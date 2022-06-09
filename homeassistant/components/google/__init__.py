@@ -44,13 +44,11 @@ from .const import (
     DEVICE_AUTH_IMPL,
     DOMAIN,
     EVENT_DESCRIPTION,
-    EVENT_END_CONF,
     EVENT_END_DATE,
     EVENT_END_DATETIME,
     EVENT_IN,
     EVENT_IN_DAYS,
     EVENT_IN_WEEKS,
-    EVENT_START_CONF,
     EVENT_START_DATE,
     EVENT_START_DATETIME,
     EVENT_SUMMARY,
@@ -138,17 +136,31 @@ _EVENT_IN_TYPES = vol.Schema(
     }
 )
 
-ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
+ADD_EVENT_SERVICE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
     {
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-        vol.Exclusive(EVENT_START_DATE, EVENT_START_CONF): cv.date,
-        vol.Exclusive(EVENT_END_DATE, EVENT_END_CONF): cv.date,
-        vol.Exclusive(EVENT_START_DATETIME, EVENT_START_CONF): cv.datetime,
-        vol.Exclusive(EVENT_END_DATETIME, EVENT_END_CONF): cv.datetime,
-        vol.Exclusive(EVENT_IN, EVENT_START_CONF): _EVENT_IN_TYPES,
-    }
+        vol.Inclusive(
+            EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+        ): cv.date,
+        vol.Inclusive(
+            EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+        ): cv.date,
+        vol.Inclusive(
+            EVENT_START_DATETIME,
+            "datetimes",
+            "Start and end datetimes must both be specified",
+        ): cv.datetime,
+        vol.Inclusive(
+            EVENT_END_DATETIME,
+            "datetimes",
+            "Start and end datetimes must both be specified",
+        ): cv.datetime,
+        vol.Optional(EVENT_IN): _EVENT_IN_TYPES,
+    },
 )
 
 

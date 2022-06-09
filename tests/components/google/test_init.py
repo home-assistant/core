@@ -346,36 +346,36 @@ async def test_calendar_config_track_new(
     [
         (
             {},
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in",
         ),
         (
             {
                 "start_date": "2022-04-01",
             },
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
         ),
         (
             {
                 "end_date": "2022-04-02",
             },
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in.",
         ),
         (
             {
                 "start_date_time": "2022-04-01T06:00:00",
             },
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "Start and end datetimes must both be specified",
         ),
         (
             {
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in.",
         ),
         (
             {
@@ -384,7 +384,7 @@ async def test_calendar_config_track_new(
                 "end_date_time": "2022-04-02T07:00:00",
             },
             vol.error.MultipleInvalid,
-            "two or more values in the same group of exclusion 'start'",
+            "must contain at most one of start_date, start_date_time, in.",
         ),
         (
             {
@@ -393,23 +393,23 @@ async def test_calendar_config_track_new(
                 "end_date": "2022-04-02",
             },
             vol.error.MultipleInvalid,
-            "two or more values in the same group of exclusion 'end'",
+            "Start and end dates must both be specified",
         ),
         (
             {
                 "start_date": "2022-04-01",
                 "end_date_time": "2022-04-02T07:00:00",
             },
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
         ),
         (
             {
                 "start_date_time": "2022-04-01T07:00:00",
                 "end_date": "2022-04-02",
             },
-            ValueError,
-            "Missing required fields",
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
         ),
         (
             {
@@ -430,7 +430,7 @@ async def test_calendar_config_track_new(
                 },
             },
             vol.error.MultipleInvalid,
-            "two or more values in the same group of exclusion 'start'",
+            "must contain at most one of start_date, start_date_time, in.",
         ),
         (
             {
@@ -441,7 +441,7 @@ async def test_calendar_config_track_new(
                 },
             },
             vol.error.MultipleInvalid,
-            "two or more values in the same group of exclusion 'start'",
+            "must contain at most one of start_date, start_date_time, in.",
         ),
     ],
     ids=[
