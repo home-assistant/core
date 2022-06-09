@@ -544,7 +544,7 @@ class Entity(ABC):
         return str(state)
 
     @callback
-    def _async_write_ha_state(self) -> None:  # noqa: C901
+    def _async_write_ha_state(self) -> None:
         """Write the state to the state machine."""
         if self._platform_state == EntityPlatformState.REMOVED:
             # Polling returned after the entity has already been removed
