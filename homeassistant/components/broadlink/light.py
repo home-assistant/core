@@ -14,8 +14,9 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.color import color_temperature_kelvin_to_mired, color_temperature_mired_to_kelvin
 
-from .const import DOMAIN
+from .const import DOMAIN, MAX_COLOR_TEMP_KELVIN, MIN_COLOR_TEMP_KELVIN
 from .entity import BroadlinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,6 +57,8 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             self._attr_supported_color_modes.add(ColorMode.HS)
         if "colortemp" in data:
             self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
+            self._attr_max_mireds = color_temperature_kelvin_to_mired(MIN_COLOR_TEMP_KELVIN)
+            self._attr_min_mireds = color_temperature_kelvin_to_mired(MAX_COLOR_TEMP_KELVIN)
         if not self.supported_color_modes:
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
@@ -77,7 +80,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
             self._attr_hs_color = [data["hue"], data["saturation"]]
 
         if "colortemp" in data:
-            self._attr_color_temp = round((data["colortemp"] - 2700) / 100 + 153)
+            self._attr_color_temp = color_temperature_kelvin_to_mired(data["colortemp"])
 
         if "bulb_colormode" in data:
             if data["bulb_colormode"] == BROADLINK_COLOR_MODE_RGB:
@@ -107,7 +110,7 @@ class BroadlinkLight(BroadlinkEntity, LightEntity):
 
         elif ATTR_COLOR_TEMP in kwargs:
             color_temp = kwargs[ATTR_COLOR_TEMP]
-            state["colortemp"] = (color_temp - 153) * 100 + 2700
+            state["colortemp"] = color_temperature_mired_to_kelvin(color_temp)
             state["bulb_colormode"] = BROADLINK_COLOR_MODE_WHITE
 
         elif ATTR_COLOR_MODE in kwargs:
