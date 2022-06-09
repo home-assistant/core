@@ -460,7 +460,7 @@ async def _async_setup_themes(
     async def reload_themes(_: ServiceCall) -> None:
         """Reload themes."""
         config = await async_hass_config_yaml(hass)
-        new_themes = config[DOMAIN].get(CONF_THEMES, {})
+        new_themes = config.get(DOMAIN, {}).get(CONF_THEMES, {})
         hass.data[DATA_THEMES] = new_themes
         if hass.data[DATA_DEFAULT_THEME] not in new_themes:
             hass.data[DATA_DEFAULT_THEME] = DEFAULT_THEME
