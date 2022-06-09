@@ -5,7 +5,6 @@ import logging
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -27,6 +26,7 @@ from .coordinator import (
     SynologyDSMCentralUpdateCoordinator,
     SynologyDSMSwitchUpdateCoordinator,
 )
+from .models import SynologyDSMData
 from .service import async_setup_services
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)

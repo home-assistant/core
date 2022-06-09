@@ -8,7 +8,6 @@ from typing import Any
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
@@ -18,6 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import SynoApi
 from .const import DOMAIN
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 

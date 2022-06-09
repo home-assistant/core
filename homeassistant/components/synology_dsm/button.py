@@ -11,7 +11,6 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -19,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
 from .const import DOMAIN
+from .models import SynologyDSMData
 
 LOGGER = logging.getLogger(__name__)
 
