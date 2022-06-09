@@ -11,13 +11,14 @@ from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
+from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SynoApi
-from .const import DOMAIN, SYNO_API
+from .const import DOMAIN
 
 LOGGER = logging.getLogger(__name__)
 
@@ -60,10 +61,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set buttons for device."""
-    data = hass.data[DOMAIN][entry.unique_id]
-    syno_api: SynoApi = data[SYNO_API]
-
-    async_add_entities(SynologyDSMButton(syno_api, button) for button in BUTTONS)
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    async_add_entities(SynologyDSMButton(data.api, button) for button in BUTTONS)
 
 
 class SynologyDSMButton(ButtonEntity):
