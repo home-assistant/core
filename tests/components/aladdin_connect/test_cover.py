@@ -1,6 +1,7 @@
 """Test the Aladdin Connect Cover."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiohttp import ClientConnectionError
 import pytest
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
@@ -114,6 +115,25 @@ async def test_setup_login_error(
     mock_aladdinconnect_api.login.return_value = False
     with patch(
         "homeassistant.components.aladdin_connect.cover.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
+
+
+async def test_setup_connection_error(
+    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
+) -> None:
+    """Test component setup Login Errors."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=YAML_CONFIG,
+        unique_id="test-id",
+    )
+    config_entry.add_to_hass(hass)
+    mock_aladdinconnect_api.login.side_effect = ClientConnectionError
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
         return_value=mock_aladdinconnect_api,
     ):
 

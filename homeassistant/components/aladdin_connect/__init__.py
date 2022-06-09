@@ -23,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up platform from a ConfigEntry."""
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    acc = AladdinConnectClient(username, password, None)
+    acc = AladdinConnectClient(username, password)
     try:
         if not await acc.login():
             raise ConfigEntryAuthFailed("Incorrect Password")

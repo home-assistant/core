@@ -99,7 +99,7 @@ class AladdinDevice(CoverEntity):
             """Schedule a state update."""
             self.async_write_ha_state()
 
-        self._acc.register_callback(update_callback)
+        self._acc.register_callback(update_callback, self._number)
         await self.async_update()
 
     async def async_will_remove_from_hass(self) -> None:
@@ -116,7 +116,7 @@ class AladdinDevice(CoverEntity):
 
     async def async_update(self) -> None:
         """Update status of cover."""
-        await self._acc.get_doors()
+        await self._acc.get_doors(self._number)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
