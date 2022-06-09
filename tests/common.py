@@ -379,6 +379,8 @@ def async_fire_time_changed(
     """Fire a time changed event."""
     if datetime_ is None:
         datetime_ = date_util.utcnow()
+    utc = date_util.as_utc(datetime_)
+    timestamp = date_util.utc_to_timestamp(utc)
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
@@ -392,7 +394,10 @@ def async_fire_time_changed(
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
                 "homeassistant.helpers.event.time_tracker_utcnow",
-                return_value=date_util.as_utc(datetime_),
+                return_value=date_util.as_utc(utc),
+            ), patch(
+                "homeassistant.helpers.event.time_tracker_timestamp",
+                return_value=timestamp,
             ):
                 task._run()
                 task.cancel()
