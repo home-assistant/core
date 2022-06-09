@@ -766,3 +766,67 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
 
     assert config_entry.version > 2
     assert config_entry.data[CONF_RADIO_TYPE] == new_type
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_onboarding(hass):
+    """Test onboarding flow."""
+    data = {
+        "radio_type": "efr32",
+        "port": {
+            "path": "/dev/ttyAMA1",
+            "baudrate": 115200,
+            "flow_control": "hardware",
+        },
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": "onboarding"}, data=data
+    )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "/dev/ttyAMA1"
+    assert result["data"] == {
+        CONF_DEVICE: {
+            CONF_BAUDRATE: 115200,
+            CONF_FLOWCONTROL: "hardware",
+            CONF_DEVICE_PATH: "/dev/ttyAMA1",
+        },
+        CONF_RADIO_TYPE: "ezsp",
+    }
+
+
+async def test_onboarding_already_setup(hass):
+    """Test onboarding flow -- already setup."""
+
+    MockConfigEntry(
+        domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
+    ).add_to_hass(hass)
+
+    data = {
+        "radio_type": "efr32",
+        "port": {
+            "path": "/dev/ttyAMA1",
+            "baudrate": 115200,
+            "flow_control": "hardware",
+        },
+    }
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": "onboarding"}, data=data
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.parametrize(
+    "data", (None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"})
+)
+async def test_onboarding_invalid_data(hass, data):
+    """Test onboarding flow -- invalid data."""
+
+    result = await hass.config_entries.flow.async_init(
+        "zha", context={"source": "onboarding"}, data=data
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "invalid_onboarding_data"

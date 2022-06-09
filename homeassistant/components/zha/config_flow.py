@@ -242,6 +242,39 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_onboarding(self, data=None):
+        """Handle onboarding flow."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+        if not data:
+            return self.async_abort(reason="invalid_onboarding_data")
+        if data.get("radio_type") != "efr32":
+            return self.async_abort(reason="invalid_onboarding_data")
+        self._radio_type = RadioType.ezsp.name
+        app_cls = RadioType[self._radio_type].controller
+
+        schema = {
+            vol.Required(
+                CONF_DEVICE_PATH, default=self._device_path or vol.UNDEFINED
+            ): str
+        }
+        radio_schema = app_cls.SCHEMA_DEVICE.schema
+        if isinstance(radio_schema, vol.Schema):
+            radio_schema = radio_schema.schema
+
+        for param, value in radio_schema.items():
+            if param in SUPPORTED_PORT_SETTINGS:
+                schema[param] = value
+        try:
+            device_settings = vol.Schema(schema)(data.get("port"))
+        except vol.Invalid:
+            return self.async_abort(reason="invalid_onboarding_data")
+
+        return self.async_create_entry(
+            title=data["port"]["path"],
+            data={CONF_DEVICE: device_settings, CONF_RADIO_TYPE: self._radio_type},
+        )
+
 
 async def detect_radios(dev_path: str) -> dict[str, Any] | None:
     """Probe all radio types on the device port."""
