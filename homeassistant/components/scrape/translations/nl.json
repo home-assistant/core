@@ -1,0 +1,59 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "attribute": "Attribuut",
+                    "authentication": "Authenticatie",
+                    "device_class": "Apparaatklasse",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "resource": "Bron",
+                    "select": "Selecteer",
+                    "state_class": "Staatklasse",
+                    "unit_of_measurement": "Meeteenheid",
+                    "username": "Gebruikersnaam",
+                    "value_template": "Waardetemplate",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                },
+                "data_description": {
+                    "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
+                    "resource": "De URL naar de website die de waarde bevat",
+                    "state_class": "De state_class van de sensor"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "attribute": "Attribuut",
+                    "authentication": "Authenticatie",
+                    "device_class": "Apparaatklasse",
+                    "headers": "Headers",
+                    "index": "Index",
+                    "name": "Naam",
+                    "password": "Wachtwoord",
+                    "resource": "Bron",
+                    "select": "Selecteer",
+                    "state_class": "Staatklasse",
+                    "unit_of_measurement": "Meeteenheid",
+                    "username": "Gebruikersnaam",
+                    "value_template": "Waardetemplate",
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
+                },
+                "data_description": {
+                    "attribute": "Haal de waarde op van een attribuut op de geselecteerde tag",
+                    "resource": "De URL naar de website die de waarde bevat",
+                    "state_class": "De state_class van de sensor"
+                }
+            }
+        }
+    }
+}

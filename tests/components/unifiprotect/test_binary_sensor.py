@@ -71,7 +71,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 9)
 
     yield camera_obj
 
@@ -103,7 +103,7 @@ async def light_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     yield light_obj
 
@@ -138,7 +138,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     yield camera_obj
 
@@ -168,7 +168,7 @@ async def sensor_fixture(
     sensor_obj.motion_detected_at = now - timedelta(hours=1)
     sensor_obj.open_status_changed_at = now - timedelta(hours=1)
     sensor_obj.alarm_triggered_at = now - timedelta(hours=1)
-    sensor_obj.tampering_detected_at = now - timedelta(hours=1)
+    sensor_obj.tampering_detected_at = None
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
@@ -179,7 +179,7 @@ async def sensor_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
 
     yield sensor_obj
 
@@ -204,7 +204,7 @@ async def sensor_none_fixture(
     sensor_obj.mount_type = MountType.LEAK
     sensor_obj.battery_status.is_low = False
     sensor_obj.alarm_settings.is_enabled = False
-    sensor_obj.tampering_detected_at = now - timedelta(hours=1)
+    sensor_obj.tampering_detected_at = None
 
     mock_entry.api.bootstrap.reset_objects()
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
@@ -215,7 +215,7 @@ async def sensor_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
 
     yield sensor_obj
 

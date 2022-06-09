@@ -7,14 +7,16 @@ import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
 
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     Base,
     EventData,
     Events,
-    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
+)
+from homeassistant.components.recorder.models import (
+    LazyState,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,

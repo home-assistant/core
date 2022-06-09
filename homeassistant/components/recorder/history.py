@@ -9,12 +9,11 @@ import logging
 import time
 from typing import Any, cast
 
-from sqlalchemy import Column, Text, and_, func, lambda_stmt, or_, select
+from sqlalchemy import Column, Text, and_, func, or_, select
 from sqlalchemy.engine.row import Row
-from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal
-from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select, Subquery
 
 from homeassistant.components import recorder
 from homeassistant.components.websocket_api.const import (
@@ -24,18 +23,16 @@ from homeassistant.components.websocket_api.const import (
 from homeassistant.core import HomeAssistant, State, split_entity_id
 import homeassistant.util.dt as dt_util
 
+from .db_schema import RecorderRuns, StateAttributes, States
 from .filters import Filters
 from .models import (
     LazyState,
-    RecorderRuns,
-    StateAttributes,
-    States,
     process_datetime_to_timestamp,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
     row_to_compressed_state,
 )
-from .util import execute_stmt_lambda_element, session_scope
+from .util import execute_stmt, session_scope
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -115,22 +112,18 @@ def _schema_version(hass: HomeAssistant) -> int:
     return recorder.get_instance(hass).schema_version
 
 
-def lambda_stmt_and_join_attributes(
+def stmt_and_join_attributes(
     schema_version: int, no_attributes: bool, include_last_changed: bool = True
-) -> tuple[StatementLambdaElement, bool]:
-    """Return the lambda_stmt and if StateAttributes should be joined.
-
-    Because these are lambda_stmt the values inside the lambdas need
-    to be explicitly written out to avoid caching the wrong values.
-    """
+) -> tuple[Select, bool]:
+    """Return the stmt and if StateAttributes should be joined."""
     # If no_attributes was requested we do the query
     # without the attributes fields and do not join the
     # state_attributes table
     if no_attributes:
         if include_last_changed:
-            return lambda_stmt(lambda: select(*QUERY_STATE_NO_ATTR)), False
+            return select(*QUERY_STATE_NO_ATTR), False
         return (
-            lambda_stmt(lambda: select(*QUERY_STATE_NO_ATTR_NO_LAST_CHANGED)),
+            select(*QUERY_STATE_NO_ATTR_NO_LAST_CHANGED),
             False,
         )
     # If we in the process of migrating schema we do
@@ -139,19 +132,19 @@ def lambda_stmt_and_join_attributes(
     if schema_version < 25:
         if include_last_changed:
             return (
-                lambda_stmt(lambda: select(*QUERY_STATES_PRE_SCHEMA_25)),
+                select(*QUERY_STATES_PRE_SCHEMA_25),
                 False,
             )
         return (
-            lambda_stmt(lambda: select(*QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED)),
+            select(*QUERY_STATES_PRE_SCHEMA_25_NO_LAST_CHANGED),
             False,
         )
     # Finally if no migration is in progress and no_attributes
     # was not requested, we query both attributes columns and
     # join state_attributes
     if include_last_changed:
-        return lambda_stmt(lambda: select(*QUERY_STATES)), True
-    return lambda_stmt(lambda: select(*QUERY_STATES_NO_LAST_CHANGED)), True
+        return select(*QUERY_STATES), True
+    return select(*QUERY_STATES_NO_LAST_CHANGED), True
 
 
 def get_significant_states(
@@ -183,7 +176,7 @@ def get_significant_states(
         )
 
 
-def _ignore_domains_filter(query: Query) -> Query:
+def _ignore_domains_filter(query: Select) -> Select:
     """Add a filter to ignore domains we do not fetch history for."""
     return query.filter(
         and_(
@@ -203,9 +196,9 @@ def _significant_states_stmt(
     filters: Filters | None,
     significant_changes_only: bool,
     no_attributes: bool,
-) -> StatementLambdaElement:
+) -> Select:
     """Query the database for significant state changes."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=not significant_changes_only
     )
     if (
@@ -214,11 +207,11 @@ def _significant_states_stmt(
         and significant_changes_only
         and split_entity_id(entity_ids[0])[0] not in SIGNIFICANT_DOMAINS
     ):
-        stmt += lambda q: q.filter(
+        stmt = stmt.filter(
             (States.last_changed == States.last_updated) | States.last_changed.is_(None)
         )
     elif significant_changes_only:
-        stmt += lambda q: q.filter(
+        stmt = stmt.filter(
             or_(
                 *[
                     States.entity_id.like(entity_domain)
@@ -232,25 +225,22 @@ def _significant_states_stmt(
         )
 
     if entity_ids:
-        stmt += lambda q: q.filter(States.entity_id.in_(entity_ids))
+        stmt = stmt.filter(States.entity_id.in_(entity_ids))
     else:
-        stmt += _ignore_domains_filter
+        stmt = _ignore_domains_filter(stmt)
         if filters and filters.has_config:
             entity_filter = filters.states_entity_filter()
-            stmt = stmt.add_criteria(
-                lambda q: q.filter(entity_filter), track_on=[filters]
-            )
+            stmt = stmt.filter(entity_filter)
 
-    stmt += lambda q: q.filter(States.last_updated > start_time)
+    stmt = stmt.filter(States.last_updated > start_time)
     if end_time:
-        stmt += lambda q: q.filter(States.last_updated < end_time)
+        stmt = stmt.filter(States.last_updated < end_time)
 
     if join_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
-    return stmt
+    return stmt.order_by(States.entity_id, States.last_updated)
 
 
 def get_significant_states_with_session(
@@ -287,9 +277,7 @@ def get_significant_states_with_session(
         significant_changes_only,
         no_attributes,
     )
-    states = execute_stmt_lambda_element(
-        session, stmt, None if entity_ids else start_time, end_time
-    )
+    states = execute_stmt(session, stmt, None if entity_ids else start_time, end_time)
     return _sorted_states_to_dict(
         hass,
         session,
@@ -341,27 +329,28 @@ def _state_changed_during_period_stmt(
     no_attributes: bool,
     descending: bool,
     limit: int | None,
-) -> StatementLambdaElement:
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+) -> Select:
+    stmt, join_attributes = stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=False
     )
-    stmt += lambda q: q.filter(
+    stmt = stmt.filter(
         ((States.last_changed == States.last_updated) | States.last_changed.is_(None))
         & (States.last_updated > start_time)
     )
     if end_time:
-        stmt += lambda q: q.filter(States.last_updated < end_time)
-    stmt += lambda q: q.filter(States.entity_id == entity_id)
+        stmt = stmt.filter(States.last_updated < end_time)
+    if entity_id:
+        stmt = stmt.filter(States.entity_id == entity_id)
     if join_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     if descending:
-        stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc())
+        stmt = stmt.order_by(States.entity_id, States.last_updated.desc())
     else:
-        stmt += lambda q: q.order_by(States.entity_id, States.last_updated)
+        stmt = stmt.order_by(States.entity_id, States.last_updated)
     if limit:
-        stmt += lambda q: q.limit(limit)
+        stmt = stmt.limit(limit)
     return stmt
 
 
@@ -377,6 +366,7 @@ def state_changes_during_period(
 ) -> MutableMapping[str, list[State]]:
     """Return states changes during UTC period start_time - end_time."""
     entity_id = entity_id.lower() if entity_id is not None else None
+    entity_ids = [entity_id] if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         stmt = _state_changed_during_period_stmt(
@@ -388,11 +378,9 @@ def state_changes_during_period(
             descending,
             limit,
         )
-        states = execute_stmt_lambda_element(
+        states = execute_stmt(
             session, stmt, None if entity_id else start_time, end_time
         )
-        entity_ids = [entity_id] if entity_id is not None else None
-
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
@@ -407,38 +395,38 @@ def state_changes_during_period(
 
 
 def _get_last_state_changes_stmt(
-    schema_version: int, number_of_states: int, entity_id: str
-) -> StatementLambdaElement:
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    schema_version: int, number_of_states: int, entity_id: str | None
+) -> Select:
+    stmt, join_attributes = stmt_and_join_attributes(
         schema_version, False, include_last_changed=False
     )
-    stmt += lambda q: q.filter(
+    stmt = stmt.filter(
         (States.last_changed == States.last_updated) | States.last_changed.is_(None)
-    ).filter(States.entity_id == entity_id)
+    )
+    if entity_id:
+        stmt = stmt.filter(States.entity_id == entity_id)
     if join_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
-    stmt += lambda q: q.order_by(States.entity_id, States.last_updated.desc()).limit(
+    return stmt.order_by(States.entity_id, States.last_updated.desc()).limit(
         number_of_states
     )
-    return stmt
 
 
 def get_last_state_changes(
-    hass: HomeAssistant, number_of_states: int, entity_id: str
+    hass: HomeAssistant, number_of_states: int, entity_id: str | None
 ) -> MutableMapping[str, list[State]]:
     """Return the last number_of_states."""
     start_time = dt_util.utcnow()
     entity_id = entity_id.lower() if entity_id is not None else None
+    entity_ids = [entity_id] if entity_id is not None else None
 
     with session_scope(hass=hass) as session:
         stmt = _get_last_state_changes_stmt(
             _schema_version(hass), number_of_states, entity_id
         )
-        states = list(execute_stmt_lambda_element(session, stmt))
-        entity_ids = [entity_id] if entity_id is not None else None
-
+        states = list(execute_stmt(session, stmt))
         return cast(
             MutableMapping[str, list[State]],
             _sorted_states_to_dict(
@@ -458,14 +446,14 @@ def _get_states_for_entites_stmt(
     utc_point_in_time: datetime,
     entity_ids: list[str],
     no_attributes: bool,
-) -> StatementLambdaElement:
+) -> Select:
     """Baked query to get states for specific entities."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
     # We got an include-list of entities, accelerate the query by filtering already
     # in the inner query.
-    stmt += lambda q: q.where(
+    stmt = stmt.where(
         States.state_id
         == (
             select(func.max(States.state_id).label("max_state_id"))
@@ -479,28 +467,18 @@ def _get_states_for_entites_stmt(
         ).c.max_state_id
     )
     if join_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     return stmt
 
 
-def _get_states_for_all_stmt(
-    schema_version: int,
+def _generate_most_recent_states_by_date(
     run_start: datetime,
     utc_point_in_time: datetime,
-    filters: Filters | None,
-    no_attributes: bool,
-) -> StatementLambdaElement:
-    """Baked query to get states for all entities."""
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
-        schema_version, no_attributes, include_last_changed=True
-    )
-    # We did not get an include-list of entities, query all states in the inner
-    # query, then filter out unwanted domains as well as applying the custom filter.
-    # This filtering can't be done in the inner query because the domain column is
-    # not indexed and we can't control what's in the custom filter.
-    most_recent_states_by_date = (
+) -> Subquery:
+    """Generate the sub query for the most recent states by data."""
+    return (
         select(
             States.entity_id.label("max_entity_id"),
             func.max(States.last_updated).label("max_last_updated"),
@@ -512,7 +490,27 @@ def _get_states_for_all_stmt(
         .group_by(States.entity_id)
         .subquery()
     )
-    stmt += lambda q: q.where(
+
+
+def _get_states_for_all_stmt(
+    schema_version: int,
+    run_start: datetime,
+    utc_point_in_time: datetime,
+    filters: Filters | None,
+    no_attributes: bool,
+) -> Select:
+    """Baked query to get states for all entities."""
+    stmt, join_attributes = stmt_and_join_attributes(
+        schema_version, no_attributes, include_last_changed=True
+    )
+    # We did not get an include-list of entities, query all states in the inner
+    # query, then filter out unwanted domains as well as applying the custom filter.
+    # This filtering can't be done in the inner query because the domain column is
+    # not indexed and we can't control what's in the custom filter.
+    most_recent_states_by_date = _generate_most_recent_states_by_date(
+        run_start, utc_point_in_time
+    )
+    stmt = stmt.where(
         States.state_id
         == (
             select(func.max(States.state_id).label("max_state_id"))
@@ -528,12 +526,12 @@ def _get_states_for_all_stmt(
             .subquery()
         ).c.max_state_id,
     )
-    stmt += _ignore_domains_filter
+    stmt = _ignore_domains_filter(stmt)
     if filters and filters.has_config:
         entity_filter = filters.states_entity_filter()
-        stmt = stmt.add_criteria(lambda q: q.filter(entity_filter), track_on=[filters])
+        stmt = stmt.filter(entity_filter)
     if join_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
         )
     return stmt
@@ -551,7 +549,7 @@ def _get_rows_with_session(
     """Return the states at a specific point in time."""
     schema_version = _schema_version(hass)
     if entity_ids and len(entity_ids) == 1:
-        return execute_stmt_lambda_element(
+        return execute_stmt(
             session,
             _get_single_entity_states_stmt(
                 schema_version, utc_point_in_time, entity_ids[0], no_attributes
@@ -576,7 +574,7 @@ def _get_rows_with_session(
             schema_version, run.start, utc_point_in_time, filters, no_attributes
         )
 
-    return execute_stmt_lambda_element(session, stmt)
+    return execute_stmt(session, stmt)
 
 
 def _get_single_entity_states_stmt(
@@ -584,14 +582,14 @@ def _get_single_entity_states_stmt(
     utc_point_in_time: datetime,
     entity_id: str,
     no_attributes: bool = False,
-) -> StatementLambdaElement:
+) -> Select:
     # Use an entirely different (and extremely fast) query if we only
     # have a single entity id
-    stmt, join_attributes = lambda_stmt_and_join_attributes(
+    stmt, join_attributes = stmt_and_join_attributes(
         schema_version, no_attributes, include_last_changed=True
     )
-    stmt += (
-        lambda q: q.filter(
+    stmt = (
+        stmt.filter(
             States.last_updated < utc_point_in_time,
             States.entity_id == entity_id,
         )
@@ -599,7 +597,7 @@ def _get_single_entity_states_stmt(
         .limit(1)
     )
     if join_attributes:
-        stmt += lambda q: q.outerjoin(
+        stmt = stmt.outerjoin(
             StateAttributes, States.attributes_id == StateAttributes.attributes_id
         )
     return stmt

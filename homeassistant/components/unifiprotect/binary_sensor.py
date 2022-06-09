@@ -6,6 +6,7 @@ from dataclasses import dataclass
 import logging
 
 from pyunifiprotect.data import NVR, Camera, Event, Light, MountType, Sensor
+from pyunifiprotect.data.nvr import UOSDisk
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -13,7 +14,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -131,7 +131,6 @@ DOORLOCK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
 DISK_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
     ProtectBinaryEntityDescription(
         key="disk_health",
-        name="Disk {index} Health",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -182,14 +181,18 @@ def _async_nvr_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     device = data.api.bootstrap.nvr
-    for index, _ in enumerate(device.system_info.storage.devices):
+    if device.system_info.ustorage is None:
+        return entities
+
+    for disk in device.system_info.ustorage.disks:
         for description in DISK_SENSORS:
-            entities.append(
-                ProtectDiskBinarySensor(data, device, description, index=index)
-            )
+            if not disk.has_disk:
+                continue
+
+            entities.append(ProtectDiskBinarySensor(data, device, description, disk))
             _LOGGER.debug(
                 "Adding binary sensor entity %s",
-                (description.name or "{index}").format(index=index),
+                f"{disk.type} {disk.slot}",
             )
 
     return entities
@@ -216,6 +219,7 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
 class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
     """A UniFi Protect NVR Disk Binary Sensor."""
 
+    _disk: UOSDisk
     entity_description: ProtectBinaryEntityDescription
 
     def __init__(
@@ -223,26 +227,35 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         data: ProtectData,
         device: NVR,
         description: ProtectBinaryEntityDescription,
-        index: int,
+        disk: UOSDisk,
     ) -> None:
         """Initialize the Binary Sensor."""
+        self._disk = disk
+        # backwards compat with old unique IDs
+        index = self._disk.slot - 1
+
         description = copy(description)
         description.key = f"{description.key}_{index}"
-        description.name = (description.name or "{index}").format(index=index)
-        self._index = index
+        description.name = f"{disk.type} {disk.slot}"
         super().__init__(data, device, description)
 
     @callback
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()
 
-        disks = self.device.system_info.storage.devices
-        disk_available = len(disks) > self._index
-        self._attr_available = self._attr_available and disk_available
-        if disk_available:
-            disk = disks[self._index]
-            self._attr_is_on = not disk.healthy
-            self._attr_extra_state_attributes = {ATTR_MODEL: disk.model}
+        slot = self._disk.slot
+        self._attr_available = False
+
+        if self.device.system_info.ustorage is None:
+            return
+
+        for disk in self.device.system_info.ustorage.disks:
+            if disk.slot == slot:
+                self._disk = disk
+                self._attr_available = True
+                break
+
+        self._attr_is_on = not self._disk.is_healthy
 
 
 class ProtectEventBinarySensor(EventThumbnailMixin, ProtectDeviceBinarySensor):
