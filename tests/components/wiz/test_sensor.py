@@ -44,6 +44,7 @@ async def test_signal_strength(hass: HomeAssistant) -> None:
 async def test_power_monitoring(hass: HomeAssistant) -> None:
     """Test power monitoring."""
     socket = _mocked_wizlight(None, None, FAKE_SOCKET_WITH_POWER_MONITORING)
+    socket.power_monitoring = None
     socket.get_power = AsyncMock(return_value=5.123)
     _, entry = await async_setup_integration(
         hass, wizlight=socket, bulb_type=FAKE_SOCKET_WITH_POWER_MONITORING
