@@ -160,9 +160,6 @@ ZEROCONF = {
     ],
     "_hap._tcp.local.": [
         {
-            "domain": "hive"
-        },
-        {
             "domain": "homekit_controller"
         },
         {
@@ -422,6 +419,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX A19": "lifx",
