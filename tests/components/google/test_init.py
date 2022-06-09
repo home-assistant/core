@@ -9,12 +9,14 @@ from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
 from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
+from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
@@ -40,6 +42,9 @@ EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 # Typing helpers
 HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
+TEST_EVENT_SUMMARY = "Test Summary"
+TEST_EVENT_DESCRIPTION = "Test Description"
+
 
 def assert_state(actual: State | None, expected: State | None) -> None:
     """Assert that the two states are equal."""
@@ -57,6 +62,45 @@ def setup_config_entry(
 ) -> MockConfigEntry:
     """Fixture to initialize the config entry."""
     config_entry.add_to_hass(hass)
+
+
+@pytest.fixture(
+    params=[
+        (
+            SERVICE_ADD_EVENT,
+            {"calendar_id": CALENDAR_ID},
+            None,
+        ),
+        (
+            SERVICE_CREATE_EVENT,
+            {},
+            {"entity_id": TEST_YAML_ENTITY},
+        ),
+    ],
+    ids=("add_event", "create_event"),
+)
+def add_event_call_service(
+    hass: HomeAssistant,
+    request: Any,
+) -> Callable[dict[str, Any], Awaitable[None]]:
+    """Fixture for calling the add or create event service."""
+    (service_call, data, target) = request.param
+
+    async def call_service(params: dict[str, Any]) -> None:
+        await hass.services.async_call(
+            DOMAIN,
+            service_call,
+            {
+                **data,
+                **params,
+                "summary": TEST_EVENT_SUMMARY,
+                "description": TEST_EVENT_DESCRIPTION,
+            },
+            target=target,
+            blocking=True,
+        )
+
+    return call_service
 
 
 async def test_unload_entry(
@@ -297,28 +341,145 @@ async def test_calendar_config_track_new(
     assert_state(state, expected_state)
 
 
-async def test_add_event_missing_required_fields(
+@pytest.mark.parametrize(
+    "date_fields,expected_error,error_match",
+    [
+        (
+            {},
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end datetimes must both be specified",
+        ),
+        (
+            {
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "must contain at least one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "start_date_time": "2022-04-01T06:00:00",
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "must contain at most one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T06:00:00",
+                "end_date_time": "2022-04-01T07:00:00",
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date_time": "2022-04-02T07:00:00",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date": "2022-04-02",
+            },
+            vol.error.MultipleInvalid,
+            "Start and end dates must both be specified",
+        ),
+        (
+            {
+                "in": {
+                    "days": 2,
+                    "weeks": 2,
+                }
+            },
+            vol.error.MultipleInvalid,
+            "two or more values in the same group of exclusion 'event_types'",
+        ),
+        (
+            {
+                "start_date": "2022-04-01",
+                "end_date": "2022-04-02",
+                "in": {
+                    "days": 2,
+                },
+            },
+            vol.error.MultipleInvalid,
+            "must contain at most one of start_date, start_date_time, in.",
+        ),
+        (
+            {
+                "start_date_time": "2022-04-01T07:00:00",
+                "end_date_time": "2022-04-01T07:00:00",
+                "in": {
+                    "days": 2,
+                },
+            },
+            vol.error.MultipleInvalid,
+            "must contain at most one of start_date, start_date_time, in.",
+        ),
+    ],
+    ids=[
+        "missing_all",
+        "missing_end_date",
+        "missing_start_date",
+        "missing_end_datetime",
+        "missing_start_datetime",
+        "multiple_start",
+        "multiple_end",
+        "missing_end_date",
+        "missing_end_date_time",
+        "multiple_in",
+        "unexpected_in_with_date",
+        "unexpected_in_with_datetime",
+    ],
+)
+async def test_add_event_invalid_params(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
+    mock_calendars_yaml: None,
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
+    date_fields: dict[str, Any],
+    expected_error: type[Exception],
+    error_match: str | None,
 ) -> None:
-    """Test service call that adds an event missing required fields."""
+    """Test service calls with incorrect fields."""
 
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
-    with pytest.raises(ValueError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_ADD_EVENT,
-            {
-                "calendar_id": CALENDAR_ID,
-                "summary": "Summary",
-                "description": "Description",
-            },
-            blocking=True,
-        )
+    with pytest.raises(expected_error, match=error_match):
+        await add_event_call_service(date_fields)
 
 
 @pytest.mark.parametrize(
@@ -343,40 +504,35 @@ async def test_add_event_date_in_x(
     mock_calendars_list: ApiResult,
     mock_insert_event: Callable[[..., dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
+    mock_calendars_yaml: None,
+    mock_events_list: ApiResult,
     date_fields: dict[str, Any],
     start_timedelta: datetime.timedelta,
     end_timedelta: datetime.timedelta,
     setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
 ) -> None:
     """Test service call that adds an event with various time ranges."""
 
-    mock_calendars_list({})
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
     now = datetime.datetime.now()
     start_date = now + start_timedelta
     end_date = now + end_timedelta
 
+    aioclient_mock.clear_requests()
     mock_insert_event(
         calendar_id=CALENDAR_ID,
     )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_EVENT,
-        {
-            "calendar_id": CALENDAR_ID,
-            "summary": "Summary",
-            "description": "Description",
-            **date_fields,
-        },
-        blocking=True,
-    )
-    assert len(aioclient_mock.mock_calls) == 2
-    assert aioclient_mock.mock_calls[1][2] == {
-        "summary": "Summary",
-        "description": "Description",
+    await add_event_call_service(date_fields)
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
         "start": {"date": start_date.date().isoformat()},
         "end": {"date": end_date.date().isoformat()},
     }
@@ -386,39 +542,39 @@ async def test_add_event_date(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
     mock_insert_event: Callable[[str, dict[str, Any]], None],
+    mock_calendars_yaml: None,
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
 ) -> None:
     """Test service call that sets a date range."""
 
-    mock_calendars_list({})
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
     now = utcnow()
     today = now.date()
     end_date = today + datetime.timedelta(days=2)
 
+    aioclient_mock.clear_requests()
     mock_insert_event(
         calendar_id=CALENDAR_ID,
     )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_EVENT,
+    await add_event_call_service(
         {
-            "calendar_id": CALENDAR_ID,
-            "summary": "Summary",
-            "description": "Description",
             "start_date": today.isoformat(),
             "end_date": end_date.isoformat(),
         },
-        blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 2
-    assert aioclient_mock.mock_calls[1][2] == {
-        "summary": "Summary",
-        "description": "Description",
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
         "start": {"date": today.isoformat()},
         "end": {"date": end_date.isoformat()},
     }
@@ -430,38 +586,37 @@ async def test_add_event_date_time(
     mock_calendars_list: ApiResult,
     mock_insert_event: Callable[[str, dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
+    mock_calendars_yaml: None,
+    mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
 ) -> None:
     """Test service call that adds an event with a date time range."""
 
-    mock_calendars_list({})
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
     assert await component_setup()
 
     start_datetime = datetime.datetime.now()
     delta = datetime.timedelta(days=3, hours=3)
     end_datetime = start_datetime + delta
 
+    aioclient_mock.clear_requests()
     mock_insert_event(
         calendar_id=CALENDAR_ID,
     )
 
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_ADD_EVENT,
+    await add_event_call_service(
         {
-            "calendar_id": CALENDAR_ID,
-            "summary": "Summary",
-            "description": "Description",
             "start_date_time": start_datetime.isoformat(),
             "end_date_time": end_datetime.isoformat(),
         },
-        blocking=True,
     )
-    assert len(aioclient_mock.mock_calls) == 2
-    assert aioclient_mock.mock_calls[1][2] == {
-        "summary": "Summary",
-        "description": "Description",
+    assert len(aioclient_mock.mock_calls) == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "summary": TEST_EVENT_SUMMARY,
+        "description": TEST_EVENT_DESCRIPTION,
         "start": {
             "dateTime": start_datetime.isoformat(timespec="seconds"),
             "timeZone": "America/Regina",

@@ -9,7 +9,8 @@ from typing import Any
 
 from gcal_sync.api import GoogleCalendarService, ListEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import Event
+from gcal_sync.model import DateOrDatetime, Event
+import voluptuous as vol
 
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
@@ -20,8 +21,9 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
@@ -38,21 +40,65 @@ from . import (
     load_config,
     update_config,
 )
+from .api import get_feature_access
+from .const import (
+    EVENT_DESCRIPTION,
+    EVENT_END_DATE,
+    EVENT_END_DATETIME,
+    EVENT_IN,
+    EVENT_IN_DAYS,
+    EVENT_IN_WEEKS,
+    EVENT_START_DATE,
+    EVENT_START_DATETIME,
+    EVENT_SUMMARY,
+    EVENT_TYPES_CONF,
+    FeatureAccess,
+)
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_GOOGLE_SEARCH_PARAMS = {
-    "orderBy": "startTime",
-    "singleEvents": True,
-}
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 # Events have a transparency that determine whether or not they block time on calendar.
 # When an event is opaque, it means "Show me as busy" which is the default.  Events that
 # are not opaque are ignored by default.
-TRANSPARENCY = "transparency"
 OPAQUE = "opaque"
+
+_EVENT_IN_TYPES = vol.Schema(
+    {
+        vol.Exclusive(EVENT_IN_DAYS, EVENT_TYPES_CONF): cv.positive_int,
+        vol.Exclusive(EVENT_IN_WEEKS, EVENT_TYPES_CONF): cv.positive_int,
+    }
+)
+
+SERVICE_CREATE_EVENT = "create_event"
+CREATE_EVENT_SCHEMA = vol.All(
+    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.make_entity_service_schema(
+        {
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
+            vol.Inclusive(
+                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_START_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Inclusive(
+                EVENT_END_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Optional(EVENT_IN): _EVENT_IN_TYPES,
+        }
+    ),
+)
 
 
 async def async_setup_entry(
@@ -116,6 +162,14 @@ async def async_setup_entry(
 
         await hass.async_add_executor_job(append_calendars_to_config)
 
+    platform = entity_platform.async_get_current_platform()
+    if get_feature_access(hass, entry) is FeatureAccess.read_write:
+        platform.async_register_entity_service(
+            SERVICE_CREATE_EVENT,
+            CREATE_EVENT_SCHEMA,
+            async_create_event,
+        )
+
 
 class GoogleCalendarEntity(CalendarEntity):
     """A calendar event device."""
@@ -130,8 +184,8 @@ class GoogleCalendarEntity(CalendarEntity):
         entity_enabled: bool,
     ) -> None:
         """Create the Calendar event device."""
-        self._calendar_service = calendar_service
-        self._calendar_id = calendar_id
+        self.calendar_service = calendar_service
+        self.calendar_id = calendar_id
         self._search: str | None = data.get(CONF_SEARCH)
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: CalendarEvent | None = None
@@ -178,14 +232,14 @@ class GoogleCalendarEntity(CalendarEntity):
         """Get all events in a specific time frame."""
 
         request = ListEventsRequest(
-            calendar_id=self._calendar_id,
+            calendar_id=self.calendar_id,
             start_time=start_date,
             end_time=end_date,
             search=self._search,
         )
         result_items = []
         try:
-            result = await self._calendar_service.async_list_events(request)
+            result = await self.calendar_service.async_list_events(request)
             async for result_page in result:
                 result_items.extend(result_page.items)
         except ApiException as err:
@@ -199,9 +253,9 @@ class GoogleCalendarEntity(CalendarEntity):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
         """Get the latest data."""
-        request = ListEventsRequest(calendar_id=self._calendar_id, search=self._search)
+        request = ListEventsRequest(calendar_id=self.calendar_id, search=self._search)
         try:
-            result = await self._calendar_service.async_list_events(request)
+            result = await self.calendar_service.async_list_events(request)
         except ApiException as err:
             _LOGGER.error("Unable to connect to Google: %s", err)
             return
@@ -225,4 +279,53 @@ def _get_calendar_event(event: Event) -> CalendarEvent:
         end=event.end.value,
         description=event.description,
         location=event.location,
+    )
+
+
+async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) -> None:
+    """Add a new event to calendar."""
+    start: DateOrDatetime | None = None
+    end: DateOrDatetime | None = None
+    hass = entity.hass
+
+    if EVENT_IN in call.data:
+        if EVENT_IN_DAYS in call.data[EVENT_IN]:
+            now = datetime.now()
+
+            start_in = now + timedelta(days=call.data[EVENT_IN][EVENT_IN_DAYS])
+            end_in = start_in + timedelta(days=1)
+
+            start = DateOrDatetime(date=start_in)
+            end = DateOrDatetime(date=end_in)
+
+        elif EVENT_IN_WEEKS in call.data[EVENT_IN]:
+            now = datetime.now()
+
+            start_in = now + timedelta(weeks=call.data[EVENT_IN][EVENT_IN_WEEKS])
+            end_in = start_in + timedelta(days=1)
+
+            start = DateOrDatetime(date=start_in)
+            end = DateOrDatetime(date=end_in)
+
+    elif EVENT_START_DATE in call.data and EVENT_END_DATE in call.data:
+        start = DateOrDatetime(date=call.data[EVENT_START_DATE])
+        end = DateOrDatetime(date=call.data[EVENT_END_DATE])
+
+    elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
+        start_dt = call.data[EVENT_START_DATETIME]
+        end_dt = call.data[EVENT_END_DATETIME]
+        start = DateOrDatetime(date_time=start_dt, timezone=str(hass.config.time_zone))
+        end = DateOrDatetime(date_time=end_dt, timezone=str(hass.config.time_zone))
+
+    if start is None or end is None:
+        raise ValueError("Missing required fields to set start or end date/datetime")
+
+    await entity.calendar_service.async_create_event(
+        entity.calendar_id,
+        Event(
+            summary=call.data[EVENT_SUMMARY],
+            description=call.data[EVENT_DESCRIPTION],
+            start=start,
+            end=end,
+        ),
     )
