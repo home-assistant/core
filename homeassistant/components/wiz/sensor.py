@@ -91,7 +91,7 @@ class WizPowerSensor(WizSensor):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         # Newer firmwares will have the power in their state
+        watts_push = self._device.state.get_power()
         # Older firmwares will be polled and in the coordinator data
-        self._attr_native_value = (
-            self._device.state.get_power() or self.coordinator.data
-        )
+        watts_poll = self.coordinator.data
+        self._attr_native_value = watts_poll if watts_push is None else watts_push
