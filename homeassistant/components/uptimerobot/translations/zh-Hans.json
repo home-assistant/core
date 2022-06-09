@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u6b64\u8d26\u53f7\u5df2\u88ab\u914d\u7f6e",
+            "reauth_failed_existing": "\u65e0\u6cd5\u66f4\u65b0\u914d\u7f6e\u6761\u76ee\uff0c\u8bf7\u5220\u9664\u96c6\u6210\u5e76\u91cd\u65b0\u8bbe\u7f6e\u3002",
+            "reauth_successful": "\u91cd\u9a8c\u8bc1\u6210\u529f",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "error": {
+            "cannot_connect": "\u8fde\u63a5\u5931\u8d25",
+            "invalid_api_key": "\u65e0\u6548\u7684 API \u5bc6\u94a5",
+            "reauth_failed_matching_account": "\u60a8\u63d0\u4f9b\u7684 API \u5bc6\u94a5\u4e0e\u73b0\u6709\u914d\u7f6e\u7684\u8d26\u53f7 ID \u4e0d\u5339\u914d",
+            "unknown": "\u672a\u77e5\u9519\u8bef"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u5bc6\u94a5"
+                },
+                "description": "\u60a8\u9700\u8981\u4ece Uptime Robot \u4e2d\u63d0\u4f9b\u4e00\u4e2a\"\u53ea\u8bfb API \u5bc6\u94a5\""
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u5bc6\u94a5"
+                },
+                "description": "\u60a8\u9700\u8981\u4ece Uptime Robot \u4e2d\u63d0\u4f9b\u4e00\u4e2a\"\u53ea\u8bfb API \u5bc6\u94a5\""
+            }
+        }
+    }
+}

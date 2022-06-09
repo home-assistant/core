@@ -1,32 +1,35 @@
 """Support for Xiaomi Gateways."""
-import asyncio
 from datetime import timedelta
 import logging
 
 import voluptuous as vol
 from xiaomi_gateway import XiaomiGateway, XiaomiGatewayDiscovery
 
-from homeassistant import config_entries, core
+from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
+    ATTR_DEVICE_ID,
     ATTR_VOLTAGE,
     CONF_HOST,
     CONF_MAC,
     CONF_PORT,
+    CONF_PROTOCOL,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.dt import utcnow
 
 from .const import (
     CONF_INTERFACE,
     CONF_KEY,
-    CONF_PROTOCOL,
     CONF_SID,
     DEFAULT_DISCOVERY_RETRY,
     DOMAIN,
@@ -36,13 +39,19 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-GATEWAY_PLATFORMS = ["binary_sensor", "sensor", "switch", "light", "cover", "lock"]
-GATEWAY_PLATFORMS_NO_KEY = ["binary_sensor", "sensor"]
+GATEWAY_PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+GATEWAY_PLATFORMS_NO_KEY = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 ATTR_GW_MAC = "gw_mac"
 ATTR_RINGTONE_ID = "ringtone_id"
 ATTR_RINGTONE_VOL = "ringtone_vol"
-ATTR_DEVICE_ID = "device_id"
 
 TIME_TILL_UNAVAILABLE = timedelta(minutes=150)
 
@@ -67,38 +76,38 @@ SERVICE_SCHEMA_REMOVE_DEVICE = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Xiaomi component."""
 
-    def play_ringtone_service(call):
+    def play_ringtone_service(call: ServiceCall) -> None:
         """Service to play ringtone through Gateway."""
         ring_id = call.data.get(ATTR_RINGTONE_ID)
         gateway = call.data.get(ATTR_GW_MAC)
 
         kwargs = {"mid": ring_id}
 
-        ring_vol = call.data.get(ATTR_RINGTONE_VOL)
-        if ring_vol is not None:
+        if (ring_vol := call.data.get(ATTR_RINGTONE_VOL)) is not None:
             kwargs["vol"] = ring_vol
 
         gateway.write_to_hub(gateway.sid, **kwargs)
 
-    def stop_ringtone_service(call):
+    def stop_ringtone_service(call: ServiceCall) -> None:
         """Service to stop playing ringtone on Gateway."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, mid=10000)
 
-    def add_device_service(call):
+    def add_device_service(call: ServiceCall) -> None:
         """Service to add a new sub-device within the next 30 seconds."""
         gateway = call.data.get(ATTR_GW_MAC)
         gateway.write_to_hub(gateway.sid, join_permission="yes")
-        hass.components.persistent_notification.async_create(
+        persistent_notification.async_create(
+            hass,
             "Join permission enabled for 30 seconds! "
             "Please press the pairing button of the new device once.",
             title="Xiaomi Aqara Gateway",
         )
 
-    def remove_device_service(call):
+    def remove_device_service(call: ServiceCall) -> None:
         """Service to remove a sub-device from the gateway."""
         device_id = call.data.get(ATTR_DEVICE_ID)
         gateway = call.data.get(ATTR_GW_MAC)
@@ -131,9 +140,7 @@ def setup(hass, config):
     return True
 
 
-async def async_setup_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the xiaomi aqara components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN].setdefault(GATEWAYS_KEY, {})
@@ -174,7 +181,7 @@ async def async_setup_entry(
         entry.data[CONF_HOST],
     )
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.unique_id)},
@@ -188,31 +195,19 @@ async def async_setup_entry(
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    for component in platforms:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
     return True
 
 
-async def async_unload_entry(
-    hass: core.HomeAssistant, entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if entry.data[CONF_KEY] is not None:
         platforms = GATEWAY_PLATFORMS
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in platforms
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, platforms)
     if unload_ok:
         hass.data[DOMAIN][GATEWAYS_KEY].pop(entry.entry_id)
 
@@ -241,7 +236,7 @@ class XiaomiDevice(Entity):
         self._type = device_type
         self._write_to_hub = xiaomi_hub.write_to_hub
         self._get_from_hub = xiaomi_hub.get_from_hub
-        self._device_state_attributes = {}
+        self._extra_state_attributes = {}
         self._remove_unavailability_tracker = None
         self._xiaomi_hub = xiaomi_hub
         self.parse_data(device["data"], device["raw_data"])
@@ -288,23 +283,23 @@ class XiaomiDevice(Entity):
         return self._device_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the Xiaomi Aqara device."""
         if self._is_gateway:
-            device_info = {
-                "identifiers": {(DOMAIN, self._device_id)},
-                "model": self._model,
-            }
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._device_id)},
+                model=self._model,
+            )
         else:
-            device_info = {
-                "connections": {(dr.CONNECTION_ZIGBEE, self._device_id)},
-                "identifiers": {(DOMAIN, self._device_id)},
-                "manufacturer": "Xiaomi Aqara",
-                "model": self._model,
-                "name": self._device_name,
-                "sw_version": self._protocol,
-                "via_device": (DOMAIN, self._gateway_id),
-            }
+            device_info = DeviceInfo(
+                connections={(dr.CONNECTION_ZIGBEE, self._device_id)},
+                identifiers={(DOMAIN, self._device_id)},
+                manufacturer="Xiaomi Aqara",
+                model=self._model,
+                name=self._device_name,
+                sw_version=self._protocol,
+                via_device=(DOMAIN, self._gateway_id),
+            )
 
         return device_info
 
@@ -319,9 +314,9 @@ class XiaomiDevice(Entity):
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
-        return self._device_state_attributes
+        return self._extra_state_attributes
 
     @callback
     def _async_set_unavailable(self, now):
@@ -364,11 +359,11 @@ class XiaomiDevice(Entity):
         max_volt = 3300
         min_volt = 2800
         voltage = data[voltage_key]
-        self._device_state_attributes[ATTR_VOLTAGE] = round(voltage / 1000.0, 2)
+        self._extra_state_attributes[ATTR_VOLTAGE] = round(voltage / 1000.0, 2)
         voltage = min(voltage, max_volt)
         voltage = max(voltage, min_volt)
         percent = ((voltage - min_volt) / (max_volt - min_volt)) * 100
-        self._device_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
+        self._extra_state_attributes[ATTR_BATTERY_LEVEL] = round(percent, 1)
         return True
 
     def parse_data(self, data, raw_data):
@@ -390,8 +385,7 @@ def _add_gateway_to_schema(hass, schema):
         raise vol.Invalid(f"Unknown gateway sid {sid}")
 
     kwargs = {}
-    xiaomi_data = hass.data.get(DOMAIN)
-    if xiaomi_data is not None:
+    if (xiaomi_data := hass.data.get(DOMAIN)) is not None:
         gateways = list(xiaomi_data[GATEWAYS_KEY].values())
 
         # If the user has only 1 gateway, make it the default for services.

@@ -1,0 +1,88 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "one": "Bo\u015f",
+            "other": "Bo\u015f"
+        },
+        "step": {
+            "one": "Bo\u015f",
+            "other": "Bo\u015f",
+            "setup_network": {
+                "data": {
+                    "host": "Ana Bilgisayar",
+                    "port": "Port"
+                },
+                "title": "Ba\u011flant\u0131 adresini se\u00e7in"
+            },
+            "setup_serial": {
+                "data": {
+                    "device": "Cihaz se\u00e7"
+                },
+                "title": "Cihaz"
+            },
+            "setup_serial_manual_path": {
+                "data": {
+                    "device": "USB Cihaz Yolu"
+                },
+                "title": "Yol"
+            },
+            "user": {
+                "data": {
+                    "type": "Ba\u011flant\u0131 t\u00fcr\u00fc"
+                },
+                "title": "Ba\u011flant\u0131 t\u00fcr\u00fcn\u00fc se\u00e7in"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "send_command": "Komut g\u00f6nder: {subtype}",
+            "send_status": "Durum g\u00fcncellemesi g\u00f6nder: {subtype}"
+        },
+        "trigger_type": {
+            "command": "Al\u0131nan komut: {subtype}",
+            "status": "Al\u0131nan durum: {subtype}"
+        }
+    },
+    "one": "Bo\u015f",
+    "options": {
+        "error": {
+            "already_configured_device": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "invalid_event_code": "Ge\u00e7ersiz etkinlik kodunu",
+            "invalid_input_2262_off": "Komut kapatma i\u00e7in ge\u00e7ersiz giri\u015f",
+            "invalid_input_2262_on": "A\u00e7ma komutu i\u00e7in ge\u00e7ersiz giri\u015f",
+            "invalid_input_off_delay": "Kapanma gecikmesi i\u00e7in ge\u00e7ersiz giri\u015f",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "prompt_options": {
+                "data": {
+                    "automatic_add": "Otomatik eklemeyi etkinle\u015ftir",
+                    "debug": "Hata ay\u0131klamay\u0131 etkinle\u015ftir",
+                    "device": "Yap\u0131land\u0131rmak i\u00e7in cihaz\u0131 se\u00e7in",
+                    "event_code": "Eklemek i\u00e7in etkinlik kodunu girin",
+                    "protocols": "Protokoller"
+                },
+                "title": "Rfxtrx Se\u00e7enekleri"
+            },
+            "set_device_options": {
+                "data": {
+                    "command_off": "Komut kapatma i\u00e7in veri bitleri de\u011feri",
+                    "command_on": "Komut i\u00e7in veri bitleri de\u011feri",
+                    "data_bit": "Veri biti say\u0131s\u0131",
+                    "off_delay": "Kapanma gecikmesi",
+                    "off_delay_enabled": "Kapatma gecikmesini etkinle\u015ftir",
+                    "replace_device": "De\u011fi\u015ftirilecek cihaz\u0131 se\u00e7in",
+                    "venetian_blind_mode": "Jaluzi modu"
+                },
+                "title": "Cihaz se\u00e7eneklerini yap\u0131land\u0131r\u0131n"
+            }
+        }
+    },
+    "other": "Bo\u015f"
+}

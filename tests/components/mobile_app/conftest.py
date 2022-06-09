@@ -1,4 +1,6 @@
 """Tests for mobile_app component."""
+from http import HTTPStatus
+
 # pylint: disable=redefined-outer-name,unused-import
 import pytest
 
@@ -6,14 +8,6 @@ from homeassistant.components.mobile_app.const import DOMAIN
 from homeassistant.setup import async_setup_component
 
 from .const import REGISTER, REGISTER_CLEARTEXT
-
-from tests.common import mock_device_registry
-
-
-@pytest.fixture
-def registry(hass):
-    """Return a configured device registry."""
-    return mock_device_registry(hass)
 
 
 @pytest.fixture
@@ -25,14 +19,14 @@ async def create_registrations(hass, authed_api_client):
         "/api/mobile_app/registrations", json=REGISTER
     )
 
-    assert enc_reg.status == 201
+    assert enc_reg.status == HTTPStatus.CREATED
     enc_reg_json = await enc_reg.json()
 
     clear_reg = await authed_api_client.post(
         "/api/mobile_app/registrations", json=REGISTER_CLEARTEXT
     )
 
-    assert clear_reg.status == 201
+    assert clear_reg.status == HTTPStatus.CREATED
     clear_reg_json = await clear_reg.json()
 
     await hass.async_block_till_done()
@@ -56,7 +50,7 @@ async def push_registration(hass, authed_api_client):
         },
     )
 
-    assert enc_reg.status == 201
+    assert enc_reg.status == HTTPStatus.CREATED
     return await enc_reg.json()
 
 

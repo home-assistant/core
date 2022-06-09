@@ -1,6 +1,8 @@
 """Helper for Netatmo integration."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 
 @dataclass
@@ -14,4 +16,4 @@ class NetatmoArea:
     lon_sw: float
     mode: str
     show_on_map: bool
-    uuid: str = uuid4()
+    uuid: UUID = uuid4()

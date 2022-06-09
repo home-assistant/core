@@ -4,6 +4,7 @@
             "arm_away": "Arm {entity_name} away",
             "arm_home": "Arm {entity_name} home",
             "arm_night": "Arm {entity_name} night",
+            "arm_vacation": "Arm {entity_name} vacation",
             "disarm": "Disarm {entity_name}",
             "trigger": "Trigger {entity_name}"
         },
@@ -11,6 +12,7 @@
             "is_armed_away": "{entity_name} is armed away",
             "is_armed_home": "{entity_name} is armed home",
             "is_armed_night": "{entity_name} is armed night",
+            "is_armed_vacation": "{entity_name} is armed vacation",
             "is_disarmed": "{entity_name} is disarmed",
             "is_triggered": "{entity_name} is triggered"
         },
@@ -18,6 +20,7 @@
             "armed_away": "{entity_name} armed away",
             "armed_home": "{entity_name} armed home",
             "armed_night": "{entity_name} armed night",
+            "armed_vacation": "{entity_name} armed vacation",
             "disarmed": "{entity_name} disarmed",
             "triggered": "{entity_name} triggered"
         }
@@ -29,6 +32,7 @@
             "armed_custom_bypass": "Armed custom bypass",
             "armed_home": "Armed home",
             "armed_night": "Armed night",
+            "armed_vacation": "Armed vacation",
             "arming": "Arming",
             "disarmed": "Disarmed",
             "disarming": "Disarming",

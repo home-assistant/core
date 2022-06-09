@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "ignore_ip6_link_local": "L'enlla\u00e7 amb adreces IPv6 locals no est\u00e0 perm\u00e8s",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "upnp_not_configured": "Falta la configuraci\u00f3 UPnP al dispositiu."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "S'ha descobert FRITZ!Box: {name} \n\nConfigura FRITZ!Box Tools per controlar {name}",
+                "title": "Configuraci\u00f3 de FRITZ!Box Tools"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Actualitza les credencials de FRITZ!Box Tools de: {host}.\n\nFRITZ!Box Tools no pot iniciar sessi\u00f3 a FRITZ!Box.",
+                "title": "Actualitzant les credencials de FRITZ!Box Tools"
+            },
+            "user": {
+                "data": {
+                    "host": "Amfitri\u00f3",
+                    "password": "Contrasenya",
+                    "port": "Port",
+                    "username": "Nom d'usuari"
+                },
+                "description": "Configura FRITZ!Box Tools per poder controlar FRITZ!Box.\nEl m\u00ednim necessari \u00e9s: nom d'usuari i contrasenya.",
+                "title": "Configuraci\u00f3 de FRITZ!Box Tools"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Segons d'espera abans de considerar un dispositiu a 'casa'",
+                    "old_discovery": "Activa el m\u00e8tode de descobriment antic"
+                }
+            }
+        }
+    }
+}

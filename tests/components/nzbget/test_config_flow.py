@@ -1,4 +1,6 @@
 """Test the NZBGet config flow."""
+from unittest.mock import patch
+
 from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
@@ -9,25 +11,21 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
 from . import (
     ENTRY_CONFIG,
     USER_INPUT,
-    _patch_async_setup,
     _patch_async_setup_entry,
     _patch_history,
     _patch_status,
     _patch_version,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
 async def test_user_form(hass):
     """Test we get the user initiated form."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -35,7 +33,7 @@ async def test_user_form(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             USER_INPUT,
@@ -46,13 +44,11 @@ async def test_user_form(hass):
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: False}
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_user_form_show_advanced_options(hass):
     """Test we get the user initiated form with advanced options shown."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
@@ -65,7 +61,7 @@ async def test_user_form_show_advanced_options(hass):
         CONF_VERIFY_SSL: True,
     }
 
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry() as mock_setup_entry:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input_advanced,
@@ -76,7 +72,6 @@ async def test_user_form_show_advanced_options(hass):
     assert result["title"] == "10.10.10.30"
     assert result["data"] == {**USER_INPUT, CONF_VERIFY_SSL: True}
 
-    assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -151,7 +146,7 @@ async def test_options_flow(hass, nzbget_api):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    with _patch_async_setup(), _patch_async_setup_entry():
+    with _patch_async_setup_entry():
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={CONF_SCAN_INTERVAL: 15},

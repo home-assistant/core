@@ -1,0 +1,106 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "not_insteon_device": "Ke\u015ffedilen cihaz bir Insteon cihaz\u0131 de\u011fil",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "select_single": "Bir se\u00e7enek belirleyin."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm_usb": {
+                "description": "{name} kurulumunu yapmak istiyor musunuz?"
+            },
+            "hubv1": {
+                "data": {
+                    "host": "IP Adresi",
+                    "port": "Port"
+                },
+                "description": "Insteon Hub S\u00fcr\u00fcm 1 'i (2014 \u00f6ncesi) yap\u0131land\u0131r\u0131n.",
+                "title": "Insteon Hub S\u00fcr\u00fcm 1"
+            },
+            "hubv2": {
+                "data": {
+                    "host": "IP Adresi",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Insteon Hub S\u00fcr\u00fcm 2'yi yap\u0131land\u0131r\u0131n.",
+                "title": "Insteon Hub S\u00fcr\u00fcm 2"
+            },
+            "plm": {
+                "data": {
+                    "device": "USB Cihaz Yolu"
+                },
+                "description": "Insteon PowerLink Modemini (PLM) yap\u0131land\u0131r\u0131n.",
+                "title": "Insteon PLM'si"
+            },
+            "user": {
+                "data": {
+                    "modem_type": "Modem t\u00fcr\u00fc."
+                },
+                "description": "Insteon modem tipini se\u00e7in."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "input_error": "Ge\u00e7ersiz giri\u015fler, l\u00fctfen de\u011ferlerinizi kontrol edin.",
+            "select_single": "Bir se\u00e7enek belirleyin."
+        },
+        "step": {
+            "add_override": {
+                "data": {
+                    "address": "Cihaz adresi (\u00f6rnek: 1a2b3c)",
+                    "cat": "Cihaz alt kategorisi (\u00f6rnek: 0x10)",
+                    "subcat": "Cihaz alt kategorisi (yani 0x0a)"
+                },
+                "description": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lma ekleyin."
+            },
+            "add_x10": {
+                "data": {
+                    "housecode": "Ev kodu (a - p)",
+                    "platform": "Platform",
+                    "steps": "Dimmer ad\u0131mlar\u0131 (yaln\u0131zca hafif cihazlar i\u00e7in varsay\u0131lan 22)",
+                    "unitcode": "Birim kodu (1 - 16)"
+                },
+                "description": "Insteon Hub parolas\u0131n\u0131 de\u011fi\u015ftirin."
+            },
+            "change_hub_config": {
+                "data": {
+                    "host": "IP Adresi",
+                    "password": "Parola",
+                    "port": "Port",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "Insteon Hub ba\u011flant\u0131 bilgilerini de\u011fi\u015ftirin. Bu de\u011fi\u015fikli\u011fi yapt\u0131ktan sonra Home Assistant'\u0131 yeniden ba\u015flatman\u0131z gerekir. Bu, Hub'\u0131n yap\u0131land\u0131rmas\u0131n\u0131 de\u011fi\u015ftirmez. Hub'daki yap\u0131land\u0131rmay\u0131 de\u011fi\u015ftirmek i\u00e7in Hub uygulamas\u0131n\u0131 kullan\u0131n."
+            },
+            "init": {
+                "data": {
+                    "add_override": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lma ekleyin.",
+                    "add_x10": "Bir X10 cihaz\u0131 ekleyin.",
+                    "change_hub_config": "Hub yap\u0131land\u0131rmas\u0131n\u0131 de\u011fi\u015ftirin.",
+                    "remove_override": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lma i\u015flemini kald\u0131r\u0131n.",
+                    "remove_x10": "Bir X10 cihaz\u0131n\u0131 \u00e7\u0131kar\u0131n."
+                }
+            },
+            "remove_override": {
+                "data": {
+                    "address": "Kald\u0131r\u0131lacak bir cihaz adresi se\u00e7in"
+                },
+                "description": "Bir cihaz\u0131 ge\u00e7ersiz k\u0131lmay\u0131 kald\u0131rma"
+            },
+            "remove_x10": {
+                "data": {
+                    "address": "Kald\u0131r\u0131lacak bir cihaz adresi se\u00e7in"
+                },
+                "description": "Bir X10 cihaz\u0131n\u0131 kald\u0131r\u0131n"
+            }
+        }
+    }
+}

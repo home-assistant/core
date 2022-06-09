@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "backoff": "El dispositivo no acepta solicitudes de emparejamiento en este momento (es posible que haya ingresado un c\u00f3digo PIN no v\u00e1lido demasiadas veces), vuelva a intentarlo m\u00e1s tarde.",
+            "device_did_not_pair": "No se intent\u00f3 finalizar el proceso de emparejamiento desde el dispositivo."
+        },
+        "step": {
+            "confirm": {
+                "description": "Est\u00e1 a punto de agregar el Apple TV llamado `{name} ` a Home Assistant. \n\n** Para completar el proceso, es posible que deba ingresar varios c\u00f3digos PIN. ** \n\nTenga en cuenta que *no* podr\u00e1 apagar su Apple TV con esta integraci\u00f3n. \u00a1Solo se apagar\u00e1 el reproductor multimedia en Home Assistant!",
+                "title": "Confirma la adici\u00f3n de Apple TV"
+            },
+            "pair_no_pin": {
+                "description": "El emparejamiento es necesario para el servicio `{protocol}`. Ingresa el PIN {pin} en tu Apple TV para continuar.",
+                "title": "Emparejamiento"
+            },
+            "pair_with_pin": {
+                "description": "El emparejamiento es necesario para el `{protocol}`. Ingrese el c\u00f3digo PIN que se muestra en la pantalla. Se omitir\u00e1n los ceros iniciales, es decir, introduzca 123 si el c\u00f3digo que se muestra es 0123.",
+                "title": "Emparejamiento"
+            },
+            "reconfigure": {
+                "description": "Este Apple TV est\u00e1 experimentando algunas dificultades de conexi\u00f3n y debe reconfigurarse.",
+                "title": "Reconfiguraci\u00f3n del dispositivo"
+            },
+            "service_problem": {
+                "description": "Ocurri\u00f3 un problema al emparejar el protocolo \" {protocol} \". Ser\u00e1 ignorado.",
+                "title": "No se pudo agregar el servicio"
+            },
+            "user": {
+                "data": {
+                    "device_input": "Dispositivo"
+                },
+                "description": "Comience ingresando el nombre del dispositivo (por ejemplo, cocina o dormitorio) o la direcci\u00f3n IP del Apple TV que desea agregar. Si se encontraron dispositivos autom\u00e1ticamente en su red, se muestran a continuaci\u00f3n. \n\nSi no puede ver su dispositivo o experimenta alg\u00fan problema, intente especificar la direcci\u00f3n IP del dispositivo. \n\n{devices}",
+                "title": "Configurar un nuevo Apple TV"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "start_off": "No encienda el dispositivo al iniciar Home Assistant"
+                },
+                "description": "Configurar los ajustes generales del dispositivo"
+            }
+        }
+    }
+}

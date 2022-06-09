@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi"
+                },
+                "description": "Seadista P1 -monitor Home Assistantiga sidumiseks."
+            }
+        }
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "azimuth": "Azimut (360 degr\u00e9s, 0 = Nord, 90 = Est, 180 = Sud, 270 = Ouest)",
+                    "declination": "D\u00e9clinaison (0 = horizontale, 90 = verticale)",
+                    "latitude": "Latitude",
+                    "longitude": "Longitude",
+                    "modules power": "Puissance de cr\u00eate totale en watts de vos modules solaires",
+                    "name": "Nom"
+                },
+                "description": "Remplissez les donn\u00e9es de vos panneaux solaires. Veuillez vous r\u00e9f\u00e9rer \u00e0 la documentation si un champ n'est pas clair."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "api_key": "Cl\u00e9 API Forecast.Solar (facultatif)",
+                    "azimuth": "Azimut (360 degr\u00e9s, 0 = Nord, 90 = Est, 180 = Sud, 270 = Ouest)",
+                    "damping": "Facteur d'amortissement : ajuste les r\u00e9sultats matin et soir",
+                    "declination": "D\u00e9clinaison (0 = horizontale, 90 = verticale)",
+                    "inverter_size": "Taille de l'onduleur (en watts)",
+                    "modules power": "Puissance de cr\u00eate totale en watts de vos modules solaires"
+                },
+                "description": "Ces valeurs permettent de peaufiner le r\u00e9sultat Solar.Forecast. Veuillez vous r\u00e9f\u00e9rer \u00e0 la documentation si un champ n'est pas clair."
+            }
+        }
+    }
+}

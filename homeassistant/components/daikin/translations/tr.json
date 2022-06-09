@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "api_password": "Ge\u00e7ersiz kimlik do\u011frulama , API Anahtar\u0131 veya Parola kullan\u0131n.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "host": "Sunucu",
+                    "password": "Parola"
+                },
+                "description": "IP Adresi de\u011ferini girin. \n\n API Anahtar\u0131 ve Parola \u00f6\u011felerinin s\u0131ras\u0131yla BRP072Cxx ve SKYFi cihazlar\u0131 taraf\u0131ndan kullan\u0131ld\u0131\u011f\u0131n\u0131 unutmay\u0131n.",
+                "title": "Daikin AC'yi yap\u0131land\u0131r\u0131n"
+            }
+        }
+    }
+}

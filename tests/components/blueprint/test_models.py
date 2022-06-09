@@ -1,12 +1,11 @@
 """Test blueprint models."""
 import logging
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.blueprint import errors, models
 from homeassistant.util.yaml import Input
-
-from tests.async_mock import patch
 
 
 @pytest.fixture
@@ -119,18 +118,15 @@ def test_blueprint_validate():
         is None
     )
 
-    assert (
-        models.Blueprint(
-            {
-                "blueprint": {
-                    "name": "Hello",
-                    "domain": "automation",
-                    "homeassistant": {"min_version": "100000.0.0"},
-                },
-            }
-        ).validate()
-        == ["Requires at least Home Assistant 100000.0.0"]
-    )
+    assert models.Blueprint(
+        {
+            "blueprint": {
+                "name": "Hello",
+                "domain": "automation",
+                "homeassistant": {"min_version": "100000.0.0"},
+            },
+        }
+    ).validate() == ["Requires at least Home Assistant 100000.0.0"]
 
 
 def test_blueprint_inputs(blueprint_2):

@@ -7,17 +7,29 @@
         },
         "error": {
             "one": "Vuoto",
-            "other": "Vuoto"
+            "other": "Vuoti"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
+            "init": {
+                "one": "Vuoto",
+                "other": "Vuoti"
+            },
             "ssdp_confirm": {
                 "description": "Vuoi configurare questo dispositivo UPnP/IGD?"
             },
             "user": {
                 "data": {
-                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)",
-                    "usn": "Dispositivo"
+                    "unique_id": "Dispositivo"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di aggiornamento (secondi, minimo 30)"
                 }
             }
         }

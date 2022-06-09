@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Agentversjon",
             "board": "Styret",
             "disk_total": "Disk totalt",
             "disk_used": "Disk brukt",
@@ -14,6 +15,5 @@
             "update_channel": "Oppdater kanal",
             "version_api": "Versjon API"
         }
-    },
-    "title": ""
+    }
 }

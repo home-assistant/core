@@ -5,10 +5,32 @@ import sys
 from time import monotonic
 
 from . import (
+    application_credentials,
     codeowners,
     config_flow,
     coverage,
     dependencies,
+    dhcp,
+    json,
+    manifest,
+    metadata,
+    mqtt,
+    mypy_config,
+    requirements,
+    services,
+    ssdp,
+    translations,
+    usb,
+    zeroconf,
+)
+from .model import Config, Integration
+
+INTEGRATION_PLUGINS = [
+    application_credentials,
+    codeowners,
+    config_flow,
+    dependencies,
+    dhcp,
     json,
     manifest,
     mqtt,
@@ -16,24 +38,18 @@ from . import (
     services,
     ssdp,
     translations,
-    zeroconf,
-)
-from .model import Config, Integration
-
-INTEGRATION_PLUGINS = [
-    json,
-    codeowners,
-    config_flow,
-    dependencies,
-    manifest,
-    mqtt,
-    services,
-    ssdp,
-    translations,
+    usb,
     zeroconf,
 ]
 HASS_PLUGINS = [
     coverage,
+    mypy_config,
+    metadata,
+]
+
+ALL_PLUGIN_NAMES = [
+    plugin.__name__.rsplit(".", maxsplit=1)[-1]
+    for plugin in (*INTEGRATION_PLUGINS, *HASS_PLUGINS)
 ]
 
 
@@ -44,6 +60,17 @@ def valid_integration_path(integration_path):
         raise argparse.ArgumentTypeError(f"{integration_path} is not a directory.")
 
     return path
+
+
+def validate_plugins(plugin_names: str) -> list[str]:
+    """Split and validate plugin names."""
+    all_plugin_names = set(ALL_PLUGIN_NAMES)
+    plugins = plugin_names.split(",")
+    for plugin in plugins:
+        if plugin not in all_plugin_names:
+            raise argparse.ArgumentTypeError(f"{plugin} is not a valid plugin name")
+
+    return plugins
 
 
 def get_config() -> Config:
@@ -62,6 +89,13 @@ def get_config() -> Config:
         "--requirements",
         action="store_true",
         help="Validate requirements",
+    )
+    parser.add_argument(
+        "-p",
+        "--plugins",
+        type=validate_plugins,
+        default=ALL_PLUGIN_NAMES,
+        help="Comma-separate list of plugins to run. Valid plugin names: %(default)s",
     )
     parsed = parser.parse_args()
 
@@ -84,6 +118,7 @@ def get_config() -> Config:
         specific_integrations=parsed.integration_path,
         action=parsed.action,
         requirements=parsed.requirements,
+        plugins=set(parsed.plugins),
     )
 
 
@@ -96,9 +131,6 @@ def main():
         return 1
 
     plugins = [*INTEGRATION_PLUGINS]
-
-    if config.requirements:
-        plugins.append(requirements)
 
     if config.specific_integrations:
         integrations = {}
@@ -113,13 +145,20 @@ def main():
         plugins += HASS_PLUGINS
 
     for plugin in plugins:
+        plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
+        if plugin_name not in config.plugins:
+            continue
         try:
             start = monotonic()
-            print(f"Validating {plugin.__name__.split('.')[-1]}...", end="", flush=True)
-            if plugin is requirements and not config.specific_integrations:
+            print(f"Validating {plugin_name}...", end="", flush=True)
+            if (
+                plugin is requirements
+                and config.requirements
+                and not config.specific_integrations
+            ):
                 print()
             plugin.validate(integrations, config)
-            print(" done in {:.2f}s".format(monotonic() - start))
+            print(f" done in {monotonic() - start:.2f}s")
         except RuntimeError as err:
             print()
             print()
@@ -153,6 +192,9 @@ def main():
 
         if config.action == "generate":
             for plugin in plugins:
+                plugin_name = plugin.__name__.rsplit(".", maxsplit=1)[-1]
+                if plugin_name not in config.plugins:
+                    continue
                 if hasattr(plugin, "generate"):
                     plugin.generate(integrations, config)
         return 0
@@ -181,7 +223,7 @@ def print_integrations_status(config, integrations, *, show_fixable_errors=True)
         print(f"Integration {integration.domain}{extra}:")
         for error in integration.errors:
             if show_fixable_errors or not error.fixable:
-                print("*", error)
+                print("*", "[ERROR]", error)
         for warning in integration.warnings:
             print("*", "[WARNING]", warning)
         print()

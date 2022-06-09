@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "destination": "\u76ee\u7684\u5730",
+                    "name": "\u540d\u7a31",
+                    "origin": "\u51fa\u767c\u5730",
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u65bc\u51fa\u767c\u5730\u8207\u76ee\u7684\u5730\u3001\u8f38\u5165\u5730\u5740\u6216 GPS \u5ea7\u6a19\uff08GPS \u5ea7\u6a19\u4ee5\u9017\u865f\u5206\u9694\uff09\u3002\u540c\u6642\u4e5f\u53ef\u4ee5\u8f38\u5165\u5305\u542b\u72c0\u614b\u7684\u5be6\u9ad4 ID\u3001\u5305\u542b\u7d93\u7def\u5ea6\u5c6c\u6027\u7684\u5be6\u9ad4\u3001\u6216\u5340\u57df\u7684\u540d\u7a31\u3002"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "avoid_ferries": "\u907f\u958b\u6e21\u8f2a\uff1f",
+                    "avoid_subscription_roads": "\u907f\u958b\u9700\u8981\u5716\u5b9a\u6a19\u793a / \u8a02\u95b1\u8def\u7dda\uff1f",
+                    "avoid_toll_roads": "\u907f\u958b\u6536\u8cbb\u9053\u8def\uff1f",
+                    "excl_filter": "\u6240\u9078\u64c7\u8def\u7dda\u63cf\u8ff0\u4e0d\u5305\u542b Substring",
+                    "incl_filter": "\u6240\u9078\u64c7\u8def\u7dda\u63cf\u8ff0\u5305\u542b Substring",
+                    "realtime": "\u5373\u6642\u65c5\u7a0b\u6642\u9593\uff1f",
+                    "units": "\u55ae\u4f4d",
+                    "vehicle_type": "\u8eca\u8f1b\u985e\u5225"
+                },
+                "description": "`substring` \u8f38\u5165\u53ef\u4f9b\u5f37\u5236\u6574\u5408\u3001\u65bc\u8a08\u7b97\u65c5\u7a0b\u6642\u9593\u6642\uff0c\u4f7f\u7528\u7279\u5b9a\u8def\u7dda\u6216\u907f\u958b\u4f7f\u7528\u7279\u5b9a\u8def\u7dda\u3002"
+            }
+        }
+    },
+    "title": "Waze \u65c5\u7a0b\u6642\u9593"
+}

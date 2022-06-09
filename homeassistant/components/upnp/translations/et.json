@@ -9,7 +9,7 @@
             "one": "\u00fcks",
             "other": "Teine"
         },
-        "flow_title": "UPnP / IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "init": {
                 "one": "\u00dcks",
@@ -20,8 +20,16 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "P\u00e4ringute intervall (sekundites, v\u00e4hemalt 30)",
-                    "usn": "Seade"
+                    "unique_id": "Seade"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute intervall (sekundites, v\u00e4hemalt 30)"
                 }
             }
         }

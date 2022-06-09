@@ -1,0 +1,22 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u7801"
+                },
+                "description": "\u914d\u7f6e FRITZ!Box Tool \u4ee5\u63a7\u5236\u60a8\u7684 FRITZ!Box\u3002\n\u6700\u4f4e\u4fe1\u606f\u63d0\u4f9b\u8981\u6c42\uff1a\u7528\u6237\u540d\u3001\u5bc6\u7801\u3002"
+            }
+        }
+    }
+}

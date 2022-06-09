@@ -1,5 +1,6 @@
 """Prowl notification service."""
 import asyncio
+from http import HTTPStatus
 import logging
 
 import async_timeout
@@ -12,7 +13,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_KEY, HTTP_OK
+from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -48,16 +49,18 @@ class ProwlNotificationService(BaseNotificationService):
             "description": message,
             "priority": data["priority"] if data and "priority" in data else 0,
         }
+        if data and data.get("url"):
+            payload["url"] = data["url"]
 
         _LOGGER.debug("Attempting call Prowl service at %s", url)
         session = async_get_clientsession(self._hass)
 
         try:
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await session.post(url, data=payload)
                 result = await response.text()
 
-            if response.status != HTTP_OK or "error" in result:
+            if response.status != HTTPStatus.OK or "error" in result:
                 _LOGGER.error(
                     "Prowl service returned http status %d, response %s",
                     response.status,

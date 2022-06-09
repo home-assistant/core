@@ -3,5 +3,6 @@
   "name": "Speech-to-Text (STT)",
   "documentation": "https://www.home-assistant.io/integrations/stt",
   "dependencies": ["http"],
-  "codeowners": ["@pvizeli"]
+  "codeowners": ["@pvizeli"],
+  "quality_scale": "internal"
 }

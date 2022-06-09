@@ -1,23 +1,43 @@
 """Switch support for the Skybell HD Doorbell."""
+from __future__ import annotations
+
+from typing import Any, cast
+
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    PLATFORM_SCHEMA,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
+from .const import DOMAIN
+from .entity import SkybellEntity
 
-# Switch types: Name
-SWITCH_TYPES = {
-    "do_not_disturb": ["Do Not Disturb"],
-    "motion_sensor": ["Motion Sensor"],
-}
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="do_not_disturb",
+        name="Do Not Disturb",
+    ),
+    SwitchEntityDescription(
+        key="do_not_ring",
+        name="Do Not Ring",
+    ),
+    SwitchEntityDescription(
+        key="motion_sensor",
+        name="Motion Sensor",
+    ),
+)
 
+# Deprecated in Home Assistant 2022.6
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
+        vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
             cv.ensure_list, [vol.In(SWITCH_TYPES)]
         ),
@@ -25,43 +45,29 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the SkyBell switch."""
+    async_add_entities(
+        SkybellSwitch(coordinator, description)
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
+        for description in SWITCH_TYPES
+    )
 
-    sensors = []
-    for switch_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in skybell.get_devices():
-            sensors.append(SkybellSwitch(device, switch_type))
 
-    add_entities(sensors, True)
-
-
-class SkybellSwitch(SkybellDevice, SwitchEntity):
+class SkybellSwitch(SkybellEntity, SwitchEntity):
     """A switch implementation for Skybell devices."""
 
-    def __init__(self, device, switch_type):
-        """Initialize a light for a Skybell device."""
-        super().__init__(device)
-        self._switch_type = switch_type
-        self._name = "{} {}".format(
-            self._device.name, SWITCH_TYPES[self._switch_type][0]
-        )
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        setattr(self._device, self._switch_type, True)
+        await self._device.async_set_setting(self.entity_description.key, True)
 
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        setattr(self._device, self._switch_type, False)
+        await self._device.async_set_setting(self.entity_description.key, False)
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return getattr(self._device, self._switch_type)
+    def is_on(self) -> bool:
+        """Return true if entity is on."""
+        return cast(bool, getattr(self._device, self.entity_description.key))

@@ -1,4 +1,6 @@
 """Test the Soundtouch component."""
+from unittest.mock import call, patch
+
 from libsoundtouch.device import (
     Config,
     Preset,
@@ -25,8 +27,6 @@ from homeassistant.components.soundtouch.media_player import (
 from homeassistant.const import STATE_OFF, STATE_PAUSED, STATE_PLAYING
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import call, patch
 
 # pylint: disable=super-init-not-called
 
@@ -488,7 +488,7 @@ async def test_media_commands(mocked_status, mocked_volume, hass, one_device):
     assert mocked_volume.call_count == 2
 
     entity_1_state = hass.states.get("media_player.soundtouch_1")
-    assert entity_1_state.attributes["supported_features"] == 20413
+    assert entity_1_state.attributes["supported_features"] == 151485
 
 
 @patch("libsoundtouch.device.SoundTouchDevice.power_off")

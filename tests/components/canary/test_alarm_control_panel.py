@@ -1,4 +1,6 @@
 """The tests for the Canary alarm_control_panel platform."""
+from unittest.mock import PropertyMock, patch
+
 from canary.api import LOCATION_MODE_AWAY, LOCATION_MODE_HOME, LOCATION_MODE_NIGHT
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
@@ -14,17 +16,16 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_UNKNOWN,
 )
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 
 from . import mock_device, mock_location, mock_mode
 
-from tests.async_mock import PropertyMock, patch
 from tests.common import mock_registry
 
 
 async def test_alarm_control_panel(hass, canary) -> None:
     """Test the creation and values of the alarm_control_panel for Canary."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     registry = mock_registry(hass)
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
@@ -59,7 +60,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
     # test private system
     type(mocked_location).is_private = PropertyMock(return_value=True)
 
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -74,7 +75,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
         return_value=mock_mode(4, LOCATION_MODE_HOME)
     )
 
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -86,7 +87,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
         return_value=mock_mode(5, LOCATION_MODE_AWAY)
     )
 
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -98,7 +99,7 @@ async def test_alarm_control_panel(hass, canary) -> None:
         return_value=mock_mode(6, LOCATION_MODE_NIGHT)
     )
 
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
@@ -108,7 +109,6 @@ async def test_alarm_control_panel(hass, canary) -> None:
 
 async def test_alarm_control_panel_services(hass, canary) -> None:
     """Test the services of the alarm_control_panel for Canary."""
-    await async_setup_component(hass, "persistent_notification", {})
 
     online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro")
 

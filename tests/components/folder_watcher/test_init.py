@@ -1,10 +1,9 @@
 """The tests for the folder_watcher component."""
 import os
+from unittest.mock import Mock, patch
 
 from homeassistant.components import folder_watcher
 from homeassistant.setup import async_setup_component
-
-from tests.async_mock import Mock, patch
 
 
 async def test_invalid_path_setup(hass):

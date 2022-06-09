@@ -1,5 +1,6 @@
 """Tests for the HomeKit AID manager."""
 import os
+from unittest.mock import patch
 
 from fnvhash import fnv1a_32
 import pytest
@@ -12,7 +13,6 @@ from homeassistant.components.homekit.aidmanager import (
 from homeassistant.helpers import device_registry
 from homeassistant.helpers.storage import STORAGE_DIR
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 
@@ -77,7 +77,7 @@ async def test_aid_generation(hass, device_reg, entity_reg):
     aid_storage.delete_aid(get_system_unique_id(light_ent))
     aid_storage.delete_aid(get_system_unique_id(light_ent2))
     aid_storage.delete_aid(get_system_unique_id(remote_ent))
-    aid_storage.delete_aid("non-existant-one")
+    aid_storage.delete_aid("non-existent-one")
 
     for _ in range(0, 2):
         assert (

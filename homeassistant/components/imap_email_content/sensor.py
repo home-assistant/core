@@ -1,4 +1,6 @@
 """Email sensor support."""
+from __future__ import annotations
+
 from collections import deque
 import datetime
 import email
@@ -7,7 +9,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_DATE,
     CONF_NAME,
@@ -15,10 +17,14 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
+    CONF_VERIFY_SSL,
     CONTENT_TYPE_TEXT_PLAIN,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util.ssl import client_context
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,55 +48,63 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_FOLDER, default="INBOX"): cv.string,
+        vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Email sensor platform."""
     reader = EmailReader(
-        config.get(CONF_USERNAME),
-        config.get(CONF_PASSWORD),
-        config.get(CONF_SERVER),
-        config.get(CONF_PORT),
-        config.get(CONF_FOLDER),
+        config[CONF_USERNAME],
+        config[CONF_PASSWORD],
+        config[CONF_SERVER],
+        config[CONF_PORT],
+        config[CONF_FOLDER],
+        config[CONF_VERIFY_SSL],
     )
 
-    value_template = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
+    if (value_template := config.get(CONF_VALUE_TEMPLATE)) is not None:
         value_template.hass = hass
     sensor = EmailContentSensor(
         hass,
         reader,
-        config.get(CONF_NAME) or config.get(CONF_USERNAME),
-        config.get(CONF_SENDERS),
+        config.get(CONF_NAME) or config[CONF_USERNAME],
+        config[CONF_SENDERS],
         value_template,
     )
 
     if sensor.connected:
         add_entities([sensor], True)
-    else:
-        return False
 
 
 class EmailReader:
     """A class to read emails from an IMAP server."""
 
-    def __init__(self, user, password, server, port, folder):
+    def __init__(self, user, password, server, port, folder, verify_ssl):
         """Initialize the Email Reader."""
         self._user = user
         self._password = password
         self._server = server
         self._port = port
         self._folder = folder
+        self._verify_ssl = verify_ssl
         self._last_id = None
         self._unread_ids = deque([])
         self.connection = None
 
     def connect(self):
         """Login and setup the connection."""
+        ssl_context = client_context() if self._verify_ssl else None
         try:
-            self.connection = imaplib.IMAP4_SSL(self._server, self._port)
+            self.connection = imaplib.IMAP4_SSL(
+                self._server, self._port, ssl_context=ssl_context
+            )
             self.connection.login(self._user, self._password)
             return True
         except imaplib.IMAP4.error:
@@ -145,7 +159,7 @@ class EmailReader:
         return None
 
 
-class EmailContentSensor(Entity):
+class EmailContentSensor(SensorEntity):
     """Representation of an EMail sensor."""
 
     def __init__(self, hass, email_reader, name, allowed_senders, value_template):
@@ -166,12 +180,12 @@ class EmailContentSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the current email state."""
         return self._message
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return other state attributes for the message."""
         return self._state_attributes
 
@@ -221,9 +235,11 @@ class EmailContentSensor(Entity):
             elif part.get_content_type() == "text/html":
                 if message_html is None:
                     message_html = part.get_payload()
-            elif part.get_content_type().startswith("text"):
-                if message_untyped_text is None:
-                    message_untyped_text = part.get_payload()
+            elif (
+                part.get_content_type().startswith("text")
+                and message_untyped_text is None
+            ):
+                message_untyped_text = part.get_payload()
 
         if message_text is not None:
             return message_text

@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "ignore_ip6_link_local": "IPv6 \ub9c1\ud06c \ub85c\uceec \uc8fc\uc18c\ub294 \uc9c0\uc6d0\ub418\uc9c0 \uc54a\uc2b5\ub2c8\ub2e4.",
+            "reauth_successful": "\uc7ac\uc778\uc99d\uc5d0 \uc131\uacf5\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "error": {
+            "already_configured": "\uae30\uae30\uac00 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "already_in_progress": "\uae30\uae30 \uad6c\uc131\uc774 \uc774\ubbf8 \uc9c4\ud589 \uc911\uc785\ub2c8\ub2e4",
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4",
+            "invalid_auth": "\uc778\uc99d\uc774 \uc798\ubabb\ub418\uc5c8\uc2b5\ub2c8\ub2e4"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "\ubc1c\uacac\ub41c FRITZ!Box: {name} \n\n FRITZ!Box Tool\uc744 \uc124\uc815\ud558\uc5ec \ub2e4\uc74c\uc744 \uc81c\uc5b4\ud574\ubcf4\uc138\uc694: {name}",
+                "title": "FRITZ!Box Tool \uc124\uc815"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                }
+            },
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "description": "FRITZ!Box Tool\uc744 \uc124\uc815\ud558\uc5ec FRITZ!Box\ub97c \uc81c\uc5b4\ud569\ub2c8\ub2e4.\n \ud544\uc218 \uc785\ub825\uc0ac\ud56d: \uc0ac\uc6a9\uc790 \uc774\ub984, \ube44\ubc00\ubc88\ud638.",
+                "title": "FRITZ!Box Tools \uc124\uc815"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "old_discovery": "\uc774\uc804 \uc7a5\uce58\uac80\uc0c9 \ubc29\ubc95 \uc0ac\uc6a9"
+                }
+            }
+        }
+    }
+}

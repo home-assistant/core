@@ -1,0 +1,52 @@
+{
+    "state": {
+        "yamaha_musiccast__dimmer": {
+            "auto": "Auto"
+        },
+        "yamaha_musiccast__zone_equalizer_mode": {
+            "auto": "Auto",
+            "bypass": "Bypass",
+            "manual": "Manuell"
+        },
+        "yamaha_musiccast__zone_link_audio_delay": {
+            "audio_sync": "Lydsynkronisering",
+            "audio_sync_off": "Lydsynkronisering av",
+            "audio_sync_on": "Lydsynkronisering p\u00e5",
+            "balanced": "Balansert",
+            "lip_sync": "Leppesynkronisering"
+        },
+        "yamaha_musiccast__zone_link_audio_quality": {
+            "compressed": "Komprimert",
+            "uncompressed": "Ukomprimert"
+        },
+        "yamaha_musiccast__zone_link_control": {
+            "speed": "Hastighet",
+            "stability": "Stabilitet",
+            "standard": "Standard"
+        },
+        "yamaha_musiccast__zone_sleep": {
+            "120 min": "120 minutter",
+            "30 min": "30 minutter",
+            "60 min": "60 minutter",
+            "90 min": "90 minutter",
+            "off": "Av"
+        },
+        "yamaha_musiccast__zone_surr_decoder_type": {
+            "auto": "Auto",
+            "dolby_pl": "Dolby ProLogic",
+            "dolby_pl2x_game": "Dolby ProLogic 2x-spill",
+            "dolby_pl2x_movie": "Dolby ProLogic 2x film",
+            "dolby_pl2x_music": "Dolby ProLogic 2x musikk",
+            "dolby_surround": "Dolby Surround",
+            "dts_neo6_cinema": "DTS Neo:6 kino",
+            "dts_neo6_music": "DTS Neo:6 musikk",
+            "dts_neural_x": "DTS Neural:X",
+            "toggle": "Veksle"
+        },
+        "yamaha_musiccast__zone_tone_control_mode": {
+            "auto": "Auto",
+            "bypass": "Bypass",
+            "manual": "Manuell"
+        }
+    }
+}

@@ -14,5 +14,15 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "friendly_name": "Use friendly names for pickup types (when possible)"
+                },
+                "title": "Configure Recollect Waste"
+            }
+        }
     }
 }

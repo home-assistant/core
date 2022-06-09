@@ -1,0 +1,12 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "webhook_set": "\u0642\u0645 \u0628\u062a\u0643\u0648\u064a\u0646 webhooks \u0627\u0644\u062e\u0627\u0635\u0629 \u0628\u0640 motionEye \u0644\u0644\u0625\u0628\u0644\u0627\u063a \u0639\u0646 \u0627\u0644\u0623\u062d\u062f\u0627\u062b \u0644\u0640 Home Assistant",
+                    "webhook_set_overwrite": "\u0627\u0644\u0643\u062a\u0627\u0628\u0629 \u0641\u0648\u0642 webhooks \u063a\u064a\u0631 \u0645\u0639\u0631\u0648\u0641"
+                }
+            }
+        }
+    }
+}

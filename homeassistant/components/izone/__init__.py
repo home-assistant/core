@@ -2,12 +2,16 @@
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_EXCLUDE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_EXCLUDE, Platform
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_CONFIG, IZONE
 from .discovery import async_start_discovery_service, async_stop_discovery_service
+
+PLATFORMS = [Platform.CLIMATE]
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -23,10 +27,9 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Register the iZone component config."""
-    conf = config.get(IZONE)
-    if not conf:
+    if not (conf := config.get(IZONE)):
         return True
 
     hass.data[DATA_CONFIG] = conf
@@ -41,18 +44,14 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType):
     return True
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up from a config entry."""
     await async_start_discovery_service(hass)
-
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(entry, "climate")
-    )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the config entry and stop discovery process."""
     await async_stop_discovery_service(hass)
-    await hass.config_entries.async_forward_entry_unload(entry, "climate")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

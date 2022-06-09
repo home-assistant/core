@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert",
+            "alternative_integration": "Enheten st\u00f8ttes bedre av en annen integrasjon",
+            "cannot_connect": "Tilkobling mislyktes",
+            "discovery_error": "Kunne ikke finne en matchende DLNA -enhet",
+            "incomplete_config": "Konfigurasjonen mangler en n\u00f8dvendig variabel",
+            "non_unique_id": "Flere enheter ble funnet med samme unike ID",
+            "not_dmr": "Enheten er ikke en st\u00f8ttet Digital Media Renderer"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "not_dmr": "Enheten er ikke en st\u00f8ttet Digital Media Renderer"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Vil du starte oppsettet?"
+            },
+            "import_turn_on": {
+                "description": "Sl\u00e5 p\u00e5 enheten og klikk p\u00e5 send for \u00e5 fortsette overf\u00f8ringen"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "URL til en enhetsbeskrivelse XML -fil",
+                "title": "Manuell DLNA DMR -enhetstilkobling"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                },
+                "description": "Velg en enhet du vil konfigurere, eller la den st\u00e5 tom for \u00e5 angi en URL",
+                "title": "Oppdaget DLNA DMR -enheter"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "ugyldig URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "browse_unfiltered": "Vis inkompatible medier n\u00e5r du surfer",
+                    "callback_url_override": "URL for tilbakeringing av hendelseslytter",
+                    "listen_port": "Hendelseslytterport (tilfeldig hvis den ikke er angitt)",
+                    "poll_availability": "Avstemning for tilgjengelighet av enheter"
+                },
+                "title": "DLNA Digital Media Renderer -konfigurasjon"
+            }
+        }
+    }
+}

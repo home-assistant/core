@@ -1,8 +1,10 @@
 """Validate dependencies."""
+from __future__ import annotations
+
 import ast
 from pathlib import Path
-from typing import Dict, Set
 
+from homeassistant.const import Platform
 from homeassistant.requirements import DISCOVERY_INTEGRATIONS
 
 from .model import Integration
@@ -14,7 +16,7 @@ class ImportCollector(ast.NodeVisitor):
     def __init__(self, integration: Integration):
         """Initialize the import collector."""
         self.integration = integration
-        self.referenced: Dict[Path, Set[str]] = {}
+        self.referenced: dict[Path, set[str]] = {}
 
         # Current file or dir we're inspecting
         self._cur_fil_dir = None
@@ -37,6 +39,14 @@ class ImportCollector(ast.NodeVisitor):
     def visit_ImportFrom(self, node):
         """Visit ImportFrom node."""
         if node.module is None:
+            return
+
+        # Exception: we will allow importing the sign path code.
+        if (
+            node.module == "homeassistant.components.http.auth"
+            and len(node.names) == 1
+            and node.names[0].name == "async_sign_path"
+        ):
             return
 
         if node.module.startswith("homeassistant.components."):
@@ -89,6 +99,7 @@ class ImportCollector(ast.NodeVisitor):
 
 
 ALLOWED_USED_COMPONENTS = {
+    *{platform.value for platform in Platform},
     # Internal integrations
     "alert",
     "automation",
@@ -99,10 +110,12 @@ ALLOWED_USED_COMPONENTS = {
     "hassio",
     "homeassistant",
     "input_boolean",
+    "input_button",
     "input_datetime",
     "input_number",
     "input_select",
     "input_text",
+    "media_source",
     "onboarding",
     "persistent_notification",
     "person",
@@ -115,23 +128,6 @@ ALLOWED_USED_COMPONENTS = {
     "webhook",
     "websocket_api",
     "zone",
-    # Entity integrations with platforms
-    "alarm_control_panel",
-    "binary_sensor",
-    "climate",
-    "cover",
-    "device_tracker",
-    "fan",
-    "humidifier",
-    "image_processing",
-    "light",
-    "lock",
-    "media_player",
-    "scene",
-    "sensor",
-    "switch",
-    "vacuum",
-    "water_heater",
     # Other
     "mjpeg",  # base class, has no reqs or component to load.
     "stream",  # Stream cannot install on all systems, can be imported without reqs.
@@ -147,14 +143,18 @@ IGNORE_VIOLATIONS = {
     # Demo
     ("demo", "manual"),
     ("demo", "openalpr_local"),
+    # This would be a circular dep
+    ("http", "network"),
     # This should become a helper method that integrations can submit data to
     ("websocket_api", "lovelace"),
     ("websocket_api", "shopping_list"),
     "logbook",
+    # Migration wizard from zwave to zwave_js.
+    "zwave_js",
 }
 
 
-def calc_allowed_references(integration: Integration) -> Set[str]:
+def calc_allowed_references(integration: Integration) -> set[str]:
     """Return a set of allowed references."""
     allowed_references = (
         ALLOWED_USED_COMPONENTS
@@ -171,9 +171,9 @@ def calc_allowed_references(integration: Integration) -> Set[str]:
 
 
 def find_non_referenced_integrations(
-    integrations: Dict[str, Integration],
+    integrations: dict[str, Integration],
     integration: Integration,
-    references: Dict[Path, Set[str]],
+    references: dict[Path, set[str]],
 ):
     """Find intergrations that are not allowed to be referenced."""
     allowed_references = calc_allowed_references(integration)
@@ -219,7 +219,7 @@ def find_non_referenced_integrations(
 
 
 def validate_dependencies(
-    integrations: Dict[str, Integration], integration: Integration
+    integrations: dict[str, Integration], integration: Integration
 ):
     """Validate all dependencies."""
     # Some integrations are allowed to have violations.
@@ -242,7 +242,7 @@ def validate_dependencies(
         )
 
 
-def validate(integrations: Dict[str, Integration], config):
+def validate(integrations: dict[str, Integration], config):
     """Handle dependencies for integrations."""
     # check for non-existing dependencies
     for integration in integrations.values():

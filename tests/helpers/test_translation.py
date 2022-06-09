@@ -2,21 +2,20 @@
 import asyncio
 from os import path
 import pathlib
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.generated import config_flows
 from homeassistant.helpers import translation
 from homeassistant.loader import async_get_integration
-from homeassistant.setup import async_setup_component, setup_component
-
-from tests.async_mock import Mock, patch
+from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
 def mock_config_flows():
     """Mock the config flows."""
-    flows = []
+    flows = {"integration": [], "helper": {}}
     with patch.object(config_flows, "FLOWS", flows):
         yield flows
 
@@ -34,25 +33,18 @@ def test_recursive_flatten():
     }
 
 
-async def test_component_translation_path(hass):
+async def test_component_translation_path(hass, enable_custom_integrations):
     """Test the component translation file function."""
     assert await async_setup_component(
         hass,
         "switch",
         {"switch": [{"platform": "test"}, {"platform": "test_embedded"}]},
     )
-    assert await async_setup_component(hass, "test_standalone", {"test_standalone"})
     assert await async_setup_component(hass, "test_package", {"test_package"})
 
-    (
-        int_test,
-        int_test_embedded,
-        int_test_standalone,
-        int_test_package,
-    ) = await asyncio.gather(
+    (int_test, int_test_embedded, int_test_package,) = await asyncio.gather(
         async_get_integration(hass, "test"),
         async_get_integration(hass, "test_embedded"),
-        async_get_integration(hass, "test_standalone"),
         async_get_integration(hass, "test_package"),
     )
 
@@ -70,13 +62,6 @@ async def test_component_translation_path(hass):
         hass.config.path(
             "custom_components", "test_embedded", "translations", "switch.en.json"
         )
-    )
-
-    assert (
-        translation.component_translation_path(
-            "test_standalone", "en", int_test_standalone
-        )
-        is None
     )
 
     assert path.normpath(
@@ -106,7 +91,7 @@ def test_load_translations_files(hass):
     }
 
 
-async def test_get_translations(hass, mock_config_flows):
+async def test_get_translations(hass, mock_config_flows, enable_custom_integrations):
     """Test the get translations helper."""
     translations = await translation.async_get_translations(hass, "en", "state")
     assert translations == {}
@@ -139,7 +124,7 @@ async def test_get_translations(hass, mock_config_flows):
 
 async def test_get_translations_loads_config_flows(hass, mock_config_flows):
     """Test the get translations helper loads config flow translations."""
-    mock_config_flows.append("component1")
+    mock_config_flows["integration"].append("component1")
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 1"
 
@@ -168,7 +153,7 @@ async def test_get_translations_loads_config_flows(hass, mock_config_flows):
 
     assert "component1" not in hass.config.components
 
-    mock_config_flows.append("component2")
+    mock_config_flows["integration"].append("component2")
     integration = Mock(file_path=pathlib.Path(__file__))
     integration.name = "Component 2"
 
@@ -217,7 +202,7 @@ async def test_get_translations_while_loading_components(hass):
         nonlocal load_count
         load_count += 1
         # Mimic race condition by loading a component during setup
-        setup_component(hass, "persistent_notification", {})
+
         return {"component1": {"title": "world"}}
 
     with patch(
@@ -305,10 +290,27 @@ async def test_translation_merging_loaded_apart(hass, caplog):
     assert "component.sensor.state.moon__phase.first_quarter" in translations
 
     translations = await translation.async_get_translations(
-        hass, "en", "state", integration="sensor"
+        hass, "en", "state", integrations={"sensor"}
     )
 
     assert "component.sensor.state.moon__phase.first_quarter" in translations
+
+
+async def test_translation_merging_loaded_together(hass, caplog):
+    """Test we merge translations of two integrations when they are loaded at the same time."""
+    hass.config.components.add("hue")
+    hass.config.components.add("homekit")
+    hue_translations = await translation.async_get_translations(
+        hass, "en", "config", integrations={"hue"}
+    )
+    homekit_translations = await translation.async_get_translations(
+        hass, "en", "config", integrations={"homekit"}
+    )
+
+    translations = await translation.async_get_translations(
+        hass, "en", "config", integrations={"hue", "homekit"}
+    )
+    assert translations == hue_translations | homekit_translations
 
 
 async def test_caching(hass):
@@ -335,14 +337,14 @@ async def test_caching(hass):
             )
 
     load_sensor_only = await translation.async_get_translations(
-        hass, "en", "state", integration="sensor"
+        hass, "en", "state", integrations={"sensor"}
     )
     assert load_sensor_only
     for key in load_sensor_only:
         assert key.startswith("component.sensor.state.")
 
     load_light_only = await translation.async_get_translations(
-        hass, "en", "state", integration="light"
+        hass, "en", "state", integrations={"light"}
     )
     assert load_light_only
     for key in load_light_only:
@@ -356,7 +358,7 @@ async def test_caching(hass):
         side_effect=translation._build_resources,
     ) as mock_build:
         load_sensor_only = await translation.async_get_translations(
-            hass, "en", "title", integration="sensor"
+            hass, "en", "title", integrations={"sensor"}
         )
         assert load_sensor_only
         for key in load_sensor_only:
@@ -364,12 +366,12 @@ async def test_caching(hass):
         assert len(mock_build.mock_calls) == 0
 
         assert await translation.async_get_translations(
-            hass, "en", "title", integration="sensor"
+            hass, "en", "title", integrations={"sensor"}
         )
         assert len(mock_build.mock_calls) == 0
 
         load_light_only = await translation.async_get_translations(
-            hass, "en", "title", integration="media_player"
+            hass, "en", "title", integrations={"media_player"}
         )
         assert load_light_only
         for key in load_light_only:
@@ -377,9 +379,8 @@ async def test_caching(hass):
         assert len(mock_build.mock_calls) > 1
 
 
-async def test_custom_component_translations(hass):
+async def test_custom_component_translations(hass, enable_custom_integrations):
     """Test getting translation from custom components."""
-    hass.config.components.add("test_standalone")
     hass.config.components.add("test_embedded")
     hass.config.components.add("test_package")
     assert await translation.async_get_translations(hass, "en", "state") == {}

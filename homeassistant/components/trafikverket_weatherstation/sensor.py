@@ -1,205 +1,208 @@
 """Weather information for air and road temperature (by Trafikverket)."""
+from __future__ import annotations
 
-import asyncio
-from datetime import timedelta
-import logging
+from dataclasses import dataclass
+from datetime import datetime
 
-import aiohttp
-from pytrafikverket.trafikverket_weather import TrafikverketWeather
-import voluptuous as vol
-
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    CONF_API_KEY,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
     DEGREE,
-    DEVICE_CLASS_HUMIDITY,
-    DEVICE_CLASS_TEMPERATURE,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util.dt import as_utc
 
-_LOGGER = logging.getLogger(__name__)
+from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
+from .coordinator import TVDataUpdateCoordinator
 
-ATTRIBUTION = "Data provided by Trafikverket"
-ATTR_MEASURE_TIME = "measure_time"
-ATTR_ACTIVE = "active"
 
-CONF_STATION = "station"
+@dataclass
+class TrafikverketRequiredKeysMixin:
+    """Mixin for required keys."""
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=10)
+    api_key: str
 
-SCAN_INTERVAL = timedelta(seconds=300)
 
-SENSOR_TYPES = {
-    "air_temp": [
-        "Air temperature",
-        TEMP_CELSIUS,
-        "air_temp",
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "road_temp": [
-        "Road temperature",
-        TEMP_CELSIUS,
-        "road_temp",
-        "mdi:thermometer",
-        DEVICE_CLASS_TEMPERATURE,
-    ],
-    "precipitation": [
-        "Precipitation type",
-        None,
-        "precipitationtype",
-        "mdi:weather-snowy-rainy",
-        None,
-    ],
-    "wind_direction": [
-        "Wind direction",
-        DEGREE,
-        "winddirection",
-        "mdi:flag-triangle",
-        None,
-    ],
-    "wind_direction_text": [
-        "Wind direction text",
-        None,
-        "winddirectiontext",
-        "mdi:flag-triangle",
-        None,
-    ],
-    "wind_speed": [
-        "Wind speed",
-        SPEED_METERS_PER_SECOND,
-        "windforce",
-        "mdi:weather-windy",
-        None,
-    ],
-    "wind_speed_max": [
-        "Wind speed max",
-        SPEED_METERS_PER_SECOND,
-        "windforcemax",
-        "mdi:weather-windy-variant",
-        None,
-    ],
-    "humidity": [
-        "Humidity",
-        PERCENTAGE,
-        "humidity",
-        "mdi:water-percent",
-        DEVICE_CLASS_HUMIDITY,
-    ],
-    "precipitation_amount": [
-        "Precipitation amount",
-        LENGTH_MILLIMETERS,
-        "precipitation_amount",
-        "mdi:cup-water",
-        None,
-    ],
-    "precipitation_amountname": [
-        "Precipitation name",
-        None,
-        "precipitation_amountname",
-        "mdi:weather-pouring",
-        None,
-    ],
-}
+@dataclass
+class TrafikverketSensorEntityDescription(
+    SensorEntityDescription, TrafikverketRequiredKeysMixin
+):
+    """Describes Trafikverket sensor entity."""
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_NAME): cv.string,
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_STATION): cv.string,
-        vol.Required(CONF_MONITORED_CONDITIONS, default=[]): [vol.In(SENSOR_TYPES)],
-    }
+
+SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
+    TrafikverketSensorEntityDescription(
+        key="air_temp",
+        api_key="air_temp",
+        name="Air temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="road_temp",
+        api_key="road_temp",
+        name="Road temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:thermometer",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="precipitation",
+        api_key="precipitationtype",
+        name="Precipitation type",
+        icon="mdi:weather-snowy-rainy",
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="wind_direction",
+        api_key="winddirection",
+        name="Wind direction",
+        native_unit_of_measurement=DEGREE,
+        icon="mdi:flag-triangle",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="wind_direction_text",
+        api_key="winddirectiontext",
+        name="Wind direction text",
+        icon="mdi:flag-triangle",
+    ),
+    TrafikverketSensorEntityDescription(
+        key="wind_speed",
+        api_key="windforce",
+        name="Wind speed",
+        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        icon="mdi:weather-windy",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="wind_speed_max",
+        api_key="windforcemax",
+        name="Wind speed max",
+        native_unit_of_measurement=SPEED_METERS_PER_SECOND,
+        icon="mdi:weather-windy-variant",
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="humidity",
+        api_key="humidity",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:water-percent",
+        device_class=SensorDeviceClass.HUMIDITY,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="precipitation_amount",
+        api_key="precipitation_amount",
+        name="Precipitation amount",
+        native_unit_of_measurement=LENGTH_MILLIMETERS,
+        icon="mdi:cup-water",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="precipitation_amountname",
+        api_key="precipitation_amountname",
+        name="Precipitation name",
+        icon="mdi:weather-pouring",
+        entity_registry_enabled_default=False,
+    ),
+    TrafikverketSensorEntityDescription(
+        key="measure_time",
+        api_key="measure_time",
+        name="Measure Time",
+        icon="mdi:clock",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Set up the Trafikverket sensor platform."""
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Trafikverket sensor entry."""
 
-    sensor_name = config[CONF_NAME]
-    sensor_api = config[CONF_API_KEY]
-    sensor_station = config[CONF_STATION]
+    coordinator: TVDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    web_session = async_get_clientsession(hass)
-
-    weather_api = TrafikverketWeather(web_session, sensor_api)
-
-    dev = []
-    for condition in config[CONF_MONITORED_CONDITIONS]:
-        dev.append(
-            TrafikverketWeatherStation(
-                weather_api, sensor_name, condition, sensor_station
-            )
+    async_add_entities(
+        TrafikverketWeatherStation(
+            coordinator, entry.entry_id, entry.data[CONF_STATION], description
         )
+        for description in SENSOR_TYPES
+    )
 
-    if dev:
-        async_add_entities(dev, True)
+
+def _to_datetime(measuretime: str) -> datetime:
+    """Return isoformatted utc time."""
+    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return as_utc(time_obj)
 
 
-class TrafikverketWeatherStation(Entity):
+class TrafikverketWeatherStation(
+    CoordinatorEntity[TVDataUpdateCoordinator], SensorEntity
+):
     """Representation of a Trafikverket sensor."""
 
-    def __init__(self, weather_api, name, sensor_type, sensor_station):
+    entity_description: TrafikverketSensorEntityDescription
+    _attr_attribution = ATTRIBUTION
+
+    def __init__(
+        self,
+        coordinator: TVDataUpdateCoordinator,
+        entry_id: str,
+        sensor_station: str,
+        description: TrafikverketSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
-        self._client = name
-        self._name = SENSOR_TYPES[sensor_type][0]
-        self._type = sensor_type
-        self._state = None
-        self._unit = SENSOR_TYPES[sensor_type][1]
-        self._station = sensor_station
-        self._weather_api = weather_api
-        self._icon = SENSOR_TYPES[sensor_type][3]
-        self._device_class = SENSOR_TYPES[sensor_type][4]
-        self._weather = None
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_name = f"{sensor_station} {description.name}"
+        self._attr_unique_id = f"{entry_id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, entry_id)},
+            manufacturer="Trafikverket",
+            model="v2.0",
+            name=sensor_station,
+            configuration_url="https://api.trafikinfo.trafikverket.se/",
+        )
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{self._client} {self._name}"
+    def native_value(self) -> StateType | datetime:
+        """Return state of sensor."""
+        if self.entity_description.api_key == "measure_time":
+            return _to_datetime(self.coordinator.data.measure_time)
+
+        state: StateType = getattr(
+            self.coordinator.data, self.entity_description.api_key
+        )
+
+        # For zero value state the api reports back None for certain sensors.
+        if state is None and self.entity_description.key in NONE_IS_ZERO_SENSORS:
+            return 0
+        return state
 
     @property
-    def icon(self):
-        """Icon to use in the frontend."""
-        return self._icon
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes of Trafikverket Weatherstation."""
-        return {
-            ATTR_ATTRIBUTION: ATTRIBUTION,
-            ATTR_ACTIVE: self._weather.active,
-            ATTR_MEASURE_TIME: self._weather.measure_time,
-        }
-
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return self._device_class
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement of this entity, if any."""
-        return self._unit
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    async def async_update(self):
-        """Get the latest data from Trafikverket and updates the states."""
-        try:
-            self._weather = await self._weather_api.async_get_weather(self._station)
-            self._state = getattr(self._weather, SENSOR_TYPES[self._type][2])
-        except (asyncio.TimeoutError, aiohttp.ClientError, ValueError) as error:
-            _LOGGER.error("Could not fetch weather data: %s", error)
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return self.coordinator.data.active and super().available

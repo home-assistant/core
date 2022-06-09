@@ -4,7 +4,6 @@ import pytest
 
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     MODE_AWAY,
     MODE_ECO,
@@ -13,8 +12,15 @@ from homeassistant.components.humidifier.const import (
     SERVICE_SET_MODE,
 )
 from homeassistant.components.humidifier.reproduce_state import async_reproduce_states
-from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_MODE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import Context, State
+from homeassistant.helpers.state import async_reproduce_state
 
 from tests.common import async_mock_service
 
@@ -33,7 +39,8 @@ async def test_reproducing_on_off_states(hass, caplog):
     humidity_calls = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
 
     # These calls should do nothing as entities already in desired state
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State(ENTITY_1, "off", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
             State(ENTITY_2, "on", {ATTR_MODE: MODE_NORMAL, ATTR_HUMIDITY: 45}),
@@ -46,7 +53,7 @@ async def test_reproducing_on_off_states(hass, caplog):
     assert len(humidity_calls) == 0
 
     # Test invalid state is handled
-    await hass.helpers.state.async_reproduce_state([State(ENTITY_1, "not_supported")])
+    await async_reproduce_state(hass, [State(ENTITY_1, "not_supported")])
 
     assert "not_supported" in caplog.text
     assert len(turn_on_calls) == 0
@@ -55,13 +62,14 @@ async def test_reproducing_on_off_states(hass, caplog):
     assert len(humidity_calls) == 0
 
     # Make sure correct services are called
-    await hass.helpers.state.async_reproduce_state(
+    await async_reproduce_state(
+        hass,
         [
             State(ENTITY_2, "off"),
             State(ENTITY_1, "on", {}),
             # Should not raise
             State("humidifier.non_existing", "on"),
-        ]
+        ],
     )
 
     assert len(turn_on_calls) == 1

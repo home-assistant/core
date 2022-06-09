@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "invalid_dongle_path": "Ruta de dongle no v\u00e1lida"
+        },
+        "error": {
+            "invalid_dongle_path": "No se encontr\u00f3 ning\u00fan dongle v\u00e1lido para esta ruta"
+        },
+        "step": {
+            "detect": {
+                "data": {
+                    "path": "Ruta de dongle USB"
+                },
+                "title": "Seleccione la ruta a su ENOcean dongle"
+            },
+            "manual": {
+                "data": {
+                    "path": "Ruta de dongle USB"
+                },
+                "title": "Ingrese la ruta a su ENOcean dongle"
+            }
+        }
+    }
+}

@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "token": "Eri\u015fim Anahtar\u0131"
+                },
+                "description": "Nuki entegrasyonunun k\u00f6pr\u00fcn\u00fczle yeniden kimlik do\u011frulamas\u0131 yapmas\u0131 gerekiyor.",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "port": "Port",
+                    "token": "Eri\u015fim Anahtar\u0131"
+                }
+            }
+        }
+    }
+}

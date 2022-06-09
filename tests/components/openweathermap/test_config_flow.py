@@ -1,4 +1,6 @@
 """Define tests for the OpenWeatherMap config flow."""
+from unittest.mock import MagicMock, patch
+
 from pyowm.commons.exceptions import APIRequestError, UnauthorizedError
 
 from homeassistant import data_entry_flow
@@ -8,7 +10,7 @@ from homeassistant.components.openweathermap.const import (
     DEFAULT_LANGUAGE,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_LATITUDE,
@@ -17,7 +19,6 @@ from homeassistant.const import (
     CONF_NAME,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 CONFIG = {
@@ -56,11 +57,11 @@ async def test_form(hass):
 
         conf_entries = hass.config_entries.async_entries(DOMAIN)
         entry = conf_entries[0]
-        assert entry.state == "loaded"
+        assert entry.state == ConfigEntryState.LOADED
 
         await hass.config_entries.async_unload(conf_entries[0].entry_id)
         await hass.async_block_till_done()
-        assert entry.state == "not_loaded"
+        assert entry.state == ConfigEntryState.NOT_LOADED
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == CONFIG[CONF_NAME]
@@ -85,7 +86,7 @@ async def test_form_options(hass):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert config_entry.state == "loaded"
+        assert config_entry.state == ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -104,7 +105,7 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert config_entry.state == "loaded"
+        assert config_entry.state == ConfigEntryState.LOADED
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -123,7 +124,7 @@ async def test_form_options(hass):
 
         await hass.async_block_till_done()
 
-        assert config_entry.state == "loaded"
+        assert config_entry.state == ConfigEntryState.LOADED
 
 
 async def test_form_invalid_api_key(hass):
@@ -186,6 +187,7 @@ def _create_mocked_owm(is_api_online: bool):
     weather.snow.return_value = []
     weather.detailed_status.return_value = "status"
     weather.weather_code = 803
+    weather.dewpoint = 10
 
     mocked_owm.weather_at_coords.return_value.weather = weather
 

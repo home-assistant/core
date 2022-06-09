@@ -1,0 +1,148 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u641c\u7d22\u8cc7\u8a0a\u5931\u6557\u3002",
+            "addon_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8cc7\u8a0a\u5931\u6557\u3002",
+            "addon_install_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5931\u6557\u3002",
+            "addon_set_config_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a\u5931\u6557\u3002",
+            "addon_start_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u5931\u6557\u3002",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "already_in_progress": "\u8a2d\u5b9a\u5df2\u7d93\u9032\u884c\u4e2d",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "discovery_requires_supervisor": "\u641c\u7d22\u529f\u80fd\u9700\u8981 Supervisor \u6b0a\u9650\u3002",
+            "not_zwave_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e Z-Wave \u88dd\u7f6e"
+        },
+        "error": {
+            "addon_start_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u52d5\u5931\u6557\uff0c\u8acb\u6aa2\u67e5\u8a2d\u5b9a\u3002",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_ws_url": "Websocket URL \u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "install_addon": "\u8acb\u7a0d\u7b49 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002",
+            "start_addon": "\u8acb\u7a0d\u7b49 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "S0 \u91d1\u9470\uff08\u820a\u7248\uff09",
+                    "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u91d1\u9470",
+                    "s2_authenticated_key": "S2 \u9a57\u8b49\u91d1\u9470",
+                    "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u91d1\u9470",
+                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u91d1\u9470\u3002",
+                "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a"
+            },
+            "hassio_confirm": {
+                "title": "\u4ee5 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a Z-Wave JS \u6574\u5408"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5df2\u555f\u52d5"
+            },
+            "manual": {
+                "data": {
+                    "url": "\u7db2\u5740"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "\u4f7f\u7528 Z-Wave JS Supervisor \u9644\u52a0\u5143\u4ef6"
+                },
+                "description": "\u662f\u5426\u8981\u4f7f\u7528 Z-Wave JS Supervisor \u9644\u52a0\u5143\u4ef6\uff1f",
+                "title": "\u9078\u64c7\u9023\u7dda\u985e\u5225"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u4e2d\u3002"
+            },
+            "usb_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a\u540d\u70ba  {name}  \u7684 Z-Wave JS \u9644\u52a0\u5143\u4ef6\uff1f"
+            },
+            "zeroconf_confirm": {
+                "description": "\u662f\u5426\u8981\u65b0\u589e\u65bc {url} \u6240\u627e\u5230\u4e4b ID \u70ba {home_id} \u4e4b Z-Wave JS \u4f3a\u670d\u5668\u81f3 Home Assistant\uff1f",
+                "title": "\u6240\u767c\u73fe\u7684 Z-Wave JS \u4f3a\u670d\u5668"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "\u6e05\u9664 {entity_name}  usercode",
+            "ping": "Ping \u88dd\u7f6e",
+            "refresh_value": "\u66f4\u65b0 {entity_name} \u6578\u503c",
+            "reset_meter": "\u91cd\u7f6e {subtype} \u8a08\u91cf",
+            "set_config_parameter": "\u8a2d\u5b9a {subtype} \u8a2d\u5b9a\u8b8a\u6578",
+            "set_lock_usercode": "\u8a2d\u5b9a {entity_name} usercode",
+            "set_value": "\u8a2d\u5b9a Z-Wave \u6578\u503c"
+        },
+        "condition_type": {
+            "config_parameter": "\u8a2d\u5b9a\u53c3\u6578 {subtype} \u6578\u503c",
+            "node_status": "\u7bc0\u9ede\u72c0\u614b",
+            "value": "Z-Wave \u76ee\u524d\u503c"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "\u50b3\u9001\u5be6\u9ad4\u63a7\u5236\u901a\u77e5",
+            "event.notification.notification": "\u50b3\u9001\u901a\u77e5",
+            "event.value_notification.basic": "{subtype} \u4e0a\u57fa\u672c CC \u4e8b\u4ef6",
+            "event.value_notification.central_scene": "{subtype} \u4e0a\u6838\u5fc3\u5834\u666f\u52d5\u4f5c",
+            "event.value_notification.scene_activation": "{subtype} \u4e0a\u5834\u666f\u5df2\u555f\u52d5",
+            "state.node_status": "\u7bc0\u9ede\u72c0\u614b\u5df2\u6539\u8b8a",
+            "zwave_js.value_updated.config_parameter": "\u8a2d\u5b9a\u53c3\u6578 {subtype} \u6578\u503c\u8b8a\u66f4",
+            "zwave_js.value_updated.value": "Z-Wave JS \u503c\u4e0a\u7684\u6578\u503c\u8b8a\u66f4"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u641c\u7d22\u8cc7\u8a0a\u5931\u6557\u3002",
+            "addon_info_failed": "\u53d6\u5f97 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8cc7\u8a0a\u5931\u6557\u3002",
+            "addon_install_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5931\u6557\u3002",
+            "addon_set_config_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a\u5931\u6557\u3002",
+            "addon_start_failed": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u5931\u6557\u3002",
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "different_device": "\u6240\u9023\u63a5\u7684 USB \u88dd\u7f6e\u8207\u4e4b\u524d\u7684\u8a2d\u5b9a\u88dd\u7f6e\u4e0d\u540c\uff0c\u8acb\u91dd\u5c0d\u65b0\u88dd\u7f6e\u65b0\u589e\u8a2d\u5b9a\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_ws_url": "Websocket URL \u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "progress": {
+            "install_addon": "\u8acb\u7a0d\u7b49 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002",
+            "start_addon": "\u8acb\u7a0d\u7b49 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u5b8c\u6210\uff0c\u53ef\u80fd\u6703\u9700\u8981\u5e7e\u5206\u9418\u3002"
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "\u6a21\u64ec\u786c\u9ad4",
+                    "log_level": "\u65e5\u8a8c\u8a18\u9304\u7b49\u7d1a",
+                    "s0_legacy_key": "S0 \u91d1\u9470\uff08\u820a\u7248\uff09",
+                    "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u91d1\u9470",
+                    "s2_authenticated_key": "S2 \u9a57\u8b49\u91d1\u9470",
+                    "s2_unauthenticated_key": "S2 \u672a\u9a57\u8b49\u91d1\u9470",
+                    "usb_path": "USB \u88dd\u7f6e\u8def\u5f91"
+                },
+                "description": "\u5047\u5982\u6b04\u4f4d\u4fdd\u6301\u7a7a\u767d\u3001\u9644\u52a0\u5143\u4ef6\u5c07\u6703\u7522\u751f\u4e00\u7d44\u5b89\u5168\u91d1\u9470\u3002",
+                "title": "\u8f38\u5165 Z-Wave JS \u9644\u52a0\u5143\u4ef6\u8a2d\u5b9a"
+            },
+            "install_addon": {
+                "title": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u5b89\u88dd\u5df2\u555f\u52d5"
+            },
+            "manual": {
+                "data": {
+                    "url": "\u7db2\u5740"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "\u4f7f\u7528 Z-Wave JS Supervisor \u9644\u52a0\u5143\u4ef6"
+                },
+                "description": "\u662f\u5426\u8981\u4f7f\u7528 Z-Wave JS Supervisor \u9644\u52a0\u5143\u4ef6\uff1f",
+                "title": "\u9078\u64c7\u9023\u7dda\u985e\u5225"
+            },
+            "start_addon": {
+                "title": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u4e2d\u3002"
+            }
+        }
+    }
+}

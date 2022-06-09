@@ -1,5 +1,6 @@
 """The tests for the Owntracks device tracker."""
 import json
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +8,6 @@ from homeassistant.components import owntracks
 from homeassistant.const import STATE_NOT_HOME
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_coro
 
 USER = "greg"
@@ -283,9 +283,6 @@ BAD_JSON_SUFFIX = "** and it ends here ^^"
 @pytest.fixture
 def setup_comp(hass, mock_device_tracker_conf, mqtt_mock):
     """Initialize components."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(hass, "persistent_notification", {})
-    )
     hass.loop.run_until_complete(async_setup_component(hass, "device_tracker", {}))
 
     hass.states.async_set("zone.inner", "zoning", INNER_ZONE)

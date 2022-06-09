@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "Gateway bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "id_exists": "Gateway-ID ist bereits vorhanden"
         },
@@ -11,8 +11,7 @@
                     "device": "Pfad oder URL",
                     "id": "ID",
                     "name": "Name"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -21,9 +20,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Boden-Temperatur",
-                    "precision": "Genauigkeit"
-                },
-                "description": "Optionen f\u00fcr das OpenTherm Gateway"
+                    "read_precision": "Pr\u00e4zision abfragen",
+                    "set_precision": "Pr\u00e4zision einstellen",
+                    "temporary_override_mode": "Tempor\u00e4rer Sollwert\u00fcbersteuerungsmodus"
+                }
             }
         }
     }

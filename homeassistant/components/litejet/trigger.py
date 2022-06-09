@@ -1,19 +1,28 @@
 """Trigger an automation when a LiteJet switch is released."""
+from __future__ import annotations
+
+from collections.abc import Callable
+
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
-# mypy: allow-untyped-defs, no-check-untyped-defs
+from .const import DOMAIN
 
 CONF_NUMBER = "number"
 CONF_HELD_MORE_THAN = "held_more_than"
 CONF_HELD_LESS_THAN = "held_less_than"
 
-TRIGGER_SCHEMA = vol.Schema(
+TRIGGER_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
     {
         vol.Required(CONF_PLATFORM): "litejet",
         vol.Required(CONF_NUMBER): cv.positive_int,
@@ -27,13 +36,19 @@ TRIGGER_SCHEMA = vol.Schema(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for events based on configuration."""
+    trigger_data = automation_info["trigger_data"]
     number = config.get(CONF_NUMBER)
     held_more_than = config.get(CONF_HELD_MORE_THAN)
     held_less_than = config.get(CONF_HELD_LESS_THAN)
     pressed_time = None
-    cancel_pressed_more_than = None
+    cancel_pressed_more_than: Callable | None = None
     job = HassJob(action)
 
     @callback
@@ -43,6 +58,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     CONF_PLATFORM: "litejet",
                     CONF_NUMBER: number,
                     CONF_HELD_MORE_THAN: held_more_than,
@@ -91,12 +107,15 @@ async def async_attach_trigger(hass, config, action, automation_info):
         ):
             hass.add_job(call_action)
 
-    hass.data["litejet_system"].on_switch_pressed(number, pressed)
-    hass.data["litejet_system"].on_switch_released(number, released)
+    system = hass.data[DOMAIN]
+
+    system.on_switch_pressed(number, pressed)
+    system.on_switch_released(number, released)
 
     @callback
     def async_remove():
         """Remove all subscriptions used for this trigger."""
-        return
+        system.unsubscribe(pressed)
+        system.unsubscribe(released)
 
     return async_remove

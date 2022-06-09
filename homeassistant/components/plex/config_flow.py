@@ -10,6 +10,7 @@ import requests.exceptions
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import http
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.const import (
@@ -25,9 +26,8 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.network import get_url
 
-from .const import (  # pylint: disable=unused-import
+from .const import (
     AUTH_CALLBACK_NAME,
     AUTH_CALLBACK_PATH,
     AUTOMATIC_SETUP_STRING,
@@ -51,6 +51,8 @@ from .const import (  # pylint: disable=unused-import
 )
 from .errors import NoServersFound, ServerNotSpecified
 from .server import PlexServer
+
+HEADER_FRONTEND_BASE = "HA-Frontend-Base"
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -80,7 +82,6 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a Plex config flow."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
 
     @staticmethod
     @callback
@@ -97,9 +98,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client_id = None
         self._manual = False
 
-    async def async_step_user(
-        self, user_input=None, errors=None
-    ):  # pylint: disable=arguments-differ
+    async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             return await self.async_step_plex_website_auth()
@@ -130,8 +129,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Begin manual configuration."""
         if user_input is not None and errors is None:
             user_input.pop(CONF_URL, None)
-            host = user_input.get(CONF_HOST)
-            if host:
+            if host := user_input.get(CONF_HOST):
                 port = user_input[CONF_PORT]
                 prefix = "https" if user_input.get(CONF_SSL) else "http"
                 user_input[CONF_URL] = f"{prefix}://{host}:{port}"
@@ -230,10 +228,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         entry = await self.async_set_unique_id(server_id)
-        if (
-            self.context[CONF_SOURCE]  # pylint: disable=no-member
-            == config_entries.SOURCE_REAUTH
-        ):
+        if self.context[CONF_SOURCE] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(entry, data=data)
             _LOGGER.debug("Updated config entry for %s", plex_server.friendly_name)
             await self.hass.config_entries.async_reload(entry.entry_id)
@@ -243,32 +238,32 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         _LOGGER.debug("Valid config created for %s", plex_server.friendly_name)
 
-        return self.async_create_entry(title=plex_server.friendly_name, data=data)
+        return self.async_create_entry(title=url, data=data)
 
     async def async_step_select_server(self, user_input=None):
         """Use selected Plex server."""
         config = dict(self.current_login)
         if user_input is not None:
-            config[CONF_SERVER] = user_input[CONF_SERVER]
+            config[CONF_SERVER_IDENTIFIER] = user_input[CONF_SERVER_IDENTIFIER]
             return await self.async_step_server_validate(config)
 
         configured = configured_servers(self.hass)
-        available_servers = [
-            name
-            for (name, server_id) in self.available_servers
+        available_servers = {
+            server_id: f"{name} ({owner})" if owner else name
+            for (name, server_id, owner) in self.available_servers
             if server_id not in configured
-        ]
+        }
 
         if not available_servers:
             return self.async_abort(reason="all_configured")
         if len(available_servers) == 1:
-            config[CONF_SERVER] = available_servers[0]
+            config[CONF_SERVER_IDENTIFIER] = next(iter(available_servers))
             return await self.async_step_server_validate(config)
 
         return self.async_show_form(
             step_id="select_server",
             data_schema=vol.Schema(
-                {vol.Required(CONF_SERVER): vol.In(available_servers)}
+                {vol.Required(CONF_SERVER_IDENTIFIER): vol.In(available_servers)}
             ),
             errors={},
         )
@@ -280,7 +275,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         host = f"{discovery_info['from'][0]}:{discovery_info['data']['Port']}"
         name = discovery_info["data"]["Name"]
-        self.context["title_placeholders"] = {  # pylint: disable=no-member
+        self.context["title_placeholders"] = {
             "host": host,
             "name": name,
         }
@@ -289,7 +284,11 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_plex_website_auth(self):
         """Begin external auth flow on Plex website."""
         self.hass.http.register_view(PlexAuthorizationCallbackView)
-        hass_url = get_url(self.hass)
+        if (req := http.current_request.get()) is None:
+            raise RuntimeError("No current request in context")
+        if (hass_url := req.headers.get(HEADER_FRONTEND_BASE)) is None:
+            raise RuntimeError("No header in request")
+
         headers = {"Origin": hass_url}
         payload = {
             "X-Plex-Device-Name": X_PLEX_DEVICE_NAME,
@@ -379,6 +378,7 @@ class PlexOptionsFlowHandler(config_entries.OptionsFlow):
                 for user in plex_server.option_monitored_users
                 if plex_server.option_monitored_users[user]["enabled"]
             }
+            default_accounts.intersection_update(plex_server.accounts)
             for user in plex_server.accounts:
                 if user not in known_accounts:
                     available_accounts[user] += " [New]"

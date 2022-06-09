@@ -1,12 +1,17 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service al geconfigureerd"
+            "already_configured": "Dienst is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API-sleutel"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "API-sleutel",
@@ -15,6 +20,7 @@
                     "name": "Naam",
                     "port": "Poort",
                     "ssl": "Maakt gebruik van een SSL-certificaat",
+                    "statistics_only": "Alleen statistieken",
                     "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 }
             }

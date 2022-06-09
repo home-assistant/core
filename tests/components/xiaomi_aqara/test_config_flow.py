@@ -1,14 +1,13 @@
 """Test the Xiaomi Aqara config flow."""
 from socket import gaierror
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.xiaomi_aqara import config_flow, const
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT
-
-from tests.async_mock import Mock, patch
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_PORT, CONF_PROTOCOL
 
 ZEROCONF_NAME = "name"
 ZEROCONF_PROP = "properties"
@@ -108,14 +107,14 @@ async def test_config_flow_user_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
 
 
 async def test_config_flow_user_multiple_success(hass):
-    """Test a successful config flow initialized by the user with multiple gateways discoverd."""
+    """Test a successful config flow initialized by the user with multiple gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -160,7 +159,7 @@ async def test_config_flow_user_multiple_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
@@ -197,7 +196,7 @@ async def test_config_flow_user_no_key_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: None,
         const.CONF_SID: TEST_SID,
     }
@@ -244,14 +243,14 @@ async def test_config_flow_user_host_mac_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: None,
         const.CONF_SID: TEST_SID,
     }
 
 
 async def test_config_flow_user_discovery_error(hass):
-    """Test a failed config flow initialized by the user with no gateways discoverd."""
+    """Test a failed config flow initialized by the user with no gateways discovered."""
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -402,11 +401,15 @@ async def test_zeroconf_success(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            zeroconf.ATTR_HOST: TEST_HOST,
-            ZEROCONF_NAME: TEST_ZEROCONF_NAME,
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name=TEST_ZEROCONF_NAME,
+            port=None,
+            properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "form"
@@ -434,7 +437,7 @@ async def test_zeroconf_success(hass):
         CONF_PORT: TEST_PORT,
         CONF_MAC: TEST_MAC,
         const.CONF_INTERFACE: config_flow.DEFAULT_INTERFACE,
-        const.CONF_PROTOCOL: TEST_PROTOCOL,
+        CONF_PROTOCOL: TEST_PROTOCOL,
         const.CONF_KEY: TEST_KEY,
         const.CONF_SID: TEST_SID,
     }
@@ -445,7 +448,15 @@ async def test_zeroconf_missing_data(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={zeroconf.ATTR_HOST: TEST_HOST, ZEROCONF_NAME: TEST_ZEROCONF_NAME},
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name=TEST_ZEROCONF_NAME,
+            port=None,
+            properties={},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"
@@ -457,11 +468,15 @@ async def test_zeroconf_unknown_device(hass):
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data={
-            zeroconf.ATTR_HOST: TEST_HOST,
-            ZEROCONF_NAME: "not-a-xiaomi-aqara-gateway",
-            ZEROCONF_PROP: {ZEROCONF_MAC: TEST_MAC},
-        },
+        data=zeroconf.ZeroconfServiceInfo(
+            host=TEST_HOST,
+            addresses=[TEST_HOST],
+            hostname="mock_hostname",
+            name="not-a-xiaomi-aqara-gateway",
+            port=None,
+            properties={ZEROCONF_MAC: TEST_MAC},
+            type="mock_type",
+        ),
     )
 
     assert result["type"] == "abort"

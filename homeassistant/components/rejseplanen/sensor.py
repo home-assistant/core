@@ -4,6 +4,9 @@ Support for Rejseplanen information from rejseplanen.dk.
 For more info on the API see:
 https://help.rejseplanen.dk/hc/en-us/articles/214174465-Rejseplanen-s-API
 """
+from __future__ import annotations
+
+from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
 from operator import itemgetter
@@ -11,10 +14,12 @@ from operator import itemgetter
 import rjpl
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, TIME_MINUTES
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,7 +78,12 @@ def due_in_minutes(timestamp):
     return int(diff.total_seconds() // 60)
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_devices: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Rejseplanen transport sensor."""
     name = config[CONF_NAME]
     stop_id = config[CONF_STOP_ID]
@@ -87,7 +97,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     )
 
 
-class RejseplanenTransportSensor(Entity):
+class RejseplanenTransportSensor(SensorEntity):
     """Implementation of Rejseplanen transport sensor."""
 
     def __init__(self, data, stop_id, route, direction, name):
@@ -105,12 +115,12 @@ class RejseplanenTransportSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._times:
             return {ATTR_STOP_ID: self._stop_id, ATTR_ATTRIBUTION: ATTRIBUTION}
@@ -131,7 +141,7 @@ class RejseplanenTransportSensor(Entity):
         return attributes
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit this state is expressed in."""
         return TIME_MINUTES
 
@@ -148,10 +158,8 @@ class RejseplanenTransportSensor(Entity):
         if not self._times:
             self._state = None
         else:
-            try:
+            with suppress(TypeError):
                 self._state = self._times[0][ATTR_DUE_IN]
-            except TypeError:
-                pass
 
 
 class PublicTransportData:

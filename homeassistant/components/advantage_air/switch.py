@@ -1,6 +1,8 @@
 """Switch platform for Advantage Air integration."""
-
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ADVANTAGE_AIR_STATE_OFF,
@@ -10,7 +12,11 @@ from .const import (
 from .entity import AdvantageAirEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up AdvantageAir toggle platform."""
 
     instance = hass.data[ADVANTAGE_AIR_DOMAIN][config_entry.entry_id]
@@ -22,28 +28,23 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     async_add_entities(entities)
 
 
-class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
+class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
     """Representation of Advantage Air fresh air control."""
 
-    @property
-    def name(self):
-        """Return the name."""
-        return f'{self._ac["name"]} Fresh Air'
+    _attr_icon = "mdi:air-filter"
 
-    @property
-    def unique_id(self):
-        """Return a unique id."""
-        return f'{self.coordinator.data["system"]["rid"]}-{self.ac_key}-freshair'
+    def __init__(self, instance, ac_key):
+        """Initialize an Advantage Air fresh air control."""
+        super().__init__(instance, ac_key)
+        self._attr_name = f'{self._ac["name"]} Fresh Air'
+        self._attr_unique_id = (
+            f'{self.coordinator.data["system"]["rid"]}-{ac_key}-freshair'
+        )
 
     @property
     def is_on(self):
         """Return the fresh air status."""
         return self._ac["freshAirStatus"] == ADVANTAGE_AIR_STATE_ON
-
-    @property
-    def icon(self):
-        """Return a representative icon of the fresh air switch."""
-        return "mdi:air-filter"
 
     async def async_turn_on(self, **kwargs):
         """Turn fresh air on."""

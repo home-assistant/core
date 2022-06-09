@@ -6,7 +6,8 @@
             "reauth_successful": "Token de Acesso actualizado com sucesso"
         },
         "error": {
-            "invalid_access_token": "Token de acesso inv\u00e1lido"
+            "invalid_access_token": "Token de acesso inv\u00e1lido",
+            "unknown": "Erro inesperado"
         },
         "step": {
             "reauth": {

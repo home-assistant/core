@@ -9,12 +9,12 @@
         },
         "step": {
             "authorize": {
-                "description": "Veuillez autoriser cette application \u00e0 https://www.ecobee.com/consumerportal/index.html avec un code PIN :\n\n{pin}\n\nEnsuite, appuyez sur Soumettre.",
+                "description": "Veuillez autoriser cette application \u00e0 https://www.ecobee.com/consumerportal/index.html avec le code NIP :\n\n{pin}\n\nEnsuite, appuyez sur Soumettre.",
                 "title": "Autoriser l'application sur ecobee.com"
             },
             "user": {
                 "data": {
-                    "api_key": "Cl\u00e9 API"
+                    "api_key": "Cl\u00e9 d'API"
                 },
                 "description": "Veuillez entrer la cl\u00e9 API obtenue aupr\u00e8s d'ecobee.com.",
                 "title": "Cl\u00e9 API ecobee"

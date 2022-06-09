@@ -48,7 +48,7 @@ async def test_turn_on(hass):
     assert len(turn_on_calls) == 1
     call = turn_on_calls[-1]
 
-    assert DOMAIN == call.domain
+    assert call.domain == DOMAIN
 
 
 async def test_turn_off(hass):
@@ -139,13 +139,3 @@ async def test_delete_command(hass):
     assert call.domain == remote.DOMAIN
     assert call.service == SERVICE_DELETE_COMMAND
     assert call.data[ATTR_ENTITY_ID] == ENTITY_ID
-
-
-async def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomRemote(remote.RemoteDevice):
-        pass
-
-    CustomRemote()
-    assert "RemoteDevice is deprecated, modify CustomRemote" in caplog.text

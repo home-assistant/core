@@ -1,0 +1,50 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "no_uuid": "Kodi \u00f6rne\u011finin benzersiz bir kimli\u011fi yok. Bu b\u00fcy\u00fck olas\u0131l\u0131kla eski bir Kodi s\u00fcr\u00fcm\u00fcnden (17.x veya alt\u0131) kaynaklanmaktad\u0131r. Entegrasyonu manuel olarak yap\u0131land\u0131rabilir veya daha yeni bir Kodi s\u00fcr\u00fcm\u00fcne y\u00fckseltebilirsiniz.",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "credentials": {
+                "data": {
+                    "password": "Parola",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131"
+                },
+                "description": "L\u00fctfen Kodi kullan\u0131c\u0131 ad\u0131n\u0131z\u0131 ve \u015fifrenizi girin. Bunlar Sistem / Ayarlar / A\u011f / Hizmetler'de bulunabilir."
+            },
+            "discovery_confirm": {
+                "description": "Ev Asistan\u0131'na Kodi \"{name}\" eklemek istiyor musunuz?",
+                "title": "Ke\u015ffedilen Kodi"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "port": "Port",
+                    "ssl": "SSL sertifikas\u0131 kullan\u0131r"
+                },
+                "description": "Kodi ba\u011flant\u0131 bilgileri. L\u00fctfen Sistem/Ayarlar/A\u011f/Hizmetler'de \"Kodi'nin HTTP \u00fczerinden denetimine izin ver\" se\u00e7ene\u011fini etkinle\u015ftirdi\u011finizden emin olun."
+            },
+            "ws_port": {
+                "data": {
+                    "ws_port": "Port"
+                },
+                "description": "WebSocket ba\u011flant\u0131 noktas\u0131 (bazen Kodi'de TCP ba\u011flant\u0131 noktas\u0131 olarak adland\u0131r\u0131l\u0131r). WebSocket \u00fczerinden ba\u011flanmak i\u00e7in Sistem/Ayarlar/A\u011f/Hizmetler'de \"Programlar\u0131n Kodi'yi kontrol etmesine izin ver\" se\u00e7ene\u011fini etkinle\u015ftirmeniz gerekir. WebSocket etkin de\u011filse, ba\u011flant\u0131 noktas\u0131n\u0131 kald\u0131r\u0131n ve bo\u015f b\u0131rak\u0131n."
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_off": "{entity_name} nin kapat\u0131lmas\u0131 istendi",
+            "turn_on": "{entity_name} nin a\u00e7\u0131lmas\u0131 istendi"
+        }
+    }
+}

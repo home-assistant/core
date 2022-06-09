@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "create_entry": {
+            "default": "Beberapa sensor tidak diaktifkan secara default. Anda dapat mengaktifkannya di registri entitas setelah konfigurasi integrasi.\nPrakiraan cuaca tidak diaktifkan secara default. Anda dapat mengaktifkannya di opsi integrasi."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_api_key": "Kunci API tidak valid",
+            "requests_exceeded": "Jumlah permintaan yang diizinkan ke API Accuweather telah terlampaui. Anda harus menunggu atau mengubah Kunci API."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "latitude": "Lintang",
+                    "longitude": "Bujur",
+                    "name": "Nama"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "forecast": "Prakiraan cuaca"
+                },
+                "description": "Karena keterbatasan versi gratis kunci API AccuWeather, ketika Anda mengaktifkan prakiraan cuaca, pembaruan data akan dilakukan setiap 80 menit, bukan setiap 40 menit."
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Keterjangkauan server AccuWeather",
+            "remaining_requests": "Sisa permintaan yang diizinkan"
+        }
+    }
+}

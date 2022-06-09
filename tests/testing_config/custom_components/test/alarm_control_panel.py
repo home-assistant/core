@@ -8,12 +8,14 @@ from homeassistant.components.alarm_control_panel.const import (
     SUPPORT_ALARM_ARM_AWAY,
     SUPPORT_ALARM_ARM_HOME,
     SUPPORT_ALARM_ARM_NIGHT,
+    SUPPORT_ALARM_ARM_VACATION,
     SUPPORT_ALARM_TRIGGER,
 )
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
@@ -79,30 +81,36 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
             | SUPPORT_ALARM_ARM_AWAY
             | SUPPORT_ALARM_ARM_NIGHT
             | SUPPORT_ALARM_TRIGGER
+            | SUPPORT_ALARM_ARM_VACATION
         )
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
         self._state = STATE_ALARM_ARMED_AWAY
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
         self._state = STATE_ALARM_ARMED_HOME
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
         self._state = STATE_ALARM_ARMED_NIGHT
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
+
+    def alarm_arm_vacation(self, code=None):
+        """Send arm night command."""
+        self._state = STATE_ALARM_ARMED_VACATION
+        self.schedule_update_ha_state()
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code == "1234":
             self._state = STATE_ALARM_DISARMED
-            self.async_write_ha_state()
+            self.schedule_update_ha_state()
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
         self._state = STATE_ALARM_TRIGGERED
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()

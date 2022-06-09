@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "no_locations": "Tidak ada lokasi yang tersedia untuk pengguna ini, periksa pengaturan TotalConnect",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "usercode": "Kode pengguna tidak valid untuk pengguna ini di lokasi ini"
+        },
+        "step": {
+            "locations": {
+                "data": {
+                    "usercode": "Kode pengguna"
+                },
+                "description": "Masukkan kode pengguna untuk pengguna ini di lokasi {location_id}",
+                "title": "Lokasi Kode Pengguna"
+            },
+            "reauth_confirm": {
+                "description": "Total Connect perlu mengautentikasi ulang akun Anda",
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Otomatis dilewatkan saat baterai lemah"
+                },
+                "description": "Otomatis melewatkan zona saat baterai lemah dilaporkan.",
+                "title": "Opsi TotalConnect"
+            }
+        }
+    }
+}

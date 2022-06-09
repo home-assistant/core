@@ -1,27 +1,23 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Das Ger\u00e4t ist bereits konfiguriert",
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "unknown": "Unerwarteter Fehler"
         },
         "error": {
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
-        "flow_title": "Roku: {name}",
+        "flow_title": "{name}",
         "step": {
-            "ssdp_confirm": {
-                "data": {
-                    "one": "eins",
-                    "other": "andere"
-                },
-                "description": "M\u00f6chten Sie {name} einrichten?",
-                "title": "Roku"
+            "discovery_confirm": {
+                "description": "M\u00f6chtest du {name} einrichten?"
             },
             "user": {
                 "data": {
                     "host": "Host"
                 },
-                "description": "Geben Sie Ihre Roku-Informationen ein."
+                "description": "Gib deine Roku-Informationen ein."
             }
         }
     }

@@ -8,13 +8,14 @@ from homeassistant.components.advantage_air.const import (
 )
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DAMPER,
     DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    CoverDeviceClass,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OPEN
+from homeassistant.helpers import entity_registry as er
 
 from tests.components.advantage_air import (
     TEST_SET_RESPONSE,
@@ -39,7 +40,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
 
     await add_mock_config(hass)
 
-    registry = await hass.helpers.entity_registry.async_get_registry()
+    registry = er.async_get(hass)
 
     assert len(aioclient_mock.mock_calls) == 1
 
@@ -48,7 +49,7 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
-    assert state.attributes.get("device_class") == DEVICE_CLASS_DAMPER
+    assert state.attributes.get("device_class") == CoverDeviceClass.DAMPER
     assert state.attributes.get("current_position") == 100
 
     entry = registry.async_get(entity_id)
@@ -111,3 +112,35 @@ async def test_cover_async_setup_entry(hass, aioclient_mock):
     assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
     assert aioclient_mock.mock_calls[-1][0] == "GET"
     assert aioclient_mock.mock_calls[-1][1].path == "/getSystemData"
+
+    # Test controlling multiple Cover Zone Entity
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {
+            ATTR_ENTITY_ID: [
+                "cover.zone_open_without_sensor",
+                "cover.zone_closed_without_sensor",
+            ]
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 11
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_CLOSE
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {
+            ATTR_ENTITY_ID: [
+                "cover.zone_open_without_sensor",
+                "cover.zone_closed_without_sensor",
+            ]
+        },
+        blocking=True,
+    )
+    assert len(aioclient_mock.mock_calls) == 13
+    data = loads(aioclient_mock.mock_calls[-2][1].query["json"])
+    assert data["ac2"]["zones"]["z01"]["state"] == ADVANTAGE_AIR_STATE_OPEN
+    assert data["ac2"]["zones"]["z02"]["state"] == ADVANTAGE_AIR_STATE_OPEN

@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                }
+            },
+            "local": {
+                "data": {
+                    "ip_address": "Alamat IP"
+                },
+                "description": "Alamat IP lokal perangkat."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Pilih jenis koneksi"
+                },
+                "description": "Pilih jenis koneksi. Lokal membutuhkan pemanas generasi 3"
+            }
+        }
+    }
+}

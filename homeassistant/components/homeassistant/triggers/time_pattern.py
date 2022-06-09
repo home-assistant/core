@@ -1,10 +1,15 @@
 """Offer time listening automation rules."""
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_PLATFORM
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_track_time_change
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -43,7 +48,7 @@ class TimePattern:
 
 
 TRIGGER_SCHEMA = vol.All(
-    vol.Schema(
+    cv.TRIGGER_BASE_SCHEMA.extend(
         {
             vol.Required(CONF_PLATFORM): "time_pattern",
             CONF_HOURS: TimePattern(maximum=23),
@@ -55,8 +60,14 @@ TRIGGER_SCHEMA = vol.All(
 )
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
+    trigger_data = automation_info["trigger_data"]
     hours = config.get(CONF_HOURS)
     minutes = config.get(CONF_MINUTES)
     seconds = config.get(CONF_SECONDS)
@@ -75,6 +86,7 @@ async def async_attach_trigger(hass, config, action, automation_info):
             job,
             {
                 "trigger": {
+                    **trigger_data,
                     "platform": "time_pattern",
                     "now": now,
                     "description": "time pattern",

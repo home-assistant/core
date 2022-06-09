@@ -1,2 +1,3 @@
 reload:
-  description: Reload all filter entities.
+  name: Reload
+  description: Reload all filter entities

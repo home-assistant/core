@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "heater_not_available": "Heizger\u00e4t nicht verf\u00fcgbar. Versuche das Heizger\u00e4t zur\u00fcckzusetzen, indem du + und OK einige Sekunden lang dr\u00fcckst.",
+            "heater_not_found": "Heizger\u00e4t nicht gefunden. Versuche das Heizger\u00e4t n\u00e4her an den Home Assistant-Computer zu bringen.",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "account_id": "Konto-ID",
+                    "password": "Passwort"
+                }
+            },
+            "local": {
+                "data": {
+                    "wifi_pswd": "WLAN Passwort",
+                    "wifi_ssid": "WLAN SSID"
+                },
+                "description": "Setze das Heizger\u00e4t zur\u00fcck, indem du + und OK dr\u00fcckst, bis auf dem Display \"Reset\" angezeigt wird. Halte dann die OK-Taste am Heizger\u00e4t gedr\u00fcckt, bis die blaue LED zu blinken beginnt, und dr\u00fccke dann auf Senden. Das Konfigurieren des Heizger\u00e4ts kann einige Minuten dauern."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Verbindungstyp ausw\u00e4hlen"
+                },
+                "description": "Verbindungstyp ausw\u00e4hlen. Lokal erfordert Heizungen mit Bluetooth"
+            }
+        }
+    }
+}

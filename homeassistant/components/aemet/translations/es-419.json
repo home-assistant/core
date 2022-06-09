@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nombre de la integraci\u00f3n"
+                },
+                "description": "Configure la integraci\u00f3n de AEMET OpenData. Para generar la clave API vaya a https://opendata.aemet.es/centrodedescargas/altaUsuario"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "station_updates": "Recopile datos de las estaciones meteorol\u00f3gicas de AEMET"
+                }
+            }
+        }
+    }
+}

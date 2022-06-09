@@ -1,0 +1,53 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus",
+            "unknown_entry": "Olemasolevat kirjet ei leitud."
+        },
+        "error": {
+            "invalid_code": "Hive sisselogimine nurjus. Kaheastmeline autentimiskood oli vale.",
+            "invalid_password": "Hive sisselogimine nurjus. Vale parool, proovi uuesti.",
+            "invalid_username": "Hive sisselogimine nurjus. E-posti aadressi ei tuvastatud.",
+            "no_internet_available": "Hive-ga \u00fchenduse loomiseks on vajalik Interneti\u00fchendus.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "2fa": {
+                "data": {
+                    "2fa": "Kaheastmelise tuvastuse kood"
+                },
+                "description": "Sisesta oma Hive autentimiskood. \n\n Uue koodi taotlemiseks sisesta kood 0000.",
+                "title": "Hive kaheastmeline autentimine."
+            },
+            "reauth": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisesta oma Hive sisselogimisandmed uuesti.",
+                "title": "Hive sisselogimine"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisesta oma Hive sisselogimisteave ja s\u00e4tted.",
+                "title": "Hive sisselogimine"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "scan_interval": "P\u00e4ringute intervall (sekundites)"
+                },
+                "description": "Muuda k\u00fcsitlemise intervalli p\u00e4ringute tihendamiseks.",
+                "title": "Hive s\u00e4tted"
+            }
+        }
+    }
+}

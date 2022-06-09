@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\uacc4\uc815\uc774 \uc774\ubbf8 \uad6c\uc131\ub418\uc5c8\uc2b5\ub2c8\ub2e4",
+            "not_keenetic_ndms2": "\ubc1c\uacac\ub41c \uc7a5\uce58\uac00 Keenetic \ub77c\uc6b0\ud130\uac00 \uc544\ub2d9\ub2c8\ub2e4."
+        },
+        "error": {
+            "cannot_connect": "\uc5f0\uacb0\ud558\uc9c0 \ubabb\ud588\uc2b5\ub2c8\ub2e4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\ud638\uc2a4\ud2b8",
+                    "password": "\ube44\ubc00\ubc88\ud638",
+                    "port": "\ud3ec\ud2b8",
+                    "username": "\uc0ac\uc6a9\uc790 \uc774\ub984"
+                },
+                "title": "Keenetic NDMS2 \ub77c\uc6b0\ud130 \uc124\uc815\ud558\uae30"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "consider_home": "\uc7ac\uc2e4 \ucd94\uce21 \uac04\uaca9",
+                    "include_arp": "ARP \ub370\uc774\ud130 \uc0ac\uc6a9\ud558\uae30 (\ud56b\uc2a4\ud31f \ub370\uc774\ud130\uac00 \uc0ac\uc6a9\ub418\ub294 \uacbd\uc6b0 \ubb34\uc2dc\ub428)",
+                    "include_associated": "WiFi AP \uc5f0\uacb0 \ub370\uc774\ud130 \uc0ac\uc6a9\ud558\uae30 (\ud56b\uc2a4\ud31f \ub370\uc774\ud130\uac00 \uc0ac\uc6a9\ub418\ub294 \uacbd\uc6b0 \ubb34\uc2dc\ub428)",
+                    "interfaces": "\uc2a4\uce94\ud560 \uc778\ud130\ud398\uc774\uc2a4\ub97c \uc120\ud0dd\ud574\uc8fc\uc138\uc694",
+                    "scan_interval": "\uc2a4\uce94 \uac04\uaca9",
+                    "try_hotspot": "'ip \ud56b\uc2a4\ud31f' \ub370\uc774\ud130 \uc0ac\uc6a9\ud558\uae30 (\uac00\uc7a5 \uc815\ud655\ud568)"
+                }
+            }
+        }
+    }
+}

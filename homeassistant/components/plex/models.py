@@ -1,13 +1,24 @@
 """Models to represent various Plex objects used in the integration."""
+import logging
+
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_MOVIE,
     MEDIA_TYPE_MUSIC,
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
 )
+from homeassistant.helpers.template import result_as_boolean
 from homeassistant.util import dt as dt_util
 
-LIVE_TV_SECTION = "-4"
+LIVE_TV_SECTION = "Live TV"
+TRANSIENT_SECTION = "Preroll"
+UNKNOWN_SECTION = "Unknown"
+SPECIAL_SECTIONS = {
+    -2: TRANSIENT_SECTION,
+    -4: LIVE_TV_SECTION,
+}
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class PlexSession:
@@ -66,11 +77,18 @@ class PlexSession:
         if media.duration:
             self.media_duration = int(media.duration / 1000)
 
-        if media.librarySectionID == LIVE_TV_SECTION:
-            self.media_library_title = "Live TV"
+        if media.librarySectionID in SPECIAL_SECTIONS:
+            self.media_library_title = SPECIAL_SECTIONS[media.librarySectionID]
+        elif media.librarySectionID and media.librarySectionID < 1:
+            self.media_library_title = UNKNOWN_SECTION
+            _LOGGER.warning(
+                "Unknown library section ID (%s) for title '%s', please create an issue",
+                media.librarySectionID,
+                media.title,
+            )
         else:
             self.media_library_title = (
-                media.section().title if media.section() is not None else ""
+                media.section().title if media.librarySectionID is not None else ""
             )
 
         if media.type == "episode":
@@ -115,7 +133,7 @@ class PlexSession:
         """Get the image URL from a media object."""
         thumb_url = media.thumbUrl
         if media.type == "episode" and not self.plex_server.option_use_episode_art:
-            if media.librarySectionID == LIVE_TV_SECTION:
+            if SPECIAL_SECTIONS.get(media.librarySectionID) == LIVE_TV_SECTION:
                 thumb_url = media.grandparentThumb
             else:
                 thumb_url = media.url(media.grandparentThumb)
@@ -124,3 +142,35 @@ class PlexSession:
             thumb_url = media.url(media.art)
 
         return thumb_url
+
+
+class PlexMediaSearchResult:
+    """Represents results from a Plex media media_content_id search.
+
+    Results are used by media_player.play_media implementations.
+    """
+
+    def __init__(self, media, params=None) -> None:
+        """Initialize the result."""
+        self.media = media
+        self._params = params or {}
+
+    @property
+    def offset(self) -> int:
+        """Provide the appropriate offset based on payload contents."""
+        if offset := self._params.get("offset", 0):
+            return offset * 1000
+        resume = self._params.get("resume", False)
+        if isinstance(resume, str):
+            resume = result_as_boolean(resume)
+        if resume:
+            return self.media.viewOffset
+        return 0
+
+    @property
+    def shuffle(self) -> bool:
+        """Return value of shuffle parameter."""
+        shuffle = self._params.get("shuffle", False)
+        if isinstance(shuffle, str):
+            shuffle = result_as_boolean(shuffle)
+        return shuffle

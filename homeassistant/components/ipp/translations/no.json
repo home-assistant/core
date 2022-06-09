@@ -13,7 +13,7 @@
             "cannot_connect": "Tilkobling mislyktes",
             "connection_upgrade": "Kunne ikke koble til skriveren. Vennligst pr\u00f8v igjen med alternativet SSL / TLS merket."
         },
-        "flow_title": "Skriver: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

@@ -1,16 +1,17 @@
 """Helper functions for the Minecraft Server integration."""
+from __future__ import annotations
 
-from typing import Any, Dict
+from typing import Any
 
 import aiodns
 
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
 
 from .const import SRV_RECORD_PREFIX
 
 
-async def async_check_srv_record(hass: HomeAssistantType, host: str) -> Dict[str, Any]:
+async def async_check_srv_record(hass: HomeAssistant, host: str) -> dict[str, Any]:
     """Check if the given host is a valid Minecraft SRV record."""
     # Check if 'host' is a valid SRV record.
     return_value = None

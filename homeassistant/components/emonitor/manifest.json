@@ -1,0 +1,14 @@
+{
+  "domain": "emonitor",
+  "name": "SiteSage Emonitor",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/emonitor",
+  "requirements": ["aioemonitor==1.0.5"],
+  "dhcp": [
+    { "hostname": "emonitor*", "macaddress": "0090C2*" },
+    { "registered_devices": true }
+  ],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_polling",
+  "loggers": ["aioemonitor"]
+}

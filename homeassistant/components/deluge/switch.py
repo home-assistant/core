@@ -1,114 +1,54 @@
 """Support for setting the Deluge BitTorrent client in Pause."""
-import logging
+from __future__ import annotations
 
-from deluge_client import DelugeRPCClient, FailedToReconnectException
-import voluptuous as vol
+from typing import Any
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
-)
-from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
+from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_platform
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "Deluge Switch"
-DEFAULT_PORT = 58846
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    }
-)
+from . import DelugeEntity
+from .const import DOMAIN
+from .coordinator import DelugeDataUpdateCoordinator
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: entity_platform.AddEntitiesCallback,
+) -> None:
     """Set up the Deluge switch."""
-
-    name = config[CONF_NAME]
-    host = config[CONF_HOST]
-    username = config[CONF_USERNAME]
-    password = config[CONF_PASSWORD]
-    port = config[CONF_PORT]
-
-    deluge_api = DelugeRPCClient(host, port, username, password)
-    try:
-        deluge_api.connect()
-    except ConnectionRefusedError as err:
-        _LOGGER.error("Connection to Deluge Daemon failed")
-        raise PlatformNotReady from err
-
-    add_entities([DelugeSwitch(deluge_api, name)])
+    async_add_entities([DelugeSwitch(hass.data[DOMAIN][entry.entry_id])])
 
 
-class DelugeSwitch(ToggleEntity):
+class DelugeSwitch(DelugeEntity, SwitchEntity):
     """Representation of a Deluge switch."""
 
-    def __init__(self, deluge_client, name):
+    def __init__(self, coordinator: DelugeDataUpdateCoordinator) -> None:
         """Initialize the Deluge switch."""
-        self._name = name
-        self.deluge_client = deluge_client
-        self._state = STATE_OFF
-        self._available = False
+        super().__init__(coordinator)
+        self._attr_name = coordinator.config_entry.title
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_enabled"
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state == STATE_ON
-
-    @property
-    def available(self):
-        """Return true if device is available."""
-        return self._available
-
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
-        torrent_ids = self.deluge_client.call("core.get_session_state")
-        self.deluge_client.call("core.resume_torrent", torrent_ids)
+        torrent_ids = self.coordinator.api.call("core.get_session_state")
+        self.coordinator.api.call("core.resume_torrent", torrent_ids)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        torrent_ids = self.deluge_client.call("core.get_session_state")
-        self.deluge_client.call("core.pause_torrent", torrent_ids)
+        torrent_ids = self.coordinator.api.call("core.get_session_state")
+        self.coordinator.api.call("core.pause_torrent", torrent_ids)
 
-    def update(self):
-        """Get the latest data from deluge and updates the state."""
-
-        try:
-            torrent_list = self.deluge_client.call(
-                "core.get_torrents_status", {}, ["paused"]
-            )
-            self._available = True
-        except FailedToReconnectException:
-            _LOGGER.error("Connection to Deluge Daemon Lost")
-            self._available = False
-            return
-        for torrent in torrent_list.values():
-            item = torrent.popitem()
-            if not item[1]:
-                self._state = STATE_ON
-                return
-
-        self._state = STATE_OFF
+    @property
+    def is_on(self) -> bool:
+        """Return state of the switch."""
+        if self.coordinator.data:
+            data: dict = self.coordinator.data[Platform.SWITCH]
+            for torrent in data.values():
+                item = torrent.popitem()
+                if not item[1]:
+                    return True
+        return False

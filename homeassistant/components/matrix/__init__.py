@@ -1,12 +1,13 @@
 """The Matrix bot component."""
 from functools import partial
 import logging
+import mimetypes
 import os
 
 from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
-from homeassistant.components.notify import ATTR_MESSAGE, ATTR_TARGET
+from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE, ATTR_TARGET
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -15,8 +16,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
 from .const import DOMAIN, SERVICE_SEND_MESSAGE
@@ -31,7 +34,11 @@ CONF_COMMANDS = "commands"
 CONF_WORD = "word"
 CONF_EXPRESSION = "expression"
 
+DEFAULT_CONTENT_TYPE = "application/octet-stream"
+
 EVENT_MATRIX_COMMAND = "matrix_command"
+
+ATTR_IMAGES = "images"  # optional images
 
 COMMAND_SCHEMA = vol.All(
     vol.Schema(
@@ -67,12 +74,15 @@ CONFIG_SCHEMA = vol.Schema(
 SERVICE_SCHEMA_SEND_MESSAGE = vol.Schema(
     {
         vol.Required(ATTR_MESSAGE): cv.string,
+        vol.Optional(ATTR_DATA): {
+            vol.Optional(ATTR_IMAGES): vol.All(cv.ensure_list, [cv.string]),
+        },
         vol.Required(ATTR_TARGET): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Matrix bot component."""
     config = config[DOMAIN]
 
@@ -233,7 +243,10 @@ class MatrixBot:
                 room.update_aliases()
                 self._aliases_fetched_for.add(room.room_id)
 
-            if room_id_or_alias in room.aliases:
+            if (
+                room_id_or_alias in room.aliases
+                or room_id_or_alias == room.canonical_alias
+            ):
                 _LOGGER.debug(
                     "Already in room %s (known as %s)", room.room_id, room_id_or_alias
                 )
@@ -336,13 +349,20 @@ class MatrixBot:
 
         return _client
 
-    def _send_message(self, message, target_rooms):
-        """Send the message to the Matrix server."""
+    def _send_image(self, img, target_rooms):
+        _LOGGER.debug("Uploading file from path, %s", img)
 
+        if not self.hass.config.is_allowed_path(img):
+            _LOGGER.error("Path not allowed: %s", img)
+            return
+        with open(img, "rb") as upfile:
+            imgfile = upfile.read()
+        content_type = mimetypes.guess_type(img)[0]
+        mxc = self._client.upload(imgfile, content_type)
         for target_room in target_rooms:
             try:
                 room = self._join_or_get_room(target_room)
-                _LOGGER.debug(room.send_text(message))
+                room.send_image(mxc, img, mimetype=content_type)
             except MatrixRequestError as ex:
                 _LOGGER.error(
                     "Unable to deliver message to room '%s': %d, %s",
@@ -351,6 +371,28 @@ class MatrixBot:
                     ex.content,
                 )
 
-    def handle_send_message(self, service):
+    def _send_message(self, message, data, target_rooms):
+        """Send the message to the Matrix server."""
+        for target_room in target_rooms:
+            try:
+                room = self._join_or_get_room(target_room)
+                if message is not None:
+                    _LOGGER.debug(room.send_text(message))
+            except MatrixRequestError as ex:
+                _LOGGER.error(
+                    "Unable to deliver message to room '%s': %d, %s",
+                    target_room,
+                    ex.code,
+                    ex.content,
+                )
+        if data is not None:
+            for img in data.get(ATTR_IMAGES, []):
+                self._send_image(img, target_rooms)
+
+    def handle_send_message(self, service: ServiceCall) -> None:
         """Handle the send_message service."""
-        self._send_message(service.data[ATTR_MESSAGE], service.data[ATTR_TARGET])
+        self._send_message(
+            service.data.get(ATTR_MESSAGE),
+            service.data.get(ATTR_DATA),
+            service.data[ATTR_TARGET],
+        )

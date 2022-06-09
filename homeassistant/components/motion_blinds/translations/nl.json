@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "connection_error": "Kan geen verbinding maken"
+        },
+        "error": {
+            "discovery_error": "Kan geen Motion Gateway vinden"
+        },
+        "flow_title": "{short_mac} ({ip_address})",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "description": "U hebt de API-sleutel van 16 tekens nodig, zie https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key voor instructies"
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP-adres"
+                },
+                "description": "Voer de installatie opnieuw uit als u extra Motion Gateways wilt aansluiten",
+                "title": "Selecteer de Motion Gateway waarmee u verbinding wilt maken"
+            },
+            "user": {
+                "data": {
+                    "host": "IP-adres"
+                },
+                "description": "Maak verbinding met uw Motion Gateway, als het IP-adres niet is ingesteld, wordt auto-discovery gebruikt"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "Wacht op multicast push bij update"
+                }
+            }
+        }
+    }
+}

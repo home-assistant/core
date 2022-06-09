@@ -1,5 +1,7 @@
 """The tests for the climate component."""
-from typing import List
+from __future__ import annotations
+
+from unittest.mock import MagicMock
 
 import pytest
 import voluptuous as vol
@@ -8,11 +10,9 @@ from homeassistant.components.climate import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
     SET_TEMPERATURE_SCHEMA,
-    ClimateDevice,
     ClimateEntity,
 )
 
-from tests.async_mock import MagicMock
 from tests.common import async_mock_service
 
 
@@ -58,7 +58,7 @@ class MockClimateEntity(ClimateEntity):
         return HVAC_MODE_HEAT
 
     @property
-    def hvac_modes(self) -> List[str]:
+    def hvac_modes(self) -> list[str]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
@@ -92,21 +92,3 @@ async def test_sync_turn_off(hass):
     await climate.async_turn_off()
 
     assert climate.turn_off.called
-
-
-def test_deprecated_base_class(caplog):
-    """Test deprecated base class."""
-
-    class CustomClimate(ClimateDevice):
-        """Custom climate entity class."""
-
-        @property
-        def hvac_mode(self):
-            pass
-
-        @property
-        def hvac_modes(self):
-            pass
-
-    CustomClimate()
-    assert "ClimateDevice is deprecated, modify CustomClimate" in caplog.text

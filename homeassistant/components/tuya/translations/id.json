@@ -1,0 +1,20 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "login_error": "Kesalahan masuk ({code}): {msg}"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "access_id": "ID Akses Tuya IoT",
+                    "access_secret": "Kode Rahasia Akses Tuya IoT",
+                    "country_code": "Negara",
+                    "password": "Kata Sandi",
+                    "username": "Akun"
+                },
+                "description": "Masukkan kredensial Tuya Anda."
+            }
+        }
+    }
+}

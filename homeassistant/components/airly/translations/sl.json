@@ -14,9 +14,13 @@
                     "longitude": "Zemljepisna dol\u017eina",
                     "name": "Ime integracije"
                 },
-                "description": "Nastavite Airly integracijo za kakovost zraka. \u010ce \u017eelite ustvariti API klju\u010d pojdite na https://developer.airly.eu/register",
-                "title": "Airly"
+                "description": "Nastavite Airly integracijo za kakovost zraka. \u010ce \u017eelite ustvariti API klju\u010d pojdite na https://developer.airly.eu/register"
             }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "Dostop do Airly stre\u017enika"
         }
     }
 }

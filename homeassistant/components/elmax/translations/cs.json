@@ -1,0 +1,28 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 ov\u011b\u0159en\u00ed",
+            "invalid_pin": "Poskytnut\u00fd k\u00f3d PIN je neplatn\u00fd",
+            "network_error": "Do\u0161lo k chyb\u011b s\u00edt\u011b",
+            "no_panel_online": "Nebyl nalezen \u017e\u00e1dn\u00fd online ovl\u00e1dac\u00ed panel Elmax.",
+            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
+        },
+        "step": {
+            "panels": {
+                "data": {
+                    "panel_id": "ID panelu",
+                    "panel_name": "N\u00e1zev panelu",
+                    "panel_pin": "PIN k\u00f3d"
+                },
+                "description": "Vyberte, kter\u00fd panel chcete touto integrac\u00ed ovl\u00e1dat. Vezm\u011bte pros\u00edm na v\u011bdom\u00ed, \u017ee panel mus\u00ed b\u00fdt zapnut\u00fd, aby mohl b\u00fdt nakonfigurov\u00e1n."
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                },
+                "description": "P\u0159ihlaste se do cloudu Elmax pomoc\u00ed sv\u00fdch p\u0159ihla\u0161ovac\u00edch \u00fadaj\u016f"
+            }
+        }
+    }
+}

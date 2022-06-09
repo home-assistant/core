@@ -8,6 +8,13 @@ import requests
 from homeassistant.components.nx584 import binary_sensor as nx584
 from homeassistant.setup import async_setup_component
 
+DEFAULT_CONFIG = {
+    "host": nx584.DEFAULT_HOST,
+    "port": nx584.DEFAULT_PORT,
+    "exclude_zones": [],
+    "zone_types": {},
+}
+
 
 class StopMe(Exception):
     """Stop helper."""
@@ -51,13 +58,8 @@ def client(fake_zones):
 def test_nx584_sensor_setup_defaults(mock_nx, mock_watcher, hass, fake_zones):
     """Test the setup with no configuration."""
     add_entities = mock.MagicMock()
-    config = {
-        "host": nx584.DEFAULT_HOST,
-        "port": nx584.DEFAULT_PORT,
-        "exclude_zones": [],
-        "zone_types": {},
-    }
-    assert nx584.setup_platform(hass, config, add_entities)
+    config = DEFAULT_CONFIG
+    nx584.setup_platform(hass, config, add_entities)
     mock_nx.assert_has_calls([mock.call(zone, "opening") for zone in fake_zones])
     assert add_entities.called
     assert nx584_client.Client.call_count == 1
@@ -76,7 +78,7 @@ def test_nx584_sensor_setup_full_config(mock_nx, mock_watcher, hass, fake_zones)
         "zone_types": {3: "motion"},
     }
     add_entities = mock.MagicMock()
-    assert nx584.setup_platform(hass, config, add_entities)
+    nx584.setup_platform(hass, config, add_entities)
     mock_nx.assert_has_calls(
         [
             mock.call(fake_zones[0], "opening"),
@@ -135,7 +137,11 @@ def test_nx584_sensor_setup_no_zones(hass):
     """Test the setup with no zones."""
     nx584_client.Client.return_value.list_zones.return_value = []
     add_entities = mock.MagicMock()
-    assert nx584.setup_platform(hass, {}, add_entities)
+    nx584.setup_platform(
+        hass,
+        DEFAULT_CONFIG,
+        add_entities,
+    )
     assert not add_entities.called
 
 
@@ -143,10 +149,10 @@ def test_nx584_zone_sensor_normal():
     """Test for the NX584 zone sensor."""
     zone = {"number": 1, "name": "foo", "state": True}
     sensor = nx584.NX584ZoneSensor(zone, "motion")
-    assert "foo" == sensor.name
+    assert sensor.name == "foo"
     assert not sensor.should_poll
     assert sensor.is_on
-    assert sensor.device_state_attributes["zone_number"] == 1
+    assert sensor.extra_state_attributes["zone_number"] == 1
 
     zone["state"] = False
     assert not sensor.is_on
@@ -204,7 +210,7 @@ def test_nx584_watcher_run_with_zone_events():
         assert fake_process.call_args == mock.call(fake_events[0])
 
     run()
-    assert 3 == client.get_events.call_count
+    assert client.get_events.call_count == 3
 
 
 @mock.patch("time.sleep")
@@ -224,5 +230,5 @@ def test_nx584_watcher_run_retries_failures(mock_sleep):
         mock_inner.side_effect = fake_run
         with pytest.raises(StopMe):
             watcher.run()
-        assert 3 == mock_inner.call_count
+        assert mock_inner.call_count == 3
     mock_sleep.assert_has_calls([mock.call(10), mock.call(10)])

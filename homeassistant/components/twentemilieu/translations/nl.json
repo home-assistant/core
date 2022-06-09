@@ -4,7 +4,8 @@
             "already_configured": "Locatie is al geconfigureerd"
         },
         "error": {
-            "invalid_address": "Adres niet gevonden in servicegebied Twente Milieu."
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_address": "Adres niet gevonden in Twente Milieu servicegebied."
         },
         "step": {
             "user": {
@@ -13,8 +14,7 @@
                     "house_number": "Huisnummer",
                     "post_code": "Postcode"
                 },
-                "description": "Stel Twente Milieu in voor het inzamelen van afval op uw adres.",
-                "title": "Twente Milieu"
+                "description": "Stel Twente Milieu in voor het inzamelen van afval op uw adres."
             }
         }
     }

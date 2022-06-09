@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi"
+                },
+                "description": "Vaata dokumentatsiooni, et veenduda, et k\u00f5ik n\u00f5uded on t\u00e4idetud."
+            }
+        }
+    }
+}

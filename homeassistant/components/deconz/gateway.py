@@ -1,13 +1,25 @@
 """Representation of a deCONZ gateway."""
+
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Callable
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Any, cast
 
 import async_timeout
 from pydeconz import DeconzSession, errors
+from pydeconz.interfaces.api import APIItems, GroupedAPIItems
+from pydeconz.models.event import EventType
 
+from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.core import callback
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.helpers import (
+    aiohttp_client,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -19,56 +31,63 @@ from .const import (
     DEFAULT_ALLOW_CLIP_SENSOR,
     DEFAULT_ALLOW_DECONZ_GROUPS,
     DEFAULT_ALLOW_NEW_DEVICES,
-    DOMAIN,
+    DOMAIN as DECONZ_DOMAIN,
+    HASSIO_CONFIGURATION_URL,
     LOGGER,
-    NEW_GROUP,
-    NEW_LIGHT,
-    NEW_SCENE,
-    NEW_SENSOR,
-    SUPPORTED_PLATFORMS,
+    PLATFORMS,
 )
-from .deconz_event import async_setup_events, async_unload_events
 from .errors import AuthenticationRequired, CannotConnect
 
-
-@callback
-def get_gateway_from_config_entry(hass, config_entry):
-    """Return gateway with a matching bridge id."""
-    return hass.data[DOMAIN][config_entry.unique_id]
+if TYPE_CHECKING:
+    from .deconz_event import DeconzAlarmEvent, DeconzEvent
 
 
 class DeconzGateway:
     """Manages a single deCONZ gateway."""
 
-    def __init__(self, hass, config_entry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: DeconzSession
+    ) -> None:
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
+        self.api = api
 
-        self.api = None
+        api.connection_status_callback = self.async_connection_status_callback
 
         self.available = True
         self.ignore_state_updates = False
 
-        self.deconz_ids = {}
-        self.entities = {}
-        self.events = []
-        self.listeners = []
+        self.signal_reachable = f"deconz-reachable-{config_entry.entry_id}"
+        self.signal_reload_groups = f"deconz_reload_group_{config_entry.entry_id}"
+        self.signal_reload_clip_sensors = f"deconz_reload_clip_{config_entry.entry_id}"
+
+        self.deconz_ids: dict[str, str] = {}
+        self.entities: dict[str, set[str]] = {}
+        self.events: list[DeconzAlarmEvent | DeconzEvent] = []
+        self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
+
+        self._option_allow_deconz_groups = self.config_entry.options.get(
+            CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
+        )
+        self.option_allow_new_devices = self.config_entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+        )
 
     @property
     def bridgeid(self) -> str:
         """Return the unique identifier of the gateway."""
-        return self.config_entry.unique_id
+        return cast(str, self.config_entry.unique_id)
 
     @property
     def host(self) -> str:
         """Return the host of the gateway."""
-        return self.config_entry.data[CONF_HOST]
+        return cast(str, self.config_entry.data[CONF_HOST])
 
     @property
     def master(self) -> bool:
         """Gateway which is used with deCONZ services without defining id."""
-        return self.config_entry.options[CONF_MASTER_GATEWAY]
+        return cast(bool, self.config_entry.options[CONF_MASTER_GATEWAY])
 
     # Options
 
@@ -86,62 +105,57 @@ class DeconzGateway:
             CONF_ALLOW_DECONZ_GROUPS, DEFAULT_ALLOW_DECONZ_GROUPS
         )
 
-    @property
-    def option_allow_new_devices(self) -> bool:
-        """Allow automatic adding of new devices."""
-        return self.config_entry.options.get(
-            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+    @callback
+    def register_platform_add_device_callback(
+        self,
+        add_device_callback: Callable[[EventType, str], None],
+        deconz_device_interface: APIItems | GroupedAPIItems,
+    ) -> None:
+        """Wrap add_device_callback to check allow_new_devices option."""
+
+        def async_add_device(event: EventType, device_id: str) -> None:
+            """Add device or add it to ignored_devices set.
+
+            If ignore_state_updates is True means device_refresh service is used.
+            Device_refresh is expected to load new devices.
+            """
+            if not self.option_allow_new_devices and not self.ignore_state_updates:
+                self.ignored_devices.add((async_add_device, device_id))
+                return
+            add_device_callback(event, device_id)
+
+        self.config_entry.async_on_unload(
+            deconz_device_interface.subscribe(
+                async_add_device,
+                EventType.ADDED,
+            )
         )
 
-    # Signals
-
-    @property
-    def signal_reachable(self) -> str:
-        """Gateway specific event to signal a change in connection status."""
-        return f"deconz-reachable-{self.bridgeid}"
+        for device_id in deconz_device_interface:
+            add_device_callback(EventType.ADDED, device_id)
 
     @callback
-    def async_signal_new_device(self, device_type) -> str:
-        """Gateway specific event to signal new device."""
-        new_device = {
-            NEW_GROUP: f"deconz_new_group_{self.bridgeid}",
-            NEW_LIGHT: f"deconz_new_light_{self.bridgeid}",
-            NEW_SCENE: f"deconz_new_scene_{self.bridgeid}",
-            NEW_SENSOR: f"deconz_new_sensor_{self.bridgeid}",
-        }
-        return new_device[device_type]
+    def load_ignored_devices(self) -> None:
+        """Load previously ignored devices."""
+        for add_entities, device_id in self.ignored_devices:
+            add_entities(EventType.ADDED, device_id)
+        self.ignored_devices.clear()
 
     # Callbacks
 
     @callback
-    def async_connection_status_callback(self, available) -> None:
+    def async_connection_status_callback(self, available: bool) -> None:
         """Handle signals of gateway connection status."""
         self.available = available
         self.ignore_state_updates = False
-        async_dispatcher_send(self.hass, self.signal_reachable, True)
-
-    @callback
-    def async_add_device_callback(
-        self, device_type, device=None, force: bool = False
-    ) -> None:
-        """Handle event of new device creation in deCONZ."""
-        if not force and not self.option_allow_new_devices:
-            return
-
-        args = []
-
-        if device is not None and not isinstance(device, list):
-            args.append([device])
-
-        async_dispatcher_send(
-            self.hass,
-            self.async_signal_new_device(device_type),
-            *args,  # Don't send device if None, it would override default value in listeners
-        )
+        async_dispatcher_send(self.hass, self.signal_reachable)
 
     async def async_update_device_registry(self) -> None:
         """Update device registry."""
-        device_registry = await self.hass.helpers.device_registry.async_get_registry()
+        if self.api.config.mac is None:
+            return
+
+        device_registry = dr.async_get(self.hass)
 
         # Host device
         device_registry.async_get_or_create(
@@ -150,50 +164,25 @@ class DeconzGateway:
         )
 
         # Gateway service
+        configuration_url = f"http://{self.host}:{self.config_entry.data[CONF_PORT]}"
+        if self.config_entry.source == SOURCE_HASSIO:
+            configuration_url = HASSIO_CONFIGURATION_URL
         device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, self.api.config.bridgeid)},
+            configuration_url=configuration_url,
+            entry_type=dr.DeviceEntryType.SERVICE,
+            identifiers={(DECONZ_DOMAIN, self.api.config.bridge_id)},
             manufacturer="Dresden Elektronik",
-            model=self.api.config.modelid,
+            model=self.api.config.model_id,
             name=self.api.config.name,
-            sw_version=self.api.config.swversion,
+            sw_version=self.api.config.software_version,
             via_device=(CONNECTION_NETWORK_MAC, self.api.config.mac),
         )
 
-    async def async_setup(self) -> bool:
-        """Set up a deCONZ gateway."""
-        try:
-            self.api = await get_gateway(
-                self.hass,
-                self.config_entry.data,
-                self.async_add_device_callback,
-                self.async_connection_status_callback,
-            )
-
-        except CannotConnect as err:
-            raise ConfigEntryNotReady from err
-
-        except Exception as err:  # pylint: disable=broad-except
-            LOGGER.error("Error connecting with deCONZ gateway: %s", err, exc_info=True)
-            return False
-
-        for component in SUPPORTED_PLATFORMS:
-            self.hass.async_create_task(
-                self.hass.config_entries.async_forward_entry_setup(
-                    self.config_entry, component
-                )
-            )
-
-        await async_setup_events(self)
-
-        self.api.start()
-
-        self.config_entry.add_update_listener(self.async_config_entry_updated)
-
-        return True
-
     @staticmethod
-    async def async_config_entry_updated(hass, entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         This is a static method because a class method (bound method), can not be used with weak references.
@@ -209,12 +198,14 @@ class DeconzGateway:
 
         await gateway.options_updated()
 
-    async def options_updated(self):
+    async def options_updated(self) -> None:
         """Manage entities affected by config entry options."""
         deconz_ids = []
 
+        # Allow CLIP sensors
+
         if self.option_allow_clip_sensor:
-            self.async_add_device_callback(NEW_SENSOR)
+            async_dispatcher_send(self.hass, self.signal_reload_clip_sensors)
 
         else:
             deconz_ids += [
@@ -223,13 +214,29 @@ class DeconzGateway:
                 if sensor.type.startswith("CLIP")
             ]
 
-        if self.option_allow_deconz_groups:
-            self.async_add_device_callback(NEW_GROUP)
+        # Allow Groups
 
+        if self.option_allow_deconz_groups:
+            if not self._option_allow_deconz_groups:
+                async_dispatcher_send(self.hass, self.signal_reload_groups)
         else:
             deconz_ids += [group.deconz_id for group in self.api.groups.values()]
 
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        self._option_allow_deconz_groups = self.option_allow_deconz_groups
+
+        # Allow adding new devices
+
+        option_allow_new_devices = self.config_entry.options.get(
+            CONF_ALLOW_NEW_DEVICES, DEFAULT_ALLOW_NEW_DEVICES
+        )
+        if option_allow_new_devices != self.option_allow_new_devices:
+            self.option_allow_new_devices = option_allow_new_devices
+            if option_allow_new_devices:
+                self.load_ignored_devices()
+
+        # Remove entities based on above categories
+
+        entity_registry = er.async_get(self.hass)
 
         for entity_id, deconz_id in self.deconz_ids.items():
             if deconz_id in deconz_ids and entity_registry.async_is_registered(
@@ -240,56 +247,57 @@ class DeconzGateway:
                 entity_registry.async_remove(entity_id)
 
     @callback
-    def shutdown(self, event) -> None:
+    def shutdown(self, event: Event) -> None:
         """Wrap the call to deconz.close.
 
         Used as an argument to EventBus.async_listen_once.
         """
         self.api.close()
 
-    async def async_reset(self):
+    async def async_reset(self) -> bool:
         """Reset this gateway to default state."""
-        self.api.async_connection_status_callback = None
+        self.api.connection_status_callback = None
         self.api.close()
 
-        for component in SUPPORTED_PLATFORMS:
-            await self.hass.config_entries.async_forward_entry_unload(
-                self.config_entry, component
-            )
-
-        for unsub_dispatcher in self.listeners:
-            unsub_dispatcher()
-        self.listeners = []
-
-        async_unload_events(self)
+        await self.hass.config_entries.async_unload_platforms(
+            self.config_entry, PLATFORMS
+        )
 
         self.deconz_ids = {}
         return True
 
 
-async def get_gateway(
-    hass, config, async_add_device_callback, async_connection_status_callback
+@callback
+def get_gateway_from_config_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> DeconzGateway:
+    """Return gateway with a matching config entry ID."""
+    return cast(DeconzGateway, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
+
+
+async def get_deconz_session(
+    hass: HomeAssistant,
+    config: MappingProxyType[str, Any],
 ) -> DeconzSession:
     """Create a gateway object and verify configuration."""
     session = aiohttp_client.async_get_clientsession(hass)
 
-    deconz = DeconzSession(
+    deconz_session = DeconzSession(
         session,
         config[CONF_HOST],
         config[CONF_PORT],
         config[CONF_API_KEY],
-        async_add_device=async_add_device_callback,
-        connection_status=async_connection_status_callback,
+        legacy_add_device=False,
     )
     try:
-        with async_timeout.timeout(10):
-            await deconz.initialize()
-        return deconz
+        async with async_timeout.timeout(10):
+            await deconz_session.refresh_state()
+        return deconz_session
 
     except errors.Unauthorized as err:
         LOGGER.warning("Invalid key for deCONZ at %s", config[CONF_HOST])
         raise AuthenticationRequired from err
 
-    except (asyncio.TimeoutError, errors.RequestError) as err:
+    except (asyncio.TimeoutError, errors.RequestError, errors.ResponseError) as err:
         LOGGER.error("Error connecting to deCONZ gateway at %s", config[CONF_HOST])
         raise CannotConnect from err

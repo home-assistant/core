@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "H\u00e4\u00e4lestamine on k\u00e4imas",
+            "ignore_ip6_link_local": "IPv6 lingi kohalikku aadressi ei toetata.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4ivitatud",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Tuvastamine nurjus",
+            "upnp_not_configured": "Puuduvad seadme UPnP-seaded."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Avasti FRITZ! Box: {name} \n\n Seadista FRITZ! Boxi t\u00f6\u00f6riistad oma {name} juhtimiseks",
+                "title": "FRITZ! Boxi t\u00f6\u00f6riistade seadistamine"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "V\u00e4rskenda FRITZ!Box Tools'i volitusi: {host}.\n\nFRITZ!Box Tools ei saa FRITZ!Boxi sisse logida.",
+                "title": "FRITZ!Boxi t\u00f6\u00f6riistade uuendamine - volitused"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Salas\u00f5ma",
+                    "port": "Port",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Seadista FRITZ!Box Tools oma FRITZ!Boxi juhtimiseks.\n Minimaalselt vajalik: kasutajanimi ja salas\u00f5na.",
+                "title": "Seadista FRITZ! Box Tools"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Millal m\u00e4\u00e4rata seade olema kodus (sekundites)",
+                    "old_discovery": "Luba vana avastamismeetod"
+                }
+            }
+        }
+    }
+}

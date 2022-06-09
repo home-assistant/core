@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "config": "Connection or login error: please check your configuration"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host (Optional)",
+                    "password": "Password",
+                    "username": "Username (Optional)"
+                },
+                "description": "Default host: {host}\nDefault username: {username}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Consider home time (seconds)"
+                },
+                "description": "Specify optional settings"
+            }
+        }
+    }
+}

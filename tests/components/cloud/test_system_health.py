@@ -1,12 +1,12 @@
 """Test cloud system health."""
 import asyncio
+from unittest.mock import Mock
 
 from aiohttp import ClientError
 
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from tests.async_mock import Mock
 from tests.common import get_system_health_info
 
 
@@ -28,7 +28,7 @@ async def test_cloud_system_health(hass, aioclient_mock):
         relayer="wss://cloud.bla.com/websocket_api",
         acme_directory_server="https://cert-server",
         is_logged_in=True,
-        remote=Mock(is_connected=False),
+        remote=Mock(is_connected=False, snitun_server="us-west-1"),
         expiration_date=now,
         is_connected=True,
         client=Mock(
@@ -52,6 +52,7 @@ async def test_cloud_system_health(hass, aioclient_mock):
         "relayer_connected": True,
         "remote_enabled": True,
         "remote_connected": False,
+        "remote_server": "us-west-1",
         "alexa_enabled": True,
         "google_enabled": False,
         "can_reach_cert_server": "ok",

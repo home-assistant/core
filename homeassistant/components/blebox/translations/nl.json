@@ -5,11 +5,11 @@
             "already_configured": "Apparaat is al geconfigureerd"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "unknown": "Onverwachte fout",
             "unsupported_version": "BleBox-apparaat heeft verouderde firmware. Upgrade het eerst."
         },
-        "flow_title": "BleBox-apparaat: {name} ( {host} )",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {

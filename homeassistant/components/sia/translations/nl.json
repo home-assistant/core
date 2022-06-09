@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "invalid_account_format": "Het account is geen hex waarde, gebruik alleen 0-9 en A-F.",
+            "invalid_account_length": "Het account heeft niet de juiste lengte, het moet tussen de 3 en 16 karakters zijn.",
+            "invalid_key_format": "De sleutel is geen hex waarde, gebruik alleen 0-9 en A-F.",
+            "invalid_key_length": "De sleutel heeft niet de juiste lengte, het moeten 16, 24 of 32 hex karakters zijn.",
+            "invalid_ping": "Het ping-interval moet tussen 1 en 1440 minuten liggen.",
+            "invalid_zones": "Er moet minstens 1 zone zijn.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "additional_account": {
+                "data": {
+                    "account": "Account ID",
+                    "additional_account": "Extra accounts",
+                    "encryption_key": "Encryptiesleutel",
+                    "ping_interval": "Ping Interval (min)",
+                    "zones": "Aantal zones voor het account"
+                },
+                "title": "Voeg nog een account toe aan de huidige poort."
+            },
+            "user": {
+                "data": {
+                    "account": "Account ID",
+                    "additional_account": "Extra accounts",
+                    "encryption_key": "Encryptiesleutel",
+                    "ping_interval": "Ping Interval (min)",
+                    "port": "Poort",
+                    "protocol": "Protocol",
+                    "zones": "Aantal zones voor het account"
+                },
+                "title": "Maak een verbinding voor SIA gebaseerde alarmsystemen."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Negeer de tijdstempelcontrole van de SIA-gebeurtenissen",
+                    "zones": "Aantal zones voor het account"
+                },
+                "description": "Stel de opties voor account in: {account}",
+                "title": "Opties voor de SIA Setup."
+            }
+        }
+    }
+}

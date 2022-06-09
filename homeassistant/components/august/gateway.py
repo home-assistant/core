@@ -1,19 +1,15 @@
 """Handle August connection setup and authentication."""
 
 import asyncio
+from http import HTTPStatus
 import logging
 import os
 
 from aiohttp import ClientError, ClientResponseError
-from august.api_async import ApiAsync
-from august.authenticator_async import AuthenticationState, AuthenticatorAsync
+from yalexs.api_async import ApiAsync
+from yalexs.authenticator_async import AuthenticationState, AuthenticatorAsync
 
-from homeassistant.const import (
-    CONF_PASSWORD,
-    CONF_TIMEOUT,
-    CONF_USERNAME,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_PASSWORD, CONF_TIMEOUT, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
 
 from .const import (
@@ -21,6 +17,7 @@ from .const import (
     CONF_INSTALL_ID,
     CONF_LOGIN_METHOD,
     DEFAULT_AUGUST_CONFIG_FILE,
+    DEFAULT_TIMEOUT,
     VERIFICATION_CODE_KEY,
 )
 from .exceptions import CannotConnect, InvalidAuth, RequireValidation
@@ -52,9 +49,7 @@ class AugustGateway:
         return {
             CONF_LOGIN_METHOD: self._config[CONF_LOGIN_METHOD],
             CONF_USERNAME: self._config[CONF_USERNAME],
-            CONF_PASSWORD: self._config[CONF_PASSWORD],
             CONF_INSTALL_ID: self._config.get(CONF_INSTALL_ID),
-            CONF_TIMEOUT: self._config.get(CONF_TIMEOUT),
             CONF_ACCESS_TOKEN_CACHE_FILE: self._access_token_cache_file,
         }
 
@@ -70,14 +65,15 @@ class AugustGateway:
         self._config = conf
 
         self.api = ApiAsync(
-            self._aiohttp_session, timeout=self._config.get(CONF_TIMEOUT)
+            self._aiohttp_session,
+            timeout=self._config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         )
 
         self.authenticator = AuthenticatorAsync(
             self.api,
             self._config[CONF_LOGIN_METHOD],
             self._config[CONF_USERNAME],
-            self._config[CONF_PASSWORD],
+            self._config.get(CONF_PASSWORD, ""),
             install_id=self._config.get(CONF_INSTALL_ID),
             access_token_cache_file=self._hass.config.path(
                 self._access_token_cache_file
@@ -97,7 +93,7 @@ class AugustGateway:
                 # by have no access
                 await self.api.async_get_operable_locks(self.access_token)
         except ClientResponseError as ex:
-            if ex.status == HTTP_UNAUTHORIZED:
+            if ex.status == HTTPStatus.UNAUTHORIZED:
                 raise InvalidAuth from ex
 
             raise CannotConnect from ex
@@ -128,14 +124,15 @@ class AugustGateway:
 
     async def async_refresh_access_token_if_needed(self):
         """Refresh the august access token if needed."""
-        if self.authenticator.should_refresh():
-            async with self._token_refresh_lock:
-                refreshed_authentication = (
-                    await self.authenticator.async_refresh_access_token(force=False)
-                )
-                _LOGGER.info(
-                    "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
-                    self.authentication.access_token_expires,
-                    refreshed_authentication.access_token_expires,
-                )
-                self.authentication = refreshed_authentication
+        if not self.authenticator.should_refresh():
+            return
+        async with self._token_refresh_lock:
+            refreshed_authentication = (
+                await self.authenticator.async_refresh_access_token(force=False)
+            )
+            _LOGGER.info(
+                "Refreshed august access token. The old token expired at %s, and the new token expires at %s",
+                self.authentication.access_token_expires,
+                refreshed_authentication.access_token_expires,
+            )
+            self.authentication = refreshed_authentication

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il servizio \u00e8 gi\u00e0 configurato"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "title": "Configurazione integrazione Syncthing",
+                    "token": "Token",
+                    "url": "URL",
+                    "verify_ssl": "Verifica il certificato SSL"
+                }
+            }
+        }
+    }
+}

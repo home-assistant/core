@@ -1,6 +1,7 @@
 """Axis light platform tests."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from homeassistant.components.axis.const import DOMAIN as AXIS_DOMAIN
 from homeassistant.components.light import ATTR_BRIGHTNESS, DOMAIN as LIGHT_DOMAIN
@@ -13,32 +14,17 @@ from homeassistant.const import (
 )
 from homeassistant.setup import async_setup_component
 
-from .test_device import API_DISCOVERY_RESPONSE, NAME, setup_axis_integration
-
-from tests.async_mock import patch
+from .test_device import (
+    API_DISCOVERY_RESPONSE,
+    LIGHT_CONTROL_RESPONSE,
+    NAME,
+    setup_axis_integration,
+)
 
 API_DISCOVERY_LIGHT_CONTROL = {
     "id": "light-control",
     "version": "1.1",
     "name": "Light Control",
-}
-
-EVENT_ON = {
-    "operation": "Initialized",
-    "topic": "tns1:Device/tnsaxis:Light/Status",
-    "source": "id",
-    "source_idx": "0",
-    "type": "state",
-    "value": "ON",
-}
-
-EVENT_OFF = {
-    "operation": "Initialized",
-    "topic": "tns1:Device/tnsaxis:Light/Status",
-    "source": "id",
-    "source_idx": "0",
-    "type": "state",
-    "value": "OFF",
 }
 
 
@@ -58,14 +44,40 @@ async def test_no_lights(hass):
     assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
 
 
-async def test_lights(hass):
+async def test_no_light_entity_without_light_control_representation(
+    hass, mock_rtsp_event
+):
+    """Verify no lights entities get created without light control representation."""
+    api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
+    api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
+
+    light_control = deepcopy(LIGHT_CONTROL_RESPONSE)
+    light_control["data"]["items"] = []
+
+    with patch.dict(API_DISCOVERY_RESPONSE, api_discovery), patch.dict(
+        LIGHT_CONTROL_RESPONSE, light_control
+    ):
+        await setup_axis_integration(hass)
+
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Light/Status",
+        data_type="state",
+        data_value="ON",
+        source_name="id",
+        source_idx="0",
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.states.async_entity_ids(LIGHT_DOMAIN)
+
+
+async def test_lights(hass, mock_rtsp_event):
     """Test that lights are loaded properly."""
     api_discovery = deepcopy(API_DISCOVERY_RESPONSE)
     api_discovery["data"]["apiList"].append(API_DISCOVERY_LIGHT_CONTROL)
 
     with patch.dict(API_DISCOVERY_RESPONSE, api_discovery):
-        config_entry = await setup_axis_integration(hass)
-        device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
+        await setup_axis_integration(hass)
 
     # Add light
     with patch(
@@ -75,7 +87,13 @@ async def test_lights(hass):
         "axis.light_control.LightControl.get_valid_intensity",
         return_value={"data": {"ranges": [{"high": 150}]}},
     ):
-        device.api.event.process_event(EVENT_ON)
+        mock_rtsp_event(
+            topic="tns1:Device/tnsaxis:Light/Status",
+            data_type="state",
+            data_value="ON",
+            source_name="id",
+            source_idx="0",
+        )
         await hass.async_block_till_done()
 
     assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
@@ -120,7 +138,13 @@ async def test_lights(hass):
         mock_deactivate.assert_called_once()
 
     # Event turn off light
-    device.api.event.process_event(EVENT_OFF)
+    mock_rtsp_event(
+        topic="tns1:Device/tnsaxis:Light/Status",
+        data_type="state",
+        data_value="OFF",
+        source_name="id",
+        source_idx="0",
+    )
     await hass.async_block_till_done()
 
     light_0 = hass.states.get(entity_id)

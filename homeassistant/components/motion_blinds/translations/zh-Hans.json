@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "connection_error": "\u8fde\u63a5\u5931\u8d25"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "IP\u5730\u5740"
+                }
+            }
+        }
+    }
+}

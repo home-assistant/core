@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Agendi versioon",
             "board": "Seade",
             "disk_total": "Kettaruum kokku",
             "disk_used": "Kasutatud kettaruum",
@@ -14,6 +15,5 @@
             "update_channel": "V\u00e4rskenduskanal",
             "version_api": "API versioon"
         }
-    },
-    "title": "Hass.io"
+    }
 }

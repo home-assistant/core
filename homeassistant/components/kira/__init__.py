@@ -13,13 +13,16 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PORT,
+    CONF_REPEAT,
     CONF_SENSORS,
     CONF_TYPE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "kira"
 
@@ -28,7 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 DEFAULT_HOST = "0.0.0.0"
 DEFAULT_PORT = 65432
 
-CONF_REPEAT = "repeat"
 CONF_REMOTES = "remotes"
 CONF_SENSOR = "sensor"
 CONF_REMOTE = "remote"
@@ -78,7 +80,7 @@ def load_codes(path):
     """Load KIRA codes from specified file."""
     codes = []
     if os.path.exists(path):
-        with open(path) as code_file:
+        with open(path, encoding="utf8") as code_file:
             data = yaml.safe_load(code_file) or []
         for code in data:
             try:
@@ -87,12 +89,12 @@ def load_codes(path):
                 # keep going
                 _LOGGER.warning("KIRA code invalid data: %s", exception)
     else:
-        with open(path, "w") as code_file:
+        with open(path, "w", encoding="utf8") as code_file:
             code_file.write("")
     return codes
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the KIRA component."""
     sensors = config.get(DOMAIN, {}).get(CONF_SENSORS, [])
     remotes = config.get(DOMAIN, {}).get(CONF_REMOTES, [])

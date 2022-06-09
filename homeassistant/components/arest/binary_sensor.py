@@ -1,5 +1,8 @@
 """Support for an exposed aREST RESTful API of a device."""
+from __future__ import annotations
+
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 
 import requests
@@ -10,14 +13,11 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    CONF_PIN,
-    CONF_RESOURCE,
-    HTTP_OK,
-)
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, CONF_PIN, CONF_RESOURCE
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,7 +34,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the aREST binary sensor."""
     resource = config[CONF_RESOURCE]
     pin = config[CONF_PIN]
@@ -46,10 +51,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         _LOGGER.error(
             "Missing resource or schema in configuration. Add http:// to your URL"
         )
-        return False
+        return
     except requests.exceptions.ConnectionError:
         _LOGGER.error("No route to device at %s", resource)
-        return False
+        return
 
     arest = ArestData(resource, pin)
 
@@ -73,34 +78,18 @@ class ArestBinarySensor(BinarySensorEntity):
     def __init__(self, arest, resource, name, device_class, pin):
         """Initialize the aREST device."""
         self.arest = arest
-        self._resource = resource
-        self._name = name
-        self._device_class = device_class
-        self._pin = pin
+        self._attr_name = name
+        self._attr_device_class = device_class
 
-        if self._pin is not None:
-            request = requests.get(f"{self._resource}/mode/{self._pin}/i", timeout=10)
-            if request.status_code != HTTP_OK:
-                _LOGGER.error("Can't set mode of %s", self._resource)
-
-    @property
-    def name(self):
-        """Return the name of the binary sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return bool(self.arest.data.get("state"))
-
-    @property
-    def device_class(self):
-        """Return the class of this sensor."""
-        return self._device_class
+        if pin is not None:
+            request = requests.get(f"{resource}/mode/{pin}/i", timeout=10)
+            if request.status_code != HTTPStatus.OK:
+                _LOGGER.error("Can't set mode of %s", resource)
 
     def update(self):
         """Get the latest data from aREST API."""
         self.arest.update()
+        self._attr_is_on = bool(self.arest.data.get("state"))
 
 
 class ArestData:

@@ -1,0 +1,13 @@
+{
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "few": "Cateva",
+                    "one": "Unu",
+                    "other": "Altele"
+                }
+            }
+        }
+    }
+}

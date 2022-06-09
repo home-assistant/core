@@ -1,15 +1,20 @@
 """Support for testing internet speed via Fast.com."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from fastdotcom import fast_com
 import voluptuous as vol
 
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "fastdotcom"
 DATA_UPDATED = f"{DOMAIN}_data_updated"
@@ -35,7 +40,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Fast.com component."""
     conf = config[DOMAIN]
     data = hass.data[DOMAIN] = SpeedtestData(hass)
@@ -43,13 +48,15 @@ async def async_setup(hass, config):
     if not conf[CONF_MANUAL]:
         async_track_time_interval(hass, data.update, conf[CONF_SCAN_INTERVAL])
 
-    def update(call=None):
+    def update(service_call: ServiceCall | None = None) -> None:
         """Service call to manually update the data."""
         data.update()
 
     hass.services.async_register(DOMAIN, "speedtest", update)
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
+    )
 
     return True
 
@@ -57,12 +64,12 @@ async def async_setup(hass, config):
 class SpeedtestData:
     """Get the latest data from fast.com."""
 
-    def __init__(self, hass):
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the data object."""
-        self.data = None
+        self.data: dict[str, Any] | None = None
         self._hass = hass
 
-    def update(self, now=None):
+    def update(self, now: datetime | None = None) -> None:
         """Get the latest data from fast.com."""
 
         _LOGGER.debug("Executing fast.com speedtest")

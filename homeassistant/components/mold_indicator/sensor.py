@@ -1,11 +1,13 @@
 """Calculates mold growth indication from temperature and humidity."""
+from __future__ import annotations
+
 import logging
 import math
 
 import voluptuous as vol
 
 from homeassistant import util
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
@@ -15,10 +17,11 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up MoldIndicator sensor."""
     name = config.get(CONF_NAME, DEFAULT_NAME)
     indoor_temp_sensor = config.get(CONF_INDOOR_TEMP)
@@ -69,7 +77,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-class MoldIndicator(Entity):
+class MoldIndicator(SensorEntity):
     """Represents a MoldIndication sensor."""
 
     def __init__(
@@ -197,9 +205,8 @@ class MoldIndicator(Entity):
             return None
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        temp = util.convert(state.state, float)
 
-        if temp is None:
+        if (temp := util.convert(state.state, float)) is None:
             _LOGGER.error(
                 "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,
@@ -236,10 +243,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        hum = util.convert(state.state, float)
-
-        if hum is None:
+        if (hum := util.convert(state.state, float)) is None:
             _LOGGER.error(
                 "Unable to parse humidity sensor %s, state: %s",
                 state.entity_id,
@@ -247,7 +251,7 @@ class MoldIndicator(Entity):
             )
             return None
 
-        if unit != PERCENTAGE:
+        if (unit := state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)) != PERCENTAGE:
             _LOGGER.error(
                 "Humidity sensor %s has unsupported unit: %s %s",
                 state.entity_id,
@@ -360,12 +364,12 @@ class MoldIndicator(Entity):
         return self._name
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the entity."""
         return self._state
 
@@ -375,10 +379,13 @@ class MoldIndicator(Entity):
         return self._available
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if self._is_metric:
-            return {ATTR_DEWPOINT: self._dewpoint, ATTR_CRITICAL_TEMP: self._crit_temp}
+            return {
+                ATTR_DEWPOINT: round(self._dewpoint, 2),
+                ATTR_CRITICAL_TEMP: round(self._crit_temp, 2),
+            }
 
         dewpoint = (
             util.temperature.celsius_to_fahrenheit(self._dewpoint)
@@ -392,4 +399,7 @@ class MoldIndicator(Entity):
             else None
         )
 
-        return {ATTR_DEWPOINT: dewpoint, ATTR_CRITICAL_TEMP: crit_temp}
+        return {
+            ATTR_DEWPOINT: round(dewpoint, 2),
+            ATTR_CRITICAL_TEMP: round(crit_temp, 2),
+        }

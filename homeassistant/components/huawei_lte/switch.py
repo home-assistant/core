@@ -1,34 +1,34 @@
 """Support for Huawei LTE switches."""
+from __future__ import annotations
 
+from dataclasses import dataclass, field
 import logging
-from typing import Any, Callable, List, Optional
-
-import attr
+from typing import Any
 
 from homeassistant.components.switch import (
-    DEVICE_CLASS_SWITCH,
     DOMAIN as SWITCH_DOMAIN,
+    SwitchDeviceClass,
     SwitchEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_URL
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntity
+from . import HuaweiLteBaseEntityWithDevice
 from .const import DOMAIN, KEY_DIALUP_MOBILE_DATASWITCH
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
-    router = hass.data[DOMAIN].routers[config_entry.data[CONF_URL]]
-    switches: List[Entity] = []
+    router = hass.data[DOMAIN].routers[config_entry.unique_id]
+    switches: list[Entity] = []
 
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
@@ -36,13 +36,17 @@ async def async_setup_entry(
     async_add_entities(switches, True)
 
 
-@attr.s
-class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
+@dataclass
+class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
     """Huawei LTE switch device base class."""
 
-    key: str
-    item: str
-    _raw_state: Optional[str] = attr.ib(init=False, default=None)
+    key: str = field(init=False)
+    item: str = field(init=False)
+
+    _attr_device_class: SwitchDeviceClass = field(
+        default=SwitchDeviceClass.SWITCH, init=False
+    )
+    _raw_state: str | None = field(default=None, init=False)
 
     def _turn(self, state: bool) -> None:
         raise NotImplementedError
@@ -54,11 +58,6 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         self._turn(state=False)
-
-    @property
-    def device_class(self) -> str:
-        """Return device class."""
-        return DEVICE_CLASS_SWITCH
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to needed data on add."""
@@ -82,11 +81,11 @@ class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
         self._raw_state = str(value)
 
 
-@attr.s
+@dataclass
 class HuaweiLteMobileDataSwitch(HuaweiLteBaseSwitch):
     """Huawei LTE mobile data switch device."""
 
-    def __attrs_post_init__(self) -> None:
+    def __post_init__(self) -> None:
         """Initialize identifiers."""
         self.key = KEY_DIALUP_MOBILE_DATASWITCH
         self.item = "dataswitch"

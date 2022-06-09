@@ -8,18 +8,11 @@
             "unknown": "Errore imprevisto"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Risorse"
-                },
-                "title": "Scegliere le risorse da monitorare"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Risorse"
+                    "alias": "Alias"
                 },
-                "title": "Scegliere l'UPS da monitorare"
+                "title": "Scegli l'UPS da monitorare"
             },
             "user": {
                 "data": {
@@ -28,7 +21,7 @@
                     "port": "Porta",
                     "username": "Nome utente"
                 },
-                "title": "Connessione al server NUT"
+                "title": "Connettiti al server NUT"
             }
         }
     },
@@ -36,10 +29,8 @@
         "step": {
             "init": {
                 "data": {
-                    "resources": "Risorse",
                     "scan_interval": "Intervallo di scansione (secondi)"
-                },
-                "description": "Scegliere le Risorse del Sensore."
+                }
             }
         }
     }

@@ -1,10 +1,11 @@
 """Test Mikrotik setup process."""
+from unittest.mock import AsyncMock, Mock, patch
+
 from homeassistant.components import mikrotik
 from homeassistant.setup import async_setup_component
 
 from . import MOCK_DATA
 
-from tests.async_mock import AsyncMock, Mock, patch
 from tests.common import MockConfigEntry
 
 
@@ -24,7 +25,7 @@ async def test_successful_config_entry(hass):
     mock_registry = Mock()
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub, patch(
-        "homeassistant.helpers.device_registry.async_get_registry",
+        "homeassistant.components.mikrotik.dr.async_get",
         return_value=mock_registry,
     ):
         mock_hub.return_value.async_setup = AsyncMock(return_value=True)
@@ -75,7 +76,7 @@ async def test_unload_entry(hass):
     entry.add_to_hass(hass)
 
     with patch.object(mikrotik, "MikrotikHub") as mock_hub, patch(
-        "homeassistant.helpers.device_registry.async_get_registry",
+        "homeassistant.helpers.device_registry.async_get",
         return_value=Mock(),
     ):
         mock_hub.return_value.async_setup = AsyncMock(return_value=True)

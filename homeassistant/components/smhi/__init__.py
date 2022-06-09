@@ -1,29 +1,23 @@
 """Support for the Swedish weather institute weather service."""
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, Platform
+from homeassistant.core import HomeAssistant
 
-# Have to import for config_flow to work even if they are not used here
-from .config_flow import smhi_locations  # noqa: F401
-from .const import DOMAIN  # noqa: F401
-
-DEFAULT_NAME = "smhi"
+PLATFORMS = [Platform.WEATHER]
 
 
-async def async_setup(hass: HomeAssistant, config: Config) -> bool:
-    """Set up configured SMHI."""
-    # We allow setup only through config flow type of config
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up SMHI forecast as config entry."""
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setup(config_entry, "weather")
-    )
+
+    # Setting unique id where missing
+    if entry.unique_id is None:
+        unique_id = f"{entry.data[CONF_LATITUDE]}-{entry.data[CONF_LONGITUDE]}"
+        hass.config_entries.async_update_entry(entry, unique_id=unique_id)
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.config_entries.async_forward_entry_unload(config_entry, "weather")
-    return True
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

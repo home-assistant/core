@@ -11,8 +11,7 @@
                     "device": "Cesta nebo URL",
                     "id": "ID",
                     "name": "Jm\u00e9no"
-                },
-                "title": "Br\u00e1na OpenTherm"
+                }
             }
         }
     },
@@ -20,10 +19,8 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Teplota podlahy",
-                    "precision": "P\u0159esnost"
-                },
-                "description": "Mo\u017enosti br\u00e1ny OpenTherm"
+                    "floor_temperature": "Teplota podlahy"
+                }
             }
         }
     }

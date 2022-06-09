@@ -1,7 +1,6 @@
 """Constants for the Alexa integration."""
 from collections import OrderedDict
 
-from homeassistant.components import fan
 from homeassistant.components.climate import const as climate
 from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
 
@@ -19,7 +18,6 @@ CONF_FILTER = "filter"
 CONF_ENTITY_CONFIG = "entity_config"
 CONF_ENDPOINT = "endpoint"
 CONF_LOCALE = "locale"
-CONF_PASSWORD = "password"
 
 ATTR_UID = "uid"
 ATTR_UPDATE_DATE = "updateDate"
@@ -30,7 +28,9 @@ ATTR_REDIRECTION_URL = "redirectionURL"
 
 SYN_RESOLUTION_MATCH = "ER_SUCCESS_MATCH"
 
-DATE_FORMAT = "%Y-%m-%dT%H:%M:%S.0Z"
+# Alexa requires timestamps to be formatted according to ISO 8601, YYYY-MM-DDThh:mm:ssZ
+# https://developer.amazon.com/es-ES/docs/alexa/device-apis/alexa-scenecontroller.html#activate-response-event
+DATE_FORMAT = "%Y-%m-%dT%H:%M:%SZ"
 
 API_DIRECTIVE = "directive"
 API_ENDPOINT = "endpoint"
@@ -42,7 +42,6 @@ API_SCOPE = "scope"
 API_CHANGE = "change"
 API_PASSWORD = "password"
 
-CONF_DESCRIPTION = "description"
 CONF_DISPLAY_CATEGORIES = "display_categories"
 CONF_SUPPORTED_LOCALES = (
     "de-DE",
@@ -53,10 +52,13 @@ CONF_SUPPORTED_LOCALES = (
     "en-US",
     "es-ES",
     "es-MX",
+    "es-US",
     "fr-CA",
     "fr-FR",
+    "hi-IN",
     "it-IT",
     "ja-JP",
+    "pt-BR",
 )
 
 API_TEMP_UNITS = {TEMP_FAHRENHEIT: "FAHRENHEIT", TEMP_CELSIUS: "CELSIUS"}
@@ -78,12 +80,8 @@ API_THERMOSTAT_MODES = OrderedDict(
 API_THERMOSTAT_MODES_CUSTOM = {climate.HVAC_MODE_DRY: "DEHUMIDIFY"}
 API_THERMOSTAT_PRESETS = {climate.PRESET_ECO: "ECO"}
 
-PERCENTAGE_FAN_MAP = {
-    fan.SPEED_OFF: 0,
-    fan.SPEED_LOW: 33,
-    fan.SPEED_MEDIUM: 66,
-    fan.SPEED_HIGH: 100,
-}
+# AlexaModeController does not like a single mode for the fan preset, we add PRESET_MODE_NA if a fan has only one preset_mode
+PRESET_MODE_NA = "-"
 
 
 class Cause:

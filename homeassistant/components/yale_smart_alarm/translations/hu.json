@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Ter\u00fclet ID",
+                    "name": "Elnevez\u00e9s",
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Ter\u00fclet ID",
+                    "name": "Elnevez\u00e9s",
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "A k\u00f3d nem rendelkezik a sz\u00fcks\u00e9ges sz\u00e1mjegyekkel"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "A z\u00e1rak alap\u00e9rtelmezett k\u00f3dja, ha nincs m\u00e1sik megadva",
+                    "lock_code_digits": "Sz\u00e1mjegyek sz\u00e1ma a z\u00e1rak PIN-k\u00f3dj\u00e1ban"
+                }
+            }
+        }
+    }
+}

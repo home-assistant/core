@@ -1,16 +1,22 @@
 """Support for Rain Bird Irrigation system LNK WiFi Module."""
+from __future__ import annotations
+
 from pyrainbird import AvailableStations, RainbirdController
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import ATTR_ENTITY_ID, CONF_FRIENDLY_NAME, CONF_TRIGGER_TIME
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_ZONES, DATA_RAINBIRD, DOMAIN, RAINBIRD_CONTROLLER
 
 ATTR_DURATION = "duration"
 
 SERVICE_START_IRRIGATION = "start_irrigation"
+SERVICE_SET_RAIN_DELAY = "set_rain_delay"
 
 SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     {
@@ -19,8 +25,19 @@ SERVICE_SCHEMA_IRRIGATION = vol.Schema(
     }
 )
 
+SERVICE_SCHEMA_RAIN_DELAY = vol.Schema(
+    {
+        vol.Required(ATTR_DURATION): cv.positive_float,
+    }
+)
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Rain Bird switches over a Rain Bird controller."""
 
     if discovery_info is None:
@@ -49,7 +66,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     add_entities(devices, True)
 
-    def start_irrigation(service):
+    def start_irrigation(service: ServiceCall) -> None:
         entity_id = service.data[ATTR_ENTITY_ID]
         duration = service.data[ATTR_DURATION]
 
@@ -62,6 +79,18 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         SERVICE_START_IRRIGATION,
         start_irrigation,
         schema=SERVICE_SCHEMA_IRRIGATION,
+    )
+
+    def set_rain_delay(service: ServiceCall) -> None:
+        duration = service.data[ATTR_DURATION]
+
+        controller.set_rain_delay(duration)
+
+    hass.services.register(
+        DOMAIN,
+        SERVICE_SET_RAIN_DELAY,
+        set_rain_delay,
+        schema=SERVICE_SCHEMA_RAIN_DELAY,
     )
 
 
@@ -78,7 +107,7 @@ class RainBirdSwitch(SwitchEntity):
         self._attributes = {ATTR_DURATION: self._duration, "zone": self._zone}
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return state attributes."""
         return self._attributes
 

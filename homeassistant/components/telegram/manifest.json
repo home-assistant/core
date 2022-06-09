@@ -3,5 +3,6 @@
   "name": "Telegram",
   "documentation": "https://www.home-assistant.io/integrations/telegram",
   "dependencies": ["telegram_bot"],
-  "codeowners": []
+  "codeowners": [],
+  "iot_class": "cloud_polling"
 }

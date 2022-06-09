@@ -1,0 +1,49 @@
+{
+    "config": {
+        "error": {
+            "invalid_account_format": "El compte no \u00e9s un valor hexadecimal, utilitza nom\u00e9s 0-9 i A-F.",
+            "invalid_account_length": "El compte no t\u00e9 la longitud correcta, ha de tenir entre 3 i 16 car\u00e0cters.",
+            "invalid_key_format": "La clau no \u00e9s un valor hexadecimal, utilitza nom\u00e9s 0-9 i A-F.",
+            "invalid_key_length": "La clau no t\u00e9 longitud correcta, ha de tenir 16, 24 o 32 car\u00e0cters hexadecimals.",
+            "invalid_ping": "L'interval de refresc ha d'estar compr\u00e8s entre 1 i 1440 minuts.",
+            "invalid_zones": "Cal que hi hagi com a m\u00ednim 1 zona.",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "additional_account": {
+                "data": {
+                    "account": "ID del compte",
+                    "additional_account": "Comptes addicionals",
+                    "encryption_key": "Clau de xifrat",
+                    "ping_interval": "Interval de refresc (min)",
+                    "zones": "Nombre de zones del compte"
+                },
+                "title": "Afegeix un altre compte al port actual."
+            },
+            "user": {
+                "data": {
+                    "account": "ID del compte",
+                    "additional_account": "Comptes addicionals",
+                    "encryption_key": "Clau de xifrat",
+                    "ping_interval": "Interval de refresc (min)",
+                    "port": "Port",
+                    "protocol": "Protocol",
+                    "zones": "Nombre de zones del compte"
+                },
+                "title": "Crea una connexi\u00f3 per a sistemes d'alarma basats en SIA."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "ignore_timestamps": "Ignora la comprovaci\u00f3 de marca de temps dels esdeveniments SIA",
+                    "zones": "Nombre de zones del compte"
+                },
+                "description": "Configura les opcions del compte: {account}",
+                "title": "Opcions de configuraci\u00f3 de SIA."
+            }
+        }
+    }
+}

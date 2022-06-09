@@ -11,10 +11,10 @@
         "step": {
             "user": {
                 "data": {
+                    "brand": "Marca",
                     "password": "Password",
                     "username": "Nome utente"
-                },
-                "title": "Connettersi a mynexia.com"
+                }
             }
         }
     }

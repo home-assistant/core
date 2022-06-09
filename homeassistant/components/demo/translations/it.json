@@ -1,6 +1,12 @@
 {
     "options": {
         "step": {
+            "init": {
+                "data": {
+                    "one": "Vuoto",
+                    "other": "Vuoti"
+                }
+            },
             "options_1": {
                 "data": {
                     "bool": "Valore booleano facoltativo",
@@ -11,7 +17,7 @@
             "options_2": {
                 "data": {
                     "multi": "Selezione multipla",
-                    "select": "Selezionare un'opzione",
+                    "select": "Seleziona un'opzione",
                     "string": "Valore stringa"
                 }
             }

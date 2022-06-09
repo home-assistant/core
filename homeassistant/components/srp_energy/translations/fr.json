@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de connexion",
+            "invalid_account": "L'ID de compte doit \u00eatre un num\u00e9ro \u00e0 9 chiffres",
+            "invalid_auth": "Authentification non valide",
+            "unknown": "Erreur inattendue"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "id": "Identifiant de compte",
+                    "is_tou": "Est le plan de temps d'utilisation",
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    }
+}

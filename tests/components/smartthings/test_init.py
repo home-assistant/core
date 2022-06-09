@@ -1,10 +1,13 @@
 """Tests for the SmartThings component init module."""
+from http import HTTPStatus
+from unittest.mock import Mock, patch
 from uuid import uuid4
 
 from aiohttp import ClientConnectionError, ClientResponseError
 from pysmartthings import InstalledAppStatus, OAuthToken
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components import cloud, smartthings
 from homeassistant.components.smartthings.const import (
     CONF_CLOUDHOOK_URL,
@@ -13,22 +16,19 @@ from homeassistant.components.smartthings.const import (
     DATA_BROKERS,
     DOMAIN,
     EVENT_BUTTON,
+    PLATFORMS,
     SIGNAL_SMARTTHINGS_UPDATE,
-    SUPPORTED_PLATFORMS,
 )
 from homeassistant.config import async_process_ha_core_config
-from homeassistant.const import HTTP_FORBIDDEN, HTTP_INTERNAL_SERVER_ERROR
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.setup import async_setup_component
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 
 async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
     """Test migration deletes app and creates new flow."""
-    assert await async_setup_component(hass, "persistent_notification", {})
+
     config_entry.version = 1
     config_entry.add_to_hass(hass)
 
@@ -41,7 +41,7 @@ async def test_migration_creates_new_flow(hass, smartthings_mock, config_entry):
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": "import"}
+    assert flows[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
 
 
 async def test_unrecoverable_api_errors_create_new_flow(
@@ -54,11 +54,11 @@ async def test_unrecoverable_api_errors_create_new_flow(
     403 (forbidden/not found): Occurs when the app or installed app could
         not be retrieved/found (likely deleted?)
     """
-    assert await async_setup_component(hass, "persistent_notification", {})
+
     config_entry.add_to_hass(hass)
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=401
+        request_info=request_info, history=None, status=HTTPStatus.UNAUTHORIZED
     )
 
     # Assert setup returns false
@@ -71,7 +71,7 @@ async def test_unrecoverable_api_errors_create_new_flow(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["handler"] == "smartthings"
-    assert flows[0]["context"] == {"source": "import"}
+    assert flows[0]["context"] == {"source": config_entries.SOURCE_IMPORT}
     hass.config_entries.flow.async_abort(flows[0]["flow_id"])
 
 
@@ -82,7 +82,9 @@ async def test_recoverable_api_errors_raise_not_ready(
     config_entry.add_to_hass(hass)
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
+        request_info=request_info,
+        history=None,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
 
     with pytest.raises(ConfigEntryNotReady):
@@ -98,7 +100,9 @@ async def test_scenes_api_errors_raise_not_ready(
     smartthings_mock.app.return_value = app
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
+        request_info=request_info,
+        history=None,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
     with pytest.raises(ConfigEntryNotReady):
         await smartthings.async_setup_entry(hass, config_entry)
@@ -159,7 +163,7 @@ async def test_scenes_unauthorized_loads_platforms(
     smartthings_mock.installed_app.return_value = installed_app
     smartthings_mock.devices.return_value = [device]
     smartthings_mock.scenes.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_FORBIDDEN
+        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
     )
     mock_token = Mock()
     mock_token.access_token = str(uuid4())
@@ -174,7 +178,7 @@ async def test_scenes_unauthorized_loads_platforms(
         assert await smartthings.async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_config_entry_loads_platforms(
@@ -206,7 +210,7 @@ async def test_config_entry_loads_platforms(
         assert await smartthings.async_setup_entry(hass, config_entry)
         # Assert platforms loaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_config_entry_loads_unconnected_cloud(
@@ -237,7 +241,7 @@ async def test_config_entry_loads_unconnected_cloud(
     with patch.object(hass.config_entries, "async_forward_entry_setup") as forward_mock:
         assert await smartthings.async_setup_entry(hass, config_entry)
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_unload_entry(hass, config_entry):
@@ -258,7 +262,7 @@ async def test_unload_entry(hass, config_entry):
         assert config_entry.entry_id not in hass.data[DOMAIN][DATA_BROKERS]
         # Assert platforms unloaded
         await hass.async_block_till_done()
-        assert forward_mock.call_count == len(SUPPORTED_PLATFORMS)
+        assert forward_mock.call_count == len(PLATFORMS)
 
 
 async def test_remove_entry(hass, config_entry, smartthings_mock):
@@ -310,10 +314,10 @@ async def test_remove_entry_already_deleted(hass, config_entry, smartthings_mock
     request_info = Mock(real_url="http://example.com")
     # Arrange
     smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_FORBIDDEN
+        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
     )
     smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_FORBIDDEN
+        request_info=request_info, history=None, status=HTTPStatus.FORBIDDEN
     )
     # Act
     await smartthings.async_remove_entry(hass, config_entry)
@@ -329,7 +333,9 @@ async def test_remove_entry_installedapp_api_error(
     request_info = Mock(real_url="http://example.com")
     # Arrange
     smartthings_mock.delete_installed_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
+        request_info=request_info,
+        history=None,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
     # Act
     with pytest.raises(ClientResponseError):
@@ -358,7 +364,9 @@ async def test_remove_entry_app_api_error(hass, config_entry, smartthings_mock):
     # Arrange
     request_info = Mock(real_url="http://example.com")
     smartthings_mock.delete_app.side_effect = ClientResponseError(
-        request_info=request_info, history=None, status=HTTP_INTERNAL_SERVER_ERROR
+        request_info=request_info,
+        history=None,
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
     )
     # Act
     with pytest.raises(ClientResponseError):

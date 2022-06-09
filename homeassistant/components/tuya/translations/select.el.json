@@ -1,0 +1,133 @@
+{
+    "state": {
+        "tuya__basic_anti_flickr": {
+            "0": "\u0391\u03c0\u03b5\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03b9\u03b7\u03bc\u03ad\u03bd\u03bf",
+            "1": "50 Hz",
+            "2": "60 Hz"
+        },
+        "tuya__basic_nightvision": {
+            "0": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf",
+            "1": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "2": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc"
+        },
+        "tuya__countdown": {
+            "1h": "1 \u03ce\u03c1\u03b1",
+            "2h": "2 \u03ce\u03c1\u03b5\u03c2",
+            "3h": "3 \u03ce\u03c1\u03b5\u03c2",
+            "4h": "4 \u03ce\u03c1\u03b5\u03c2",
+            "5h": "5 \u03ce\u03c1\u03b5\u03c2",
+            "6h": "6 \u03ce\u03c1\u03b5\u03c2",
+            "cancel": "\u0391\u03ba\u03cd\u03c1\u03c9\u03c3\u03b7"
+        },
+        "tuya__curtain_mode": {
+            "morning": "\u03a0\u03c1\u03c9\u03af",
+            "night": "\u039d\u03cd\u03c7\u03c4\u03b1"
+        },
+        "tuya__curtain_motor_mode": {
+            "back": "\u03a0\u03af\u03c3\u03c9",
+            "forward": "\u0395\u03bc\u03c0\u03c1\u03cc\u03c2"
+        },
+        "tuya__decibel_sensitivity": {
+            "0": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1",
+            "1": "\u03a5\u03c8\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1"
+        },
+        "tuya__fan_angle": {
+            "30": "30\u00b0",
+            "60": "60\u00b0",
+            "90": "90\u00b0"
+        },
+        "tuya__fingerbot_mode": {
+            "click": "\u03a0\u03af\u03b5\u03c3\u03b5",
+            "switch": "\u0394\u03b9\u03b1\u03ba\u03cc\u03c0\u03c4\u03b7\u03c2"
+        },
+        "tuya__humidifier_level": {
+            "level_1": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 1",
+            "level_10": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 10",
+            "level_2": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 2",
+            "level_3": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 3",
+            "level_4": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 4",
+            "level_5": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 5",
+            "level_6": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 6",
+            "level_7": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 7",
+            "level_8": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 8",
+            "level_9": "\u0395\u03c0\u03af\u03c0\u03b5\u03b4\u03bf 9"
+        },
+        "tuya__humidifier_moodlighting": {
+            "1": "\u0394\u03b9\u03ac\u03b8\u03b5\u03c3\u03b7 1",
+            "2": "\u0394\u03b9\u03ac\u03b8\u03b5\u03c3\u03b7 2",
+            "3": "\u0394\u03b9\u03ac\u03b8\u03b5\u03c3\u03b7 3",
+            "4": "\u0394\u03b9\u03ac\u03b8\u03b5\u03c3\u03b7 4",
+            "5": "\u0394\u03b9\u03ac\u03b8\u03b5\u03c3\u03b7 5"
+        },
+        "tuya__humidifier_spray_mode": {
+            "auto": "\u0391\u03c5\u03c4\u03cc\u03bc\u03b1\u03c4\u03bf",
+            "health": "\u03a5\u03b3\u03b5\u03af\u03b1",
+            "humidity": "\u03a5\u03b3\u03c1\u03b1\u03c3\u03af\u03b1",
+            "sleep": "\u038e\u03c0\u03bd\u03bf\u03c2",
+            "work": "\u0395\u03c1\u03b3\u03b1\u03c3\u03af\u03b1"
+        },
+        "tuya__ipc_work_mode": {
+            "0": "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03c7\u03b1\u03bc\u03b7\u03bb\u03ae\u03c2 \u03b9\u03c3\u03c7\u03cd\u03bf\u03c2",
+            "1": "\u039b\u03b5\u03b9\u03c4\u03bf\u03c5\u03c1\u03b3\u03af\u03b1 \u03c3\u03c5\u03bd\u03b5\u03c7\u03bf\u03cd\u03c2 \u03b5\u03c1\u03b3\u03b1\u03c3\u03af\u03b1\u03c2"
+        },
+        "tuya__led_type": {
+            "halogen": "\u0391\u03bb\u03bf\u03b3\u03cc\u03bd\u03bf\u03c5",
+            "incandescent": "\u03a0\u03c5\u03c1\u03b1\u03ba\u03c4\u03ce\u03c3\u03b5\u03c9\u03c2",
+            "led": "LED"
+        },
+        "tuya__light_mode": {
+            "none": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "pos": "\u03a5\u03c0\u03bf\u03b4\u03b5\u03af\u03be\u03c4\u03b5 \u03c4\u03b7 \u03b8\u03ad\u03c3\u03b7 \u03c4\u03bf\u03c5 \u03b4\u03b9\u03b1\u03ba\u03cc\u03c0\u03c4\u03b7",
+            "relay": "\u0388\u03bd\u03b4\u03b5\u03b9\u03be\u03b7 \u03c4\u03b7\u03c2 \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7\u03c2 \u03b5\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7\u03c2/\u03b1\u03c0\u03b5\u03bd\u03b5\u03c1\u03b3\u03bf\u03c0\u03bf\u03af\u03b7\u03c3\u03b7\u03c2 \u03c4\u03bf\u03c5 \u03b4\u03b9\u03b1\u03ba\u03cc\u03c0\u03c4\u03b7"
+        },
+        "tuya__motion_sensitivity": {
+            "0": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1",
+            "1": "\u039c\u03b5\u03c3\u03b1\u03af\u03b1 \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1",
+            "2": "\u03a5\u03c8\u03b7\u03bb\u03ae \u03b5\u03c5\u03b1\u03b9\u03c3\u03b8\u03b7\u03c3\u03af\u03b1"
+        },
+        "tuya__record_mode": {
+            "1": "\u039a\u03b1\u03c4\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae \u03c3\u03c5\u03bc\u03b2\u03ac\u03bd\u03c4\u03c9\u03bd \u03bc\u03cc\u03bd\u03bf",
+            "2": "\u03a3\u03c5\u03bd\u03b5\u03c7\u03ae\u03c2 \u03ba\u03b1\u03c4\u03b1\u03b3\u03c1\u03b1\u03c6\u03ae"
+        },
+        "tuya__relay_status": {
+            "last": "\u0398\u03c5\u03bc\u03b7\u03b8\u03b5\u03af\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c4\u03b5\u03bb\u03b5\u03c5\u03c4\u03b1\u03af\u03b1 \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7",
+            "memory": "\u0398\u03c5\u03bc\u03b7\u03b8\u03b5\u03af\u03c4\u03b5 \u03c4\u03b7\u03bd \u03c4\u03b5\u03bb\u03b5\u03c5\u03c4\u03b1\u03af\u03b1 \u03ba\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7",
+            "off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "on": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "power_off": "\u0391\u03bd\u03b5\u03bd\u03b5\u03c1\u03b3\u03cc",
+            "power_on": "\u0395\u03bd\u03b5\u03c1\u03b3\u03cc"
+        },
+        "tuya__vacuum_cistern": {
+            "closed": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
+            "high": "\u03a5\u03c8\u03b7\u03bb\u03cc",
+            "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc",
+            "middle": "\u039c\u03b5\u03c3\u03b1\u03af\u03bf"
+        },
+        "tuya__vacuum_collection": {
+            "large": "\u039c\u03b5\u03b3\u03ac\u03bb\u03bf",
+            "middle": "\u039c\u03b5\u03c3\u03b1\u03af\u03bf",
+            "small": "\u039c\u03b9\u03ba\u03c1\u03cc"
+        },
+        "tuya__vacuum_mode": {
+            "bow": "\u03a4\u03cc\u03be\u03bf",
+            "chargego": "\u0395\u03c0\u03b9\u03c3\u03c4\u03c1\u03bf\u03c6\u03ae \u03c3\u03c4\u03b7 \u03b2\u03ac\u03c3\u03b7",
+            "left_bow": "\u03a4\u03cc\u03be\u03bf \u03b1\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ac",
+            "left_spiral": "\u03a3\u03c0\u03b9\u03c1\u03ac\u03bb \u0391\u03c1\u03b9\u03c3\u03c4\u03b5\u03c1\u03ac",
+            "mop": "\u03a3\u03c6\u03bf\u03c5\u03b3\u03b3\u03ac\u03c1\u03b9\u03c3\u03bc\u03b1",
+            "part": "\u039c\u03ad\u03c1\u03bf\u03c2",
+            "partial_bow": "\u03a4\u03cc\u03be\u03bf \u03b5\u03bd \u03bc\u03ad\u03c1\u03b5\u03b9",
+            "pick_zone": "\u0395\u03c0\u03b9\u03bb\u03bf\u03b3\u03ae \u0396\u03ce\u03bd\u03b7\u03c2",
+            "point": "\u03a3\u03b7\u03bc\u03b5\u03af\u03bf",
+            "pose": "\u03a3\u03c4\u03ac\u03c3\u03b7",
+            "random": "\u03a4\u03c5\u03c7\u03b1\u03af\u03bf",
+            "right_bow": "\u03a4\u03cc\u03be\u03bf \u0394\u03b5\u03be\u03b9\u03ac",
+            "right_spiral": "\u03a3\u03c0\u03b9\u03c1\u03ac\u03bb \u0394\u03b5\u03be\u03b9\u03ac",
+            "single": "\u039c\u03bf\u03bd\u03cc",
+            "smart": "\u0388\u03be\u03c5\u03c0\u03bd\u03bf",
+            "spiral": "\u03a3\u03c0\u03b9\u03c1\u03ac\u03bb",
+            "standby": "\u039a\u03b1\u03c4\u03ac\u03c3\u03c4\u03b1\u03c3\u03b7 \u03b1\u03bd\u03b1\u03bc\u03bf\u03bd\u03ae\u03c2",
+            "wall_follow": "\u0391\u03ba\u03bf\u03bb\u03bf\u03cd\u03b8\u03b7\u03c3\u03b5 \u03c4\u03bf\u03bd \u03c4\u03bf\u03af\u03c7\u03bf",
+            "zone": "\u0396\u03ce\u03bd\u03b7"
+        }
+    }
+}

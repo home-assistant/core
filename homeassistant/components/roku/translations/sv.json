@@ -2,6 +2,14 @@
     "config": {
         "abort": {
             "unknown": "Ov\u00e4ntat fel"
+        },
+        "flow_title": "Roku: {name}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "V\u00e4rd"
+                }
+            }
         }
     }
 }

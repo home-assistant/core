@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL",
+                    "name": "Name",
+                    "password": "Password",
+                    "still_image_url": "Still Image URL",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "already_configured": "Device is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "mjpeg_url": "MJPEG URL",
+                    "name": "Name",
+                    "password": "Password",
+                    "still_image_url": "Still Image URL",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    }
+}

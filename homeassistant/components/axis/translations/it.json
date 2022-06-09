@@ -11,7 +11,7 @@
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida"
         },
-        "flow_title": "Dispositivo Axis: {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "user": {
                 "data": {
@@ -28,7 +28,7 @@
         "step": {
             "configure_stream": {
                 "data": {
-                    "stream_profile": "Selezionare il profilo di flusso da utilizzare"
+                    "stream_profile": "Seleziona il profilo di flusso da utilizzare"
                 },
                 "title": "Opzioni del flusso video del dispositivo Axis"
             }

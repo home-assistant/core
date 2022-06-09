@@ -21,8 +21,8 @@
                 "data": {
                     "discovery": "Omogo\u010di odkrivanje"
                 },
-                "description": "Ali \u017eelite konfigurirati Home Assistant za povezavo s posrednikom MQTT, ki ga ponuja dodatek Hass.io {addon} ?",
-                "title": "MQTT Broker prek dodatka Hass.io"
+                "description": "Ali \u017eelite konfigurirati Home Assistant za povezavo s posrednikom MQTT, ki ga ponuja dodatek Supervisor {addon} ?",
+                "title": "MQTT Broker prek dodatka Supervisor"
             }
         }
     },

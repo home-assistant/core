@@ -1,6 +1,9 @@
 """Support for controlling GPIO pins of a Raspberry Pi."""
-from gpiozero import LED, Button
+from gpiozero import LED, DigitalInputDevice
 from gpiozero.pins.pigpio import PiGPIOFactory
+
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.typing import ConfigType
 
 CONF_BOUNCETIME = "bouncetime"
 CONF_INVERT_LOGIC = "invert_logic"
@@ -13,7 +16,7 @@ DEFAULT_PULL_MODE = "UP"
 DOMAIN = "remote_rpi_gpio"
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Raspberry Pi Remote GPIO component."""
     return True
 
@@ -38,7 +41,7 @@ def setup_input(address, port, pull_mode, bouncetime):
         pull_gpio_up = False
 
     try:
-        return Button(
+        return DigitalInputDevice(
             port,
             pull_up=pull_gpio_up,
             bounce_time=bouncetime,
@@ -56,6 +59,6 @@ def write_output(switch, value):
         switch.off()
 
 
-def read_input(button):
+def read_input(sensor):
     """Read a value from a GPIO."""
-    return button.is_pressed
+    return sensor.value

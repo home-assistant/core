@@ -1,6 +1,7 @@
 """Base class for Ring entity."""
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import callback
+from homeassistant.helpers.entity import DeviceInfo
 
 from . import ATTRIBUTION, DOMAIN
 
@@ -38,16 +39,16 @@ class RingEntityMixin:
         return False
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {ATTR_ATTRIBUTION: ATTRIBUTION}
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "identifiers": {(DOMAIN, self._device.device_id)},
-            "name": self._device.name,
-            "model": self._device.model,
-            "manufacturer": "Ring",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device.device_id)},
+            manufacturer="Ring",
+            model=self._device.model,
+            name=self._device.name,
+        )

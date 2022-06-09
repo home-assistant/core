@@ -1,5 +1,5 @@
 """Tests for the NZBGet integration."""
-from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.const import (
@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 ENTRY_CONFIG = {
@@ -33,16 +32,6 @@ USER_INPUT = {
     CONF_NAME: "NZBGet",
     CONF_PASSWORD: "",
     CONF_PORT: 6789,
-    CONF_SSL: False,
-    CONF_USERNAME: "",
-}
-
-YAML_CONFIG = {
-    CONF_HOST: "10.10.10.30",
-    CONF_NAME: "GetNZBsTest",
-    CONF_PASSWORD: "",
-    CONF_PORT: 6789,
-    CONF_SCAN_INTERVAL: timedelta(seconds=5),
     CONF_SSL: False,
     CONF_USERNAME: "",
 }
@@ -82,13 +71,6 @@ async def init_integration(
     await hass.async_block_till_done()
 
     return entry
-
-
-def _patch_async_setup(return_value=True):
-    return patch(
-        "homeassistant.components.nzbget.async_setup",
-        return_value=return_value,
-    )
 
 
 def _patch_async_setup_entry(return_value=True):

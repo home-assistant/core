@@ -1,11 +1,15 @@
 """Binary sensor support for Wireless Sensor Tags."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
 from homeassistant.const import CONF_MONITORED_CONDITIONS, STATE_OFF, STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import (
     DOMAIN as WIRELESSTAG_DOMAIN,
@@ -68,20 +72,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the platform for a WirelessTags."""
-    platform = hass.data.get(WIRELESSTAG_DOMAIN)
+    platform = hass.data[WIRELESSTAG_DOMAIN]
 
     sensors = []
     tags = platform.tags
     for tag in tags.values():
         allowed_sensor_types = tag.supported_binary_events_types
-        for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
+        for sensor_type in config[CONF_MONITORED_CONDITIONS]:
             if sensor_type in allowed_sensor_types:
                 sensors.append(WirelessTagBinarySensor(platform, tag, sensor_type))
 
     add_entities(sensors, True)
-    hass.add_job(platform.install_push_notifications, sensors)
 
 
 class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
@@ -134,8 +142,8 @@ class WirelessTagBinarySensor(WirelessTagBaseSensor, BinarySensorEntity):
         return self.principal_value
 
     @callback
-    def _on_binary_event_callback(self, event):
+    def _on_binary_event_callback(self, new_tag):
         """Update state from arrived push notification."""
-        # state should be 'on' or 'off'
-        self._state = event.data.get("state")
+        self._tag = new_tag
+        self._state = self.updated_state_value()
         self.async_write_ha_state()

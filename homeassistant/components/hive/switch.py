@@ -1,65 +1,70 @@
 """Support for the Hive switches."""
-from homeassistant.components.switch import SwitchEntity
+from __future__ import annotations
 
-from . import DATA_HIVE, DOMAIN, HiveEntity, refresh_system
+from datetime import timedelta
+
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from . import HiveEntity, refresh_system
+from .const import ATTR_MODE, DOMAIN
+
+PARALLEL_UPDATES = 0
+SCAN_INTERVAL = timedelta(seconds=15)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up Hive switches."""
-    if discovery_info is None:
-        return
-
-    session = hass.data.get(DATA_HIVE)
-    devs = []
-    for dev in discovery_info:
-        devs.append(HiveDevicePlug(session, dev))
-    add_entities(devs)
+SWITCH_TYPES: tuple[SwitchEntityDescription, ...] = (
+    SwitchEntityDescription(
+        key="activeplug",
+    ),
+    SwitchEntityDescription(key="Heating_Heat_On_Demand"),
+)
 
 
-class HiveDevicePlug(HiveEntity, SwitchEntity):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Hive thermostat based on a config entry."""
+
+    hive = hass.data[DOMAIN][entry.entry_id]
+    devices = hive.session.deviceList.get("switch")
+    entities = []
+    if devices:
+        for description in SWITCH_TYPES:
+            for dev in devices:
+                if dev["hiveType"] == description.key:
+                    entities.append(HiveSwitch(hive, dev, description))
+    async_add_entities(entities, True)
+
+
+class HiveSwitch(HiveEntity, SwitchEntity):
     """Hive Active Plug."""
 
-    @property
-    def unique_id(self):
-        """Return unique ID of entity."""
-        return self._unique_id
-
-    @property
-    def device_info(self):
-        """Return device information."""
-        return {"identifiers": {(DOMAIN, self.unique_id)}, "name": self.name}
-
-    @property
-    def name(self):
-        """Return the name of this Switch device if any."""
-        return self.node_name
-
-    @property
-    def device_state_attributes(self):
-        """Show Device Attributes."""
-        return self.attributes
-
-    @property
-    def current_power_w(self):
-        """Return the current power usage in W."""
-        return self.session.switch.get_power_usage(self.node_id)
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self.session.switch.get_state(self.node_id)
+    def __init__(self, hive, hive_device, entity_description):
+        """Initialise hive switch."""
+        super().__init__(hive, hive_device)
+        self.entity_description = entity_description
 
     @refresh_system
-    def turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
-        self.session.switch.turn_on(self.node_id)
+        await self.hive.switch.turnOn(self.device)
 
     @refresh_system
-    def turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        self.session.switch.turn_off(self.node_id)
+        await self.hive.switch.turnOff(self.device)
 
-    def update(self):
+    async def async_update(self):
         """Update all Node data from Hive."""
-        self.session.core.update_data(self.node_id)
-        self.attributes = self.session.attributes.state_attributes(self.node_id)
+        await self.hive.session.updateData(self.device)
+        self.device = await self.hive.switch.getSwitch(self.device)
+        self.attributes.update(self.device.get("attributes", {}))
+        self._attr_extra_state_attributes = {
+            ATTR_MODE: self.attributes.get(ATTR_MODE),
+        }
+        self._attr_available = self.device["deviceData"].get("online")
+        if self._attr_available:
+            self._attr_is_on = self.device["status"]["state"]

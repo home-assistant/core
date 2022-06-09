@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u91d1\u9470",
+                    "default_channel": "\u9810\u8a2d\u983b\u9053",
+                    "icon": "\u5716\u793a",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                },
+                "data_description": {
+                    "api_key": "\u4f7f\u7528\u65bc\u50b3\u9001 Slack \u8a0a\u606f\u7684 Slack API \u6b0a\u6756\u3002",
+                    "default_channel": "\u767c\u9001\u8a0a\u606f\u6642\u3001\u82e5\u7121\u6307\u5b9a\u983b\u9053\u6642\uff0c\u6240\u8981\u5f35\u8cbc\u7684\u983b\u9053\u3002",
+                    "icon": "\u4f7f\u7528 Slack \u8868\u60c5\u7b26\u865f\u4f5c\u70ba\u63d0\u4f9b\u4f7f\u7528\u8005\u540d\u7a31\u4e4b\u5716\u793a\u3002",
+                    "username": "Home Assistant \u5c07\u6703\u4f7f\u7528\u6307\u5b9a\u4f7f\u7528\u8005\u540d\u7a31\u5f35\u8cbc\u81f3 Slack\u3002"
+                },
+                "description": "\u8acb\u53c3\u8003\u6587\u4ef6\u4ee5\u53d6\u5f97 API \u91d1\u9470\u3002"
+            }
+        }
+    }
+}

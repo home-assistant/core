@@ -9,6 +9,10 @@
             "unknown": "Error inesperado"
         },
         "step": {
+            "reauth_confirm": {
+                "description": "La contrase\u00f1a de {username} ya no es v\u00e1lida.",
+                "title": "Vuelva a autenticar su cuenta de Flume"
+            },
             "user": {
                 "data": {
                     "client_id": "Identificaci\u00f3n del cliente",

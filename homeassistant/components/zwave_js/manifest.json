@@ -1,0 +1,34 @@
+{
+  "domain": "zwave_js",
+  "name": "Z-Wave JS",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/zwave_js",
+  "requirements": ["zwave-js-server-python==0.37.1"],
+  "codeowners": ["@home-assistant/z-wave"],
+  "dependencies": ["usb", "http", "websocket_api"],
+  "iot_class": "local_push",
+  "usb": [
+    {
+      "vid": "0658",
+      "pid": "0200",
+      "known_devices": ["Aeotec Z-Stick Gen5+", "Z-WaveMe UZB"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "8A2A",
+      "description": "*z-wave*",
+      "known_devices": ["Nortek HUSBZB-1"]
+    },
+    {
+      "vid": "10C4",
+      "pid": "EA60",
+      "known_devices": [
+        "Aeotec Z-Stick 7",
+        "Silicon Labs UZB-7",
+        "Zooz ZST10 700"
+      ]
+    }
+  ],
+  "zeroconf": ["_zwave-js-server._tcp.local."],
+  "loggers": ["zwave_js_server"]
+}

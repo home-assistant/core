@@ -8,5 +8,11 @@
                 "description": "\u60a8\u60f3\u8981\u914d\u7f6e\u79fb\u52a8\u5e94\u7528\u7a0b\u5e8f\u7ec4\u4ef6\u5417\uff1f"
             }
         }
-    }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "\u63a8\u9001\u901a\u77e5"
+        }
+    },
+    "title": "\u79fb\u52a8\u5e94\u7528"
 }

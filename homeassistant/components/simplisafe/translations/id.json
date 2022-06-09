@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun SimpliSafe ini sudah digunakan.",
+            "email_2fa_timed_out": "Tenggang waktu habis ketika menunggu autentikasi dua faktor berbasis email.",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "progress": {
+            "email_2fa": "Periksa email Anda untuk tautan verifikasi dari Simplisafe."
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Kata Sandi"
+                },
+                "description": "Masukkan kembali kata sandi untuk {username}.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Kode"
+                },
+                "description": "Masukkan kode autentikasi dua faktor yang dikirimkan kepada Anda melalui SMS."
+            },
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan nama pengguna dan kata sandi Anda."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Kode (digunakan di antarmuka Home Assistant)"
+                },
+                "title": "Konfigurasikan SimpliSafe"
+            }
+        }
+    }
+}

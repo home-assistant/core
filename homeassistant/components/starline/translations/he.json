@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "error_auth_user": "\u05e9\u05dd \u05de\u05e9\u05ea\u05de\u05e9 \u05d0\u05d5 \u05e1\u05d9\u05e1\u05de\u05d4 \u05e9\u05d2\u05d5\u05d9\u05d9\u05dd"
+        },
+        "step": {
+            "auth_captcha": {
+                "description": "{captcha_img}"
+            },
+            "auth_user": {
+                "data": {
+                    "password": "\u05e1\u05d9\u05e1\u05de\u05d4",
+                    "username": "\u05e9\u05dd \u05de\u05e9\u05ea\u05de\u05e9"
+                },
+                "description": "\u05d3\u05d5\u05d0\"\u05dc \u05d5\u05e1\u05d9\u05e1\u05de\u05d4 \u05dc\u05d7\u05e9\u05d1\u05d5\u05df StarLine"
+            }
+        }
+    }
+}

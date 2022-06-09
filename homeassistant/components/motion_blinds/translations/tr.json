@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "connection_error": "Ba\u011flanma hatas\u0131"
+        },
+        "error": {
+            "discovery_error": "Motion Gateway bulunamad\u0131"
+        },
+        "flow_title": "{short_mac} ({ip_address})",
+        "step": {
+            "connect": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                },
+                "description": "16 karakterlik API Anahtar\u0131na ihtiyac\u0131n\u0131z olacak, talimatlar i\u00e7in https://www.home-assistant.io/integrations/motion_blinds/#retriving-the-key adresine bak\u0131n."
+            },
+            "select": {
+                "data": {
+                    "select_ip": "IP Adresi"
+                },
+                "description": "Motion Gateway'e ba\u011flamak istiyorsan\u0131z kurulumu tekrar \u00e7al\u0131\u015ft\u0131r\u0131n",
+                "title": "Ba\u011flamak istedi\u011finiz Hareket A\u011f Ge\u00e7idini se\u00e7in"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adresi"
+                },
+                "description": "Motion Gateway'inize ba\u011flan\u0131n, IP adresi ayarlanmad\u0131ysa, otomatik ke\u015fif kullan\u0131l\u0131r"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "wait_for_push": "G\u00fcncellemede \u00e7ok noktaya yay\u0131n i\u00e7in bekleyin"
+                }
+            }
+        }
+    }
+}

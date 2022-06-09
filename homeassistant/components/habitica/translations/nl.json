@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "invalid_credentials": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel",
+                    "api_user": "Habitica's API-gebruikers-ID",
+                    "name": "Vervanging voor de gebruikersnaam van Habitica. Wordt gebruikt voor serviceoproepen",
+                    "url": "URL"
+                },
+                "description": "Verbind uw Habitica-profiel om het profiel en de taken van uw gebruiker te bewaken. Houd er rekening mee dat api_id en api_key van https://habitica.com/user/settings/api moeten worden gehaald"
+            }
+        }
+    }
+}

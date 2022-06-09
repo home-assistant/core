@@ -1,21 +1,30 @@
 """InfluxDB component which allows you to get data from an Influx database."""
+from __future__ import annotations
+
+import datetime
 import logging
-from typing import Dict
+from typing import Final
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_API_VERSION,
     CONF_NAME,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     EVENT_HOMEASSISTANT_STOP,
     STATE_UNKNOWN,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady, TemplateError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 from . import create_influx_url, get_influx_connection, validate_version_specific_config
@@ -59,6 +68,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL: Final = datetime.timedelta(seconds=60)
+
 
 def _merge_connection_config_into_query(conf, query):
     """Merge connection details into each configured query."""
@@ -67,7 +78,7 @@ def _merge_connection_config_into_query(conf, query):
             query[key] = conf[key]
 
 
-def validate_query_format_for_version(conf: Dict) -> Dict:
+def validate_query_format_for_version(conf: dict) -> dict:
     """Ensure queries are provided in correct format based on API version."""
     if conf[CONF_API_VERSION] == API_VERSION_2:
         if CONF_QUERIES_FLUX not in conf:
@@ -99,6 +110,7 @@ def validate_query_format_for_version(conf: Dict) -> Dict:
 _QUERY_SENSOR_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
@@ -141,7 +153,12 @@ PLATFORM_SCHEMA = vol.All(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the InfluxDB component."""
     try:
         influx = get_influx_connection(config, test_read=True)
@@ -168,7 +185,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, lambda _: influx.close())
 
 
-class InfluxSensor(Entity):
+class InfluxSensor(SensorEntity):
     """Implementation of a Influxdb sensor."""
 
     def __init__(self, hass, influx, query):
@@ -183,6 +200,7 @@ class InfluxSensor(Entity):
             self._value_template = None
         self._state = None
         self._hass = hass
+        self._attr_unique_id = query.get(CONF_UNIQUE_ID)
 
         if query[CONF_LANGUAGE] == LANGUAGE_FLUX:
             query_clause = query.get(CONF_QUERY)
@@ -215,20 +233,19 @@ class InfluxSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement
 
     def update(self):
         """Get the latest data from Influxdb and updates the states."""
         self.data.update()
-        value = self.data.value
-        if value is None:
+        if (value := self.data.value) is None:
             value = STATE_UNKNOWN
         if self._value_template is not None:
             value = self._value_template.render_with_possible_json_value(

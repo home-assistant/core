@@ -1,11 +1,11 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Az eszk\u00f6zt m\u00e1r konfigur\u00e1ltuk"
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s.",
-            "unknown": "V\u00e1ratlan hiba"
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
             "2fa": {

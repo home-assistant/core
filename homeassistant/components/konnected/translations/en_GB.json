@@ -1,0 +1,12 @@
+{
+    "config": {
+        "abort": {
+            "not_konn_panel": "Not a recognised Konnected.io device"
+        }
+    },
+    "options": {
+        "abort": {
+            "not_konn_panel": "Not a recognised Konnected.io device"
+        }
+    }
+}

@@ -1,17 +1,19 @@
 """Config flow for Volumio integration."""
+from __future__ import annotations
+
 import logging
-from typing import Optional
 
 from pyvolumio import CannotConnectError, Volumio
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_ID, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN  # pylint:disable=unused-import
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,14 +37,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Volumio."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize flow."""
-        self._host: Optional[str] = None
-        self._port: Optional[int] = None
-        self._name: Optional[str] = None
-        self._uuid: Optional[str] = None
+        self._host: str | None = None
+        self._port: int | None = None
+        self._name: str | None = None
+        self._uuid: str | None = None
 
     @callback
     def _async_get_entry(self):
@@ -93,12 +94,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_zeroconf(self, discovery_info: DiscoveryInfoType):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle zeroconf discovery."""
-        self._host = discovery_info["host"]
-        self._port = int(discovery_info["port"])
-        self._name = discovery_info["properties"]["volumioName"]
-        self._uuid = discovery_info["properties"]["UUID"]
+        self._host = discovery_info.host
+        self._port = discovery_info.port
+        self._name = discovery_info.properties["volumioName"]
+        self._uuid = discovery_info.properties["UUID"]
 
         await self._set_uid_and_abort()
 

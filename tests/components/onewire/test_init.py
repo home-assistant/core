@@ -1,88 +1,114 @@
 """Tests for 1-Wire config flow."""
-from pyownet.protocol import ConnError, OwnetError
+from collections.abc import Awaitable, Callable
+from unittest.mock import MagicMock, patch
 
-from homeassistant.components.onewire.const import CONF_TYPE_OWSERVER, DOMAIN
-from homeassistant.config_entries import (
-    CONN_CLASS_LOCAL_POLL,
-    ENTRY_STATE_LOADED,
-    ENTRY_STATE_NOT_LOADED,
-    ENTRY_STATE_SETUP_RETRY,
-)
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TYPE
+import aiohttp
+from pyownet import protocol
+import pytest
 
-from . import setup_onewire_owserver_integration, setup_onewire_sysbus_integration
+from homeassistant.components.onewire.const import DOMAIN
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
-from tests.common import MockConfigEntry
+from . import setup_owproxy_mock_devices
 
 
-async def test_owserver_connect_failure(hass):
+async def remove_device(
+    ws_client: aiohttp.ClientWebSocketResponse, device_id: str, config_entry_id: str
+) -> bool:
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 1,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
+@pytest.mark.usefixtures("owproxy_with_connerror")
+async def test_connect_failure(hass: HomeAssistant, config_entry: ConfigEntry):
     """Test connection failure raises ConfigEntryNotReady."""
-    config_entry_owserver = MockConfigEntry(
-        domain=DOMAIN,
-        source="user",
-        data={
-            CONF_TYPE: CONF_TYPE_OWSERVER,
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: "1234",
-        },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
-        connection_class=CONN_CLASS_LOCAL_POLL,
-        options={},
-        entry_id="2",
-    )
-    config_entry_owserver.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
-        side_effect=ConnError,
-    ):
-        await hass.config_entries.async_setup(config_entry_owserver.entry_id)
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert config_entry_owserver.state == ENTRY_STATE_SETUP_RETRY
-    assert not hass.data.get(DOMAIN)
-
-
-async def test_failed_owserver_listing(hass):
-    """Create the 1-Wire integration."""
-    config_entry_owserver = MockConfigEntry(
-        domain=DOMAIN,
-        source="user",
-        data={
-            CONF_TYPE: CONF_TYPE_OWSERVER,
-            CONF_HOST: "1.2.3.4",
-            CONF_PORT: "1234",
-        },
-        unique_id=f"{CONF_TYPE_OWSERVER}:1.2.3.4:1234",
-        connection_class=CONN_CLASS_LOCAL_POLL,
-        options={},
-        entry_id="2",
-    )
-    config_entry_owserver.add_to_hass(hass)
-
-    with patch("homeassistant.components.onewire.onewirehub.protocol.proxy") as owproxy:
-        owproxy.return_value.dir.side_effect = OwnetError
-        await hass.config_entries.async_setup(config_entry_owserver.entry_id)
-        await hass.async_block_till_done()
-
-        return config_entry_owserver
-
-
-async def test_unload_entry(hass):
-    """Test being able to unload an entry."""
-    config_entry_owserver = await setup_onewire_owserver_integration(hass)
-    config_entry_sysbus = await setup_onewire_sysbus_integration(hass)
-
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 2
-    assert config_entry_owserver.state == ENTRY_STATE_LOADED
-    assert config_entry_sysbus.state == ENTRY_STATE_LOADED
-
-    assert await hass.config_entries.async_unload(config_entry_owserver.entry_id)
-    assert await hass.config_entries.async_unload(config_entry_sysbus.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry_owserver.state == ENTRY_STATE_NOT_LOADED
-    assert config_entry_sysbus.state == ENTRY_STATE_NOT_LOADED
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.data.get(DOMAIN)
+
+
+async def test_listing_failure(
+    hass: HomeAssistant, config_entry: ConfigEntry, owproxy: MagicMock
+):
+    """Test listing failure raises ConfigEntryNotReady."""
+    owproxy.return_value.dir.side_effect = protocol.OwnetError()
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.data.get(DOMAIN)
+
+
+@pytest.mark.usefixtures("owproxy")
+async def test_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry):
+    """Test being able to unload an entry."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
+
+
+@patch("homeassistant.components.onewire.PLATFORMS", [Platform.SENSOR])
+async def test_registry_cleanup(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    owproxy: MagicMock,
+    hass_ws_client: Callable[
+        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+    ],
+):
+    """Test being able to remove a disconnected device."""
+    assert await async_setup_component(hass, "config", {})
+
+    entry_id = config_entry.entry_id
+    device_registry = dr.async_get(hass)
+    live_id = "10.111111111111"
+    dead_id = "28.111111111111"
+
+    # Initialise with two components
+    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [live_id, dead_id])
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    # Reload with a device no longer on bus
+    setup_owproxy_mock_devices(owproxy, Platform.SENSOR, [live_id])
+    await hass.config_entries.async_reload(entry_id)
+    await hass.async_block_till_done()
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+
+    # Try to remove "10.111111111111" - fails as it is live
+    device = device_registry.async_get_device(identifiers={(DOMAIN, live_id)})
+    assert await remove_device(await hass_ws_client(hass), device.id, entry_id) is False
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 2
+    assert device_registry.async_get_device(identifiers={(DOMAIN, live_id)}) is not None
+
+    # Try to remove "28.111111111111" - succeeds as it is dead
+    device = device_registry.async_get_device(identifiers={(DOMAIN, dead_id)})
+    assert await remove_device(await hass_ws_client(hass), device.id, entry_id) is True
+    assert len(dr.async_entries_for_config_entry(device_registry, entry_id)) == 1
+    assert device_registry.async_get_device(identifiers={(DOMAIN, dead_id)}) is None

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Estas coordenadas ya est\u00e1n registradas."
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada"
         },
         "error": {
             "invalid_api_key": "Clave API no v\u00e1lida"
@@ -15,6 +15,17 @@
                     "longitude": "Longitud"
                 },
                 "title": "Completa tu informaci\u00f3n"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "\u00cdndice UV inicial para la ventana de protecci\u00f3n",
+                    "to_window": "\u00cdndice UV final para la ventana de protecci\u00f3n"
+                },
+                "title": "Configurar OpenUV"
             }
         }
     }

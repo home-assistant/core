@@ -1,4 +1,6 @@
 """Tests for the Ruckus Unleashed integration."""
+from unittest.mock import patch
+
 from homeassistant.components.ruckus_unleashed import DOMAIN
 from homeassistant.components.ruckus_unleashed.const import (
     API_ACCESS_POINT,
@@ -14,8 +16,8 @@ from homeassistant.components.ruckus_unleashed.const import (
     API_VERSION,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.helpers import device_registry as dr
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 DEFAULT_TITLE = "Ruckus Mesh"
@@ -67,6 +69,13 @@ def mock_config_entry() -> MockConfigEntry:
 async def init_integration(hass) -> MockConfigEntry:
     """Set up the Ruckus Unleashed integration in Home Assistant."""
     entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    # Make device tied to other integration so device tracker entities get enabled
+    dr.async_get(hass).async_get_or_create(
+        name="Device from other integration",
+        config_entry_id=MockConfigEntry().entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, TEST_CLIENT[API_MAC])},
+    )
     with patch(
         "homeassistant.components.ruckus_unleashed.Ruckus.connect",
         return_value=None,
@@ -85,7 +94,6 @@ async def init_integration(hass) -> MockConfigEntry:
             TEST_CLIENT[API_MAC]: TEST_CLIENT,
         },
     ):
-        entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 

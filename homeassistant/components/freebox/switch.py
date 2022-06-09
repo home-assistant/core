@@ -1,12 +1,15 @@
 """Support for Freebox Delta, Revolution and Mini 4K."""
-import logging
-from typing import Dict
+from __future__ import annotations
 
-from aiofreepybox.exceptions import InsufficientPermissionsError
+import logging
+
+from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .router import FreeboxRouter
@@ -15,10 +18,10 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the switch."""
-    router = hass.data[DOMAIN][entry.unique_id]
+    router: FreeboxRouter = hass.data[DOMAIN][entry.unique_id]
     async_add_entities([FreeboxWifiSwitch(router)], True)
 
 
@@ -28,7 +31,7 @@ class FreeboxWifiSwitch(SwitchEntity):
     def __init__(self, router: FreeboxRouter) -> None:
         """Initialize the Wifi switch."""
         self._name = "Freebox WiFi"
-        self._state = None
+        self._state: bool | None = None
         self._router = router
         self._unique_id = f"{self._router.mac} {self._name}"
 
@@ -43,12 +46,12 @@ class FreeboxWifiSwitch(SwitchEntity):
         return self._name
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
     @property
-    def device_info(self) -> Dict[str, any]:
+    def device_info(self) -> DeviceInfo:
         """Return the device information."""
         return self._router.device_info
 

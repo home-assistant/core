@@ -2,7 +2,8 @@
 import asyncio
 
 import zigpy.exceptions
-import zigpy.zcl.clusters.lightlink as lightlink
+from zigpy.zcl.clusters import lightlink
+from zigpy.zcl.foundation import GENERAL_COMMANDS, GeneralCommand
 
 from .. import registries
 from .base import ChannelStatus, ZigbeeChannel
@@ -12,6 +13,8 @@ from .base import ChannelStatus, ZigbeeChannel
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(lightlink.LightLink.cluster_id)
 class LightLink(ZigbeeChannel):
     """Lightlink channel."""
+
+    BIND: bool = False
 
     async def async_configure(self) -> None:
         """Add Coordinator to LightLink group ."""
@@ -28,10 +31,15 @@ class LightLink(ZigbeeChannel):
             return
 
         try:
-            _, _, groups = await self.cluster.get_group_identifiers(0)
+            rsp = await self.cluster.get_group_identifiers(0)
         except (zigpy.exceptions.ZigbeeException, asyncio.TimeoutError) as exc:
             self.warning("Couldn't get list of groups: %s", str(exc))
             return
+
+        if isinstance(rsp, GENERAL_COMMANDS[GeneralCommand.Default_Response].schema):
+            groups = []
+        else:
+            groups = rsp.group_info_records
 
         if groups:
             for group in groups:

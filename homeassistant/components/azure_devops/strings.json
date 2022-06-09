@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "Azure DevOps: {project_url}",
+    "flow_title": "{project_url}",
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",

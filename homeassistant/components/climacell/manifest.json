@@ -1,0 +1,11 @@
+{
+  "domain": "climacell",
+  "name": "ClimaCell",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/climacell",
+  "requirements": ["pyclimacell==0.18.2"],
+  "after_dependencies": ["tomorrowio"],
+  "codeowners": ["@raman325"],
+  "iot_class": "cloud_polling",
+  "loggers": ["pyclimacell"]
+}

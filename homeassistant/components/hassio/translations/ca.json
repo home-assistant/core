@@ -1,9 +1,10 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Versi\u00f3 de l'agent",
             "board": "Placa",
-            "disk_total": "Total disc",
-            "disk_used": "Disc utilitzat",
+            "disk_total": "Total del disc",
+            "disk_used": "Emmagatzematge utilitzat",
             "docker_version": "Versi\u00f3 de Docker",
             "healthy": "Saludable",
             "host_os": "Sistema operatiu amfitri\u00f3",
@@ -11,9 +12,8 @@
             "supervisor_api": "API del Supervisor",
             "supervisor_version": "Versi\u00f3 del Supervisor",
             "supported": "Compatible",
-            "update_channel": "Canal d'actualitzaci\u00f3",
-            "version_api": "API de versions"
+            "update_channel": "Canal d'actualitzacions",
+            "version_api": "Versi\u00f3 d'APIs"
         }
-    },
-    "title": "Hass.io"
+    }
 }

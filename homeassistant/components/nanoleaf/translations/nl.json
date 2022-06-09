@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_token": "Ongeldig toegangstoken",
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "not_allowing_new_tokens": "Nanoleaf staat geen nieuwe tokens toe, volg de bovenstaande instructies.",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "link": {
+                "description": "Houd de aan/uit-knop van je Nanoleaf 5 seconden ingedrukt totdat de LED's van de knoppen beginnen te knipperen en klik vervolgens binnen 30 seconden op **OPSLAAN**.",
+                "title": "Link Nanoleaf"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "swipe_down": "Veeg omlaag",
+            "swipe_left": "Veeg naar links",
+            "swipe_right": "Veeg naar rechts",
+            "swipe_up": "Veeg omhoog"
+        }
+    }
+}

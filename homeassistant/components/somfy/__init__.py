@@ -1,30 +1,28 @@
 """Support for Somfy hubs."""
-from abc import abstractmethod
-import asyncio
 from datetime import timedelta
 import logging
 
 from pymfy.api.devices.category import Category
 import voluptuous as vol
 
-from homeassistant.components.somfy import config_flow
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import callback
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_OPTIMISTIC,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
     device_registry as dr,
 )
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.typing import ConfigType
 
-from . import api
-from .const import API, CONF_OPTIMISTIC, COORDINATOR, DOMAIN
+from . import api, config_flow
+from .const import COORDINATOR, DOMAIN
+from .coordinator import SomfyDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +45,15 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-SOMFY_COMPONENTS = ["cover", "switch"]
+PLATFORMS = [
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Somfy component."""
     hass.data[DOMAIN] = {}
     domain_config = config.get(DOMAIN, {})
@@ -72,8 +75,16 @@ async def async_setup(hass, config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Somfy from a config entry."""
+
+    _LOGGER.warning(
+        "The Somfy integration is deprecated and will be removed "
+        "in Home Assistant Core 2022.7; due to the Somfy Open API deprecation."
+        "The Somfy Open API will shutdown June 21st 2022, migrate to the "
+        "Overkiz integration to control your Somfy devices"
+    )
+
     # Backwards compat
     if "auth_implementation" not in entry.data:
         hass.config_entries.async_update_entry(
@@ -87,23 +98,16 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
     )
 
     data = hass.data[DOMAIN]
-    data[API] = api.ConfigEntrySomfyApi(hass, entry, implementation)
-
-    async def _update_all_devices():
-        """Update all the devices."""
-        devices = await hass.async_add_executor_job(data[API].get_devices)
-        return {dev.id: dev for dev in devices}
-
-    coordinator = DataUpdateCoordinator(
+    coordinator = SomfyDataUpdateCoordinator(
         hass,
         _LOGGER,
         name="somfy device update",
-        update_method=_update_all_devices,
+        client=api.ConfigEntrySomfyApi(hass, entry, implementation),
         update_interval=SCAN_INTERVAL,
     )
     data[COORDINATOR] = coordinator
 
-    await coordinator.async_refresh()
+    await coordinator.async_config_entry_first_refresh()
 
     if all(not bool(device.states) for device in coordinator.data.values()):
         _LOGGER.debug(
@@ -112,7 +116,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
         )
         coordinator.update_interval = SCAN_INTERVAL_ALL_ASSUMED_STATE
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
 
     hubs = [
         device
@@ -129,86 +133,11 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry):
             model=hub.type,
         )
 
-    for component in SOMFY_COMPONENTS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hass.data[DOMAIN].pop(API, None)
-    await asyncio.gather(
-        *[
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in SOMFY_COMPONENTS
-        ]
-    )
-    return True
-
-
-class SomfyEntity(CoordinatorEntity, Entity):
-    """Representation of a generic Somfy device."""
-
-    def __init__(self, coordinator, device_id, somfy_api):
-        """Initialize the Somfy device."""
-        super().__init__(coordinator)
-        self._id = device_id
-        self.api = somfy_api
-
-    @property
-    def device(self):
-        """Return data for the device id."""
-        return self.coordinator.data[self._id]
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id base on the id returned by Somfy."""
-        return self._id
-
-    @property
-    def name(self) -> str:
-        """Return the name of the device."""
-        return self.device.name
-
-    @property
-    def device_info(self):
-        """Return device specific attributes.
-
-        Implemented by platform classes.
-        """
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "model": self.device.type,
-            "via_hub": (DOMAIN, self.device.parent_id),
-            # For the moment, Somfy only returns their own device.
-            "manufacturer": "Somfy",
-        }
-
-    def has_capability(self, capability: str) -> bool:
-        """Test if device has a capability."""
-        capabilities = self.device.capabilities
-        return bool([c for c in capabilities if c.name == capability])
-
-    def has_state(self, state: str) -> bool:
-        """Test if device has a state."""
-        states = self.device.states
-        return bool([c for c in states if c.name == state])
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return if the device has an assumed state."""
-        return not bool(self.device.states)
-
-    @callback
-    def _handle_coordinator_update(self):
-        """Process an update from the coordinator."""
-        self._create_device()
-        super()._handle_coordinator_update()
-
-    @abstractmethod
-    def _create_device(self):
-        """Update the device with the latest data."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

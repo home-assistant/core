@@ -1,14 +1,16 @@
 """HomeKit controller session fixtures."""
 import datetime
 from unittest import mock
+import unittest.mock
 
 from aiohomekit.testing import FakeController
 import pytest
 
 import homeassistant.util.dt as dt_util
 
-import tests.async_mock
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
+
+pytest.register_assert_rewrite("tests.components.homekit_controller.common")
 
 
 @pytest.fixture
@@ -25,5 +27,13 @@ def utcnow(request):
 def controller(hass):
     """Replace aiohomekit.Controller with an instance of aiohomekit.testing.FakeController."""
     instance = FakeController()
-    with tests.async_mock.patch("aiohomekit.Controller", return_value=instance):
+    with unittest.mock.patch(
+        "homeassistant.components.homekit_controller.utils.Controller",
+        return_value=instance,
+    ):
         yield instance
+
+
+@pytest.fixture(autouse=True)
+def hk_mock_async_zeroconf(mock_async_zeroconf):
+    """Auto mock zeroconf."""

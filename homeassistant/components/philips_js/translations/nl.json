@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_pin": "Ongeldige pincode",
+            "pairing_failure": "Kan niet koppelen: {error_id}",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "pair": {
+                "data": {
+                    "pin": "Pincode"
+                },
+                "description": "Voer de pincode in die op uw tv wordt weergegeven",
+                "title": "Koppel"
+            },
+            "user": {
+                "data": {
+                    "api_version": "API Versie",
+                    "host": "Host"
+                }
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "turn_on": "Apparaat wordt gevraagd om in te schakelen"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "allow_notify": "Sta het gebruik van de gegevensnotificatieservice toe."
+                }
+            }
+        }
+    }
+}

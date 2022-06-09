@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "reauth_wrong_account": "U kunt deze invoer alleen opnieuw verifi\u00ebren met hetzelfde Overkiz account en hub"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "server_in_maintenance": "Server is offline wegens onderhoud",
+            "too_many_attempts": "Te veel pogingen met een ongeldig token, tijdelijk verbannen",
+            "too_many_requests": "Te veel verzoeken, probeer het later opnieuw.",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "Gateway: {gateway_id}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "hub": "Hub",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Het Overkiz platform wordt gebruikt door fabrikanten zoals Somfy (Connexoon / TaHoma), Hitachi (Hi Kumo), Rexel (Energeasy Connect) en Atlantic (Cozytouch). Voer je inloggegevens in en selecteer je hub."
+            }
+        }
+    }
+}

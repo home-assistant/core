@@ -6,11 +6,7 @@
         "step": {
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Kontinuerlig",
-                    "delay": "F\u00f6rdr\u00f6jning",
-                    "host": "V\u00e4rdnamn eller IP-adress",
-                    "password": "L\u00f6senord"
+                    "host": "V\u00e4rdnamn eller IP-adress"
                 },
                 "title": "Anslut till enheten"
             }

@@ -1,19 +1,22 @@
 """Counter for the days until an HTTPS (TLS) certificate will expire."""
-from datetime import timedelta
+from __future__ import annotations
+
+from datetime import datetime, timedelta
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PORT,
-    DEVICE_CLASS_TIMESTAMP,
-    EVENT_HOMEASSISTANT_START,
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
 )
-from homeassistant.core import callback
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_START
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DEFAULT_PORT, DOMAIN
@@ -28,7 +31,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up certificate expiry sensor."""
 
     @callback
@@ -48,7 +56,9 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, schedule_import)
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Add cert-expiry entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -62,13 +72,10 @@ async def async_setup_entry(hass, entry, async_add_entities):
 class CertExpiryEntity(CoordinatorEntity):
     """Defines a base Cert Expiry entity."""
 
-    @property
-    def icon(self):
-        """Icon to use in the frontend, if any."""
-        return "mdi:certificate"
+    _attr_icon = "mdi:certificate"
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return additional sensor state attributes."""
         return {
             "is_valid": self.coordinator.is_cert_valid,
@@ -76,27 +83,20 @@ class CertExpiryEntity(CoordinatorEntity):
         }
 
 
-class SSLCertificateTimestamp(CertExpiryEntity):
+class SSLCertificateTimestamp(CertExpiryEntity, SensorEntity):
     """Implementation of the Cert Expiry timestamp sensor."""
 
-    @property
-    def device_class(self):
-        """Return the device class of the sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+
+    def __init__(self, coordinator) -> None:
+        """Initialize a Cert Expiry timestamp sensor."""
+        super().__init__(coordinator)
+        self._attr_name = f"Cert Expiry Timestamp ({coordinator.name})"
+        self._attr_unique_id = f"{coordinator.host}:{coordinator.port}-timestamp"
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"Cert Expiry Timestamp ({self.coordinator.name})"
-
-    @property
-    def state(self):
+    def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         if self.coordinator.data:
-            return self.coordinator.data.isoformat()
+            return self.coordinator.data
         return None
-
-    @property
-    def unique_id(self):
-        """Return a unique id for the sensor."""
-        return f"{self.coordinator.host}:{self.coordinator.port}-timestamp"

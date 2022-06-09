@@ -1,0 +1,9 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Configure la integraci\u00f3n de Dune HD. Si tiene problemas con la configuraci\u00f3n, vaya a: https://www.home-assistant.io/integrations/dunehd \n\n Aseg\u00farese de que su reproductor est\u00e9 encendido."
+            }
+        }
+    }
+}

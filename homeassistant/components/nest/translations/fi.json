@@ -1,7 +1,8 @@
 {
     "config": {
-        "abort": {
-            "authorize_url_fail": "Tuntematon virhe luotaessa valtuutuksen URL-osoitetta."
+        "error": {
+            "internal_error": "Sis\u00e4inen virhe koodin vahvistamisessa",
+            "unknown": "Odottamaton virhe"
         },
         "step": {
             "init": {

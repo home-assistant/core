@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "register_failed": "Gagal mendaftar, coba lagi.",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "link": {
+                "description": "Klik \"Kirim\", lalu sentuh panah kanan di router untuk mendaftarkan Freebox dengan Home Assistant. \n\n![Lokasi tombol di router](/static/images/config_freebox.png)",
+                "title": "Tautkan router Freebox"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

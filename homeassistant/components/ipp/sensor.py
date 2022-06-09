@@ -1,18 +1,19 @@
 """Support for IPP sensors."""
-from datetime import timedelta
-from typing import Any, Callable, Dict, List, Optional
+from __future__ import annotations
 
+from datetime import datetime, timedelta
+from typing import Any
+
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEVICE_CLASS_TIMESTAMP, PERCENTAGE
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.const import ATTR_LOCATION, PERCENTAGE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
 
-from . import IPPDataUpdateCoordinator, IPPEntity
 from .const import (
     ATTR_COMMAND_SET,
     ATTR_INFO,
-    ATTR_LOCATION,
     ATTR_MARKER_HIGH_LEVEL,
     ATTR_MARKER_LOW_LEVEL,
     ATTR_MARKER_TYPE,
@@ -22,23 +23,23 @@ from .const import (
     ATTR_URI_SUPPORTED,
     DOMAIN,
 )
+from .coordinator import IPPDataUpdateCoordinator
+from .entity import IPPEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType,
+    hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: Callable[[List[Entity], bool], None],
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up IPP sensor based on a config entry."""
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     # config flow sets this to either UUID, serial number or None
-    unique_id = entry.unique_id
-
-    if unique_id is None:
+    if (unique_id := entry.unique_id) is None:
         unique_id = entry.entry_id
 
-    sensors = []
+    sensors: list[SensorEntity] = []
 
     sensors.append(IPPPrinterSensor(entry.entry_id, unique_id, coordinator))
     sensors.append(IPPUptimeSensor(entry.entry_id, unique_id, coordinator))
@@ -51,7 +52,7 @@ async def async_setup_entry(
     async_add_entities(sensors, True)
 
 
-class IPPSensor(IPPEntity):
+class IPPSensor(IPPEntity, SensorEntity):
     """Defines an IPP sensor."""
 
     def __init__(
@@ -64,15 +65,12 @@ class IPPSensor(IPPEntity):
         icon: str,
         key: str,
         name: str,
-        unit_of_measurement: Optional[str] = None,
+        unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize IPP sensor."""
-        self._unit_of_measurement = unit_of_measurement
         self._key = key
-        self._unique_id = None
-
-        if unique_id is not None:
-            self._unique_id = f"{unique_id}_{key}"
+        self._attr_unique_id = f"{unique_id}_{key}"
+        self._attr_native_unit_of_measurement = unit_of_measurement
 
         super().__init__(
             entry_id=entry_id,
@@ -82,16 +80,6 @@ class IPPSensor(IPPEntity):
             icon=icon,
             enabled_default=enabled_default,
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this sensor."""
-        return self._unique_id
-
-    @property
-    def unit_of_measurement(self) -> str:
-        """Return the unit this state is expressed in."""
-        return self._unit_of_measurement
 
 
 class IPPMarkerSensor(IPPSensor):
@@ -118,7 +106,7 @@ class IPPMarkerSensor(IPPSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
             ATTR_MARKER_HIGH_LEVEL: self.coordinator.data.markers[
@@ -133,7 +121,7 @@ class IPPMarkerSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> Optional[int]:
+    def native_value(self) -> int | None:
         """Return the state of the sensor."""
         level = self.coordinator.data.markers[self.marker_index].level
 
@@ -161,7 +149,7 @@ class IPPPrinterSensor(IPPSensor):
         )
 
     @property
-    def device_state_attributes(self) -> Optional[Dict[str, Any]]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the entity."""
         return {
             ATTR_INFO: self.coordinator.data.info.printer_info,
@@ -174,13 +162,15 @@ class IPPPrinterSensor(IPPSensor):
         }
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> str:
         """Return the state of the sensor."""
         return self.coordinator.data.state.printer_state
 
 
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
@@ -197,12 +187,6 @@ class IPPUptimeSensor(IPPSensor):
         )
 
     @property
-    def state(self) -> str:
+    def native_value(self) -> datetime:
         """Return the state of the sensor."""
-        uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
-        return uptime.replace(microsecond=0).isoformat()
-
-    @property
-    def device_class(self) -> Optional[str]:
-        """Return the class of this sensor."""
-        return DEVICE_CLASS_TIMESTAMP
+        return utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)

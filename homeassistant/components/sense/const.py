@@ -1,8 +1,13 @@
 """Constants for monitoring a Sense energy sensor."""
 
 import asyncio
+import socket
 
-from sense_energy import SenseAPITimeoutException
+from sense_energy import (
+    SenseAPIException,
+    SenseAPITimeoutException,
+    SenseWebsocketException,
+)
 
 DOMAIN = "sense"
 DEFAULT_TIMEOUT = 10
@@ -23,10 +28,26 @@ CONSUMPTION_NAME = "Usage"
 CONSUMPTION_ID = "usage"
 PRODUCTION_NAME = "Production"
 PRODUCTION_ID = "production"
+PRODUCTION_PCT_NAME = "Net Production Percentage"
+PRODUCTION_PCT_ID = "production_pct"
+NET_PRODUCTION_NAME = "Net Production"
+NET_PRODUCTION_ID = "net_production"
+TO_GRID_NAME = "To Grid"
+TO_GRID_ID = "to_grid"
+FROM_GRID_NAME = "From Grid"
+FROM_GRID_ID = "from_grid"
+SOLAR_POWERED_NAME = "Solar Powered Percentage"
+SOLAR_POWERED_ID = "solar_powered"
 
 ICON = "mdi:flash"
 
 SENSE_TIMEOUT_EXCEPTIONS = (asyncio.TimeoutError, SenseAPITimeoutException)
+SENSE_EXCEPTIONS = (socket.gaierror, SenseWebsocketException)
+SENSE_CONNECT_EXCEPTIONS = (
+    asyncio.TimeoutError,
+    SenseAPITimeoutException,
+    SenseAPIException,
+)
 
 MDI_ICONS = {
     "ac": "air-conditioner",

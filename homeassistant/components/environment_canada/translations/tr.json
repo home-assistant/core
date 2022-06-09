@@ -1,0 +1,23 @@
+{
+    "config": {
+        "error": {
+            "bad_station_id": "\u0130stasyon Kimli\u011fi ge\u00e7ersiz, eksik veya istasyon kimli\u011fi veritaban\u0131nda bulunamad\u0131",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "error_response": "Environment Canada'dan hatal\u0131 yan\u0131t",
+            "too_many_attempts": "Environment Kanada'ya ba\u011flant\u0131lar s\u0131n\u0131rl\u0131d\u0131r; 60 saniye sonra tekrar deneyin",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "language": "Hava durumu bilgisi dili",
+                    "latitude": "Enlem",
+                    "longitude": "Boylam",
+                    "station": "Hava istasyonu ID"
+                },
+                "description": "Bir istasyon kimli\u011fi veya enlem/boylam belirtilmelidir. Kullan\u0131lan varsay\u0131lan enlem/boylam, Home Assistant kurulumunuzda yap\u0131land\u0131r\u0131lan de\u011ferlerdir. Koordinatlar belirtilirse, koordinatlara en yak\u0131n meteoroloji istasyonu kullan\u0131lacakt\u0131r. Bir istasyon kodu kullan\u0131l\u0131yorsa, \u015fu bi\u00e7imde olmal\u0131d\u0131r: PP/kod, burada PP iki harfli ildir ve kod istasyon kimli\u011fidir. \u0130stasyon kimliklerinin listesi burada bulunabilir: https://dd.weather.gc.ca/citypage_weather/docs/site_list_towns_en.csv. Hava durumu bilgileri \u0130ngilizce veya Frans\u0131zca olarak al\u0131nabilir.",
+                "title": "Environment Canada: hava konumu durumu ve dili"
+            }
+        }
+    }
+}

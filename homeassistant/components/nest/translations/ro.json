@@ -1,6 +1,12 @@
 {
     "config": {
+        "error": {
+            "unknown": "Eroare nea\u0219teptat\u0103"
+        },
         "step": {
+            "init": {
+                "description": "Alege metoda de autentificare"
+            },
             "link": {
                 "data": {
                     "code": "Cod PIN"

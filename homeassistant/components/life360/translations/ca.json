@@ -8,7 +8,7 @@
             "default": "Per configurar les opcions avan\u00e7ades mira la [documentaci\u00f3 de Life360]({docs_url})."
         },
         "error": {
-            "already_configured": "El compte ja ha estat configurat",
+            "already_configured": "El compte ja est\u00e0 configurat",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "invalid_username": "Nom d'usuari incorrecte",
             "unknown": "Error inesperat"

@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto jest ju\u017c skonfigurowane",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "area_id": "Identyfikator obszaru",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            },
+            "user": {
+                "data": {
+                    "area_id": "Identyfikator obszaru",
+                    "name": "Nazwa",
+                    "password": "Has\u0142o",
+                    "username": "Nazwa u\u017cytkownika"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "code_format_mismatch": "Kod PIN nie odpowiada wymaganej liczbie cyfr"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Domy\u015blny kod dla zamk\u00f3w. U\u017cywany, je\u015bli nie podano \u017cadnego.",
+                    "lock_code_digits": "Liczba cyfr w kodzie PIN dla zamk\u00f3w"
+                }
+            }
+        }
+    }
+}

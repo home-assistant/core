@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie je u\u017e nakonfigurovan\u00e9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

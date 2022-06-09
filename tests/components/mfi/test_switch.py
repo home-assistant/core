@@ -1,11 +1,11 @@
 """The tests for the mFi switch platform."""
+import unittest.mock as mock
+
 import pytest
 
 import homeassistant.components.mfi.switch as mfi
 import homeassistant.components.switch as switch_component
 from homeassistant.setup import async_setup_component
-
-import tests.async_mock as mock
 
 PLATFORM = mfi
 COMPONENT = switch_component
@@ -37,7 +37,6 @@ async def test_setup_adds_proper_devices(hass):
             for i, model in enumerate(mfi.SWITCH_MODELS)
         }
         ports["bad"] = mock.MagicMock(model="notaswitch")
-        print(ports["bad"].model)
         mock_client.return_value.get_devices.return_value = [
             mock.MagicMock(ports=ports)
         ]
@@ -104,21 +103,3 @@ async def test_turn_off(port, switch):
     assert port.control.call_args == mock.call(False)
     # pylint: disable=protected-access
     assert not switch._target_state
-
-
-async def test_current_power_w(port, switch):
-    """Test current power."""
-    port.data = {"active_pwr": 10}
-    assert switch.current_power_w == 10
-
-
-async def test_current_power_w_no_data(port, switch):
-    """Test current power if there is no data."""
-    port.data = {"notpower": 123}
-    assert switch.current_power_w == 0
-
-
-async def test_device_state_attributes(port, switch):
-    """Test the state attributes."""
-    port.data = {"v_rms": 1.25, "i_rms": 2.75}
-    assert switch.device_state_attributes == {"volts": 1.2, "amps": 2.8}

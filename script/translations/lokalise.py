@@ -1,4 +1,6 @@
 """API for Lokalise."""
+from __future__ import annotations
+
 from pprint import pprint
 
 import requests
@@ -6,7 +8,7 @@ import requests
 from .util import get_lokalise_token
 
 
-def get_api(project_id, debug=False) -> "Lokalise":
+def get_api(project_id, debug=False) -> Lokalise:
     """Get Lokalise API."""
     return Lokalise(project_id, get_lokalise_token(), debug)
 

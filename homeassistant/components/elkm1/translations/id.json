@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "address_already_configured": "ElkM1 dengan alamat ini sudah dikonfigurasi",
+            "already_configured": "ElkM1 dengan prefiks ini sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{mac_address} ({host})",
+        "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "protocol": "Protokol",
+                    "temperature_unit": "Unit suhu yang digunakan ElkM1.",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Hubungkan ke sistem yang ditemukan: {mac_address} ({host})",
+                "title": "Hubungkan ke Kontrol Elk-M1"
+            },
+            "manual_connection": {
+                "data": {
+                    "address": "Alamat IP atau domain atau port serial jika terhubung melalui serial.",
+                    "password": "Kata Sandi",
+                    "prefix": "Prefiks unik (kosongkan jika hanya ada satu ElkM1).",
+                    "protocol": "Protokol",
+                    "temperature_unit": "Unit suhu yang digunakan ElkM1.",
+                    "username": "Nama Pengguna"
+                },
+                "description": "String alamat harus dalam format 'alamat[:port]' untuk 'aman' dan 'tidak aman'. Misalnya, '192.168.1.1'. Port bersifat opsional dan nilai baku adalah 2101 untuk 'tidak aman' dan 2601 untuk 'aman'. Untuk protokol serial, alamat harus dalam format 'tty[:baud]'. Misalnya, '/dev/ttyS1'. Baud bersifat opsional dan nilai bakunya adalah 115200.",
+                "title": "Hubungkan ke Kontrol Elk-M1"
+            },
+            "user": {
+                "data": {
+                    "device": "Perangkat"
+                },
+                "description": "Pilih sistem yang ditemukan atau 'Entri Manual' jika tidak ada perangkat yang ditemukan.",
+                "title": "Hubungkan ke Kontrol Elk-M1"
+            }
+        }
+    }
+}

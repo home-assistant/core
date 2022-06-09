@@ -7,7 +7,8 @@
             "auth_new_token_not_work_error": "Error al autenticarse con el token reci\u00e9n creado",
             "auth_required_error": "No se pudo determinar si se requiere autorizaci\u00f3n",
             "cannot_connect": "No se pudo conectar",
-            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su identificaci\u00f3n"
+            "no_id": "La instancia de Hyperion Ambilight no inform\u00f3 su identificaci\u00f3n",
+            "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -22,7 +23,7 @@
                 "description": "Configurar autorizaci\u00f3n a tu servidor Hyperion Ambilight"
             },
             "confirm": {
-                "description": "\u00bfQuieres a\u00f1adir este Hyperion Ambilight a Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**Identificaci\u00f3n**: {id}",
+                "description": "\u00bfQuieres a\u00f1adir el siguiente Hyperion Ambilight en Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**Identificaci\u00f3n**: {id}",
                 "title": "Confirmar la adici\u00f3n del servicio Hyperion Ambilight"
             },
             "create_token": {
@@ -44,6 +45,7 @@
         "step": {
             "init": {
                 "data": {
+                    "effect_show_list": "Efectos de Hyperion a mostrar",
                     "priority": "Prioridad de Hyperion a usar para colores y efectos"
                 }
             }

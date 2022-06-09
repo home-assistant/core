@@ -6,10 +6,11 @@
         "error": {
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
         },
+        "flow_title": "{ip}",
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "Nombre de host o direcci\u00f3n IP",
+                    "ip_address": "Nombre del host o direcci\u00f3n IP",
                     "password": "Contrase\u00f1a",
                     "port": "Puerto"
                 },

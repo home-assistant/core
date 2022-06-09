@@ -1,4 +1,6 @@
 """Sensor for checking the air quality around Norway."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -27,7 +29,10 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_SHOW_ON_MAP,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -109,7 +114,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the NILU air quality sensor."""
     name = config.get(CONF_NAME)
     area = config.get(CONF_AREA)
@@ -158,7 +168,7 @@ class NiluData:
 class NiluSensor(AirQualityEntity):
     """Single nilu station air sensor."""
 
-    def __init__(self, api_data: NiluData, name: str, show_on_map: bool):
+    def __init__(self, api_data: NiluData, name: str, show_on_map: bool) -> None:
         """Initialize the sensor."""
         self._api = api_data
         self._name = f"{name} {api_data.data.name}"
@@ -175,7 +185,7 @@ class NiluSensor(AirQualityEntity):
         return ATTRIBUTION
 
     @property
-    def device_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict:
         """Return other details about the sensor state."""
         return self._attrs
 
@@ -252,7 +262,7 @@ class NiluSensor(AirQualityEntity):
 
         sensors = self._api.data.sensors.values()
         if sensors:
-            max_index = max([s.pollution_index for s in sensors])
+            max_index = max(s.pollution_index for s in sensors)
             self._max_aqi = max_index
             self._attrs[ATTR_POLLUTION_INDEX] = POLLUTION_INDEX[self._max_aqi]
 

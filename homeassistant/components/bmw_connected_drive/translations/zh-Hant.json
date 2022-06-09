@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "region": "ConnectedDrive \u5340\u57df",
+                    "username": "\u4f7f\u7528\u8005\u540d\u7a31"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "\u552f\u8b80\uff08\u50c5\u652f\u63f4\u611f\u6e2c\u5668\u8207\u901a\u77e5\uff0c\u4e0d\n\u5305\u542b\u670d\u52d9\u8207\u9396\u5b9a\uff09"
+                }
+            }
+        }
+    }
+}

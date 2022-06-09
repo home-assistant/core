@@ -1,7 +1,7 @@
 """The test for the Random binary sensor platform."""
-from homeassistant.setup import async_setup_component
+from unittest.mock import patch
 
-from tests.async_mock import patch
+from homeassistant.setup import async_setup_component
 
 
 async def test_random_binary_sensor_on(hass):

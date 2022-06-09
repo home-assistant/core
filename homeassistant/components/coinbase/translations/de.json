@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "invalid_auth_key": "API-Anmeldeinformationen von Coinbase aufgrund eines ung\u00fcltigen API-Schl\u00fcssels abgelehnt.",
+            "invalid_auth_secret": "API-Anmeldeinformationen von Coinbase aufgrund eines ung\u00fcltigen API-Geheimnisses abgelehnt.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API-Schl\u00fcssel",
+                    "api_token": "API-Geheimnis"
+                },
+                "description": "Bitte gib die Details deines API-Schl\u00fcssels ein, wie von Coinbase bereitgestellt.",
+                "title": "Coinbase API Schl\u00fcssel Details"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "currency_unavailable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
+            "exchange_rate_unavailable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
+                    "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
+                    "exchange_rate_currencies": "Zu meldende Wechselkurse.",
+                    "exchnage_rate_precision": "Anzahl der Dezimalstellen f\u00fcr Wechselkurse."
+                },
+                "description": "Coinbase-Optionen anpassen"
+            }
+        }
+    }
+}

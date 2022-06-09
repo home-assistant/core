@@ -2,9 +2,6 @@
     "config": {
         "step": {
             "user": {
-                "data": {
-                    "name": "Sensornavn"
-                },
                 "title": "Lokal IP-adresse"
             }
         }

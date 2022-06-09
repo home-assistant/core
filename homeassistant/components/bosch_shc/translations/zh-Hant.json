@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "pairing_failed": "\u914d\u5c0d\u5931\u6557\uff1a\u8acb\u78ba\u8a8d Bosch Smart Home Controller \u5df2\u7d93\u8655\u65bc\u914d\u5c0d\u6a21\u5f0f\uff08LED \u9583\u720d\uff09\u3001\u4e26\u4e14\u5bc6\u78bc\u8f38\u5165\u6b63\u78ba\u3002",
+            "session_error": "Session \u932f\u8aa4\uff1aAPI \u56de\u8986\u975e\u6b63\u5e38\u7d50\u679c\u3002",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "flow_title": "Bosch SHC: {name}",
+        "step": {
+            "confirm_discovery": {
+                "description": "\u8acb\u6309\u4e0b Bosch Smart Home Controller \u524d\u65b9\u7684\u6309\u9215\u76f4\u5230 LED \u9583\u720d\u3002\n\u662f\u5426\u8981\u7e7c\u7e8c\u8a2d\u5b9a\u4f4d\u65bc {host} \u7684 {model} \u9023\u63a5\u81f3 Home Assistant\uff1f"
+            },
+            "credentials": {
+                "data": {
+                    "password": "Smart Home Controller \u5bc6\u78bc"
+                }
+            },
+            "reauth_confirm": {
+                "description": "bosch_shc \u6574\u5408\u9700\u8981\u91cd\u65b0\u8a8d\u8b49\u60a8\u7684\u5e33\u865f",
+                "title": "\u91cd\u65b0\u8a8d\u8b49\u6574\u5408"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u8a2d\u5b9a Bosch Smart Home Controller \u4ee5\u5141\u8a31 Home Assistant \u9032\u884c\u76e3\u63a7\u3002",
+                "title": "SHC \u8a8d\u8b49\u53c3\u6578"
+            }
+        }
+    }
+}

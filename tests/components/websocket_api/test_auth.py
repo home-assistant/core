@@ -1,6 +1,7 @@
 """Test auth of websocket API."""
 from unittest.mock import patch
 
+import aiohttp
 import pytest
 
 from homeassistant.components.websocket_api.auth import (
@@ -15,6 +16,7 @@ from homeassistant.components.websocket_api.const import (
     URL,
 )
 from homeassistant.core import callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_coro
@@ -29,18 +31,14 @@ def track_connected(hass):
     def track_connected():
         connected_evt.append(1)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_CONNECTED, track_connected
-    )
+    async_dispatcher_connect(hass, SIGNAL_WEBSOCKET_CONNECTED, track_connected)
     disconnected_evt = []
 
     @callback
     def track_disconnected():
         disconnected_evt.append(1)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(
-        SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected
-    )
+    async_dispatcher_connect(hass, SIGNAL_WEBSOCKET_DISCONNECTED, track_disconnected)
 
     return {"connected": connected_evt, "disconnected": disconnected_evt}
 
@@ -121,14 +119,14 @@ async def test_auth_active_with_token(
     assert auth_msg["type"] == TYPE_AUTH_OK
 
 
-async def test_auth_active_user_inactive(hass, aiohttp_client, hass_access_token):
+async def test_auth_active_user_inactive(hass, hass_client_no_auth, hass_access_token):
     """Test authenticating with a token."""
     refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
     refresh_token.user.is_active = False
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -140,12 +138,12 @@ async def test_auth_active_user_inactive(hass, aiohttp_client, hass_access_token
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
+async def test_auth_active_with_password_not_allow(hass, hass_client_no_auth):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -157,12 +155,14 @@ async def test_auth_active_with_password_not_allow(hass, aiohttp_client):
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_legacy_support_with_password(hass, aiohttp_client, legacy_auth):
+async def test_auth_legacy_support_with_password(
+    hass, hass_client_no_auth, legacy_auth
+):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -174,12 +174,12 @@ async def test_auth_legacy_support_with_password(hass, aiohttp_client, legacy_au
         assert auth_msg["type"] == TYPE_AUTH_INVALID
 
 
-async def test_auth_with_invalid_token(hass, aiohttp_client):
+async def test_auth_with_invalid_token(hass, hass_client_no_auth):
     """Test authenticating with a token."""
     assert await async_setup_component(hass, "websocket_api", {})
     await hass.async_block_till_done()
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
 
     async with client.ws_connect(URL) as ws:
         auth_msg = await ws.receive_json()
@@ -189,3 +189,15 @@ async def test_auth_with_invalid_token(hass, aiohttp_client):
 
         auth_msg = await ws.receive_json()
         assert auth_msg["type"] == TYPE_AUTH_INVALID
+
+
+async def test_auth_close_after_revoke(hass, websocket_client, hass_access_token):
+    """Test that a websocket is closed after the refresh token is revoked."""
+    assert not websocket_client.closed
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+    await hass.auth.async_remove_refresh_token(refresh_token)
+
+    msg = await websocket_client.receive()
+    assert msg.type == aiohttp.WSMsgType.CLOSE
+    assert websocket_client.closed

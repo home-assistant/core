@@ -1,118 +1,124 @@
-"""Support for deCONZ switches."""
-from homeassistant.components.fan import (
-    DOMAIN,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-    FanEntity,
+"""Support for deCONZ fans."""
+from __future__ import annotations
+
+from typing import Any, Literal
+
+from pydeconz.models.event import EventType
+from pydeconz.models.light.fan import (
+    FAN_SPEED_25_PERCENT,
+    FAN_SPEED_50_PERCENT,
+    FAN_SPEED_75_PERCENT,
+    FAN_SPEED_100_PERCENT,
+    FAN_SPEED_OFF,
+    Fan,
 )
-from homeassistant.core import callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import FANS, NEW_LIGHT
+from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.percentage import (
+    ordered_list_item_to_percentage,
+    percentage_to_ordered_list_item,
+)
+
 from .deconz_device import DeconzDevice
-from .gateway import get_gateway_from_config_entry
+from .gateway import DeconzGateway, get_gateway_from_config_entry
 
-SPEEDS = {SPEED_OFF: 0, SPEED_LOW: 1, SPEED_MEDIUM: 2, SPEED_HIGH: 4}
-SUPPORTED_ON_SPEEDS = {1: SPEED_LOW, 2: SPEED_MEDIUM, 4: SPEED_HIGH}
-
-
-def convert_speed(speed: int) -> str:
-    """Convert speed from deCONZ to HASS.
-
-    Fallback to medium speed if unsupported by HASS fan platform.
-    """
-    if speed in SPEEDS.values():
-        for hass_speed, deconz_speed in SPEEDS.items():
-            if speed == deconz_speed:
-                return hass_speed
-    return SPEED_MEDIUM
+ORDERED_NAMED_FAN_SPEEDS: list[Literal[0, 1, 2, 3, 4, 5, 6]] = [
+    FAN_SPEED_25_PERCENT,
+    FAN_SPEED_50_PERCENT,
+    FAN_SPEED_75_PERCENT,
+    FAN_SPEED_100_PERCENT,
+]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up fans for deCONZ component."""
     gateway = get_gateway_from_config_entry(hass, config_entry)
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_fan(lights=gateway.api.lights.values()) -> None:
+    def async_add_fan(_: EventType, fan_id: str) -> None:
         """Add fan from deCONZ."""
-        entities = []
+        fan = gateway.api.lights.fans[fan_id]
+        async_add_entities([DeconzFan(fan, gateway)])
 
-        for light in lights:
-
-            if light.type in FANS and light.uniqueid not in gateway.entities[DOMAIN]:
-                entities.append(DeconzFan(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
-
-    gateway.listeners.append(
-        async_dispatcher_connect(
-            hass, gateway.async_signal_new_device(NEW_LIGHT), async_add_fan
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_fan,
+        gateway.api.lights.fans,
     )
-
-    async_add_fan()
 
 
 class DeconzFan(DeconzDevice, FanEntity):
     """Representation of a deCONZ fan."""
 
     TYPE = DOMAIN
+    _device: Fan
+    _default_on_speed: Literal[0, 1, 2, 3, 4, 5, 6]
 
-    def __init__(self, device, gateway) -> None:
+    _attr_supported_features = FanEntityFeature.SET_SPEED
+
+    def __init__(self, device: Fan, gateway: DeconzGateway) -> None:
         """Set up fan."""
         super().__init__(device, gateway)
 
-        self._default_on_speed = SPEEDS[SPEED_MEDIUM]
-        if self.speed != SPEED_OFF:
+        self._default_on_speed = FAN_SPEED_50_PERCENT
+        if self._device.speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = self._device.speed
-
-        self._features = SUPPORT_SET_SPEED
 
     @property
     def is_on(self) -> bool:
         """Return true if fan is on."""
-        return self.speed != SPEED_OFF
+        return self._device.speed != FAN_SPEED_OFF
 
     @property
-    def speed(self) -> int:
-        """Return the current speed."""
-        return convert_speed(self._device.speed)
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        if self._device.speed == FAN_SPEED_OFF:
+            return 0
+        if self._device.speed not in ORDERED_NAMED_FAN_SPEEDS:
+            return None
+        return ordered_list_item_to_percentage(
+            ORDERED_NAMED_FAN_SPEEDS, self._device.speed
+        )
 
     @property
-    def speed_list(self) -> list:
-        """Get the list of available speeds."""
-        return list(SPEEDS)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._features
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @callback
-    def async_update_callback(self, force_update=False) -> None:
+    def async_update_callback(self) -> None:
         """Store latest configured speed from the device."""
-        if self.speed != SPEED_OFF and self._device.speed != self._default_on_speed:
+        if self._device.speed in ORDERED_NAMED_FAN_SPEEDS:
             self._default_on_speed = self._device.speed
-        super().async_update_callback(force_update)
+        super().async_update_callback()
 
-    async def async_set_speed(self, speed: str) -> None:
-        """Set the speed of the fan."""
-        if speed not in SPEEDS:
-            raise ValueError(f"Unsupported speed {speed}")
+    async def async_set_percentage(self, percentage: int) -> None:
+        """Set the speed percentage of the fan."""
+        if percentage == 0:
+            return await self.async_turn_off()
+        await self._device.set_speed(
+            percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
+        )
 
-        await self._device.set_speed(SPEEDS[speed])
-
-    async def async_turn_on(self, speed: str = None, **kwargs) -> None:
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn on fan."""
-        if not speed:
-            speed = convert_speed(self._default_on_speed)
-        await self.async_set_speed(speed)
+        if percentage is not None:
+            await self.async_set_percentage(percentage)
+            return
+        await self._device.set_speed(self._default_on_speed)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off fan."""
-        await self.async_set_speed(SPEED_OFF)
+        await self._device.set_speed(FAN_SPEED_OFF)

@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs"
+        },
+        "error": {
+            "connection_error": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Adre\u00e7a IP"
+                },
+                "description": "Connexi\u00f3 amb l'inversor",
+                "title": "Inversor GoodWe"
+            }
+        }
+    }
+}

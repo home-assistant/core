@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Kasutaja on juba seadistatud",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "account_locked": "Konto on lukus. Proovi hiljem uuesti.",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "email": "E-posti aadress",
+                    "password": "Salas\u00f5na",
+                    "region": "Piirkond"
+                },
+                "description": "Sisesta e-posti aadress ja salas\u00f5na mida kasutad MyMazda mobiilirakendusse sisselogimiseks."
+            }
+        }
+    }
+}

@@ -1,7 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositiu ja est\u00e0 configurat"
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament",
+            "reconfigure_successful": "Re-configuraci\u00f3 realitzada correctament"
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
@@ -10,7 +12,7 @@
             "otp_failed": "L'autenticaci\u00f3 en dos passos ha fallat, torna-ho a provar amb un nou codi",
             "unknown": "Error inesperat"
         },
-        "flow_title": "Synology DSM {name} ({host})",
+        "flow_title": "{name} ({host})",
         "step": {
             "2sa": {
                 "data": {
@@ -26,8 +28,14 @@
                     "username": "Nom d'usuari",
                     "verify_ssl": "Verifica el certificat SSL"
                 },
-                "description": "Vols configurar {name} ({host})?",
-                "title": "Synology DSM"
+                "description": "Vols configurar {name} ({host})?"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                },
+                "title": "Reautenticaci\u00f3 de la integraci\u00f3 Synology DSM"
             },
             "user": {
                 "data": {
@@ -37,8 +45,7 @@
                     "ssl": "Utilitza un certificat SSL",
                     "username": "Nom d'usuari",
                     "verify_ssl": "Verifica el certificat SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },
@@ -47,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minuts entre escanejos",
+                    "snap_profile_type": "Qualitat de les fotos de la c\u00e0mera (0:alta, 1:mitjana, 2:baixa)",
                     "timeout": "Temps d'espera (segons)"
                 }
             }

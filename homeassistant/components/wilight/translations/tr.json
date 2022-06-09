@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "not_supported_device": "Bu WiLight \u015fu anda desteklenmiyor",
+            "not_wilight_device": "Bu Cihaz WiLight de\u011fil"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "A\u015fa\u011f\u0131daki bile\u015fenler desteklenir: {components}"
+            }
+        }
+    }
+}

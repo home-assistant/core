@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "client_id": "API Anahtar\u0131",
+                    "heating_type": "Is\u0131tma tipi",
+                    "password": "Parola",
+                    "username": "E-posta"
+                },
+                "description": "ViCare entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://developer.viessmann.com adresine gidin."
+            }
+        }
+    }
+}

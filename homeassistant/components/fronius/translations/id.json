@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "invalid_host": "Nama host atau alamat IP tidak valid"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{device}",
+        "step": {
+            "confirm_discovery": {
+                "description": "Ingin menambahkan {device} to Home Assistant?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Konfigurasikan alamat IP atau nama host lokal perangkat Fronius Anda",
+                "title": "Fronius SolarNet"
+            }
+        }
+    }
+}

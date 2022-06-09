@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Authentification non valide"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Mot de passe",
+                    "username": "Nom d'utilisateur"
+                },
+                "description": "Veuillez saisir les informations d'identification utilis\u00e9es pour vous connecter \u00e0 mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "away_cool_temperature": "Temp\u00e9rature de refroidissement en absence",
+                    "away_heat_temperature": "Temp\u00e9rature de chauffage en absence"
+                },
+                "description": "Options de configuration Honeywell suppl\u00e9mentaires. Les temp\u00e9ratures sont exprim\u00e9es en degr\u00e9s Fahrenheit."
+            }
+        }
+    }
+}

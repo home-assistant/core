@@ -1,0 +1,16 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "name": "Navn"
+                },
+                "description": "Sett opp P1 Monitor for \u00e5 integreres med Home Assistant."
+            }
+        }
+    }
+}

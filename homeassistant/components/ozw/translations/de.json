@@ -1,7 +1,0 @@
-{
-    "config": {
-        "abort": {
-            "mqtt_required": "Die MQTT-Integration ist nicht eingerichtet"
-        }
-    }
-}

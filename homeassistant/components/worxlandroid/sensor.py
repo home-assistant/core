@@ -1,4 +1,6 @@
 """Support for Worx Landroid mower."""
+from __future__ import annotations
+
 import asyncio
 import logging
 
@@ -6,11 +8,13 @@ import aiohttp
 import async_timeout
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_TIMEOUT, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,13 +48,18 @@ ERROR_STATE = [
 ]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Worx Landroid sensors."""
     for typ in ("battery", "state"):
         async_add_entities([WorxLandroidSensor(typ, config)])
 
 
-class WorxLandroidSensor(Entity):
+class WorxLandroidSensor(SensorEntity):
     """Implementation of a Worx Landroid sensor."""
 
     def __init__(self, sensor, config):
@@ -69,12 +78,12 @@ class WorxLandroidSensor(Entity):
         return f"worxlandroid-{self.sensor}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement of the sensor."""
         if self.sensor == "battery":
             return PERCENTAGE
@@ -86,7 +95,7 @@ class WorxLandroidSensor(Entity):
 
         try:
             session = async_get_clientsession(self.hass)
-            with async_timeout.timeout(self.timeout):
+            async with async_timeout.timeout(self.timeout):
                 auth = aiohttp.helpers.BasicAuth("admin", self.pin)
                 mower_response = await session.get(self.url, auth=auth)
         except (asyncio.TimeoutError, aiohttp.ClientError):
@@ -128,17 +137,14 @@ class WorxLandroidSensor(Entity):
     def get_error(obj):
         """Get the mower error."""
         for i, err in enumerate(obj["allarmi"]):
-            if i != 2:  # ignore wire bounce errors
-                if err == 1:
-                    return ERROR_STATE[i]
+            if i != 2 and err == 1:  # ignore wire bounce errors
+                return ERROR_STATE[i]
 
         return None
 
     def get_state(self, obj):
         """Get the state of the mower."""
-        state = self.get_error(obj)
-
-        if state is None:
+        if (state := self.get_error(obj)) is None:
             if obj["batteryChargerState"] == "charging":
                 return obj["batteryChargerState"]
 

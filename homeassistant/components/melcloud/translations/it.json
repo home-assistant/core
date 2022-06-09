@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Integrazione MELCloud gi\u00e0 configurata per questa e-mail. Il token di accesso \u00e8 stato aggiornato."
+            "already_configured": "Integrazione MELCloud gi\u00e0 configurata per questa email. Il token di accesso \u00e8 stato aggiornato."
         },
         "error": {
             "cannot_connect": "Impossibile connettersi",
@@ -12,10 +12,10 @@
             "user": {
                 "data": {
                     "password": "Password",
-                    "username": "E-mail"
+                    "username": "Email"
                 },
                 "description": "Connettiti utilizzando il tuo account MELCloud.",
-                "title": "Connettersi a MELCloud"
+                "title": "Connettiti a MELCloud"
             }
         }
     }

@@ -2,7 +2,6 @@
 from homeassistant.components.humidifier import (
     ATTR_AVAILABLE_MODES,
     ATTR_HUMIDITY,
-    ATTR_MODE,
     DOMAIN,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
@@ -10,12 +9,13 @@ from homeassistant.components.humidifier import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.helpers.intent import IntentHandleError
+from homeassistant.helpers.intent import IntentHandleError, async_handle
 
 from tests.common import async_mock_service
 
@@ -29,7 +29,8 @@ async def test_intent_set_humidity(hass):
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await hass.helpers.intent.async_handle(
+    result = await async_handle(
+        hass,
         "test",
         intent.INTENT_HUMIDITY,
         {"name": {"value": "Bedroom humidifier"}, "humidity": {"value": "50"}},
@@ -56,7 +57,8 @@ async def test_intent_set_humidity_and_turn_on(hass):
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await hass.helpers.intent.async_handle(
+    result = await async_handle(
+        hass,
         "test",
         intent.INTENT_HUMIDITY,
         {"name": {"value": "Bedroom humidifier"}, "humidity": {"value": "50"}},
@@ -97,7 +99,8 @@ async def test_intent_set_mode(hass):
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await hass.helpers.intent.async_handle(
+    result = await async_handle(
+        hass,
         "test",
         intent.INTENT_MODE,
         {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
@@ -134,7 +137,8 @@ async def test_intent_set_mode_and_turn_on(hass):
     turn_on_calls = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
     await intent.async_setup_intents(hass)
 
-    result = await hass.helpers.intent.async_handle(
+    result = await async_handle(
+        hass,
         "test",
         intent.INTENT_MODE,
         {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
@@ -168,7 +172,8 @@ async def test_intent_set_mode_tests_feature(hass):
     await intent.async_setup_intents(hass)
 
     try:
-        await hass.helpers.intent.async_handle(
+        await async_handle(
+            hass,
             "test",
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "away"}},
@@ -196,7 +201,8 @@ async def test_intent_set_unknown_mode(hass):
     await intent.async_setup_intents(hass)
 
     try:
-        await hass.helpers.intent.async_handle(
+        await async_handle(
+            hass,
             "test",
             intent.INTENT_MODE,
             {"name": {"value": "Bedroom humidifier"}, "mode": {"value": "eco"}},

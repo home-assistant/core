@@ -1,0 +1,16 @@
+set_pump_speed:
+  name: Set pump speed
+  description: Set the run speed of a variable speed pump.
+  target:
+    entity:
+      integration: omnilogic
+      domain: switch
+  fields:
+    speed:
+      name: Speed
+      description: Speed for the VSP between min and max speed.
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 100000

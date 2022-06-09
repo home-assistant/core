@@ -9,9 +9,8 @@
         },
         "flow_title": "Roku: {name}",
         "step": {
-            "ssdp_confirm": {
-                "description": "Soll {name} konfigur\u00e9iert ginn?",
-                "title": "Roku"
+            "discovery_confirm": {
+                "description": "Soll {name} konfigur\u00e9iert ginn?"
             },
             "user": {
                 "data": {

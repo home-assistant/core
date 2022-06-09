@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{serial_number} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "title": "Configureer Tesla Wall Connector"
+            }
+        }
+    }
+}

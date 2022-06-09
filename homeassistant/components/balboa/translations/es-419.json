@@ -1,0 +1,18 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "title": "Con\u00e9ctese al dispositivo Wi-Fi de Balboa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sync_time": "Mant\u00e9n sincronizada la hora de tu Cliente Balboa Spa con Home Assistant"
+                }
+            }
+        }
+    }
+}

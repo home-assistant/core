@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "action_type": {
+            "toggle": "P\u0159epnout {entity_name}",
             "turn_off": "Vypnout {entity_name}",
             "turn_on": "Zapnout {entity_name}"
         },

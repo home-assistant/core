@@ -4,13 +4,19 @@ Read temperature information from Eddystone beacons.
 Your beacons must be configured to transmit UID (for identification) and TLM
 (for temperature) frames.
 """
+from __future__ import annotations
+
 import logging
 
 # pylint: disable=import-error
 from beacontools import BeaconScanner, EddystoneFilter, EddystoneTLMFrame
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
 from homeassistant.const import (
     CONF_NAME,
     EVENT_HOMEASSISTANT_START,
@@ -18,8 +24,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,11 +52,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Validate configuration, create devices and start monitoring thread."""
     bt_device_id = config.get("bt_device_id")
 
-    beacons = config.get(CONF_BEACONS)
+    beacons = config[CONF_BEACONS]
     devices = []
 
     for dev_name, properties in beacons.items():
@@ -97,7 +110,7 @@ def get_from_conf(config, config_key, length):
     return string
 
 
-class EddystoneTemp(Entity):
+class EddystoneTemp(SensorEntity):
     """Representation of a temperature sensor."""
 
     def __init__(self, name, namespace, instance):
@@ -114,12 +127,17 @@ class EddystoneTemp(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the device."""
         return self.temperature
 
     @property
-    def unit_of_measurement(self):
+    def device_class(self):
+        """Return the class of this device, from component DEVICE_CLASSES."""
+        return SensorDeviceClass.TEMPERATURE
+
+    @property
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return TEMP_CELSIUS
 
@@ -171,15 +189,18 @@ class Monitor:
         )
 
         for dev in self.devices:
-            if dev.namespace == namespace and dev.instance == instance:
-                if dev.temperature != temperature:
-                    dev.temperature = temperature
-                    dev.schedule_update_ha_state()
+            if (
+                dev.namespace == namespace
+                and dev.instance == instance
+                and dev.temperature != temperature
+            ):
+                dev.temperature = temperature
+                dev.schedule_update_ha_state()
 
     def stop(self):
         """Signal runner to stop and join thread."""
         if self.scanning:
-            _LOGGER.debug("Stopping...")
+            _LOGGER.debug("Stopping")
             self.scanner.stop()
             _LOGGER.debug("Stopped")
             self.scanning = False

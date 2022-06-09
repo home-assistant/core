@@ -1,0 +1,121 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud.",
+            "single_instance_allowed": "Juba seadistatud. Lubatud on ainult \u00fcks sidumine."
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "file_not_found": "M\u00e4\u00e4ratud faili \".knxkeys\" ei leitud asukohas config/.storage/knx/",
+            "invalid_individual_address": "V\u00e4\u00e4rtus ei \u00fchti KNX-i individuaalse aadressi mustriga.\n 'area.line.device'",
+            "invalid_ip_address": "Kehtetu IPv4 aadress.",
+            "invalid_signature": "Parool faili `.knxkeys` dekr\u00fcpteerimiseks on vale."
+        },
+        "step": {
+            "manual_tunnel": {
+                "data": {
+                    "host": "Host",
+                    "local_ip": "Home Assistanti kohalik IP aadress",
+                    "port": "Port",
+                    "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
+                },
+                "data_description": {
+                    "host": "KNX/IP tunneldusseadme IP-aadress.",
+                    "local_ip": "Automaatse avastamise kasutamiseks j\u00e4ta t\u00fchjaks.",
+                    "port": "KNX/IP-tunneldusseadme port."
+                },
+                "description": "Sisesta tunneldamisseadme \u00fchenduse teave."
+            },
+            "routing": {
+                "data": {
+                    "individual_address": "Individuaalne aadress",
+                    "local_ip": "Home Assistanti kohalik IP aadress",
+                    "multicast_group": "Multicast grupp",
+                    "multicast_port": "Mulicasti port"
+                },
+                "data_description": {
+                    "individual_address": "Home Assistantis kasutatav KNX-aadress, nt \"0.0.4\".",
+                    "local_ip": "Automaatse avastamise kasutamiseks j\u00e4ta t\u00fchjaks."
+                },
+                "description": "Konfigureeri marsruutimissuvandid."
+            },
+            "secure_knxkeys": {
+                "data": {
+                    "knxkeys_filename": "`.nxkeys` faili t\u00e4ielik nimi (koos laiendiga)",
+                    "knxkeys_password": "Parool `.knxkeys` faili dekr\u00fcpteerimiseks"
+                },
+                "data_description": {
+                    "knxkeys_filename": "Eeldatakse, et fail asub konfiguratsioonikataloogis kaustas \".storage/knx/\".\nHome Assistant OS-is oleks see `/config/.storage/knx/`\n N\u00e4ide: \"minu_projekt.knxkeys\".",
+                    "knxkeys_password": "See m\u00e4\u00e4rati faili eksportimisel ETSist."
+                },
+                "description": "Sisesta oma `.knxkeys` faili teave."
+            },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Seadme autentimise parool",
+                    "user_id": "Kasutaja ID",
+                    "user_password": "Kasutaja salas\u00f5na"
+                },
+                "data_description": {
+                    "device_authentication": "See m\u00e4\u00e4ratakse ETSi liidese IP-paneelil.",
+                    "user_id": "See on sageli tunneli number +1. Nii et tunnel 2 oleks kasutaja ID-ga 3.",
+                    "user_password": "Konkreetse tunneli\u00fchenduse parool, mis on m\u00e4\u00e4ratud ETS-i tunneli paneelil \u201eAtribuudid\u201d."
+                },
+                "description": "Sisesta IP Secure teave."
+            },
+            "secure_tunneling": {
+                "description": "Vali kuidas soovid KNX/IP Secure'i seadistada.",
+                "menu_options": {
+                    "secure_knxkeys": "Kasuta knxkeys fail, mis sisaldab IP Secure teavet.",
+                    "secure_manual": "IP Secure v\u00f5tmete k\u00e4sitsi seadistamine"
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "gateway": "KNX tunneli \u00fchendus"
+                },
+                "description": "Vali loendist l\u00fc\u00fcs."
+            },
+            "type": {
+                "data": {
+                    "connection_type": "KNX \u00fchenduse t\u00fc\u00fcp"
+                },
+                "description": "Sisesta \u00fchenduse t\u00fc\u00fcp, mida kasutada KNX-\u00fchenduse jaoks. \n AUTOMAATNE \u2013 sidumine hoolitseb KNX siini \u00fchenduvuse eest, tehes l\u00fc\u00fcsikontrolli. \n TUNNELING - sidumine \u00fchendub KNX siiniga tunneli kaudu. \n MARSRUUTIMINE \u2013 sidumine \u00fchendub marsruudi kaudu KNX siiniga."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "connection_type": "KNX \u00fchenduse t\u00fc\u00fcp",
+                    "individual_address": "Vaikimisi individuaalne aadress",
+                    "local_ip": "Home Assistanti kohalik IP aadress",
+                    "multicast_group": "Multicast grupp",
+                    "multicast_port": "Mulicasti port",
+                    "rate_limit": "Teavituste m\u00e4\u00e4r",
+                    "state_updater": "Oleku uuendaja"
+                },
+                "data_description": {
+                    "individual_address": "Home Assistantis kasutatav KNX-aadress, nt \"0.0.4\".",
+                    "local_ip": "Automaatse tuvastamise jaoks kasuta `0.0.0.0.0`.",
+                    "multicast_group": "Kasutatakse marsruutimiseks ja avastamiseks. Vaikimisi: \"224.0.23.12\"",
+                    "multicast_port": "Kasutatakse marsruutimiseks ja avastamiseks. Vaikev\u00e4\u00e4rtus: \"3671\"",
+                    "rate_limit": "Maksimaalne v\u00e4ljaminevate telegrammide arv sekundis.\nSoovitatav: 20 kuni 40",
+                    "state_updater": "M\u00e4\u00e4ra KNX siini olekute lugemise vaikev\u00e4\u00e4rtused. Kui see on keelatud, ei too Home Assistant aktiivselt olemi olekuid KNX siinilt. Saab alistada olemivalikute s\u00fcnkroonimise_olekuga."
+                }
+            },
+            "tunnel": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
+                },
+                "data_description": {
+                    "host": "KNX/IP tunneldusseadme IP-aadress.",
+                    "port": "KNX/IP-tunneldusseadme port."
+                }
+            }
+        }
+    }
+}

@@ -1,10 +1,13 @@
 """Config flow for Raspberry Pi Power Supply Checker."""
-from typing import Any, Dict, Optional
+from __future__ import annotations
+
+from collections.abc import Awaitable
+from typing import Any
 
 from rpi_bad_power import new_under_voltage
 
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
@@ -16,7 +19,7 @@ async def _async_supported(hass: HomeAssistant) -> bool:
     return under_voltage is not None
 
 
-class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
+class RPiPowerFlow(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
     """Discovery flow handler."""
 
     VERSION = 1
@@ -27,13 +30,14 @@ class RPiPowerFlow(DiscoveryFlowHandler, domain=DOMAIN):
             DOMAIN,
             "Raspberry Pi Power Supply Checker",
             _async_supported,
-            config_entries.CONN_CLASS_LOCAL_POLL,
         )
 
     async def async_step_onboarding(
-        self, data: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by onboarding."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
         has_devices = await self._discovery_function(self.hass)
 
         if not has_devices:

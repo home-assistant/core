@@ -1,16 +1,17 @@
 {
     "config": {
         "abort": {
-            "authorize_url_timeout": "Time-out tijdens genereren autorisatie url.",
-            "missing_configuration": "Het Somfy-component is niet geconfigureerd. Gelieve de documentatie te volgen.",
+            "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
+            "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
+            "no_url_available": "Geen URL beschikbaar. Voor informatie over deze fout, [raadpleeg de documentatie]({docs_url})",
             "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "create_entry": {
-            "default": "Succesvol geverifieerd met Somfy."
+            "default": "Authenticatie geslaagd"
         },
         "step": {
             "pick_implementation": {
-                "title": "Kies de authenticatie methode"
+                "title": "Kies een authenticatie methode"
             }
         }
     }

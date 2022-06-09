@@ -1,0 +1,19 @@
+{
+    "config": {
+        "error": {
+            "already_configured": "Dienst is al geconfigureerd"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "elevation": "Hoogte",
+                    "latitude": "Breedtegraad",
+                    "longitude": "Lengtegraad",
+                    "name": "Naam"
+                },
+                "description": "Voer uw locatie in om weergegevens van de Met \u00c9ireann Public Weather Forecast API te gebruiken",
+                "title": "Locatie"
+            }
+        }
+    }
+}

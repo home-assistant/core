@@ -38,13 +38,17 @@ trigger:
   to: "on"
 
 action:
-  - service: light.turn_on
+  - alias: "Turn on the light"
+    service: light.turn_on
     target: !input light_target
-  - wait_for_trigger:
+  - alias: "Wait until there is no motion from device"
+    wait_for_trigger:
       platform: state
       entity_id: !input motion_entity
       from: "on"
       to: "off"
-  - delay: !input no_motion_wait
-  - service: light.turn_off
+  - alias: "Wait the number of seconds that has been set"
+    delay: !input no_motion_wait
+  - alias: "Turn off the light"
+    service: light.turn_off
     target: !input light_target

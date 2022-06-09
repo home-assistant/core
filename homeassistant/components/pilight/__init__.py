@@ -16,8 +16,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_point_in_utc_time
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,7 +60,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Pilight component."""
 
     host = config[DOMAIN][CONF_HOST]
@@ -84,7 +86,7 @@ def setup(hass, config):
     hass.bus.listen_once(EVENT_HOMEASSISTANT_STOP, stop_pilight_client)
 
     @send_throttler.limited
-    def send_code(call):
+    def send_code(call: ServiceCall) -> None:
         """Send RF code to the pilight-daemon."""
         # Change type to dict from mappingproxy since data has to be JSON
         # serializable
@@ -136,7 +138,7 @@ class CallRateDelayThrottle:
     def __init__(self, hass, delay_seconds: float) -> None:
         """Initialize the delay handler."""
         self._delay = timedelta(seconds=max(0.0, delay_seconds))
-        self._queue = []
+        self._queue: list = []
         self._active = False
         self._lock = threading.Lock()
         self._next_ts = dt_util.utcnow()

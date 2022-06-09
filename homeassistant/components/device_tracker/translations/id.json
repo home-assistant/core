@@ -1,7 +1,17 @@
 {
+    "device_automation": {
+        "condition_type": {
+            "is_home": "{entity_name} ada di rumah",
+            "is_not_home": "{entity_name} tidak ada di rumah"
+        },
+        "trigger_type": {
+            "enters": "{entity_name} memasuki zona",
+            "leaves": "{entity_name} meninggalkan zona"
+        }
+    },
     "state": {
         "_": {
-            "home": "Rumah",
+            "home": "Di Rumah",
             "not_home": "Keluar"
         }
     },

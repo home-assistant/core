@@ -1,14 +1,19 @@
 """Config flow for Withings."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
-from typing import Dict, Union
+from typing import Any
 
 import voluptuous as vol
 from withings_api.common import AuthScope
 
-from homeassistant import config_entries
-from homeassistant.components.withings import const
+from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util import slugify
+
+from . import const
 
 
 class WithingsFlowHandler(
@@ -17,9 +22,9 @@ class WithingsFlowHandler(
     """Handle a config flow."""
 
     DOMAIN = const.DOMAIN
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+
     # Temporarily holds authorization data during the profile step.
-    _current_data: Dict[str, Union[None, str, int]] = {}
+    _current_data: dict[str, None | str | int] = {}
 
     @property
     def logger(self) -> logging.Logger:
@@ -27,7 +32,7 @@ class WithingsFlowHandler(
         return logging.getLogger(__name__)
 
     @property
-    def extra_authorize_data(self) -> dict:
+    def extra_authorize_data(self) -> dict[str, str]:
         """Extra data that needs to be appended to the authorize url."""
         return {
             "scope": ",".join(
@@ -40,18 +45,17 @@ class WithingsFlowHandler(
             )
         }
 
-    async def async_oauth_create_entry(self, data: dict) -> dict:
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:
         """Override the create entry so user can select a profile."""
         self._current_data = data
         return await self.async_step_profile(data)
 
-    async def async_step_profile(self, data: dict) -> dict:
+    async def async_step_profile(self, data: dict[str, Any]) -> FlowResult:
         """Prompt the user to select a user profile."""
         errors = {}
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         reauth_profile = (
             self.context.get(const.PROFILE)
-            if self.context.get("source") == "reauth"
+            if self.context.get("source") == SOURCE_REAUTH
             else None
         )
         profile = data.get(const.PROFILE) or reauth_profile
@@ -59,7 +63,7 @@ class WithingsFlowHandler(
         if profile:
             existing_entries = [
                 config_entry
-                for config_entry in self.hass.config_entries.async_entries(const.DOMAIN)
+                for config_entry in self._async_current_entries()
                 if slugify(config_entry.data.get(const.PROFILE)) == slugify(profile)
             ]
 
@@ -76,23 +80,21 @@ class WithingsFlowHandler(
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: dict = None) -> dict:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Prompt user to re-authenticate."""
         if data is not None:
             return await self.async_step_user()
 
-        # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
         placeholders = {const.PROFILE: self.context["profile"]}
 
         self.context.update({"title_placeholders": placeholders})
 
         return self.async_show_form(
             step_id="reauth",
-            # pylint: disable=no-member # https://github.com/PyCQA/pylint/issues/3167
             description_placeholders=placeholders,
         )
 
-    async def async_step_finish(self, data: dict) -> dict:
+    async def async_step_finish(self, data: dict[str, Any]) -> FlowResult:
         """Finish the flow."""
         self._current_data = {}
 

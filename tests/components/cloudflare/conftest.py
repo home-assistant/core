@@ -1,9 +1,9 @@
 """Define fixtures available for all tests."""
+from unittest.mock import patch
+
 from pytest import fixture
 
 from . import _get_mock_cfupdate
-
-from tests.async_mock import patch
 
 
 @fixture

@@ -1,0 +1,35 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "T\u00e6ki n\u00fa \u00feegar stillt",
+            "no_devices_found": "Engin t\u00e6ki fundust \u00e1 netinu"
+        },
+        "error": {
+            "cannot_connect": "Tenging mist\u00f3kst"
+        },
+        "flow_title": "{model} {id} ( {ipaddr} )",
+        "step": {
+            "discovery_confirm": {
+                "description": "Viltu setja upp {model} {id} ( {ipaddr} )?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Ef \u00fe\u00fa skilur host eftir autt ver\u00f0ur leit notu\u00f0 til a\u00f0 finna t\u00e6ki"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "S\u00e9rsni\u00f0in \u00e1hrif: Listi yfir 1 til 16 [R, G, B] liti. D\u00e6mi: [255,0,255], [60,128,0]",
+                    "custom_effect_speed_pct": "S\u00e9rsni\u00f0in \u00e1hrif: Hra\u00f0i \u00ed pr\u00f3sentum fyrir \u00e1hrifin sem skipta um liti.",
+                    "custom_effect_transition": "S\u00e9rsni\u00f0in \u00e1hrif: Ger\u00f0 bl\u00f6ndunar \u00e1 milli litanna.",
+                    "mode": "Valinn birtuhamur"
+                }
+            }
+        }
+    }
+}

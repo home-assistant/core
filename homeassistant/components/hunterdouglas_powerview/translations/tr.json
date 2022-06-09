@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{name} ({host})",
+        "step": {
+            "link": {
+                "description": "{name} ( {host} ) kurulumu yapmak istiyor musunuz?",
+                "title": "PowerView Hub'a ba\u011flan\u0131n"
+            },
+            "user": {
+                "data": {
+                    "host": "IP Adresi"
+                },
+                "title": "PowerView Hub'a ba\u011flan\u0131n"
+            }
+        }
+    }
+}

@@ -1,11 +1,18 @@
 """BleBox switch implementation."""
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a BleBox switch entity."""
     create_blebox_entities(
         hass, config_entry, async_add_entities, BleBoxSwitchEntity, "switches"
@@ -15,10 +22,10 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
     """Representation of a BleBox switch feature."""
 
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return BLEBOX_TO_HASS_DEVICE_CLASSES[self._feature.device_class]
+    def __init__(self, feature):
+        """Initialize a BleBox switch feature."""
+        super().__init__(feature)
+        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
 
     @property
     def is_on(self):

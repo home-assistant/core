@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
+            "reauth_invalid": "Ha fallat la re-autenticaci\u00f3; el n\u00famero de s\u00e8rie no coincideix amb l'original",
+            "unknown": "Error inesperat"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Contrasenya",
+                    "username": "Nom d'usuari"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Contrasenya",
+                    "station": "N\u00famero de s\u00e8rie de l'estaci\u00f3",
+                    "username": "Nom d'usuari"
+                }
+            }
+        }
+    }
+}

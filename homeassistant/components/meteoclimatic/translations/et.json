@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "unknown": "Tundmatu t\u00f5rge"
+        },
+        "error": {
+            "not_found": "Seadmeid ei leitud"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Jaama kood"
+                },
+                "data_description": {
+                    "code": "N\u00e4eb v\u00e4lja nagu ESCAT4300000043206B"
+                }
+            }
+        }
+    }
+}

@@ -11,10 +11,13 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-XS1_COMPONENTS = ["climate", "sensor", "switch"]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
 
 # Lock used to limit the amount of concurrent update requests
 # as the XS1 Gateway can only handle a very
@@ -46,8 +49,8 @@ XS1_COMPONENTS = ["climate", "sensor", "switch"]
 UPDATE_LOCK = asyncio.Lock()
 
 
-def setup(hass, config):
-    """Set up XS1 Component."""
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up XS1 integration."""
     _LOGGER.debug("Initializing XS1")
 
     host = config[DOMAIN][CONF_HOST]
@@ -68,7 +71,7 @@ def setup(hass, config):
         )
         return False
 
-    _LOGGER.debug("Establishing connection to XS1 gateway and retrieving data...")
+    _LOGGER.debug("Establishing connection to XS1 gateway and retrieving data")
 
     hass.data[DOMAIN] = {}
 
@@ -78,10 +81,10 @@ def setup(hass, config):
     hass.data[DOMAIN][ACTUATORS] = actuators
     hass.data[DOMAIN][SENSORS] = sensors
 
-    _LOGGER.debug("Loading components for XS1 platform...")
-    # Load components for supported devices
-    for component in XS1_COMPONENTS:
-        discovery.load_platform(hass, component, DOMAIN, {}, config)
+    _LOGGER.debug("Loading platforms for XS1 integration")
+    # Load platforms for supported devices
+    for platform in PLATFORMS:
+        discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
 

@@ -1,4 +1,6 @@
 """Support for X10 switch over Mochad."""
+from __future__ import annotations
+
 import logging
 
 from pymochad import device
@@ -7,7 +9,10 @@ import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import CONF_ADDRESS, CONF_DEVICES, CONF_NAME, CONF_PLATFORM
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_COMM_TYPE, DOMAIN, REQ_LOCK
 
@@ -28,12 +33,16 @@ PLATFORM_SCHEMA = vol.Schema(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up X10 switches over a mochad controller."""
     mochad_controller = hass.data[DOMAIN]
-    devs = config.get(CONF_DEVICES)
+    devs = config[CONF_DEVICES]
     add_entities([MochadSwitch(hass, mochad_controller.ctrl, dev) for dev in devs])
-    return True
 
 
 class MochadSwitch(SwitchEntity):
@@ -44,7 +53,7 @@ class MochadSwitch(SwitchEntity):
 
         self._controller = ctrl
         self._address = dev[CONF_ADDRESS]
-        self._name = dev.get(CONF_NAME, "x10_switch_dev_%s" % self._address)
+        self._name = dev.get(CONF_NAME, f"x10_switch_dev_{self._address}")
         self._comm_type = dev.get(CONF_COMM_TYPE, "pl")
         self.switch = device.Device(ctrl, self._address, comm_type=self._comm_type)
         # Init with false to avoid locking HA for long on CM19A (goes from rf

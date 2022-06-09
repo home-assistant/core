@@ -3,10 +3,9 @@
 import asyncio
 
 from aiohttp.client_exceptions import ServerDisconnectedError
-from aiopvapi.helpers.aiorequest import PvApiConnectionError
+from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiResponseStatusError
 
 DOMAIN = "hunterdouglas_powerview"
-
 
 MANUFACTURER = "Hunter Douglas"
 
@@ -19,14 +18,11 @@ USER_DATA = "userData"
 
 MAC_ADDRESS_IN_USERDATA = "macAddress"
 SERIAL_NUMBER_IN_USERDATA = "serialNumber"
-FIRMWARE_IN_USERDATA = "firmware"
-MAINPROCESSOR_IN_USERDATA_FIRMWARE = "mainProcessor"
-REVISION_IN_MAINPROCESSOR = "revision"
-MODEL_IN_MAINPROCESSOR = "name"
 HUB_NAME = "hubName"
 
-FIRMWARE_IN_SHADE = "firmware"
-
+FIRMWARE = "firmware"
+FIRMWARE_MAINPROCESSOR = "mainProcessor"
+FIRMWARE_NAME = "name"
 FIRMWARE_REVISION = "revision"
 FIRMWARE_SUB_REVISION = "subRevision"
 FIRMWARE_BUILD = "build"
@@ -51,7 +47,6 @@ ROOM_NAME = "name"
 ROOM_NAME_UNICODE = "name_unicode"
 ROOM_ID = "id"
 
-SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
 
@@ -59,15 +54,36 @@ STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 
 PV_API = "pv_api"
 PV_HUB = "pv_hub"
+PV_HUB_ADDRESS = "pv_hub_address"
 PV_SHADES = "pv_shades"
 PV_SCENE_DATA = "pv_scene_data"
 PV_SHADE_DATA = "pv_shade_data"
 PV_ROOM_DATA = "pv_room_data"
 COORDINATOR = "coordinator"
 
-HUB_EXCEPTIONS = (ServerDisconnectedError, asyncio.TimeoutError, PvApiConnectionError)
+HUB_EXCEPTIONS = (
+    ServerDisconnectedError,
+    asyncio.TimeoutError,
+    PvApiConnectionError,
+    PvApiResponseStatusError,
+)
 
 LEGACY_DEVICE_SUB_REVISION = 1
 LEGACY_DEVICE_REVISION = 0
 LEGACY_DEVICE_BUILD = 0
-LEGACY_DEVICE_MODEL = "PV Hub1.0"
+LEGACY_DEVICE_MODEL = "PowerView Hub"
+
+DEFAULT_LEGACY_MAINPROCESSOR = {
+    FIRMWARE_REVISION: LEGACY_DEVICE_REVISION,
+    FIRMWARE_SUB_REVISION: LEGACY_DEVICE_SUB_REVISION,
+    FIRMWARE_BUILD: LEGACY_DEVICE_BUILD,
+    FIRMWARE_NAME: LEGACY_DEVICE_MODEL,
+}
+
+API_PATH_FWVERSION = "api/fwversion"
+
+POS_KIND_NONE = 0
+POS_KIND_PRIMARY = 1
+POS_KIND_SECONDARY = 2
+POS_KIND_VANE = 3
+POS_KIND_ERROR = 4

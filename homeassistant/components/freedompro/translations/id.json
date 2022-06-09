@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API"
+                },
+                "description": "Masukkan kunci API yang diperoleh dari https://home.freedompro.eu.",
+                "title": "Kunci API Freedompro"
+            }
+        }
+    }
+}

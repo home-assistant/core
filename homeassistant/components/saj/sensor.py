@@ -1,21 +1,25 @@
 """SAJ solar inverter interface."""
+from __future__ import annotations
+
 from datetime import date
 import logging
 
 import pysaj
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_TYPE,
     CONF_USERNAME,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_TEMPERATURE,
     ENERGY_KILO_WATT_HOUR,
-    EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     MASS_KILOGRAMS,
     POWER_WATT,
@@ -23,11 +27,13 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     TIME_HOURS,
 )
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.helpers.start import async_at_start
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +62,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the SAJ sensors."""
 
     remove_interval_update = None
@@ -104,33 +115,35 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 
         for sensor in hass_sensors:
             state_unknown = False
-            if not values:
-                # SAJ inverters are powered by DC via solar panels and thus are
-                # offline after the sun has set. If a sensor resets on a daily
-                # basis like "today_yield", this reset won't happen automatically.
-                # Code below checks if today > day when sensor was last updated
-                # and if so: set state to None.
-                # Sensors with live values like "temperature" or "current_power"
-                # will also be reset to None.
-                if (sensor.per_day_basis and date.today() > sensor.date_updated) or (
-                    not sensor.per_day_basis and not sensor.per_total_basis
-                ):
-                    state_unknown = True
+            # SAJ inverters are powered by DC via solar panels and thus are
+            # offline after the sun has set. If a sensor resets on a daily
+            # basis like "today_yield", this reset won't happen automatically.
+            # Code below checks if today > day when sensor was last updated
+            # and if so: set state to None.
+            # Sensors with live values like "temperature" or "current_power"
+            # will also be reset to None.
+            if not values and (
+                (sensor.per_day_basis and date.today() > sensor.date_updated)
+                or (not sensor.per_day_basis and not sensor.per_total_basis)
+            ):
+                state_unknown = True
             sensor.async_update_values(unknown_state=state_unknown)
 
         return values
 
+    @callback
     def start_update_interval(event):
         """Start the update interval scheduling."""
         nonlocal remove_interval_update
         remove_interval_update = async_track_time_interval_backoff(hass, async_saj)
 
+    @callback
     def stop_update_interval(event):
         """Properly cancel the scheduled update."""
         remove_interval_update()  # pylint: disable=not-callable
 
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, start_update_interval)
     hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, stop_update_interval)
+    async_at_start(hass, start_update_interval)
 
 
 @callback
@@ -160,7 +173,7 @@ def async_track_time_interval_backoff(hass, action) -> CALLBACK_TYPE:
     return remove_listener
 
 
-class SAJsensor(Entity):
+class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
 
     def __init__(self, serialnumber, pysaj_sensor, inverter_name=None):
@@ -169,6 +182,11 @@ class SAJsensor(Entity):
         self._inverter_name = inverter_name
         self._serialnumber = serialnumber
         self._state = self._sensor.value
+
+        if pysaj_sensor.name in ("current_power", "temperature"):
+            self._attr_state_class = SensorStateClass.MEASUREMENT
+        if pysaj_sensor.name == "total_yield":
+            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
     def name(self):
@@ -179,25 +197,24 @@ class SAJsensor(Entity):
         return f"saj_{self._sensor.name}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return SAJ_UNIT_MAPPINGS[self._sensor.unit]
 
     @property
     def device_class(self):
         """Return the device class the sensor belongs to."""
-        if self.unit_of_measurement == POWER_WATT:
-            return DEVICE_CLASS_POWER
-        if (
-            self.unit_of_measurement == TEMP_CELSIUS
-            or self._sensor.unit == TEMP_FAHRENHEIT
-        ):
-            return DEVICE_CLASS_TEMPERATURE
+        if self.native_unit_of_measurement == POWER_WATT:
+            return SensorDeviceClass.POWER
+        if self.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            return SensorDeviceClass.ENERGY
+        if self.native_unit_of_measurement in (TEMP_CELSIUS, TEMP_FAHRENHEIT):
+            return SensorDeviceClass.TEMPERATURE
 
     @property
     def should_poll(self) -> bool:

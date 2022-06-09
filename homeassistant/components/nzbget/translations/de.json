@@ -1,6 +1,13 @@
 {
     "config": {
-        "flow_title": "NZBGet: {name}",
+        "abort": {
+            "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich.",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -8,7 +15,9 @@
                     "name": "Name",
                     "password": "Passwort",
                     "port": "Port",
-                    "username": "Benutzername"
+                    "ssl": "Verwendet ein SSL-Zertifikat",
+                    "username": "Benutzername",
+                    "verify_ssl": "SSL-Zertifikat \u00fcberpr\u00fcfen"
                 },
                 "title": "Mit NZBGet verbinden"
             }

@@ -1,0 +1,6 @@
+<MediaContainer allowSync="1" identifier="com.plexapp.plugins.library" librarySectionID="2" librarySectionTitle="TV Shows" librarySectionUUID="905308ec-5019-43d4-a449-75d2b9e42f93" mediaTagPrefix="/system/bundle/media/flags/" mediaTagVersion="1603922053" size="1"><Directory addedAt="1377827407" art="/library/metadata/30/art/1488495292" banner="/library/metadata/30/banner/1488495292" childCount="5" contentRating="TV-Y" duration="3000000" guid="com.plexapp.agents.thetvdb://12345?lang=en" index="1" key="/library/metadata/30/children" leafCount="100" originallyAvailableAt="2000-01-01" primaryExtraKey="/library/metadata/194407" rating="9.0" ratingKey="30" studio="TV Studio" summary="Elaborate summary." theme="/library/metadata/30/theme/1488495292" thumb="/library/metadata/30/thumb/1488495292" title="TV Show" type="show" updatedAt="1488495292" viewedLeafCount="0" year="2000">
+<Genre tag="Action" />
+<Genre tag="Animated" />
+<Role tag="Some Actor" />
+<Role tag="Another One" />
+<Location path="/storage/tvshows/TV Show" /></Directory></MediaContainer>

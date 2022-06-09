@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "name": "Nazwa"
+                },
+                "description": "Zapoznaj si\u0119 z dokumentacj\u0105, aby upewni\u0107 si\u0119, \u017ce wszystkie wymagania s\u0105 spe\u0142nione."
+            }
+        }
+    }
+}

@@ -1,27 +1,20 @@
 """The WiLight integration."""
-import asyncio
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN
 from .parent_device import WiLightParent
 
+DOMAIN = "wilight"
+
 # List the platforms that you want to support.
-PLATFORMS = ["light"]
+PLATFORMS = [Platform.COVER, Platform.FAN, Platform.LIGHT]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
-    """Set up the WiLight with Config Flow component."""
-
-    hass.data[DOMAIN] = {}
-
-    return True
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a wilight config entry."""
 
     parent = WiLightParent(hass, entry)
@@ -29,34 +22,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     if not await parent.async_setup():
         raise ConfigEntryNotReady
 
+    hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = parent
 
     # Set up all platforms for this device/entry.
-    for component in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, component)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload WiLight config entry."""
 
     # Unload entities for this entry/device.
-    await asyncio.gather(
-        *(
-            hass.config_entries.async_forward_entry_unload(entry, component)
-            for component in PLATFORMS
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     # Cleanup
     parent = hass.data[DOMAIN][entry.entry_id]
     await parent.async_reset()
     del hass.data[DOMAIN][entry.entry_id]
 
-    return True
+    return unload_ok
 
 
 class WiLightDevice(Entity):
@@ -93,16 +79,16 @@ class WiLightDevice(Entity):
         return self._unique_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info."""
-        return {
-            "name": self._name,
-            "identifiers": {(DOMAIN, self._unique_id)},
-            "model": self._model,
-            "manufacturer": "WiLight",
-            "sw_version": self._sw_version,
-            "via_device": (DOMAIN, self._device_id),
-        }
+        return DeviceInfo(
+            name=self._name,
+            identifiers={(DOMAIN, self._unique_id)},
+            model=self._model,
+            manufacturer="WiLight",
+            sw_version=self._sw_version,
+            via_device=(DOMAIN, self._device_id),
+        )
 
     @property
     def available(self):

@@ -1,0 +1,11 @@
+{
+  "domain": "home_plus_control",
+  "name": "Legrand Home+ Control",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/home_plus_control",
+  "requirements": ["homepluscontrol==0.0.5"],
+  "dependencies": ["auth"],
+  "codeowners": ["@chemaaa"],
+  "iot_class": "cloud_polling",
+  "loggers": ["homepluscontrol"]
+}

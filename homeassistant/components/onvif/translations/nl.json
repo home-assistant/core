@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al begonnen",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "no_h264": "Er waren geen H264-streams beschikbaar. Controleer de profielconfiguratie op uw apparaat.",
             "no_mac": "Kan geen unieke ID configureren voor ONVIF-apparaat.",
             "onvif_error": "Fout bij het instellen van ONVIF-apparaat. Controleer de logboeken voor meer informatie."
@@ -11,12 +11,15 @@
             "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
-            "auth": {
+            "configure": {
                 "data": {
+                    "host": "Host",
+                    "name": "Naam",
                     "password": "Wachtwoord",
+                    "port": "Poort",
                     "username": "Gebruikersnaam"
                 },
-                "title": "Configureer authenticatie"
+                "title": "Configureer ONVIF-apparaat"
             },
             "configure_profile": {
                 "data": {
@@ -31,15 +34,10 @@
                 },
                 "title": "Selecteer ONVIF-apparaat"
             },
-            "manual_input": {
-                "data": {
-                    "host": "Host",
-                    "name": "Naam",
-                    "port": "Poort"
-                },
-                "title": "Configureer ONVIF-apparaat"
-            },
             "user": {
+                "data": {
+                    "auto": "Automatisch zoeken"
+                },
                 "description": "Door op verzenden te klikken, zoeken we in uw netwerk naar ONVIF-apparaten die Profiel S ondersteunen. \n\nSommige fabrikanten zijn begonnen ONVIF standaard uit te schakelen. Zorg ervoor dat ONVIF is ingeschakeld in de configuratie van uw camera.",
                 "title": "ONVIF-apparaat instellen"
             }
@@ -52,7 +50,7 @@
                     "extra_arguments": "Extra FFMPEG argumenten",
                     "rtsp_transport": "RTSP-transportmechanisme"
                 },
-                "title": "[%%] Apparaatopties"
+                "title": "ONVIF-apparaatopties"
             }
         }
     }

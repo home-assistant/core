@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "no_devices_found": "Geen apparaten gevonden op het netwerk"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Wilt u {model} {id} ( {ipaddr} ) instellen?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Als u de host leeg laat, wordt detectie gebruikt om apparaten te vinden."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Aangepast effect: Lijst van 1 tot 16 [R,G,B] kleuren. Voorbeeld: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Aangepast effect: snelheid in procenten voor het effect dat van kleur verandert.",
+                    "custom_effect_transition": "Aangepast effect: Type overgang tussen de kleuren.",
+                    "mode": "De gekozen helderheidsstand."
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_failed_existing": "Kon de config entry niet updaten, gelieve de integratie te verwijderen en het opnieuw op te zetten.",
+            "reauth_successful": "Herauthenticatie geslaagd",
+            "unknown": "Onverwachte fout"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_api_key": "Ongeldige API-sleutel",
+            "not_main_key": "Verkeerde API sleutel gedetecteerd, gebruik de 'hoofd' API sleutel",
+            "reauth_failed_matching_account": "De API sleutel die u heeft opgegeven komt niet overeen met de account ID voor de bestaande configuratie.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "description": "U moet een nieuwe 'hoofd'-API-sleutel van UptimeRobot opgeven",
+                "title": "Integratie herauthenticeren"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-sleutel"
+                },
+                "description": "U moet de 'hoofd' API-sleutel van UptimeRobot opgeven"
+            }
+        }
+    }
+}

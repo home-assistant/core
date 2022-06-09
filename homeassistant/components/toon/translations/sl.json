@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "no_agreements": "Ta ra\u010dun nima prikazov Toon."
+            "no_agreements": "Ta ra\u010dun nima prikazov Toon.",
+            "unknown_authorize_url_generation": "Neznana napaka pri ustvarjanju overitvenega url."
         }
     }
 }

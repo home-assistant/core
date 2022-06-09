@@ -3,6 +3,9 @@ import logging
 
 import httpx
 
+from homeassistant.helpers import template
+from homeassistant.helpers.httpx_client import get_async_client
+
 DEFAULT_TIMEOUT = 10
 
 _LOGGER = logging.getLogger(__name__)
@@ -13,6 +16,7 @@ class RestData:
 
     def __init__(
         self,
+        hass,
         method,
         resource,
         auth,
@@ -23,6 +27,7 @@ class RestData:
         timeout=DEFAULT_TIMEOUT,
     ):
         """Initialize the data object."""
+        self._hass = hass
         self._method = method
         self._resource = resource
         self._auth = auth
@@ -33,36 +38,42 @@ class RestData:
         self._verify_ssl = verify_ssl
         self._async_client = None
         self.data = None
+        self.last_exception = None
         self.headers = None
-
-    async def async_remove(self):
-        """Destroy the http session on destroy."""
-        if self._async_client:
-            await self._async_client.aclose()
 
     def set_url(self, url):
         """Set url."""
         self._resource = url
 
-    async def async_update(self):
+    async def async_update(self, log_errors=True):
         """Get the latest data from REST service with provided method."""
         if not self._async_client:
-            self._async_client = httpx.AsyncClient(verify=self._verify_ssl)
+            self._async_client = get_async_client(
+                self._hass, verify_ssl=self._verify_ssl
+            )
+
+        rendered_headers = template.render_complex(self._headers, parse_result=False)
+        rendered_params = template.render_complex(self._params)
 
         _LOGGER.debug("Updating from %s", self._resource)
         try:
             response = await self._async_client.request(
                 self._method,
                 self._resource,
-                headers=self._headers,
-                params=self._params,
+                headers=rendered_headers,
+                params=rendered_params,
                 auth=self._auth,
                 data=self._request_data,
                 timeout=self._timeout,
+                follow_redirects=True,
             )
             self.data = response.text
             self.headers = response.headers
         except httpx.RequestError as ex:
-            _LOGGER.error("Error fetching data: %s failed with %s", self._resource, ex)
+            if log_errors:
+                _LOGGER.error(
+                    "Error fetching data: %s failed with %s", self._resource, ex
+                )
+            self.last_exception = ex
             self.data = None
             self.headers = None

@@ -1,0 +1,32 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'account \u00e8 gi\u00e0 configurato",
+            "reauth_failed_existing": "Impossibile aggiornare la voce di configurazione, rimuovere l'integrazione e configurarla di nuovo.",
+            "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente",
+            "unknown": "Errore imprevisto"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_api_key": "Chiave API non valida",
+            "not_main_key": "Rilevato tipo di chiave API errato, utilizza la chiave API 'principale'.",
+            "reauth_failed_matching_account": "La chiave API che hai fornito non corrisponde all'ID account per la configurazione esistente.",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Devi fornire una nuova chiave API 'principale' da UptimeRobot",
+                "title": "Autentica nuovamente l'integrazione"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Devi fornire la chiave API 'principale' da UptimeRobot"
+            }
+        }
+    }
+}

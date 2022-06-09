@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "heater_not_available": "Riscaldatore non disponibile. Prova a ripristinare il riscaldatore premendo + e OK per alcuni secondi.",
+            "heater_not_found": "Riscaldatore non trovato. Prova ad avvicinare il riscaldatore al computer Home Assistant.",
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "account_id": "ID account",
+                    "password": "Password"
+                }
+            },
+            "local": {
+                "data": {
+                    "wifi_pswd": "Password Wi-Fi",
+                    "wifi_ssid": "SSID Wi-Fi"
+                },
+                "description": "Ripristina il riscaldatore premendo + e OK finch\u00e9 il display non mostra 'Reset'. Quindi premi e tieni premuto il pulsante OK sul riscaldatore fino a quando il led blu inizia a lampeggiare prima di premere Invia. La configurazione del riscaldatore potrebbe richiedere alcuni minuti."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Seleziona il tipo di connessione"
+                },
+                "description": "Seleziona il tipo di connessione. Locale richiede riscaldatori con bluetooth"
+            }
+        }
+    }
+}

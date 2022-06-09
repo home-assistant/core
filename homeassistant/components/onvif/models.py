@@ -1,6 +1,10 @@
 """ONVIF models."""
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Any, List
+from typing import Any
+
+from homeassistant.helpers.entity import EntityCategory
 
 
 @dataclass
@@ -37,7 +41,7 @@ class PTZ:
     continuous: bool
     relative: bool
     absolute: bool
-    presets: List[str] = None
+    presets: list[str] = None
 
 
 @dataclass
@@ -70,4 +74,5 @@ class Event:
     device_class: str = None
     unit_of_measurement: str = None
     value: Any = None
+    entity_category: EntityCategory | None = None
     entity_enabled: bool = True

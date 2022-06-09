@@ -11,6 +11,11 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.components.telegram_bot import (
+    ATTR_DISABLE_NOTIF,
+    ATTR_MESSAGE_TAG,
+    ATTR_PARSER,
+)
 from homeassistant.const import ATTR_LOCATION
 from homeassistant.helpers.reload import setup_reload_service
 
@@ -55,6 +60,21 @@ class TelegramNotificationService(BaseNotificationService):
         if message:
             service_data.update({ATTR_MESSAGE: message})
         data = kwargs.get(ATTR_DATA)
+
+        # Set message tag
+        if data is not None and ATTR_MESSAGE_TAG in data:
+            message_tag = data.get(ATTR_MESSAGE_TAG)
+            service_data.update({ATTR_MESSAGE_TAG: message_tag})
+
+        # Set disable_notification
+        if data is not None and ATTR_DISABLE_NOTIF in data:
+            disable_notification = data.get(ATTR_DISABLE_NOTIF)
+            service_data.update({ATTR_DISABLE_NOTIF: disable_notification})
+
+        # Set parse_mode
+        if data is not None and ATTR_PARSER in data:
+            parse_mode = data.get(ATTR_PARSER)
+            service_data.update({ATTR_PARSER: parse_mode})
 
         # Get keyboard info
         if data is not None and ATTR_KEYBOARD in data:

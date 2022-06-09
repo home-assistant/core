@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "alternative_integration": "Seadet toetab paremini teine sidumine",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "discovery_error": "Sobiva DLNA -seadme leidmine nurjus",
+            "incomplete_config": "Seadetes puudub n\u00f5utav muutuja",
+            "non_unique_id": "Leiti mitu sama unikaalse ID-ga seadet",
+            "not_dmr": "Seade ei ole toetatud digitaalne meediumiedastusseade"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "not_dmr": "Seade ei ole toetatud digitaalne meediumiedastusseade"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Kas alustada seadistamist?"
+            },
+            "import_turn_on": {
+                "description": "L\u00fclita seade sisse ja kl\u00f5psa migreerimise j\u00e4tkamiseks nuppu Edasta"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                },
+                "description": "Seadme kirjelduse XML-faili URL",
+                "title": "DLNA DMR seadme k\u00e4sitsi \u00fchendamine"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Vali h\u00e4\u00e4lestatav seade v\u00f5i j\u00e4ta URL -i sisestamiseks t\u00fchjaks",
+                "title": "Avastatud DLNA DMR-seadmed"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_url": "Sobimatu URL"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "browse_unfiltered": "Kuva sirvimisel \u00fchildumatu meedia",
+                    "callback_url_override": "S\u00fcndmuse kuulaja URL",
+                    "listen_port": "S\u00fcndmuste kuulaja port (juhuslik kui pole m\u00e4\u00e4ratud)",
+                    "poll_availability": "K\u00fcsitle seadme saadavuse kohta"
+                },
+                "title": "DLNA digitaalse meediumi renderdaja s\u00e4tted"
+            }
+        }
+    }
+}

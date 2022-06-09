@@ -2,12 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom voor het apparaat wordt al uitgevoerd.",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "cannot_connect": "Kan geen verbinding maken",
             "not_konn_panel": "Geen herkend Konnected.io apparaat",
-            "unknown": "Onbekende fout opgetreden"
+            "unknown": "Onverwachte fout"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken met een Konnected Panel op {host} : {port}"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "step": {
             "confirm": {
@@ -20,8 +21,8 @@
             },
             "user": {
                 "data": {
-                    "host": "IP-adres van Konnected apparaat",
-                    "port": "Konnected apparaat poort"
+                    "host": "IP-adres",
+                    "port": "Poort"
                 },
                 "description": "Voer de host-informatie in voor uw Konnected-paneel."
             }
@@ -48,8 +49,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "Naam (optioneel)",
-                    "poll_interval": "Poll interval (minuten) (optioneel)",
+                    "name": "Naam (optional)",
+                    "poll_interval": "Poll interval (minuten)",
                     "type": "Type sensor"
                 },
                 "description": "{zone} opties",
@@ -85,8 +86,9 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "API host-URL overschrijven (optioneel)",
+                    "api_host": "API host-URL overschrijven",
                     "blink": "Led knipperen bij het verzenden van statuswijziging",
+                    "discovery": "Reageer op detectieverzoeken op uw netwerk",
                     "override_api_host": "Overschrijf standaard Home Assistant API hostpaneel-URL"
                 },
                 "description": "Selecteer het gewenste gedrag voor uw paneel",
@@ -95,11 +97,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Uitvoer wanneer ingeschakeld",
-                    "momentary": "Pulsduur (ms) (optioneel)",
+                    "momentary": "Pulsduur (ms)",
                     "more_states": "Aanvullende statussen voor deze zone configureren",
                     "name": "Naam (optioneel)",
-                    "pause": "Pauze tussen de pulsen (ms) (optioneel)",
-                    "repeat": "Aantal herhalingen (-1=oneindig) (optioneel)"
+                    "pause": "Pauze tussen de pulsen (ms)",
+                    "repeat": "Aantal herhalingen (-1=oneindig)"
                 },
                 "description": "{zone} opties: status {state}",
                 "title": "Schakelbare uitgang configureren"

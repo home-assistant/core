@@ -17,7 +17,7 @@ from .helper import supports_encryption
 
 _LOGGER = logging.getLogger(__name__)
 
-HANDLERS = decorator.Registry()
+HANDLERS = decorator.Registry()  # type: ignore[var-annotated]
 
 
 def get_cipher():
@@ -159,7 +159,7 @@ def encrypt_message(secret, topic, message):
 
     if key is None:
         _LOGGER.warning(
-            "Unable to encrypt payload because no decryption key known " "for topic %s",
+            "Unable to encrypt payload because no decryption key known for topic %s",
             topic,
         )
         return None
@@ -304,7 +304,7 @@ async def async_handle_waypoint(hass, name_base, waypoint):
     if hass.states.get(entity_id) is not None:
         return
 
-    zone = zone_comp.Zone(
+    zone = zone_comp.Zone.from_yaml(
         {
             zone_comp.CONF_NAME: pretty_name,
             zone_comp.CONF_LATITUDE: lat,
@@ -313,7 +313,6 @@ async def async_handle_waypoint(hass, name_base, waypoint):
             zone_comp.CONF_ICON: zone_comp.ICON_IMPORT,
             zone_comp.CONF_PASSIVE: False,
         },
-        False,
     )
     zone.hass = hass
     zone.entity_id = entity_id

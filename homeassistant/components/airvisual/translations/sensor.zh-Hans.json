@@ -1,0 +1,20 @@
+{
+    "state": {
+        "airvisual__pollutant_label": {
+            "co": "\u4e00\u6c27\u5316\u78b3",
+            "n2": "\u4e8c\u6c27\u5316\u6c2e",
+            "o3": "\u81ed\u6c27",
+            "p1": "PM10",
+            "p2": "PM2.5",
+            "s2": "\u4e8c\u6c27\u5316\u786b"
+        },
+        "airvisual__pollutant_level": {
+            "good": "\u826f\u597d",
+            "hazardous": "\u5371\u5bb3\u5065\u5eb7",
+            "moderate": "\u4e2d\u7b49",
+            "unhealthy": "\u4e0d\u5229\u4e8e\u5065\u5eb7",
+            "unhealthy_sensitive": "\u4e0d\u5229\u4e8e\u654f\u611f\u4eba\u7fa4",
+            "very_unhealthy": "\u975e\u5e38\u4e0d\u5229\u4e8e\u5065\u5eb7"
+        }
+    }
+}

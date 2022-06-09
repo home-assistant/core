@@ -2,12 +2,13 @@
     "config": {
         "abort": {
             "already_configured": "Enheten er allerede konfigurert",
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "cct_unsupported": "Denne WLED-enheten bruker CCT-kanaler, som ikke st\u00f8ttes av denne integrasjonen"
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes"
         },
-        "flow_title": "",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
@@ -18,6 +19,15 @@
             "zeroconf_confirm": {
                 "description": "Vil du legge til WLED med navnet ' {name} ' i Home Assistant?",
                 "title": "Oppdaget WLED-enhet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "keep_master_light": "Behold hovedlys, selv med 1 LED-segment."
+                }
             }
         }
     }

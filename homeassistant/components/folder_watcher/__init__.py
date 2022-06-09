@@ -7,7 +7,9 @@ from watchdog.events import PatternMatchingEventHandler
 from watchdog.observers import Observer
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,14 +38,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the folder watcher."""
     conf = config[DOMAIN]
     for watcher in conf:
         path = watcher[CONF_FOLDER]
         patterns = watcher[CONF_PATTERNS]
         if not hass.config.is_allowed_path(path):
-            _LOGGER.error("folder %s is not valid or allowed", path)
+            _LOGGER.error("Folder %s is not valid or allowed", path)
             return False
         Watcher(path, patterns, hass)
 
@@ -90,6 +92,10 @@ def create_event_handler(patterns, hass):
 
         def on_deleted(self, event):
             """File deleted."""
+            self.process(event)
+
+        def on_closed(self, event):
+            """File closed."""
             self.process(event)
 
     return EventHandler(patterns, hass)

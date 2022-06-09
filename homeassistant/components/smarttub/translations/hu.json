@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
+            "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt."
+        },
+        "error": {
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "A SmartTub integr\u00e1ci\u00f3nak \u00fajra hiteles\u00edtenie kell a fi\u00f3kj\u00e1t",
+                "title": "Az integr\u00e1ci\u00f3 \u00fajb\u00f3li azonos\u00edt\u00e1sa"
+            },
+            "user": {
+                "data": {
+                    "email": "E-mail",
+                    "password": "Jelsz\u00f3"
+                },
+                "description": "Adja meg SmartTub e-mail c\u00edmet \u00e9s jelsz\u00f3t a bejelentkez\u00e9shez",
+                "title": "Bejelentkez\u00e9s"
+            }
+        }
+    }
+}

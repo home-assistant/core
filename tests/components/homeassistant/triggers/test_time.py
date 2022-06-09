@@ -1,5 +1,6 @@
 """The tests for the time automation."""
 from datetime import timedelta
+from unittest.mock import Mock, patch
 
 import pytest
 import voluptuous as vol
@@ -10,7 +11,6 @@ from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_ENTITY_ID, SERVICE_TURN_
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.async_mock import Mock, patch
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -51,7 +51,8 @@ async def test_if_fires_using_at(hass, calls):
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}"
+                            "some": "{{ trigger.platform }} - {{ trigger.now.hour }}",
+                            "id": "{{ trigger.id}}",
                         },
                     },
                 }
@@ -64,6 +65,7 @@ async def test_if_fires_using_at(hass, calls):
 
     assert len(calls) == 1
     assert calls[0].data["some"] == "time - 5"
+    assert calls[0].data["id"] == 0
 
 
 @pytest.mark.parametrize(

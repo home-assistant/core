@@ -9,5 +9,10 @@
                 "description": "\u00d8nsker du \u00e5 sette opp Wemo?"
             }
         }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "long_press": "Wemo-knappen ble trykket i 2 sekunder"
+        }
     }
 }

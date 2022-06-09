@@ -4,5 +4,10 @@
             "turn_off": "Vypnout {entity_name}",
             "turn_on": "Zapnout {entity_name}"
         }
+    },
+    "state": {
+        "_": {
+            "off": "Vypnuto"
+        }
     }
 }

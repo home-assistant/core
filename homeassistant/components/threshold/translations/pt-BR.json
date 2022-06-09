@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Os limites inferior e superior n\u00e3o podem estar vazios"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Sensor de entrada",
+                    "hysteresis": "Histerese",
+                    "lower": "Limite inferior",
+                    "name": "Nome",
+                    "upper": "Limite superior"
+                },
+                "description": "Crie um sensor bin\u00e1rio que liga e desliga dependendo do valor de um sensor \n\n Somente limite inferior configurado - Liga quando o valor do sensor de entrada for menor que o limite inferior.\n Somente limite superior configurado - Liga quando o valor do sensor de entrada for maior que o limite superior.\n Ambos os limites inferior e superior configurados - Liga quando o valor do sensor de entrada est\u00e1 na faixa [limite inferior .. limite superior].",
+                "title": "Adicionar sensor Threshold"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Os limites inferior e superior n\u00e3o podem estar vazios"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Sensor de entrada",
+                    "hysteresis": "Histerese",
+                    "lower": "Limite inferior",
+                    "name": "Nome",
+                    "upper": "Limite superior"
+                },
+                "description": "Somente o limite inferior \u00e9 configurado - Liga quando o valor do sensor de entrada for menor que o limite inferior.\nSomente o limite superior \u00e9  configurado - Liga quando o valor do sensor de entrada for maior que o limite superior.\nAmbos os limites inferior e superior s\u00e3o configurados - Liga quando o valor do sensor de entrada est\u00e1 na faixa [limite inferior .. limite superior]."
+            }
+        }
+    },
+    "title": "Sensor Threshold"
+}

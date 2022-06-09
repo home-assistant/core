@@ -1,15 +1,19 @@
 """Details about printers which are connected to CUPS."""
+from __future__ import annotations
+
 from datetime import timedelta
 import importlib
 import logging
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_HOST, CONF_PORT, PERCENTAGE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +55,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the CUPS sensor."""
     host = config[CONF_HOST]
     port = config[CONF_PORT]
@@ -65,7 +74,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             _LOGGER.error("Unable to connect to CUPS server: %s:%s", host, port)
             raise PlatformNotReady()
 
-        dev = []
+        dev: list[SensorEntity] = []
         for printer in printers:
             if printer not in data.printers:
                 _LOGGER.error("Printer is not present: %s", printer)
@@ -96,7 +105,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     add_entities(dev, True)
 
 
-class CupsSensor(Entity):
+class CupsSensor(SensorEntity):
     """Representation of a CUPS sensor."""
 
     def __init__(self, data, printer):
@@ -112,7 +121,7 @@ class CupsSensor(Entity):
         return self._name
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._printer is None:
             return None
@@ -131,7 +140,7 @@ class CupsSensor(Entity):
         return ICON_PRINTER
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._printer is None:
             return None
@@ -155,7 +164,7 @@ class CupsSensor(Entity):
         self._available = self.data.available
 
 
-class IPPSensor(Entity):
+class IPPSensor(SensorEntity):
     """Implementation of the IPPSensor.
 
     This sensor represents the status of the printer.
@@ -184,7 +193,7 @@ class IPPSensor(Entity):
         return self._available
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._attributes is None:
             return None
@@ -193,7 +202,7 @@ class IPPSensor(Entity):
         return PRINTER_STATES.get(key, key)
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._attributes is None:
             return None
@@ -232,7 +241,7 @@ class IPPSensor(Entity):
         self._available = self.data.available
 
 
-class MarkerSensor(Entity):
+class MarkerSensor(SensorEntity):
     """Implementation of the MarkerSensor.
 
     This sensor represents the percentage of ink or toner.
@@ -258,7 +267,7 @@ class MarkerSensor(Entity):
         return ICON_MARKER
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         if self._attributes is None:
             return None
@@ -266,12 +275,12 @@ class MarkerSensor(Entity):
         return self._attributes[self._printer]["marker-levels"][self._index]
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit of measurement."""
         return PERCENTAGE
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
         if self._attributes is None:
             return None

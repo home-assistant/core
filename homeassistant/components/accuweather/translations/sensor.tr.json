@@ -1,0 +1,9 @@
+{
+    "state": {
+        "accuweather__pressure_tendency": {
+            "falling": "D\u00fc\u015f\u00fcyor",
+            "rising": "Y\u00fckseliyor",
+            "steady": "Sabit"
+        }
+    }
+}

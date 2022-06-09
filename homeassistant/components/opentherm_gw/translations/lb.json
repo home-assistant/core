@@ -11,8 +11,7 @@
                     "device": "Pfad oder URL",
                     "id": "ID",
                     "name": "Numm"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -20,10 +19,8 @@
         "step": {
             "init": {
                 "data": {
-                    "floor_temperature": "Buedem Temperatur",
-                    "precision": "Pr\u00e4zisioun"
-                },
-                "description": "Optioune fir OpenTherm Gateway"
+                    "floor_temperature": "Buedem Temperatur"
+                }
             }
         }
     }

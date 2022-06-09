@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "{base_url} url'si ile denetleyiciye ba\u011flan\u0131lamad\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "exclude": "Home Asistan\u0131'ndan hari\u00e7 tutulacak Vera cihaz kimlikleri.",
+                    "lights": "Vera, Home Assistant'ta \u0131\u015f\u0131k gibi davranmak i\u00e7in cihaz kimliklerini de\u011fi\u015ftirir.",
+                    "vera_controller_url": "Denetleyici URL'si"
+                },
+                "data_description": {
+                    "vera_controller_url": "\u015eu \u015fekilde g\u00f6r\u00fcnmelidir: http://192.168.1.161:3480"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "exclude": "Home Asistan\u0131'ndan hari\u00e7 tutulacak Vera cihaz kimlikleri.",
+                    "lights": "Vera, Home Assistant'ta \u0131\u015f\u0131k gibi davranmak i\u00e7in cihaz kimliklerini de\u011fi\u015ftirir."
+                },
+                "description": "\u0130ste\u011fe ba\u011fl\u0131 parametrelerle ilgili ayr\u0131nt\u0131lar i\u00e7in vera belgelerine bak\u0131n: https://www.home-assistant.io/integrations/vera/. Not: Buradaki herhangi bir de\u011fi\u015fiklik, ev asistan\u0131 sunucusunun yeniden ba\u015flat\u0131lmas\u0131n\u0131 gerektirecektir. De\u011ferleri temizlemek i\u00e7in bir bo\u015fluk b\u0131rak\u0131n.",
+                "title": "Vera denetleyici se\u00e7enekleri"
+            }
+        }
+    }
+}

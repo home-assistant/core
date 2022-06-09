@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "authenticate": {
+                "data": {
+                    "api_key": "API Key"
+                },
+                "description": "Please enter the API Key you set in your configuration for {name}."
+            },
+            "user": {
+                "data": {
+                    "api_key": "API Key",
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "description": "Please enter your connection details."
+            }
+        }
+    }
+}

@@ -1,16 +1,26 @@
 """Support for Qwikswitch Sensors."""
+from __future__ import annotations
+
 import logging
 
 from pyqwikswitch.qwikswitch import SENSORS
 
-from homeassistant.core import callback
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as QWIKSWITCH, QSEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, _, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    _: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Add sensor from the main Qwikswitch component."""
     if discovery_info is None:
         return
@@ -21,7 +31,7 @@ async def async_setup_platform(hass, _, add_entities, discovery_info=None):
     add_entities(devs)
 
 
-class QSSensor(QSEntity):
+class QSSensor(QSEntity, SensorEntity):
     """Sensor based on a Qwikswitch relay/dimmer module."""
 
     _val = None
@@ -56,7 +66,7 @@ class QSSensor(QSEntity):
             self.async_write_ha_state()
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the value of the sensor."""
         return str(self._val)
 
@@ -66,6 +76,6 @@ class QSSensor(QSEntity):
         return f"qs{self.qsid}:{self.channel}"
 
     @property
-    def unit_of_measurement(self):
+    def native_unit_of_measurement(self):
         """Return the unit the value is expressed in."""
         return self.unit

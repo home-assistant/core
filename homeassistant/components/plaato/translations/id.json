@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
+            "cloud_not_connected": "Tidak terhubung ke Home Assistant Cloud.",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan.",
+            "webhook_not_internet_accessible": "Instans Home Assistant Anda harus dapat diakses dari internet untuk menerima pesan webhook."
+        },
+        "create_entry": {
+            "default": "Plaato {device_type} dengan nama **{device_name}** berhasil disiapkan!"
+        },
+        "error": {
+            "invalid_webhook_device": "Anda telah memilih perangkat yang tidak mendukung pengiriman data ke webhook. Ini hanya tersedia untuk Airlock",
+            "no_api_method": "Anda perlu menambahkan token auth atau memilih webhook",
+            "no_auth_token": "Anda perlu menambahkan token autentikasi"
+        },
+        "step": {
+            "api_method": {
+                "data": {
+                    "token": "Tempel Token Auth di sini",
+                    "use_webhook": "Gunakan webhook"
+                },
+                "description": "Untuk dapat melakukan kueri API diperlukan `auth_token`. Nilai token dapat diperoleh dengan mengikuti [petunjuk ini](https://plaato.zendesk.com/hc/en-us/articles/360003234717-Auth-token)\n\nPerangkat yang dipilih: **{device_type}** \n\nJika Anda lebih memilih untuk menggunakan metode webhook bawaan (hanya Airlock), centang centang kotak di bawah ini dan kosongkan nilai Auth Token'",
+                "title": "Pilih metode API"
+            },
+            "user": {
+                "data": {
+                    "device_name": "Nama perangkat Anda",
+                    "device_type": "Jenis perangkat Plaato"
+                },
+                "description": "Ingin memulai penyiapan?",
+                "title": "Siapkan perangkat Plaato"
+            },
+            "webhook": {
+                "description": "Untuk mengirim event ke Home Assistant, Anda harus menyiapkan fitur webhook di Plaato Airlock.\n\nIsi info berikut:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nBaca [dokumentasi]({docs_url}) tentang detail lebih lanjut.",
+                "title": "Webhook untuk digunakan"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "update_interval": "Interval pembaruan (menit)"
+                },
+                "description": "Atur interval pembaruan (menit)",
+                "title": "Opsi untuk Plaato"
+            },
+            "webhook": {
+                "description": "Info webhook:\n\n- URL: `{webhook_url}`\n- Method: POST\n\n",
+                "title": "Opsi untuk Plaato Airlock"
+            }
+        }
+    }
+}

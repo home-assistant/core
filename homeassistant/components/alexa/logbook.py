@@ -1,4 +1,9 @@
 """Describe logbook events."""
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_ENTITY_ID,
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.core import callback
 
 from .const import DOMAIN, EVENT_ALEXA_SMART_HOME
@@ -12,17 +17,20 @@ def async_describe_events(hass, async_describe_event):
     def async_describe_logbook_event(event):
         """Describe a logbook event."""
         data = event.data
-        entity_id = data["request"].get("entity_id")
 
-        if entity_id:
+        if entity_id := data["request"].get("entity_id"):
             state = hass.states.get(entity_id)
             name = state.name if state else entity_id
-            message = f"send command {data['request']['namespace']}/{data['request']['name']} for {name}"
+            message = f"sent command {data['request']['namespace']}/{data['request']['name']} for {name}"
         else:
             message = (
-                f"send command {data['request']['namespace']}/{data['request']['name']}"
+                f"sent command {data['request']['namespace']}/{data['request']['name']}"
             )
 
-        return {"name": "Amazon Alexa", "message": message, "entity_id": entity_id}
+        return {
+            LOGBOOK_ENTRY_NAME: "Amazon Alexa",
+            LOGBOOK_ENTRY_MESSAGE: message,
+            LOGBOOK_ENTRY_ENTITY_ID: entity_id,
+        }
 
     async_describe_event(DOMAIN, EVENT_ALEXA_SMART_HOME, async_describe_logbook_event)

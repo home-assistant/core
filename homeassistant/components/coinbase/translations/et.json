@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine",
+            "invalid_auth_key": "Coinbase l\u00fckkas API mandaadid tagasi kehtetu API-v\u00f5tme t\u00f5ttu.",
+            "invalid_auth_secret": "Coinbase l\u00fckkas API volitused tagasi kuna API salas\u00f5na on kehtetu.",
+            "unknown": "Ootamtu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API v\u00f5ti",
+                    "api_token": "API salas\u00f5na"
+                },
+                "description": "Sisesta Coinbase'i pakutava API-v\u00f5tme \u00fcksikasjad.",
+                "title": "Coinbase'i API v\u00f5tme \u00fcksikasjad"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "currency_unavailable": "Coinbase API ei paku \u00fchte v\u00f5i mitut soovitud valuutasaldot.",
+            "exchange_rate_unavailable": "Coinbase ei paku \u00fchte v\u00f5i mitut soovitud vahetuskurssi.",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "account_balance_currencies": "Rahakoti saldod teavitamine.",
+                    "exchange_base": "Vahetuskursiandurite baasvaluuta.",
+                    "exchange_rate_currencies": "Vahetuskursside aruanne.",
+                    "exchnage_rate_precision": "Vahetuskursside k\u00fcmnendkohtade arv."
+                },
+                "description": "Kohanda Coinbase'i valikuid"
+            }
+        }
+    }
+}

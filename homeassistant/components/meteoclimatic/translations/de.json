@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+            "unknown": "Unerwarteter Fehler"
+        },
+        "error": {
+            "not_found": "Keine Ger\u00e4te im Netzwerk gefunden"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Stationscode"
+                },
+                "data_description": {
+                    "code": "Sieht aus wie ESCAT4300000043206B"
+                }
+            }
+        }
+    }
+}

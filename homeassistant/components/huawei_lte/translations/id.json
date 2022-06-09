@@ -1,0 +1,41 @@
+{
+    "config": {
+        "abort": {
+            "not_huawei_lte": "Bukan perangkat Huawei LTE"
+        },
+        "error": {
+            "connection_timeout": "Tenggang waktu terhubung habis",
+            "incorrect_password": "Kata sandi salah",
+            "incorrect_username": "Nama pengguna salah",
+            "invalid_auth": "Autentikasi tidak valid",
+            "invalid_url": "URL tidak valid",
+            "login_attempts_exceeded": "Upaya login maksimum telah terlampaui, coba lagi nanti",
+            "response_error": "Kesalahan tidak dikenal dari perangkat",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Kata Sandi",
+                    "url": "URL",
+                    "username": "Nama Pengguna"
+                },
+                "description": "Masukkan detail akses perangkat.",
+                "title": "Konfigurasikan Huawei LTE"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nama layanan notifikasi (perubahan harus dimulai ulang)",
+                    "recipient": "Penerima notifikasi SMS",
+                    "track_wired_clients": "Lacak klien jaringan kabel",
+                    "unauthenticated_mode": "Mode tidak diautentikasi (perubahan memerlukan pemuatan ulang)"
+                }
+            }
+        }
+    }
+}

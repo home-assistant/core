@@ -1,31 +1,46 @@
 """Test the NEW_NAME config flow."""
-from homeassistant import config_entries, setup
+
+from unittest.mock import patch
+
+import pytest
+
+from homeassistant import config_entries
 from homeassistant.components.NEW_DOMAIN.const import (
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
 )
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
-
-from tests.async_mock import patch
+from homeassistant.setup import async_setup_component
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
 
-async def test_full_flow(
-    hass, aiohttp_client, aioclient_mock, current_request_with_host
-):
-    """Check full flow."""
-    assert await setup.async_setup_component(
+@pytest.fixture
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
         hass,
-        "NEW_DOMAIN",
-        {
-            "NEW_DOMAIN": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
-        },
+        DOMAIN,
+        ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
+
+async def test_full_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth,
+    aioclient_mock,
+    current_request_with_host,
+    setup_credentials,
+) -> None:
+    """Check full flow."""
     result = await hass.config_entries.flow.async_init(
         "NEW_DOMAIN", context={"source": config_entries.SOURCE_USER}
     )
@@ -43,7 +58,7 @@ async def test_full_flow(
         f"&state={state}"
     )
 
-    client = await aiohttp_client(hass.http.app)
+    client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
     assert resp.status == 200
     assert resp.headers["content-type"] == "text/html; charset=utf-8"

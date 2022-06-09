@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Wersja agenta",
             "board": "Uk\u0142ad",
             "disk_total": "Pojemno\u015b\u0107 dysku",
             "disk_used": "Pojemno\u015b\u0107 u\u017cyta",
@@ -14,6 +15,5 @@
             "update_channel": "Kana\u0142 aktualizacji",
             "version_api": "Wersja API"
         }
-    },
-    "title": "Hass.io"
+    }
 }

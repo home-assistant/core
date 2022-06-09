@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "error": {
+            "bad_dsn": "Ge\u00e7ersiz DSN",
+            "unknown": "Beklenmeyen hata"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "dsn": "Sentry DSN"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "environment": "Ortam\u0131n iste\u011fe ba\u011fl\u0131 ad\u0131.",
+                    "event_custom_components": "\u00d6zel bile\u015fenlerden olay g\u00f6nder",
+                    "event_handled": "\u0130\u015flenen etkinlikleri g\u00f6nder",
+                    "event_third_party_packages": "\u00dc\u00e7\u00fcnc\u00fc taraf paketlerden etkinlik g\u00f6nder",
+                    "logging_event_level": "G\u00fcnl\u00fck seviyesi Sentry, a\u015fa\u011f\u0131dakiler i\u00e7in bir olay kaydedecektir:",
+                    "logging_level": "G\u00fcnl\u00fck seviyesi Sentry, g\u00fcnl\u00fckleri i\u00e7erik par\u00e7alar\u0131 olarak kaydeder.",
+                    "tracing": "Performans izlemeyi etkinle\u015ftir",
+                    "tracing_sample_rate": "\u00d6rnekleme h\u0131z\u0131n\u0131n izlenmesi; 0.0 ile 1.0 aras\u0131nda (1.0 = %100)"
+                }
+            }
+        }
+    }
+}

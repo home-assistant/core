@@ -1,0 +1,27 @@
+{
+    "config": {
+        "error": {
+            "invalid_auth": "Autenticazione non valida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                },
+                "description": "Inserisci le credenziali utilizzate per accedere a mytotalconnectcomfort.com."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "away_cool_temperature": "Fuori casa temperatura fresca",
+                    "away_heat_temperature": "Fuori casa temperatura calda"
+                },
+                "description": "Ulteriori opzioni di configurazione di Honeywell. Le temperature sono impostate in Fahrenheit."
+            }
+        }
+    }
+}

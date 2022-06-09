@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Voer voor nieuwere modellen gebruikersnaam 'envoy' in zonder wachtwoord. Voer voor oudere modellen gebruikersnaam `installer` in zonder wachtwoord. Voer voor alle andere modellen een geldige gebruikersnaam en wachtwoord in."
+            }
+        }
+    }
+}

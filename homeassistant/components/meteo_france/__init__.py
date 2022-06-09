@@ -1,17 +1,17 @@
 """Support for Meteo-France weather data."""
-import asyncio
 from datetime import timedelta
 import logging
 
-from meteofrance.client import MeteoFranceClient
-from meteofrance.helpers import is_valid_warning_department
+from meteofrance_api.client import MeteoFranceClient
+from meteofrance_api.helpers import is_valid_warning_department
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.typing import ConfigType, HomeAssistantType
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
@@ -33,15 +33,17 @@ SCAN_INTERVAL = timedelta(minutes=15)
 CITY_SCHEMA = vol.Schema({vol.Required(CONF_CITY): cv.string})
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {DOMAIN: vol.Schema(vol.All(cv.ensure_list, [CITY_SCHEMA]))},
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
 
-async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Meteo-France from legacy config file."""
-    conf = config.get(DOMAIN)
-    if not conf:
+    if not (conf := config.get(DOMAIN)):
         return True
 
     for city_conf in conf:
@@ -54,27 +56,11 @@ async def async_setup(hass: HomeAssistantType, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up an Meteo-France account from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    latitude = entry.data.get(CONF_LATITUDE)
-
     client = MeteoFranceClient()
-    # Migrate from previous config
-    if not latitude:
-        places = await hass.async_add_executor_job(
-            client.search_places, entry.data[CONF_CITY]
-        )
-        hass.config_entries.async_update_entry(
-            entry,
-            title=f"{places[0]}",
-            data={
-                CONF_LATITUDE: places[0].latitude,
-                CONF_LONGITUDE: places[0].longitude,
-            },
-        )
-
     latitude = entry.data[CONF_LATITUDE]
     longitude = entry.data[CONF_LONGITUDE]
 
@@ -159,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
             )
     else:
         _LOGGER.warning(
-            "Weather alert not available: The city %s is not in metropolitan France or Andorre.",
+            "Weather alert not available: The city %s is not in metropolitan France or Andorre",
             entry.title,
         )
 
@@ -172,15 +158,12 @@ async def async_setup_entry(hass: HomeAssistantType, entry: ConfigEntry) -> bool
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    for platform in PLATFORMS:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(entry, platform)
-        )
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if hass.data[DOMAIN][entry.entry_id][COORDINATOR_ALERT]:
 
@@ -189,18 +172,11 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
         ].data.position.get("dept")
         hass.data[DOMAIN][department] = False
         _LOGGER.debug(
-            "Weather alert for depatment %s unloaded and released. It can be added now by another city.",
+            "Weather alert for depatment %s unloaded and released. It can be added now by another city",
             department,
         )
 
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, platform)
-                for platform in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN][entry.entry_id][UNDO_UPDATE_LISTENER]()
         hass.data[DOMAIN].pop(entry.entry_id)
@@ -210,6 +186,6 @@ async def async_unload_entry(hass: HomeAssistantType, entry: ConfigEntry):
     return unload_ok
 
 
-async def _async_update_listener(hass: HomeAssistantType, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)

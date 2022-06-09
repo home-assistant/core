@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Layanan sudah dikonfigurasi"
+        },
+        "error": {
+            "unexpected_response": "Respons tak terduga dari server whois",
+            "unknown_date_format": "Format tanggal tidak diketahui dalam respons server whois",
+            "unknown_tld": "TLD yang diberikan tidak diketahui atau tidak tersedia untuk integrasi ini",
+            "whois_command_failed": "Perintah whois gagal: tidak dapat mengambil informasi whois"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "domain": "Nama domain"
+                }
+            }
+        }
+    }
+}

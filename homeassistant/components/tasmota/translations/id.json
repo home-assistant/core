@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "error": {
+            "invalid_discovery_topic": "Prefiks topik penemuan tidak valid."
+        },
+        "step": {
+            "config": {
+                "data": {
+                    "discovery_prefix": "Prefiks topik penemuan"
+                }
+            },
+            "confirm": {
+                "description": "Ingin menyiapkan Tasmota?"
+            }
+        }
+    }
+}

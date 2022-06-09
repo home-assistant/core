@@ -1,0 +1,56 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van",
+            "ignore_ip6_link_local": "Az IPv6-kapcsolat helyi c\u00edme nem t\u00e1mogatott.",
+            "reauth_successful": "Az \u00fajhiteles\u00edt\u00e9s sikeres volt"
+        },
+        "error": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "already_in_progress": "A konfigur\u00e1ci\u00f3 m\u00e1r folyamatban van",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "upnp_not_configured": "Hi\u00e1nyz\u00f3 UPnP-be\u00e1ll\u00edt\u00e1sok az eszk\u00f6z\u00f6n."
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "Felfedezte a FRITZ! Boxot: {name} \n\n A FRITZ! Box Tools be\u00e1ll\u00edt\u00e1sa a {name}",
+                "title": "A FRITZ! Box Tools be\u00e1ll\u00edt\u00e1sa"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "{host} FRITZ! Box Tools hiteles\u00edt\u0151 adatait. \n\n A FRITZ! Box Tools nem tud bejelentkezni a FRITZ! Box eszk\u00f6zbe.",
+                "title": "A FRITZ! Box Tools friss\u00edt\u00e9se - hiteles\u00edt\u0151 adatok"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "port": "Port",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "description": "A FRITZ! Box eszk\u00f6z\u00f6k be\u00e1ll\u00edt\u00e1sa a FRITZ! Box vez\u00e9rl\u00e9s\u00e9hez.\n Minimum sz\u00fcks\u00e9ges: felhaszn\u00e1l\u00f3n\u00e9v, jelsz\u00f3.",
+                "title": "A FRITZ! Box Tools be\u00e1ll\u00edt\u00e1sa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "M\u00e1sodpercek egy eszk\u00f6z \"otthon\" tart\u00e1s\u00e1ra",
+                    "old_discovery": "R\u00e9gi felder\u00edt\u00e9si m\u00f3dszer enged\u00e9lyez\u00e9se"
+                }
+            }
+        }
+    }
+}

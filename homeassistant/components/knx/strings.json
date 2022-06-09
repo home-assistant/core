@@ -1,0 +1,121 @@
+{
+  "config": {
+    "step": {
+      "type": {
+        "description": "Please enter the connection type we should use for your KNX connection. \n AUTOMATIC - The integration takes care of the connectivity to your KNX Bus by performing a gateway scan. \n TUNNELING - The integration will connect to your KNX bus via tunneling. \n ROUTING - The integration will connect to your KNX bus via routing.",
+        "data": {
+          "connection_type": "KNX Connection Type"
+        }
+      },
+      "tunnel": {
+        "description": "Please select a gateway from the list.",
+        "data": {
+          "gateway": "KNX Tunnel Connection"
+        }
+      },
+      "manual_tunnel": {
+        "description": "Please enter the connection information of your tunneling device.",
+        "data": {
+          "tunneling_type": "KNX Tunneling Type",
+          "port": "[%key:common::config_flow::data::port%]",
+          "host": "[%key:common::config_flow::data::host%]",
+          "local_ip": "Local IP of Home Assistant"
+        },
+        "data_description": {
+          "port": "Port of the KNX/IP tunneling device.",
+          "host": "IP address of the KNX/IP tunneling device.",
+          "local_ip": "Leave blank to use auto-discovery."
+        }
+      },
+      "secure_tunneling": {
+        "description": "Select how you want to configure KNX/IP Secure.",
+        "menu_options": {
+          "secure_knxkeys": "Use a `.knxkeys` file containing IP secure keys",
+          "secure_manual": "Configure IP secure keys manually"
+        }
+      },
+      "secure_knxkeys": {
+        "description": "Please enter the information for your `.knxkeys` file.",
+        "data": {
+          "knxkeys_filename": "The filename of your `.knxkeys` file (including extension)",
+          "knxkeys_password": "The password to decrypt the `.knxkeys` file"
+        },
+        "data_description": {
+          "knxkeys_filename": "The file is expected to be found in your config directory in `.storage/knx/`.\nIn Home Assistant OS this would be `/config/.storage/knx/`\nExample: `my_project.knxkeys`",
+          "knxkeys_password": "This was set when exporting the file from ETS."
+        }
+      },
+      "secure_manual": {
+        "description": "Please enter your IP secure information.",
+        "data": {
+          "user_id": "User ID",
+          "user_password": "User password",
+          "device_authentication": "Device authentication password"
+        },
+        "data_description": {
+          "user_id": "This is often tunnel number +1. So 'Tunnel 2' would have User-ID '3'.",
+          "user_password": "Password for the specific tunnel connection set in the 'Properties' panel of the tunnel in ETS.",
+          "device_authentication": "This is set in the 'IP' panel of the interface in ETS."
+        }
+      },
+      "routing": {
+        "description": "Please configure the routing options.",
+        "data": {
+          "individual_address": "Individual address",
+          "multicast_group": "Multicast group",
+          "multicast_port": "Multicast port",
+          "local_ip": "Local IP of Home Assistant"
+        },
+        "data_description": {
+          "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
+          "local_ip": "Leave blank to use auto-discovery."
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
+      "invalid_ip_address": "Invalid IPv4 address.",
+      "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong.",
+      "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "connection_type": "KNX Connection Type",
+          "individual_address": "Default individual address",
+          "multicast_group": "[%key:component::knx::config::step::routing::data::multicast_group%]",
+          "multicast_port": "[%key:component::knx::config::step::routing::data::multicast_port%]",
+          "local_ip": "Local IP of Home Assistant",
+          "state_updater": "State updater",
+          "rate_limit": "Rate limit"
+        },
+        "data_description": {
+          "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
+          "multicast_group": "Used for routing and discovery. Default: `224.0.23.12`",
+          "multicast_port": "Used for routing and discovery. Default: `3671`",
+          "local_ip": "Use `0.0.0.0` for auto-discovery.",
+          "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options.",
+          "rate_limit": "Maximum outgoing telegrams per second.\nRecommended: 20 to 40"
+        }
+      },
+      "tunnel": {
+        "data": {
+          "tunneling_type": "KNX Tunneling Type",
+          "port": "[%key:common::config_flow::data::port%]",
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "port": "[%key:component::knx::config::step::manual_tunnel::data_description::port%]",
+          "host": "[%key:component::knx::config::step::manual_tunnel::data_description::host%]"
+        }
+      }
+    }
+  }
+}

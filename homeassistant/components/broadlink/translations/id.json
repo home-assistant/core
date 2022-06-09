@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
+            "invalid_host": "Nama host atau alamat IP tidak valid",
+            "not_supported": "Perangkat tidak didukung",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_host": "Nama host atau alamat IP tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{name} ({model} di {host})",
+        "step": {
+            "auth": {
+                "title": "Autentikasi ke perangkat"
+            },
+            "finish": {
+                "data": {
+                    "name": "Nama"
+                },
+                "title": "Pilih nama untuk perangkat"
+            },
+            "reset": {
+                "description": "{name} ({model} di {host}) dikunci. Anda perlu membuka kunci perangkat untuk mengautentikasi dan menyelesaikan konfigurasi. Ikuti petunjuk berikut:\n1. Buka aplikasi Broadlink.\n2. Klik pada perangkat.\n3. Klik `\u2026` di pojok kanan atas.\n4. Gulir ke bagian bawah halaman.\n5. Nonaktifkan kunci.",
+                "title": "Buka kunci perangkat"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Ya, lakukan."
+                },
+                "description": "{name} ({model} di {host}) dikunci. Hal ini dapat menyebabkan masalah autentikasi di Home Assistant. Apakah Anda ingin membukanya?",
+                "title": "Buka kunci perangkat (opsional)"
+            },
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "timeout": "Tenggang waktu"
+                },
+                "title": "Hubungkan ke perangkat"
+            }
+        }
+    }
+}

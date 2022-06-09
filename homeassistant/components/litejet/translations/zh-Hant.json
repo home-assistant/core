@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+        },
+        "error": {
+            "open_failed": "\u7121\u6cd5\u958b\u555f\u6307\u5b9a\u7684\u5e8f\u5217\u57e0"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u9023\u7dda\u81f3\u96fb\u8166\u4e0a\u7684 LiteJet RS232-2 \u57e0\uff0c\u4e26\u8f38\u5165\u5e8f\u5217\u57e0\u88dd\u7f6e\u7684\u8def\u5f91\u3002\n\nLiteJet MCP \u5fc5\u9808\u8a2d\u5b9a\u70ba\u901a\u8a0a\u901f\u7387 19.2 K baud\u30018 \u6578\u64da\u4f4d\u5143\u30011 \u505c\u6b62\u4f4d\u5143\u3001\u7121\u540c\u4f4d\u4f4d\u5143\u4e26\u65bc\u6bcf\u500b\u56de\u5fa9\u5f8c\u50b3\u9001 'CR'\u3002",
+                "title": "\u9023\u7dda\u81f3 LiteJet"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "default_transition": "\u9810\u8a2d\u8f49\u63db\u6642\u9593\uff08\u79d2\uff09"
+                },
+                "title": "\u8a2d\u5b9a LiteJet"
+            }
+        }
+    }
+}

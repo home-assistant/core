@@ -11,8 +11,7 @@
                     "device": "Path or URL",
                     "id": "ID",
                     "name": "Name"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -21,9 +20,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Floor Temperature",
-                    "precision": "Precision"
-                },
-                "description": "Options for the OpenTherm Gateway"
+                    "read_precision": "Read Precision",
+                    "set_precision": "Set Precision",
+                    "temporary_override_mode": "Temporary Setpoint Override Mode"
+                }
             }
         }
     }

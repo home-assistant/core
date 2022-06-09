@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "url": "URL"
+                },
+                "description": "- URL: alamat instans nightscout Anda, misalnya https://myhomeassistant.duckdns.org:5423\n- Kunci API (opsional): Hanya gunakan jika instans Anda dilindungi (auth_default_roles != dapat dibaca).",
+                "title": "Masukkan informasi server Nightscout Anda."
+            }
+        }
+    }
+}

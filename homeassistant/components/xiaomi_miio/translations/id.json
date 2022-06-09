@@ -1,0 +1,65 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "incomplete_info": "Informasi tidak lengkap untuk menyiapkan perangkat, tidak ada host atau token yang disediakan.",
+            "not_xiaomi_miio": "Perangkat (masih) tidak didukung oleh Xiaomi Miio.",
+            "reauth_successful": "Autentikasi ulang berhasil"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "cloud_credentials_incomplete": "Kredensial cloud tidak lengkap, isi nama pengguna, kata sandi, dan negara",
+            "cloud_login_error": "Tidak dapat masuk ke Xiaomi Miio Cloud, periksa kredensialnya.",
+            "cloud_no_devices": "Tidak ada perangkat yang ditemukan di akun cloud Xiaomi Miio ini.",
+            "unknown_device": "Model perangkat tidak diketahui, tidak dapat menyiapkan perangkat menggunakan alur konfigurasi.",
+            "wrong_token": "Kesalahan checksum, token salah"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "cloud": {
+                "data": {
+                    "cloud_country": "Negara server cloud",
+                    "cloud_password": "Kata sandi cloud",
+                    "cloud_username": "Nama pengguna cloud",
+                    "manual": "Konfigurasi secara manual (tidak disarankan)"
+                },
+                "description": "Masuk ke cloud Xiaomi Miio, lihat https://www.openhab.org/addons/bindings/miio/#country-servers untuk menemukan server cloud yang digunakan."
+            },
+            "connect": {
+                "data": {
+                    "model": "Model perangkat"
+                }
+            },
+            "manual": {
+                "data": {
+                    "host": "Alamat IP",
+                    "token": "Token API"
+                },
+                "description": "Anda akan membutuhkan Token API 32 karakter, baca petunjuknya di https://www.home-assistant.io/integrations/xiaomi_miio#retrieving-the-access-token. Perhatikan bahwa  Token API ini berbeda dengan kunci yang digunakan untuk integrasi Xiaomi Aqara."
+            },
+            "reauth_confirm": {
+                "description": "Integrasi Xiaomi Miio perlu mengautentikasi ulang akun Anda untuk memperbarui token atau menambahkan kredensial cloud yang hilang.",
+                "title": "Autentikasi Ulang Integrasi"
+            },
+            "select": {
+                "data": {
+                    "select_device": "Perangkat Miio"
+                },
+                "description": "Pilih perangkat Xiaomi Miio untuk disiapkan."
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "cloud_credentials_incomplete": "Kredensial cloud tidak lengkap, isi nama pengguna, kata sandi, dan negara"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "cloud_subdevices": "Gunakan cloud untuk mendapatkan subperangkat yang tersambung"
+                }
+            }
+        }
+    }
+}

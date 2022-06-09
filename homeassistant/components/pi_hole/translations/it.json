@@ -7,6 +7,11 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "Chiave API"
+                }
+            },
             "user": {
                 "data": {
                     "api_key": "Chiave API",
@@ -15,7 +20,8 @@
                     "name": "Nome",
                     "port": "Porta",
                     "ssl": "Utilizza un certificato SSL",
-                    "verify_ssl": "Verificare il certificato SSL"
+                    "statistics_only": "Solo Statistiche",
+                    "verify_ssl": "Verifica il certificato SSL"
                 }
             }
         }

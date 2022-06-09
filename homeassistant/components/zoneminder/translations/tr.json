@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "auth_fail": "Kullan\u0131c\u0131 ad\u0131 veya \u015fifre yanl\u0131\u015f.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "connection_error": "ZoneMinder sunucusuna ba\u011flan\u0131lamad\u0131.",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "create_entry": {
+            "default": "ZoneMinder sunucusu eklendi."
+        },
+        "error": {
+            "auth_fail": "Kullan\u0131c\u0131 ad\u0131 veya \u015fifre yanl\u0131\u015f.",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "connection_error": "ZoneMinder sunucusuna ba\u011flan\u0131lamad\u0131.",
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+        },
+        "flow_title": "ZoneMinder",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar ve Ba\u011flant\u0131 Noktas\u0131 (\u00f6r. 10.10.0.4:8010)",
+                    "password": "Parola",
+                    "path": "ZM Yolu",
+                    "path_zms": "ZMS Yolu",
+                    "ssl": "SSL sertifikas\u0131 kullan\u0131r",
+                    "username": "Kullan\u0131c\u0131 Ad\u0131",
+                    "verify_ssl": "SSL sertifikas\u0131n\u0131 do\u011frulay\u0131n"
+                },
+                "title": "ZoneMinder Sunucusunu ekleyin."
+            }
+        }
+    }
+}

@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "port": "Port",
+                    "system_id": "ID Sistem"
+                },
+                "description": "ID Sistem dapat diperoleh di aplikasi MyLink di bawah bagian Integrasi dengan memilih layanan non-Cloud."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "target_id": "Konfigurasikan opsi untuk penutup."
+                },
+                "title": "Konfigurasikan Opsi MyLink"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "Penutup dibalik"
+                },
+                "description": "Konfigurasikan opsi untuk `{target_name}`",
+                "title": "Konfigurasikan Cover MyLink"
+            }
+        }
+    }
+}

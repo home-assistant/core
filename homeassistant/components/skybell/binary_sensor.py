@@ -1,95 +1,76 @@
 """Binary sensor support for the Skybell HD Doorbell."""
-from datetime import timedelta
+from __future__ import annotations
 
+from aioskybell.helpers import const as CONST
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
-    DEVICE_CLASS_MOTION,
-    DEVICE_CLASS_OCCUPANCY,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_NAMESPACE, CONF_MONITORED_CONDITIONS
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DEFAULT_ENTITY_NAMESPACE, DOMAIN as SKYBELL_DOMAIN, SkybellDevice
+from . import DOMAIN
+from .coordinator import SkybellDataUpdateCoordinator
+from .entity import SkybellEntity
 
-SCAN_INTERVAL = timedelta(seconds=5)
+BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
+    BinarySensorEntityDescription(
+        key="button",
+        name="Button",
+        device_class=BinarySensorDeviceClass.OCCUPANCY,
+    ),
+    BinarySensorEntityDescription(
+        key="motion",
+        name="Motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+)
 
-# Sensor types: Name, device_class, event
-SENSOR_TYPES = {
-    "button": ["Button", DEVICE_CLASS_OCCUPANCY, "device:sensor:button"],
-    "motion": ["Motion", DEVICE_CLASS_MOTION, "device:sensor:motion"],
-}
-
+# Deprecated in Home Assistant 2022.6
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
-        vol.Optional(
-            CONF_ENTITY_NAMESPACE, default=DEFAULT_ENTITY_NAMESPACE
-        ): cv.string,
+        vol.Optional(CONF_ENTITY_NAMESPACE, default=DOMAIN): cv.string,
         vol.Required(CONF_MONITORED_CONDITIONS, default=[]): vol.All(
-            cv.ensure_list, [vol.In(SENSOR_TYPES)]
+            cv.ensure_list, [vol.In(BINARY_SENSOR_TYPES)]
         ),
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
-    """Set up the platform for a Skybell device."""
-    skybell = hass.data.get(SKYBELL_DOMAIN)
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Skybell switch."""
+    async_add_entities(
+        SkybellBinarySensor(coordinator, sensor)
+        for sensor in BINARY_SENSOR_TYPES
+        for coordinator in hass.data[DOMAIN][entry.entry_id]
+    )
 
-    sensors = []
-    for sensor_type in config.get(CONF_MONITORED_CONDITIONS):
-        for device in skybell.get_devices():
-            sensors.append(SkybellBinarySensor(device, sensor_type))
 
-    add_entities(sensors, True)
-
-
-class SkybellBinarySensor(SkybellDevice, BinarySensorEntity):
+class SkybellBinarySensor(SkybellEntity, BinarySensorEntity):
     """A binary sensor implementation for Skybell devices."""
 
-    def __init__(self, device, sensor_type):
+    def __init__(
+        self,
+        coordinator: SkybellDataUpdateCoordinator,
+        description: BinarySensorEntityDescription,
+    ) -> None:
         """Initialize a binary sensor for a Skybell device."""
-        super().__init__(device)
-        self._sensor_type = sensor_type
-        self._name = "{} {}".format(
-            self._device.name, SENSOR_TYPES[self._sensor_type][0]
-        )
-        self._device_class = SENSOR_TYPES[self._sensor_type][1]
-        self._event = {}
-        self._state = None
+        super().__init__(coordinator, description)
+        self._event: dict[str, str] = {}
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._state
-
-    @property
-    def device_class(self):
-        """Return the class of the binary sensor."""
-        return self._device_class
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        attrs = super().device_state_attributes
-
-        attrs["event_date"] = self._event.get("createdAt")
-
-        return attrs
-
-    def update(self):
-        """Get the latest data and updates the state."""
-        super().update()
-
-        event = self._device.latest(SENSOR_TYPES[self._sensor_type][2])
-
-        self._state = bool(event and event.get("id") != self._event.get("id"))
-
-        self._event = event or {}
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        event = self._device.latest(self.entity_description.key)
+        self._attr_is_on = bool(event.get(CONST.ID) != self._event.get(CONST.ID))
+        self._event = event
+        super()._handle_coordinator_update()

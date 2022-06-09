@@ -1,4 +1,6 @@
 """Tests for the Withings component."""
+from unittest.mock import MagicMock, patch
+
 import pytest
 import voluptuous as vol
 from withings_api.common import UnauthorizedException
@@ -25,7 +27,6 @@ from .common import (
     new_profile_config,
 )
 
-from tests.async_mock import MagicMock, patch
 from tests.common import MockConfigEntry
 
 
@@ -58,7 +59,6 @@ def test_config_schema_basic_config() -> None:
 
 def test_config_schema_client_id() -> None:
     """Test schema."""
-    config_schema_assert_fail({CONF_CLIENT_SECRET: "my_client_secret"})
     config_schema_assert_fail(
         {CONF_CLIENT_SECRET: "my_client_secret", CONF_CLIENT_ID: ""}
     )
@@ -69,7 +69,6 @@ def test_config_schema_client_id() -> None:
 
 def test_config_schema_client_secret() -> None:
     """Test schema."""
-    config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id"})
     config_schema_assert_fail({CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: ""})
     config_schema_validate(
         {CONF_CLIENT_ID: "my_client_id", CONF_CLIENT_SECRET: "my_client_secret"}
@@ -124,7 +123,10 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
     ],
 )
 async def test_auth_failure(
-    hass: HomeAssistant, component_factory: ComponentFactory, exception: Exception
+    hass: HomeAssistant,
+    component_factory: ComponentFactory,
+    exception: Exception,
+    current_request_with_host,
 ) -> None:
     """Test auth failure."""
     person0 = new_profile_config(

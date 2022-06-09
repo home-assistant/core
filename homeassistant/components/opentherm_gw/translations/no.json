@@ -11,8 +11,7 @@
                     "device": "Bane eller URL-adresse",
                     "id": "",
                     "name": "Navn"
-                },
-                "title": ""
+                }
             }
         }
     },
@@ -21,9 +20,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Etasje Temperatur",
-                    "precision": "Presisjon"
-                },
-                "description": "Alternativer for OpenTherm Gateway"
+                    "read_precision": "Les presisjon",
+                    "set_precision": "Angi presisjon",
+                    "temporary_override_mode": "Midlertidig overstyringsmodus for settpunkt"
+                }
             }
         }
     }

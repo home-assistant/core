@@ -1,4 +1,7 @@
 """Support for Toon switches."""
+from __future__ import annotations
+
+from dataclasses import dataclass
 from typing import Any
 
 from toonapi import (
@@ -8,76 +11,55 @@ from toonapi import (
     PROGRAM_STATE_ON,
 )
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.helpers.typing import HomeAssistantType
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    ATTR_DEFAULT_ENABLED,
-    ATTR_ICON,
-    ATTR_INVERTED,
-    ATTR_MEASUREMENT,
-    ATTR_NAME,
-    ATTR_SECTION,
-    DOMAIN,
-    SWITCH_ENTITIES,
-)
+from .const import DOMAIN
 from .coordinator import ToonDataUpdateCoordinator
 from .helpers import toon_exception_handler
-from .models import ToonDisplayDeviceEntity, ToonEntity
+from .models import ToonDisplayDeviceEntity, ToonEntity, ToonRequiredKeysMixin
 
 
 async def async_setup_entry(
-    hass: HomeAssistantType, entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a Toon switches based on a config entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     async_add_entities(
-        [ToonProgramSwitch(coordinator), ToonHolidayModeSwitch(coordinator)]
+        [description.cls(coordinator, description) for description in SWITCH_ENTITIES]
     )
 
 
 class ToonSwitch(ToonEntity, SwitchEntity):
     """Defines an Toon switch."""
 
-    def __init__(self, coordinator: ToonDataUpdateCoordinator, *, key: str) -> None:
+    entity_description: ToonSwitchEntityDescription
+
+    def __init__(
+        self,
+        coordinator: ToonDataUpdateCoordinator,
+        description: ToonSwitchEntityDescription,
+    ) -> None:
         """Initialize the Toon switch."""
-        self.key = key
+        self.entity_description = description
+        super().__init__(coordinator)
 
-        super().__init__(
-            coordinator,
-            enabled_default=SWITCH_ENTITIES[key][ATTR_DEFAULT_ENABLED],
-            icon=SWITCH_ENTITIES[key][ATTR_ICON],
-            name=SWITCH_ENTITIES[key][ATTR_NAME],
+        self._attr_unique_id = (
+            f"{coordinator.data.agreement.agreement_id}_{description.key}"
         )
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique ID for this binary sensor."""
-        agreement_id = self.coordinator.data.agreement.agreement_id
-        return f"{agreement_id}_{self.key}"
 
     @property
     def is_on(self) -> bool:
         """Return the status of the binary sensor."""
-        section = getattr(
-            self.coordinator.data, SWITCH_ENTITIES[self.key][ATTR_SECTION]
-        )
-        value = getattr(section, SWITCH_ENTITIES[self.key][ATTR_MEASUREMENT])
-
-        if SWITCH_ENTITIES[self.key][ATTR_INVERTED]:
-            return not value
-
-        return value
+        section = getattr(self.coordinator.data, self.entity_description.section)
+        return getattr(section, self.entity_description.measurement)
 
 
 class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
     """Defines a Toon program switch."""
-
-    def __init__(self, coordinator: ToonDataUpdateCoordinator) -> None:
-        """Initialize the Toon program switch."""
-        super().__init__(coordinator, key="thermostat_program")
 
     @toon_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -97,10 +79,6 @@ class ToonProgramSwitch(ToonSwitch, ToonDisplayDeviceEntity):
 class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
     """Defines a Toon Holiday mode switch."""
 
-    def __init__(self, coordinator: ToonDataUpdateCoordinator) -> None:
-        """Initialize the Toon holiday switch."""
-        super().__init__(coordinator, key="thermostat_holiday_mode")
-
     @toon_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Toon holiday mode switch."""
@@ -114,3 +92,35 @@ class ToonHolidayModeSwitch(ToonSwitch, ToonDisplayDeviceEntity):
         await self.coordinator.toon.set_active_state(
             ACTIVE_STATE_HOLIDAY, PROGRAM_STATE_OFF
         )
+
+
+@dataclass
+class ToonSwitchRequiredKeysMixin(ToonRequiredKeysMixin):
+    """Mixin for switch required keys."""
+
+    cls: type[ToonSwitch]
+
+
+@dataclass
+class ToonSwitchEntityDescription(SwitchEntityDescription, ToonSwitchRequiredKeysMixin):
+    """Describes Toon switch entity."""
+
+
+SWITCH_ENTITIES: tuple[ToonSwitchEntityDescription, ...] = (
+    ToonSwitchEntityDescription(
+        key="thermostat_holiday_mode",
+        name="Holiday Mode",
+        section="thermostat",
+        measurement="holiday_mode",
+        icon="mdi:airport",
+        cls=ToonHolidayModeSwitch,
+    ),
+    ToonSwitchEntityDescription(
+        key="thermostat_program",
+        name="Thermostat Program",
+        section="thermostat",
+        measurement="program",
+        icon="mdi:calendar-clock",
+        cls=ToonProgramSwitch,
+    ),
+)

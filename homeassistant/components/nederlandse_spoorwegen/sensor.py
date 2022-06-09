@@ -1,4 +1,6 @@
 """Support for Nederlandse Spoorwegen public transport."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 import logging
 
@@ -7,11 +9,13 @@ from ns_api import RequestParametersError
 import requests
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA
+from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION, CONF_API_KEY, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +49,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the departure sensor."""
 
     nsapi = ns_api.NSAPI(config[CONF_API_KEY])
@@ -63,7 +72,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         return
 
     sensors = []
-    for departure in config.get(CONF_ROUTES):
+    for departure in config.get(CONF_ROUTES, {}):
         if not valid_stations(
             stations,
             [departure.get(CONF_FROM), departure.get(CONF_VIA), departure.get(CONF_TO)],
@@ -94,7 +103,7 @@ def valid_stations(stations, given_stations):
     return True
 
 
-class NSDepartureSensor(Entity):
+class NSDepartureSensor(SensorEntity):
     """Implementation of a NS Departure Sensor."""
 
     def __init__(self, nsapi, name, departure, heading, via, time):
@@ -119,12 +128,12 @@ class NSDepartureSensor(Entity):
         return ICON
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the next departure time."""
         return self._state
 
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         if not self._trips:
             return

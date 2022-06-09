@@ -11,8 +11,7 @@
                     "device": "\u015acie\u017cka lub adres URL",
                     "id": "Identyfikator",
                     "name": "Nazwa"
-                },
-                "title": "Bramka OpenTherm"
+                }
             }
         }
     },
@@ -21,9 +20,10 @@
             "init": {
                 "data": {
                     "floor_temperature": "Zaokr\u0105glanie warto\u015bci w d\u00f3\u0142",
-                    "precision": "Precyzja"
-                },
-                "description": "Opcje dla bramki OpenTherm"
+                    "read_precision": "Odczytaj precyzj\u0119",
+                    "set_precision": "Ustaw precyzj\u0119",
+                    "temporary_override_mode": "Tryb tymczasowej zmiany nastawy"
+                }
             }
         }
     }

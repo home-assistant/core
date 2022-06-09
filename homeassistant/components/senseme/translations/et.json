@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_host": "Vigane hostinimi v\u00f5i IP aadress"
+        },
+        "flow_title": "{name} - {model} ({host})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Kas seadistada {name} \u2013 {model} ( {host} )?"
+            },
+            "manual": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Sisesta IP-aadress."
+            },
+            "user": {
+                "data": {
+                    "device": "Seade"
+                },
+                "description": "Valiseade v\u00f5i IP-aadressi k\u00e4sitsi sisestamiseks IP-aadress."
+            }
+        }
+    }
+}

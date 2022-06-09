@@ -2,6 +2,7 @@
 import json
 import logging
 import os
+from unittest.mock import patch
 
 import pytest
 
@@ -12,7 +13,6 @@ from homeassistant.components.device_tracker.legacy import (
 from homeassistant.const import CONF_PLATFORM
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import async_fire_mqtt_message
 
 LOCATION_MESSAGE = {
@@ -26,7 +26,7 @@ LOCATION_MESSAGE_INCOMPLETE = {"longitude": 2.0}
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass, mqtt_mock):
+async def setup_comp(hass, mqtt_mock_entry_with_yaml_config):
     """Initialize components."""
     yaml_devices = hass.config.path(YAML_DEVICES)
     yield

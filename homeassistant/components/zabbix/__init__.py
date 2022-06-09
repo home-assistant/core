@@ -1,4 +1,5 @@
 """Support for Zabbix."""
+from contextlib import suppress
 import json
 import logging
 import math
@@ -22,13 +23,14 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper, state as state_helper
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     convert_include_exclude_filter,
 )
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +66,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Zabbix component."""
 
     conf = config[DOMAIN]
@@ -88,7 +90,11 @@ def setup(hass, config):
         _LOGGER.error("HTTPError when connecting to Zabbix API: %s", http_error)
         zapi = None
         _LOGGER.error(RETRY_MESSAGE, http_error)
-        event_helper.call_later(hass, RETRY_INTERVAL, lambda _: setup(hass, config))
+        event_helper.call_later(
+            hass,
+            RETRY_INTERVAL,
+            lambda _: setup(hass, config),  # type: ignore[arg-type,return-value]
+        )
         return True
 
     hass.data[DOMAIN] = zapi
@@ -202,7 +208,7 @@ class ZabbixThread(threading.Thread):
 
         dropped = 0
 
-        try:
+        with suppress(queue.Empty):
             while len(metrics) < BATCH_BUFFER_SIZE and not self.shutdown:
                 timeout = None if count == 0 else BATCH_TIMEOUT
                 item = self.queue.get(timeout=timeout)
@@ -222,9 +228,6 @@ class ZabbixThread(threading.Thread):
                             metrics += event_metrics
                     else:
                         dropped += 1
-
-        except queue.Empty:
-            pass
 
         if dropped:
             _LOGGER.warning("Catching up, dropped %d old events", dropped)

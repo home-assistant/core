@@ -1,20 +1,26 @@
 """Support for Alexa skill service end point."""
 import voluptuous as vol
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET, CONF_NAME
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_DESCRIPTION,
+    CONF_NAME,
+    CONF_PASSWORD,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers.typing import ConfigType
 
 from . import flash_briefings, intent, smart_home_http
 from .const import (
     CONF_AUDIO,
-    CONF_DESCRIPTION,
     CONF_DISPLAY_CATEGORIES,
     CONF_DISPLAY_URL,
     CONF_ENDPOINT,
     CONF_ENTITY_CONFIG,
     CONF_FILTER,
     CONF_LOCALE,
-    CONF_PASSWORD,
     CONF_SUPPORTED_LOCALES,
     CONF_TEXT,
     CONF_TITLE,
@@ -74,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Alexa component."""
     if DOMAIN not in config:
         return True

@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
+            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "no_devices_found": "Nessun dispositivo trovato sulla rete"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Vuoi configurare {model} {id} ({ipaddr})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Se lasci vuoto l'host, il rilevamento sar\u00e0 utilizzato per trovare i dispositivi."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Effetto personalizzato: Lista da 1 a 16 colori [R,G,B]. Esempio: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Effetto personalizzato: Velocit\u00e0 in percentuale per l'effetto che cambia colore.",
+                    "custom_effect_transition": "Effetto personalizzato: tipo di transizione tra i colori.",
+                    "mode": "La modalit\u00e0 di luminosit\u00e0 scelta."
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "could_not_connect": "Solaredge API'ye ba\u011flan\u0131lamad\u0131",
+            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131",
+            "site_not_active": "Site aktif de\u011fil"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API Anahtar\u0131",
+                    "name": "Bu kurulumun ad\u0131",
+                    "site_id": "SolarEdge site kimli\u011fi"
+                },
+                "title": "Bu kurulum i\u00e7in API parametrelerini tan\u0131mlay\u0131n"
+            }
+        }
+    }
+}

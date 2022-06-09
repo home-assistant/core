@@ -12,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 SUPPORT_LANGUAGES = [
     "af",
     "ar",
+    "bg",
     "bn",
     "bs",
     "ca",
@@ -34,6 +35,7 @@ SUPPORT_LANGUAGES = [
     "id",
     "is",
     "it",
+    "iw",
     "ja",
     "jw",
     "km",

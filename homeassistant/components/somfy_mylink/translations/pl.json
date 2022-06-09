@@ -1,0 +1,43 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "invalid_auth": "Niepoprawne uwierzytelnienie",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{mac} ({ip})",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP",
+                    "port": "Port",
+                    "system_id": "Identyfikator systemu"
+                },
+                "description": "Identyfikator systemu mo\u017cna uzyska\u0107 w aplikacji MyLink w sekcji Integracja, wybieraj\u0105c dowoln\u0105 us\u0142ug\u0119 spoza chmury."
+            }
+        }
+    },
+    "options": {
+        "abort": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "target_id": "Konfiguracja opcji rolety"
+                },
+                "title": "Konfiguracja opcji MyLink"
+            },
+            "target_config": {
+                "data": {
+                    "reverse": "Roleta/pokrywa jest odwr\u00f3cona"
+                },
+                "description": "Konfiguracja opcji dla \"{target_name}\"",
+                "title": "Konfiguracja rolety MyLink"
+            }
+        }
+    }
+}

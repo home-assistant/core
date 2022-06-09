@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "device_exists": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} - {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            }
+        }
+    }
+}

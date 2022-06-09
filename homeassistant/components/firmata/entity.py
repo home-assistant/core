@@ -1,7 +1,8 @@
 """Entity for Firmata devices."""
-from typing import Type
+from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.helpers.entity import DeviceInfo
 
 from .board import FirmataPinType
 from .const import DOMAIN, FIRMATA_MANUFACTURER
@@ -16,15 +17,15 @@ class FirmataEntity:
         self._api = api
 
     @property
-    def device_info(self) -> dict:
+    def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "connections": {},
-            "identifiers": {(DOMAIN, self._api.board.name)},
-            "manufacturer": FIRMATA_MANUFACTURER,
-            "name": self._api.board.name,
-            "sw_version": self._api.board.firmware_version,
-        }
+        return DeviceInfo(
+            connections=set(),
+            identifiers={(DOMAIN, self._api.board.name)},
+            manufacturer=FIRMATA_MANUFACTURER,
+            name=self._api.board.name,
+            sw_version=self._api.board.firmware_version,
+        )
 
 
 class FirmataPinEntity(FirmataEntity):
@@ -32,11 +33,11 @@ class FirmataPinEntity(FirmataEntity):
 
     def __init__(
         self,
-        api: Type[FirmataBoardPin],
+        api: FirmataBoardPin,
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,
-    ):
+    ) -> None:
         """Initialize the pin entity."""
         super().__init__(api)
         self._name = name

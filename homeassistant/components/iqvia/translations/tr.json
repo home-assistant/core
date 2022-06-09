@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "invalid_zip_code": "Posta kodu ge\u00e7ersiz"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "zip_code": "Posta kodu"
+                },
+                "description": "ABD veya Kanada Posta kodunuzu doldurun."
+            }
+        }
+    }
+}

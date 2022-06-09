@@ -1,2 +1,3 @@
 reload:
-  description: Reload all bayesian entities.
+  name: Reload
+  description: Reload all bayesian entities

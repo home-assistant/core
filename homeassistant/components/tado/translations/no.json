@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Aktiver tilbakefallsmodus."
+                    "fallback": "Velg reservemodus."
                 },
-                "description": "Fallback-modus bytter til Smart Schedule ved neste planbryter etter manuell justering av en sone.",
+                "description": "Reservemodus lar deg velge n\u00e5r du vil falle tilbake til Smart Schedule fra det manuelle soneoverlegget ditt. (NEXT_TIME_BLOCK:= Endre ved neste Smart Schedule-endring; MANUAL:= Ikke endre f\u00f8r du avbryter; TADO_DEFAULT:= Endre basert p\u00e5 innstillingen din i Tado-appen).",
                 "title": "Juster Tado-alternativene."
             }
         }

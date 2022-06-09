@@ -1,67 +1,34 @@
 """VeSync integration."""
-import asyncio
 import logging
 
 from pyvesync import VeSync
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .common import async_process_devices
-from .config_flow import configured_instances
 from .const import (
     DOMAIN,
     SERVICE_UPDATE_DEVS,
     VS_DISCOVERY,
-    VS_DISPATCHERS,
     VS_FANS,
+    VS_LIGHTS,
     VS_MANAGER,
+    VS_SENSORS,
     VS_SWITCHES,
 )
 
-PLATFORMS = ["switch", "fan"]
+PLATFORMS = [Platform.SWITCH, Platform.FAN, Platform.LIGHT, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_USERNAME): cv.string,
-                vol.Required(CONF_PASSWORD): cv.string,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def async_setup(hass, config):
-    """Set up the VeSync component."""
-    conf = config.get(DOMAIN)
-
-    if conf is None:
-        return True
-
-    if not configured_instances(hass):
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": SOURCE_IMPORT},
-                data={
-                    CONF_USERNAME: conf[CONF_USERNAME],
-                    CONF_PASSWORD: conf[CONF_PASSWORD],
-                },
-            )
-        )
-
-    return True
-
-
-async def async_setup_entry(hass, config_entry):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up Vesync as config entry."""
     username = config_entry.data[CONF_USERNAME]
     password = config_entry.data[CONF_PASSWORD]
@@ -85,26 +52,38 @@ async def async_setup_entry(hass, config_entry):
 
     switches = hass.data[DOMAIN][VS_SWITCHES] = []
     fans = hass.data[DOMAIN][VS_FANS] = []
-
-    hass.data[DOMAIN][VS_DISPATCHERS] = []
+    lights = hass.data[DOMAIN][VS_LIGHTS] = []
+    sensors = hass.data[DOMAIN][VS_SENSORS] = []
 
     if device_dict[VS_SWITCHES]:
         switches.extend(device_dict[VS_SWITCHES])
-        hass.async_create_task(forward_setup(config_entry, "switch"))
+        hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
 
     if device_dict[VS_FANS]:
         fans.extend(device_dict[VS_FANS])
-        hass.async_create_task(forward_setup(config_entry, "fan"))
+        hass.async_create_task(forward_setup(config_entry, Platform.FAN))
 
-    async def async_new_device_discovery(service):
+    if device_dict[VS_LIGHTS]:
+        lights.extend(device_dict[VS_LIGHTS])
+        hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+
+    if device_dict[VS_SENSORS]:
+        sensors.extend(device_dict[VS_SENSORS])
+        hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
+
+    async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
         manager = hass.data[DOMAIN][VS_MANAGER]
         switches = hass.data[DOMAIN][VS_SWITCHES]
         fans = hass.data[DOMAIN][VS_FANS]
+        lights = hass.data[DOMAIN][VS_LIGHTS]
+        sensors = hass.data[DOMAIN][VS_SENSORS]
 
         dev_dict = await async_process_devices(hass, manager)
         switch_devs = dev_dict.get(VS_SWITCHES, [])
         fan_devs = dev_dict.get(VS_FANS, [])
+        light_devs = dev_dict.get(VS_LIGHTS, [])
+        sensor_devs = dev_dict.get(VS_SENSORS, [])
 
         switch_set = set(switch_devs)
         new_switches = list(switch_set.difference(switches))
@@ -114,7 +93,7 @@ async def async_setup_entry(hass, config_entry):
             return
         if new_switches and not switches:
             switches.extend(new_switches)
-            hass.async_create_task(forward_setup(config_entry, "switch"))
+            hass.async_create_task(forward_setup(config_entry, Platform.SWITCH))
 
         fan_set = set(fan_devs)
         new_fans = list(fan_set.difference(fans))
@@ -124,7 +103,27 @@ async def async_setup_entry(hass, config_entry):
             return
         if new_fans and not fans:
             fans.extend(new_fans)
-            hass.async_create_task(forward_setup(config_entry, "fan"))
+            hass.async_create_task(forward_setup(config_entry, Platform.FAN))
+
+        light_set = set(light_devs)
+        new_lights = list(light_set.difference(lights))
+        if new_lights and lights:
+            lights.extend(new_lights)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_LIGHTS), new_lights)
+            return
+        if new_lights and not lights:
+            lights.extend(new_lights)
+            hass.async_create_task(forward_setup(config_entry, Platform.LIGHT))
+
+        sensor_set = set(sensor_devs)
+        new_sensors = list(sensor_set.difference(sensors))
+        if new_sensors and sensors:
+            sensors.extend(new_sensors)
+            async_dispatcher_send(hass, VS_DISCOVERY.format(VS_SENSORS), new_sensors)
+            return
+        if new_sensors and not sensors:
+            sensors.extend(new_sensors)
+            hass.async_create_task(forward_setup(config_entry, Platform.SENSOR))
 
     hass.services.async_register(
         DOMAIN, SERVICE_UPDATE_DEVS, async_new_device_discovery
@@ -133,16 +132,9 @@ async def async_setup_entry(hass, config_entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = all(
-        await asyncio.gather(
-            *[
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            ]
-        )
-    )
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 

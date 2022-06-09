@@ -4,9 +4,9 @@ import logging
 import attr
 import eternalegypt
 
-from homeassistant.components.notify import ATTR_TARGET, DOMAIN, BaseNotificationService
+from homeassistant.components.notify import ATTR_TARGET, BaseNotificationService
 
-from . import CONF_RECIPIENT, DATA_KEY
+from . import CONF_NOTIFY, CONF_RECIPIENT, DATA_KEY
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class NetgearNotifyService(BaseNotificationService):
             _LOGGER.error("Modem not ready")
             return
 
-        targets = kwargs.get(ATTR_TARGET, self.config[DOMAIN][CONF_RECIPIENT])
+        targets = kwargs.get(ATTR_TARGET, self.config[CONF_NOTIFY][CONF_RECIPIENT])
         if not targets:
             _LOGGER.warning("No recipients")
             return

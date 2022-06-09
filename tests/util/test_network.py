@@ -33,6 +33,12 @@ def test_is_link_local():
     assert not network_util.is_link_local(ip_address("127.0.0.1"))
 
 
+def test_is_invalid():
+    """Test invalid address."""
+    assert network_util.is_invalid(ip_address("0.0.0.0"))
+    assert not network_util.is_invalid(ip_address("127.0.0.1"))
+
+
 def test_is_local():
     """Test local addresses."""
     assert network_util.is_local(ip_address("192.168.0.1"))
@@ -48,6 +54,22 @@ def test_is_ip_address():
     assert not network_util.is_ip_address("192.168.0.999")
     assert not network_util.is_ip_address("192.168.0.0/24")
     assert not network_util.is_ip_address("example.com")
+
+
+def test_is_ipv4_address():
+    """Test if strings are IPv4 addresses."""
+    assert network_util.is_ipv4_address("192.168.0.1") is True
+    assert network_util.is_ipv4_address("8.8.8.8") is True
+    assert network_util.is_ipv4_address("192.168.0.999") is False
+    assert network_util.is_ipv4_address("192.168.0.0/24") is False
+    assert network_util.is_ipv4_address("example.com") is False
+
+
+def test_is_ipv6_address():
+    """Test if strings are IPv6 addresses."""
+    assert network_util.is_ipv6_address("::1") is True
+    assert network_util.is_ipv6_address("8.8.8.8") is False
+    assert network_util.is_ipv6_address("8.8.8.8") is False
 
 
 def test_normalize_url():
@@ -69,3 +91,4 @@ def test_normalize_url():
         network_util.normalize_url("https://example.com:443/test/")
         == "https://example.com/test"
     )
+    assert network_util.normalize_url("/test/") == "/test"

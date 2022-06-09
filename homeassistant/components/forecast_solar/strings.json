@@ -1,0 +1,32 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Fill in the data of your solar panels. Please refer to the documentation if a field is unclear.",
+        "data": {
+          "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
+          "declination": "Declination (0 = Horizontal, 90 = Vertical)",
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "modules power": "Total Watt peak power of your solar modules",
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "These values allow tweaking the Solar.Forecast result. Please refer to the documentation if a field is unclear.",
+        "data": {
+          "api_key": "Forecast.Solar API Key (optional)",
+          "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West)",
+          "damping": "Damping factor: adjusts the results in the morning and evening",
+          "inverter_size": "Inverter size (Watt)",
+          "declination": "Declination (0 = Horizontal, 90 = Vertical)",
+          "modules power": "Total Watt peak power of your solar modules"
+        }
+      }
+    }
+  }
+}

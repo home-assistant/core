@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "unsupported_model": "Model printer ini tidak didukung."
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung",
+            "snmp_error": "Server SNMP dimatikan atau printer tidak didukung.",
+            "wrong_host": "Nama host atau alamat IP tidak valid."
+        },
+        "flow_title": "{model} {serial_number}",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "type": "Jenis printer"
+                }
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "type": "Jenis printer"
+                },
+                "description": "Ingin menambahkan printer {model} dengan nomor seri `{serial_number}` ke Home Assistant?",
+                "title": "Perangkat Printer Brother yang Ditemukan"
+            }
+        }
+    }
+}

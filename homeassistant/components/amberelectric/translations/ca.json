@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Nom del lloc",
+                    "site_nmi": "NMI del lloc"
+                },
+                "description": "Selecciona l'NMI del lloc que vulguis afegir"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token d'API",
+                    "site_id": "ID del lloc"
+                },
+                "description": "Ves a {api_url} per generar una clau API"
+            }
+        }
+    }
+}

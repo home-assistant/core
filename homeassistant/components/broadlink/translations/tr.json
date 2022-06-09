@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_host": "Ge\u00e7ersiz ana bilgisayar ad\u0131 veya IP adresi",
+            "not_supported": "Cihaz desteklenmiyor",
+            "unknown": "Beklenmeyen hata"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_host": "Ge\u00e7ersiz ana bilgisayar ad\u0131 veya IP adresi",
+            "unknown": "Beklenmeyen hata"
+        },
+        "flow_title": "{name} ({model} at {host})",
+        "step": {
+            "auth": {
+                "title": "Cihaza kimlik do\u011frulama"
+            },
+            "finish": {
+                "data": {
+                    "name": "Ad"
+                },
+                "title": "Cihaz i\u00e7in bir isim se\u00e7in"
+            },
+            "reset": {
+                "description": "{name} ( {model} at {host} ) kilitli. Yap\u0131land\u0131rmay\u0131 do\u011frulamak ve tamamlamak i\u00e7in cihaz\u0131n kilidini a\u00e7man\u0131z gerekir. Talimatlar:\n 1. Broadlink uygulamas\u0131n\u0131 a\u00e7\u0131n.\n 2. Cihaza t\u0131klay\u0131n.\n 3. Sa\u011f \u00fcstteki `...` se\u00e7ene\u011fine t\u0131klay\u0131n.\n 4. Sayfan\u0131n en alt\u0131na gidin.\n 5. Kilidi devre d\u0131\u015f\u0131 b\u0131rak\u0131n.",
+                "title": "Cihaz\u0131n kilidini a\u00e7\u0131n"
+            },
+            "unlock": {
+                "data": {
+                    "unlock": "Evet, yap."
+                },
+                "description": "{name} ( {model} at {host} ) kilitli. Bu, Home Assistant'ta kimlik do\u011frulama sorunlar\u0131na yol a\u00e7abilir. Kilidini a\u00e7mak ister misin?",
+                "title": "Cihaz\u0131n kilidini a\u00e7\u0131n (iste\u011fe ba\u011fl\u0131)"
+            },
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "timeout": "Zaman a\u015f\u0131m\u0131"
+                },
+                "title": "Cihaza ba\u011flan\u0131n"
+            }
+        }
+    }
+}

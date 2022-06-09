@@ -1,0 +1,22 @@
+set_vicare_mode:
+  name: Set vicare mode
+  description: Set a ViCare mode.
+  target:
+    entity:
+      integration: vicare
+      domain: climate
+  fields:
+    vicare_mode:
+      name: Vicare Mode
+      description: ViCare mode.
+      required: true
+      selector:
+        select:
+          options:
+            - "dhw"
+            - "dhwAndHeating"
+            - "dhwAndHeatingCooling"
+            - "forcedNormal"
+            - "forcedReduced"
+            - "heating"
+            - "standby"

@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Yetkilendirme URL'si olu\u015ftururken zaman a\u015f\u0131m\u0131.",
+            "missing_configuration": "Bile\u015fen yap\u0131land\u0131r\u0131lmam\u0131\u015f. L\u00fctfen belgeleri takip edin.",
+            "no_url_available": "Kullan\u0131labilir URL yok. Bu hata hakk\u0131nda bilgi i\u00e7in [yard\u0131m b\u00f6l\u00fcm\u00fcne bak\u0131n]({docs_url})",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr."
+        },
+        "create_entry": {
+            "default": "Ba\u015far\u0131yla do\u011fruland\u0131"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Kimlik Do\u011frulama Y\u00f6ntemini Se\u00e7"
+            },
+            "reauth_confirm": {
+                "description": "Netatmo entegrasyonunun hesab\u0131n\u0131z\u0131 yeniden do\u011frulamas\u0131 gerekiyor",
+                "title": "Entegrasyonu Yeniden Do\u011frula"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "uzakta",
+            "hg": "donma korumas\u0131",
+            "schedule": "Zamanlama"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} bir alarm alg\u0131lad\u0131",
+            "animal": "{entity_name} bir hayvan tespit etti",
+            "cancel_set_point": "{entity_name} zamanlamas\u0131na devam etti",
+            "human": "{entity_name} bir insan alg\u0131lad\u0131",
+            "movement": "{entity_name} hareket alg\u0131lad\u0131",
+            "outdoor": "{entity_name} bir d\u0131\u015f mekan etkinli\u011fi alg\u0131lad\u0131",
+            "person": "{entity_name} bir ki\u015fi tespit etti",
+            "person_away": "{entity_name} bir ki\u015finin ayr\u0131ld\u0131\u011f\u0131n\u0131 tespit etti",
+            "set_point": "{entity_name} hedef s\u0131cakl\u0131\u011f\u0131 manuel olarak ayarland\u0131",
+            "therm_mode": "{entity_name} , \" {subtype} \" olarak de\u011fi\u015ftirildi",
+            "turned_off": "{entity_name} kapat\u0131ld\u0131",
+            "turned_on": "{entity_name} a\u00e7\u0131ld\u0131",
+            "vehicle": "{entity_name} bir ara\u00e7 alg\u0131lad\u0131"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Alan\u0131n ad\u0131",
+                    "lat_ne": "Enlem Kuzey-Do\u011fu k\u00f6\u015fesi",
+                    "lat_sw": "Enlem G\u00fcney-Bat\u0131 k\u00f6\u015fesi",
+                    "lon_ne": "Boylam Kuzey-Do\u011fu k\u00f6\u015fesi",
+                    "lon_sw": "Boylam G\u00fcney-Bat\u0131 k\u00f6\u015fesi",
+                    "mode": "Hesaplama",
+                    "show_on_map": "Haritada g\u00f6ster"
+                },
+                "description": "Bir alan i\u00e7in genel hava durumu sens\u00f6r\u00fc yap\u0131land\u0131r\u0131n.",
+                "title": "Netatmo genel hava durumu sens\u00f6r\u00fc"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Alan ad\u0131",
+                    "weather_areas": "Hava b\u00f6lgeleri"
+                },
+                "description": "Genel hava durumu sens\u00f6rlerini yap\u0131land\u0131r\u0131n.",
+                "title": "Netatmo genel hava durumu sens\u00f6r\u00fc"
+            }
+        }
+    }
+}

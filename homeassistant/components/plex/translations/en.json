@@ -22,7 +22,7 @@
                     "host": "Host",
                     "port": "Port",
                     "ssl": "Uses an SSL certificate",
-                    "token": "Token (Optional)",
+                    "token": "Token (optional)",
                     "verify_ssl": "Verify SSL certificate"
                 },
                 "title": "Manual Plex Configuration"
@@ -35,14 +35,12 @@
                 "title": "Select Plex server"
             },
             "user": {
-                "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server.",
-                "title": "Plex Media Server"
+                "description": "Continue to [plex.tv](https://plex.tv) to link a Plex server."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Setup method"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

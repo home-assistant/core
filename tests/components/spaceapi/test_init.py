@@ -1,4 +1,6 @@
 """The tests for the Home Assistant SpaceAPI component."""
+from http import HTTPStatus
+
 # pylint: disable=protected-access
 from unittest.mock import patch
 
@@ -91,7 +93,7 @@ def mock_client(hass, hass_client):
 async def test_spaceapi_get(hass, mock_client):
     """Test response after start-up Home Assistant."""
     resp = await mock_client.get(URL_API_SPACEAPI)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
 
@@ -137,7 +139,7 @@ async def test_spaceapi_state_get(hass, mock_client):
     hass.states.async_set("test.test_door", True)
 
     resp = await mock_client.get(URL_API_SPACEAPI)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
     assert data["state"]["open"] == bool(1)
@@ -146,7 +148,7 @@ async def test_spaceapi_state_get(hass, mock_client):
 async def test_spaceapi_sensors_get(hass, mock_client):
     """Test the response for the sensors."""
     resp = await mock_client.get(URL_API_SPACEAPI)
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     data = await resp.json()
     assert data["sensors"] == SENSOR_OUTPUT

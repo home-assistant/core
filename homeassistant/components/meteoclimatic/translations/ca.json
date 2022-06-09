@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "unknown": "Error inesperat"
+        },
+        "error": {
+            "not_found": "No s'han trobat dispositius a la xarxa"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "code": "Codi d'estaci\u00f3"
+                },
+                "data_description": {
+                    "code": "T\u00e9 el format com ESCAT4300000043206B"
+                }
+            }
+        }
+    }
+}

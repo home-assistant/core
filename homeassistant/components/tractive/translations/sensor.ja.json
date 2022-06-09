@@ -1,0 +1,10 @@
+{
+    "state": {
+        "tractive__tracker_state": {
+            "not_reporting": "\u5831\u544a\u3057\u306a\u3044",
+            "operational": "\u904b\u7528",
+            "system_shutdown_user": "System shutdown user",
+            "system_startup": "\u30b7\u30b9\u30c6\u30e0\u306e\u8d77\u52d5"
+        }
+    }
+}

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "cloud_not_connected": "Home Assistant Cloud'a ba\u011fl\u0131 de\u011fil.",
+            "single_instance_allowed": "Zaten yap\u0131land\u0131r\u0131lm\u0131\u015f. Yaln\u0131zca tek bir konfig\u00fcrasyon m\u00fcmk\u00fcnd\u00fcr.",
+            "webhook_not_internet_accessible": "Webhook mesajlar\u0131n\u0131 alabilmek i\u00e7in Home Assistant \u00f6rne\u011finize internetten eri\u015filebilmelidir."
+        },
+        "create_entry": {
+            "default": "Etkinlikleri Home Assistant'a g\u00f6ndermek i\u00e7in [Twilio ile Webhook]( {twilio_url} ) kurman\u0131z gerekir. \n\n A\u015fa\u011f\u0131daki bilgileri doldurun: \n\n - URL: ` {webhook_url} `\n - Y\u00f6ntem: POST\n - \u0130\u00e7erik T\u00fcr\u00fc: application/x-www-form-urlencoded \n\n Gelen verileri i\u015flemek i\u00e7in otomasyonlar\u0131n nas\u0131l yap\u0131land\u0131r\u0131laca\u011f\u0131 hakk\u0131nda [belgelere]( {docs_url}"
+        },
+        "step": {
+            "user": {
+                "description": "Kuruluma ba\u015flamak ister misiniz?",
+                "title": "Twilio Webhook'u kurun"
+            }
+        }
+    }
+}

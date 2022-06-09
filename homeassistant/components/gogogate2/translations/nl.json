@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie"
         },
+        "flow_title": "{device} ({ip_address})",
         "step": {
             "user": {
                 "data": {
@@ -15,7 +16,7 @@
                     "username": "Gebruikersnaam"
                 },
                 "description": "Geef hieronder de vereiste informatie op.",
-                "title": "Stel GogoGate2 in"
+                "title": "Stel GogoGate2 of iSmartGate in"
             }
         }
     }

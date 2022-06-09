@@ -12,23 +12,12 @@ import homeassistant.components.tts as tts
 from homeassistant.config import async_process_ha_core_config
 from homeassistant.setup import async_setup_component
 
-from tests.async_mock import patch
 from tests.common import assert_setup_component, async_mock_service
 
 
 def relative_url(url):
     """Convert an absolute url to a relative one."""
     return str(yarl.URL(url).relative())
-
-
-@pytest.fixture(autouse=True)
-def mutagen_mock():
-    """Mock writing tags."""
-    with patch(
-        "homeassistant.components.tts.SpeechManager.write_tags",
-        side_effect=lambda *args: args[1],
-    ):
-        yield
 
 
 @pytest.fixture(autouse=True)

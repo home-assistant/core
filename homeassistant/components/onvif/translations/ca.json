@@ -11,12 +11,15 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
-            "auth": {
+            "configure": {
                 "data": {
+                    "host": "Amfitri\u00f3",
+                    "name": "Nom",
                     "password": "Contrasenya",
+                    "port": "Port",
                     "username": "Nom d'usuari"
                 },
-                "title": "Configuraci\u00f3 d'autenticaci\u00f3"
+                "title": "Configuraci\u00f3 de dispositiu ONVIF"
             },
             "configure_profile": {
                 "data": {
@@ -31,15 +34,10 @@
                 },
                 "title": "Selecci\u00f3 de dispositiu ONVIF"
             },
-            "manual_input": {
-                "data": {
-                    "host": "Amfitri\u00f3",
-                    "name": "Nom",
-                    "port": "Port"
-                },
-                "title": "Configura el dispositiu ONVIF"
-            },
             "user": {
+                "data": {
+                    "auto": "Cerca autom\u00e0ticament"
+                },
                 "description": "En fer clic a envia, es cercaran a la xarxa dispositius ONVIF que suportin perfils S.\n\nAlguns fabricants han comen\u00e7at a desactivar ONVIF per defecte. Comprova que ONVIF est\u00e0 activat a la configuraci\u00f3 de les c\u00e0meres.",
                 "title": "Configuraci\u00f3 de dispositiu ONVIF"
             }

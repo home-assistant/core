@@ -1,0 +1,148 @@
+{
+    "config": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",
+            "addon_info_failed": "Ophalen van Z-Wave JS add-on-info is mislukt.",
+            "addon_install_failed": "Kan de Z-Wave JS add-on niet installeren.",
+            "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
+            "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "cannot_connect": "Kan geen verbinding maken",
+            "discovery_requires_supervisor": "Ontdekking vereist de Supervisor.",
+            "not_zwave_device": "Het ontdekte apparaat is niet een Z-Wave apparaat."
+        },
+        "error": {
+            "addon_start_failed": "Het is niet gelukt om de Z-Wave JS add-on te starten. Controleer de configuratie.",
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_ws_url": "Ongeldige websocket URL",
+            "unknown": "Onverwachte fout"
+        },
+        "flow_title": "{name}",
+        "progress": {
+            "install_addon": "Een ogenblik geduld terwijl de installatie van de Z-Wave JS add-on is voltooid. Dit kan enkele minuten duren.",
+            "start_addon": "Wacht alstublieft terwijl de Z-Wave JS add-on start voltooid is. Dit kan enkele seconden duren."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "s0_legacy_key": "S0 Sleutel (Legacy)",
+                    "s2_access_control_key": "S2 Toegangscontrolesleutel",
+                    "s2_authenticated_key": "S2 geverifieerde sleutel",
+                    "s2_unauthenticated_key": "S2 niet-geverifieerde sleutel",
+                    "usb_path": "USB-apparaatpad"
+                },
+                "description": "De add-on genereert beveiligingssleutels als deze velden leeg worden gelaten.",
+                "title": "Voer de Z-Wave JS add-on configuratie in"
+            },
+            "hassio_confirm": {
+                "title": "Z-Wave JS integratie instellen met de Z-Wave JS add-on"
+            },
+            "install_addon": {
+                "title": "De Z-Wave JS add-on installatie is gestart"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Gebruik de Z-Wave JS Supervisor add-on"
+                },
+                "description": "Wilt u de Z-Wave JS Supervisor add-on gebruiken?",
+                "title": "Selecteer verbindingsmethode"
+            },
+            "start_addon": {
+                "title": "De add-on Z-Wave JS wordt gestart."
+            },
+            "usb_confirm": {
+                "description": "Wilt u {name} instellen met de Z-Wave JS add-on?"
+            },
+            "zeroconf_confirm": {
+                "description": "Wilt u de Z-Wave JS Server met home ID {home_id} gevonden op {url} toevoegen aan Home Assistant?",
+                "title": "Ontdekt Z-Wave JS Server"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "clear_lock_usercode": "Wis gebruikerscode van {entity_name}",
+            "ping": "Ping apparaat",
+            "refresh_value": "Ververs de waarde(s) voor {entity_name}",
+            "reset_meter": "Reset meters op {subtype}",
+            "set_config_parameter": "Stel waarde in voor configuratieparameter {subtype}",
+            "set_lock_usercode": "Stel gebruikerscode in voor {entity_name}",
+            "set_value": "Waarde van een Z-Wave waarde instellen"
+        },
+        "condition_type": {
+            "config_parameter": "Config parameter {subtype} waarde",
+            "node_status": "Apparaatstatus",
+            "value": "Huidige waarde van een Z-Wave-waarde"
+        },
+        "trigger_type": {
+            "event.notification.entry_control": "Stuur een Entry Control melding",
+            "event.notification.notification": "Stuur een notificatie",
+            "event.value_notification.basic": "Basis CC-evenement op {subtype}",
+            "event.value_notification.central_scene": "Centrale Sc\u00e8ne actie op {subtype}",
+            "event.value_notification.scene_activation": "Sc\u00e8ne-activering op {subtype}",
+            "state.node_status": "Apparaatstatus gewijzigd",
+            "zwave_js.value_updated.config_parameter": "Waardeverandering op configuratieparameter {subtype}",
+            "zwave_js.value_updated.value": "Waardeverandering op een Z-Wave JS-waarde"
+        }
+    },
+    "options": {
+        "abort": {
+            "addon_get_discovery_info_failed": "Ophalen van ontdekkingsinformatie voor Z-Wave JS-add-on is mislukt.",
+            "addon_info_failed": "Ophalen van Z-Wave JS add-on-info is mislukt.",
+            "addon_install_failed": "Kan de Z-Wave JS add-on niet installeren.",
+            "addon_set_config_failed": "Instellen van de Z-Wave JS configuratie is mislukt.",
+            "addon_start_failed": "Kan de Z-Wave JS add-on niet starten.",
+            "already_configured": "Apparaat is al geconfigureerd",
+            "cannot_connect": "Kan geen verbinding maken",
+            "different_device": "Het aangesloten USB-apparaat is niet hetzelfde als eerder geconfigureerd voor dit configuratie-item. Maak in plaats daarvan een nieuw configuratie-item voor het nieuwe apparaat."
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_ws_url": "Ongeldige websocket URL",
+            "unknown": "Onverwachte fout"
+        },
+        "progress": {
+            "install_addon": "Wacht alstublieft terwijl de Z-Wave JS add-on installatie voltooid is. Dit kan enkele minuten duren.",
+            "start_addon": "Wacht alstublieft terwijl de Z-Wave JS add-on start voltooid is. Dit kan enkele seconden duren."
+        },
+        "step": {
+            "configure_addon": {
+                "data": {
+                    "emulate_hardware": "Emulate Hardware",
+                    "log_level": "Log level",
+                    "s0_legacy_key": "S0 Sleutel (Legacy)",
+                    "s2_access_control_key": "S2 Toegangscontrolesleutel",
+                    "s2_authenticated_key": "S2 geverifieerde sleutel",
+                    "s2_unauthenticated_key": "S2 niet-geverifieerde sleutel",
+                    "usb_path": "USB-apparaatpad"
+                },
+                "description": "De add-on genereert beveiligingssleutels als deze velden leeg worden gelaten.",
+                "title": "Voer de configuratie van de Z-Wave JS-add-on in"
+            },
+            "install_addon": {
+                "title": "De Z-Wave JS add-on installatie is gestart"
+            },
+            "manual": {
+                "data": {
+                    "url": "URL"
+                }
+            },
+            "on_supervisor": {
+                "data": {
+                    "use_addon": "Gebruik de Z-Wave JS Supervisor add-on"
+                },
+                "description": "Wilt u de Z-Wave JS Supervisor add-on gebruiken?",
+                "title": "Selecteer een verbindingsmethode"
+            },
+            "start_addon": {
+                "title": "The Z-Wave JS add-on is aan het starten."
+            }
+        }
+    }
+}

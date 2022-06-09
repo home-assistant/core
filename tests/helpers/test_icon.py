@@ -37,7 +37,7 @@ def test_battery_icon():
         else:
             postfix_charging = "-charging-100"
         if 5 < level < 95:
-            postfix = "-{}".format(int(round(level / 10 - 0.01)) * 10)
+            postfix = f"-{int(round(level / 10 - 0.01)) * 10}"
         elif level <= 5:
             postfix = "-alert"
         else:

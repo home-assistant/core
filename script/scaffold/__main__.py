@@ -59,7 +59,9 @@ def main():
         # If it's a new integration and it's not a config flow,
         # create a config flow too.
         if not args.template.startswith("config_flow"):
-            if info.oauth2:
+            if info.helper:
+                template = "config_flow_helper"
+            elif info.oauth2:
                 template = "config_flow_oauth2"
             elif info.authentication or not info.discoverable:
                 template = "config_flow"
@@ -99,7 +101,7 @@ def main():
     if args.develop:
         print("Running tests")
         print(f"$ pytest -vvv tests/components/{info.domain}")
-        subprocess.run(["pytest", "-vvv", "tests/components/{info.domain}"])
+        subprocess.run(["pytest", "-vvv", f"tests/components/{info.domain}"])
         print()
 
     docs.print_relevant_docs(args.template, info)

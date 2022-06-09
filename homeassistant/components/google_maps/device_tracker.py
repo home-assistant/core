@@ -1,4 +1,7 @@
 """Support for Google Maps location sharing."""
+from __future__ import annotations
+
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -6,7 +9,10 @@ from locationsharinglib import Service
 from locationsharinglib.locationsharinglibexceptions import InvalidCookies
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import PLATFORM_SCHEMA, SOURCE_TYPE_GPS
+from homeassistant.components.device_tracker import (
+    PLATFORM_SCHEMA as PLATFORM_SCHEMA_BASE,
+    SOURCE_TYPE_GPS,
+)
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
@@ -14,9 +20,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +37,9 @@ CONF_MAX_GPS_ACCURACY = "max_gps_accuracy"
 
 CREDENTIALS_FILE = ".google_maps_location_sharing.cookies"
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+# the parent "device_tracker" have marked the schemas as legacy, so this
+# need to be refactored as part of a bigger rewrite.
+PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=100000): vol.Coerce(float),
@@ -38,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Callable[..., None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the Google Maps Location sharing scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
     return scanner.success_init
@@ -53,7 +67,7 @@ class GoogleMapsScanner:
         self.username = config[CONF_USERNAME]
         self.max_gps_accuracy = config[CONF_MAX_GPS_ACCURACY]
         self.scan_interval = config.get(CONF_SCAN_INTERVAL) or timedelta(seconds=60)
-        self._prev_seen = {}
+        self._prev_seen: dict[str, str] = {}
 
         credfile = f"{hass.config.path(CREDENTIALS_FILE)}.{slugify(self.username)}"
         try:

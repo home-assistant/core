@@ -1,0 +1,20 @@
+{
+    "config": {
+        "step": {
+            "site": {
+                "data": {
+                    "site_name": "Nazwa obiektu",
+                    "site_nmi": "Numer identyfikacyjny (NMI) obiektu"
+                },
+                "description": "Wybierz NMI obiektu, kt\u00f3ry chcesz doda\u0107"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token API",
+                    "site_id": "Identyfikator obiektu"
+                },
+                "description": "Przejd\u017a do {api_url}, aby wygenerowa\u0107 klucz API"
+            }
+        }
+    }
+}

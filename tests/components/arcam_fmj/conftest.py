@@ -1,4 +1,6 @@
 """Tests for the arcam_fmj component."""
+from unittest.mock import Mock, patch
+
 from arcam.fmj.client import Client
 from arcam.fmj.state import State
 import pytest
@@ -7,7 +9,6 @@ from homeassistant.components.arcam_fmj.const import DEFAULT_NAME
 from homeassistant.components.arcam_fmj.media_player import ArcamFmj
 from homeassistant.const import CONF_HOST, CONF_PORT
 
-from tests.async_mock import Mock, patch
 from tests.common import MockConfigEntry
 
 MOCK_HOST = "127.0.0.1"
@@ -43,6 +44,7 @@ def state_1_fixture(client):
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (0, 0)
     state.get_mute.return_value = None
+    state.get_decode_modes.return_value = []
     return state
 
 
@@ -57,6 +59,7 @@ def state_2_fixture(client):
     state.get_source_list.return_value = []
     state.get_incoming_audio_format.return_value = (0, 0)
     state.get_mute.return_value = None
+    state.get_decode_modes.return_value = []
     return state
 
 

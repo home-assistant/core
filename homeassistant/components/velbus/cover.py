@@ -1,85 +1,85 @@
 """Support for Velbus covers."""
-import logging
+from __future__ import annotations
 
-from velbus.util import VelbusException
+from typing import Any
+
+from velbusaio.channels import Blind as VelbusBlind
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import VelbusEntity
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, entry, async_add_entities):
-    """Set up Velbus cover based on config_entry."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Velbus switch based on config_entry."""
+    await hass.data[DOMAIN][entry.entry_id]["tsk"]
     cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    modules_data = hass.data[DOMAIN][entry.entry_id]["cover"]
     entities = []
-    for address, channel in modules_data:
-        module = cntrl.get_module(address)
-        entities.append(VelbusCover(module, channel))
+    for channel in cntrl.get_all("cover"):
+        entities.append(VelbusCover(channel))
     async_add_entities(entities)
 
 
 class VelbusCover(VelbusEntity, CoverEntity):
     """Representation a Velbus cover."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._module.support_position():
-            return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP
+    _channel: VelbusBlind
+
+    def __init__(self, channel: VelbusBlind) -> None:
+        """Initialize the dimmer."""
+        super().__init__(channel)
+        if self._channel.support_position():
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+                | CoverEntityFeature.SET_POSITION
+            )
+        else:
+            self._attr_supported_features = (
+                CoverEntityFeature.OPEN
+                | CoverEntityFeature.CLOSE
+                | CoverEntityFeature.STOP
+            )
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
-        if self._module.get_position(self._channel) == 100:
-            return True
-        return False
+        return self._channel.is_closed()
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open
         Velbus: 100 = closed, 0 = open
         """
-        pos = self._module.get_position(self._channel)
-        return 100 - pos
+        return 100 - self._channel.get_position()
 
-    def open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        try:
-            self._module.open(self._channel)
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
+        await self._channel.open()
 
-    def close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        try:
-            self._module.close(self._channel)
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
+        await self._channel.close()
 
-    def stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        try:
-            self._module.stop(self._channel)
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
+        await self._channel.stop()
 
-    def set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        try:
-            self._module.set(self._channel, (100 - kwargs[ATTR_POSITION]))
-        except VelbusException as err:
-            _LOGGER.error("A Velbus error occurred: %s", err)
+        await self._channel.set_position(100 - kwargs[ATTR_POSITION])

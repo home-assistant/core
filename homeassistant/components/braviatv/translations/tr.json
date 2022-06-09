@@ -1,0 +1,38 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_ip_control": "TV'nizde IP Kontrol\u00fc devre d\u0131\u015f\u0131 veya TV desteklenmiyor."
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_host": "Ge\u00e7ersiz ana bilgisayar ad\u0131 veya IP adresi",
+            "unsupported_model": "TV modeliniz desteklenmiyor."
+        },
+        "step": {
+            "authorize": {
+                "data": {
+                    "pin": "PIN Kodu"
+                },
+                "description": "Sony Bravia TV'de g\u00f6sterilen PIN kodunu girin. \n\n PIN kodu g\u00f6r\u00fcnt\u00fclenmiyorsa, TV'nizde Home Assistant kayd\u0131n\u0131 iptal etmeniz gerekir, \u015furaya gidin: Ayarlar - > A\u011f - > Uzak cihaz ayarlar\u0131 - > Uzak cihaz\u0131n kayd\u0131n\u0131 iptal et.Home Assistant",
+                "title": "Sony Bravia TV'yi yetkilendirin"
+            },
+            "user": {
+                "data": {
+                    "host": "Ana Bilgisayar"
+                },
+                "description": "Kurmaya \u00e7al\u0131\u015fmadan \u00f6nce TV'nizin a\u00e7\u0131k oldu\u011fundan emin olun."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "user": {
+                "data": {
+                    "ignored_sources": "Yok say\u0131lan kaynaklar\u0131n listesi"
+                },
+                "title": "Sony Bravia TV i\u00e7in se\u00e7enekler"
+            }
+        }
+    }
+}

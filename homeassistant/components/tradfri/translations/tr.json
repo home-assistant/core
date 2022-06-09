@@ -1,0 +1,24 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor"
+        },
+        "error": {
+            "cannot_authenticate": "Kimlik do\u011frulamas\u0131 yap\u0131lam\u0131yor, A\u011f Ge\u00e7idi, \u00f6rne\u011fin Homekit gibi ba\u015fka bir sunucuyla e\u015fle\u015ftirilmi\u015f mi?",
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_key": "Sa\u011flanan anahtarla kay\u0131t olunamad\u0131. Bu durum devam ederse, a\u011f ge\u00e7idini yeniden ba\u015flatmay\u0131 deneyin.",
+            "timeout": "Kodun do\u011frulanmas\u0131 zaman a\u015f\u0131m\u0131na u\u011frad\u0131."
+        },
+        "step": {
+            "auth": {
+                "data": {
+                    "host": "Sunucu",
+                    "security_code": "G\u00fcvenlik Kodu"
+                },
+                "description": "G\u00fcvenlik kodunu a\u011f ge\u00e7idinizin arkas\u0131nda bulabilirsiniz.",
+                "title": "G\u00fcvenlik kodunu gir"
+            }
+        }
+    }
+}

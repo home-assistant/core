@@ -1,17 +1,17 @@
 """Handler for Hass.io."""
 import asyncio
+from http import HTTPStatus
 import logging
 import os
 
 import aiohttp
-import async_timeout
 
 from homeassistant.components.http import (
     CONF_SERVER_HOST,
     CONF_SERVER_PORT,
     CONF_SSL_CERTIFICATE,
 )
-from homeassistant.const import HTTP_BAD_REQUEST, HTTP_OK, SERVER_PORT
+from homeassistant.const import SERVER_PORT
 
 from .const import X_HASSIO
 
@@ -52,7 +52,12 @@ def api_data(funct):
 class HassIO:
     """Small API wrapper for Hass.io."""
 
-    def __init__(self, loop, websession, ip):
+    def __init__(
+        self,
+        loop: asyncio.AbstractEventLoop,
+        websession: aiohttp.ClientSession,
+        ip: str,
+    ) -> None:
         """Initialize Hass.io API."""
         self.loop = loop
         self.websession = websession
@@ -115,6 +120,31 @@ class HassIO:
         return self.send_command(f"/addons/{addon}/info", method="get")
 
     @api_data
+    def get_addon_stats(self, addon):
+        """Return stats for an Add-on.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(f"/addons/{addon}/stats", method="get")
+
+    def get_addon_changelog(self, addon):
+        """Return changelog for an Add-on.
+
+        This method returns a coroutine.
+        """
+        return self.send_command(
+            f"/addons/{addon}/changelog", method="get", return_text=True
+        )
+
+    @api_data
+    def get_store(self):
+        """Return data from the store.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/store", method="get")
+
+    @api_data
     def get_ingress_panels(self):
         """Return data for Add-on ingress panels.
 
@@ -138,13 +168,21 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
+    @_api_bool
+    def refresh_updates(self):
+        """Refresh available updates.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/refresh_updates", timeout=None)
+
     @api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
 
         This method return a coroutine.
         """
-        return self.send_command("/discovery", method="get")
+        return self.send_command("/discovery", method="get", timeout=60)
 
     @api_data
     def get_discovery_message(self, uuid):
@@ -181,26 +219,45 @@ class HassIO:
         """
         return self.send_command("/supervisor/options", payload={"timezone": timezone})
 
-    async def send_command(self, command, method="post", payload=None, timeout=10):
+    @_api_bool
+    def update_diagnostics(self, diagnostics: bool):
+        """Update Supervisor diagnostics setting.
+
+        This method return a coroutine.
+        """
+        return self.send_command(
+            "/supervisor/options", payload={"diagnostics": diagnostics}
+        )
+
+    async def send_command(
+        self,
+        command,
+        method="post",
+        payload=None,
+        timeout=10,
+        return_text=False,
+    ):
         """Send API command to Hass.io.
 
         This method is a coroutine.
         """
         try:
-            with async_timeout.timeout(timeout):
-                request = await self.websession.request(
-                    method,
-                    f"http://{self._ip}{command}",
-                    json=payload,
-                    headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
-                )
+            request = await self.websession.request(
+                method,
+                f"http://{self._ip}{command}",
+                json=payload,
+                headers={X_HASSIO: os.environ.get("SUPERVISOR_TOKEN", "")},
+                timeout=aiohttp.ClientTimeout(total=timeout),
+            )
 
-                if request.status not in (HTTP_OK, HTTP_BAD_REQUEST):
-                    _LOGGER.error("%s return code %d", command, request.status)
-                    raise HassioAPIError()
+            if request.status not in (HTTPStatus.OK, HTTPStatus.BAD_REQUEST):
+                _LOGGER.error("%s return code %d", command, request.status)
+                raise HassioAPIError()
 
-                answer = await request.json()
-                return answer
+            if return_text:
+                return await request.text(encoding="utf-8")
+
+            return await request.json()
 
         except asyncio.TimeoutError:
             _LOGGER.error("Timeout on %s request", command)

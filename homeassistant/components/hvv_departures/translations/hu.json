@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
+        },
+        "error": {
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
+            "no_results": "Nincs eredm\u00e9ny. Pr\u00f3b\u00e1lja ki m\u00e1sik \u00e1llom\u00e1ssal/c\u00edmmel"
+        },
+        "step": {
+            "station": {
+                "data": {
+                    "station": "\u00c1llom\u00e1s/c\u00edm"
+                },
+                "title": "Adja meg az \u00e1llom\u00e1st/c\u00edmet"
+            },
+            "station_select": {
+                "data": {
+                    "station": "\u00c1llom\u00e1s/c\u00edm"
+                },
+                "title": "\u00c1llom\u00e1s/c\u00edm kiv\u00e1laszt\u00e1sa"
+            },
+            "user": {
+                "data": {
+                    "host": "C\u00edm",
+                    "password": "Jelsz\u00f3",
+                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                },
+                "title": "Csatlakozzon a HVV API-hoz"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "filter": "V\u00e1lassza ki a sorokat",
+                    "offset": "Eltol\u00e1s (perc)",
+                    "real_time": "Val\u00f3s idej\u0171 adatok haszn\u00e1lata"
+                },
+                "description": "M\u00f3dos\u00edtsa az indul\u00e1si \u00e9rz\u00e9kel\u0151 be\u00e1ll\u00edt\u00e1sait",
+                "title": "Be\u00e1ll\u00edt\u00e1sok"
+            }
+        }
+    }
+}

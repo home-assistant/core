@@ -1,0 +1,30 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "config": "Tilkoblings- eller p\u00e5loggingsfeil: Kontroller konfigurasjonen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert (valgfritt)",
+                    "password": "Passord",
+                    "username": "Brukernavn (Valgfritt)"
+                },
+                "description": "Standard vert: {host}\n Standard brukernavn: {username}"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "consider_home": "Vurder hjemmetid (sekunder)"
+                },
+                "description": "Spesifiser valgfrie innstillinger"
+            }
+        }
+    }
+}

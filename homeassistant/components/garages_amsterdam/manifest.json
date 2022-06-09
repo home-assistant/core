@@ -1,0 +1,9 @@
+{
+  "domain": "garages_amsterdam",
+  "name": "Garages Amsterdam",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/garages_amsterdam",
+  "requirements": ["garages-amsterdam==3.0.0"],
+  "codeowners": ["@klaasnicolaas"],
+  "iot_class": "cloud_polling"
+}

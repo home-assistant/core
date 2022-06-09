@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi",
+            "no_stations": "Tidak ditemukan stasiun pemantau banjir."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "station": "Stasiun"
+                },
+                "description": "Pilih stasiun yang ingin dipantau",
+                "title": "Lacak stasiun pemantauan banjir"
+            }
+        }
+    }
+}

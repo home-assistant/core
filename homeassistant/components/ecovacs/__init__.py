@@ -6,9 +6,16 @@ import string
 from sucks import EcoVacsAPI, VacBot
 import voluptuous as vol
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +46,7 @@ ECOVACS_API_DEVICEID = "".join(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ecovacs component."""
     _LOGGER.debug("Creating new Ecovacs component")
 
@@ -59,8 +66,8 @@ def setup(hass, config):
     for device in devices:
         _LOGGER.info(
             "Discovered Ecovacs device on account: %s with nickname %s",
-            device["did"],
-            device["nick"],
+            device.get("did"),
+            device.get("nick"),
         )
         vacbot = VacBot(
             ecovacs_api.uid,
@@ -77,7 +84,8 @@ def setup(hass, config):
         """Shut down open connections to Ecovacs XMPP server."""
         for device in hass.data[ECOVACS_DEVICES]:
             _LOGGER.info(
-                "Shutting down connection to Ecovacs device %s", device.vacuum["did"]
+                "Shutting down connection to Ecovacs device %s",
+                device.vacuum.get("did"),
             )
             device.disconnect()
 
@@ -86,6 +94,6 @@ def setup(hass, config):
 
     if hass.data[ECOVACS_DEVICES]:
         _LOGGER.debug("Starting vacuum components")
-        discovery.load_platform(hass, "vacuum", DOMAIN, {}, config)
+        discovery.load_platform(hass, Platform.VACUUM, DOMAIN, {}, config)
 
     return True

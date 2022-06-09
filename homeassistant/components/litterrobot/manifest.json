@@ -1,0 +1,10 @@
+{
+  "domain": "litterrobot",
+  "name": "Litter-Robot",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/litterrobot",
+  "requirements": ["pylitterbot==2022.3.0"],
+  "codeowners": ["@natekspencer"],
+  "iot_class": "cloud_polling",
+  "loggers": ["pylitterbot"]
+}

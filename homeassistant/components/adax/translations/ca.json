@@ -1,0 +1,34 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat",
+            "heater_not_available": "Escalfador no disponible. Intenta reiniciar l'escalfador prement '+' i 'OK' durant uns segons.",
+            "heater_not_found": "No s'ha trobat l'escalfador. Intenta apropar-lo a l'ordinador amb Home Assistant.",
+            "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "cloud": {
+                "data": {
+                    "account_id": "ID del compte",
+                    "password": "Contrasenya"
+                }
+            },
+            "local": {
+                "data": {
+                    "wifi_pswd": "Contrasenya Wi-Fi",
+                    "wifi_ssid": "SSID Wi-Fi"
+                },
+                "description": "Reinicia l'escalfador prement '+' i 'OK' fins que la pantalla mostri 'Reset'. A continuaci\u00f3 i abans de fer clic a Envia, mant\u00e9 premut el bot\u00f3 'OK' fins que el led blau comenci a parpellejar. La configuraci\u00f3 de l'escalfador pot trigar uns minuts."
+            },
+            "user": {
+                "data": {
+                    "connection_type": "Selecciona el tipus de connexi\u00f3"
+                },
+                "description": "Selecciona el tipus de connexi\u00f3. La local necessita escalfadors amb Bluetooth"
+            }
+        }
+    }
+}

@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "cannot_connect": "Gagal terhubung",
+            "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
+            "no_url_available": "Tidak ada URL yang tersedia. Untuk informasi tentang kesalahan ini, [lihat bagian bantuan]({docs_url})",
+            "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "Ingin mengonfigurasi Home Assistant untuk terhubung ke Almond yang disediakan oleh add-on: {addon}?",
+                "title": "Almond melalui add-on Home Assistant"
+            },
+            "pick_implementation": {
+                "title": "Pilih Metode Autentikasi"
+            }
+        }
+    }
+}

@@ -1,0 +1,11 @@
+{
+    "config": {
+        "step": {
+            "cloud": {
+                "data": {
+                    "username": "Brukernavn"
+                }
+            }
+        }
+    }
+}

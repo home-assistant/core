@@ -1,8 +1,9 @@
 """The Remote Python Debugger integration."""
-from asyncio import Event
+from __future__ import annotations
+
+from asyncio import Event, get_running_loop
 import logging
 from threading import Thread
-from typing import Optional
 
 import debugpy
 import voluptuous as vol
@@ -14,8 +15,8 @@ from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "debugpy"
-CONF_WAIT = "wait"
 CONF_START = "start"
+CONF_WAIT = "wait"
 SERVICE_START = "start"
 
 CONFIG_SCHEMA = vol.Schema(
@@ -40,13 +41,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     conf = config[DOMAIN]
 
     async def debug_start(
-        call: Optional[ServiceCall] = None, *, wait: bool = True
+        call: ServiceCall | None = None, *, wait: bool = True
     ) -> None:
-        """Start the debugger."""
-        debugpy.listen((conf[CONF_HOST], conf[CONF_PORT]))
+        """Enable asyncio debugging and start the debugger."""
+        get_running_loop().set_debug(True)
 
-        wait = conf[CONF_WAIT]
-        if wait:
+        await hass.async_add_executor_job(
+            debugpy.listen, (conf[CONF_HOST], conf[CONF_PORT])
+        )
+
+        if conf[CONF_WAIT]:
             _LOGGER.warning(
                 "Waiting for remote debug connection on %s:%s",
                 conf[CONF_HOST],

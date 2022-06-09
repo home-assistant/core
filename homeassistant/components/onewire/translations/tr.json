@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Sunucu",
+                    "port": "Port"
+                },
+                "title": "Sunucu ayr\u0131nt\u0131lar\u0131n\u0131 ayarla"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Yap\u0131land\u0131r\u0131lacak cihazlar\u0131 se\u00e7in"
+        },
+        "step": {
+            "ack_no_options": {
+                "data": {
+                    "one": "Bo\u015f",
+                    "other": "Bo\u015f"
+                }
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Sens\u00f6r Hassasiyeti"
+                },
+                "description": "{sensor_id} i\u00e7in sens\u00f6r hassasiyetini se\u00e7in",
+                "title": "OneWire Sens\u00f6r Hassasiyeti"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "T\u00fcm cihaz yap\u0131land\u0131rmalar\u0131n\u0131 temizle",
+                    "device_selection": "Yap\u0131land\u0131r\u0131lacak cihazlar\u0131 se\u00e7in"
+                },
+                "description": "Hangi yap\u0131land\u0131rma ad\u0131mlar\u0131n\u0131n i\u015flenece\u011fini se\u00e7in",
+                "title": "OneWire Cihaz Se\u00e7enekleri"
+            }
+        }
+    }
+}

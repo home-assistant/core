@@ -1,22 +1,22 @@
 """Test fixtures for Tasmota component."""
+from unittest.mock import patch
+
 from hatasmota.discovery import get_status_sensor_entities
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.tasmota.const import (
     CONF_DISCOVERY_PREFIX,
     DEFAULT_PREFIX,
     DOMAIN,
 )
 
-from tests.async_mock import patch
 from tests.common import (
     MockConfigEntry,
     async_mock_service,
     mock_device_registry,
     mock_registry,
 )
-from tests.components.light.conftest import mock_light_profiles  # noqa
+from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 
 
 @pytest.fixture
@@ -63,7 +63,6 @@ async def setup_tasmota_helper(hass):
     hass.config.components.add("tasmota")
 
     entry = MockConfigEntry(
-        connection_class=config_entries.CONN_CLASS_LOCAL_PUSH,
         data={CONF_DISCOVERY_PREFIX: DEFAULT_PREFIX},
         domain=DOMAIN,
         title="Tasmota",

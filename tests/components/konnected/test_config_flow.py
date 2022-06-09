@@ -1,10 +1,12 @@
 """Tests for Konnected Alarm Panel config flow."""
+from unittest.mock import patch
+
 import pytest
 
-from homeassistant.components import konnected
+from homeassistant import config_entries
+from homeassistant.components import konnected, ssdp
 from homeassistant.components.konnected import config_flow
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 
 
@@ -27,7 +29,7 @@ async def mock_panel_fixture():
 async def test_flow_works(hass, mock_panel):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -64,7 +66,7 @@ async def test_flow_works(hass, mock_panel):
 async def test_pro_flow_works(hass, mock_panel):
     """Test config flow ."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == "form"
     assert result["step_id"] == "user"
@@ -107,14 +109,19 @@ async def test_ssdp(hass, mock_panel):
         "model": "Konnected",
     }
 
+    # Test success
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
-        data={
-            "ssdp_location": "http://1.2.3.4:1234/Device.xml",
-            "manufacturer": config_flow.KONN_MANUFACTURER,
-            "modelName": config_flow.KONN_MODEL,
-        },
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": config_flow.KONN_MODEL,
+            },
+        ),
     )
 
     assert result["type"] == "form"
@@ -126,6 +133,101 @@ async def test_ssdp(hass, mock_panel):
         "port": 1234,
     }
 
+    # Test abort if connection failed
+    mock_panel.get_status.side_effect = config_flow.CannotConnect
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": config_flow.KONN_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "cannot_connect"
+
+    # Test abort if invalid data
+    mock_panel.get_status.side_effect = KeyError
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:1234/Device.xml",
+            upnp={},
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "unknown"
+
+    # Test abort if invalid manufacturer
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:1234/Device.xml",
+            upnp={
+                "manufacturer": "SHOULD_FAIL",
+                "modelName": config_flow.KONN_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_konn_panel"
+
+    # Test abort if invalid model
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": "SHOULD_FAIL",
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "not_konn_panel"
+
+    # Test abort if already configured
+    config_entry = MockConfigEntry(
+        domain=config_flow.DOMAIN,
+        data={config_flow.CONF_HOST: "1.2.3.4", config_flow.CONF_PORT: 1234},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        config_flow.DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.2.3.4:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": config_flow.KONN_MODEL,
+            },
+        ),
+    )
+
+    assert result["type"] == "abort"
+    assert result["reason"] == "already_configured"
+
 
 async def test_import_no_host_user_finish(hass, mock_panel):
     """Test importing a panel with no host info."""
@@ -136,7 +238,7 @@ async def test_import_no_host_user_finish(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "default_options": {
                 "blink": True,
@@ -203,7 +305,7 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "default_options": {
                 "blink": True,
@@ -237,12 +339,16 @@ async def test_import_ssdp_host_user_finish(hass, mock_panel):
     # discover the panel via ssdp
     ssdp_result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
-        data={
-            "ssdp_location": "http://0.0.0.0:1234/Device.xml",
-            "manufacturer": config_flow.KONN_MANUFACTURER,
-            "modelName": config_flow.KONN_MODEL_PRO,
-        },
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": config_flow.KONN_MODEL_PRO,
+            },
+        ),
     )
     assert ssdp_result["type"] == "abort"
     assert ssdp_result["reason"] == "already_in_progress"
@@ -280,12 +386,16 @@ async def test_ssdp_already_configured(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
-        data={
-            "ssdp_location": "http://0.0.0.0:1234/Device.xml",
-            "manufacturer": config_flow.KONN_MANUFACTURER,
-            "modelName": config_flow.KONN_MODEL_PRO,
-        },
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://0.0.0.0:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": config_flow.KONN_MODEL_PRO,
+            },
+        ),
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_configured"
@@ -356,12 +466,16 @@ async def test_ssdp_host_update(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "ssdp"},
-        data={
-            "ssdp_location": "http://1.1.1.1:1234/Device.xml",
-            "manufacturer": config_flow.KONN_MANUFACTURER,
-            "modelName": config_flow.KONN_MODEL_PRO,
-        },
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn="mock_usn",
+            ssdp_st="mock_st",
+            ssdp_location="http://1.1.1.1:1234/Device.xml",
+            upnp={
+                "manufacturer": config_flow.KONN_MANUFACTURER,
+                "modelName": config_flow.KONN_MODEL_PRO,
+            },
+        ),
     )
     assert result["type"] == "abort"
 
@@ -381,7 +495,7 @@ async def test_import_existing_config(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",
@@ -514,7 +628,7 @@ async def test_import_existing_config_entry(hass, mock_panel):
     hass.data[config_flow.DOMAIN] = {"access_token": "SUPERSECRETTOKEN"}
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -572,7 +686,7 @@ async def test_import_pin_config(hass, mock_panel):
 
     result = await hass.config_entries.flow.async_init(
         config_flow.DOMAIN,
-        context={"source": "import"},
+        context={"source": config_entries.SOURCE_IMPORT},
         data=konnected.DEVICE_SCHEMA_YAML(
             {
                 "host": "1.2.3.4",

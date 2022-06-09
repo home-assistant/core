@@ -1,16 +1,21 @@
 """Support for Axis switches."""
-
 from axis.event_stream import CLASS_OUTPUT
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .axis_base import AxisEventBase
 from .const import DOMAIN as AXIS_DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Axis switch."""
     device = hass.data[AXIS_DOMAIN][config_entry.unique_id]
 
@@ -22,13 +27,20 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if event.CLASS == CLASS_OUTPUT:
             async_add_entities([AxisSwitch(event, device)])
 
-    device.listeners.append(
+    config_entry.async_on_unload(
         async_dispatcher_connect(hass, device.signal_new_event, async_add_switch)
     )
 
 
 class AxisSwitch(AxisEventBase, SwitchEntity):
     """Representation of a Axis switch."""
+
+    def __init__(self, event, device):
+        """Initialize the Axis switch."""
+        super().__init__(event, device)
+
+        if event.id and device.api.vapix.ports[event.id].name:
+            self._attr_name = f"{device.name} {device.api.vapix.ports[event.id].name}"
 
     @property
     def is_on(self):
@@ -42,13 +54,3 @@ class AxisSwitch(AxisEventBase, SwitchEntity):
     async def async_turn_off(self, **kwargs):
         """Turn off switch."""
         await self.device.api.vapix.ports[self.event.id].open()
-
-    @property
-    def name(self):
-        """Return the name of the event."""
-        if self.event.id and self.device.api.vapix.ports[self.event.id].name:
-            return (
-                f"{self.device.name} {self.device.api.vapix.ports[self.event.id].name}"
-            )
-
-        return super().name

@@ -1,6 +1,7 @@
 """Common test objects."""
 import copy
 import json
+from unittest.mock import ANY
 
 from hatasmota.const import (
     CONF_MAC,
@@ -17,10 +18,10 @@ from hatasmota.utils import (
     get_topic_tele_will,
 )
 
-from homeassistant.components.tasmota.const import DEFAULT_PREFIX
+from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.async_mock import ANY
 from tests.common import async_fire_mqtt_message
 
 DEFAULT_CONFIG = {
@@ -35,7 +36,7 @@ DEFAULT_CONFIG = {
     "ofln": "Offline",
     "onln": "Online",
     "state": ["OFF", "ON", "TOGGLE", "HOLD"],
-    "sw": "8.4.0.2",
+    "sw": "9.4.0.4",
     "swn": [None, None, None, None, None],
     "t": "tasmota_49A3BC",
     "ft": "%topic%/%prefix%/",
@@ -96,6 +97,31 @@ DEFAULT_CONFIG_9_0_0_3 = {
 }
 
 
+DEFAULT_SENSOR_CONFIG = {
+    "sn": {
+        "Time": "2020-09-25T12:47:15",
+        "DHT11": {"Temperature": None},
+        "TempUnit": "C",
+    }
+}
+
+
+async def remove_device(hass, ws_client, device_id, config_entry_id=None):
+    """Remove config entry from a device."""
+    if config_entry_id is None:
+        config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+
 async def help_test_availability_when_connection_lost(
     hass,
     mqtt_client_mock,
@@ -129,7 +155,7 @@ async def help_test_availability_when_connection_lost(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -157,6 +183,7 @@ async def help_test_availability_when_connection_lost(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -195,7 +222,7 @@ async def help_test_availability(
         get_topic_tele_will(config),
         config_get_state_online(config),
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -204,7 +231,7 @@ async def help_test_availability(
         get_topic_tele_will(config),
         config_get_state_offline(config),
     )
-
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
@@ -257,10 +284,12 @@ async def help_test_availability_discovery_update(
     assert state.state == STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, online1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, availability_topic1, offline1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
@@ -272,11 +301,13 @@ async def help_test_availability_discovery_update(
     async_fire_mqtt_message(hass, availability_topic1, online1)
     async_fire_mqtt_message(hass, availability_topic1, online2)
     async_fire_mqtt_message(hass, availability_topic2, online1)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
     # Verify we are subscribing to the new topic
     async_fire_mqtt_message(hass, availability_topic2, online2)
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
@@ -363,8 +394,8 @@ async def help_test_discovery_removal(
     name="Test",
 ):
     """Test removal of discovered entity."""
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
 
     data1 = json.dumps(config1)
     data2 = json.dumps(config2)
@@ -381,7 +412,9 @@ async def help_test_discovery_removal(
         await hass.async_block_till_done()
 
     # Verify device and entity registry entries are created
-    device_entry = device_reg.async_get_device(set(), {("mac", config1[CONF_MAC])})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config1[CONF_MAC])}
+    )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{entity_id}")
     assert entity_entry is not None
@@ -402,7 +435,9 @@ async def help_test_discovery_removal(
         await hass.async_block_till_done()
 
     # Verify entity registry entries are cleared
-    device_entry = device_reg.async_get_device(set(), {("mac", config2[CONF_MAC])})
+    device_entry = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config2[CONF_MAC])}
+    )
     assert device_entry is not None
     entity_entry = entity_reg.async_get(f"{domain}.{entity_id}")
     assert entity_entry is None
@@ -470,8 +505,8 @@ async def help_test_discovery_device_remove(
     hass, mqtt_mock, domain, unique_id, config, sensor_config=None
 ):
     """Test domain entity is removed when device is removed."""
-    device_reg = await hass.helpers.device_registry.async_get_registry()
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    device_reg = dr.async_get(hass)
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
 
@@ -486,14 +521,18 @@ async def help_test_discovery_device_remove(
         )
         await hass.async_block_till_done()
 
-    device = device_reg.async_get_device(set(), {("mac", config[CONF_MAC])})
+    device = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+    )
     assert device is not None
     assert entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
 
     async_fire_mqtt_message(hass, f"{DEFAULT_PREFIX}/{config[CONF_MAC]}/config", "")
     await hass.async_block_till_done()
 
-    device = device_reg.async_get_device(set(), {("mac", config[CONF_MAC])})
+    device = device_reg.async_get_device(
+        set(), {(dr.CONNECTION_NETWORK_MAC, config[CONF_MAC])}
+    )
     assert device is None
     assert not entity_reg.async_get_entity_id(domain, "tasmota", unique_id)
 
@@ -502,7 +541,7 @@ async def help_test_entity_id_update_subscriptions(
     hass, mqtt_mock, domain, config, topics=None, sensor_config=None, entity_id="test"
 ):
     """Test MQTT subscriptions are managed when entity_id is updated."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
     data = json.dumps(config)
@@ -548,7 +587,7 @@ async def help_test_entity_id_update_discovery_update(
     hass, mqtt_mock, domain, config, sensor_config=None, entity_id="test"
 ):
     """Test MQTT discovery update after entity_id is updated."""
-    entity_reg = await hass.helpers.entity_registry.async_get_registry()
+    entity_reg = er.async_get(hass)
 
     config = copy.deepcopy(config)
     data = json.dumps(config)
@@ -566,10 +605,12 @@ async def help_test_entity_id_update_discovery_update(
         await hass.async_block_till_done()
 
     async_fire_mqtt_message(hass, topic, config_get_state_online(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state != STATE_UNAVAILABLE
 
     async_fire_mqtt_message(hass, topic, config_get_state_offline(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.{entity_id}")
     assert state.state == STATE_UNAVAILABLE
 
@@ -588,5 +629,6 @@ async def help_test_entity_id_update_discovery_update(
 
     topic = get_topic_tele_will(config)
     async_fire_mqtt_message(hass, topic, config_get_state_online(config))
+    await hass.async_block_till_done()
     state = hass.states.get(f"{domain}.milk")
     assert state.state != STATE_UNAVAILABLE

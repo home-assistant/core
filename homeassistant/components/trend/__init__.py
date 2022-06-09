@@ -1,4 +1,6 @@
 """A sensor that monitors trends in other components."""
 
+from homeassistant.const import Platform
+
 DOMAIN = "trend"
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = [Platform.BINARY_SENSOR]

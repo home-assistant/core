@@ -1,57 +1,55 @@
-"""Constant for Plugwise component."""
-DOMAIN = "plugwise"
+"""Constants for Plugwise component."""
+from __future__ import annotations
 
-SENSOR_PLATFORMS = ["sensor", "switch"]
-PLATFORMS_GATEWAY = ["binary_sensor", "climate", "sensor", "switch"]
-PW_TYPE = "plugwise_type"
-GATEWAY = "gateway"
+from datetime import timedelta
+import logging
+from typing import Final
 
-# Sensor mapping
-SENSOR_MAP_DEVICE_CLASS = 2
-SENSOR_MAP_ICON = 3
-SENSOR_MAP_MODEL = 0
-SENSOR_MAP_UOM = 1
+from homeassistant.const import Platform
 
-# Default directives
-DEFAULT_MIN_TEMP = 4
-DEFAULT_MAX_TEMP = 30
-DEFAULT_NAME = "Smile"
-DEFAULT_PORT = 80
-DEFAULT_USERNAME = "smile"
-DEFAULT_SCAN_INTERVAL = {"power": 10, "stretch": 60, "thermostat": 60}
-DEFAULT_TIMEOUT = 60
+DOMAIN: Final = "plugwise"
 
-# Configuration directives
-CONF_BASE = "base"
-CONF_GAS = "gas"
-CONF_MAX_TEMP = "max_temp"
-CONF_MIN_TEMP = "min_temp"
-CONF_POWER = "power"
-CONF_THERMOSTAT = "thermostat"
+LOGGER = logging.getLogger(__package__)
 
-ATTR_ILLUMINANCE = "illuminance"
+API: Final = "api"
+FLOW_SMILE: Final = "smile (Adam/Anna/P1)"
+FLOW_STRETCH: Final = "stretch (Stretch)"
+FLOW_TYPE: Final = "flow_type"
+GATEWAY: Final = "gateway"
+PW_TYPE: Final = "plugwise_type"
+SMILE: Final = "smile"
+STRETCH: Final = "stretch"
+STRETCH_USERNAME: Final = "stretch"
+UNIT_LUMEN: Final = "lm"
 
-UNIT_LUMEN = "lm"
-
-DEVICE_STATE = "device_state"
-
-SCHEDULE_OFF = "false"
-SCHEDULE_ON = "true"
-
-COOL_ICON = "mdi:snowflake"
-FLAME_ICON = "mdi:fire"
-FLOW_OFF_ICON = "mdi:water-pump-off"
-FLOW_ON_ICON = "mdi:water-pump"
-IDLE_ICON = "mdi:circle-off-outline"
-SWITCH_ICON = "mdi:electric-switch"
-NO_NOTIFICATION_ICON = "mdi:mailbox-outline"
-NOTIFICATION_ICON = "mdi:mailbox-up-outline"
-
-COORDINATOR = "coordinator"
-UNDO_UPDATE_LISTENER = "undo_update_listener"
-ZEROCONF_MAP = {
+PLATFORMS_GATEWAY: Final[list[str]] = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.SENSOR,
+    Platform.SELECT,
+    Platform.SWITCH,
+]
+ZEROCONF_MAP: Final[dict[str, str]] = {
     "smile": "P1",
     "smile_thermo": "Anna",
     "smile_open_therm": "Adam",
     "stretch": "Stretch",
 }
+
+# Default directives
+DEFAULT_MAX_TEMP: Final = 30
+DEFAULT_MIN_TEMP: Final = 4
+DEFAULT_PORT: Final = 80
+DEFAULT_SCAN_INTERVAL: Final[dict[str, timedelta]] = {
+    "power": timedelta(seconds=10),
+    "stretch": timedelta(seconds=60),
+    "thermostat": timedelta(seconds=60),
+}
+DEFAULT_USERNAME: Final = "smile"
+
+THERMOSTAT_CLASSES: Final[list[str]] = [
+    "thermostat",
+    "thermostatic_radiator_valve",
+    "zone_thermometer",
+    "zone_thermostat",
+]

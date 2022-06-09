@@ -21,7 +21,6 @@ ATTR_VALUE_TYPE = "value_type"
 ATTR_INTERFACE = "interface"
 ATTR_ERRORCODE = "error"
 ATTR_MESSAGE = "message"
-ATTR_TIME = "time"
 ATTR_UNIQUE_ID = "unique_id"
 ATTR_PARAMSET_KEY = "paramset_key"
 ATTR_PARAMSET = "paramset"
@@ -46,7 +45,9 @@ HM_DEVICE_TYPES = {
         "Switch",
         "SwitchPowermeter",
         "IOSwitch",
+        "IOSwitchNoInhibit",
         "IPSwitch",
+        "IPSwitchRssiDevice",
         "RFSiren",
         "IPSwitchPowermeter",
         "HMWIOSwitch",
@@ -59,7 +60,12 @@ HM_DEVICE_TYPES = {
         "IPMultiIO",
         "IPWSwitch",
         "IOSwitchWireless",
+        "IPSwitchRssiDevice",
         "IPWIODevice",
+        "IPSwitchBattery",
+        "IPMultiIOPCB",
+        "IPGarageSwitch",
+        "IPWHS2",
     ],
     DISCOVER_LIGHTS: [
         "Dimmer",
@@ -75,6 +81,8 @@ HM_DEVICE_TYPES = {
         "SwitchPowermeter",
         "Motion",
         "MotionV2",
+        "MotionIPV2",
+        "MotionIPContactSabotage",
         "RemoteMotion",
         "MotionIP",
         "ThermostatWall",
@@ -109,12 +117,23 @@ HM_DEVICE_TYPES = {
         "IPBrightnessSensor",
         "IPGarage",
         "UniversalSensor",
-        "MotionIPV2",
         "IPMultiIO",
         "IPThermostatWall2",
         "IPRemoteMotionV2",
         "HBUNISenWEA",
         "PresenceIPW",
+        "IPRainSensor",
+        "ValveBox",
+        "IPKeyBlind",
+        "IPKeyBlindTilt",
+        "IPLanRouter",
+        "TempModuleSTE2",
+        "IPMultiIOPCB",
+        "ValveBoxW",
+        "CO2SensorIP",
+        "IPLockDLD",
+        "ParticulateMatterSensorIP",
+        "IPRemoteMotionV2W",
     ],
     DISCOVER_CLIMATE: [
         "Thermostat",
@@ -127,14 +146,18 @@ HM_DEVICE_TYPES = {
         "ThermostatGroup",
         "IPThermostatWall230V",
         "IPThermostatWall2",
+        "IPWThermostatWall",
     ],
     DISCOVER_BINARY_SENSORS: [
         "ShutterContact",
         "Smoke",
         "SmokeV2",
+        "SmokeV2Team",
         "Motion",
         "MotionV2",
         "MotionIP",
+        "MotionIPV2",
+        "MotionIPContactSabotage",
         "RemoteMotion",
         "WeatherSensor",
         "TiltSensor",
@@ -144,11 +167,11 @@ HM_DEVICE_TYPES = {
         "Rain",
         "WiredSensor",
         "PresenceIP",
+        "PresenceIPW",
         "IPWeatherSensor",
         "IPPassageSensor",
         "SmartwareMotion",
         "IPWeatherSensorPlus",
-        "MotionIPV2",
         "WaterIP",
         "IPMultiIO",
         "TiltIP",
@@ -158,6 +181,11 @@ HM_DEVICE_TYPES = {
         "IPWInputDevice",
         "IPWMotionDection",
         "IPAlarmSensor",
+        "IPRainSensor",
+        "IPLanRouter",
+        "IPMultiIOPCB",
+        "IPWHS2",
+        "IPRemoteMotionV2W",
     ],
     DISCOVER_COVER: [
         "Blind",
@@ -181,6 +209,9 @@ HM_IGNORE_DISCOVERY_NODE_EXCEPTIONS = {
         "IPWeatherSensorBasic",
         "IPThermostatWall",
         "IPThermostatWall2",
+        "ParticulateMatterSensorIP",
+        "CO2SensorIP",
+        "TempModuleSTE2",
     ]
 }
 
@@ -205,6 +236,10 @@ HM_ATTRIBUTE_SUPPORT = {
     "OPERATING_VOLTAGE": ["voltage", {}],
     "WORKING": ["working", {0: "No", 1: "Yes"}],
     "STATE_UNCERTAIN": ["state_uncertain", {}],
+    "SENDERID": ["last_senderid", {}],
+    "SENDERADDRESS": ["last_senderaddress", {}],
+    "ERROR_ALARM_TEST": ["error_alarm_test", {0: "No", 1: "Yes"}],
+    "ERROR_SMOKE_CHAMBER": ["error_smoke_chamber", {0: "No", 1: "Yes"}],
 }
 
 HM_PRESS_EVENTS = [
@@ -226,8 +261,6 @@ DATA_CONF = "homematic_conf"
 CONF_INTERFACES = "interfaces"
 CONF_LOCAL_IP = "local_ip"
 CONF_LOCAL_PORT = "local_port"
-CONF_PORT = "port"
-CONF_PATH = "path"
 CONF_CALLBACK_IP = "callback_ip"
 CONF_CALLBACK_PORT = "callback_port"
 CONF_RESOLVENAMES = "resolvenames"

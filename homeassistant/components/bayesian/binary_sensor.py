@@ -1,4 +1,6 @@
 """Use Bayesian Inference to trigger a binary sensor."""
+from __future__ import annotations
+
 from collections import OrderedDict
 import logging
 
@@ -16,10 +18,11 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import callback
-from homeassistant.exceptions import TemplateError
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConditionError, TemplateError
 from homeassistant.helpers import condition
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import (
     TrackTemplate,
     async_track_state_change_event,
@@ -27,6 +30,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.template import result_as_boolean
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, PLATFORMS
 
@@ -107,7 +111,12 @@ def update_probability(prior, prob_given_true, prob_given_false):
     return numerator / denominator
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bayesian Binary sensor."""
     await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
@@ -129,13 +138,15 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
 class BayesianBinarySensor(BinarySensorEntity):
     """Representation of a Bayesian sensor."""
 
+    _attr_should_poll = False
+
     def __init__(self, name, prior, observations, probability_threshold, device_class):
         """Initialize the Bayesian sensor."""
-        self._name = name
+        self._attr_name = name
         self._observations = observations
         self._probability_threshold = probability_threshold
-        self._device_class = device_class
-        self._deviation = False
+        self._attr_device_class = device_class
+        self._attr_is_on = False
         self._callbacks = []
 
         self.prior = prior
@@ -238,12 +249,12 @@ class BayesianBinarySensor(BinarySensorEntity):
 
         self.current_observations.update(self._initialize_current_observations())
         self.probability = self._calculate_new_probability()
-        self._deviation = bool(self.probability >= self._probability_threshold)
+        self._attr_is_on = bool(self.probability >= self._probability_threshold)
 
     @callback
     def _recalculate_and_write_state(self):
         self.probability = self._calculate_new_probability()
-        self._deviation = bool(self.probability >= self._probability_threshold)
+        self._attr_is_on = bool(self.probability >= self._probability_threshold)
         self.async_write_ha_state()
 
     def _initialize_current_observations(self):
@@ -340,45 +351,32 @@ class BayesianBinarySensor(BinarySensorEntity):
         """Return True if numeric condition is met."""
         entity = entity_observation["entity_id"]
 
-        return condition.async_numeric_state(
-            self.hass,
-            entity,
-            entity_observation.get("below"),
-            entity_observation.get("above"),
-            None,
-            entity_observation,
-        )
+        try:
+            return condition.async_numeric_state(
+                self.hass,
+                entity,
+                entity_observation.get("below"),
+                entity_observation.get("above"),
+                None,
+                entity_observation,
+            )
+        except ConditionError:
+            return False
 
     def _process_state(self, entity_observation):
         """Return True if state conditions are met."""
         entity = entity_observation["entity_id"]
 
-        return condition.state(self.hass, entity, entity_observation.get("to_state"))
+        try:
+            return condition.state(
+                self.hass, entity, entity_observation.get("to_state")
+            )
+        except ConditionError:
+            return False
 
     @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if sensor is on."""
-        return self._deviation
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def device_class(self):
-        """Return the sensor class of the sensor."""
-        return self._device_class
-
-    @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes of the sensor."""
-
         attr_observations_list = [
             obs.copy() for obs in self.current_observations.values() if obs is not None
         ]

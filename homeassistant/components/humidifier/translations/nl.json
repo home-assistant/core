@@ -1,10 +1,19 @@
 {
     "device_automation": {
         "action_type": {
+            "set_humidity": "Luchtvochtigheid instellen voor {entity_name}",
+            "set_mode": "Wijzig modus van {entity_name}",
+            "toggle": "Schakel {entity_name}",
             "turn_off": "{entity_name} uitschakelen",
             "turn_on": "{entity_name} inschakelen"
         },
+        "condition_type": {
+            "is_mode": "{entity_name} is ingesteld op een specifieke modus",
+            "is_off": "{entity_name} is uitgeschakeld",
+            "is_on": "{entity_name} is ingeschakeld"
+        },
         "trigger_type": {
+            "changed_states": "{entity_name} in- of uitgeschakeld",
             "target_humidity_changed": "{entity_name} doel luchtvochtigheid gewijzigd",
             "turned_off": "{entity_name} is uitgeschakeld",
             "turned_on": "{entity_name} is ingeschakeld"
@@ -15,5 +24,6 @@
             "off": "Uit",
             "on": "Aan"
         }
-    }
+    },
+    "title": "Luchtbevochtiger"
 }

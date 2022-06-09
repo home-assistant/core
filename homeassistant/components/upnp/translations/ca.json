@@ -9,15 +9,23 @@
             "one": "un",
             "other": "altre"
         },
-        "flow_title": "UPnP/IGD: {name}",
+        "flow_title": "{name}",
         "step": {
             "ssdp_confirm": {
                 "description": "Vols configurar aquest dispositiu UPnP/IGD?"
             },
             "user": {
                 "data": {
-                    "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)",
-                    "usn": "Dispositiu"
+                    "unique_id": "Dispositiu"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval d'actualitzaci\u00f3 (en segons, m\u00ednim 30)"
                 }
             }
         }

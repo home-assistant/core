@@ -5,22 +5,20 @@
             "unknown": "Errore imprevisto"
         },
         "error": {
-            "empty": "Nessun risultato nella ricerca della citt\u00e0: si prega di controllare il campo citt\u00e0"
+            "empty": "Nessun risultato nella ricerca della citt\u00e0: controlla il campo citt\u00e0"
         },
         "step": {
             "cities": {
                 "data": {
                     "city": "Citt\u00e0"
                 },
-                "description": "Scegli la tua citt\u00e0 dall'elenco",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Scegli la tua citt\u00e0 dall'elenco"
             },
             "user": {
                 "data": {
                     "city": "Citt\u00e0"
                 },
-                "description": "Inserisci il codice postale (solo per la Francia, consigliato) o il nome della citt\u00e0",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Inserisci il codice postale (solo per la Francia, consigliato) o il nome della citt\u00e0"
             }
         }
     },

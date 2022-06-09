@@ -1,0 +1,52 @@
+{
+    "config": {
+        "abort": {
+            "already_configured_account": "Kasutaja on juba seadistatud",
+            "ezviz_cloud_account_missing": "Ezvizi pilvekonto puudub. Seadista Ezvizi pilvekonto uuesti",
+            "unknown": "Ootamatu t\u00f5rge"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus",
+            "invalid_auth": "Vigane autentimine",
+            "invalid_host": "Sobimatu hostinimi v\u00f5i IP-aadress"
+        },
+        "flow_title": "{serial}",
+        "step": {
+            "confirm": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "Kasutajanimi"
+                },
+                "description": "Sisesta Ezviz kaamera {serial} IP-ga {ip_address} RTSP mandaat",
+                "title": "Avastati Ezvizi kaamera"
+            },
+            "user": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "url": "URL",
+                    "username": "Kasutajanimi"
+                },
+                "title": "Loo \u00fchendus Ezvizi pilvega"
+            },
+            "user_custom_url": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "url": "URL",
+                    "username": "Kasutajanimi"
+                },
+                "description": "M\u00e4\u00e4ra oma piirkonna URL k\u00e4sitsi",
+                "title": "\u00dchenduse loomine kohandatud Ezvizi URL-iga"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Kaamerate jaoks edastavad argumendid (ffmpeg)",
+                    "timeout": "P\u00e4ringu ajal\u00f5pp (sekundites)"
+                }
+            }
+        }
+    }
+}

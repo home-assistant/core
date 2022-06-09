@@ -1,0 +1,10 @@
+{
+    "state": {
+        "ambee__risk": {
+            "high": "Alto",
+            "low": "Baixo",
+            "moderate": "Moderado",
+            "very high": "Muito alto"
+        }
+    }
+}

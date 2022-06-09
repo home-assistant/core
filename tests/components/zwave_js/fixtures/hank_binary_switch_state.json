@@ -1,0 +1,716 @@
+{
+  "nodeId": 32,
+  "index": 0,
+  "installerIcon": 1792,
+  "userIcon": 1792,
+  "status": 4,
+  "ready": true,
+  "deviceClass": {
+    "basic": { "key": 2, "label": "Static Controller" },
+    "generic": { "key": 16, "label": "Binary Switch" },
+    "specific": { "key": 1, "label": "Binary Power Switch" },
+    "mandatorySupportedCCs": [],
+    "mandatoryControlledCCs": []
+  },
+  "isListening": true,
+  "isFrequentListening": false,
+  "isRouting": true,
+  "maxBaudRate": 40000,
+  "isSecure": false,
+  "version": 4,
+  "isBeaming": true,
+  "manufacturerId": 520,
+  "productId": 5,
+  "productType": 257,
+  "firmwareVersion": "1.5",
+  "zwavePlusVersion": 1,
+  "nodeType": 0,
+  "roleType": 5,
+  "deviceConfig": {
+    "manufacturerId": 520,
+    "manufacturer": "HANK Electronics Ltd.",
+    "label": "HKZW-SO01",
+    "description": "Smart Plug with two USB ports",
+    "devices": [
+      {
+        "productType": "0x0101",
+        "productId": "0x0005"
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "HKZW-SO01",
+  "neighbors": [1, 33, 36, 37, 39, 52],
+  "interviewAttempts": 1,
+  "endpoints": [
+    {
+      "nodeId": 32,
+      "index": 0,
+      "installerIcon": 1792,
+      "userIcon": 1792,
+      "commandClasses": []
+    }
+  ],
+  "values": [
+    {
+      "commandClassName": "Binary Switch",
+      "commandClass": 37,
+      "endpoint": 0,
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value"
+      },
+      "value": false
+    },
+    {
+      "commandClassName": "Binary Switch",
+      "commandClass": 37,
+      "endpoint": 0,
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value"
+      },
+      "value": false
+    },
+    {
+      "commandClassName": "Scene Activation",
+      "commandClass": 43,
+      "endpoint": 0,
+      "property": "sceneId",
+      "propertyName": "sceneId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "min": 1,
+        "max": 255,
+        "label": "Scene ID"
+      }
+    },
+    {
+      "commandClassName": "Scene Activation",
+      "commandClass": 43,
+      "endpoint": 0,
+      "property": "dimmingDuration",
+      "propertyName": "dimmingDuration",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": true,
+        "label": "Dimming duration"
+      }
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "value",
+      "propertyKey": 66049,
+      "propertyName": "value",
+      "propertyKeyName": "W_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Value (Electric, Consumed)",
+        "unit": "W",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 2
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "deltaTime",
+      "propertyKey": 66049,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "W_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Time since the previous reading",
+        "unit": "s",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 2
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "value",
+      "propertyKey": 65537,
+      "propertyName": "value",
+      "propertyKeyName": "kWh_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Value (Electric, Consumed)",
+        "unit": "kWh",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 0
+        }
+      },
+      "value": 0.164
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "previousValue",
+      "propertyKey": 65537,
+      "propertyName": "previousValue",
+      "propertyKeyName": "kWh_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Previous value (Electric, Consumed)",
+        "unit": "kWh",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 0
+        }
+      },
+      "value": 0.164
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "deltaTime",
+      "propertyKey": 65537,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "kWh_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Time since the previous reading",
+        "unit": "s",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 0
+        }
+      },
+      "value": 30
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "value",
+      "propertyKey": 66561,
+      "propertyName": "value",
+      "propertyKeyName": "V_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Value (Electric, Consumed)",
+        "unit": "V",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 4
+        }
+      },
+      "value": 122.963
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "deltaTime",
+      "propertyKey": 66561,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "V_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Time since the previous reading",
+        "unit": "s",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 4
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "value",
+      "propertyKey": 66817,
+      "propertyName": "value",
+      "propertyKeyName": "A_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Value (Electric, Consumed)",
+        "unit": "A",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 5
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "deltaTime",
+      "propertyKey": 66817,
+      "propertyName": "deltaTime",
+      "propertyKeyName": "A_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Time since the previous reading",
+        "unit": "s",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 5
+        }
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "reset",
+      "propertyName": "reset",
+      "metadata": {
+        "type": "boolean",
+        "readable": false,
+        "writeable": true,
+        "label": "Reset accumulated values"
+      }
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "previousValue",
+      "propertyKey": 66049,
+      "propertyName": "previousValue",
+      "propertyKeyName": "W_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Previous value (Electric, Consumed)",
+        "unit": "W",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 2
+        }
+      }
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "previousValue",
+      "propertyKey": 66561,
+      "propertyName": "previousValue",
+      "propertyKeyName": "V_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Previous value (Electric, Consumed)",
+        "unit": "V",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 4
+        }
+      }
+    },
+    {
+      "commandClassName": "Meter",
+      "commandClass": 50,
+      "endpoint": 0,
+      "property": "previousValue",
+      "propertyKey": 66817,
+      "propertyName": "previousValue",
+      "propertyKeyName": "A_Consumed",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Previous value (Electric, Consumed)",
+        "unit": "A",
+        "ccSpecific": {
+          "meterType": 1,
+          "rateType": 1,
+          "scale": 5
+        }
+      }
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 20,
+      "propertyName": "Overload Protection",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Overload Protection",
+        "description": "If current exceeds 16.5A over 5 seconds, relay will turn off.",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 21,
+      "propertyName": "Device Status after Power Failure",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 2,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Device Status after Power Failure",
+        "description": "Define how the plug reacts after power failure",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 24,
+      "propertyName": "Notifcation on Load Change",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 2,
+        "default": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Notifcation on Load Change",
+        "description": "Smart Plug can send notifications to association device load state changes.",
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 27,
+      "propertyName": "Indicator Modes",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 1,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Indicator Modes",
+        "description": "LED in the device will indicate the state of load",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 151,
+      "propertyName": "Threshold of power report",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 2,
+        "min": 0,
+        "max": 65535,
+        "default": 50,
+        "format": 1,
+        "allowManualEntry": true,
+        "label": "Threshold of power report",
+        "description": "Power Threshold at which to send meter report",
+        "isFromConfig": true
+      },
+      "value": 50
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 152,
+      "propertyName": "Percentage Threshold of Power Report",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 1,
+        "min": 0,
+        "max": 255,
+        "default": 10,
+        "format": 1,
+        "allowManualEntry": true,
+        "label": "Percentage Threshold of Power Report",
+        "description": "Percentage Threshold at which to send meter report",
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 171,
+      "propertyName": "Power Report Frequency",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 5,
+        "max": 2678400,
+        "default": 30,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Power Report Frequency",
+        "description": "The interval of sending power report to association device (Group Lifeline).",
+        "isFromConfig": true
+      },
+      "value": 30
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 172,
+      "propertyName": "Energy Report Frequency",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 5,
+        "max": 2678400,
+        "default": 300,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Energy Report Frequency",
+        "description": "The interval of sending energy report to association device (Group Lifeline).",
+        "isFromConfig": true
+      },
+      "value": 300
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 173,
+      "propertyName": "Voltage Report Frequency",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 2678400,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Voltage Report Frequency",
+        "description": "The interval of sending voltage report to association device (Group Lifeline)",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Configuration",
+      "commandClass": 112,
+      "endpoint": 0,
+      "property": 174,
+      "propertyName": "Electricity Report Frequency",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "valueSize": 4,
+        "min": 0,
+        "max": 2678400,
+        "default": 0,
+        "format": 0,
+        "allowManualEntry": true,
+        "label": "Electricity Report Frequency",
+        "description": "Interval for sending electricity report.",
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Manufacturer ID"
+      },
+      "value": 520
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "productType",
+      "propertyName": "productType",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product type"
+      },
+      "value": 257
+    },
+    {
+      "commandClassName": "Manufacturer Specific",
+      "commandClass": 114,
+      "endpoint": 0,
+      "property": "productId",
+      "propertyName": "productId",
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "min": 0,
+        "max": 65535,
+        "label": "Product ID"
+      },
+      "value": 5
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Libary type"
+      },
+      "value": 3
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version"
+      },
+      "value": "4.24"
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions"
+      },
+      "value": ["1.5"]
+    },
+    {
+      "commandClassName": "Version",
+      "commandClass": 134,
+      "endpoint": 0,
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "metadata": {
+        "type": "any",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version"
+      }
+    }
+  ],
+  "isControllerNode": false
+}

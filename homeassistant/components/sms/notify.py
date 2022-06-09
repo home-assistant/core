@@ -1,7 +1,7 @@
 """Support for SMS notification services."""
 import logging
 
-import gammu  # pylint: disable=import-error, no-member
+import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
@@ -46,13 +46,13 @@ class SMSNotificationService(BaseNotificationService):
         """Send SMS message."""
         smsinfo = {
             "Class": -1,
-            "Unicode": False,
+            "Unicode": True,
             "Entries": [{"ID": "ConcatenatedTextLong", "Buffer": message}],
         }
         try:
             # Encode messages
-            encoded = gammu.EncodeSMS(smsinfo)  # pylint: disable=no-member
-        except gammu.GSMError as exc:  # pylint: disable=no-member
+            encoded = gammu.EncodeSMS(smsinfo)
+        except gammu.GSMError as exc:
             _LOGGER.error("Encoding message %s failed: %s", message, exc)
             return
 
@@ -64,5 +64,5 @@ class SMSNotificationService(BaseNotificationService):
             try:
                 # Actually send the message
                 await self.gateway.send_sms_async(encoded_message)
-            except gammu.GSMError as exc:  # pylint: disable=no-member
+            except gammu.GSMError as exc:
                 _LOGGER.error("Sending to %s failed: %s", self.number, exc)

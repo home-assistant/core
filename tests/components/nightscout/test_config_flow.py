@@ -1,12 +1,14 @@
 """Test the Nightscout config flow."""
+from http import HTTPStatus
+from unittest.mock import patch
+
 from aiohttp import ClientConnectionError, ClientResponseError
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nightscout.const import DOMAIN
 from homeassistant.components.nightscout.utils import hash_from_url
 from homeassistant.const import CONF_URL
 
-from tests.async_mock import patch
 from tests.common import MockConfigEntry
 from tests.components.nightscout import (
     GLUCOSE_READINGS,
@@ -19,14 +21,14 @@ CONFIG = {CONF_URL: "https://some.url:1234"}
 
 async def test_form(hass):
     """Test we get the user initiated form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {}
 
-    with _patch_glucose_readings(), _patch_server_status(), _patch_async_setup() as mock_setup, _patch_async_setup_entry() as mock_setup_entry:
+    with _patch_glucose_readings(), _patch_server_status(), _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             CONFIG,
@@ -36,7 +38,6 @@ async def test_form(hass):
         assert result2["title"] == SERVER_STATUS.name  # pylint: disable=maybe-no-member
         assert result2["data"] == CONFIG
         await hass.async_block_till_done()
-        assert len(mock_setup.mock_calls) == 1
         assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -70,7 +71,7 @@ async def test_user_form_api_key_required(hass):
         return_value=SERVER_STATUS_STATUS_ONLY,
     ), patch(
         "homeassistant.components.nightscout.NightscoutAPI.get_sgvs",
-        side_effect=ClientResponseError(None, None, status=401),
+        side_effect=ClientResponseError(None, None, status=HTTPStatus.UNAUTHORIZED),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -113,10 +114,6 @@ async def test_user_form_duplicate(hass):
         )
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
-
-
-def _patch_async_setup():
-    return patch("homeassistant.components.nightscout.async_setup", return_value=True)
 
 
 def _patch_async_setup_entry():

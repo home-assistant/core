@@ -2,6 +2,7 @@
 
 import json
 import os
+from unittest.mock import MagicMock, Mock
 
 from tesla_powerwall import (
     DeviceType,
@@ -13,11 +14,9 @@ from tesla_powerwall import (
     SiteMaster,
 )
 
-from homeassistant.components.powerwall.const import DOMAIN
-from homeassistant.const import CONF_IP_ADDRESS
-
-from tests.async_mock import MagicMock, Mock
 from tests.common import load_fixture
+
+MOCK_GATEWAY_DIN = "111-0----2-000000000FFA"
 
 
 async def _mock_powerwall_with_fixtures(hass):
@@ -33,10 +32,12 @@ async def _mock_powerwall_with_fixtures(hass):
         charge=47.34587394586,
         sitemaster=SiteMaster(sitemaster),
         meters=MetersAggregates(meters),
+        grid_services_active=True,
         grid_status=GridStatus.CONNECTED,
         status=PowerwallStatus(status),
         device_type=DeviceType(device_type["device_type"]),
         serial_numbers=["TG0123456789AB", "TG9876543210BA"],
+        backup_reserve_percentage=15.0,
     )
 
 
@@ -45,10 +46,12 @@ def _mock_powerwall_return_value(
     charge=None,
     sitemaster=None,
     meters=None,
+    grid_services_active=None,
     grid_status=None,
     status=None,
     device_type=None,
     serial_numbers=None,
+    backup_reserve_percentage=None,
 ):
     powerwall_mock = MagicMock(Powerwall("1.2.3.4"))
     powerwall_mock.get_site_info = Mock(return_value=site_info)
@@ -59,6 +62,10 @@ def _mock_powerwall_return_value(
     powerwall_mock.get_status = Mock(return_value=status)
     powerwall_mock.get_device_type = Mock(return_value=device_type)
     powerwall_mock.get_serial_numbers = Mock(return_value=serial_numbers)
+    powerwall_mock.get_backup_reserve_percentage = Mock(
+        return_value=backup_reserve_percentage
+    )
+    powerwall_mock.is_grid_services_active = Mock(return_value=grid_services_active)
 
     return powerwall_mock
 
@@ -70,6 +77,7 @@ async def _mock_powerwall_site_name(hass, site_name):
     # Sets site_info_resp.site_name to return site_name
     site_info_resp.response["site_name"] = site_name
     powerwall_mock.get_site_info = Mock(return_value=site_info_resp)
+    powerwall_mock.get_gateway_din = Mock(return_value=MOCK_GATEWAY_DIN)
 
     return powerwall_mock
 
@@ -85,8 +93,3 @@ async def _async_load_json_fixture(hass, path):
         load_fixture, os.path.join("powerwall", path)
     )
     return json.loads(fixture)
-
-
-def _mock_get_config():
-    """Return a default powerwall config."""
-    return {DOMAIN: {CONF_IP_ADDRESS: "1.2.3.4"}}

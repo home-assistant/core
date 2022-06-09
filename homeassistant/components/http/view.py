@@ -1,8 +1,12 @@
 """Support for views."""
+from __future__ import annotations
+
 import asyncio
+from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 import json
 import logging
-from typing import Any, Callable, List, Optional
+from typing import Any
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
@@ -11,10 +15,11 @@ from aiohttp.web_exceptions import (
     HTTPInternalServerError,
     HTTPUnauthorized,
 )
+from aiohttp.web_urldispatcher import AbstractRoute
 import voluptuous as vol
 
 from homeassistant import exceptions
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK, HTTP_SERVICE_UNAVAILABLE
+from homeassistant.const import CONTENT_TYPE_JSON
 from homeassistant.core import Context, is_callback
 from homeassistant.helpers.json import JSONEncoder
 
@@ -26,8 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 class HomeAssistantView:
     """Base view for all views."""
 
-    url: Optional[str] = None
-    extra_urls: List[str] = []
+    url: str | None = None
+    extra_urls: list[str] = []
     # Views inheriting from this class can override this
     requires_auth = True
     cors_allowed = False
@@ -35,8 +40,7 @@ class HomeAssistantView:
     @staticmethod
     def context(request: web.Request) -> Context:
         """Generate a context from a request."""
-        user = request.get("hass_user")
-        if user is None:
+        if (user := request.get("hass_user")) is None:
             return Context()
 
         return Context(user_id=user.id)
@@ -44,8 +48,8 @@ class HomeAssistantView:
     @staticmethod
     def json(
         result: Any,
-        status_code: int = HTTP_OK,
-        headers: Optional[LooseHeaders] = None,
+        status_code: HTTPStatus | int = HTTPStatus.OK,
+        headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON response."""
         try:
@@ -56,7 +60,7 @@ class HomeAssistantView:
         response = web.Response(
             body=msg,
             content_type=CONTENT_TYPE_JSON,
-            status=status_code,
+            status=int(status_code),
             headers=headers,
         )
         response.enable_compression()
@@ -65,9 +69,9 @@ class HomeAssistantView:
     def json_message(
         self,
         message: str,
-        status_code: int = HTTP_OK,
-        message_code: Optional[str] = None,
-        headers: Optional[LooseHeaders] = None,
+        status_code: HTTPStatus | int = HTTPStatus.OK,
+        message_code: str | None = None,
+        headers: LooseHeaders | None = None,
     ) -> web.Response:
         """Return a JSON message response."""
         data = {"message": message}
@@ -79,12 +83,10 @@ class HomeAssistantView:
         """Register the view with a router."""
         assert self.url is not None, "No url set for view"
         urls = [self.url] + self.extra_urls
-        routes = []
+        routes: list[AbstractRoute] = []
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
-            handler = getattr(self, method, None)
-
-            if not handler:
+            if not (handler := getattr(self, method, None)):
                 continue
 
             handler = request_handler_factory(self, handler)
@@ -92,14 +94,20 @@ class HomeAssistantView:
             for url in urls:
                 routes.append(router.add_route(method, url, handler))
 
-        if not self.cors_allowed:
-            return
+        # Use `get` because CORS middleware is not be loaded in emulated_hue
+        if self.cors_allowed:
+            allow_cors = app.get("allow_all_cors")
+        else:
+            allow_cors = app.get("allow_configured_cors")
 
-        for route in routes:
-            app["allow_cors"](route)
+        if allow_cors:
+            for route in routes:
+                allow_cors(route)
 
 
-def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Callable:
+def request_handler_factory(
+    view: HomeAssistantView, handler: Callable
+) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     assert asyncio.iscoroutinefunction(handler) or is_callback(
         handler
@@ -108,7 +116,7 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""
         if request.app[KEY_HASS].is_stopping:
-            return web.Response(status=HTTP_SERVICE_UNAVAILABLE)
+            return web.Response(status=HTTPStatus.SERVICE_UNAVAILABLE)
 
         authenticated = request.get(KEY_AUTHENTICATED, False)
 
@@ -138,7 +146,7 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
             # The method handler returned a ready-made Response, how nice of it
             return result
 
-        status_code = HTTP_OK
+        status_code = HTTPStatus.OK
 
         if isinstance(result, tuple):
             result, status_code = result
@@ -152,7 +160,7 @@ def request_handler_factory(view: HomeAssistantView, handler: Callable) -> Calla
         else:
             assert (
                 False
-            ), f"Result should be None, string, bytes or Response. Got: {result}"
+            ), f"Result should be None, string, bytes or StreamResponse. Got: {result}"
 
         return web.Response(body=bresult, status=status_code)
 

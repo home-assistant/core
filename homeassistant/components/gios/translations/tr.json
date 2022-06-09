@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+        },
+        "error": {
+            "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "invalid_sensors_data": "Bu \u00f6l\u00e7\u00fcm istasyonu i\u00e7in ge\u00e7ersiz sens\u00f6r verileri.",
+            "wrong_station_id": "\u00d6l\u00e7\u00fcm istasyonunun kimli\u011fi do\u011fru de\u011fil."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Ad",
+                    "station_id": "\u00d6l\u00e7\u00fcm istasyonunun kimli\u011fi"
+                },
+                "title": "GIO\u015a (Polonya \u00c7evre Koruma Ba\u015f M\u00fcfetti\u015fli\u011fi)"
+            }
+        }
+    },
+    "system_health": {
+        "info": {
+            "can_reach_server": "GIO\u015a sunucusuna ula\u015f\u0131n"
+        }
+    }
+}

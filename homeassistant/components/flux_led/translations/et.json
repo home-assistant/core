@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "no_devices_found": "V\u00f5rgust seadmeid ei leitud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine nurjus"
+        },
+        "flow_title": "{model} {id} ({ipaddr})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Kas seadistada {model} {id} ({ipaddr})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Kui j\u00e4tad hosti t\u00fchjaks kasutatakse seadmete leidmiseks avastamist."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "custom_effect_colors": "Kohandatud efekt: Loetelu 1 kuni 16 [R,G,B] v\u00e4rvist. N\u00e4ide: [255,0,255],[60,128,0]",
+                    "custom_effect_speed_pct": "Kohandatud efekt: v\u00e4rvide vahetamise efekti kiirus protsentides.",
+                    "custom_effect_transition": "Kohandatud efekt: v\u00e4rvide vahelise \u00fclemineku t\u00fc\u00fcp.",
+                    "mode": "Valitud heleduse re\u017eiim."
+                }
+            }
+        }
+    }
+}
