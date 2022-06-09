@@ -401,7 +401,10 @@ class SensorEntity(Entity):
                     )
 
                 if value.tzinfo != timezone.utc:
-                    value = value.astimezone(timezone.utc)
+                    try:
+                        value = value.astimezone(timezone.utc)
+                    except OverflowError:
+                        pass
 
                 return value.isoformat(timespec="seconds")
             except (AttributeError, TypeError) as err:
