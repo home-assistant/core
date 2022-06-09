@@ -1,4 +1,6 @@
 """WiZ Platform integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -80,10 +82,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
         )
 
-    async def _async_update() -> None:
+    async def _async_update() -> float | None:
         """Update the WiZ device."""
         try:
             await bulb.updateState()
+            if bulb.power_monitoring is not False:
+                power: float | None = await bulb.get_power()
+                return power
+            return None
         except WIZ_EXCEPTIONS as ex:
             raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
 
