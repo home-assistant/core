@@ -1,4 +1,5 @@
 """Config flow to configure ZWaveMe integration."""
+from __future__ import annotations
 
 import logging
 
@@ -6,7 +7,9 @@ from url_normalize import url_normalize
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.data_entry_flow import FlowResult
 
 from . import helpers
 from .const import DOMAIN
@@ -17,13 +20,15 @@ _LOGGER = logging.getLogger(__name__)
 class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """ZWaveMe integration config flow."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize flow."""
-        self.url = None
-        self.token = None
-        self.uuid = None
+        self.url: str | None = None
+        self.token: str | None = None
+        self.uuid: str | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, str] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user or started with zeroconf."""
         errors = {}
         placeholders = {
@@ -55,6 +60,7 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not self.url.startswith(("ws://", "wss://")):
                 self.url = f"ws://{self.url}"
             self.url = url_normalize(self.url, default_scheme="ws")
+            assert self.url
             if self.uuid is None:
                 self.uuid = await helpers.get_uuid(self.url, self.token)
                 if self.uuid is not None:
@@ -76,7 +82,9 @@ class ZWaveMeConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
         """
         Handle a discovered Z-Wave accessory - get url to pass into user step.
 

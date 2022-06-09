@@ -56,12 +56,12 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         """Return the icon for the switch."""
         return "mdi:timer-off" if self._zone.is_in_permanent_hold() else "mdi:timer"
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
-        self._zone.call_permanent_hold()
+        await self._zone.call_permanent_hold()
         self._signal_zone_update()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable permanent hold."""
-        self._zone.call_return_to_schedule()
+        await self._zone.call_return_to_schedule()
         self._signal_zone_update()

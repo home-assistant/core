@@ -55,7 +55,12 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def shutdown(self) -> None:
         """Close the connection."""
-        if self.recorder_or_dbworker and self._conn and (conn := self._conn.current()):
+        if (
+            self.recorder_or_dbworker
+            and self._conn
+            and hasattr(self._conn, "current")
+            and (conn := self._conn.current())
+        ):
             conn.close()
 
     def dispose(self) -> None:

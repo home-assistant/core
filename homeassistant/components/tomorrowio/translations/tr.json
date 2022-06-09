@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API Anahtar\u0131",
-                    "latitude": "Enlem",
                     "location": "Konum",
-                    "longitude": "Boylam",
                     "name": "Ad"
                 },
                 "description": "API anahtar\u0131 almak i\u00e7in [Tomorrow.io](https://app.tomorrow.io/signup) adresinden kaydolun."

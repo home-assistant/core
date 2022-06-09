@@ -7,6 +7,9 @@
             "disarm": "Avlarma {entity_name}",
             "trigger": "Utl\u00f6sare {entity_name}"
         },
+        "condition_type": {
+            "is_triggered": "har utl\u00f6sts"
+        },
         "trigger_type": {
             "armed_away": "{entity_name} larmad borta",
             "armed_home": "{entity_name} larmad hemma",

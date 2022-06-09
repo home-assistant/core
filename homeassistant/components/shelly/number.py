@@ -81,7 +81,7 @@ async def async_setup_entry(
         return
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,

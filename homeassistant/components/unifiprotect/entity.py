@@ -6,7 +6,9 @@ import logging
 from typing import Any
 
 from pyunifiprotect.data import (
+    NVR,
     Camera,
+    Chime,
     Doorlock,
     Event,
     Light,
@@ -16,7 +18,6 @@ from pyunifiprotect.data import (
     StateType,
     Viewer,
 )
-from pyunifiprotect.data.nvr import NVR
 
 from homeassistant.core import callback
 import homeassistant.helpers.device_registry as dr
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
 from .models import ProtectRequiredKeysMixin
-from .utils import get_nested_attr
+from .utils import async_get_adoptable_devices_by_type, get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +43,7 @@ def _async_device_entities(
 
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_by_types({model_type}):
-        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock))
+        assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         for description in descs:
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)
@@ -75,6 +76,7 @@ def async_all_device_entities(
     sense_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     viewer_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
@@ -84,6 +86,7 @@ def async_all_device_entities(
     sense_descs = list(sense_descs or []) + all_descs
     viewer_descs = list(viewer_descs or []) + all_descs
     lock_descs = list(lock_descs or []) + all_descs
+    chime_descs = list(chime_descs or []) + all_descs
 
     return (
         _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
@@ -91,6 +94,7 @@ def async_all_device_entities(
         + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
         + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
         + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
+        + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
     )
 
 
@@ -149,7 +153,9 @@ class ProtectDeviceEntity(Entity):
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
             assert self.device.model
-            devices = getattr(self.data.api.bootstrap, f"{self.device.model.value}s")
+            devices = async_get_adoptable_devices_by_type(
+                self.data.api, self.device.model
+            )
             self.device = devices[self.device.id]
 
         is_connected = (

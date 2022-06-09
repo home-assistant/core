@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Mengontrol jumlah digit desimal dalam output."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Presisi"
-                },
-                "description": "Presisi mengontrol jumlah digit desimal pada output."
             }
         }
     },

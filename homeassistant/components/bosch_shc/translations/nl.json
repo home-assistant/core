@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -23,7 +23,7 @@
             },
             "reauth_confirm": {
                 "description": "De bosch_shc integratie moet uw account herauthenticeren",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {
@@ -33,6 +33,5 @@
                 "title": "SHC-authenticatieparameters"
             }
         }
-    },
-    "title": "Bosch SHC"
+    }
 }

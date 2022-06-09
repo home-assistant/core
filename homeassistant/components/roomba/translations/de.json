@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "Host"
-                },
-                "description": "W\u00e4hle einen Roomba oder Braava aus.",
-                "title": "Automatisch mit dem Ger\u00e4t verbinden"
-            },
             "link": {
                 "description": "Halte die Home-Taste von {name} gedr\u00fcckt, bis das Ger\u00e4t einen Ton erzeugt (ca. zwei Sekunden) und sende die Best\u00e4tigung innerhalb von 30 Sekunden ab.",
                 "title": "Passwort abrufen"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "Host"
                 },
                 "description": "Es wurde kein Roomba oder Braava in deinem Netzwerk entdeckt.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "Kontinuierlich",
-                    "delay": "Verz\u00f6gerung",
-                    "host": "Host",
-                    "password": "Passwort"
+                    "host": "Host"
                 },
                 "description": "W\u00e4hle einen Roomba oder Braava aus.",
                 "title": "Automatisch mit dem Ger\u00e4t verbinden"

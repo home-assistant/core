@@ -79,7 +79,11 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import TrackTemplate, async_track_template_result
+from homeassistant.helpers.event import (
+    TrackTemplate,
+    async_track_state_change_event,
+    async_track_template_result,
+)
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.service import async_call_from_config
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -202,8 +206,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             depend.append(entity[0])
 
         self.async_on_remove(
-            self.hass.helpers.event.async_track_state_change_event(
-                list(set(depend)), _async_on_dependency_update
+            async_track_state_change_event(
+                self.hass, list(set(depend)), _async_on_dependency_update
             )
         )
 

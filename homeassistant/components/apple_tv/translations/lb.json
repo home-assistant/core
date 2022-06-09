@@ -1,9 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "Apparat ass scho konfigur\u00e9iert",
             "already_in_progress": "Konfiguratioun's Oflaf ass schon am gaang",
-            "invalid_config": "Konfiguratioun fir d\u00ebsen Apparat ass net komplett. Prob\u00e9ier fir et nach emol dob\u00e4i ze setzen.",
             "no_devices_found": "Keng Apparater am Netzwierk fonnt",
             "unknown": "Onerwaarte Feeler"
         },
@@ -55,6 +53,5 @@
                 "description": "Allgemeng Apparat Astellungen konfigur\u00e9ieren"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

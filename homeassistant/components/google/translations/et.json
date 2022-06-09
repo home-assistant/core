@@ -27,5 +27,14 @@
                 "title": "Taastuvasta sidumine"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistanti juurdep\u00e4\u00e4s Google'i kalendrile"
+                }
+            }
+        }
     }
 }

@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 from pyunifiprotect import NotAuthorized, NvrError
-from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect.data import NVR
 
 from homeassistant import config_entries
 from homeassistant.components import dhcp, ssdp

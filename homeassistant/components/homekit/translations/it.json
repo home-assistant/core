@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Avvio automatico (disabilita se stai chiamando manualmente il servizio homekit.start)",
                     "devices": "Dispositivi (Attivatori)"
                 },
                 "description": "Gli interruttori programmabili vengono creati per ogni dispositivo selezionato. Quando si attiva un trigger del dispositivo, HomeKit pu\u00f2 essere configurato per eseguire un'automazione o una scena.",

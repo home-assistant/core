@@ -27,5 +27,14 @@
                 "title": "Autentica nuovamente l'integrazione"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Accesso di Home Assistant a Google Calendar"
+                }
+            }
+        }
     }
 }

@@ -50,8 +50,7 @@
                     "automatic_add": "\uc790\ub3d9 \ucd94\uac00 \ud65c\uc131\ud654\ud558\uae30",
                     "debug": "\ub514\ubc84\uae45 \ud65c\uc131\ud654\ud558\uae30",
                     "device": "\uad6c\uc131\ud560 \uae30\uae30 \uc120\ud0dd\ud558\uae30",
-                    "event_code": "\ucd94\uac00\ud560 \uc774\ubca4\ud2b8 \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694",
-                    "remove_device": "\uc0ad\uc81c\ud560 \uae30\uae30 \uc120\ud0dd\ud558\uae30"
+                    "event_code": "\ucd94\uac00\ud560 \uc774\ubca4\ud2b8 \ucf54\ub4dc\ub97c \uc785\ub825\ud574\uc8fc\uc138\uc694"
                 },
                 "title": "Rfxtrx \uc635\uc158"
             },
@@ -60,11 +59,9 @@
                     "command_off": "\ub044\uae30 \uba85\ub839\uc5d0 \ub300\ud55c \ub370\uc774\ud130 \ube44\ud2b8 \uac12",
                     "command_on": "\ucf1c\uae30 \uba85\ub839\uc5d0 \ub300\ud55c \ub370\uc774\ud130 \ube44\ud2b8 \uac12",
                     "data_bit": "\ub370\uc774\ud130 \ube44\ud2b8 \uc218",
-                    "fire_event": "\uae30\uae30 \uc774\ubca4\ud2b8 \ud65c\uc131\ud654\ud558\uae30",
                     "off_delay": "\uc790\ub3d9 \uaebc\uc9c4 \uc0c1\ud0dc",
                     "off_delay_enabled": "\uc790\ub3d9 \uaebc\uc9c4 \uc0c1\ud0dc(Off Delay) \ud65c\uc131\ud654\ud558\uae30",
                     "replace_device": "\uad50\uccb4\ud560 \uae30\uae30 \uc120\ud0dd\ud558\uae30",
-                    "signal_repetitions": "\uc2e0\ud638 \ubc18\ubcf5 \ud69f\uc218",
                     "venetian_blind_mode": "\ubca0\ub124\uc2dc\uc548 \ube14\ub77c\uc778\ub4dc \ubaa8\ub4dc"
                 },
                 "title": "\uae30\uae30 \uc635\uc158 \uad6c\uc131\ud558\uae30"

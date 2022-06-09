@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Vols comen\u00e7ar la configuraci\u00f3?"
-            },
             "discovery_confirm": {
                 "description": "Vols configurar {name} ({host})?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Adre\u00e7a IP",
-                    "name": "Nom"
+                    "host": "Adre\u00e7a IP"
                 },
                 "description": "Si deixes l'adre\u00e7a IP buida, s'utilitzar\u00e0 el descobriment per cercar dispositius."
             }

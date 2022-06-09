@@ -18,6 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 from .const import (
@@ -32,7 +33,7 @@ from .const import (
 
 async def get_api(hass: HomeAssistant, host: str) -> Freepybox:
     """Get the Freebox API."""
-    freebox_path = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY).path
+    freebox_path = Store(hass, STORAGE_VERSION, STORAGE_KEY).path
 
     if not os.path.exists(freebox_path):
         await hass.async_add_executor_job(os.makedirs, freebox_path)

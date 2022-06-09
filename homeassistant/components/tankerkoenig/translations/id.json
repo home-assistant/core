@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokasi sudah dikonfigurasi"
+            "already_configured": "Lokasi sudah dikonfigurasi",
+            "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
             "invalid_auth": "Autentikasi tidak valid",
             "no_stations": "Tidak dapat menemukan SPBU dalam jangkauan."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Kunci API"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "SPBU"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Interval pembaruan",
-                    "show_on_map": "Tampilkan SPBU di peta"
+                    "show_on_map": "Tampilkan SPBU di peta",
+                    "stations": "SPBU"
                 },
                 "title": "Opsi Tankerkoenig"
             }

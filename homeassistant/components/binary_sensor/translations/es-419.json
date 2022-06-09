@@ -121,10 +121,6 @@
             "off": "No esta cargando",
             "on": "Cargando"
         },
-        "co": {
-            "off": "Despejado",
-            "on": "Detectado"
-        },
         "cold": {
             "off": "Normal",
             "on": "Fr\u00edo"

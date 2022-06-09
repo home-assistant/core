@@ -11,13 +11,6 @@
             "cannot_connect": "Ha fallat la connexi\u00f3"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Contrasenya",
-                    "username": "Nom d'usuari"
-                },
-                "title": "Configuraci\u00f3 d'autenticaci\u00f3"
-            },
             "configure": {
                 "data": {
                     "host": "Amfitri\u00f3",
@@ -40,14 +33,6 @@
                     "host": "Selecciona un dispositiu ONVIF descobert"
                 },
                 "title": "Selecci\u00f3 de dispositiu ONVIF"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "Amfitri\u00f3",
-                    "name": "Nom",
-                    "port": "Port"
-                },
-                "title": "Configura el dispositiu ONVIF"
             },
             "user": {
                 "data": {

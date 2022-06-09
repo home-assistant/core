@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 
 from synology_dsm import SynologyDSM
@@ -98,7 +97,7 @@ class SynoApi:
         self._async_setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
-        await self.async_update()
+        await self.async_update(first_setup=True)
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -251,7 +250,7 @@ class SynoApi:
             # ignore API errors during logout
             pass
 
-    async def async_update(self, now: timedelta | None = None) -> None:
+    async def async_update(self, first_setup: bool = False) -> None:
         """Update function for updating API information."""
         LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._async_setup_api_requests()
@@ -259,14 +258,22 @@ class SynoApi:
             await self._hass.async_add_executor_job(
                 self.dsm.update, self._with_information
             )
-        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            LOGGER.warning(
-                "Connection error during update, fallback by reloading the entry"
-            )
+        except (
+            SynologyDSMLoginFailedException,
+            SynologyDSMRequestException,
+            SynologyDSMAPIErrorException,
+        ) as err:
             LOGGER.debug(
                 "Connection error during update of '%s' with exception: %s",
                 self._entry.unique_id,
                 err,
+            )
+
+            if first_setup:
+                raise err
+
+            LOGGER.warning(
+                "Connection error during update, fallback by reloading the entry"
             )
             await self._hass.config_entries.async_reload(self._entry.entry_id)
             return

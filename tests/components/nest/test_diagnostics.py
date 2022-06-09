@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from google_nest_sdm.exceptions import ApiException, SubscriberException
+from google_nest_sdm.exceptions import SubscriberException
 import pytest
 
 from homeassistant.components.nest.const import DOMAIN
@@ -137,34 +137,6 @@ async def test_setup_susbcriber_failure(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
     assert await get_diagnostics_for_config_entry(hass, hass_client, config_entry) == {}
-
-
-async def test_device_manager_failure(
-    hass,
-    hass_client,
-    config_entry,
-    setup_platform,
-    create_device,
-):
-    """Test configuration error."""
-    create_device.create(raw_data=DEVICE_API_DATA)
-    await setup_platform()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device({(DOMAIN, NEST_DEVICE_ID)})
-    assert device is not None
-
-    with patch(
-        "homeassistant.components.nest.diagnostics._get_nest_devices",
-        side_effect=ApiException("Device manager failure"),
-    ):
-        assert await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        ) == {"error": "Device manager failure"}
-        assert await get_diagnostics_for_device(
-            hass, hass_client, config_entry, device
-        ) == {"error": "Device manager failure"}
 
 
 @pytest.mark.parametrize("nest_test_config", [TEST_CONFIG_LEGACY])

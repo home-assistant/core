@@ -14,9 +14,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "confirm": {
-                "description": "Kas alustan seadistamist?"
-            },
             "discovery_confirm": {
                 "description": "Kas soovid seadistada {name}({host})?"
             },
@@ -27,8 +24,7 @@
             },
             "user": {
                 "data": {
-                    "host": "IP aadress",
-                    "name": "Nimi"
+                    "host": "IP aadress"
                 },
                 "description": "Kui j\u00e4tad IP aadressi t\u00fchjaks kasutatakse seadmete leidmiseks avastamist."
             }

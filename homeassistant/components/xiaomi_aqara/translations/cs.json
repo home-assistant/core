@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "IP adresa"
                 },
-                "description": "Chcete-li p\u0159ipojit dal\u0161\u00ed br\u00e1ny, spus\u0165te znovu instalaci",
-                "title": "Vyberte br\u00e1nu Xiaomi Aqara, kterou chcete p\u0159ipojit"
+                "description": "Chcete-li p\u0159ipojit dal\u0161\u00ed br\u00e1ny, spus\u0165te znovu instalaci"
             },
             "settings": {
                 "data": {
@@ -34,8 +33,7 @@
                     "host": "IP adresa (voliteln\u011b)",
                     "mac": "MAC adresa (voliteln\u00e1)"
                 },
-                "description": "P\u0159ipojte se k va\u0161\u00ed br\u00e1n\u011b Xiaomi Aqara - pokud z\u016fstanou pr\u00e1zdn\u00e9 adresy IP a MAC, pou\u017eije se automatick\u00e9 zji\u0161\u0165ov\u00e1n\u00ed",
-                "title": "Br\u00e1na Xiaomi Aqara"
+                "description": "P\u0159ipojte se k va\u0161\u00ed br\u00e1n\u011b Xiaomi Aqara - pokud z\u016fstanou pr\u00e1zdn\u00e9 adresy IP a MAC, pou\u017eije se automatick\u00e9 zji\u0161\u0165ov\u00e1n\u00ed"
             }
         }
     }

@@ -333,8 +333,8 @@ class PS4Device(MediaPlayerEntity):
         # If cannot get status on startup, assume info from registry.
         if status is None:
             _LOGGER.info("Assuming status from registry")
-            e_registry = await entity_registry.async_get_registry(self.hass)
-            d_registry = await device_registry.async_get_registry(self.hass)
+            e_registry = entity_registry.async_get(self.hass)
+            d_registry = device_registry.async_get(self.hass)
             for entity_id, entry in e_registry.entities.items():
                 if entry.config_entry_id == self._entry_id:
                     self._unique_id = entry.unique_id

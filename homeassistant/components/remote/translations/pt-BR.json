@@ -11,7 +11,6 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} ligado ou desligado",
-            "toggled": "{entity_name} ligado ou desligado",
             "turned_off": "{entity_name} for desligado",
             "turned_on": "{entity_name} for ligado"
         }

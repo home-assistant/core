@@ -2,9 +2,7 @@
     "config": {
         "abort": {
             "invalid_unique_id": "Seadme kehtivat kordumatut ID-d on v\u00f5imatu m\u00e4\u00e4rata",
-            "no_unique_id": "Seade, millel puudub kehtiv kordumatu ID, on juba seadistatud. Mitme eksemplari seadistamine pole v\u00f5imalik",
-            "not_unique_id_exist": "Seade, millel puudub kehtiv kordumatu ID, on juba seadistatud. Mitme eksemplari seadistamine pole v\u00f5imalik",
-            "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
+            "no_unique_id": "Seade, millel puudub kehtiv kordumatu ID, on juba seadistatud. Mitme eksemplari seadistamine pole v\u00f5imalik"
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",

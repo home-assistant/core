@@ -26,21 +26,20 @@ async def async_setup_entry(
     Adds occupancy groups from the Caseta bridge associated with the
     config_entry as binary_sensor entities.
     """
-    entities = []
     data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
     bridge = data[BRIDGE_LEAP]
     bridge_device = data[BRIDGE_DEVICE]
     occupancy_groups = bridge.occupancy_groups
-
-    for occupancy_group in occupancy_groups.values():
-        entity = LutronOccupancySensor(occupancy_group, bridge, bridge_device)
-        entities.append(entity)
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        LutronOccupancySensor(occupancy_group, bridge, bridge_device)
+        for occupancy_group in occupancy_groups.values()
+    )
 
 
 class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     """Representation of a Lutron occupancy group."""
+
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     def __init__(self, device, bridge, bridge_device):
         """Init an occupancy sensor."""
@@ -58,11 +57,6 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
         if area != UNASSIGNED_AREA:
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
-
-    @property
-    def device_class(self):
-        """Flag supported features."""
-        return BinarySensorDeviceClass.OCCUPANCY
 
     @property
     def is_on(self):

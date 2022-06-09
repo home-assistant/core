@@ -10,6 +10,8 @@ import respx
 from homeassistant import config_entries, setup
 from homeassistant.components.generic.const import DOMAIN
 
+from tests.common import MockConfigEntry
+
 
 @pytest.fixture(scope="package")
 def fakeimgbytes_png():
@@ -79,3 +81,36 @@ async def user_flow(hass):
     assert result["errors"] == {}
 
     return result
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture(hass):
+    """Define a config entry fixture."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Test Camera",
+        unique_id="abc123",
+        data={},
+        options={
+            "still_image_url": "http://joebloggs:letmein1@example.com/secret1/file.jpg?pw=qwerty",
+            "stream_source": "http://janebloggs:letmein2@example.com/stream",
+            "username": "johnbloggs",
+            "password": "letmein123",
+            "limit_refetch_to_url_change": False,
+            "authentication": "basic",
+            "framerate": 2.0,
+            "verify_ssl": True,
+            "content_type": "image/jpeg",
+        },
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    return entry
+
+
+@pytest.fixture
+async def setup_entry(hass, config_entry):
+    """Set up a config entry ready to be used in tests."""
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    return config_entry

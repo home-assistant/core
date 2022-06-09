@@ -36,7 +36,7 @@ async def async_setup_platform(
     entities = []
     for user in eight.users.values():
         entities.append(
-            EightHeatSensor(heat_coordinator, eight, user.userid, "bed_presence")
+            EightHeatSensor(heat_coordinator, eight, user.user_id, "bed_presence")
         )
 
     async_add_entities(entities)
@@ -44,6 +44,8 @@ async def async_setup_platform(
 
 class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     """Representation of a Eight Sleep heat-based sensor."""
+
+    _attr_device_class = BinarySensorDeviceClass.OCCUPANCY
 
     def __init__(
         self,
@@ -54,7 +56,6 @@ class EightHeatSensor(EightSleepBaseEntity, BinarySensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, eight, user_id, sensor)
-        self._attr_device_class = BinarySensorDeviceClass.OCCUPANCY
         assert self._user_obj
         _LOGGER.debug(
             "Presence Sensor: %s, Side: %s, User: %s",

@@ -271,7 +271,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key=obis_references.BELGIUM_HOURLY_GAS_METER_READING,
+        key=obis_references.BELGIUM_5MIN_GAS_METER_READING,
         name="Gas Consumption",
         dsmr_versions={"5B"},
         is_gas=True,

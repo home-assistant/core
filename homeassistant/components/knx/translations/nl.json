@@ -1,8 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk."
+            "already_configured": "Dienst is al geconfigureerd",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk."
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
-                    "individual_address": "Individueel adres voor de verbinding",
                     "local_ip": "Lokale IP van Home Assistant",
                     "port": "Poort",
-                    "route_back": "Route Back / NAT Mode",
                     "tunneling_type": "KNX Tunneling Type"
                 },
                 "data_description": {
@@ -110,9 +108,7 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "Lokaal IP (laat leeg indien niet zeker)",
                     "port": "Poort",
-                    "route_back": "Route Back / NAT Mode",
                     "tunneling_type": "KNX Tunneling Type"
                 },
                 "data_description": {

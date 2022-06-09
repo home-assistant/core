@@ -7,16 +7,19 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Light
-from pyunifiprotect.data.devices import LCDMessage, Viewer
-from pyunifiprotect.data.nvr import DoorbellMessage, Liveview
-from pyunifiprotect.data.types import (
+from pyunifiprotect.data import (
+    Camera,
     DoorbellMessageType,
     IRLEDMode,
+    LCDMessage,
+    Light,
     LightModeEnableType,
     LightModeType,
+    Liveview,
     RecordingMode,
+    Viewer,
 )
+from pyunifiprotect.data.nvr import DoorbellMessage
 
 from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.components.unifiprotect.const import (

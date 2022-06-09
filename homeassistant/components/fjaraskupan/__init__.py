@@ -9,7 +9,7 @@ import logging
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
-from fjaraskupan import UUID_SERVICE, Device, State, device_filter
+from fjaraskupan import Device, State, device_filter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -20,7 +20,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DISPATCH_DETECTION, DOMAIN
 
@@ -35,13 +35,48 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class DeviceState:
-    """Store state of a device."""
+class Coordinator(DataUpdateCoordinator[State]):
+    """Update coordinator for each device."""
 
-    device: Device
-    coordinator: DataUpdateCoordinator[State]
-    device_info: DeviceInfo
+    def __init__(
+        self, hass: HomeAssistant, device: Device, device_info: DeviceInfo
+    ) -> None:
+        """Initialize the coordinator."""
+        self.device = device
+        self.device_info = device_info
+        self._refresh_was_scheduled = False
+
+        super().__init__(
+            hass, _LOGGER, name="Fjäråskupan", update_interval=timedelta(seconds=120)
+        )
+
+    async def _async_refresh(
+        self,
+        log_failures: bool = True,
+        raise_on_auth_failed: bool = False,
+        scheduled: bool = False,
+    ) -> None:
+        self._refresh_was_scheduled = scheduled
+        await super()._async_refresh(
+            log_failures=log_failures,
+            raise_on_auth_failed=raise_on_auth_failed,
+            scheduled=scheduled,
+        )
+
+    async def _async_update_data(self) -> State:
+        """Handle an explicit update request."""
+        if self._refresh_was_scheduled:
+            raise UpdateFailed("No data received within schedule.")
+
+        await self.device.update()
+        return self.device.state
+
+    def detection_callback(
+        self, ble_device: BLEDevice, advertisement_data: AdvertisementData
+    ) -> None:
+        """Handle a new announcement of data."""
+        self.device.detection_callback(ble_device, advertisement_data)
+        self.async_set_updated_data(self.device.state)
 
 
 @dataclass
@@ -49,13 +84,13 @@ class EntryState:
     """Store state of config entry."""
 
     scanner: BleakScanner
-    devices: dict[str, DeviceState]
+    coordinators: dict[str, Coordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Fjäråskupan from a config entry."""
 
-    scanner = BleakScanner(filters={"UUIDs": [str(UUID_SERVICE)]})
+    scanner = BleakScanner(filters={"DuplicateData": True})
 
     state = EntryState(scanner, {})
     hass.data.setdefault(DOMAIN, {})
@@ -64,13 +99,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def detection_callback(
         ble_device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
-        if data := state.devices.get(ble_device.address):
+        if data := state.coordinators.get(ble_device.address):
             _LOGGER.debug(
                 "Update: %s %s - %s", ble_device.name, ble_device, advertisement_data
             )
 
-            data.device.detection_callback(ble_device, advertisement_data)
-            data.coordinator.async_set_updated_data(data.device.state)
+            data.detection_callback(ble_device, advertisement_data)
         else:
             if not device_filter(ble_device, advertisement_data):
                 return
@@ -80,31 +114,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
             device = Device(ble_device)
-            device.detection_callback(ble_device, advertisement_data)
-
-            async def async_update_data():
-                """Handle an explicit update request."""
-                await device.update()
-                return device.state
-
-            coordinator: DataUpdateCoordinator[State] = DataUpdateCoordinator(
-                hass,
-                logger=_LOGGER,
-                name="Fjaraskupan Updater",
-                update_interval=timedelta(seconds=120),
-                update_method=async_update_data,
-            )
-            coordinator.async_set_updated_data(device.state)
-
             device_info = DeviceInfo(
                 identifiers={(DOMAIN, ble_device.address)},
                 manufacturer="Fjäråskupan",
                 name="Fjäråskupan",
             )
-            device_state = DeviceState(device, coordinator, device_info)
-            state.devices[ble_device.address] = device_state
+
+            coordinator: Coordinator = Coordinator(hass, device, device_info)
+            coordinator.detection_callback(ble_device, advertisement_data)
+
+            state.coordinators[ble_device.address] = coordinator
             async_dispatcher_send(
-                hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", device_state
+                hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", coordinator
             )
 
     scanner.register_detection_callback(detection_callback)
@@ -119,20 +140,20 @@ def async_setup_entry_platform(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    constructor: Callable[[DeviceState], list[Entity]],
+    constructor: Callable[[Coordinator], list[Entity]],
 ) -> None:
     """Set up a platform with added entities."""
 
     entry_state: EntryState = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         entity
-        for device_state in entry_state.devices.values()
-        for entity in constructor(device_state)
+        for coordinator in entry_state.coordinators.values()
+        for entity in constructor(coordinator)
     )
 
     @callback
-    def _detection(device_state: DeviceState) -> None:
-        async_add_entities(constructor(device_state))
+    def _detection(coordinator: Coordinator) -> None:
+        async_add_entities(constructor(coordinator))
 
     entry.async_on_unload(
         async_dispatcher_connect(
