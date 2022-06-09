@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Post\u0119puj zgodnie z [instrukcjami]( {more_info_url} ) na [ekran akceptacji OAuth]( {oauth_consent_url} ), aby przyzna\u0107 Home Assistantowi dost\u0119p do Twojego Kalendarza Google. Musisz r\u00f3wnie\u017c utworzy\u0107 po\u015bwiadczenia aplikacji po\u0142\u0105czone z Twoim kalendarzem:\n1. Przejd\u017a do [Po\u015bwiadczenia]( {oauth_creds_url} ) i kliknij **Utw\u00f3rz po\u015bwiadczenia**.\n2. Z listy rozwijanej wybierz **ID klienta OAuth**.\n3. Wybierz **TV i urz\u0105dzenia z ograniczonym wej\u015bciem** jako typ aplikacji.\n\n"
+    },
     "config": {
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
