@@ -171,3 +171,16 @@ class IASZone(BinarySensor):
         value = await self._channel.get_attribute_value("zone_status")
         if value is not None:
             self._state = value & 3
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class FrostLock(BinarySensor, id_suffix="frost_lock"):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "frost_lock"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK

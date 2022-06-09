@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
 from pytest import MonkeyPatch
@@ -16,6 +16,7 @@ from tests.common import async_fire_time_changed
 
 async def test_binary_sensor(
     hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
     load_int: ConfigEntry,
     monkeypatch: MonkeyPatch,
     get_data: SensiboData,
@@ -26,10 +27,20 @@ async def test_binary_sensor(
     state2 = hass.states.get("binary_sensor.hallway_motion_sensor_main_sensor")
     state3 = hass.states.get("binary_sensor.hallway_motion_sensor_motion")
     state4 = hass.states.get("binary_sensor.hallway_room_occupied")
+    state5 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
+    state6 = hass.states.get(
+        "binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality"
+    )
+    state7 = hass.states.get(
+        "binary_sensor.kitchen_pure_boost_linked_with_outdoor_air_quality"
+    )
     assert state1.state == "on"
     assert state2.state == "on"
     assert state3.state == "on"
     assert state4.state == "on"
+    assert state5.state == "off"
+    assert state6.state == "on"
+    assert state7.state == "off"
 
     monkeypatch.setattr(
         get_data.parsed["ABC999111"].motion_sensors["AABBCC"], "alive", False

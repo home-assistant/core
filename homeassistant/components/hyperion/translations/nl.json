@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd",
+            "already_configured": "Dienst is al geconfigureerd",
             "already_in_progress": "De configuratie is momenteel al bezig",
             "auth_new_token_not_granted_error": "Nieuw aangemaakte token is niet goedgekeurd in Hyperion UI",
             "auth_new_token_not_work_error": "Verificatie met nieuw aangemaakt token mislukt",

@@ -28,6 +28,7 @@ from withings_api.common import (
 )
 
 from homeassistant.components import webhook
+from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -45,7 +46,6 @@ from homeassistant.helpers import config_entry_oauth2_flow, entity_registry as e
 from homeassistant.helpers.config_entry_oauth2_flow import (
     AUTH_CALLBACK_PATH,
     AbstractOAuth2Implementation,
-    LocalOAuth2Implementation,
     OAuth2Session,
 )
 from homeassistant.helpers.entity import Entity
@@ -1106,7 +1106,7 @@ def get_platform_attributes(platform: str) -> tuple[WithingsAttribute, ...]:
     )
 
 
-class WithingsLocalOAuth2Implementation(LocalOAuth2Implementation):
+class WithingsLocalOAuth2Implementation(AuthImplementation):
     """Oauth2 implementation that only uses the external url."""
 
     @property

@@ -18,7 +18,7 @@
             },
             "reauth_confirm": {
                 "description": "De yolink-integratie moet opnieuw inloggen bij uw account",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
         }
     }

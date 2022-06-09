@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.here_travel_time.config_flow import default_options
 from homeassistant.components.here_travel_time.const import (
     CONF_DESTINATION_LATITUDE,
     CONF_DESTINATION_LONGITUDE,
@@ -39,6 +40,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             CONF_MODE: TRAVEL_MODE_CAR,
             CONF_NAME: "test",
         },
+        options=default_options(hass),
     )
     entry.add_to_hass(hass)
 

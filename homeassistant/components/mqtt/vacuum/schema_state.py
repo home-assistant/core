@@ -4,6 +4,7 @@ import json
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
+    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     STATE_CLEANING,
     STATE_DOCKED,
@@ -22,7 +23,7 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
 from .. import subscription
-from ... import mqtt
+from ..config import MQTT_BASE_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -31,7 +32,8 @@ from ..const import (
     CONF_STATE_TOPIC,
 )
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
+from ..util import valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -103,8 +105,8 @@ DEFAULT_PAYLOAD_LOCATE = "locate"
 DEFAULT_PAYLOAD_START = "start"
 DEFAULT_PAYLOAD_PAUSE = "pause"
 
-PLATFORM_SCHEMA_STATE = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_STATE_MODERN = (
+    MQTT_BASE_SCHEMA.extend(
         {
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
@@ -122,13 +124,13 @@ PLATFORM_SCHEMA_STATE = (
             vol.Optional(CONF_PAYLOAD_START, default=DEFAULT_PAYLOAD_START): cv.string,
             vol.Optional(CONF_PAYLOAD_PAUSE, default=DEFAULT_PAYLOAD_PAUSE): cv.string,
             vol.Optional(CONF_PAYLOAD_STOP, default=DEFAULT_PAYLOAD_STOP): cv.string,
-            vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_STATE_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_STATE_TOPIC): valid_publish_topic,
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
             ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
@@ -136,8 +138,13 @@ PLATFORM_SCHEMA_STATE = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
+# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA_STATE = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_STATE_MODERN.schema),
+    warn_for_legacy_schema(VACUUM_DOMAIN),
+)
 
-DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA_STATE = PLATFORM_SCHEMA_STATE_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entity_state(
@@ -172,7 +179,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
             supported_feature_strings, STRING_TO_SERVICE
         )
         self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
-        self._command_topic = config.get(mqtt.CONF_COMMAND_TOPIC)
+        self._command_topic = config.get(CONF_COMMAND_TOPIC)
         self._set_fan_speed_topic = config.get(CONF_SET_FAN_SPEED_TOPIC)
         self._send_command_topic = config.get(CONF_SEND_COMMAND_TOPIC)
 

@@ -45,6 +45,7 @@ from .const import (
 )
 from .helpers import _categorize_nodes, _categorize_programs, _categorize_variables
 from .services import async_setup_services, async_unload_services
+from .util import unique_ids_for_config_entry_id
 
 CONFIG_SCHEMA = vol.Schema(
     {
@@ -296,3 +297,15 @@ async def async_unload_entry(
     async_unload_services(hass)
 
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    device_entry: dr.DeviceEntry,
+) -> bool:
+    """Remove isy994 config entry from a device."""
+    return not device_entry.identifiers.intersection(
+        (DOMAIN, unique_id)
+        for unique_id in unique_ids_for_config_entry_id(hass, config_entry.entry_id)
+    )

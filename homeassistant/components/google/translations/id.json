@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Akun sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
-            "code_expired": "Kode autentikasi kedaluwarsa atau penyiapan kredensial tidak valid, silakan coba lagi.",
+            "code_expired": "Kode autentikasi kedaluwarsa atau penyiapan kredensial tidak valid, coba lagi.",
             "invalid_access_token": "Token akses tidak valid",
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
             "oauth_error": "Menerima respons token yang tidak valid.",
@@ -25,6 +25,15 @@
             "reauth_confirm": {
                 "description": "Integrasi Google Kalender perlu mengautentikasi ulang akun Anda",
                 "title": "Autentikasi Ulang Integrasi"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Akses Home Assistant ke Google Kalender"
+                }
             }
         }
     }

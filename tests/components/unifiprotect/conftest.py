@@ -67,6 +67,19 @@ class MockBootstrap:
         """Fake process method for tests."""
         pass
 
+    def unifi_dict(self) -> dict[str, Any]:
+        """Return UniFi formatted dict representation of the NVR."""
+        return {
+            "nvr": self.nvr.unifi_dict(),
+            "cameras": [c.unifi_dict() for c in self.cameras.values()],
+            "lights": [c.unifi_dict() for c in self.lights.values()],
+            "sensors": [c.unifi_dict() for c in self.sensors.values()],
+            "viewers": [c.unifi_dict() for c in self.viewers.values()],
+            "liveviews": [c.unifi_dict() for c in self.liveviews.values()],
+            "doorlocks": [c.unifi_dict() for c in self.doorlocks.values()],
+            "chimes": [c.unifi_dict() for c in self.chimes.values()],
+        }
+
 
 @dataclass
 class MockEntityFixture:

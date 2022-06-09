@@ -15,6 +15,7 @@
             "stream_no_video": "Stream har ingen video",
             "stream_not_permitted": "Operasjon er ikke tillatt mens du pr\u00f8ver \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
             "stream_unauthorised": "Autorisasjonen mislyktes under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8mmen",
+            "template_error": "Feil ved gjengivelse av mal. Se gjennom loggen for mer informasjon.",
             "timeout": "Tidsavbrudd under innlasting av URL",
             "unable_still_load": "Kan ikke laste inn gyldig bilde fra URL-adresse for stillbilde (f.eks. ugyldig verts-, URL- eller godkjenningsfeil).  Se gjennom loggen hvis du vil ha mer informasjon.",
             "unknown": "Uventet feil"
@@ -57,6 +58,7 @@
             "stream_no_video": "Stream har ingen video",
             "stream_not_permitted": "Operasjon er ikke tillatt mens du pr\u00f8ver \u00e5 koble til str\u00f8m. Feil RTSP-transportprotokoll?",
             "stream_unauthorised": "Autorisasjonen mislyktes under fors\u00f8k p\u00e5 \u00e5 koble til str\u00f8mmen",
+            "template_error": "Feil ved gjengivelse av mal. Se gjennom loggen for mer informasjon.",
             "timeout": "Tidsavbrudd under innlasting av URL",
             "unable_still_load": "Kan ikke laste inn gyldig bilde fra URL-adresse for stillbilde (f.eks. ugyldig verts-, URL- eller godkjenningsfeil).  Se gjennom loggen hvis du vil ha mer informasjon.",
             "unknown": "Uventet feil"

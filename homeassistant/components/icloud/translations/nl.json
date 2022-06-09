@@ -16,7 +16,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Uw eerder ingevoerde wachtwoord voor {username} werkt niet meer. Update uw wachtwoord om deze integratie te blijven gebruiken.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "trusted_device": {
                 "data": {

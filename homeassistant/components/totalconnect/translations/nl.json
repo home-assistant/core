@@ -19,13 +19,20 @@
             },
             "reauth_confirm": {
                 "description": "Total Connect moet uw account opnieuw verifi\u00ebren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {
                     "password": "Wachtwoord",
                     "username": "Gebruikersnaam"
                 }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "TotalConnect-opties"
             }
         }
     }

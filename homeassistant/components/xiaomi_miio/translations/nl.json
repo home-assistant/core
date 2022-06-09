@@ -40,7 +40,7 @@
             },
             "reauth_confirm": {
                 "description": "De Xiaomi Miio-integratie moet uw account opnieuw verifi\u00ebren om de tokens bij te werken of ontbrekende cloudreferenties toe te voegen.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "select": {
                 "data": {

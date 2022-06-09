@@ -14,7 +14,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Voer het wachtwoord voor {username} opnieuw in.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

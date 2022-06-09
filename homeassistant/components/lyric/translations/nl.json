@@ -14,7 +14,7 @@
             },
             "reauth_confirm": {
                 "description": "De Lyric-integratie moet uw account opnieuw verifi\u00ebren.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
         }
     }
