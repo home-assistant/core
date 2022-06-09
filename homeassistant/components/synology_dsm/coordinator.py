@@ -34,7 +34,7 @@ class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
         api: SynoApi,
         update_interval: timedelta,
     ) -> None:
-        """Initialize DataUpdateCoordinator for cameras."""
+        """Initialize synology_dsm DataUpdateCoordinator."""
         self.api = api
         self.entry = entry
         super().__init__(
