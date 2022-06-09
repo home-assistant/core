@@ -364,7 +364,6 @@ class NestFlowHandler(
             ),
             description_placeholders={
                 "device_access_console_url": DEVICE_ACCESS_CONSOLE_URL,
-                #                "oauth_client_id": self._data[CONF_CLIENT_ID],
                 "more_info_url": MORE_INFO_URL,
             },
             errors=errors,
