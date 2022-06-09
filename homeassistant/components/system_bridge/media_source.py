@@ -28,17 +28,18 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up SystemBridge media source."""
-    entry: ConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
-    coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    return SystemBridgeSource(
-        hass,
-        coordinator,
-        entry.title,
-        entry.data[CONF_HOST],
-        entry.data[CONF_PORT],
-        entry.data[CONF_API_KEY],
-    )
-
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.entry_id is not None:
+            coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN].get(entry.entry_id)
+            if coordinator is not None:
+                return SystemBridgeSource(
+                    hass,
+                    coordinator,
+                    entry.title,
+                    entry.data[CONF_HOST],
+                    entry.data[CONF_PORT],
+                    entry.data[CONF_API_KEY],
+                )
 
 class SystemBridgeSource(MediaSource):
     """Provide System Bridge media files as a media source."""
