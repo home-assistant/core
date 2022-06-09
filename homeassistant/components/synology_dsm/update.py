@@ -7,14 +7,14 @@ from typing import Final
 from synology_dsm.api.core.upgrade import SynoCoreUpgrade
 from yarl import URL
 
+from homeassistant.components.synology_dsm.models import SynologyDSMData
 from homeassistant.components.update import UpdateEntity, UpdateEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SynoApi
-from .const import COORDINATOR_CENTRAL, DOMAIN, SYNO_API
+from .const import DOMAIN
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 
@@ -39,12 +39,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Synology DSM update entities."""
-    data = hass.data[DOMAIN][entry.unique_id]
-    api: SynoApi = data[SYNO_API]
-    coordinator = data[COORDINATOR_CENTRAL]
-
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     async_add_entities(
-        SynoDSMUpdateEntity(api, coordinator, description)
+        SynoDSMUpdateEntity(data.api, data.coordinator_central, description)
         for description in UPDATE_ENTITIES
     )
 
