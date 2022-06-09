@@ -1,11 +1,23 @@
 """Test the Raspberry Pi integration."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.raspberry_pi.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+
+
+@pytest.fixture(autouse=True)
+def mock_rpi_power():
+    """Mock the rpi_power integration."""
+    with patch(
+        "homeassistant.components.rpi_power.async_setup_entry",
+        return_value=True,
+    ):
+        yield
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
@@ -23,10 +35,18 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.raspberry_pi.get_os_info",
         return_value={"board": "rpi"},
-    ) as mock_get_os_info:
+    ) as mock_get_os_info, patch(
+        "homeassistant.components.rpi_power.config_flow._async_supported",
+        return_value=True,
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(mock_get_os_info.mock_calls) == 1
+
+    rpi_power_config_entry = hass.config_entries.async_entries("rpi_power")[0]
+    assert rpi_power_config_entry.data == {}
+    assert rpi_power_config_entry.options == {}
+    assert rpi_power_config_entry.title == "Raspberry Pi Power Supply Checker"
 
 
 async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
