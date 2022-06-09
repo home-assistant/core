@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to gather data for a synology_dsm cameras."""
+    """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(
         self,
