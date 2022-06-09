@@ -1,23 +1,11 @@
 """Test the Home Assistant Yellow integration."""
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
-
-
-@pytest.fixture(autouse=True)
-def mock_zha():
-    """Mock the zha integration."""
-    with patch(
-        "homeassistant.components.zha.async_setup_entry",
-        return_value=True,
-    ):
-        yield
 
 
 async def test_setup_entry(hass: HomeAssistant) -> None:
