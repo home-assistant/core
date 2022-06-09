@@ -32,21 +32,18 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         title="Raspberry Pi",
     )
     config_entry.add_to_hass(hass)
+    assert not hass.config_entries.async_entries("rpi_power")
     with patch(
         "homeassistant.components.raspberry_pi.get_os_info",
         return_value={"board": "rpi"},
     ) as mock_get_os_info, patch(
-        "homeassistant.components.rpi_power.config_flow._async_supported",
-        return_value=True,
+        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(mock_get_os_info.mock_calls) == 1
 
-    rpi_power_config_entry = hass.config_entries.async_entries("rpi_power")[0]
-    assert rpi_power_config_entry.data == {}
-    assert rpi_power_config_entry.options == {}
-    assert rpi_power_config_entry.title == "Raspberry Pi Power Supply Checker"
+    assert len(hass.config_entries.async_entries("rpi_power")) == 1
 
 
 async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
