@@ -1,7 +1,5 @@
 """OAuth implementations."""
 
-import logging
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -11,8 +9,6 @@ from .const import (
     OOB_REDIRECT_URI,
     WEB_AUTH_DOMAIN,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class WebAuth(config_entry_oauth2_flow.LocalOAuth2Implementation):
