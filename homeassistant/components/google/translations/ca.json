@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Segueix les [instruccions]({more_info_url}) de [la pantalla de consentiment OAuth]({oauth_consent_url}) perqu\u00e8 Home Assistant tingui acc\u00e9s al teu calendari de Google. Tamb\u00e9 has de crear les credencials d'aplicaci\u00f3 enlla\u00e7ades al calendari:\n 1. V\u00e9s a [Credencials]({oauth_creds_url}) i fes clic a **Crear credencials**.\n 2 A la llista desplegable, selecciona **ID de client OAuth**.\n 3. Selecciona **Dispositius TV i d'entrada limitada** al tipus d'aplicaci\u00f3.\n \n "
+    },
     "config": {
         "abort": {
             "already_configured": "El compte ja est\u00e0 configurat",
