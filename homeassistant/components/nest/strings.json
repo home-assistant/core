@@ -3,7 +3,7 @@
     "step": {
       "create_cloud_project": {
         "title": "Nest: Create and configure Cloud Project",
-        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a time US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, click **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then click **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and click **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and click **Enable**.\n\nProceed when your cloud project is set up."
+        "description": "The Nest integration allows you to integrate your Nest Thermostats, Cameras, and Doorbells using the Smart Device Management API. The SDM API **requires a US $5** one time setup fee. See documentation for [more info]({more_info_url}).\n\n1. Go to the [Google Cloud Console]({cloud_console_url}).\n1. If this is your first project, click **Create Project** then **New Project**.\n1. Give your Cloud Project a Name and then click **Create**.\n1. Save the Cloud Project ID e.g. *example-project-12345* as you will need it later\n1. Go to API Library for [Smart Device Management API]({sdm_api_url}) and click **Enable**.\n1. Go to API Library for [Cloud Pub/Sub API]({pubsub_api_url}) and click **Enable**.\n\nProceed when your cloud project is set up."
       },
       "cloud_project": {
         "title": "Nest: Enter Cloud Project ID",
