@@ -498,7 +498,7 @@ class EntityPlatform:
                 requested_entity_id = entity.entity_id
                 suggested_object_id = split_entity_id(entity.entity_id)[1]
             else:
-                if device and entity.modern_name:  # type: ignore[unreachable]
+                if device and entity.has_entity_name:  # type: ignore[unreachable]
                     device_name = device.name_by_user or device.name
                     if not entity.name:
                         suggested_object_id = device_name

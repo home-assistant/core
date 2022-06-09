@@ -221,7 +221,7 @@ class EntityDescription:
     entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
-    modern_name: bool = False
+    has_entity_name: bool = False
     name: str | None = None
     unit_of_measurement: str | None = None
 
@@ -278,7 +278,7 @@ class Entity(ABC):
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
-    _attr_modern_name: bool
+    _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -306,12 +306,12 @@ class Entity(ABC):
         return self._attr_unique_id
 
     @property
-    def modern_name(self) -> bool:
+    def has_entity_name(self) -> bool:
         """Return if the name of the entity is describing only the entity itself."""
-        if hasattr(self, "_attr_modern_name"):
-            return self._attr_modern_name
+        if hasattr(self, "_attr_has_entity_name"):
+            return self._attr_has_entity_name
         if hasattr(self, "entity_description"):
-            return self.entity_description.modern_name
+            return self.entity_description.has_entity_name
         return False
 
     @property
@@ -597,10 +597,10 @@ class Entity(ABC):
         def friendly_name() -> str | None:
             """Return the friendly name.
 
-            If modern_name is False, this returns self.name
-            If modern_name is True, this returns device.name + self.name
+            If has_entity_name is False, this returns self.name
+            If has_entity_name is True, this returns device.name + self.name
             """
-            if not self.modern_name or not self.registry_entry:
+            if not self.has_entity_name or not self.registry_entry:
                 return self.name
 
             device_registry = dr.async_get(self.hass)

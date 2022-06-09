@@ -891,7 +891,7 @@ async def test_entity_description_fallback():
 
 
 @pytest.mark.parametrize(
-    "modern_name, entity_name, expected_friendly_name",
+    "has_entity_name, entity_name, expected_friendly_name",
     (
         (False, "Entity Blu", "Entity Blu"),
         (False, None, None),
@@ -899,7 +899,9 @@ async def test_entity_description_fallback():
         (True, None, "Device Bla"),
     ),
 )
-async def test_friendly_name(hass, modern_name, entity_name, expected_friendly_name):
+async def test_friendly_name(
+    hass, has_entity_name, entity_name, expected_friendly_name
+):
     """Test entity_id is influenced by entity name."""
 
     async def async_setup_entry(hass, config_entry, async_add_entities):
@@ -913,7 +915,7 @@ async def test_friendly_name(hass, modern_name, entity_name, expected_friendly_n
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "name": "Device Bla",
                     },
-                    modern_name=modern_name,
+                    has_entity_name=has_entity_name,
                     name=entity_name,
                 ),
             ]

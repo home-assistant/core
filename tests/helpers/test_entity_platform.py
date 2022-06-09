@@ -1395,7 +1395,7 @@ class SlowEntity(MockEntity):
 
 
 @pytest.mark.parametrize(
-    "modern_name, entity_name, expected_entity_id",
+    "has_entity_name, entity_name, expected_entity_id",
     (
         (False, "Entity Blu", "test_domain.entity_blu"),
         (False, None, "test_domain.test_qwer"),  # Set to <platform>_<unique_id>
@@ -1404,7 +1404,7 @@ class SlowEntity(MockEntity):
     ),
 )
 async def test_entity_name_influences_entity_id(
-    hass, modern_name, entity_name, expected_entity_id
+    hass, has_entity_name, entity_name, expected_entity_id
 ):
     """Test entity_id is influenced by entity name."""
     registry = er.async_get(hass)
@@ -1420,7 +1420,7 @@ async def test_entity_name_influences_entity_id(
                         "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
                         "name": "Device Bla",
                     },
-                    modern_name=modern_name,
+                    has_entity_name=has_entity_name,
                     name=entity_name,
                 ),
             ]
