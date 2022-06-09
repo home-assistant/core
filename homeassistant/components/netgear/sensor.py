@@ -375,14 +375,17 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
-        if self.coordinator.data is not None:
-            data = self.coordinator.data.get(self.entity_description.key)
-            if data is not None:
-                self._value = self.entity_description.value(data)
-            else:
-                self._value = None
-                _LOGGER.debug(
-                    "key '%s' not in Netgear router response '%s'",
-                    self.entity_description.key,
-                    data,
-                )
+        if self.coordinator.data is None:
+            return
+
+        data = self.coordinator.data.get(self.entity_description.key)
+        if data is None:
+            self._value = None
+            _LOGGER.debug(
+                "key '%s' not in Netgear router response '%s'",
+                self.entity_description.key,
+                data,
+            )
+            return
+
+        self._value = self.entity_description.value(data)
