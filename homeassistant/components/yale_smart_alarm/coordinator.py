@@ -125,6 +125,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
 
     @retry(
         (UpdateFailed),
+        delay=1,
         tries=5,
         backoff=2,
         logger=LOGGER,
@@ -138,19 +139,12 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
                 )
             except AuthenticationError as error:
-                LOGGER.warning(
-                    "Authentication Error initializing Yale updater", exc_info=True
-                )
                 raise ConfigEntryAuthFailed from error
             except YALE_BASE_ERRORS as error:
-                LOGGER.error("Yale Base Error initializing Yale updater", exc_info=True)
                 raise UpdateFailed(
                     "Yale Base Error initializing Yale updater", error
                 ) from error
             except Exception as error:
-                LOGGER.error(
-                    "Unexpected error initializing Yale updater", exc_info=True
-                )
                 raise UpdateFailed("Unknown error occurred ", error) from error
 
         try:
