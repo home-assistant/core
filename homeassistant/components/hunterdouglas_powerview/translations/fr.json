@@ -10,7 +10,7 @@
         "flow_title": "{name} ({host})",
         "step": {
             "link": {
-                "description": "Voulez-vous configurer {name} ({host})?",
+                "description": "Voulez-vous configurer {name} ({host})\u00a0?",
                 "title": "Connectez-vous au concentrateur PowerView"
             },
             "user": {

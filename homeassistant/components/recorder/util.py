@@ -22,21 +22,19 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
-from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
-from .models import (
+from .db_schema import (
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
     TABLES_TO_CHECK,
     RecorderRuns,
-    UnsupportedDialect,
-    process_timestamp,
 )
+from .models import UnsupportedDialect, process_timestamp
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -167,9 +165,9 @@ def execute(
     assert False  # unreachable # pragma: no cover
 
 
-def execute_stmt_lambda_element(
+def execute_stmt(
     session: Session,
-    stmt: StatementLambdaElement,
+    query: Query,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
@@ -185,11 +183,12 @@ def execute_stmt_lambda_element(
     specific entities) since they are usually faster
     with .all().
     """
-    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
         try:
-            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
+            if use_all:
+                return session.execute(query).all()  # type: ignore[no-any-return]
+            return session.execute(query).yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:

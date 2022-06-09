@@ -36,7 +36,7 @@ async def async_setup_platform(
     entities = []
     for user in eight.users.values():
         entities.append(
-            EightHeatSensor(heat_coordinator, eight, user.userid, "bed_presence")
+            EightHeatSensor(heat_coordinator, eight, user.user_id, "bed_presence")
         )
 
     async_add_entities(entities)

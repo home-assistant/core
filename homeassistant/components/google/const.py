@@ -11,8 +11,6 @@ DATA_CALENDARS = "calendars"
 DATA_SERVICE = "service"
 DATA_CONFIG = "config"
 
-DISCOVER_CALENDAR = "google_discover_calendar"
-
 
 class FeatureAccess(Enum):
     """Class to represent different access scopes."""

@@ -133,6 +133,8 @@ async def async_setup_platform(
 class CoverTemplate(TemplateEntity, CoverEntity):
     """Representation of a Template cover."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,

@@ -1,7 +1,6 @@
 """Support for Google - Calendar Event Devices."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
@@ -9,8 +8,7 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
-from gcal_sync.exceptions import ApiException
-from gcal_sync.model import Calendar, DateOrDatetime, Event
+from gcal_sync.model import DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
 from voluptuous.error import Error as VoluptuousError
@@ -31,15 +29,10 @@ from homeassistant.const import (
     CONF_OFFSET,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.typing import ConfigType
 
@@ -49,7 +42,6 @@ from .const import (
     DATA_CONFIG,
     DATA_SERVICE,
     DEVICE_AUTH_IMPL,
-    DISCOVER_CALENDAR,
     DOMAIN,
     FeatureAccess,
 )
@@ -86,7 +78,6 @@ NOTIFICATION_ID = "google_calendar_notification"
 NOTIFICATION_TITLE = "Google Calendar Setup"
 GROUP_NAME_ALL_CALENDARS = "Google Calendar Sensors"
 
-SERVICE_SCAN_CALENDARS = "scan_for_calendars"
 SERVICE_ADD_EVENT = "add_event"
 
 YAML_DEVICES = f"{DOMAIN}_calendars.yaml"
@@ -248,7 +239,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     hass.data[DOMAIN][DATA_SERVICE] = calendar_service
 
-    await async_setup_services(hass, calendar_service)
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:
         await async_setup_add_event_service(hass, calendar_service)
@@ -276,57 +266,6 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Reload config entry if the access options change."""
     if not async_entry_has_scopes(hass, entry):
         await hass.config_entries.async_reload(entry.entry_id)
-
-
-async def async_setup_services(
-    hass: HomeAssistant,
-    calendar_service: GoogleCalendarService,
-) -> None:
-    """Set up the service listeners."""
-
-    calendars = await hass.async_add_executor_job(
-        load_config, hass.config.path(YAML_DEVICES)
-    )
-    calendars_file_lock = asyncio.Lock()
-
-    async def _found_calendar(calendar_item: Calendar) -> None:
-        calendar = get_calendar_info(
-            hass,
-            calendar_item.dict(exclude_unset=True),
-        )
-        calendar_id = calendar_item.id
-        # If the google_calendars.yaml file already exists, populate it for
-        # backwards compatibility, but otherwise do not create it if it does
-        # not exist.
-        if calendars:
-            if calendar_id not in calendars:
-                calendars[calendar_id] = calendar
-                async with calendars_file_lock:
-                    await hass.async_add_executor_job(
-                        update_config, hass.config.path(YAML_DEVICES), calendar
-                    )
-            else:
-                # Prefer entity/name information from yaml, overriding api
-                calendar = calendars[calendar_id]
-        async_dispatcher_send(hass, DISCOVER_CALENDAR, calendar)
-
-    created_calendars = set()
-
-    async def _scan_for_calendars(call: ServiceCall) -> None:
-        """Scan for new calendars."""
-        try:
-            result = await calendar_service.async_list_calendars()
-        except ApiException as err:
-            raise HomeAssistantError(str(err)) from err
-        tasks = []
-        for calendar_item in result.items:
-            if calendar_item.id in created_calendars:
-                continue
-            created_calendars.add(calendar_item.id)
-            tasks.append(_found_calendar(calendar_item))
-        await asyncio.gather(*tasks)
-
-    hass.services.async_register(DOMAIN, SERVICE_SCAN_CALENDARS, _scan_for_calendars)
 
 
 async def async_setup_add_event_service(

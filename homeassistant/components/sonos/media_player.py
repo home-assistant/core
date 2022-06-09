@@ -751,17 +751,23 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_content_type,
         )
 
-    def join_players(self, group_members):
+    async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
-        speakers = []
-        for entity_id in group_members:
-            if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(entity_id):
-                speakers.append(speaker)
-            else:
-                raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
+        async with self.hass.data[DATA_SONOS].topology_condition:
+            speakers = []
+            for entity_id in group_members:
+                if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(
+                    entity_id
+                ):
+                    speakers.append(speaker)
+                else:
+                    raise HomeAssistantError(
+                        f"Not a known Sonos entity_id: {entity_id}"
+                    )
 
-        self.speaker.join(speakers)
+            await self.hass.async_add_executor_job(self.speaker.join, speakers)
 
-    def unjoin_player(self):
+    async def async_unjoin_player(self):
         """Remove this player from any group."""
-        self.speaker.unjoin()
+        async with self.hass.data[DATA_SONOS].topology_condition:
+            await self.hass.async_add_executor_job(self.speaker.unjoin)
