@@ -8,13 +8,13 @@ import async_timeout
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import SynologyDSMAPIErrorException
 
-from homeassistant.components.synology_dsm.common import SynoApi
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .common import SynoApi
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     SIGNAL_CAMERA_SOURCE_CHANGED,
