@@ -18,5 +18,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Configura bloqueig permanent quan s'ajusti la temperatura."
+                }
+            }
+        }
     }
 }
