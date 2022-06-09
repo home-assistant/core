@@ -123,7 +123,12 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             "panel_info": updates["panel_info"],
         }
 
-    @retry(tries=5, backoff=2, logger=LOGGER)
+    @retry(
+        (UpdateFailed),
+        tries=5,
+        backoff=2,
+        logger=LOGGER,
+    )
     def get_updates(self) -> dict[str, Any]:
         """Fetch data from Yale."""
 
@@ -133,9 +138,20 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                     self.entry.data[CONF_USERNAME], self.entry.data[CONF_PASSWORD]
                 )
             except AuthenticationError as error:
+                LOGGER.warning(
+                    "Authentication Error initializing Yale updater", exc_info=True
+                )
                 raise ConfigEntryAuthFailed from error
             except YALE_BASE_ERRORS as error:
-                raise UpdateFailed from error
+                LOGGER.error("Yale Base Error initializing Yale updater", exc_info=True)
+                raise UpdateFailed(
+                    "Yale Base Error initializing Yale updater", error
+                ) from error
+            except Exception as error:
+                LOGGER.error(
+                    "Unexpected error initializing Yale updater", exc_info=True
+                )
+                raise UpdateFailed("Unknown error occurred ", error) from error
 
         try:
 
@@ -147,14 +163,13 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             panel_info = data["PANEL INFO"]
 
         except AuthenticationError as error:
-            LOGGER.warning("AuthenticationError updating from Yale", exc_info=True)
+            LOGGER.error("AuthenticationError updating from Yale", exc_info=True)
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
-            LOGGER.warning("Yale based error updating from Yale", exc_info=True)
-            raise UpdateFailed from error
+            raise UpdateFailed("Yale Base Error occurred ", error) from error
         except Exception as error:
             LOGGER.error("Unexpected error updating Yale", exc_info=True)
-            raise UpdateFailed from error
+            raise UpdateFailed("Unknown error occurred ", error) from error
 
         return {
             "arm_status": arm_status,
