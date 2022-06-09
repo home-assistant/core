@@ -7,7 +7,6 @@ from urllib.parse import ParseResult, urlparse
 
 from SungrowModbusClient import Client, sungrow_register
 
-import homeassistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -48,10 +47,8 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
             hass, _LOGGER, name="Sungrow", update_interval=timedelta(seconds=300)
         )
 
-        self.host = entry.data[CONF_HOST]
-        self.port = 502
-        if CONF_PORT in entry.data:
-            self.port = entry.data[CONF_PORT]
+        self.host = entry.data.get(CONF_HOST, "")
+        self.port = entry.data.get(CONF_PORT, 502)
 
         self.unique_id = entry.entry_id
         self.name = entry.title
@@ -69,12 +66,12 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
             self.host,
         )
 
-    def update(self) -> list:
+    def update(self) -> dict:
         """Update register data from device."""
         self.client.load_register()
         return self.client.inverter
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict:
         """Update the data from the Sungrow WiNet-S device."""
         try:
             data = await self.hass.async_add_executor_job(self.update)
@@ -83,9 +80,8 @@ class SungrowData(update_coordinator.DataUpdateCoordinator):
             _LOGGER.error("No route to host/endpoint: %s", self.host)
             raise update_coordinator.UpdateFailed(err)
 
-        data["alternator_loss"] = (
-            data["5017 - Total DC power"] - data["5031 - Total active power"]
+        data["alternator_loss"] = data.get("5017 - Total DC power", 0) - data.get(
+            "5031 - Total active power", 0
         )
 
-        data["time"] = homeassistant.util.dt.utcnow()
         return data

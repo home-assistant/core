@@ -31,10 +31,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     port = data.get("port", 502)
     client = Client(sungrow_register.regmap, data["host"], port)
-
     client.load_register()
     if "4990 ~ 4999 - Serial number" not in client.inverter:
-        raise InvalidAuth
+        raise CannotConnect
 
     # Return info that you want to store in the config entry.
     return {
@@ -51,24 +50,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-
         errors = {}
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+        if user_input is not None:
+            try:
+                info = await validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -77,7 +67,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
-
-
-class InvalidAuth(HomeAssistantError):
-    """Error to indicate there is invalid auth."""

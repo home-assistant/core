@@ -21,7 +21,6 @@ from homeassistant.const import (
     TIME_HOURS,
     TIME_MINUTES,
 )
-from homeassistant.util.dt import as_local
 
 DOMAIN = "sungrow"
 
@@ -34,12 +33,6 @@ class SungrowSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
-    SungrowSensorEntityDescription(
-        key="time",
-        name="last update",
-        device_class=SensorDeviceClass.TIMESTAMP,
-        value=as_local,
-    ),
     # '5031 - Total active power'
     SungrowSensorEntityDescription(
         key="5031 - Total active power",
@@ -111,7 +104,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
         icon="mdi:solar-power",
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        value=lambda value: round(value, 3),
+        value=lambda value: round(value, 1),
     ),
     # '5144 - Total power yields'
     SungrowSensorEntityDescription(
@@ -162,7 +155,7 @@ SENSOR_TYPES: tuple[SungrowSensorEntityDescription, ...] = (
     # '5035 - Power factor'
     SungrowSensorEntityDescription(
         key="5035 - Power factor",
-        name="efficiency",
+        name="power factor",
         icon="mdi-gauge",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.POWER_FACTOR,
