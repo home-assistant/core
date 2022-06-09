@@ -142,14 +142,24 @@ def async_clear_install_history(hass: HomeAssistant) -> None:
         install_failure_history.clear()
 
 
-def _install_if_missing(req: str, kwargs: dict[str, Any]) -> bool:
-    """Install requirement if missing."""
-    if pkg_util.is_installed(req):
-        return True
-    for _ in range(MAX_INSTALL_FAILURES):
-        if pkg_util.install_package(req, **kwargs):
-            return True
-    return False
+def _find_missing_requirements(
+    requirements: list[str], is_installed_cache: set[str]
+) -> list[str]:
+    """Find requirements that are missing in the cache."""
+    return [req for req in requirements if req not in is_installed_cache]
+
+
+def _raise_for_failed_requirements(
+    integration: str, missing: list[str], install_failure_history: set[str]
+) -> None:
+    """Raise RequirementsNotFound so we do not keep trying requirements that have already failed."""
+    for req in missing:
+        if req in install_failure_history:
+            _LOGGER.info(
+                "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
+                req,
+            )
+            raise RequirementsNotFound(integration, [req])
 
 
 async def async_process_requirements(
@@ -164,18 +174,14 @@ async def async_process_requirements(
         pip_lock = hass.data[DATA_PIP_LOCK] = asyncio.Lock()
     install_failure_history = hass.data.setdefault(DATA_INSTALL_FAILURE_HISTORY, set())
     is_installed_cache = hass.data.setdefault(DATA_IS_INSTALLED_CACHE, set())
-    missing = [req for req in requirements if req not in is_installed_cache]
+    missing = _find_missing_requirements(requirements, is_installed_cache)
     if not missing:
         return
-    for req in missing:
-        if req in install_failure_history:
-            _LOGGER.info(
-                "Multiple attempts to install %s failed, install will be retried after next configuration check or restart",
-                req,
-            )
-            raise RequirementsNotFound(name, [req])
+    _raise_for_failed_requirements(name, missing, install_failure_history)
 
     async with pip_lock:
+        # Recaculate missing again now that we have the lock
+        missing = _find_missing_requirements(requirements, is_installed_cache)
         await _async_process_requirements(
             hass,
             name,
@@ -183,6 +189,28 @@ async def async_process_requirements(
             is_installed_cache,
             install_failure_history,
         )
+
+
+def _install_with_retry(requirement: str, kwargs: dict[str, Any]) -> bool:
+    """Try to install a package up to MAX_INSTALL_FAILURES times."""
+    for _ in range(MAX_INSTALL_FAILURES):
+        if pkg_util.install_package(requirement, **kwargs):
+            return True
+    return False
+
+
+def _install_requirements_if_missing(
+    requirements: list[str], kwargs: dict[str, Any]
+) -> tuple[set[str], set[str]]:
+    """Install requirements if missing."""
+    installed: set[str] = set()
+    failures: set[str] = set()
+    for req in requirements:
+        if pkg_util.is_installed(req) or _install_with_retry(req, kwargs):
+            installed.add(req)
+            continue
+        failures.add(req)
+    return installed, failures
 
 
 async def _async_process_requirements(
@@ -194,12 +222,13 @@ async def _async_process_requirements(
 ) -> None:
     """Install a requirement and save failures."""
     kwargs = pip_kwargs(hass.config.config_dir)
-    for req in requirements:
-        if await hass.async_add_executor_job(_install_if_missing, req, kwargs):
-            is_installed_cache.add(req)
-            continue
-        install_failure_history.add(req)
-        raise RequirementsNotFound(name, [req])
+    installed, failures = await hass.async_add_executor_job(
+        _install_requirements_if_missing, requirements, kwargs
+    )
+    is_installed_cache |= installed
+    install_failure_history |= failures
+    if failures:
+        raise RequirementsNotFound(name, list(failures))
 
 
 def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
