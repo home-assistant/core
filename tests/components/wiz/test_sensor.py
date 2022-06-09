@@ -62,3 +62,5 @@ async def test_power_monitoring(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == "5.123"
+    await async_push_update(hass, socket, {"mac": FAKE_MAC, "pc": 800})
+    assert hass.states.get(entity_id).state == "0.8"
