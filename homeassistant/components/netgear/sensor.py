@@ -381,4 +381,8 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
                 self._value = self.entity_description.value(data)
             else:
                 self._value = None
-                _LOGGER.debug("key '%s' not in Netgear router response '%s'", self.entity_description.key, data)
+                _LOGGER.debug(
+                    "key '%s' not in Netgear router response '%s'",
+                    self.entity_description.key,
+                    data,
+                )
