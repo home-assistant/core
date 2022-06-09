@@ -128,7 +128,7 @@ class MerakiView(HomeAssistantView):
             if i.get("ssid", False):
                 attrs["ssid"] = i["ssid"]
             if ap_mac:
-                attrs["apMac"] = ap_mac
+                attrs["ap_mac"] = ap_mac
 
             hass.async_create_task(
                 self.async_see(
