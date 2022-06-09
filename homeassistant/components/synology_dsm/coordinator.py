@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
-    """DataUpdateCoordinator to gather data for a synology_dsm cameras."""
+    """DataUpdateCoordinator base class for synology_dsm."""
 
     def __init__(
         self,
@@ -34,7 +34,7 @@ class SynologyDSMUpdateCoordinator(DataUpdateCoordinator):
         api: SynoApi,
         update_interval: timedelta,
     ) -> None:
-        """Initialize DataUpdateCoordinator for cameras."""
+        """Initialize synology_dsm DataUpdateCoordinator."""
         self.api = api
         self.entry = entry
         super().__init__(
