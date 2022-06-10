@@ -2,13 +2,12 @@
 from unittest.mock import patch
 
 from aiohttp import ClientConnectionError
-from pykostalpiko.dxs import Entries
+from pykostalpiko import LoginException
 
 from homeassistant import config_entries
-from homeassistant.components.kostal_piko.config_flow import InvalidAuth
 from homeassistant.components.kostal_piko.const import DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -16,12 +15,16 @@ async def test_form(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with patch(
+        "homeassistant.components.kostal_piko.config_flow.Piko.async_login",
+    ), patch(
+        "homeassistant.components.kostal_piko.config_flow.Piko.async_logout",
+    ), patch(
         "homeassistant.components.kostal_piko.config_flow.Piko.async_fetch",
-        return_value={Entries.InverterName.name: "test-name"},
+        return_value="test-name",
     ), patch(
         "homeassistant.components.kostal_piko.async_setup_entry",
         return_value=True,
@@ -36,7 +39,7 @@ async def test_form(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-name"
     assert result2["data"] == {
         "host": "1.1.1.1",
@@ -53,8 +56,8 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.kostal_piko.config_flow.Piko.async_fetch",
-        side_effect=InvalidAuth,
+        "homeassistant.components.kostal_piko.config_flow.Piko.async_login",
+        side_effect=LoginException,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -65,7 +68,7 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
@@ -76,6 +79,13 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
+        "homeassistant.components.kostal_piko.config_flow.Piko.async_login",
+    ), patch(
+        "homeassistant.components.kostal_piko.config_flow.Piko.async_logout",
+    ), patch(
+        "homeassistant.components.kostal_piko.config_flow.Piko.async_login",
+        return_value=True,
+    ), patch(
         "homeassistant.components.kostal_piko.config_flow.Piko.async_fetch",
         side_effect=ClientConnectionError,
     ):
@@ -88,7 +98,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -111,5 +121,5 @@ async def test_form_unexpected_exception(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
