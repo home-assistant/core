@@ -271,7 +271,7 @@ async def async_setup_platform_discovery(
         """Discover entities for a platform."""
         if DATA_MQTT_UPDATED_CONFIG in hass.data:
             # The platform has been reloaded
-            config_yaml = hass.data.get(DATA_MQTT_UPDATED_CONFIG, {})
+            config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
         else:
             config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
         if not config_yaml:
