@@ -137,6 +137,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
 
+    hass.data[DOMAIN][entry.entry_id] = google_config
+
     hass.http.register_view(GoogleAssistantView(google_config))
 
     if google_config.should_report_state:
