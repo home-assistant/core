@@ -11,16 +11,37 @@ from homeassistant.components.climate.const import (
     FAN_ON,
     PRESET_ECO,
     PRESET_NONE,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_COORDINATORS, ATTR_DEVICE_THERMOSTAT, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
+
+HA_MODEL_2_YOLINK = {
+    HVACMode.COOL: "cool",
+    HVACMode.HEAT: "heat",
+    HVACMode.AUTO: "auto",
+    HVACMode.OFF: "off",
+}
+
+YOLINK_MODEL_2_HA = {
+    "cool": HVACMode.COOL,
+    "heat": HVACMode.HEAT,
+    "auto": HVACMode.AUTO,
+    "off": HVACMode.OFF,
+}
+
+YOLINK_ACTION_2_HA = {
+    "cool": HVACAction.COOLING,
+    "heat": HVACAction.HEATING,
+    "idle": HVACAction.IDLE,
+}
 
 
 async def async_setup_entry(
@@ -70,24 +91,29 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     @callback
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
-        normal_state = state["state"]
-        self._attr_current_temperature = normal_state[ATTR_TEMPERATURE]
-        self._attr_current_humidity = normal_state["humidity"]
-        self._attr_target_temperature_low = normal_state["lowTemp"]
-        self._attr_target_temperature_high = normal_state["highTemp"]
-        self._attr_fan_mode = normal_state["fan"]
-        self._attr_hvac_mode = normal_state["mode"]
-        self._attr_hvac_action = normal_state["running"]
+        normal_state = state.get("state")
+        if normal_state is not None:
+            self._attr_current_temperature = normal_state.get("temperature")
+            self._attr_current_humidity = normal_state.get("humidity")
+            self._attr_target_temperature_low = normal_state.get("lowTemp")
+            self._attr_target_temperature_high = normal_state.get("highTemp")
+            self._attr_fan_mode = normal_state.get("fan")
+            self._attr_hvac_mode = YOLINK_MODEL_2_HA.get(normal_state.get("mode"))
+            self._attr_hvac_action = YOLINK_ACTION_2_HA.get(normal_state.get("running"))
+        eco_setting = state.get("eco")
+        if eco_setting is None:
+            return None
         self._attr_preset_mode = (
-            PRESET_NONE if state["eco"]["mode"] == "on" else PRESET_ECO
+            PRESET_NONE if eco_setting.get("mode") == "on" else PRESET_ECO
         )
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
-        await self.call_device_api("setState", {"mode": hvac_mode.value})
-        self._attr_hvac_mode = hvac_mode.value
-        self.async_write_ha_state()
+        await self.call_device_api(
+            "setState", {"mode": HA_MODEL_2_YOLINK.get(hvac_mode)}
+        )
+        await self.coordinator.async_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
@@ -105,7 +131,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
         if target_temp_high is not None:
             await self.call_device_api("setState", {"highTemp": target_temp_high})
             self._attr_target_temperature_high = target_temp_high
-        self.async_write_ha_state()
+        await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
