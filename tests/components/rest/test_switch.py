@@ -343,7 +343,6 @@ async def test_entity_config(
         },
     }
 
-    # respx.get("http://localhost") % HTTPStatus.OK
     assert await async_setup_component(hass, Platform.SWITCH, config)
     await hass.async_block_till_done()
 
