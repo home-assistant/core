@@ -56,3 +56,9 @@ DATA_CONNECTIONS: Final = f"{DOMAIN}.connections"
 JSON_DUMP: Final = partial(
     json.dumps, cls=JSONEncoder, allow_nan=False, separators=(",", ":")
 )
+
+COMPRESSED_STATE_STATE = "s"
+COMPRESSED_STATE_ATTRIBUTES = "a"
+COMPRESSED_STATE_CONTEXT = "c"
+COMPRESSED_STATE_LAST_CHANGED = "lc"
+COMPRESSED_STATE_LAST_UPDATED = "lu"

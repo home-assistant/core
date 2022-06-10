@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "L\u00fc\u00fcsi IP aadress"
                 },
-                "description": "Vali Xiaomi Aqara Gateway mida soovid \u00fchendada.",
-                "title": "Vali Xiaomi Aqara l\u00fc\u00fcs mida soovid \u00fchendada"
+                "description": "Vali Xiaomi Aqara Gateway mida soovid \u00fchendada."
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Kasutatav v\u00f5rguliides",
                     "mac": "MAC aadress (valikuline)"
                 },
-                "description": "Kui IP- ja MAC-aadressid j\u00e4etakse t\u00fchjaks, kasutatakse automaatset avastamist",
-                "title": ""
+                "description": "Kui IP- ja MAC-aadressid j\u00e4etakse t\u00fchjaks, kasutatakse automaatset avastamist"
             }
         }
     }

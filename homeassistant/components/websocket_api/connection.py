@@ -93,7 +93,7 @@ class ActiveConnection:
             return
 
         if msg["type"] not in handlers:
-            self.logger.error("Received invalid command: {}".format(msg["type"]))
+            self.logger.info("Received unknown command: {}".format(msg["type"]))
             self.send_message(
                 messages.error_message(
                     cur_id, const.ERR_UNKNOWN_COMMAND, "Unknown command."

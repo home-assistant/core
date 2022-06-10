@@ -14,6 +14,7 @@ from homeassistant.components.unifi.switch import (
     OUTLET_SWITCH,
     POE_SWITCH,
 )
+from homeassistant.components.unifi.update import DEVICE_UPDATE
 from homeassistant.const import Platform
 
 from .test_controller import setup_unifi_integration
@@ -160,6 +161,9 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                 DPI_SWITCH: ["5f976f4ae3c58f018ec7dff6"],
                 POE_SWITCH: ["00:00:00:00:00:00"],
                 OUTLET_SWITCH: [],
+            },
+            str(Platform.UPDATE): {
+                DEVICE_UPDATE: ["00:00:00:00:00:01"],
             },
         },
         "clients": {

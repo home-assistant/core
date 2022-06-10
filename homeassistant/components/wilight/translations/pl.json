@@ -8,8 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Obs\u0142ugiwane s\u0105 nast\u0119puj\u0105ce komponenty: {components}",
-                "title": "WiLight"
+                "description": "Obs\u0142ugiwane s\u0105 nast\u0119puj\u0105ce komponenty: {components}"
             }
         }
     }

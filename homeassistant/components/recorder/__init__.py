@@ -20,7 +20,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
-from . import history, statistics, websocket_api
+from . import statistics, websocket_api
 from .const import (
     CONF_DB_INTEGRITY_CHECK,
     DATA_INSTANCE,
@@ -166,7 +166,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     instance.async_register()
     instance.start()
     async_register_services(hass, instance)
-    history.async_setup(hass)
     statistics.async_setup(hass)
     websocket_api.async_setup(hass)
     await async_process_integration_platforms(hass, DOMAIN, _process_recorder_platform)

@@ -450,6 +450,16 @@ MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
+CHIME_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="last_ring",
+        name="Last Ring",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:bell",
+        ufp_value="last_ring",
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -466,6 +476,7 @@ async def async_setup_entry(
         sense_descs=SENSE_SENSORS,
         light_descs=LIGHT_SENSORS,
         lock_descs=DOORLOCK_SENSORS,
+        chime_descs=CHIME_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)

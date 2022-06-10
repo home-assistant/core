@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
-                    "individual_address": "Physikalische Adresse f\u00fcr die Verbindung",
                     "local_ip": "Lokale IP von Home Assistant",
                     "port": "Port",
-                    "route_back": "Route Back / NAT-Modus",
                     "tunneling_type": "KNX Tunneling Typ"
                 },
                 "data_description": {
@@ -104,15 +102,13 @@
                     "multicast_group": "Wird f\u00fcr Routing und Netzwerkerkennung verwendet. Standard: `224.0.23.12`",
                     "multicast_port": "Wird f\u00fcr Routing und Netzwerkerkennung verwendet. Standard: \u201e3671\u201c.",
                     "rate_limit": "Maximal gesendete Telegramme pro Sekunde.\nEmpfohlen: 20 bis 40",
-                    "state_updater": "Aktiviere oder deaktiviere global das Lesen von Zust\u00e4nden vom KNX-Bus. Wenn deaktiviert, ruft Home Assistant nicht aktiv Zust\u00e4nde vom KNX-Bus ab, \u201esync_state\u201c-Entity-Optionen haben keine Auswirkung."
+                    "state_updater": "Standardeinstellung f\u00fcr das Lesen von Zust\u00e4nden aus dem KNX-Bus. Wenn diese Option deaktiviert ist, wird der Home Assistant den Zustand der Entit\u00e4ten nicht aktiv vom KNX-Bus abrufen. Kann durch die Entity-Optionen `sync_state` au\u00dfer Kraft gesetzt werden."
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "Lokale IP (im Zweifel leer lassen)",
                     "port": "Port",
-                    "route_back": "Route Back / NAT-Modus",
                     "tunneling_type": "KNX Tunneling Typ"
                 },
                 "data_description": {

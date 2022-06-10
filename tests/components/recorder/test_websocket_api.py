@@ -18,6 +18,7 @@ from .common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
     create_engine_test,
+    do_adhoc_statistics,
 )
 
 from tests.common import async_fire_time_changed
@@ -84,7 +85,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     hass.states.async_set("sensor.test3", state * 3, attributes=attributes)
     await async_wait_recording_done(hass)
 
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -208,7 +209,7 @@ async def test_update_statistics_metadata(
     hass.states.async_set("sensor.test", state, attributes=attributes)
     await async_wait_recording_done(hass)
 
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    do_adhoc_statistics(hass, period="hourly", start=now)
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -521,7 +522,7 @@ async def test_get_statistics_metadata(
         }
     ]
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")

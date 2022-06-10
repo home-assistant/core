@@ -54,27 +54,23 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            name = user_input[CONF_NAME]
 
-            self._async_abort_entries_match({CONF_HOST: host})
-            error = await self._async_try_connect(host)
-            if error is None:
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_NAME: user_input[CONF_NAME]}
+            )
+            if not (error := await self._async_try_connect(user_input[CONF_HOST])):
                 return self.async_create_entry(
-                    title=name,
-                    data={CONF_HOST: host, CONF_NAME: name},
+                    title=user_input[CONF_NAME],
+                    data=user_input,
                 )
             errors["base"] = error
 
-        user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_HOST, default=user_input.get(CONF_HOST)): str,
-                    vol.Required(
-                        CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
-                    ): str,
+                    vol.Required(CONF_HOST): str,
+                    vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
                 }
             ),
             description_placeholders=PLACEHOLDERS,
@@ -144,19 +140,6 @@ class NFAndroidTVFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDERS,
             errors=errors,
         )
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_HOST] == import_config[CONF_HOST]:
-                _LOGGER.warning(
-                    "Already configured. This yaml configuration has already been imported. Please remove it"
-                )
-                return self.async_abort(reason="already_configured")
-        if CONF_NAME not in import_config:
-            import_config[CONF_NAME] = f"{DEFAULT_NAME} {import_config[CONF_HOST]}"
-
-        return await self.async_step_user(import_config)
 
     async def _async_try_connect(self, host: str) -> str | None:
         """Try connecting to Android TV / Fire TV."""

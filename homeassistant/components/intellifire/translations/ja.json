@@ -8,8 +8,7 @@
         "error": {
             "api_error": "\u30ed\u30b0\u30a4\u30f3\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
             "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f",
-            "iftapi_connect": "iftapi.net\u3078\u306e\u63a5\u7d9a\u4e2d\u306b\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f",
-            "unknown": "\u4e88\u671f\u3057\u306a\u3044\u30a8\u30e9\u30fc"
+            "iftapi_connect": "iftapi.net\u3078\u306e\u63a5\u7d9a\u4e2d\u306b\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f"
         },
         "flow_title": "{serial} ({host})",
         "step": {
@@ -34,11 +33,6 @@
                 },
                 "description": "\u4ee5\u4e0b\u306eIntelliFire\u30c7\u30d0\u30a4\u30b9\u304c\u691c\u51fa\u3055\u308c\u307e\u3057\u305f\u3002\u8a2d\u5b9a\u3057\u305f\u3044\u3082\u306e\u3092\u9078\u629e\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
                 "title": "\u30c7\u30d0\u30a4\u30b9\u306e\u9078\u629e"
-            },
-            "user": {
-                "data": {
-                    "host": "\u30db\u30b9\u30c8"
-                }
             }
         }
     }

@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "IP c\u00edm"
                 },
-                "description": "V\u00e1lassza ki a csatlakoztatni k\u00edv\u00e1nt Xiaomi Aqara K\u00f6zponti egys\u00e9get",
-                "title": "V\u00e1lassza ki a csatlakoztatni k\u00edv\u00e1nt Xiaomi Aqara K\u00f6zponti egys\u00e9get"
+                "description": "V\u00e1lassza ki a csatlakoztatni k\u00edv\u00e1nt Xiaomi Aqara K\u00f6zponti egys\u00e9get"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "A haszn\u00e1lni k\u00edv\u00e1nt h\u00e1l\u00f3zati interf\u00e9sz",
                     "mac": "Mac-c\u00edm (opcion\u00e1lis)"
                 },
-                "description": "Ha az IP- \u00e9s MAC-c\u00edm mez\u0151ket \u00fcresen hagyja, akkor az automatikus felder\u00edt\u00e9s ker\u00fcl alkalmaz\u00e1sra.",
-                "title": "Xiaomi Aqara k\u00f6zponti egys\u00e9g"
+                "description": "Ha az IP- \u00e9s MAC-c\u00edm mez\u0151ket \u00fcresen hagyja, akkor az automatikus felder\u00edt\u00e9s ker\u00fcl alkalmaz\u00e1sra."
             }
         }
     }

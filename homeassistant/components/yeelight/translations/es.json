@@ -34,8 +34,7 @@
                     "save_on_change": "Guardar estado al cambiar",
                     "transition": "Tiempo de transici\u00f3n (ms)",
                     "use_music_mode": "Activar el Modo M\u00fasica"
-                },
-                "description": "Si dejas el modelo vac\u00edo, se detectar\u00e1 autom\u00e1ticamente."
+                }
             }
         }
     }

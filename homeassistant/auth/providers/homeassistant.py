@@ -14,6 +14,7 @@ from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.storage import Store
 
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
@@ -60,8 +61,8 @@ class Data:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the user data store."""
         self.hass = hass
-        self._store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._store = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._data: dict[str, Any] | None = None
         # Legacy mode will allow usernames to start/end with whitespace
@@ -79,7 +80,9 @@ class Data:
 
     async def async_load(self) -> None:
         """Load stored data."""
-        if (data := await self._store.async_load()) is None:
+        if (data := await self._store.async_load()) is None or not isinstance(
+            data, dict
+        ):
             data = {"users": []}
 
         seen: set[str] = set()
@@ -203,7 +206,8 @@ class Data:
 
     async def async_save(self) -> None:
         """Save data."""
-        await self._store.async_save(self._data)
+        if self._data is not None:
+            await self._store.async_save(self._data)
 
 
 @AUTH_PROVIDERS.register("homeassistant")

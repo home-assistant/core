@@ -20,9 +20,7 @@
                     "device_class": "Le type d'appareil",
                     "host": "H\u00f4te",
                     "port": "Port"
-                },
-                "description": "D\u00e9finissez les param\u00e8tres requis pour vous connecter \u00e0 votre appareil Android TV",
-                "title": "T\u00e9l\u00e9vision Android"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Configurer les r\u00e8gles de d\u00e9tection d'\u00e9tat",
                     "turn_off_command": "Commande de d\u00e9sactivation du shell ADB (laisser vide par d\u00e9faut)",
                     "turn_on_command": "Commande d'activation du shell ADB (laisser vide par d\u00e9faut)"
-                },
-                "title": "Options de t\u00e9l\u00e9vision Android"
+                }
             },
             "rules": {
                 "data": {

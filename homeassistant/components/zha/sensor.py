@@ -27,6 +27,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_HOURS,
+    TIME_MINUTES,
     TIME_SECONDS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
@@ -419,7 +420,10 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
@@ -461,6 +465,26 @@ class SmartEnergyMetering(Sensor):
         if (status := self._channel.status) is not None:
             attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergyMetering(SmartEnergyMetering):
+    """Polled metering sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
 
 
 @MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
@@ -581,6 +605,17 @@ class PPBVOCLevel(Sensor):
     _decimals = 0
     _multiplier = 1
     _unit = CONCENTRATION_PARTS_PER_BILLION
+
+
+@MULTI_MATCH(channel_names="pm25")
+class PM25(Sensor):
+    """Particulate Matter 2.5 microns or less sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
 
 
 @MULTI_MATCH(channel_names="formaldehyde_concentration")
@@ -754,3 +789,18 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
 class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class TimeLeft(Sensor, id_suffix="time_left"):
+    """Sensor that displays time left value."""
+
+    SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES

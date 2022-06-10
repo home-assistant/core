@@ -10,16 +10,14 @@
         },
         "step": {
             "usb_confirm": {
-                "description": "Se trata de una integraci\u00f3n para llamadas a tel\u00e9fonos fijos que utilizan un m\u00f3dem de voz CX93001. Puede recuperar la informaci\u00f3n del identificador de llamadas con una opci\u00f3n para rechazar una llamada entrante.",
-                "title": "M\u00f3dem telef\u00f3nico"
+                "description": "Se trata de una integraci\u00f3n para llamadas a tel\u00e9fonos fijos que utilizan un m\u00f3dem de voz CX93001. Puede recuperar la informaci\u00f3n del identificador de llamadas con una opci\u00f3n para rechazar una llamada entrante."
             },
             "user": {
                 "data": {
                     "name": "Nombre",
                     "port": "Puerto"
                 },
-                "description": "Se trata de una integraci\u00f3n para llamadas a tel\u00e9fonos fijos que utilizan un m\u00f3dem de voz CX93001. Puede recuperar la informaci\u00f3n del identificador de llamadas con una opci\u00f3n para rechazar una llamada entrante.",
-                "title": "M\u00f3dem telef\u00f3nico"
+                "description": "Se trata de una integraci\u00f3n para llamadas a tel\u00e9fonos fijos que utilizan un m\u00f3dem de voz CX93001. Puede recuperar la informaci\u00f3n del identificador de llamadas con una opci\u00f3n para rechazar una llamada entrante."
             }
         }
     }

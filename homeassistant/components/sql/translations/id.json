@@ -5,8 +5,7 @@
         },
         "error": {
             "db_url_invalid": "URL database tidak valid",
-            "query_invalid": "Kueri SQL tidak valid",
-            "value_template_invalid": "Templat Nilai tidak valid"
+            "query_invalid": "Kueri SQL tidak valid"
         },
         "step": {
             "user": {
@@ -32,8 +31,7 @@
     "options": {
         "error": {
             "db_url_invalid": "URL database tidak valid",
-            "query_invalid": "Kueri SQL tidak valid",
-            "value_template_invalid": "Templat Nilai tidak valid"
+            "query_invalid": "Kueri SQL tidak valid"
         },
         "step": {
             "init": {

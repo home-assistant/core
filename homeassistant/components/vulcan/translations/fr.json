@@ -30,14 +30,6 @@
                 },
                 "description": "Connectez-vous \u00e0 votre compte Vulcan en utilisant la page d'inscription de l'application mobile."
             },
-            "reauth": {
-                "data": {
-                    "pin": "PIN",
-                    "region": "Symbole",
-                    "token": "Jeton"
-                },
-                "description": "Connectez-vous \u00e0 votre compte Vulcan en utilisant la page d'inscription de l'application mobile."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "PIN",
@@ -57,21 +49,6 @@
                     "student_name": "S\u00e9lectionner un \u00e9tudiant"
                 },
                 "description": "S\u00e9lectionnez l'\u00e9tudiant\u00a0; vous pouvez ajouter d'autres \u00e9tudiants en ajoutant \u00e0 nouveau l'int\u00e9gration."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Une erreur est survenue"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Afficher les notifications au sujet des derni\u00e8res entr\u00e9es de pr\u00e9sence",
-                    "grade_notify": "Afficher les notifications au sujet des derni\u00e8res notes",
-                    "message_notify": "Afficher les notifications lors de la r\u00e9ception d'un nouveau message",
-                    "scan_interval": "Intervalle de mise \u00e0 jour (en minutes)"
-                }
             }
         }
     }

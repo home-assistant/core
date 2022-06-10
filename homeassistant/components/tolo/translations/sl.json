@@ -1,8 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Naprava je \u017ee konfigurirana",
-            "no_devices_found": "V omre\u017eju ni mogo\u010de najti nobene naprave"
+            "already_configured": "Naprava je \u017ee konfigurirana"
         },
         "error": {
             "cannot_connect": "Povezava ni uspela"

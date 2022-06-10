@@ -7,9 +7,6 @@
             "switchbot_unsupported_type": "Switchbot-type st\u00f8ttes ikke.",
             "unknown": "Uventet feil"
         },
-        "error": {
-            "cannot_connect": "Tilkobling mislyktes"
-        },
         "flow_title": "{name}",
         "step": {
             "user": {

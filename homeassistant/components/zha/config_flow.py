@@ -164,9 +164,15 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
         local_name = discovery_info.hostname[:-1]
+        radio_type = discovery_info.properties.get("radio_type") or local_name
         node_name = local_name[: -len(".local")]
         host = discovery_info.host
-        device_path = f"socket://{host}:6638"
+        if local_name.startswith("tube") or "efr32" in local_name:
+            # This is hard coded to work with legacy devices
+            port = 6638
+        else:
+            port = discovery_info.port
+        device_path = f"socket://{host}:{port}"
 
         if current_entry := await self.async_set_unique_id(node_name):
             self._abort_if_unique_id_configured(
@@ -187,9 +193,12 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
 
         self._device_path = device_path
-        self._radio_type = (
-            RadioType.ezsp.name if "efr32" in local_name else RadioType.znp.name
-        )
+        if "efr32" in radio_type:
+            self._radio_type = RadioType.ezsp.name
+        elif "zigate" in radio_type:
+            self._radio_type = RadioType.zigate.name
+        else:
+            self._radio_type = RadioType.znp.name
 
         return await self.async_step_port_config()
 

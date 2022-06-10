@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "\u7db2\u8def\u91d1\u9470",
                     "s0_legacy_key": "S0 \u91d1\u9470\uff08\u820a\u7248\uff09",
                     "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u91d1\u9470",
                     "s2_authenticated_key": "S2 \u9a57\u8b49\u91d1\u9470",
@@ -117,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "\u6a21\u64ec\u786c\u9ad4",
                     "log_level": "\u65e5\u8a8c\u8a18\u9304\u7b49\u7d1a",
-                    "network_key": "\u7db2\u8def\u91d1\u9470",
                     "s0_legacy_key": "S0 \u91d1\u9470\uff08\u820a\u7248\uff09",
                     "s2_access_control_key": "S2 \u5b58\u53d6\u63a7\u5236\u91d1\u9470",
                     "s2_authenticated_key": "S2 \u9a57\u8b49\u91d1\u9470",
@@ -146,6 +144,5 @@
                 "title": "Z-Wave JS \u9644\u52a0\u5143\u4ef6\u555f\u59cb\u4e2d\u3002"
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

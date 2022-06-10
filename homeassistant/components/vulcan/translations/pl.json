@@ -30,14 +30,6 @@
                 },
                 "description": "Zaloguj si\u0119 do swojego konta Vulcan za pomoc\u0105 strony rejestracji aplikacji mobilnej."
             },
-            "reauth": {
-                "data": {
-                    "pin": "Kod pin",
-                    "region": "Symbol",
-                    "token": "Token"
-                },
-                "description": "Zaloguj si\u0119 do swojego konta Vulcan za pomoc\u0105 strony rejestracji aplikacji mobilnej."
-            },
             "reauth_confirm": {
                 "data": {
                     "pin": "Kod PIN",
@@ -57,21 +49,6 @@
                     "student_name": "Wybierz ucznia"
                 },
                 "description": "Wybierz ucznia. Mo\u017cesz doda\u0107 wi\u0119cej uczni\u00f3w, ponownie dodaj\u0105c integracj\u0119."
-            }
-        }
-    },
-    "options": {
-        "error": {
-            "error": "Wyst\u0105pi\u0142 b\u0142\u0105d"
-        },
-        "step": {
-            "init": {
-                "data": {
-                    "attendance_notify": "Poka\u017c powiadomienia o najnowszych wpisach o obecno\u015bci",
-                    "grade_notify": "Poka\u017c powiadomienia o najnowszych ocenach",
-                    "message_notify": "Pokazuj powiadomienia po otrzymaniu nowej wiadomo\u015bci",
-                    "scan_interval": "Cz\u0119stotliwo\u015b\u0107 aktualizacji (w minutach)"
-                }
             }
         }
     }

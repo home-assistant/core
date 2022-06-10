@@ -133,6 +133,8 @@ async def async_setup_platform(
 class CoverTemplate(TemplateEntity, CoverEntity):
     """Representation of a Template cover."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -323,10 +325,12 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_open_cover(self, **kwargs):
         """Move the cover up."""
         if self._open_script:
-            await self._open_script.async_run(context=self._context)
+            await self.async_run_script(self._open_script, context=self._context)
         elif self._position_script:
-            await self._position_script.async_run(
-                {"position": 100}, context=self._context
+            await self.async_run_script(
+                self._position_script,
+                run_variables={"position": 100},
+                context=self._context,
             )
         if self._optimistic:
             self._position = 100
@@ -335,10 +339,12 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_close_cover(self, **kwargs):
         """Move the cover down."""
         if self._close_script:
-            await self._close_script.async_run(context=self._context)
+            await self.async_run_script(self._close_script, context=self._context)
         elif self._position_script:
-            await self._position_script.async_run(
-                {"position": 0}, context=self._context
+            await self.async_run_script(
+                self._position_script,
+                run_variables={"position": 0},
+                context=self._context,
             )
         if self._optimistic:
             self._position = 0
@@ -347,13 +353,15 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_stop_cover(self, **kwargs):
         """Fire the stop action."""
         if self._stop_script:
-            await self._stop_script.async_run(context=self._context)
+            await self.async_run_script(self._stop_script, context=self._context)
 
     async def async_set_cover_position(self, **kwargs):
         """Set cover position."""
         self._position = kwargs[ATTR_POSITION]
-        await self._position_script.async_run(
-            {"position": self._position}, context=self._context
+        await self.async_run_script(
+            self._position_script,
+            run_variables={"position": self._position},
+            context=self._context,
         )
         if self._optimistic:
             self.async_write_ha_state()
@@ -361,8 +369,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_open_cover_tilt(self, **kwargs):
         """Tilt the cover open."""
         self._tilt_value = 100
-        await self._tilt_script.async_run(
-            {"tilt": self._tilt_value}, context=self._context
+        await self.async_run_script(
+            self._tilt_script,
+            run_variables={"tilt": self._tilt_value},
+            context=self._context,
         )
         if self._tilt_optimistic:
             self.async_write_ha_state()
@@ -370,8 +380,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_close_cover_tilt(self, **kwargs):
         """Tilt the cover closed."""
         self._tilt_value = 0
-        await self._tilt_script.async_run(
-            {"tilt": self._tilt_value}, context=self._context
+        await self.async_run_script(
+            self._tilt_script,
+            run_variables={"tilt": self._tilt_value},
+            context=self._context,
         )
         if self._tilt_optimistic:
             self.async_write_ha_state()
@@ -379,8 +391,10 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     async def async_set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""
         self._tilt_value = kwargs[ATTR_TILT_POSITION]
-        await self._tilt_script.async_run(
-            {"tilt": self._tilt_value}, context=self._context
+        await self.async_run_script(
+            self._tilt_script,
+            run_variables={"tilt": self._tilt_value},
+            context=self._context,
         )
         if self._tilt_optimistic:
             self.async_write_ha_state()

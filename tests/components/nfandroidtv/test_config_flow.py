@@ -5,7 +5,7 @@ from aiohttp import ClientConnectorError
 from notifications_android_tv.notifications import ConnectError
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.nfandroidtv.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.nfandroidtv.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 
@@ -96,42 +96,6 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}
-
-
-async def test_flow_import(hass: HomeAssistant) -> None:
-    """Test an import flow."""
-    with _patch_config_flow_tv(await _create_mocked_tv()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=CONF_CONFIG_FLOW,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == CONF_DATA
-
-    with _patch_config_flow_tv(await _create_mocked_tv()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=CONF_CONFIG_FLOW,
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-async def test_flow_import_missing_optional(hass: HomeAssistant) -> None:
-    """Test an import flow with missing options."""
-    with _patch_config_flow_tv(await _create_mocked_tv()):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: HOST},
-        )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] == {CONF_HOST: HOST, CONF_NAME: f"{DEFAULT_NAME} {HOST}"}
 
 
 async def test_dhcp_discovery_already_configured(hass: HomeAssistant) -> None:
