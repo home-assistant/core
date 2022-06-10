@@ -23,19 +23,14 @@ from .const import ATTR_COORDINATORS, ATTR_DEVICE_THERMOSTAT, DOMAIN
 from .coordinator import YoLinkCoordinator
 from .entity import YoLinkEntity
 
-HA_MODEL_2_YOLINK = {
-    HVACMode.COOL: "cool",
-    HVACMode.HEAT: "heat",
-    HVACMode.AUTO: "auto",
-    HVACMode.OFF: "off",
-}
-
 YOLINK_MODEL_2_HA = {
     "cool": HVACMode.COOL,
     "heat": HVACMode.HEAT,
     "auto": HVACMode.AUTO,
     "off": HVACMode.OFF,
 }
+
+HA_MODEL_2_YOLINK = {v: k for k, v in YOLINK_MODEL_2_HA.items()}
 
 YOLINK_ACTION_2_HA = {
     "cool": HVACAction.COOLING,
@@ -101,18 +96,17 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
             self._attr_hvac_mode = YOLINK_MODEL_2_HA.get(normal_state.get("mode"))
             self._attr_hvac_action = YOLINK_ACTION_2_HA.get(normal_state.get("running"))
         eco_setting = state.get("eco")
-        if eco_setting is None:
-            return None
-        self._attr_preset_mode = (
-            PRESET_NONE if eco_setting.get("mode") == "on" else PRESET_ECO
-        )
+        if eco_setting is not None:
+            self._attr_preset_mode = (
+                PRESET_NONE if eco_setting.get("mode") == "on" else PRESET_ECO
+            )
         self.async_write_ha_state()
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set HVAC mode."""
-        await self.call_device_api(
-            "setState", {"mode": HA_MODEL_2_YOLINK.get(hvac_mode)}
-        )
+        """Set new target hvac mode."""
+        if (hvac_mode_id := HA_MODEL_2_YOLINK.get(hvac_mode)) is None:
+            raise ValueError(f"Received an invalid hvac mode: {hvac_mode}")
+        await self.call_device_api("setState", {"mode": hvac_mode_id})
         await self.coordinator.async_refresh()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
