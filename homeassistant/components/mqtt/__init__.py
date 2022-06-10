@@ -381,7 +381,7 @@ async def async_setup_entry(  # noqa: C901
         """Discover entities for a platform."""
         config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
         hass.data[DATA_MQTT_UPDATED_CONFIG] = config_yaml.get(DOMAIN, {})
-        dispatcher_send(hass, MQTT_RELOADED)
+        async_dispatcher_send(hass, MQTT_RELOADED)
 
     async def async_forward_entry_setup():
         """Forward the config entry setup to the platforms."""
