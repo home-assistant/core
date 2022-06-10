@@ -1548,6 +1548,9 @@ twilio==6.32.0
 # homeassistant.components.twitch
 twitchAPI==2.5.2
 
+# homeassistant.components.yale_smart_alarm
+types-retry==0.9.7
+
 # homeassistant.components.ukraine_alarm
 uasiren==0.0.1
 
