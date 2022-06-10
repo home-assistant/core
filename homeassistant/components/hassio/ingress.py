@@ -15,7 +15,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import X_INGRESS_PATH
+from .const import OLD_DEPRECATED_AUTH_HEADER, X_INGRESS_PATH
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -183,6 +183,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
         headers[name] = value
 
     # Inject token / cleanup later on Supervisor
+    headers[OLD_DEPRECATED_AUTH_HEADER] = os.environ.get("SUPERVISOR_TOKEN", "")
     headers[
         aiohttp.hdrs.AUTHORIZATION
     ] = f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
