@@ -1541,7 +1541,7 @@ pyheos==0.7.2
 pyhik==0.3.0
 
 # homeassistant.components.hive
-pyhiveapi==0.5.5
+pyhiveapi==0.5.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1993,7 +1993,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.9.1
+pyunifiprotect==3.9.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2029,7 +2029,7 @@ pywemo==0.9.1
 pywilight==0.0.70
 
 # homeassistant.components.wiz
-pywizlight==0.5.13
+pywizlight==0.5.14
 
 # homeassistant.components.ws66i
 pyws66i==1.1
