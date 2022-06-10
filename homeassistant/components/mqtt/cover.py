@@ -25,7 +25,6 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
@@ -470,7 +469,6 @@ class MqttCover(MqttEntity, CoverEntity):
             }
 
         if self._config.get(CONF_TILT_STATUS_TOPIC) is not None:
-            self._tilt_value = STATE_UNKNOWN
             topics["tilt_status_topic"] = {
                 "topic": self._config.get(CONF_TILT_STATUS_TOPIC),
                 "msg_callback": tilt_message_received,
