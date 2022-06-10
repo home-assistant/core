@@ -144,7 +144,7 @@ async def test_hls_stream(
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     hls_client = await hls_stream(stream)
 
@@ -171,7 +171,7 @@ async def test_hls_stream(
     stream_worker_sync.resume()
 
     # Stop stream, if it hasn't quit already
-    stream.stop()
+    await stream.stop()
 
     # Ensure playlist not accessible after stream ends
     fail_response = await hls_client.get()
@@ -205,7 +205,7 @@ async def test_stream_timeout(
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
     url = stream.endpoint_url(HLS_PROVIDER)
 
     http_client = await hass_client()
@@ -218,6 +218,7 @@ async def test_stream_timeout(
     # Wait a minute
     future = dt_util.utcnow() + timedelta(minutes=1)
     async_fire_time_changed(hass, future)
+    await hass.async_block_till_done()
 
     # Fetch again to reset timer
     playlist_response = await http_client.get(parsed_url.path)
@@ -249,10 +250,10 @@ async def test_stream_timeout_after_stop(
 
     # Request stream
     stream.add_provider(HLS_PROVIDER)
-    stream.start()
+    await stream.start()
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
     # Wait 5 minutes and fire callback.  Stream should already have been
     # stopped so this is a no-op.
@@ -297,14 +298,14 @@ async def test_stream_retries(hass, setup_component, should_retry):
         mock_time.time.side_effect = time_side_effect
         # Request stream. Enable retries which are disabled by default in tests.
         should_retry.return_value = True
-        stream.start()
+        await stream.start()
         stream._thread.join()
         stream._thread = None
         assert av_open.call_count == 2
         await hass.async_block_till_done()
 
     # Stop stream, if it hasn't quit already
-    stream.stop()
+    await stream.stop()
 
     # Stream marked initially available, then marked as failed, then marked available
     # before the final failure that exits the stream.
@@ -351,7 +352,7 @@ async def test_hls_playlist_view(hass, setup_component, hls_stream, stream_worke
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_hls_max_segments(hass, setup_component, hls_stream, stream_worker_sync):
@@ -400,7 +401,7 @@ async def test_hls_max_segments(hass, setup_component, hls_stream, stream_worker
         assert segment_response.status == HTTPStatus.OK
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_hls_playlist_view_discontinuity(
@@ -438,7 +439,7 @@ async def test_hls_playlist_view_discontinuity(
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_hls_max_segments_discontinuity(
@@ -481,7 +482,7 @@ async def test_hls_max_segments_discontinuity(
     )
 
     stream_worker_sync.resume()
-    stream.stop()
+    await stream.stop()
 
 
 async def test_remove_incomplete_segment_on_exit(
@@ -490,7 +491,7 @@ async def test_remove_incomplete_segment_on_exit(
     """Test that the incomplete segment gets removed when the worker thread quits."""
     stream = create_stream(hass, STREAM_SOURCE, {})
     stream_worker_sync.pause()
-    stream.start()
+    await stream.start()
     hls = stream.add_provider(HLS_PROVIDER)
 
     segment = Segment(sequence=0, stream_id=0, duration=SEGMENT_DURATION)
@@ -511,4 +512,4 @@ async def test_remove_incomplete_segment_on_exit(
     await hass.async_block_till_done()
     assert segments[-1].complete
     assert len(segments) == 2
-    stream.stop()
+    await stream.stop()

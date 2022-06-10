@@ -4,13 +4,12 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime as dt
 
-from sqlalchemy import lambda_stmt, select
+from sqlalchemy import select
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
-from sqlalchemy.sql.lambdas import StatementLambdaElement
-from sqlalchemy.sql.selectable import CTE, CompoundSelect
+from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
 
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     DEVICE_ID_IN_EVENT,
     EventData,
     Events,
@@ -31,11 +30,11 @@ def _select_device_id_context_ids_sub_query(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str],
+    json_quoted_device_ids: list[str],
 ) -> CompoundSelect:
     """Generate a subquery to find context ids for multiple devices."""
     inner = select_events_context_id_subquery(start_day, end_day, event_types).where(
-        apply_event_device_id_matchers(json_quotable_device_ids)
+        apply_event_device_id_matchers(json_quoted_device_ids)
     )
     return select(inner.c.context_id).group_by(inner.c.context_id)
 
@@ -45,14 +44,14 @@ def _apply_devices_context_union(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str],
+    json_quoted_device_ids: list[str],
 ) -> CompoundSelect:
     """Generate a CTE to find the device context ids and a query to find linked row."""
     devices_cte: CTE = _select_device_id_context_ids_sub_query(
         start_day,
         end_day,
         event_types,
-        json_quotable_device_ids,
+        json_quoted_device_ids,
     ).cte()
     return query.union_all(
         apply_events_context_hints(
@@ -72,25 +71,22 @@ def devices_stmt(
     start_day: dt,
     end_day: dt,
     event_types: tuple[str, ...],
-    json_quotable_device_ids: list[str],
-) -> StatementLambdaElement:
+    json_quoted_device_ids: list[str],
+) -> Select:
     """Generate a logbook query for multiple devices."""
-    stmt = lambda_stmt(
-        lambda: _apply_devices_context_union(
-            select_events_without_states(start_day, end_day, event_types).where(
-                apply_event_device_id_matchers(json_quotable_device_ids)
-            ),
-            start_day,
-            end_day,
-            event_types,
-            json_quotable_device_ids,
-        ).order_by(Events.time_fired)
-    )
-    return stmt
+    return _apply_devices_context_union(
+        select_events_without_states(start_day, end_day, event_types).where(
+            apply_event_device_id_matchers(json_quoted_device_ids)
+        ),
+        start_day,
+        end_day,
+        event_types,
+        json_quoted_device_ids,
+    ).order_by(Events.time_fired)
 
 
 def apply_event_device_id_matchers(
-    json_quotable_device_ids: Iterable[str],
+    json_quoted_device_ids: Iterable[str],
 ) -> ClauseList:
     """Create matchers for the device_ids in the event_data."""
-    return DEVICE_ID_IN_EVENT.in_(json_quotable_device_ids)
+    return DEVICE_ID_IN_EVENT.in_(json_quoted_device_ids)

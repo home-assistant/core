@@ -14,12 +14,12 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from sqlalchemy import bindparam, func, lambda_stmt, select
+from sqlalchemy import bindparam, func, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
-from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select, Subquery
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -41,23 +41,15 @@ from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
 from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticResult,
-    Statistics,
-    StatisticsMeta,
-    StatisticsRuns,
-    StatisticsShortTerm,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from .util import (
-    execute,
-    execute_stmt_lambda_element,
-    retryable_database_job,
-    session_scope,
-)
+from .util import execute, execute_stmt, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -482,16 +474,15 @@ def delete_statistics_meta_duplicates(session: Session) -> None:
 
 def _compile_hourly_statistics_summary_mean_stmt(
     start_time: datetime, end_time: datetime
-) -> StatementLambdaElement:
+) -> Select:
     """Generate the summary mean statement for hourly statistics."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN))
-    stmt += (
-        lambda q: q.filter(StatisticsShortTerm.start >= start_time)
+    return (
+        select(*QUERY_STATISTICS_SUMMARY_MEAN)
+        .filter(StatisticsShortTerm.start >= start_time)
         .filter(StatisticsShortTerm.start < end_time)
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
-    return stmt
 
 
 def compile_hourly_statistics(
@@ -509,7 +500,7 @@ def compile_hourly_statistics(
     # Compute last hour's average, min, max
     summary: dict[str, StatisticData] = {}
     stmt = _compile_hourly_statistics_summary_mean_stmt(start_time, end_time)
-    stats = execute_stmt_lambda_element(session, stmt)
+    stats = execute_stmt(session, stmt)
 
     if stats:
         for stat in stats:
@@ -691,17 +682,17 @@ def _generate_get_metadata_stmt(
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
-) -> StatementLambdaElement:
+) -> Select:
     """Generate a statement to fetch metadata."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
+    stmt = select(*QUERY_STATISTIC_META)
     if statistic_ids is not None:
-        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
+        stmt = stmt.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
-        stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
+        stmt = stmt.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
-        stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
+        stmt = stmt.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
-        stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
+        stmt = stmt.where(StatisticsMeta.has_sum == true())
     return stmt
 
 
@@ -723,7 +714,7 @@ def get_metadata_with_session(
 
     # Fetch metatadata from the database
     stmt = _generate_get_metadata_stmt(statistic_ids, statistic_type, statistic_source)
-    result = execute_stmt_lambda_element(session, stmt)
+    result = execute_stmt(session, stmt)
     if not result:
         return {}
 
@@ -985,27 +976,30 @@ def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
     metadata_ids: list[int] | None,
-    table: type[Statistics | StatisticsShortTerm],
-) -> StatementLambdaElement:
-    """Prepare a database query for statistics during a given period.
-
-    This prepares a lambda_stmt query, so we don't insert the parameters yet.
-    """
-    if table == StatisticsShortTerm:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    else:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS))
-
-    stmt += lambda q: q.filter(table.start >= start_time)
-
+) -> Select:
+    """Prepare a database query for statistics during a given period."""
+    stmt = select(*QUERY_STATISTICS).filter(Statistics.start >= start_time)
     if end_time is not None:
-        stmt += lambda q: q.filter(table.start < end_time)
-
+        stmt = stmt.filter(Statistics.start < end_time)
     if metadata_ids:
-        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
+        stmt = stmt.filter(Statistics.metadata_id.in_(metadata_ids))
+    return stmt.order_by(Statistics.metadata_id, Statistics.start)
 
-    stmt += lambda q: q.order_by(table.metadata_id, table.start)
-    return stmt
+
+def _statistics_during_period_stmt_short_term(
+    start_time: datetime,
+    end_time: datetime | None,
+    metadata_ids: list[int] | None,
+) -> Select:
+    """Prepare a database query for short term statistics during a given period."""
+    stmt = select(*QUERY_STATISTICS_SHORT_TERM).filter(
+        StatisticsShortTerm.start >= start_time
+    )
+    if end_time is not None:
+        stmt = stmt.filter(StatisticsShortTerm.start < end_time)
+    if metadata_ids:
+        stmt = stmt.filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+    return stmt.order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start)
 
 
 def statistics_during_period(
@@ -1034,11 +1028,13 @@ def statistics_during_period(
 
         if period == "5minute":
             table = StatisticsShortTerm
+            stmt = _statistics_during_period_stmt_short_term(
+                start_time, end_time, metadata_ids
+            )
         else:
             table = Statistics
-
-        stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids, table)
-        stats = execute_stmt_lambda_element(session, stmt)
+            stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids)
+        stats = execute_stmt(session, stmt)
 
         if not stats:
             return {}
@@ -1069,19 +1065,27 @@ def statistics_during_period(
 def _get_last_statistics_stmt(
     metadata_id: int,
     number_of_stats: int,
-    table: type[Statistics | StatisticsShortTerm],
-) -> StatementLambdaElement:
+) -> Select:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
-    if table == StatisticsShortTerm:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    else:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS))
-    stmt += (
-        lambda q: q.filter_by(metadata_id=metadata_id)
-        .order_by(table.metadata_id, table.start.desc())
+    return (
+        select(*QUERY_STATISTICS)
+        .filter_by(metadata_id=metadata_id)
+        .order_by(Statistics.metadata_id, Statistics.start.desc())
         .limit(number_of_stats)
     )
-    return stmt
+
+
+def _get_last_statistics_short_term_stmt(
+    metadata_id: int,
+    number_of_stats: int,
+) -> Select:
+    """Generate a statement for number_of_stats short term statistics for a given statistic_id."""
+    return (
+        select(*QUERY_STATISTICS_SHORT_TERM)
+        .filter_by(metadata_id=metadata_id)
+        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
+        .limit(number_of_stats)
+    )
 
 
 def _get_last_statistics(
@@ -1099,8 +1103,11 @@ def _get_last_statistics(
         if not metadata:
             return {}
         metadata_id = metadata[statistic_id][0]
-        stmt = _get_last_statistics_stmt(metadata_id, number_of_stats, table)
-        stats = execute_stmt_lambda_element(session, stmt)
+        if table == Statistics:
+            stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
+        else:
+            stmt = _get_last_statistics_short_term_stmt(metadata_id, number_of_stats)
+        stats = execute_stmt(session, stmt)
 
         if not stats:
             return {}
@@ -1136,12 +1143,9 @@ def get_last_short_term_statistics(
     )
 
 
-def _latest_short_term_statistics_stmt(
-    metadata_ids: list[int],
-) -> StatementLambdaElement:
-    """Create the statement for finding the latest short term stat rows."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    most_recent_statistic_row = (
+def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
+    """Generate the subquery to find the most recent statistic row."""
+    return (
         select(
             StatisticsShortTerm.metadata_id,
             func.max(StatisticsShortTerm.start).label("start_max"),
@@ -1149,7 +1153,15 @@ def _latest_short_term_statistics_stmt(
         .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
         .group_by(StatisticsShortTerm.metadata_id)
     ).subquery()
-    stmt += lambda s: s.join(
+
+
+def _latest_short_term_statistics_stmt(
+    metadata_ids: list[int],
+) -> Select:
+    """Create the statement for finding the latest short term stat rows."""
+    stmt = select(*QUERY_STATISTICS_SHORT_TERM)
+    most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
+    return stmt.join(
         most_recent_statistic_row,
         (
             StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
@@ -1157,7 +1169,6 @@ def _latest_short_term_statistics_stmt(
         )
         & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
     )
-    return stmt
 
 
 def get_latest_short_term_statistics(
@@ -1180,7 +1191,7 @@ def get_latest_short_term_statistics(
             if statistic_id in metadata
         ]
         stmt = _latest_short_term_statistics_stmt(metadata_ids)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = execute_stmt(session, stmt)
         if not stats:
             return {}
 

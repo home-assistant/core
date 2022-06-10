@@ -10,7 +10,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import IntEnum
 from functools import partial
-import hashlib
 import logging
 import os
 from random import SystemRandom
@@ -387,7 +386,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             stream.keepalive = True
             stream.add_provider("hls")
-            stream.start()
+            await stream.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
@@ -675,9 +674,7 @@ class Camera(Entity):
     @callback
     def async_update_token(self) -> None:
         """Update the used token."""
-        self.access_tokens.append(
-            hashlib.sha256(_RND.getrandbits(256).to_bytes(32, "little")).hexdigest()
-        )
+        self.access_tokens.append(hex(_RND.getrandbits(256))[2:])
 
     async def async_internal_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
@@ -999,7 +996,7 @@ async def _async_stream_endpoint_url(
     stream.keepalive = camera_prefs.preload_stream
 
     stream.add_provider(fmt)
-    stream.start()
+    await stream.start()
     return stream.endpoint_url(fmt)
 
 

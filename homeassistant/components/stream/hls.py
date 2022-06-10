@@ -117,7 +117,7 @@ class HlsMasterPlaylistView(StreamView):
     ) -> web.Response:
         """Return m3u8 playlist."""
         track = stream.add_provider(HLS_PROVIDER)
-        stream.start()
+        await stream.start()
         # Make sure at least two segments are ready (last one may not be complete)
         if not track.sequences and not await track.recv():
             return web.HTTPNotFound()
@@ -232,7 +232,7 @@ class HlsPlaylistView(StreamView):
         track: HlsStreamOutput = cast(
             HlsStreamOutput, stream.add_provider(HLS_PROVIDER)
         )
-        stream.start()
+        await stream.start()
 
         hls_msn: str | int | None = request.query.get("_HLS_msn")
         hls_part: str | int | None = request.query.get("_HLS_part")

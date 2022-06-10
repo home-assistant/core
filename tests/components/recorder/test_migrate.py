@@ -20,9 +20,9 @@ from sqlalchemy.pool import StaticPool
 
 from homeassistant.bootstrap import async_setup_component
 from homeassistant.components import persistent_notification as pn, recorder
-from homeassistant.components.recorder import migration, models
+from homeassistant.components.recorder import db_schema, migration
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     RecorderRuns,
     States,
@@ -66,7 +66,7 @@ async def test_schema_update_calls(hass):
     update.assert_has_calls(
         [
             call(hass, engine, session_maker, version + 1, 0)
-            for version in range(0, models.SCHEMA_VERSION)
+            for version in range(0, db_schema.SCHEMA_VERSION)
         ]
     )
 
@@ -267,14 +267,16 @@ async def test_schema_migrate(hass, start_version):
 
         This simulates an existing db with the old schema.
         """
-        module = f"tests.components.recorder.models_schema_{str(start_version)}"
+        module = f"tests.components.recorder.db_schema_{str(start_version)}"
         importlib.import_module(module)
         old_models = sys.modules[module]
         engine = create_engine(*args, **kwargs)
         old_models.Base.metadata.create_all(engine)
         if start_version > 0:
             with Session(engine) as session:
-                session.add(recorder.models.SchemaChanges(schema_version=start_version))
+                session.add(
+                    recorder.db_schema.SchemaChanges(schema_version=start_version)
+                )
                 session.commit()
         return engine
 
@@ -299,8 +301,8 @@ async def test_schema_migrate(hass, start_version):
         # the recorder will silently create a new database.
         with session_scope(hass=hass) as session:
             res = (
-                session.query(models.SchemaChanges)
-                .order_by(models.SchemaChanges.change_id.desc())
+                session.query(db_schema.SchemaChanges)
+                .order_by(db_schema.SchemaChanges.change_id.desc())
                 .first()
             )
             migration_version = res.schema_version
@@ -325,7 +327,7 @@ async def test_schema_migrate(hass, start_version):
         await hass.async_block_till_done()
         await hass.async_add_executor_job(migration_done.wait)
         await async_wait_recording_done(hass)
-        assert migration_version == models.SCHEMA_VERSION
+        assert migration_version == db_schema.SCHEMA_VERSION
         assert setup_run.called
         assert recorder.util.async_migration_in_progress(hass) is not True
 
@@ -381,7 +383,7 @@ def test_forgiving_add_column():
 def test_forgiving_add_index():
     """Test that add index will continue if index exists."""
     engine = create_engine("sqlite://", poolclass=StaticPool)
-    models.Base.metadata.create_all(engine)
+    db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         instance = Mock()
         instance.get_session = Mock(return_value=session)

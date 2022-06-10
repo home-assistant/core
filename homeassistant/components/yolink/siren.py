@@ -6,7 +6,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from yolink.device import YoLinkDevice
-from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 
 from homeassistant.components.siren import (
     SirenEntity,
@@ -15,7 +14,6 @@ from homeassistant.components.siren import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_COORDINATORS, ATTR_DEVICE_SIREN, DOMAIN
@@ -79,8 +77,7 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
         description: YoLinkSirenEntityDescription,
     ) -> None:
         """Init YoLink Siren."""
-        super().__init__(coordinator)
-        self.config_entry = config_entry
+        super().__init__(config_entry, coordinator)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
@@ -102,17 +99,7 @@ class YoLinkSirenEntity(YoLinkEntity, SirenEntity):
 
     async def call_state_change(self, state: bool) -> None:
         """Call setState api to change siren state."""
-        try:
-            # call_device_http_api will check result, fail by raise YoLinkClientError
-            await self.coordinator.device.call_device_http_api(
-                "setState", {"state": {"alarm": state}}
-            )
-        except YoLinkAuthFailError as yl_auth_err:
-            self.config_entry.async_start_reauth(self.hass)
-            raise HomeAssistantError(yl_auth_err) from yl_auth_err
-        except YoLinkClientError as yl_client_err:
-            self.coordinator.last_update_success = False
-            raise HomeAssistantError(yl_client_err) from yl_client_err
+        await self.call_device_api("setState", {"state": {"alarm": state}})
         self._attr_is_on = self.entity_description.value("alert" if state else "normal")
         self.async_write_ha_state()
 

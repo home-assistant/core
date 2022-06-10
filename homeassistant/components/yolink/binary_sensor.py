@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_COORDINATORS,
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
     ATTR_DEVICE_DOOR_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
@@ -42,7 +43,9 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_LEAK_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
 ]
+
 
 SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
     YoLinkBinarySensorEntityDescription(
@@ -51,14 +54,14 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.DOOR,
         name="State",
         value=lambda value: value == "open" if value is not None else None,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_DOOR_SENSOR],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_DOOR_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="motion_state",
         device_class=BinarySensorDeviceClass.MOTION,
         name="Motion",
         value=lambda value: value == "alert" if value is not None else None,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MOTION_SENSOR],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MOTION_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="leak_state",
@@ -66,14 +69,28 @@ SENSOR_TYPES: tuple[YoLinkBinarySensorEntityDescription, ...] = (
         icon="mdi:water",
         device_class=BinarySensorDeviceClass.MOISTURE,
         value=lambda value: value == "alert" if value is not None else None,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_LEAK_SENSOR],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_LEAK_SENSOR,
     ),
     YoLinkBinarySensorEntityDescription(
         key="vibration_state",
         name="Vibration",
         device_class=BinarySensorDeviceClass.VIBRATION,
         value=lambda value: value == "alert" if value is not None else None,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_VIBRATION_SENSOR],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_VIBRATION_SENSOR,
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="co_detected",
+        name="Co Detected",
+        device_class=BinarySensorDeviceClass.CO,
+        value=lambda state: state.get("gasAlarm"),
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
+    ),
+    YoLinkBinarySensorEntityDescription(
+        key="smoke_detected",
+        name="Smoke Detected",
+        device_class=BinarySensorDeviceClass.SMOKE,
+        value=lambda state: state.get("smokeAlarm"),
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_CO_SMOKE_SENSOR,
     ),
 )
 
@@ -96,7 +113,7 @@ async def async_setup_entry(
             if description.exists_fn(binary_sensor_device_coordinator.device):
                 entities.append(
                     YoLinkBinarySensorEntity(
-                        binary_sensor_device_coordinator, description
+                        config_entry, binary_sensor_device_coordinator, description
                     )
                 )
     async_add_entities(entities)
@@ -109,11 +126,12 @@ class YoLinkBinarySensorEntity(YoLinkEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkBinarySensorEntityDescription,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator)
+        super().__init__(config_entry, coordinator)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"

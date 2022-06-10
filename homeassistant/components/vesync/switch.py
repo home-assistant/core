@@ -66,18 +66,6 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
         super().__init__(plug)
         self.smartplug = plug
 
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes of the device."""
-        if not hasattr(self.smartplug, "weekly_energy_total"):
-            return {}
-        return {
-            "voltage": self.smartplug.voltage,
-            "weekly_energy_total": self.smartplug.weekly_energy_total,
-            "monthly_energy_total": self.smartplug.monthly_energy_total,
-            "yearly_energy_total": self.smartplug.yearly_energy_total,
-        }
-
     def update(self):
         """Update outlet details and energy usage."""
         self.smartplug.update()

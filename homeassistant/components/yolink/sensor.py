@@ -20,7 +20,10 @@ from homeassistant.util import percentage
 
 from .const import (
     ATTR_COORDINATORS,
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
     ATTR_DEVICE_DOOR_SENSOR,
+    ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
@@ -51,14 +54,29 @@ SENSOR_DEVICE_TYPE = [
     ATTR_DEVICE_MOTION_SENSOR,
     ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
 ]
 
 BATTERY_POWER_SENSOR = [
     ATTR_DEVICE_DOOR_SENSOR,
-    ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_MOTION_SENSOR,
+    ATTR_DEVICE_TH_SENSOR,
     ATTR_DEVICE_VIBRATION_SENSOR,
+    ATTR_DEVICE_LOCK,
+    ATTR_DEVICE_MANIPULATOR,
+    ATTR_DEVICE_CO_SMOKE_SENSOR,
 ]
+
+
+def cvt_battery(val: int | None) -> int | None:
+    """Convert battery to percentage."""
+    if val is None:
+        return None
+    if val > 0:
+        return percentage.ordered_list_item_to_percentage([1, 2, 3, 4], val)
+    return 0
 
 
 SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
@@ -68,11 +86,7 @@ SENSOR_TYPES: tuple[YoLinkSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         name="Battery",
         state_class=SensorStateClass.MEASUREMENT,
-        value=lambda value: percentage.ordered_list_item_to_percentage(
-            [1, 2, 3, 4], value
-        )
-        if value is not None
-        else None,
+        value=cvt_battery,
         exists_fn=lambda device: device.device_type in BATTERY_POWER_SENSOR,
     ),
     YoLinkSensorEntityDescription(
@@ -112,6 +126,7 @@ async def async_setup_entry(
             if description.exists_fn(sensor_device_coordinator.device):
                 entities.append(
                     YoLinkSensorEntity(
+                        config_entry,
                         sensor_device_coordinator,
                         description,
                     )
@@ -126,11 +141,12 @@ class YoLinkSensorEntity(YoLinkEntity, SensorEntity):
 
     def __init__(
         self,
+        config_entry: ConfigEntry,
         coordinator: YoLinkCoordinator,
         description: YoLinkSensorEntityDescription,
     ) -> None:
         """Init YoLink Sensor."""
-        super().__init__(coordinator)
+        super().__init__(config_entry, coordinator)
         self.entity_description = description
         self._attr_unique_id = (
             f"{coordinator.device.device_id} {self.entity_description.key}"
