@@ -20,7 +20,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 CONF_VALIDATOR = "validator"
 CONF_SECRET = "secret"
 URL = "/api/meraki"
-VERSION = "2.1"
+VERSION = "2.0"
+VERSION2 = "2.1"
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,7 +73,7 @@ class MerakiView(HomeAssistantView):
         if data["secret"] != self.secret:
             _LOGGER.error("Invalid Secret received from Meraki")
             return self.json_message("Invalid secret", HTTPStatus.UNPROCESSABLE_ENTITY)
-        if data["version"] != VERSION:
+        if data["version"] != VERSION and data["version"] != VERSION2:
             _LOGGER.error("Invalid API version: %s", data["version"])
             return self.json_message("Invalid version", HTTPStatus.UNPROCESSABLE_ENTITY)
         _LOGGER.debug("Valid Secret")
@@ -88,7 +90,7 @@ class MerakiView(HomeAssistantView):
 
     @callback
     def _handle(self, hass, data):
-        ap_mac = data.get("apMac")
+        ap_mac = data["data"]["apMac"]
         for i in data["data"]["observations"]:
             data["data"]["secret"] = "hidden"
 
@@ -132,7 +134,8 @@ class MerakiView(HomeAssistantView):
                 self.async_see(
                     gps=gps_location,
                     mac=mac,
-                    name=device_name,
+                    dev_id=mac,
+                    host_name=device_name,
                     source_type=SOURCE_TYPE_ROUTER,
                     gps_accuracy=accuracy,
                     attributes=attrs,
