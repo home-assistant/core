@@ -44,8 +44,7 @@ class SMSNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         """Send SMS message."""
-        
-        """ if a number or a list of numbers exist in the CONF_TARGET attribute overwrite the number define in the config."""
+
         targets = kwargs.get(CONF_TARGET, [self.number])
         smsinfo = {
             "Class": -1,
@@ -63,10 +62,9 @@ class SMSNotificationService(BaseNotificationService):
         for encoded_message in encoded:
             # Fill in numbers
             encoded_message["SMSC"] = {"Location": 1}
-            
-            """ send sms to all numbers defined"""
+
             for target in targets:
-                encoded_message["Number"] = target            
+                encoded_message["Number"] = target
                 try:
                     # Actually send the message
                     await self.gateway.send_sms_async(encoded_message)
