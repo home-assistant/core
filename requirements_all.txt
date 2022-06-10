@@ -354,7 +354,7 @@ atenpdu==0.3.2
 auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
-aurorapy==0.2.6
+aurorapy==0.2.7
 
 # homeassistant.components.generic
 # homeassistant.components.stream
