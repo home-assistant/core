@@ -387,20 +387,19 @@ def secret_yaml(
     return loader.secrets.get(loader.get_name(), node.value)
 
 
-for yaml_loader in (FastestSafeLoader, SafeLineLoader):
-    yaml_loader.add_constructor("!include", _include_yaml)
-    yaml_loader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _ordered_dict
-    )
-    yaml_loader.add_constructor(
-        yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq
-    )
-    yaml_loader.add_constructor("!env_var", _env_var_yaml)
-    yaml_loader.add_constructor("!secret", secret_yaml)
-    yaml_loader.add_constructor("!include_dir_list", _include_dir_list_yaml)
-    yaml_loader.add_constructor("!include_dir_merge_list", _include_dir_merge_list_yaml)
-    yaml_loader.add_constructor("!include_dir_named", _include_dir_named_yaml)
-    yaml_loader.add_constructor(
-        "!include_dir_merge_named", _include_dir_merge_named_yaml
-    )
-    yaml_loader.add_constructor("!input", Input.from_node)
+def add_constructor(tag: Any, constructor: Any) -> None:
+    """Add to constructor to all loaders."""
+    for yaml_loader in (FastestSafeLoader, SafeLineLoader):
+        yaml_loader.add_constructor(tag, constructor)
+
+
+add_constructor("!include", _include_yaml)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, _ordered_dict)
+add_constructor(yaml.resolver.BaseResolver.DEFAULT_SEQUENCE_TAG, _construct_seq)
+add_constructor("!env_var", _env_var_yaml)
+add_constructor("!secret", secret_yaml)
+add_constructor("!include_dir_list", _include_dir_list_yaml)
+add_constructor("!include_dir_merge_list", _include_dir_merge_list_yaml)
+add_constructor("!include_dir_named", _include_dir_named_yaml)
+add_constructor("!include_dir_merge_named", _include_dir_merge_named_yaml)
+add_constructor("!input", Input.from_node)
