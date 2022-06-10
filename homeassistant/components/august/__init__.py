@@ -414,8 +414,8 @@ async def async_remove_config_entry_device(
 ) -> bool:
     """Remove august config entry from a device if its no longer present."""
     data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
-    return any(
+    return not any(
         identifier
         for identifier in device_entry.identifiers
-        if identifier[0] == DOMAIN and not data.get_device(identifier[1])
+        if identifier[0] == DOMAIN and data.get_device(identifier[1])
     )
