@@ -430,6 +430,14 @@ class LIFXManager:
     async def _async_handle_discovery(self, inflight: InFlightDiscovery) -> None:
         """Handle LIFX bulb registration lifecycle."""
 
+        if inflight.device.mac_addr in self.entities:
+            entity: LIFXLight = self.entities[inflight.device.mac_addr]
+            self.clear_inflight_discovery(inflight)
+            entity.registered = True
+            await entity.update_hass()
+            _LOGGER.debug("Reconnected to existing entity %s", entity.who)
+            return
+
         # only allow a single discovery process per discovered device
         async with inflight.lock:
 
@@ -455,13 +463,6 @@ class LIFXManager:
                 )
                 self.switch_devices.append(inflight.device.mac_addr)
                 self.clear_inflight_discovery(inflight)
-                return
-
-            if entity := self.entities.get(inflight.device.mac_addr):
-                self.clear_inflight_discovery(inflight)
-                entity.registered = True
-                await entity.update_hass()
-                _LOGGER.debug("Reconnected to %s", entity.who)
                 return
 
             await self._async_process_discovery(inflight=inflight)
