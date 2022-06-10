@@ -5,8 +5,8 @@ import logging
 from typing import Any
 
 from aiohttp import ClientConnectionError
-from pykostalpiko.Inverter import Piko
-from pykostalpiko.dxs import Entries
+from pykostalpiko import LoginException, Piko
+from pykostalpiko.dxs.inverter import NAME
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -38,20 +38,21 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    piko = Piko(
-        async_get_clientsession(hass),
-        data[CONF_HOST],
-        data[CONF_USERNAME],
-        data[CONF_PASSWORD],
-    )
 
-    # Fetch the name of the Inverter
     try:
-        data = await piko.async_fetch(Entries.InverterName)
-        # pylint: disable=no-member
-        name = data[Entries.InverterName.name]
-    except ClientConnectionError:
-        raise CannotConnect from ClientConnectionError
+        async with Piko(
+            async_get_clientsession(hass),
+            data[CONF_HOST],
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+        ) as piko:
+            # Fetch the name of the Inverter
+            try:
+                name: str = await piko.async_fetch(NAME)
+            except ClientConnectionError:
+                raise CannotConnect from ClientConnectionError
+    except LoginException as error:
+        raise InvalidAuth from error
 
     return {"title": name}
 

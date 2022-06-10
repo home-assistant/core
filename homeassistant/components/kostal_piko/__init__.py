@@ -1,16 +1,33 @@
 """The Kostal Piko Solar Inverter integration."""
 from __future__ import annotations
 
-from pykostalpiko.Inverter import Piko
-from pykostalpiko.dxs import Entries
+import logging
+from typing import Any
+
+from pykostalpiko import Piko
+from pykostalpiko.dxs import get_value_by_descriptor as get_value
+from pykostalpiko.dxs.inverter import (
+    MODEL,
+    NAME,
+    SERIAL_NUMBER,
+    Versions as version_descriptors,
+)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -26,46 +43,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.data.get(CONF_PASSWORD),
     )
 
+    async def logout(*_: Any):
+        _LOGGER.debug("Logging out of inverter session")
+        await piko.async_logout()
+
+    # Authenticate and logout if homeassistant is stopped
+    _LOGGER.debug("Logging in to inverter session")
+    await piko.async_login()
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, logout)
+
     hass.data[DOMAIN][entry.entry_id] = piko
 
     device_registry = dr.async_get(hass)
 
-    data = await piko.async_fetch(
-        Entries.InverterName,
-        Entries.InverterType,
-        Entries.VersionUI,
-        Entries.VersionFW,
-        Entries.VersionHW,
-        Entries.VersionPAR,
-        Entries.SerialNumber,
-        Entries.ArticleNumber,
-        Entries.CountrySettingsName,
-        Entries.CountrySettingsVersion,
+    data = await piko.async_fetch_multiple(
+        [
+            NAME,
+            MODEL,
+            SERIAL_NUMBER,
+            version_descriptors.FIRMWARE,
+            version_descriptors.HARDWARE,
+        ]
     )
-
-    # pylint: disable=no-member
-    name: str = data[Entries.InverterName.name]
-    # pylint: disable=no-member
-    model: str = data[Entries.InverterType.name]
-    # pylint: disable=no-member
-    version_ui: str = data[Entries.VersionUI.name]
-    # pylint: disable=no-member
-    version_fw: str = data[Entries.VersionFW.name]
-    # pylint: disable=no-member
-    version_hw: str = data[Entries.VersionHW.name]
-    # pylint: disable=no-member
-    version_par: str = data[Entries.VersionPAR.name]
-    # pylint: disable=no-member
-    serial_number: str = data[Entries.SerialNumber.name]
 
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         default_manufacturer="Kostal",
-        name=name,
-        model=model,
-        identifiers={(DOMAIN, serial_number)},
-        sw_version=f"UI: {version_ui} FW: {version_fw} PAR: {version_par}",
-        hw_version=version_hw,
+        name=get_value(NAME, data),
+        model=get_value(MODEL, data),
+        identifiers={(DOMAIN, get_value(SERIAL_NUMBER, data))},
+        sw_version=get_value(version_descriptors.FIRMWARE, data),
+        hw_version=get_value(version_descriptors.HARDWARE, data),
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)

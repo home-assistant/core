@@ -1,6 +1,16 @@
 """Constants for the Kostal Piko Solar Inverter integration."""
 
-from pykostalpiko.dxs import Entries
+from pykostalpiko.dxs.current_values import (
+    AnalogInputs,
+    Battery,
+    Grid,
+    House,
+    PVGenerator,
+    S0Input,
+)
+from pykostalpiko.dxs.entry import Descriptor
+from pykostalpiko.dxs.inverter import OPERATION_STATUS
+from pykostalpiko.dxs.statistics import Day, Total
 
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
@@ -20,6 +30,7 @@ from homeassistant.const import (
     POWER_WATT,
     TEMP_CELSIUS,
     TIME_HOURS,
+    TIME_SECONDS,
 )
 
 DOMAIN = "kostal_piko"
@@ -31,9 +42,10 @@ LAST_RESET_DAILY = "daily"
 # Each entry is defined with a tuple of these values:
 #  - entry from the pykostalpiko library (Entries)
 #  - sensor properties (dict)
-SENSORS: list[tuple[Entries, dict]] = [
+SENSORS: list[tuple[Descriptor, dict]] = [
+    (OPERATION_STATUS, {ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT}),
     (
-        Entries.AnalaogInput1,
+        AnalogInputs.INPUT_1,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -41,7 +53,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.AnalaogInput2,
+        AnalogInputs.INPUT_2,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -49,7 +61,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.AnalaogInput3,
+        AnalogInputs.INPUT_3,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -57,7 +69,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.AnalaogInput4,
+        AnalogInputs.INPUT_4,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -65,7 +77,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.BatteryVoltage,
+        Battery.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -73,7 +85,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.BatteryCharge,
+        Battery.CHARGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
@@ -81,16 +93,16 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.BatteryCurrent,
+        Battery.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
     ),
-    (Entries.BatteryChargeCycles, {ATTR_STATE_CLASS: SensorStateClass.TOTAL}),
+    (Battery.CYCLES, {ATTR_STATE_CLASS: SensorStateClass.TOTAL}),
     (
-        Entries.BatteryTemperature,
+        Battery.TEMPERATURE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
             ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
@@ -98,7 +110,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridOutputPower,
+        Grid.Parameters.OUTPUT_POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -106,7 +118,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridFrequency,
+        Grid.Parameters.FREQUENCY,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.FREQUENCY,
             ATTR_UNIT_OF_MEASUREMENT: FREQUENCY_HERTZ,
@@ -114,15 +126,21 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridLimitation,
+        Grid.Parameters.POWER_FACTOR,
         {
-            # ATTR_DEVICE_CLASS: CHANGE_ME,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER_FACTOR,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+    ),
+    (
+        Grid.Parameters.LIMITATION,
+        {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
     ),
     (
-        Entries.GridVoltageL1,
+        Grid.Phase1.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -130,7 +148,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridCurrentL1,
+        Grid.Phase1.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
@@ -138,7 +156,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridPowerL1,
+        Grid.Phase1.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -146,7 +164,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridVoltageL2,
+        Grid.Phase2.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -154,7 +172,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridCurrentL2,
+        Grid.Phase2.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
@@ -162,7 +180,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridPowerL2,
+        Grid.Phase2.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -170,7 +188,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridVoltageL3,
+        Grid.Phase3.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -178,7 +196,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridCurrentL3,
+        Grid.Phase3.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
@@ -186,7 +204,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GridPowerL3,
+        Grid.Phase3.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -194,7 +212,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeConsumptionSolar,
+        House.CoveredBy.SOLAR_GENERATOR,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -202,7 +220,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeConsumptionBattery,
+        House.CoveredBy.BATTERY,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -210,7 +228,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeConsumptionGrid,
+        House.CoveredBy.GRID,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -218,7 +236,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeConsumptionL1,
+        House.PhaseConsumption.PHASE_1,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -226,7 +244,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeConsumptionL2,
+        House.PhaseConsumption.PHASE_2,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -234,7 +252,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeConsumptionL3,
+        House.PhaseConsumption.PHASE_3,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -242,7 +260,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc1Voltage,
+        PVGenerator.DcInput1.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -250,7 +268,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc1Current,
+        PVGenerator.DcInput1.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
@@ -258,7 +276,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc1Power,
+        PVGenerator.DcInput1.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -266,7 +284,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc2Voltage,
+        PVGenerator.DcInput2.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -274,7 +292,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc2Current,
+        PVGenerator.DcInput2.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
@@ -282,7 +300,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc2Power,
+        PVGenerator.DcInput2.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -290,7 +308,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc3Voltage,
+        PVGenerator.DcInput3.VOLTAGE,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.VOLTAGE,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_POTENTIAL_VOLT,
@@ -298,7 +316,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc3Current,
+        PVGenerator.DcInput3.CURRENT,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.CURRENT,
             ATTR_UNIT_OF_MEASUREMENT: ELECTRIC_CURRENT_AMPERE,
@@ -306,7 +324,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.GeneratorDc3Power,
+        PVGenerator.DcInput3.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -314,7 +332,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeDcPowerPV,
+        PVGenerator.CombinedInput.POWER,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -322,7 +340,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.HomeOwnConsumption,
+        House.SELF_CONSUMPTION,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
             ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
@@ -330,7 +348,21 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsDayYield,
+        S0Input.PULSE_COUNT,
+        {
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+    ),
+    (
+        S0Input.PULSE_COUNT_TIMEFRAME,
+        {
+            ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
+            ATTR_UNIT_OF_MEASUREMENT: TIME_SECONDS,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+        },
+    ),
+    (
+        Day.YIELD,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
@@ -339,7 +371,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsDayHomeConsumption,
+        Day.HOME_CONSUMPTION,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
@@ -348,7 +380,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsDayOwnConsumption,
+        Day.SELF_CONSUMPTION,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_WATT_HOUR,
@@ -357,23 +389,23 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsDayOwnConsumptionRate,
+        Day.SELF_CONSUMPTION_RATE,
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_LAST_RESET: LAST_RESET_DAILY,
         },
     ),
     (
-        Entries.StatisticsDayAutonomyDegree,
+        Day.DEGREE_OF_SELF_SUFFICIENCY,
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
             ATTR_LAST_RESET: LAST_RESET_DAILY,
         },
     ),
     (
-        Entries.StatisticsTotalYield,
+        Total.YIELD,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -381,7 +413,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsTotalOperatingTime,
+        Total.OPERATION_TIME,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.DURATION,
             ATTR_UNIT_OF_MEASUREMENT: TIME_HOURS,
@@ -389,7 +421,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsTotalHomeConsumption,
+        Total.HOME_CONSUMPTION,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -397,7 +429,7 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsTotalOwnConsumption,
+        Total.SELF_CONSUMPTION,
         {
             ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
             ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -405,17 +437,17 @@ SENSORS: list[tuple[Entries, dict]] = [
         },
     ),
     (
-        Entries.StatisticsTotalOwnConsRate,
+        Total.SELF_CONSUMPTION_RATE,
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
     ),
     (
-        Entries.StatisticsTotalAutonomyDegree,
+        Total.DEGREE_OF_SELF_SUFFICIENCY,
         {
             ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE,
-            ATTR_STATE_CLASS: SensorStateClass.TOTAL,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
         },
     ),
 ]
@@ -424,48 +456,6 @@ SENSORS: list[tuple[Entries, dict]] = [
 # This entry as a binary sensor
 # (
 #   Entries.BatteryCurrentDirection,
-#   {
-#     ATTR_DEVICE_CLASS: CHANGE_ME,
-#     ATTR_UNIT_OF_MEASUREMENT: CHANGE_ME,
-#     ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT
-#   }
-# ),
-
-# This value should be mapped somehow
-# 0 - Off
-# 1 - Idle
-# 2 - Starting
-# 3 - Feed MPP
-# 4 - Deactivated
-# 5 - Feed
-# (
-#   Entries.HomeOperatingStatus,
-#   {
-#     ATTR_DEVICE_CLASS: CHANGE_ME,
-#     ATTR_UNIT_OF_MEASUREMENT: CHANGE_ME,
-#     ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT
-#   }
-# ),
-# I dont know what these do
-# (
-#   Entries.S0InPulseCnt,
-#   {
-#     ATTR_DEVICE_CLASS: CHANGE_ME,
-#     ATTR_UNIT_OF_MEASUREMENT: CHANGE_ME,
-#     ATTR_STATE_CLASS: CHANGE_ME
-#   }
-# ),
-# (
-#   Entries.S0InLoginterval,
-#   {
-#     ATTR_DEVICE_CLASS: CHANGE_ME,
-#     ATTR_UNIT_OF_MEASUREMENT: CHANGE_ME,
-#     ATTR_STATE_CLASS: CHANGE_ME
-#   }
-# ),
-# I have no clue what this measures
-# (
-#   Entries.GridCosPhi,
 #   {
 #     ATTR_DEVICE_CLASS: CHANGE_ME,
 #     ATTR_UNIT_OF_MEASUREMENT: CHANGE_ME,
