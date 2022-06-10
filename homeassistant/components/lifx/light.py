@@ -395,9 +395,7 @@ class LIFXManager:
 
     def clear_inflight_discovery(self, inflight: InFlightDiscovery) -> None:
         """Clear in-flight discovery."""
-
-        if inflight.device.mac_addr in self.discoveries_inflight:
-            self.discoveries_inflight.pop(inflight.device.mac_addr)
+        self.discoveries_inflight.pop(inflight.device.mac_addr, None)
 
     @callback
     def register(self, bulb: Light) -> None:
