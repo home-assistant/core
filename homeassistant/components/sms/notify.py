@@ -5,7 +5,7 @@ import gammu  # pylint: disable=import-error
 import voluptuous as vol
 
 from homeassistant.components.notify import PLATFORM_SCHEMA, BaseNotificationService
-from homeassistant.const import CONF_NAME, CONF_RECIPIENT
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT, CONF_TARGET
 import homeassistant.helpers.config_validation as cv
 
 from .const import DOMAIN, SMS_GATEWAY
@@ -44,6 +44,9 @@ class SMSNotificationService(BaseNotificationService):
 
     async def async_send_message(self, message="", **kwargs):
         """Send SMS message."""
+        
+        """ if a number or a list of numbers exist in the CONF_TARGET attribute overwrite the number define in the config."""
+        targets = kwargs.get(CONF_TARGET, [self.number])
         smsinfo = {
             "Class": -1,
             "Unicode": True,
@@ -60,9 +63,12 @@ class SMSNotificationService(BaseNotificationService):
         for encoded_message in encoded:
             # Fill in numbers
             encoded_message["SMSC"] = {"Location": 1}
-            encoded_message["Number"] = self.number
-            try:
-                # Actually send the message
-                await self.gateway.send_sms_async(encoded_message)
-            except gammu.GSMError as exc:
-                _LOGGER.error("Sending to %s failed: %s", self.number, exc)
+            
+            """ send sms to all numbers defined"""
+            for target in targets:
+                encoded_message["Number"] = target            
+                try:
+                    # Actually send the message
+                    await self.gateway.send_sms_async(encoded_message)
+                except gammu.GSMError as exc:
+                    _LOGGER.error("Sending to %s failed: %s", target, exc)
