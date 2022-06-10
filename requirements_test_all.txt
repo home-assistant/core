@@ -290,7 +290,7 @@ asyncsleepiq==1.2.3
 auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
-aurorapy==0.2.6
+aurorapy==0.2.7
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -1032,7 +1032,7 @@ pyhaversion==22.4.1
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.5
+pyhiveapi==0.5.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77

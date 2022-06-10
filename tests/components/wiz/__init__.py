@@ -210,6 +210,7 @@ def _mocked_wizlight(device, extended_white_range, bulb_type) -> wizlight:
     bulb.turn_on = AsyncMock()
     bulb.get_power = AsyncMock(return_value=None)
     bulb.turn_off = AsyncMock()
+    bulb.power_monitoring = False
     bulb.updateState = AsyncMock(return_value=FAKE_STATE)
     bulb.getSupportedScenes = AsyncMock(return_value=list(SCENES.values()))
     bulb.start_push = AsyncMock(side_effect=_save_setup_callback)

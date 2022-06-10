@@ -354,7 +354,7 @@ atenpdu==0.3.2
 auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
-aurorapy==0.2.6
+aurorapy==0.2.7
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -1541,7 +1541,7 @@ pyheos==0.7.2
 pyhik==0.3.0
 
 # homeassistant.components.hive
-pyhiveapi==0.5.5
+pyhiveapi==0.5.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77

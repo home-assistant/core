@@ -1256,12 +1256,8 @@ async def test_tilt_defaults(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert ATTR_CURRENT_TILT_POSITION in state_attributes_dict
-
-    current_cover_position = hass.states.get("cover.test").attributes[
-        ATTR_CURRENT_TILT_POSITION
-    ]
-    assert current_cover_position == STATE_UNKNOWN
+    # Tilt position is not yet known
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
 
 
 async def test_tilt_via_invocation_defaults(hass, mqtt_mock_entry_with_yaml_config):

@@ -209,13 +209,13 @@ class Config:
     def get_exposed_states(self) -> list[State]:
         """Return a list of exposed states."""
         state_machine = self.hass.states
-        states: list[State] = []
         if self.expose_by_default:
             return [
                 state
                 for state in state_machine.async_all()
                 if self.is_state_exposed(state)
             ]
+        states: list[State] = []
         for entity_id in self.entities:
             if (state := state_machine.get(entity_id)) and self.is_state_exposed(state):
                 states.append(state)
