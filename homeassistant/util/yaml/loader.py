@@ -148,29 +148,33 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
 
 def parse_yaml(content: str | TextIO, secrets: Secrets | None = None) -> JSON_TYPE:
     """Load a YAML file."""
-    # If configuration file is empty YAML returns None
-    # We convert that to an empty dict
     try:
-        return (
-            yaml.load(content, Loader=lambda stream: CSafeLoader(stream, secrets))
-            or OrderedDict()
-        )
+        return _parse_yaml(CSafeLoader, content, secrets)
     except yaml.YAMLError:
+        # Loading failed, so we now load with the slow line loader
+        # since the C one will not give us line numbers
         if isinstance(content, TextIO):
             # Rewind the stream so we can try again
             content.seek(0, 0)
-        # Loading failed, so we now load with the slow line loader
-        # since the C one will not give us line numbers
         try:
-            return (
-                yaml.load(
-                    content, Loader=lambda stream: SafeLineLoader(stream, secrets)
-                )
-                or OrderedDict()
-            )
+            return _parse_yaml(SafeLineLoader, content, secrets)
         except yaml.YAMLError as exc:
             _LOGGER.error(str(exc))
             raise HomeAssistantError(exc) from exc
+
+
+def _parse_yaml(
+    loader: type[CSafeLoader] | type[SafeLineLoader],
+    content: str | TextIO,
+    secrets: Secrets | None = None,
+) -> JSON_TYPE:
+    """Load a YAML file."""
+    # If configuration file is empty YAML returns None
+    # We convert that to an empty dict
+    return (
+        yaml.load(content, Loader=lambda stream: loader(stream, secrets))
+        or OrderedDict()
+    )
 
 
 @overload
