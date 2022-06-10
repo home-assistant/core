@@ -157,6 +157,7 @@ def parse_yaml(content: str | TextIO, secrets: Secrets | None = None) -> JSON_TY
         )
     except yaml.YAMLError:
         if isinstance(content, TextIO):
+            # Rewind the stream so we can try again
             content.seek(0, 0)
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
