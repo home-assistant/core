@@ -168,6 +168,7 @@ class Config:
             hass, self.track_domains, self._clear_exposed_cache
         )
 
+    @cache
     def entity_id_to_number(self, entity_id: str) -> str:
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
