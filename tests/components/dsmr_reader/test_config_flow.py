@@ -1,13 +1,14 @@
 """Tests for the config flow."""
 from unittest.mock import MagicMock
+
 from homeassistant.components.dsmr_reader.const import DOMAIN
 from homeassistant.components.mqtt import DATA_MQTT
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
-    RESULT_TYPE_ABORT,
 )
 
 from tests.common import MockConfigEntry
@@ -23,6 +24,13 @@ async def test_import_step(hass: HomeAssistant):
     )
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "DSMR Reader"
+
+    second_result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+    )
+    assert second_result["type"] == RESULT_TYPE_ABORT
+    assert second_result["reason"] == "single_instance_allowed"
 
 
 async def test_initial_user_step(hass: HomeAssistant):
