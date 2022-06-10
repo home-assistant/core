@@ -13,7 +13,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # The hassio integration has not yet fetched data from the supervisor
         raise ConfigEntryNotReady
 
-    board: str
+    board: str | None
     if (board := os_info.get("board")) is None or not board == "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.flow.async_init(
         "zha",
-        context={"source": "onboarding"},
+        context={"source": "hardware"},
         data={
             "radio_type": "efr32",
             "port": {

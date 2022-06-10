@@ -8,7 +8,7 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.components import usb, zeroconf
+from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
@@ -36,6 +36,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow instance."""
         self._device_path = None
+        self._device_settings = None
         self._radio_type = None
         self._title = None
 
@@ -242,14 +243,14 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_onboarding(self, data=None):
-        """Handle onboarding flow."""
+    async def async_step_hardware(self, data=None):
+        """Handle hardware flow."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
         if not data:
-            return self.async_abort(reason="invalid_onboarding_data")
+            return self.async_abort(reason="invalid_hardware_data")
         if data.get("radio_type") != "efr32":
-            return self.async_abort(reason="invalid_onboarding_data")
+            return self.async_abort(reason="invalid_hardware_data")
         self._radio_type = RadioType.ezsp.name
         app_cls = RadioType[self._radio_type].controller
 
@@ -266,13 +267,29 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if param in SUPPORTED_PORT_SETTINGS:
                 schema[param] = value
         try:
-            device_settings = vol.Schema(schema)(data.get("port"))
+            self._device_settings = vol.Schema(schema)(data.get("port"))
         except vol.Invalid:
-            return self.async_abort(reason="invalid_onboarding_data")
+            return self.async_abort(reason="invalid_hardware_data")
 
-        return self.async_create_entry(
-            title=data["port"]["path"],
-            data={CONF_DEVICE: device_settings, CONF_RADIO_TYPE: self._radio_type},
+        self._title = data["port"]["path"]
+
+        self._set_confirm_only()
+        return await self.async_step_confirm_hardware()
+
+    async def async_step_confirm_hardware(self, user_input=None):
+        """Confirm a hardware discovery."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            return self.async_create_entry(
+                title=self._title,
+                data={
+                    CONF_DEVICE: self._device_settings,
+                    CONF_RADIO_TYPE: self._radio_type,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="confirm_hardware",
+            description_placeholders={CONF_NAME: self._title},
         )
 
 

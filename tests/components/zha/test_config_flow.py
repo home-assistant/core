@@ -769,8 +769,8 @@ async def test_migration_ti_cc_to_znp(old_type, new_type, hass, config_entry):
 
 
 @patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-async def test_onboarding(hass):
-    """Test onboarding flow."""
+async def test_hardware_not_onboarded(hass):
+    """Test hardware flow."""
     data = {
         "radio_type": "efr32",
         "port": {
@@ -779,8 +779,48 @@ async def test_onboarding(hass):
             "flow_control": "hardware",
         },
     }
-    result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "onboarding"}, data=data
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "zha", context={"source": "hardware"}, data=data
+        )
+
+    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "/dev/ttyAMA1"
+    assert result["data"] == {
+        CONF_DEVICE: {
+            CONF_BAUDRATE: 115200,
+            CONF_FLOWCONTROL: "hardware",
+            CONF_DEVICE_PATH: "/dev/ttyAMA1",
+        },
+        CONF_RADIO_TYPE: "ezsp",
+    }
+
+
+@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
+async def test_hardware_onboarded(hass):
+    """Test hardware flow."""
+    data = {
+        "radio_type": "efr32",
+        "port": {
+            "path": "/dev/ttyAMA1",
+            "baudrate": 115200,
+            "flow_control": "hardware",
+        },
+    }
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "zha", context={"source": "hardware"}, data=data
+        )
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "confirm_hardware"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
     )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -795,8 +835,8 @@ async def test_onboarding(hass):
     }
 
 
-async def test_onboarding_already_setup(hass):
-    """Test onboarding flow -- already setup."""
+async def test_hardware_already_setup(hass):
+    """Test hardware flow -- already setup."""
 
     MockConfigEntry(
         domain=DOMAIN, data={CONF_DEVICE: {CONF_DEVICE_PATH: "/dev/ttyUSB1"}}
@@ -811,7 +851,7 @@ async def test_onboarding_already_setup(hass):
         },
     }
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "onboarding"}, data=data
+        "zha", context={"source": "hardware"}, data=data
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
@@ -821,12 +861,12 @@ async def test_onboarding_already_setup(hass):
 @pytest.mark.parametrize(
     "data", (None, {}, {"radio_type": "best_radio"}, {"radio_type": "efr32"})
 )
-async def test_onboarding_invalid_data(hass, data):
+async def test_hardware_invalid_data(hass, data):
     """Test onboarding flow -- invalid data."""
 
     result = await hass.config_entries.flow.async_init(
-        "zha", context={"source": "onboarding"}, data=data
+        "zha", context={"source": "hardware"}, data=data
     )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "invalid_onboarding_data"
+    assert result["reason"] == "invalid_hardware_data"

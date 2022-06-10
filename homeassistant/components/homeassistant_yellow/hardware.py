@@ -6,13 +6,9 @@ from homeassistant.components.hassio import get_os_info
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-BOARD_NAMES = {
-    "yellow": "Home Assistant Yellow",
-}
-
-MODELS = {
-    "yellow": "yellow",
-}
+BOARD_NAME = "Home Assistant Yellow"
+MANUFACTURER = "homeassistant"
+MODEL = "yellow"
 
 
 @callback
@@ -29,10 +25,10 @@ def async_info(hass: HomeAssistant) -> HardwareInfo:
     return HardwareInfo(
         board=BoardInfo(
             hassio_board_id=board,
-            manufacturer="homeassistant",
-            model=MODELS.get(board),
+            manufacturer=MANUFACTURER,
+            model=MODEL,
             revision=None,
         ),
-        name=BOARD_NAMES.get(board, f"Unknown Home Assistant model '{board}'"),
+        name=BOARD_NAME,
         url=None,
     )

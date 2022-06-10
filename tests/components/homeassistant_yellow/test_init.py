@@ -1,6 +1,8 @@
 """Test the Home Assistant Yellow integration."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -8,7 +10,12 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, MockModule, mock_integration
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "onboarded, num_entries, num_flows", ((False, 1, 0), (True, 0, 1))
+)
+async def test_setup_entry(
+    hass: HomeAssistant, onboarded, num_entries, num_flows
+) -> None:
     """Test setup of a config entry, including setup of zha."""
     mock_integration(hass, MockModule("hassio"))
 
@@ -23,22 +30,15 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     with patch(
         "homeassistant.components.homeassistant_yellow.get_os_info",
         return_value={"board": "yellow"},
-    ) as mock_get_os_info:
+    ) as mock_get_os_info, patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=onboarded
+    ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
         assert len(mock_get_os_info.mock_calls) == 1
 
-    zha_config_entry = hass.config_entries.async_entries("zha")[0]
-    assert zha_config_entry.data == {
-        "device": {
-            "baudrate": 115200,
-            "flow_control": "hardware",
-            "path": "/dev/ttyAMA1",
-        },
-        "radio_type": "ezsp",
-    }
-    assert zha_config_entry.options == {}
-    assert zha_config_entry.title == "/dev/ttyAMA1"
+    assert len(hass.config_entries.async_entries("zha")) == num_entries
+    assert len(hass.config_entries.flow.async_progress_by_handler("zha")) == num_flows
 
 
 async def test_setup_entry_wrong_board(hass: HomeAssistant) -> None:
