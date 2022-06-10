@@ -12,6 +12,14 @@ from typing import Any, TextIO, TypeVar, Union, overload
 
 import yaml
 
+try:
+    from yaml import CSafeLoader as FastestAvailableLoader
+
+    HAS_C_LOADER = True
+except ImportError:
+    HAS_C_LOADER = False
+    from yaml import SafeLoader as FastestAvailableLoader  # type: ignore[misc]
+
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import SECRET_YAML
@@ -89,7 +97,7 @@ class Secrets:
         return secrets
 
 
-class CSafeLoader(yaml.CSafeLoader):
+class CSafeLoader(FastestAvailableLoader):
     """The fast c safe line loader."""
 
     def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
@@ -151,7 +159,9 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
 def parse_yaml(
     content: str | TextIO | StringIO, secrets: Secrets | None = None
 ) -> JSON_TYPE:
-    """Load a YAML file."""
+    """Parse YAML with the fastest available loader."""
+    if not HAS_C_LOADER:
+        return _parse_yaml_pure_python(content, secrets)
     try:
         return _parse_yaml(CSafeLoader, content, secrets)
     except yaml.YAMLError:
@@ -160,11 +170,18 @@ def parse_yaml(
         if isinstance(content, (StringIO, TextIO)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
-        try:
-            return _parse_yaml(SafeLineLoader, content, secrets)
-        except yaml.YAMLError as exc:
-            _LOGGER.error(str(exc))
-            raise HomeAssistantError(exc) from exc
+        return _parse_yaml_pure_python(content, secrets)
+
+
+def _parse_yaml_pure_python(
+    content: str | TextIO | StringIO, secrets: Secrets | None = None
+) -> JSON_TYPE:
+    """Parse YAML with the pure python loader (this is very slow)."""
+    try:
+        return _parse_yaml(SafeLineLoader, content, secrets)
+    except yaml.YAMLError as exc:
+        _LOGGER.error(str(exc))
+        raise HomeAssistantError(exc) from exc
 
 
 def _parse_yaml(
