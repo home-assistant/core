@@ -168,7 +168,7 @@ class Config:
             hass, self.track_domains, self._clear_exposed_cache
         )
 
-    @cache
+    @cache  # pylint: disable=method-cache-max-size-none
     def entity_id_to_number(self, entity_id: str) -> str:
         """Get a unique number for the entity id."""
         if self.type == TYPE_ALEXA:
@@ -205,7 +205,7 @@ class Config:
 
         return state.attributes.get(ATTR_EMULATED_HUE_NAME, state.name)
 
-    @cache
+    @cache  # pylint: disable=method-cache-max-size-none
     def get_exposed_states(self) -> list[State]:
         """Return a list of exposed states."""
         state_machine = self.hass.states
