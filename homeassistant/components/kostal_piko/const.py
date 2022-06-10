@@ -451,14 +451,3 @@ SENSORS: list[tuple[Descriptor, dict]] = [
         },
     ),
 ]
-
-
-# This entry as a binary sensor
-# (
-#   Entries.BatteryCurrentDirection,
-#   {
-#     ATTR_DEVICE_CLASS: CHANGE_ME,
-#     ATTR_UNIT_OF_MEASUREMENT: CHANGE_ME,
-#     ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT
-#   }
-# ),
