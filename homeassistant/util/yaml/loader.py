@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import OrderedDict
 from collections.abc import Iterator
 import fnmatch
+from io import StringIO
 import logging
 import os
 from pathlib import Path
@@ -146,14 +147,16 @@ def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
         raise HomeAssistantError(exc) from exc
 
 
-def parse_yaml(content: str | TextIO, secrets: Secrets | None = None) -> JSON_TYPE:
+def parse_yaml(
+    content: str | TextIO | StringIO, secrets: Secrets | None = None
+) -> JSON_TYPE:
     """Load a YAML file."""
     try:
         return _parse_yaml(CSafeLoader, content, secrets)
     except yaml.YAMLError:
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
-        if isinstance(content, TextIO):
+        if isinstance(content, (StringIO, TextIO)):
             # Rewind the stream so we can try again
             content.seek(0, 0)
         try:
