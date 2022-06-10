@@ -1538,7 +1538,7 @@ pyheos==0.7.2
 pyhik==0.3.0
 
 # homeassistant.components.hive
-pyhiveapi==0.5.5
+pyhiveapi==0.5.9
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1993,7 +1993,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==3.6.0
+pyunifiprotect==3.9.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2065,7 +2065,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.06.0
+regenmaschine==2022.06.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2486,7 +2486,7 @@ yeelight==0.7.10
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.0.6
+yolink-api==0.0.8
 
 # homeassistant.components.youless
 youless-api==0.16
