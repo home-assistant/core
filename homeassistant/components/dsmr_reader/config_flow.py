@@ -4,9 +4,7 @@ from __future__ import annotations
 from collections.abc import Awaitable
 from typing import Any
 
-from homeassistant import config_entries
 from homeassistant.core import HomeAssistant
-
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
@@ -14,11 +12,10 @@ from .const import DOMAIN
 
 
 async def _async_has_devices(_: HomeAssistant) -> bool:
-    """Always return true as this integration doesn't support any real devices."""
+    """Return true as this integration doesn't support any real devices."""
     return True
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN):
     """Handle DSMR Reader config flow. The MQTT step is inherited from the parent class."""
 
@@ -30,7 +27,9 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
 
     async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
         """Import from configuration.yaml and create config entry."""
-        # There's no configuration supported for this integration
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+        # There's no configuration supported for this integration, so data can be a fixed object
         return self.async_create_entry(title="DSMR Reader", data={})
 
     async def async_step_user(
