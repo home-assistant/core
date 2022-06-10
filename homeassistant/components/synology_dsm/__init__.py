@@ -1,9 +1,11 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
+from itertools import chain
 import logging
 
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
+from synology_dsm.api.surveillance_station.camera import SynoCamera
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
@@ -137,3 +139,28 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove synology_dsm config entry from a device."""
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    api = data.api
+    serial = api.information.serial
+    storage = api.storage
+    # get_all_cameras does not do I/O
+    all_cameras: list[SynoCamera] = api.surveillance_station.get_all_cameras()
+    device_ids = chain(
+        (camera.id for camera in all_cameras),
+        storage.volumes_ids,
+        storage.disks_ids,
+        storage.volumes_ids,
+        (SynoSurveillanceStation.INFO_API_KEY,),  # Camera home/away
+    )
+    return not device_entry.identifiers.intersection(
+        (
+            (DOMAIN, serial),  # Base device
+            *((DOMAIN, f"{serial}_{id}") for id in device_ids),  # Storage and cameras
+        )
+    )
