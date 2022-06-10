@@ -393,6 +393,7 @@ def async_register_api(hass: HomeAssistant) -> None:
     )
     websocket_api.async_register_command(hass, websocket_data_collection_status)
     websocket_api.async_register_command(hass, websocket_abort_firmware_update)
+    websocket_api.async_register_command(hass, websocket_get_firmware_update_progress)
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
     )
@@ -1836,6 +1837,26 @@ async def websocket_abort_firmware_update(
     """Abort a firmware update."""
     await node.async_abort_firmware_update()
     connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_firmware_update_progress",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_get_firmware_update_progress(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Get whether firmware update is in progress."""
+    connection.send_result(msg[ID], await node.async_get_firmware_update_progress())
 
 
 def _get_firmware_update_progress_dict(
