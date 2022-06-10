@@ -152,7 +152,7 @@ def parse_yaml(content: str | TextIO, secrets: Secrets | None = None) -> JSON_TY
     # We convert that to an empty dict
     try:
         return (
-            yaml.load(content, Loader=lambda stream: SafeLineLoader(stream, secrets))
+            yaml.load(content, Loader=lambda stream: CSafeLoader(stream, secrets))
             or OrderedDict()
         )
     except yaml.YAMLError:
