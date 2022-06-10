@@ -5,9 +5,10 @@ import logging
 
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_NAME
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -36,6 +37,7 @@ from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, is
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
+DATA_CONFIG = "config"
 
 ENTITY_SCHEMA = vol.Schema(
     {
@@ -95,7 +97,42 @@ async def async_setup(hass: HomeAssistant, yaml_config: ConfigType) -> bool:
     if DOMAIN not in yaml_config:
         return True
 
-    config = yaml_config[DOMAIN]
+    hass.data[DOMAIN] = {}
+    hass.data[DOMAIN][DATA_CONFIG] = yaml_config[DOMAIN]
+
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_PROJECT_ID: yaml_config[DOMAIN][CONF_PROJECT_ID]},
+        )
+    )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+
+    config: ConfigType = {**hass.data[DOMAIN][DATA_CONFIG]}
+
+    if entry.source == SOURCE_IMPORT:
+        # if project was changed, remove entry a new will be setup
+        if config[CONF_PROJECT_ID] != entry.data[CONF_PROJECT_ID]:
+            hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
+            return False
+
+    config.update(entry.data)
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, config[CONF_PROJECT_ID])},
+        manufacturer="Google",
+        model="Google Assistant",
+        name=config[CONF_PROJECT_ID],
+        entry_type=dr.DeviceEntryType.SERVICE,
+    )
 
     google_config = GoogleConfig(hass, config)
     await google_config.async_initialize()
