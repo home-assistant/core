@@ -28,18 +28,8 @@ from .coordinator import SystemBridgeDataUpdateCoordinator
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up SystemBridge media source."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.entry_id is not None:
-            coordinator: SystemBridgeDataUpdateCoordinator = hass.data[DOMAIN].get(entry.entry_id)
-            if coordinator is not None:
-                return SystemBridgeSource(
-                    hass,
-                    coordinator,
-                    entry.title,
-                    entry.data[CONF_HOST],
-                    entry.data[CONF_PORT],
-                    entry.data[CONF_API_KEY],
-                )
+    return SystemBridgeSource(hass)
+
 
 class SystemBridgeSource(MediaSource):
     """Provide System Bridge media files as a media source."""
@@ -47,84 +37,111 @@ class SystemBridgeSource(MediaSource):
     def __init__(
         self,
         hass: HomeAssistant,
-        coordinator: SystemBridgeDataUpdateCoordinator,
-        title: str,
-        host: str,
-        port: str,
-        api_key: str,
     ) -> None:
         """Initialize source."""
         super().__init__(DOMAIN)
-
-        self.name: str = f"{title} - System Bridge"
+        self.name = "System Bridge"
         self.hass: HomeAssistant = hass
-        self.coordinator: SystemBridgeDataUpdateCoordinator = coordinator
-        self.base_url = f"http://{host}:{port}/api/media/file/data?apiKey={api_key}"
 
-    async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
+    async def async_resolve_media(
+        self,
+        item: MediaSourceItem,
+    ) -> PlayMedia:
         """Resolve media to a url."""
-        path, mime_type = item.identifier.split("~~", 1)
+        entry_id, path, mime_type = item.identifier.split("~~", 2)
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            raise ValueError("Invalid entry")
         path_split = path.split("/", 1)
         return PlayMedia(
-            f"{self.base_url}&base={path_split[0]}&path={path_split[1]}",
+            f"{_build_base_url(entry)}&base={path_split[0]}&path={path_split[1]}",
             mime_type,
         )
 
-    async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
+    async def async_browse_media(
+        self,
+        item: MediaSourceItem,
+    ) -> BrowseMediaSource:
         """Return media."""
         if not item.identifier:
-            await self.coordinator.async_get_media_directories()
+            return self._build_bridges()
+
+        if "~~" not in item.identifier:
+            entry = self.hass.config_entries.async_get_entry(item.identifier)
+            if entry is None:
+                raise ValueError("Invalid entry")
+            coordinator: SystemBridgeDataUpdateCoordinator = self.hass.data[DOMAIN].get(
+                entry.entry_id
+            )
+            await coordinator.async_get_media_directories()
 
             async with async_timeout.timeout(20):
-                while self.coordinator.data.media_directories is None:
+                while coordinator.data.media_directories is None:
                     await asyncio.sleep(1)
 
-            return _build_root_paths(
-                self.coordinator.data.media_directories,
-                self.name,
-            )
+            return _build_root_paths(entry, coordinator.data.media_directories)
 
-        path = item.identifier.split("/", 1)
+        entry_id, path = item.identifier.split("~~", 1)
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            raise ValueError("Invalid entry")
 
-        await self.coordinator.async_get_media_files(
-            path[0], path[1] if len(path) > 1 else None
+        coordinator = self.hass.data[DOMAIN].get(entry.entry_id)
+
+        path_split = path.split("/", 1)
+
+        await coordinator.async_get_media_files(
+            path_split[0], path_split[1] if len(path_split) > 1 else None
         )
 
         async with async_timeout.timeout(20):
-            while self.coordinator.data.media_files is None:
+            while coordinator.data.media_files is None:
                 await asyncio.sleep(1)
 
-        return await self._build_media_items(item.identifier)
+        return _build_media_items(entry, coordinator, path, item.identifier)
 
-    async def _build_media_items(
-        self,
-        identifier: str,
-    ) -> BrowseMediaSource:
-        """Fetch requested files."""
+    def _build_bridges(self) -> BrowseMediaSource:
+        """Build bridges for System Bridge media."""
+        children = []
+        for entry in self.hass.config_entries.async_entries(DOMAIN):
+            if entry.entry_id is not None:
+                children.append(
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=entry.entry_id,
+                        media_class=MEDIA_CLASS_DIRECTORY,
+                        media_content_type="",
+                        title=entry.title,
+                        can_play=False,
+                        can_expand=True,
+                        children=[],
+                        children_media_class=MEDIA_CLASS_DIRECTORY,
+                    )
+                )
+
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=identifier,
+            identifier="",
             media_class=MEDIA_CLASS_DIRECTORY,
             media_content_type="",
-            title=f"{self.name} - {identifier}",
+            title=self.name,
             can_play=False,
             can_expand=True,
-            children=[
-                _build_media_item(identifier, file)
-                for file in self.coordinator.data.media_files.files
-                if file.is_directory
-                or (
-                    file.is_file
-                    and file.mime_type is not None
-                    and file.mime_type.startswith(MEDIA_MIME_TYPES)
-                )
-            ],
+            children=children,
+            children_media_class=MEDIA_CLASS_DIRECTORY,
         )
 
 
+def _build_base_url(
+    entry: ConfigEntry,
+) -> str:
+    """Build base url for System Bridge media."""
+    return f"http://{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}/api/media/file/data?apiKey={entry.data[CONF_API_KEY]}"
+
+
 def _build_root_paths(
+    entry: ConfigEntry,
     media_directories: MediaDirectories,
-    title: str,
 ) -> BrowseMediaSource:
     """Build base categories for System Bridge media."""
     return BrowseMediaSource(
@@ -132,13 +149,13 @@ def _build_root_paths(
         identifier="",
         media_class=MEDIA_CLASS_DIRECTORY,
         media_content_type="",
-        title=title,
+        title=entry.title,
         can_play=False,
         can_expand=True,
         children=[
             BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=directory.key,
+                identifier=f"{entry.entry_id}~~{directory.key}",
                 media_class=MEDIA_CLASS_DIRECTORY,
                 media_content_type="",
                 title=f"{directory.key[:1].capitalize()}{directory.key[1:]}",
@@ -150,6 +167,34 @@ def _build_root_paths(
             for directory in media_directories.directories
         ],
         children_media_class=MEDIA_CLASS_DIRECTORY,
+    )
+
+
+def _build_media_items(
+    entry: ConfigEntry,
+    coordinator: SystemBridgeDataUpdateCoordinator,
+    path: str,
+    identifier: str,
+) -> BrowseMediaSource:
+    """Fetch requested files."""
+    return BrowseMediaSource(
+        domain=DOMAIN,
+        identifier=identifier,
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_type="",
+        title=f"{entry.title} - {path}",
+        can_play=False,
+        can_expand=True,
+        children=[
+            _build_media_item(identifier, file)
+            for file in coordinator.data.media_files.files
+            if file.is_directory
+            or (
+                file.is_file
+                and file.mime_type is not None
+                and file.mime_type.startswith(MEDIA_MIME_TYPES)
+            )
+        ],
     )
 
 
