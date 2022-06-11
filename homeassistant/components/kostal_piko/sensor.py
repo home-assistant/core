@@ -92,7 +92,9 @@ class DxsSensor(CoordinatorEntity, SensorEntity):
 
         self._entry = dxs
         self._attr_name = dxs.name
-        self._attr_unique_id = f"sensor.{dxs.name}"
+        self._attr_unique_id = (
+            f"sensor.{self.coordinator.data[SERIAL_NUMBER.name]}_{dxs.key}"
+        )
 
         if ATTR_DEVICE_CLASS in props:
             self._attr_device_class = props[ATTR_DEVICE_CLASS]
