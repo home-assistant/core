@@ -236,9 +236,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
         await _async_setup_discovery(hass, mqtt_client.conf, entry)
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     # Merge basic configuration, and add missing defaults for basic options
     _merge_basic_config(hass, entry, hass.data.get(DATA_MQTT_CONFIG, {}))
