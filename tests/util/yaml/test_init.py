@@ -1,10 +1,12 @@
 """Test Home Assistant yaml loader."""
+import importlib
 import io
 import os
 import unittest
 from unittest.mock import patch
 
 import pytest
+import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
@@ -12,6 +14,20 @@ import homeassistant.util.yaml as yaml
 from homeassistant.util.yaml import loader as yaml_loader
 
 from tests.common import get_test_config_dir, patch_yaml_files
+
+
+@pytest.fixture()
+def disable_c_loader():
+    """Disable the yaml c loader."""
+    try:
+        cloader = pyyaml.CSafeLoader
+    except ImportError:
+        return
+    del pyyaml.CSafeLoader
+    importlib.reload(yaml_loader)
+    yield
+    pyyaml.CSafeLoader = cloader
+    importlib.reload(yaml_loader)
 
 
 def test_simple_list():
@@ -421,8 +437,27 @@ def test_duplicate_key(caplog):
     assert "contains duplicate key" in caplog.text
 
 
+def test_duplicate_key_no_c_loader(disable_c_loader, caplog):
+    """Test duplicate dict keys."""
+    assert yaml.loader.HAS_C_LOADER is False
+    files = {YAML_CONFIG_FILE: "key: thing1\nkey: thing2"}
+    with patch_yaml_files(files):
+        load_yaml_config_file(YAML_CONFIG_FILE)
+    assert "contains duplicate key" in caplog.text
+
+
 def test_no_recursive_secrets(caplog):
     """Test that loading of secrets from the secrets file fails correctly."""
+    files = {YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}
+    with patch_yaml_files(files), pytest.raises(HomeAssistantError) as e:
+        load_yaml_config_file(YAML_CONFIG_FILE)
+
+    assert e.value.args == ("Secrets not supported in this YAML file",)
+
+
+def test_no_recursive_secrets_no_c_loader(disable_c_loader, caplog):
+    """Test that loading of secrets from the secrets file fails correctly."""
+    assert yaml.loader.HAS_C_LOADER is False
     files = {YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}
     with patch_yaml_files(files), pytest.raises(HomeAssistantError) as e:
         load_yaml_config_file(YAML_CONFIG_FILE)
