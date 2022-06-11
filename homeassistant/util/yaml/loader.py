@@ -98,7 +98,7 @@ class Secrets:
 
 
 class FastestSafeLoader(FastestAvailableSafeLoader):
-    """The fast c safe line loader."""
+    """The fast C safe loader."""
 
     def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
         """Initialize a safe line loader."""
