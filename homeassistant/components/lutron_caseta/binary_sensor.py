@@ -77,7 +77,7 @@ class LutronOccupancySensor(LutronCasetaDevice, BinarySensorEntity):
     @property
     def unique_id(self):
         """Return a unique identifier."""
-        return f"occupancygroup_{self.device_id}"
+        return f"occupancygroup_{self._bridge_unique_id}_{self.device_id}"
 
     @property
     def extra_state_attributes(self):
