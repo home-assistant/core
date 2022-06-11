@@ -14,16 +14,22 @@ TEST_NAME = "my_fibaro_home_center"
 TEST_URL = "http://192.168.1.1/api/"
 TEST_USERNAME = "user"
 TEST_PASSWORD = "password"
+TEST_VERSION = "4.360"
 
 
 @pytest.fixture(name="fibaro_client", autouse=True)
 def fibaro_client_fixture():
     """Mock common methods and attributes of fibaro client."""
     info_mock = Mock()
-    info_mock.get.return_value = Mock(serialNumber=TEST_SERIALNUMBER, hcName=TEST_NAME)
+    info_mock.get.return_value = Mock(
+        serialNumber=TEST_SERIALNUMBER, hcName=TEST_NAME, softVersion=TEST_VERSION
+    )
 
     array_mock = Mock()
     array_mock.list.return_value = []
+
+    client_mock = Mock()
+    client_mock.base_url.return_value = TEST_URL
 
     with patch("fiblary3.client.v4.client.Client.__init__", return_value=None,), patch(
         "fiblary3.client.v4.client.Client.info",
@@ -36,6 +42,10 @@ def fibaro_client_fixture():
     ), patch(
         "fiblary3.client.v4.client.Client.scenes",
         array_mock,
+        create=True,
+    ), patch(
+        "fiblary3.client.v4.client.Client.client",
+        client_mock,
         create=True,
     ):
         yield
