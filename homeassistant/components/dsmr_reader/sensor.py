@@ -25,8 +25,8 @@ async def async_setup_platform(
 ) -> None:
     """Set up DSMR Reader sensors via configuration.yaml and show deprecation warning."""
     _LOGGER.warning(
-        "DSMR Reader yaml config is now deprecated and has been imported. "
-        "Please remove it from your config"
+        "DSMR Reader yaml config is now deprecated and is being imported. "
+        "Please remove it from configuration.yaml"
     )
     hass.async_create_task(
         hass.config_entries.flow.async_init(
