@@ -24,7 +24,8 @@
             }
         },
         "error": {
-            "cannot_connect": "Can not connect"
+            "cannot_connect": "Can not connect",
+            "unknown": "Unexpected error"
         },
         "abort": {
             "already_configured": "already_configured_service"

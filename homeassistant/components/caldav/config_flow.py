@@ -83,29 +83,34 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_USERNAME]}:{user_input[CONF_URL]}"
+            self._async_abort_entries_match(
+                {
+                    CONF_USERNAME: user_input[CONF_USERNAME],
+                    CONF_URL: user_input[CONF_URL],
+                }
             )
-            self._abort_if_unique_id_configured()
 
             if user_input.get(CONF_ADD_CUSTOM_CALENDAR):
                 return await self.async_step_custom_calendars(user_input)
 
             try:
                 await async_caldav_connect(self.hass, user_input)
+            except CALDAV_EXCEPTIONS:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
                 return self.async_create_entry(
                     title=DOMAIN,
                     data=user_input,
                     options={
-                        CONF_CALENDARS: user_input.pop(CONF_CALENDARS, []),
-                        CONF_CUSTOM_CALENDARS: user_input.pop(
+                        CONF_CALENDARS: user_input.get(CONF_CALENDARS, []),
+                        CONF_CUSTOM_CALENDARS: user_input.get(
                             CONF_CUSTOM_CALENDARS, []
                         ),
                     },
                 )
-            except CALDAV_EXCEPTIONS as error:
-                _LOGGER.error(error)
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
@@ -113,7 +118,8 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_custom_calendars(self, user_input=None) -> FlowResult:
         """Add custom calendars."""
-        if user_input.pop(CONF_ADD_CUSTOM_CALENDAR, None):
+        if user_input.get(CONF_ADD_CUSTOM_CALENDAR):
+            user_input[CONF_ADD_CUSTOM_CALENDAR] = False
             self.user_input = user_input
         elif user_input:
             self.user_input.update(user_input)
