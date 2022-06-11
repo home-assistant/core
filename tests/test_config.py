@@ -166,6 +166,8 @@ def test_load_yaml_config_raises_error_if_unsafe_yaml():
 
     assert len(system_mock.mock_calls) == 0
 
+    # Here we validate that the test above is a good test
+    # since previously the syntax was not valid
     with open(YAML_PATH) as fp, patch.object(os, "system") as system_mock:
         list(yaml.unsafe_load_all(fp))
 
