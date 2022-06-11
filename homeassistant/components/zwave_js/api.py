@@ -176,10 +176,9 @@ def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
 
 def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation:
     """Convert QR provisioning information dict to QRProvisioningInformation."""
-    protocols = [Protocols(proto) for proto in info.get(SUPPORTED_PROTOCOLS, [])]
     return QRProvisioningInformation(
-        version=QRCodeVersion(info[VERSION]),
-        security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
+        version=info[VERSION],
+        security_classes=info[SECURITY_CLASSES],
         dsk=info[DSK],
         generic_device_class=info[GENERIC_DEVICE_CLASS],
         specific_device_class=info[SPECIFIC_DEVICE_CLASS],
@@ -190,7 +189,7 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         application_version=info[APPLICATION_VERSION],
         max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
         uuid=info.get(UUID),
-        supported_protocols=protocols if protocols else None,
+        supported_protocols=info.get(SUPPORTED_PROTOCOLS),
         status=info[STATUS],
         requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
         additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
