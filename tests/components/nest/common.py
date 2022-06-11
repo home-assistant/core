@@ -119,6 +119,7 @@ TEST_CONFIG_APP_CREDS = NestTestConfig(
         "sdm": {},
         "token": create_token_entry(),
         "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
         "subscriber_id": SUBSCRIBER_ID,
     },
     auth_implementation="imported-cred",

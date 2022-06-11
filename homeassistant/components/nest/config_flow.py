@@ -1,27 +1,11 @@
 """Config flow to configure Nest.
 
 This configuration flow supports the following:
-  - SDM API with Installed app flow where user enters an auth code manually
   - SDM API with Web OAuth flow with redirect back to Home Assistant
   - Legacy Nest API auth flow with where user enters an auth code manually
 
 NestFlowHandler is an implementation of AbstractOAuth2FlowHandler with
-some overrides to support installed app and old APIs auth flow, reauth,
-and other custom steps inserted in the middle of the flow.
-
-The notable config flow steps are:
-- user: To dispatch between API versions
-- auth: Inserted to add a hook for the installed app flow to accept a token
-- async_oauth_create_entry: Overridden to handle when OAuth is complete.  This
-    does not actually create the entry, but holds on to the OAuth token data
-    for later
-- pubsub: Configure the pubsub subscription. Note that subscriptions created
-    by the config flow are deleted when removed.
-- finish: Handles creating a new configuration entry or updating the existing
-    configuration entry for reauth.
-
-The SDM API config flow supports a hybrid of configuration.yaml (used as defaults)
-and config flow.
+some overrides to custom steps inserted in the middle of the flow.
 """
 from __future__ import annotations
 
@@ -43,16 +27,14 @@ from google_nest_sdm.exceptions import (
 from google_nest_sdm.structure import InfoTrait, Structure
 import voluptuous as vol
 
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import get_random_string
 from homeassistant.util.json import load_json
 
-from . import api, auth
+from . import api
 from .const import (
     CONF_CLOUD_PROJECT_ID,
     CONF_PROJECT_ID,
@@ -60,9 +42,7 @@ from .const import (
     DATA_NEST_CONFIG,
     DATA_SDM,
     DOMAIN,
-    INSTALLED_AUTH_DOMAIN,
     OAUTH2_AUTHORIZE,
-    OOB_REDIRECT_URI,
     SDM_SCOPES,
 )
 
@@ -71,6 +51,9 @@ SUBSCRIPTION_FORMAT = "projects/{cloud_project_id}/subscriptions/home-assistant-
 SUBSCRIPTION_RAND_LENGTH = 10
 
 MORE_INFO_URL = "https://www.home-assistant.io/integrations/nest/#configuration"
+DEPRECATION_MORE_INFO_URL = (
+    "https://www.home-assistant.io/integrations/nest/#deprecated-app-auth-credentials"
+)
 
 # URLs for Configure Cloud Project step
 CLOUD_CONSOLE_URL = "https://console.cloud.google.com/home/dashboard"
@@ -143,29 +126,6 @@ def register_flow_implementation(
     }
 
 
-def register_flow_implementation_from_config(
-    hass: HomeAssistant,
-    config: ConfigType,
-) -> None:
-    """Register auth implementations for SDM API from configuration yaml."""
-    NestFlowHandler.async_register_implementation(
-        hass,
-        auth.InstalledAppAuth(
-            hass,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-    NestFlowHandler.async_register_implementation(
-        hass,
-        auth.WebAuth(
-            hass,
-            config[DOMAIN][CONF_CLIENT_ID],
-            config[DOMAIN][CONF_CLIENT_SECRET],
-        ),
-    )
-
-
 class NestAuthError(HomeAssistantError):
     """Base class for Nest auth errors."""
 
@@ -201,6 +161,7 @@ class NestFlowHandler(
         """Initialize NestFlowHandler."""
         super().__init__()
         self._reauth = False
+        self._upgrade = False
         self._data: dict[str, Any] = {DATA_SDM: {}}
         # Possible name to use for config entry based on the Google Home name
         self._structure_config_title: str | None = None
@@ -242,7 +203,7 @@ class NestFlowHandler(
         """Complete OAuth setup and finish pubsub or finish."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         self._data.update(data)
-        if self._reauth or not self._configure_pubsub():
+        if self._reauth:
             _LOGGER.debug("Skipping Pub/Sub configuration")
             return await self.async_step_finish()
         return await self.async_step_pubsub()
@@ -257,6 +218,13 @@ class NestFlowHandler(
             return self.async_abort(reason="missing_configuration")
         self._reauth = True
         self._data.update(user_input)
+        implementations = await config_entry_oauth2_flow.async_get_implementations(
+            self.hass, self.DOMAIN
+        )
+        if not implementations:
+            # No current valid auth mechanism exists for this config entry
+            self._upgrade = True
+            return await self.async_step_auth_upgrade()
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -266,15 +234,21 @@ class NestFlowHandler(
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         if user_input is None:
             return self.async_show_form(step_id="reauth_confirm")
-        existing_entries = self._async_current_entries()
-        if existing_entries:
-            # Pick an existing auth implementation for Reauth if present. Note
-            # only one ConfigEntry is allowed so its safe to pick the first.
-            entry = next(iter(existing_entries))
-            if "auth_implementation" in entry.data:
-                data = {"implementation": entry.data["auth_implementation"]}
-                return await super().async_step_user(data)
         return await self.async_step_user()
+
+    async def async_step_auth_upgrade(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Give instructions for upgrade of deprecated app auth."""
+        assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
+        if user_input is None:
+            return self.async_show_form(
+                step_id="auth_upgrade",
+                description_placeholders={
+                    "more_info_url": DEPRECATION_MORE_INFO_URL,
+                },
+            )
+        return await self.async_step_cloud_project()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -287,7 +261,7 @@ class NestFlowHandler(
         entries = self._async_current_entries()
         if entries and not self._reauth:
             return self.async_abort(reason="single_instance_allowed")
-        if self.config_mode == ConfigMode.SDM:
+        if self._reauth and not self._upgrade:
             return await super().async_step_user(user_input)
         # Application Credentials setup needs information from the user
         # before creating the OAuth URL
@@ -369,50 +343,6 @@ class NestFlowHandler(
             errors=errors,
         )
 
-    async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Create an entry for auth."""
-        if self.flow_impl.domain == INSTALLED_AUTH_DOMAIN:
-            # The default behavior from the parent class is to redirect the
-            # user with an external step. When using installed app auth, we
-            # instead prompt the user to sign in and copy/paste and
-            # authentication code back into this form.
-            # Note: This is similar to the Legacy API flow below, but it is
-            # simpler to reuse the OAuth logic in the parent class than to
-            # reuse SDM code with Legacy API code.
-            if user_input is not None:
-                self.external_data = {
-                    "code": user_input["code"],
-                    "state": {"redirect_uri": OOB_REDIRECT_URI},
-                }
-                return await super().async_step_creation(user_input)
-
-            result = await super().async_step_auth()
-            return self.async_show_form(
-                step_id="auth",
-                description_placeholders={
-                    "url": result["url"],
-                    "more_info_url": MORE_INFO_URL,
-                },
-                data_schema=vol.Schema({vol.Required("code"): str}),
-            )
-        return await super().async_step_auth(user_input)
-
-    def _configure_pubsub(self) -> bool:
-        """Return True if the config flow should configure Pub/Sub."""
-        if self._reauth:
-            # Just refreshing tokens and preserving existing subscriber id
-            return False
-        if (
-            self.config_mode == ConfigMode.SDM
-            and CONF_SUBSCRIBER_ID in self.hass.data[DOMAIN][DATA_NEST_CONFIG]
-        ):
-            # Hard coded configuration.yaml skips pubsub in config flow
-            return False
-        # No existing subscription configured, so create in config flow
-        return True
-
     async def async_step_pubsub(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -421,15 +351,11 @@ class NestFlowHandler(
         data.update(self._data)
         if user_input:
             data.update(user_input)
-        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
-        errors = {}
+        cloud_project_id = data[CONF_CLOUD_PROJECT_ID].strip()
+        project_id = data[CONF_PROJECT_ID]
+        errors: dict[str, str] = {}
         config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
         project_id = data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
-        if cloud_project_id == project_id:
-            _LOGGER.error(
-                "Same ID entered for Cloud Project and Device Access Project, these should not be the same"
-            )
-            errors[CONF_CLOUD_PROJECT_ID] = "wrong_project_id"
 
         if cloud_project_id and not errors:
             # Create the subscriber id and/or verify it already exists. Note that

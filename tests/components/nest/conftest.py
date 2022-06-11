@@ -26,7 +26,6 @@ from .common import (
     DEVICE_ID,
     SUBSCRIBER_ID,
     TEST_CONFIG_APP_CREDS,
-    TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
     CreateDevice,
     FakeSubscriber,
@@ -192,8 +191,8 @@ def auth_implementation(nest_test_config: NestTestConfig) -> str | None:
 
 
 @pytest.fixture(
-    params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_HYBRID, TEST_CONFIG_APP_CREDS],
-    ids=["yaml-config-only", "hybrid-config", "app-creds"],
+    params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_APP_CREDS],
+    ids=["yaml-config-only", "app-creds"],
 )
 def nest_test_config(request) -> NestTestConfig:
     """Fixture that sets up the configuration used for the test."""

@@ -65,6 +65,7 @@ from .const import (
     DATA_SUBSCRIBER,
     DOMAIN,
     INSTALLED_AUTH_DOMAIN,
+    WEB_AUTH_DOMAIN,
 )
 from .events import EVENT_NAME_MAP, NEST_EVENT
 from .legacy import async_setup_legacy, async_setup_legacy_entry
@@ -133,9 +134,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     config_mode = config_flow.get_config_mode(hass)
     if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy(hass, config)
-
-    if config_mode == config_flow.ConfigMode.SDM:
-        config_flow.register_flow_implementation_from_config(hass, config)
 
     return True
 
@@ -242,8 +240,8 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Attempt to import configuration.yaml settings."""
     config = hass.data[DOMAIN][DATA_NEST_CONFIG]
     new_data = {
-        **entry.data,
         CONF_PROJECT_ID: config[CONF_PROJECT_ID],
+        **entry.data,
     }
     if CONF_SUBSCRIBER_ID not in entry.data:
         if CONF_SUBSCRIBER_ID not in config:
@@ -257,22 +255,21 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     hass.config_entries.async_update_entry(entry, data=new_data)
 
     if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
-        _LOGGER.warning(
-            "Nest has deprecated App Auth and OAuth credentials must be "
-            "re-created by you, following the latest integration "
-            "instructions. Please delete the integration, remove nest from "
-            "configuration.yaml, restart Home Assistant and follow updated "
-            "set up instructions"
+        # App Auth credentials have been deprecated and must be re-created
+        # by the user in the config flow
+        raise ConfigEntryAuthFailed
+
+    if entry.data["auth_implementation"] == WEB_AUTH_DOMAIN:
+        await async_import_client_credential(
+            hass,
+            DOMAIN,
+            ClientCredential(
+                config[CONF_CLIENT_ID],
+                config[CONF_CLIENT_SECRET],
+            ),
+            WEB_AUTH_DOMAIN,
         )
-        return
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(
-            config[CONF_CLIENT_ID],
-            config[CONF_CLIENT_SECRET],
-        ),
-    )
+
     _LOGGER.warning(
         "Configuration of Nest integration in YAML is deprecated and "
         "will be removed in a future release; Your existing configuration "
