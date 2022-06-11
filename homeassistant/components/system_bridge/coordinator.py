@@ -75,7 +75,6 @@ class SystemBridgeDataUpdateCoordinator(
             hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
         )
 
-    @property
     def is_ready(self) -> bool:
         """Return if the data is ready."""
         if self.data is None:

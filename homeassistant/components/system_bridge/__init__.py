@@ -101,7 +101,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         # Wait for initial data
         async with async_timeout.timeout(30):
-            while not coordinator.is_ready:
+            while not coordinator.is_ready():
                 _LOGGER.debug(
                     "Waiting for initial data from %s (%s)",
                     entry.title,
@@ -112,13 +112,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Timed out waiting for {entry.title} ({entry.data[CONF_HOST]})."
         ) from exception
-
-    _LOGGER.debug(
-        "Is coordinator ready for %s (%s): %s",
-        entry.title,
-        entry.data[CONF_HOST],
-        coordinator.is_ready,
-    )
 
     _LOGGER.debug(
         "Initial coordinator data for %s (%s):\n%s",
