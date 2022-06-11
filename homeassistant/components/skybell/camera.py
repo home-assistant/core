@@ -10,7 +10,7 @@ from homeassistant.components.camera import (
     Camera,
     CameraEntityDescription,
 )
-from homeassistant.components.ffmpeg import DATA_FFMPEG
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MONITORED_CONDITIONS
 from homeassistant.core import HomeAssistant
@@ -87,7 +87,7 @@ class SkybellActivityCamera(SkybellCamera):
         self, request: web.Request
     ) -> web.StreamResponse | None:
         """Generate an HTTP MJPEG stream from the latest recorded activity."""
-        stream = CameraMjpeg(self.hass.data[DATA_FFMPEG].binary)
+        stream = CameraMjpeg(get_ffmpeg_manager(self.hass).binary)
         url = await self.coordinator.device.async_get_activity_video_url()
         await stream.open_camera(url, extra_cmd="-r 210")
 
@@ -96,7 +96,7 @@ class SkybellActivityCamera(SkybellCamera):
                 self.hass,
                 request,
                 await stream.get_reader(),
-                self.hass.data[DATA_FFMPEG].ffmpeg_stream_content_type,
+                get_ffmpeg_manager(self.hass).ffmpeg_stream_content_type,
             )
         except Exception as ex:  # pylint: disable=broad-except
             LOGGER.error("Error occurred while playing stream: %s", ex)
