@@ -37,6 +37,7 @@ USER_INPUT = {
     CONF_URL: "http://homeassistant.io",
     CONF_VERIFY_SSL: True,
     CONF_DAYS: 2,
+    CONF_ADD_CUSTOM_CALENDAR: False,
 }
 
 USER_INPUT_CUSTO = {
@@ -110,12 +111,6 @@ async def test_user_form(hass, mock_connect):
     assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
     assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
 
-    assert result["result"]
-    assert (
-        result["result"].unique_id
-        == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
-    )
-
 
 async def test_user_form_custom(hass, mock_connect):
     """Test we get the user initiated form."""
@@ -149,12 +144,6 @@ async def test_user_form_custom(hass, mock_connect):
     assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
     assert (
         result["options"][CONF_CUSTOM_CALENDARS] == CUSTOM_INPUT[CONF_CUSTOM_CALENDARS]
-    )
-
-    assert result["result"]
-    assert (
-        result["result"].unique_id
-        == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
     )
 
 
@@ -226,10 +215,6 @@ async def test_import(hass: HomeAssistant, mock_connect):
     assert result["data"][CONF_DAYS] == USER_INPUT[CONF_DAYS]
     assert result["data"][CONF_VERIFY_SSL] is USER_INPUT[CONF_VERIFY_SSL]
     assert result["options"] == OPTIONS_INPUT
-    assert (
-        result["result"].unique_id
-        == f"{USER_INPUT[CONF_USERNAME]}:{USER_INPUT[CONF_URL]}"
-    )
 
 
 async def test_options_flow(hass: HomeAssistant):
