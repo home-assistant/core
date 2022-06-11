@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
+import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
@@ -9,6 +10,8 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.config_entry_flow import DiscoveryFlowHandler
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def _async_has_devices(_: HomeAssistant) -> bool:
@@ -29,6 +32,9 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
         """Import from configuration.yaml and create config entry."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
+        if not self.hass.services.has_service(domain="mqtt", service="publish"):
+            _LOGGER.warning("DSMR Reader configuration import failed. MQTT is missing")
+            return self.async_abort(reason="mqtt_missing")
         # There's no configuration supported for this integration, so data can be a fixed object
         return self.async_create_entry(title="DSMR Reader", data={})
 
@@ -39,8 +45,6 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
         if not self.hass.services.has_service(domain="mqtt", service="publish"):
-            return self.async_show_form(
-                step_id="confirm", errors={"base": "mqtt_missing"}
-            )
+            return self.async_abort(reason="mqtt_missing")
 
         return await self.async_step_confirm()

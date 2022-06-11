@@ -1,14 +1,12 @@
 {
   "config": {
-    "error": {
-      "mqtt_missing": "The MQTT service is required for this integration."
-    },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
+      "mqtt_missing": "The MQTT service is required for this integration."
     },
     "step": {
       "confirm": {
-        "description": "This integration relies on the MQTT connection in DSMR Reader and uses the 'split topic' data sources to create sensors."
+        "description": "Make sure to configure the 'split topic' data sources in DSMR Reader, as described [in the documentation](https://www.home-assistant.io/integrations/dsmr_reader#setup)."
       }
     }
   }
