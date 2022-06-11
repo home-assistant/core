@@ -14,6 +14,7 @@ from zwave_js_server.const import (
     InclusionStrategy,
     LogLevel,
     Protocols,
+    ProvisioningEntryStatus,
     QRCodeVersion,
     SecurityClass,
     ZwaveFeature,
@@ -148,6 +149,8 @@ MAX_INCLUSION_REQUEST_INTERVAL = "max_inclusion_request_interval"
 UUID = "uuid"
 SUPPORTED_PROTOCOLS = "supported_protocols"
 ADDITIONAL_PROPERTIES = "additional_properties"
+STATUS = "status"
+REQUESTED_SECURITY_CLASSES = "requested_security_classes"
 
 FEATURE = "feature"
 UNPROVISION = "unprovision"
@@ -160,9 +163,13 @@ def convert_planned_provisioning_entry(info: dict) -> ProvisioningEntry:
     """Handle provisioning entry dict to ProvisioningEntry."""
     return ProvisioningEntry(
         dsk=info[DSK],
-        security_classes=[SecurityClass(sec_cls) for sec_cls in info[SECURITY_CLASSES]],
+        security_classes=info[SECURITY_CLASSES],
+        status=info[STATUS],
+        requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
         additional_properties={
-            k: v for k, v in info.items() if k not in (DSK, SECURITY_CLASSES)
+            k: v
+            for k, v in info.items()
+            if k not in (DSK, SECURITY_CLASSES, STATUS, REQUESTED_SECURITY_CLASSES)
         },
     )
 
@@ -184,6 +191,8 @@ def convert_qr_provisioning_information(info: dict) -> QRProvisioningInformation
         max_inclusion_request_interval=info.get(MAX_INCLUSION_REQUEST_INTERVAL),
         uuid=info.get(UUID),
         supported_protocols=protocols if protocols else None,
+        status=info[STATUS],
+        requested_security_classes=info.get(REQUESTED_SECURITY_CLASSES),
         additional_properties=info.get(ADDITIONAL_PROPERTIES, {}),
     )
 
@@ -196,6 +205,12 @@ PLANNED_PROVISIONING_ENTRY_SCHEMA = vol.All(
             vol.Required(SECURITY_CLASSES): vol.All(
                 cv.ensure_list,
                 [vol.Coerce(SecurityClass)],
+            ),
+            vol.Optional(STATUS, default=ProvisioningEntryStatus.ACTIVE): vol.Coerce(
+                ProvisioningEntryStatus
+            ),
+            vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
+                cv.ensure_list, [vol.Coerce(SecurityClass)]
             ),
         },
         # Provisioning entries can have extra keys for SmartStart
@@ -225,6 +240,12 @@ QR_PROVISIONING_INFORMATION_SCHEMA = vol.All(
             vol.Optional(SUPPORTED_PROTOCOLS): vol.All(
                 cv.ensure_list,
                 [vol.Coerce(Protocols)],
+            ),
+            vol.Optional(STATUS, default=ProvisioningEntryStatus.ACTIVE): vol.Coerce(
+                ProvisioningEntryStatus
+            ),
+            vol.Optional(REQUESTED_SECURITY_CLASSES): vol.All(
+                cv.ensure_list, [vol.Coerce(SecurityClass)]
             ),
             vol.Optional(ADDITIONAL_PROPERTIES): dict,
         }
