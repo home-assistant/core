@@ -145,6 +145,9 @@ class SafeLineLoader(yaml.SafeLoader):
         return self.stream.name or ""
 
 
+LoaderType = Union[SafeLineLoader, FastestSafeLoader]
+
+
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
     """Load a YAML file."""
     try:
@@ -200,7 +203,7 @@ def _parse_yaml(
 @overload
 def _add_reference(
     obj: list | NodeListClass,
-    loader: SafeLineLoader | FastestSafeLoader,
+    loader: LoaderType,
     node: yaml.nodes.Node,
 ) -> NodeListClass:
     ...
@@ -209,20 +212,18 @@ def _add_reference(
 @overload
 def _add_reference(
     obj: str | NodeStrClass,
-    loader: SafeLineLoader | FastestSafeLoader,
+    loader: LoaderType,
     node: yaml.nodes.Node,
 ) -> NodeStrClass:
     ...
 
 
 @overload
-def _add_reference(
-    obj: _DictT, loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
-) -> _DictT:
+def _add_reference(obj: _DictT, loader: LoaderType, node: yaml.nodes.Node) -> _DictT:
     ...
 
 
-def _add_reference(obj, loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node):  # type: ignore[no-untyped-def]
+def _add_reference(obj, loader: LoaderType, node: yaml.nodes.Node):  # type: ignore[no-untyped-def]
     """Add file reference information to an object."""
     if isinstance(obj, list):
         obj = NodeListClass(obj)
@@ -233,9 +234,7 @@ def _add_reference(obj, loader: SafeLineLoader | FastestSafeLoader, node: yaml.n
     return obj
 
 
-def _include_yaml(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
-) -> JSON_TYPE:
+def _include_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load another YAML file and embeds it using the !include tag.
 
     Example:
@@ -266,9 +265,7 @@ def _find_files(directory: str, pattern: str) -> Iterator[str]:
                 yield filename
 
 
-def _include_dir_named_yaml(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
-) -> OrderedDict:
+def _include_dir_named_yaml(loader: LoaderType, node: yaml.nodes.Node) -> OrderedDict:
     """Load multiple files from directory as a dictionary."""
     mapping: OrderedDict = OrderedDict()
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
@@ -281,7 +278,7 @@ def _include_dir_named_yaml(
 
 
 def _include_dir_merge_named_yaml(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
+    loader: LoaderType, node: yaml.nodes.Node
 ) -> OrderedDict:
     """Load multiple files from directory as a merged dictionary."""
     mapping: OrderedDict = OrderedDict()
@@ -296,7 +293,7 @@ def _include_dir_merge_named_yaml(
 
 
 def _include_dir_list_yaml(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
+    loader: LoaderType, node: yaml.nodes.Node
 ) -> list[JSON_TYPE]:
     """Load multiple files from directory as a list."""
     loc = os.path.join(os.path.dirname(loader.get_name()), node.value)
@@ -308,7 +305,7 @@ def _include_dir_list_yaml(
 
 
 def _include_dir_merge_list_yaml(
-    loader: SafeLineLoader, node: yaml.nodes.Node
+    loader: LoaderType, node: yaml.nodes.Node
 ) -> JSON_TYPE:
     """Load multiple files from directory as a merged list."""
     loc: str = os.path.join(os.path.dirname(loader.get_name()), node.value)
@@ -322,9 +319,7 @@ def _include_dir_merge_list_yaml(
     return _add_reference(merged_list, loader, node)
 
 
-def _ordered_dict(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.MappingNode
-) -> OrderedDict:
+def _ordered_dict(loader: LoaderType, node: yaml.nodes.MappingNode) -> OrderedDict:
     """Load YAML mappings into an ordered dictionary to preserve key order."""
     loader.flatten_mapping(node)
     nodes = loader.construct_pairs(node)
@@ -356,15 +351,13 @@ def _ordered_dict(
     return _add_reference(OrderedDict(nodes), loader, node)
 
 
-def _construct_seq(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
-) -> JSON_TYPE:
+def _construct_seq(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Add line number and file name to Load YAML sequence."""
     (obj,) = loader.construct_yaml_seq(node)
     return _add_reference(obj, loader, node)
 
 
-def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
+def _env_var_yaml(loader: LoaderType, node: yaml.nodes.Node) -> str:
     """Load environment variables and embed it into the configuration YAML."""
     args = node.value.split()
 
@@ -377,9 +370,7 @@ def _env_var_yaml(loader: SafeLineLoader, node: yaml.nodes.Node) -> str:
     raise HomeAssistantError(node.value)
 
 
-def secret_yaml(
-    loader: SafeLineLoader | FastestSafeLoader, node: yaml.nodes.Node
-) -> JSON_TYPE:
+def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
     """Load secrets and embed it into the configuration YAML."""
     if loader.secrets is None:
         raise HomeAssistantError("Secrets not supported in this YAML file")
