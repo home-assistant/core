@@ -48,7 +48,6 @@ class TotalConnectLowBatteryDescription(BinarySensorEntityDescription):
 
     device_class = BinarySensorDeviceClass.BATTERY
     entity_category = EntityCategory.DIAGNOSTIC
-    entity_registry_visible_default = False
 
 
 class TotalConnectTamperDescription(BinarySensorEntityDescription):
@@ -56,7 +55,6 @@ class TotalConnectTamperDescription(BinarySensorEntityDescription):
 
     device_class = BinarySensorDeviceClass.TAMPER
     entity_category = EntityCategory.DIAGNOSTIC
-    entity_registry_visible_default = False
 
 
 class TotalConnectPowerDescription(BinarySensorEntityDescription):
@@ -64,7 +62,6 @@ class TotalConnectPowerDescription(BinarySensorEntityDescription):
 
     device_class = BinarySensorDeviceClass.POWER
     entity_category = EntityCategory.DIAGNOSTIC
-    entity_registry_visible_default = False
 
 
 class TotalConnectBinarySensor(BinarySensorEntity):
