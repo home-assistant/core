@@ -147,7 +147,7 @@ def test_load_yaml_config_raises_error_if_not_dict():
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
     with open(YAML_PATH, "w") as fp:
-        fp.write(":")
+        fp.write(":-")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
