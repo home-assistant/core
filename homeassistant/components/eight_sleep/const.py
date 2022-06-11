@@ -1,7 +1,4 @@
 """Eight Sleep constants."""
-DATA_HEAT = "heat"
-DATA_USER = "user"
-DATA_API = "api"
 DOMAIN = "eight_sleep"
 
 HEAT_ENTITY = "heat"
@@ -15,5 +12,5 @@ NAME_MAP = {
 
 SERVICE_HEAT_SET = "heat_set"
 
-ATTR_TARGET_HEAT = "target"
-ATTR_HEAT_DURATION = "duration"
+ATTR_TARGET = "target"
+ATTR_DURATION = "duration"
