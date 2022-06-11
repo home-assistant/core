@@ -560,6 +560,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/kulersky/ @emlove
 /tests/components/kulersky/ @emlove
 /homeassistant/components/lametric/ @robbiet480 @frenck
+/homeassistant/components/landisgyr_heat_meter/ @vpathuis
+/tests/components/landisgyr_heat_meter/ @vpathuis
 /homeassistant/components/launch_library/ @ludeeus @DurgNomis-drol
 /tests/components/launch_library/ @ludeeus @DurgNomis-drol
 /homeassistant/components/laundrify/ @xLarry

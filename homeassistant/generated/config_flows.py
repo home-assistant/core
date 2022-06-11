@@ -187,6 +187,7 @@ FLOWS = {
         "kostal_plenticore",
         "kraken",
         "kulersky",
+        "landisgyr_heat_meter",
         "launch_library",
         "laundrify",
         "life360",
