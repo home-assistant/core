@@ -112,22 +112,23 @@ async def _async_migrate_unique_ids(
     """Migrate entities since the occupancygroup were not actually unique."""
 
     dev_reg = dr.async_get(hass)
+    bridge_unique_id = entry.unique_id
 
     @callback
     def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
-        if not (unique_id := entry.unique_id):
+        if not (unique_id := entity_entry.unique_id):
             return None
         if not unique_id.startswith("occupancygroup_") or unique_id.startswith(
-            f"occupancygroup_{entity_entry.unique_id}"
+            f"occupancygroup_{bridge_unique_id}"
         ):
             return None
         sensor_id = unique_id.split("_")[1]
-        new_unique_id = f"occupancygroup_{entity_entry.unique_id}_{sensor_id}"
+        new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
         if dev_entry := dev_reg.async_get_device({DOMAIN, unique_id}):
             dev_reg.async_update_device(
                 dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
             )
-        return {"new_unique_id": f"occupancygroup_{entity_entry.unique_id}_{sensor_id}"}
+        return {"new_unique_id": f"occupancygroup_{bridge_unique_id}_{sensor_id}"}
 
     await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
 
