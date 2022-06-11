@@ -6,7 +6,14 @@ from unittest.mock import MagicMock, Mock, patch
 from caldav.objects import Event
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_URL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
@@ -219,7 +226,10 @@ END:VCALENDAR
 
 CALDAV_CONFIG = {
     "platform": "caldav",
-    "url": "http://test.local",
+    CONF_URL: "http://test.local",
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_VERIFY_SSL: False,
     "custom_calendars": [],
 }
 
