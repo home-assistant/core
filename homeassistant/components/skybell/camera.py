@@ -25,7 +25,6 @@ from .const import (
     DOMAIN,
     IMAGE_ACTIVITY,
     IMAGE_AVATAR,
-    LOGGER,
 )
 from .coordinator import SkybellDataUpdateCoordinator
 from .entity import SkybellEntity
@@ -85,7 +84,7 @@ class SkybellActivityCamera(SkybellCamera):
 
     async def handle_async_mjpeg_stream(
         self, request: web.Request
-    ) -> web.StreamResponse | None:
+    ) -> web.StreamResponse:
         """Generate an HTTP MJPEG stream from the latest recorded activity."""
         stream = CameraMjpeg(get_ffmpeg_manager(self.hass).binary)
         url = await self.coordinator.device.async_get_activity_video_url()
@@ -98,6 +97,5 @@ class SkybellActivityCamera(SkybellCamera):
                 await stream.get_reader(),
                 get_ffmpeg_manager(self.hass).ffmpeg_stream_content_type,
             )
-        except Exception as ex:  # pylint: disable=broad-except
-            LOGGER.error("Error occurred while playing stream: %s", ex)
-            return None
+        finally:
+            await stream.close()
