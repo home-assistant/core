@@ -147,7 +147,7 @@ async def test_user_form_custom(hass, mock_connect):
     )
 
 
-async def test_abort_on_connection_error(hass: HomeAssistant, mock_connect) -> None:
+async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
     """Test we abort on connection error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -158,7 +158,7 @@ async def test_abort_on_connection_error(hass: HomeAssistant, mock_connect) -> N
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.caldav.config_flow.async_caldav_connect",
+        "homeassistant.components.caldav.caldav.DAVClient.principal",
         side_effect=DAVError(),
     ):
 
@@ -174,9 +174,7 @@ async def test_abort_on_connection_error(hass: HomeAssistant, mock_connect) -> N
 async def test_abort_if_already_setup(hass: HomeAssistant):
     """Test we abort if component is already setup."""
     MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "url", CONF_USERNAME: "username"},
-        unique_id="username:url",
+        domain=DOMAIN, data={CONF_URL: "url", CONF_USERNAME: "username"}
     ).add_to_hass(hass)
 
     # Should fail, same MOCK_HOST (import)
@@ -201,9 +199,7 @@ async def test_abort_if_already_setup(hass: HomeAssistant):
 async def test_import(hass: HomeAssistant, mock_connect):
     """Test import step."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_IMPORT},
-        data=IMPORT_INPUT,
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=IMPORT_INPUT
     )
     await hass.async_block_till_done()
 
@@ -220,9 +216,7 @@ async def test_import(hass: HomeAssistant, mock_connect):
 async def test_options_flow(hass: HomeAssistant):
     """Test options."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "url", CONF_USERNAME: "username"},
-        unique_id="username:url",
+        domain=DOMAIN, data={CONF_URL: "url", CONF_USERNAME: "username"}
     )
     entry.add_to_hass(hass)
 
@@ -242,9 +236,7 @@ async def test_options_flow(hass: HomeAssistant):
 async def test_options_flow_error_choice(hass: HomeAssistant):
     """Test options."""
     entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_URL: "url", CONF_USERNAME: "username"},
-        unique_id="username:url",
+        domain=DOMAIN, data={CONF_URL: "url", CONF_USERNAME: "username"}
     )
     entry.add_to_hass(hass)
 
