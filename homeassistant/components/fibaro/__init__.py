@@ -18,6 +18,7 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ARMED,
     ATTR_BATTERY_LEVEL,
+    ATTR_MODEL,
     CONF_DEVICE_CLASS,
     CONF_EXCLUDE,
     CONF_ICON,
@@ -29,8 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -158,6 +160,9 @@ class FibaroController:
         self._state_handler = None  # Fiblary's StateHandler object
         self.hub_serial = None  # Unique serial number of the hub
         self.name = None  # The friendly name of the hub
+        # Device infos by fibaro device id
+        self._device_infos: dict[int, DeviceInfo] = {}
+        self.hub_device_info: DeviceInfo
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
@@ -166,6 +171,14 @@ class FibaroController:
             info = self._client.info.get()
             self.hub_serial = slugify(info.serialNumber)
             self.name = slugify(info.hcName)
+            self.hub_device_info = DeviceInfo(
+                identifiers={(DOMAIN, info.serialNumber)},
+                manufacturer="Fibaro",
+                name=info.hcName,
+                model=info.serialNumber,
+                sw_version=info.softVersion,
+                configuration_url=self._client.client.base_url.removesuffix("/api/"),
+            )
         except AssertionError:
             _LOGGER.error("Can't connect to Fibaro HC. Please check URL")
             return False
@@ -305,6 +318,44 @@ class FibaroController:
             platform = Platform.LIGHT
         return platform
 
+    def _create_device_info(self, device: Any, devices: list) -> None:
+        """Create the device info. Unrooted entities are directly shown below the home center."""
+
+        # The home center is always id 1 (z-wave primary controller)
+        if "parentId" not in device or device.parentId <= 1:
+            return
+
+        master_entity: Any | None = None
+        if device.parentId == 1:
+            master_entity = device
+        else:
+            for parent in devices:
+                if "id" in parent and parent.id == device.parentId:
+                    master_entity = parent
+        if master_entity is None:
+            _LOGGER.error("Parent with id %s not found", device.parentId)
+            return
+
+        if "zwaveCompany" in master_entity.properties:
+            manufacturer = master_entity.properties.zwaveCompany
+        else:
+            manufacturer = "Unknown"
+
+        self._device_infos[master_entity.id] = DeviceInfo(
+            identifiers={(DOMAIN, master_entity.id)},
+            manufacturer=manufacturer,
+            name=master_entity.name,
+            via_device=(DOMAIN, str(self.hub_device_info[ATTR_MODEL])),
+        )
+
+    def get_device_info(self, device: Any) -> DeviceInfo:
+        """Get the device info by fibaro device id."""
+        if device.id in self._device_infos:
+            return self._device_infos[device.id]
+        if "parentId" in device and device.parentId in self._device_infos:
+            return self._device_infos[device.parentId]
+        return self.hub_device_info
+
     def _read_scenes(self):
         scenes = self._client.scenes.list()
         self._scene_map = {}
@@ -328,7 +379,7 @@ class FibaroController:
 
     def _read_devices(self):
         """Read and process the device list."""
-        devices = self._client.devices.list()
+        devices = list(self._client.devices.list())
         self._device_map = {}
         last_climate_parent = None
         last_endpoint = None
@@ -356,6 +407,7 @@ class FibaroController:
                 if (platform := device.mapped_platform) is None:
                     continue
                 device.unique_id_str = f"{self.hub_serial}.{device.id}"
+                self._create_device_info(device, devices)
                 self._device_map[device.id] = device
                 _LOGGER.debug(
                     "%s (%s, %s) -> %s %s",
@@ -462,6 +514,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     for platform in PLATFORMS:
         devices[platform] = [*controller.fibaro_devices[platform]]
 
+    # register the hub device info separately as the hub has sometimes no entities
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, **controller.hub_device_info
+    )
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     controller.enable_state_handler()
@@ -490,6 +548,7 @@ class FibaroDevice(Entity):
         self.ha_id = fibaro_device.ha_id
         self._attr_name = fibaro_device.friendly_name
         self._attr_unique_id = fibaro_device.unique_id_str
+        self._attr_device_info = self.controller.get_device_info(fibaro_device)
         # propagate hidden attribute set in fibaro home center to HA
         if "visible" in fibaro_device and fibaro_device.visible is False:
             self._attr_entity_registry_visible_default = False

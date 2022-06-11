@@ -33,6 +33,13 @@ async def async_setup_entry(
 class FibaroScene(FibaroDevice, Scene):
     """Representation of a Fibaro scene entity."""
 
+    def __init__(self, fibaro_device: Any) -> None:
+        """Initialize the Fibaro scene."""
+        super().__init__(fibaro_device)
+
+        # All scenes are shown on hub device
+        self._attr_device_info = self.controller.hub_device_info
+
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         self.fibaro_device.start()
