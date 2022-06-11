@@ -1,7 +1,7 @@
 """Test the WS66i 6-Zone Amplifier config flow."""
 from unittest.mock import patch
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.ws66i.const import (
     CONF_SOURCE_1,
     CONF_SOURCE_2,
@@ -15,15 +15,15 @@ from homeassistant.components.ws66i.const import (
 )
 from homeassistant.const import CONF_IP_ADDRESS
 
+from .test_media_player import AttrDict
+
 from tests.common import MockConfigEntry
-from tests.components.ws66i.test_media_player import AttrDict
 
 CONFIG = {CONF_IP_ADDRESS: "1.1.1.1"}
 
 
 async def test_form(hass):
     """Test we get the form."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

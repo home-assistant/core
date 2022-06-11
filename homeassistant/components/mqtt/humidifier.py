@@ -1,7 +1,6 @@
 """Support for MQTT humidifiers."""
 from __future__ import annotations
 
-import asyncio
 import functools
 import logging
 
@@ -30,8 +29,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -46,11 +45,13 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 CONF_AVAILABLE_MODES_LIST = "modes"
 CONF_DEVICE_CLASS = "device_class"
@@ -103,15 +104,13 @@ def valid_humidity_range_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         # CONF_AVAIALABLE_MODES_LIST and CONF_MODE_COMMAND_TOPIC must be used together
         vol.Inclusive(
             CONF_AVAILABLE_MODES_LIST, "available_modes", default=[]
         ): cv.ensure_list,
-        vol.Inclusive(
-            CONF_MODE_COMMAND_TOPIC, "available_modes"
-        ): mqtt.valid_publish_topic,
+        vol.Inclusive(CONF_MODE_COMMAND_TOPIC, "available_modes"): valid_publish_topic,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(
             CONF_DEVICE_CLASS, default=HumidifierDeviceClass.HUMIDIFIER
@@ -119,14 +118,14 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
             [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
         vol.Optional(CONF_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_MODE_STATE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
-        vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Required(CONF_TARGET_HUMIDITY_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_TARGET_HUMIDITY_COMMAND_TEMPLATE): cv.template,
         vol.Optional(
             CONF_TARGET_HUMIDITY_MAX, default=DEFAULT_MAX_HUMIDITY
@@ -135,7 +134,7 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_SCHEMA.extend(
             CONF_TARGET_HUMIDITY_MIN, default=DEFAULT_MIN_HUMIDITY
         ): cv.positive_int,
         vol.Optional(CONF_TARGET_HUMIDITY_STATE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_TARGET_HUMIDITY_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(
             CONF_PAYLOAD_RESET_HUMIDITY, default=DEFAULT_PAYLOAD_RESET
         ): cv.string,
@@ -173,7 +172,11 @@ async def async_setup_platform(
     """Set up MQTT humidifier configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, humidifier.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        humidifier.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -184,14 +187,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT humidifier through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, humidifier.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(
+            hass, humidifier.DOMAIN, PLATFORM_SCHEMA_MODERN
         )
-    )  # setup for discovery
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

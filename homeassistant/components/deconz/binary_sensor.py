@@ -207,14 +207,10 @@ async def async_setup_entry(
 
             async_add_entities([DeconzBinarySensor(sensor, gateway, description)])
 
-    config_entry.async_on_unload(
-        gateway.api.sensors.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors,
     )
-    for sensor_id in gateway.api.sensors:
-        async_add_sensor(EventType.ADDED, sensor_id)
 
     @callback
     def async_reload_clip_sensors() -> None:

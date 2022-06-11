@@ -12,6 +12,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     FLASH_LONG,
     FLASH_SHORT,
+    ColorMode,
 )
 from homeassistant.components.zha.core.group import GroupMember
 from homeassistant.components.zha.light import FLASH_EFFECTS
@@ -580,7 +581,11 @@ async def test_zha_group_light_entity(
     await async_wait_for_updates(hass)
 
     # test that the lights were created and are off
-    assert hass.states.get(group_entity_id).state == STATE_OFF
+    group_state = hass.states.get(group_entity_id)
+    assert group_state.state == STATE_OFF
+    assert group_state.attributes["supported_color_modes"] == [ColorMode.HS]
+    # Light which is off has no color mode
+    assert "color_mode" not in group_state.attributes
 
     # test turning the lights on and off from the HA
     await async_test_on_off_from_hass(hass, group_cluster_on_off, group_entity_id)
@@ -603,6 +608,11 @@ async def test_zha_group_light_entity(
     await async_test_dimmer_from_light(
         hass, dev1_cluster_level, group_entity_id, 150, STATE_ON
     )
+    # Check state
+    group_state = hass.states.get(group_entity_id)
+    assert group_state.state == STATE_ON
+    assert group_state.attributes["supported_color_modes"] == [ColorMode.HS]
+    assert group_state.attributes["color_mode"] == ColorMode.HS
 
     # test long flashing the lights from the HA
     await async_test_flash_from_hass(

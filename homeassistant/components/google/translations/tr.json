@@ -27,5 +27,14 @@
                 "title": "Entegrasyonu Yeniden Do\u011frula"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Google Takvim'e Home Assistant eri\u015fimi"
+                }
+            }
+        }
     }
 }

@@ -264,7 +264,7 @@ class UploadMediaView(http.HomeAssistantView):
             raise web.HTTPBadRequest() from err
 
         try:
-            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"])
+            item = MediaSourceItem.from_uri(self.hass, data["media_content_id"], None)
         except ValueError as err:
             LOGGER.error("Received invalid upload data: %s", err)
             raise web.HTTPBadRequest() from err
@@ -328,7 +328,7 @@ async def websocket_remove_media(
 ) -> None:
     """Remove media."""
     try:
-        item = MediaSourceItem.from_uri(hass, msg["media_content_id"])
+        item = MediaSourceItem.from_uri(hass, msg["media_content_id"], None)
     except ValueError as err:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(err))
         return

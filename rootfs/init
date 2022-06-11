@@ -1,4 +1,4 @@
-#!/usr/bin/env bashio
+#!/bin/sh -e
 
 # This is the first program launched at container start.
 # We don't know where our binaries are and we cannot guarantee
@@ -43,7 +43,7 @@ fi
 # root, can be a normal user).
 
 exec s6-overlay-suexec \
-  ' /package/admin/s6-overlay-@VERSION@/libexec/preinit' \
+  ' /package/admin/s6-overlay/libexec/preinit' \
   '' \
-  /package/admin/s6-overlay-@VERSION@/libexec/stage0 \
+  /package/admin/s6-overlay/libexec/stage0 \
   "$@"

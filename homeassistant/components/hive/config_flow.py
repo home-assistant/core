@@ -27,6 +27,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data = {}
         self.tokens = {}
         self.entry = None
+        self.device_registration = False
 
     async def async_step_user(self, user_input=None):
         """Prompt user input. Create or edit entry."""
@@ -88,6 +89,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             if not errors:
                 try:
+                    self.device_registration = True
                     return await self.async_setup_hive_entry()
                 except UnknownHiveError:
                     errors["base"] = "unknown"
@@ -102,6 +104,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             raise UnknownHiveError
 
         # Setup the config entry
+        if self.device_registration:
+            await self.hive_auth.device_registration("Home Assistant")
+            self.data["device_data"] = await self.hive_auth.getDeviceData()
         self.data["tokens"] = self.tokens
         if self.context["source"] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(

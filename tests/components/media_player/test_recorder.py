@@ -11,7 +11,7 @@ from homeassistant.components.media_player.const import (
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_SOUND_MODE_LIST,
 )
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
 from homeassistant.core import State

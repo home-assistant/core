@@ -348,7 +348,10 @@ async def test_all_options(
 
 @pytest.mark.parametrize(
     "hide_members,hidden_by_initial,hidden_by",
-    ((False, "integration", None), (True, None, "integration")),
+    (
+        (False, er.RegistryEntryHider.INTEGRATION, None),
+        (True, None, er.RegistryEntryHider.INTEGRATION),
+    ),
 )
 @pytest.mark.parametrize(
     "group_type,extra_input",

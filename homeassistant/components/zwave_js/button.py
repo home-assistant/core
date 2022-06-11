@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from zwave_js_server.client import Client as ZwaveClient
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 
 from homeassistant.components.button import ButtonEntity
@@ -28,7 +29,9 @@ async def async_setup_entry(
     @callback
     def async_add_ping_button_entity(node: ZwaveNode) -> None:
         """Add ping button entity."""
-        async_add_entities([ZWaveNodePingButton(client, node)])
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities([ZWaveNodePingButton(driver, node)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -45,7 +48,7 @@ class ZWaveNodePingButton(ButtonEntity):
     _attr_should_poll = False
     _attr_entity_category = EntityCategory.CONFIG
 
-    def __init__(self, client: ZwaveClient, node: ZwaveNode) -> None:
+    def __init__(self, driver: Driver, node: ZwaveNode) -> None:
         """Initialize a ping Z-Wave device button entity."""
         self.node = node
         name: str = (
@@ -53,11 +56,11 @@ class ZWaveNodePingButton(ButtonEntity):
         )
         # Entity class attributes
         self._attr_name = f"{name}: Ping"
-        self._base_unique_id = get_valueless_base_unique_id(client, node)
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.ping"
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(client, node)},
+            identifiers={get_device_id(driver, node)},
         )
 
     async def async_poll_value(self, _: bool) -> None:

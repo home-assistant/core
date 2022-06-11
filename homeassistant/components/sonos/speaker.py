@@ -137,6 +137,7 @@ class SonosSpeaker:
         self.cross_fade: bool | None = None
         self.bass: int | None = None
         self.treble: int | None = None
+        self.loudness: bool | None = None
 
         # Home theater
         self.audio_delay: int | None = None
@@ -505,6 +506,9 @@ class SonosSpeaker:
 
         if "mute" in variables:
             self.muted = variables["mute"]["Master"] == "1"
+
+        if loudness := variables.get("loudness"):
+            self.loudness = loudness["Master"] == "1"
 
         for bool_var in (
             "dialog_level",

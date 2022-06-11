@@ -1,12 +1,17 @@
 """Support for Z-Wave controls using the number platform."""
 from __future__ import annotations
 
+from typing import cast
+
 from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import TARGET_VALUE_PROPERTY
+from zwave_js_server.model.driver import Driver
+from zwave_js_server.model.value import Value
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -28,11 +33,13 @@ async def async_setup_entry(
     @callback
     def async_add_number(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave number entity."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "volume":
-            entities.append(ZwaveVolumeNumberEntity(config_entry, client, info))
+            entities.append(ZwaveVolumeNumberEntity(config_entry, driver, info))
         else:
-            entities.append(ZwaveNumberEntity(config_entry, client, info))
+            entities.append(ZwaveNumberEntity(config_entry, driver, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -48,10 +55,11 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
     """Representation of a Z-Wave number entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveNumberEntity entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
+        self._target_value: Value | None
         if self.info.primary_value.metadata.writeable:
             self._target_value = self.info.primary_value
         else:
@@ -92,20 +100,22 @@ class ZwaveNumberEntity(ZWaveBaseEntity, NumberEntity):
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        await self.info.node.async_set_value(self._target_value, value)
+        if (target_value := self._target_value) is None:
+            raise HomeAssistantError("Missing target value on device.")
+        await self.info.node.async_set_value(target_value, value)
 
 
 class ZwaveVolumeNumberEntity(ZWaveBaseEntity, NumberEntity):
     """Representation of a volume number entity."""
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a ZwaveVolumeNumberEntity entity."""
-        super().__init__(config_entry, client, info)
-        self.correction_factor = int(
-            self.info.primary_value.metadata.max - self.info.primary_value.metadata.min
-        )
+        super().__init__(config_entry, driver, info)
+        max_value = cast(int, self.info.primary_value.metadata.max)
+        min_value = cast(int, self.info.primary_value.metadata.min)
+        self.correction_factor = max_value - min_value
         # Fallback in case we can't properly calculate correction factor
         if self.correction_factor == 0:
             self.correction_factor = 1

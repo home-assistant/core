@@ -99,7 +99,7 @@ from tests.common import MockConfigEntry
             None,
             None,
             "30",
-            14.852635608048994,
+            14.852631013,
             30.05,
         ),
         (
@@ -110,7 +110,7 @@ from tests.common import MockConfigEntry
             "08:00:00",
             None,
             "30",
-            14.852635608048994,
+            14.852631013,
             30.05,
         ),
         (
