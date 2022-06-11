@@ -157,7 +157,7 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
     with open(YAML_PATH, "w") as fp:
-        fp.write("hello: !!python/object/apply:os.system")
+        fp.write("- !!python/object/apply:os.system []")
 
     with patch.object(os, "system") as system_mock, contextlib.suppress(
         HomeAssistantError
