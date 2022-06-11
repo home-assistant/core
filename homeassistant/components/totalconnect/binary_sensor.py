@@ -67,12 +67,9 @@ class TotalConnectPowerDescription(BinarySensorEntityDescription):
 class TotalConnectBinarySensor(BinarySensorEntity):
     """Represent an TotalConnect zone."""
 
-    _unique_id = None
-    _name = None
     _zone = None
     _zone_id = None
     _location_id = None
-    _is_on = None
 
     @property
     def unique_id(self):
