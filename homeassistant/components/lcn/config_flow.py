@@ -148,8 +148,8 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.Required(CONF_PORT, default=4114): cv.positive_int,
                 vol.Required(CONF_USERNAME, default="lcn"): str,
                 vol.Required(CONF_PASSWORD, default="lcn"): str,
-                vol.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
-                vol.Required(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
+                vol.Optional(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
+                vol.Optional(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
             }
         )
 
@@ -222,10 +222,10 @@ class LcnOptionsFlowHandler(config_entries.OptionsFlow):
                 ): cv.positive_int,
                 vol.Required(CONF_USERNAME, default=self.options[CONF_USERNAME]): str,
                 vol.Required(CONF_PASSWORD, default=self.options[CONF_PASSWORD]): str,
-                vol.Required(
+                vol.Optional(
                     CONF_SK_NUM_TRIES, default=self.options[CONF_SK_NUM_TRIES]
                 ): cv.positive_int,
-                vol.Required(
+                vol.Optional(
                     CONF_DIM_MODE, default=self.options[CONF_DIM_MODE]
                 ): vol.In(DIM_MODES),
             }
