@@ -167,8 +167,12 @@ class WallboxSensor(WallboxEntity, SensorEntity):
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if (sensor_round := self.entity_description.precision) is not None:
+        """Return the state of the sensor. Round the value when it, and the precision property are not None."""
+        if (
+            sensor_round := self.entity_description.precision
+        ) is not None and self.coordinator.data[
+            self.entity_description.key
+        ] is not None:
             return cast(
                 StateType,
                 round(self.coordinator.data[self.entity_description.key], sensor_round),

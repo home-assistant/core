@@ -48,10 +48,6 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import (
-    async_integration_yaml_config,
-    async_setup_reload_service,
-)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, subscription
@@ -67,13 +63,14 @@ from .const import (
     DATA_MQTT,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
+    DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
     DEFAULT_PAYLOAD_NOT_AVAILABLE,
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    PLATFORMS,
+    MQTT_RELOADED,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -270,14 +267,11 @@ async def async_setup_platform_discovery(
 ) -> CALLBACK_TYPE:
     """Set up platform discovery for manual config."""
 
-    async def _async_discover_entities(event: Event | None) -> None:
+    async def _async_discover_entities() -> None:
         """Discover entities for a platform."""
-        if event:
+        if DATA_MQTT_UPDATED_CONFIG in hass.data:
             # The platform has been reloaded
-            config_yaml = await async_integration_yaml_config(hass, DOMAIN)
-            if not config_yaml:
-                return
-            config_yaml = config_yaml.get(DOMAIN, {})
+            config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
         else:
             config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
         if not config_yaml:
@@ -293,8 +287,8 @@ async def async_setup_platform_discovery(
             )
         )
 
-    unsub = hass.bus.async_listen("event_mqtt_reloaded", _async_discover_entities)
-    await _async_discover_entities(None)
+    unsub = async_dispatcher_connect(hass, MQTT_RELOADED, _async_discover_entities)
+    await _async_discover_entities()
     return unsub
 
 
@@ -359,7 +353,6 @@ async def async_setup_platform_helper(
     async_setup_entities: SetupEntity,
 ) -> None:
     """Return true if platform setup should be aborted."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
     if not bool(hass.config_entries.async_entries(DOMAIN)):
         hass.data[DATA_MQTT_RELOAD_NEEDED] = None
         _LOGGER.warning(
