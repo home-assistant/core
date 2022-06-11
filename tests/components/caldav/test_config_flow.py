@@ -170,6 +170,19 @@ async def test_abort_on_connection_error(hass: HomeAssistant) -> None:
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    with patch(
+        "homeassistant.components.caldav.caldav.DAVClient.principal",
+        side_effect=Exception(),
+    ):
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {"base": "unknown"}
+
 
 async def test_abort_if_already_setup(hass: HomeAssistant):
     """Test we abort if component is already setup."""
