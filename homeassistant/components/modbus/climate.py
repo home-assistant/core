@@ -117,7 +117,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             # No HVAC modes defined
             self._hvac_mode_register = None
             self._attr_hvac_mode = HVACMode.AUTO
-            self._hvac_modes = [HVACMode.AUTO]
+            self._attr_hvac_modes = [HVACMode.AUTO]
 
         if CONF_HVAC_ONOFF_REGISTER in config:
             self._hvac_onoff_register = config[CONF_HVAC_ONOFF_REGISTER]
