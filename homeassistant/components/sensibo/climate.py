@@ -320,10 +320,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 if TYPE_CHECKING:
                     assert minutes is not None
                 timer_time = dt.now() + timedelta(minutes=minutes)
-                setattr(self.device_data, "timer_on", timer_on)
-            setattr(self.device_data, "timer_id", timer_id)
-            setattr(self.device_data, "timer_state_on", timer_state_on)
-            setattr(self.device_data, "timer_time", timer_time)
+                self.device_data.timer_on = timer_on
+            self.device_data.timer_id = timer_id
+            self.device_data.timer_state_on = timer_state_on
+            self.device_data.timer_time = timer_time
             self.async_write_ha_state()
             return
 
