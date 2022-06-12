@@ -408,7 +408,7 @@ async def async_remove_config_entry_device(
     buttons = bridge.buttons
     occupancy_groups = bridge.occupancy_groups
     bridge_device = devices[BRIDGE_DEVICE_ID]
-    bridge_unique_id = bridge_device["serial"]
+    bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
     all_identifiers: set[tuple[str, str]] = {
         # Base bridge
         _id_to_identifier(bridge_unique_id),
