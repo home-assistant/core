@@ -98,13 +98,10 @@ class OAuthFixture:
 
         await self.async_mock_refresh(result)
 
-    async def async_reauth(self, old_data: dict) -> dict:
+    async def async_reauth(self, config_entry: ConfigEntry) -> dict:
         """Initiate a reuath flow."""
-        result = await self.hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=old_data
-        )
-        assert result["type"] == "form"
-        assert result["step_id"] == "reauth_confirm"
+        config_entry.async_start_reauth(self.hass)
+        await self.hass.async_block_till_done()
 
         # Advance through the reauth flow
         result = self.async_progress()
@@ -189,7 +186,7 @@ class OAuthFixture:
     def get_config_entry(self) -> ConfigEntry:
         """Get the config entry."""
         entries = self.hass.config_entries.async_entries(DOMAIN)
-        assert len(entries) == 1
+        assert len(entries) >= 1
         return entries[0]
 
 
@@ -401,7 +398,7 @@ async def test_web_reauth(hass, oauth, setup_platform, config_entry):
     assert config_entry.data["token"].get("access_token") == FAKE_TOKEN
 
     orig_subscriber_id = config_entry.data.get("subscriber_id")
-    result = await oauth.async_reauth(config_entry.data)
+    result = await oauth.async_reauth(config_entry)
 
     await oauth.async_oauth_web_flow(result)
     entry = await oauth.async_finish_setup(result)
@@ -441,7 +438,10 @@ async def test_unexpected_existing_config_entries(
 
     old_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=config_entry.data,
+        data={
+            **config_entry.data,
+            "extra_data": True,
+        },
     )
     old_entry.add_to_hass(hass)
 
@@ -451,15 +451,15 @@ async def test_unexpected_existing_config_entries(
     orig_subscriber_id = config_entry.data.get("subscriber_id")
 
     # Invoke the reauth flow
-    result = await oauth.async_reauth(old_entry.data)
+    result = await oauth.async_reauth(config_entry)
 
     await oauth.async_oauth_web_flow(result)
 
     await oauth.async_finish_setup(result)
 
-    # Only a single entry now exists, and the other was cleaned up
+    # Only reauth entry was updated, the other entry is preserved
     entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
+    assert len(entries) == 2
     entry = entries[0]
     assert entry.unique_id == DOMAIN
     entry.data["token"].pop("expires_at")
@@ -470,6 +470,13 @@ async def test_unexpected_existing_config_entries(
         "expires_in": 60,
     }
     assert entry.data.get("subscriber_id") == orig_subscriber_id  # Not updated
+    assert not entry.data.get("extra_data")
+
+    # Other entry was not refreshed
+    entry = entries[1]
+    entry.data["token"].pop("expires_at")
+    assert entry.data.get("token", {}).get("access_token") == "some-token"
+    assert entry.data.get("extra_data")
 
 
 async def test_reauth_missing_config_entry(hass, setup_platform):
@@ -493,20 +500,23 @@ async def test_app_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
     await setup_platform()
 
     orig_subscriber_id = config_entry.data.get("subscriber_id")
+    assert config_entry.data["auth_implementation"] == APP_AUTH_DOMAIN
 
     result = oauth.async_progress()
-    assert result["step_id"] == "auth_upgrade"
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result.get("type") == "form"
-    assert result.get("step_id") == "cloud_project"
+    assert result.get("step_id") == "reauth_confirm"
 
-    result = await oauth.async_configure(result, {"cloud_project_id": CLOUD_PROJECT_ID})
+    result = await oauth.async_configure(result, {})
     assert result.get("type") == "form"
-    assert result.get("step_id") == "device_project"
+    assert result.get("step_id") == "auth_upgrade"
 
-    result = await oauth.async_configure(result, {"project_id": PROJECT_ID})
+    result = await oauth.async_configure(result, {})
     assert result.get("type") == "abort"
     assert result.get("reason") == "missing_credentials"
+    await hass.async_block_till_done()
+    # Config flow is aborted, but new one created back in re-auth state waiting for user
+    # to create application credentials
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
 
     # Emulate user entering credentials (different from configuration.yaml creds)
     await async_import_client_credential(
@@ -515,8 +525,16 @@ async def test_app_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
         ClientCredential(CLIENT_ID, CLIENT_SECRET),
     )
 
+    # Config flow is placed back into a reuath state
+    result = oauth.async_progress()
+    assert result.get("step_id") == "reauth_confirm"
+
+    result = await oauth.async_configure(result, {})
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "device_project_upgrade"
+
     # Frontend sends user back through the config flow again
-    result = await oauth.async_reauth(config_entry.data)
+    result = await oauth.async_configure(result, {})
     await oauth.async_oauth_web_flow(result)
 
     # Verify existing tokens are replaced
@@ -532,6 +550,9 @@ async def test_app_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
     assert entry.data["auth_implementation"] == DOMAIN
     assert entry.data.get("subscriber_id") == orig_subscriber_id  # Not updated
 
+    # Existing entry is updated
+    assert config_entry.data["auth_implementation"] == DOMAIN
+
 
 @pytest.mark.parametrize(
     "nest_test_config,auth_implementation", [(TEST_CONFIG_YAML_ONLY, WEB_AUTH_DOMAIN)]
@@ -543,7 +564,7 @@ async def test_web_auth_yaml_reauth(hass, oauth, setup_platform, config_entry):
 
     orig_subscriber_id = config_entry.data.get("subscriber_id")
 
-    result = await oauth.async_reauth(config_entry.data)
+    result = await oauth.async_reauth(config_entry)
     await oauth.async_oauth_web_flow(result)
 
     # Verify existing tokens are replaced
@@ -616,7 +637,7 @@ async def test_pubsub_subscriber_config_entry_reauth(
     """Test the pubsub subscriber id is preserved during reauth."""
     await setup_platform()
 
-    result = await oauth.async_reauth(config_entry.data)
+    result = await oauth.async_reauth(config_entry)
     await oauth.async_oauth_web_flow(result)
 
     # Entering an updated access token refreshs the config entry.

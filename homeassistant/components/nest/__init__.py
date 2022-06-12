@@ -257,7 +257,10 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
         # App Auth credentials have been deprecated and must be re-created
         # by the user in the config flow
-        raise ConfigEntryAuthFailed
+        raise ConfigEntryAuthFailed(
+            "Google has deprecated App Auth credentials, and the integration "
+            "must be reconfigured in the UI to restore access to Nest Devices."
+        )
 
     if entry.data["auth_implementation"] == WEB_AUTH_DOMAIN:
         await async_import_client_credential(
