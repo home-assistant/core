@@ -680,6 +680,7 @@ omit =
     homeassistant/components/lutron_caseta/light.py
     homeassistant/components/lutron_caseta/scene.py
     homeassistant/components/lutron_caseta/switch.py
+    homeassistant/components/lutron_caseta/util.py
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/api.py
