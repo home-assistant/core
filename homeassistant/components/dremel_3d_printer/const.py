@@ -4,11 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.const import Platform
-
 _LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = [Platform.CAMERA, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.BUTTON]
 
 SCAN_INTERVAL = timedelta(seconds=10)
 
