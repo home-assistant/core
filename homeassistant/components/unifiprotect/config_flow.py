@@ -37,6 +37,7 @@ from .const import (
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
 )
+from .data import async_last_update_was_successful
 from .discovery import async_start_discovery
 from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 
@@ -52,6 +53,17 @@ async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
 def _host_is_direct_connect(host: str) -> bool:
     """Check if a host is a unifi direct connect domain."""
     return host.endswith(".ui.direct")
+
+
+def _async_entry_is_in_failure_state(
+    hass: HomeAssistant,
+    entry: config_entries.ConfigEntry,
+) -> bool:
+    """Check if an entry is in a failure state."""
+    return entry.state in (
+        config_entries.ConfigEntryState.SETUP_ERROR,
+        config_entries.ConfigEntryState.SETUP_RETRY,
+    ) or not async_last_update_was_successful(hass, entry)
 
 
 class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -92,6 +104,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         source_ip = discovery_info["source_ip"]
         direct_connect_domain = discovery_info["direct_connect_domain"]
+
         for entry in self._async_current_entries():
             if entry.source == config_entries.SOURCE_IGNORE:
                 if entry.unique_id == mac:
@@ -111,6 +124,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     not entry_has_direct_connect
                     and is_ip_address(entry_host)
                     and entry_host != source_ip
+                    and _async_entry_is_in_failure_state(self.hass, entry)
                 ):
                     new_host = source_ip
                 if new_host:
