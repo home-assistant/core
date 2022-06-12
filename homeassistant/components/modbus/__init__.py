@@ -233,7 +233,7 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
             vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
             vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int
+            vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
         }
     ),
 )

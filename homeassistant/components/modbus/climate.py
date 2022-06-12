@@ -106,7 +106,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
                 (CONF_HVAC_MODE_DRY, HVACMode.DRY),
                 (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
-                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO) ]:
+                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
+            ]:
 
                 if cm in config:
                     self._hvac_mode_mapping.append((config[cm], m))
