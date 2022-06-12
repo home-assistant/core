@@ -1,7 +1,14 @@
 """The Network Configuration integration."""
 from __future__ import annotations
 
-from ipaddress import IPv4Address, IPv6Address, ip_interface
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_interface,
+)
 import logging
 
 from homeassistant.core import HomeAssistant, callback
@@ -111,6 +118,30 @@ async def async_get_ipv4_broadcast_addresses(hass: HomeAssistant) -> set[IPv4Add
                 IPv4Address(interface.network.broadcast_address.exploded)
             )
     return broadcast_addresses
+
+
+async def async_ip_on_same_subnet(
+    hass: HomeAssistant, ip_to_check: str | IPv4Address | IPv6Address
+) -> bool:
+    """Check if an ip address is on the same subnet as one of the configured network addresses."""
+    adapters = await async_get_adapters(hass)
+    ip_addr = ip_address(ip_to_check)
+    for adapter in adapters:
+        if not adapter["enabled"]:
+            continue
+        if ip_addr.version == 4:
+            for ip_info in adapter["ipv4"]:
+                if ip_addr in IPv4Network(
+                    f"{ip_info['address']}/{ip_info['network_prefix']}", strict=False
+                ):
+                    return True
+        if ip_addr.version == 6:
+            for ip_info in adapter["ipv6"]:
+                if ip_addr in IPv6Network(
+                    f"{ip_info['address']}/{ip_info['network_prefix']}", strict=False
+                ):
+                    return True
+    return False
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

@@ -686,3 +686,26 @@ async def test_async_get_source_ip_no_ip_loopback(hass, hass_storage, caplog):
         await hass.async_block_till_done()
 
         assert await network.async_get_source_ip(hass) == "127.0.0.1"
+
+
+async def test_async_ip_on_same_subnet(hass, hass_storage):
+    """Test checking if an ip address is on the same subnet as a configured adapter."""
+    hass_storage[STORAGE_KEY] = {
+        "version": STORAGE_VERSION,
+        "key": STORAGE_KEY,
+        "data": {ATTR_CONFIGURED_ADAPTERS: ["eth0", "eth1", "vtun0"]},
+    }
+    with patch(
+        "homeassistant.components.network.util.socket.socket",
+        return_value=_mock_socket([_LOOPBACK_IPADDR]),
+    ), patch(
+        "homeassistant.components.network.util.ifaddr.get_adapters",
+        return_value=_generate_mock_adapters(),
+    ):
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
+    assert await network.async_ip_on_same_subnet(hass, "192.168.1.6") is True
+    assert await network.async_ip_on_same_subnet(hass, "192.168.2.6") is False
+    assert await network.async_ip_on_same_subnet(hass, "169.254.3.3") is True
+    assert await network.async_ip_on_same_subnet(hass, "2001:db8::") is True
+    assert await network.async_ip_on_same_subnet(hass, "1001:db8::") is False
