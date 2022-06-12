@@ -131,16 +131,11 @@ class TotalConnectZoneBinarySensor(BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{location_id} {zone.zoneid} {description.key}"
         self._attr_is_on = None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {
+        self._attr_extra_state_attributes = {
             "zone_id": self._zone.zoneid,
             "location_id": self._location_id,
             "partition": self._zone.partition,
         }
-        return attributes
 
 
 class TotalConnectZoneSecurityBinarySensor(TotalConnectZoneBinarySensor):
@@ -180,14 +175,9 @@ class TotalConnectAlarmBinarySensor(BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{location.location_id} {description.key}"
         self._attr_is_on = None
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        attributes = {
+        self._attr_extra_state_attributes = {
             "location_id": self._location.location_id,
         }
-        return attributes
 
 
 class TotalConnectAlarmLowBatteryBinarySensor(TotalConnectAlarmBinarySensor):
