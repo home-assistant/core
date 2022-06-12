@@ -404,7 +404,6 @@ async def async_remove_config_entry_device(
     """Remove lutron_caseta config entry from a device."""
     bridge: Smartbridge = hass.data[DOMAIN][entry.entry_id][BRIDGE_LEAP]
     devices = bridge.get_devices()
-    scenes = bridge.get_scenes()
     buttons = bridge.buttons
     occupancy_groups = bridge.occupancy_groups
     bridge_device = devices[BRIDGE_DEVICE_ID]
@@ -418,11 +417,6 @@ async def async_remove_config_entry_device(
                 f"occupancygroup_{bridge_unique_id}_{device['occupancy_group_id']}"
             )
             for device in occupancy_groups.values()
-        ),
-        # Scenes
-        *(
-            _id_to_identifier(f"scene_{bridge_unique_id}_{device['scene_id']}")
-            for device in scenes.values()
         ),
         # Button devices such as pico remotes and all other devices
         *(
