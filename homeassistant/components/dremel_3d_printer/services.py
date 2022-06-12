@@ -69,18 +69,20 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         filepath = service.data.get(ATTR_FILEPATH)
         url = service.data.get(ATTR_URL)
         try:
-            if (
-                filepath is not None
-                and file_exists(hass, filepath)
-                and filepath.lower().endswith(".gcode")
-            ):
+            if filepath is not None:
+                if not file_exists(hass, filepath):
+                    raise RuntimeError("File does not exist.")
+                if not filepath.lower().endswith(".gcode"):
+                    raise RuntimeError("File is not a gcode file.")
                 result = await hass.async_add_executor_job(
                     api.start_print_from_file, filepath
                 )
-            elif url is not None and url.lower().endswith(".gcode"):
+
+            if url is not None:
                 result = await hass.async_add_executor_job(
                     api.start_print_from_url, url
                 )
+
             hass.bus.async_fire(
                 EVENT_DATA_NEW_PRINT_STATS,
                 result,

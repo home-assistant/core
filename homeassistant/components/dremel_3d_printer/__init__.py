@@ -8,7 +8,7 @@ from dremel3dpy import Dremel3DPrinter
 from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant.config_entries import SOURCE_USER, ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.entity import DeviceInfo, Entity
@@ -19,8 +19,10 @@ from homeassistant.helpers.update_coordinator import (
 )
 import homeassistant.util.dt as dt_util
 
-from .const import _LOGGER, DOMAIN, PLATFORMS, SCAN_INTERVAL
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 from .services import async_setup_services
+
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
