@@ -5,7 +5,6 @@ from pylutron_caseta.smartbridge import Smartbridge
 
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SUGGESTED_AREA
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -18,7 +17,6 @@ from .const import (
     CONFIG_URL,
     DOMAIN as CASETA_DOMAIN,
     MANUFACTURER,
-    UNASSIGNED_AREA,
 )
 from .util import serial_to_unique_id
 
@@ -49,23 +47,20 @@ class LutronCasetaScene(Scene):
         """Initialize the Lutron Caseta scene."""
         self._scene_id = scene["scene_id"]
         self._bridge: Smartbridge = bridge
-        area, name = _area_and_name_from_name(scene["name"])
+        _, name = _area_and_name_from_name(scene["name"])
         bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
-        full_name = f"{area} {name}"
         unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
         info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Scene",
-            name=full_name,
+            name=name,
             via_device=(CASETA_DOMAIN, bridge_device["serial"]),
             configuration_url=CONFIG_URL,
             entry_type=DeviceEntryType.SERVICE,
         )
-        if area != UNASSIGNED_AREA:
-            info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
-        self._attr_name = full_name
+        self._attr_name = name
         self._attr_unique_id = unique_id
 
     async def async_activate(self, **kwargs: Any) -> None:
