@@ -47,12 +47,12 @@ class LutronCasetaScene(Scene):
 
     def __init__(self, scene, bridge, bridge_device):
         """Initialize the Lutron Caseta scene."""
-        self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         self._scene_id = scene["scene_id"]
         self._bridge: Smartbridge = bridge
         area, name = _area_and_name_from_name(scene["name"])
+        bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         full_name = f"{area} {name}"
-        unique_id = f"scene_{self._bridge_unique_id}_{self._scene_id}"
+        unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
         info = DeviceInfo(
             identifiers={(CASETA_DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
