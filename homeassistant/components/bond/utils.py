@@ -15,7 +15,7 @@ MAX_REQUESTS = 6
 
 _LOGGER = logging.getLogger(__name__)
 
-SMART_BY_BOND_PREFIX = "breck-"
+SMART_BY_BOND_PREFIXES = ["breck-"]
 
 
 class BondDevice:
@@ -227,7 +227,9 @@ class BondHub:
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
         target = self.target
-        if target and target.startswith(SMART_BY_BOND_PREFIX):
+        if target and any(
+            target.startswith(prefix) for prefix in SMART_BY_BOND_PREFIXES
+        ):
             #
             # v3 firmwares have the bridge endpoint even
             # though the docs currently imply they do not
