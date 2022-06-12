@@ -402,7 +402,7 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove lutron_caseta config entry from a device."""
-    bridge: Smartbridge = hass.data[DOMAIN][entry.entry_id][BRIDGE_DEVICE]
+    bridge: Smartbridge = hass.data[DOMAIN][entry.entry_id][BRIDGE_LEAP]
     devices = bridge.get_devices()
     scenes = bridge.get_scenes()
     buttons = bridge.buttons
