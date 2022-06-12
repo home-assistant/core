@@ -40,7 +40,7 @@ async def async_setup_entry(
         except AttributeError:
             return
         entity = NetatmoCameraLight(netatmo_device)
-        _LOGGER.debug("Adding climate battery sensor %s", entity)
+        _LOGGER.debug("Adding camera flood light %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(
@@ -52,11 +52,11 @@ async def async_setup_entry(
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
         try:
-            getattr(netatmo_device.device, "floodlight")
+            getattr(netatmo_device.device, "brightness")
         except AttributeError:
             return
-        entity = NetatmoCameraLight(netatmo_device)
-        _LOGGER.debug("Adding climate battery sensor %s", entity)
+        entity = NetatmoLight(netatmo_device)
+        _LOGGER.debug("Adding light %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(
@@ -199,12 +199,12 @@ class NetatmoLight(NetatmoBase, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
-        _LOGGER.debug("Turn camera '%s' on", self.name)
+        _LOGGER.debug("Turn light '%s' on", self.name)
         await self._dimmer.async_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn camera floodlight into auto mode."""
-        _LOGGER.debug("Turn camera '%s' to auto mode", self.name)
+        """Turn light off."""
+        _LOGGER.debug("Turn light '%s' off", self.name)
         await self._dimmer.async_off()
 
     @callback

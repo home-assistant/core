@@ -31,8 +31,11 @@ from .const import (
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_LIGHT,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
+    NETATMO_CREATE_SENSOR,
+    NETATMO_CREATE_SWITCH,
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
     WEBHOOK_ACTIVATION,
@@ -312,6 +315,13 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
+            NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
+            NetatmoDeviceCategory.switch: [
+                NETATMO_CREATE_LIGHT,
+                NETATMO_CREATE_SWITCH,
+                NETATMO_CREATE_SENSOR,
+            ],
+            NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
         }
         for module in home.modules.values():
             if not module.device_category:
