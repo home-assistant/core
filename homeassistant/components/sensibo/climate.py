@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from bisect import bisect_left
-from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -21,7 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import dt
 from homeassistant.util.temperature import convert as convert_temperature
 
 from .const import DOMAIN
@@ -297,11 +295,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if state == "on" and minutes is None:
             raise HomeAssistantError("No value provided for timer")
 
-        timer_on: bool | None = None
-        timer_id: str | None = None
-        timer_state_on: bool | None = None
-        timer_time: datetime | None = None
-
         if state == "off":
             result = await self.async_send_command("del_timer")
         else:
@@ -313,18 +306,5 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             result = await self.async_send_command("set_timer", params)
 
         if result["status"] == "success":
-            if state == "on":
-                timer_on = True
-                timer_id = result["result"]["id"]
-                timer_state_on = new_state
-                if TYPE_CHECKING:
-                    assert minutes is not None
-                timer_time = dt.now() + timedelta(minutes=minutes)
-                self.device_data.timer_on = timer_on
-            self.device_data.timer_id = timer_id
-            self.device_data.timer_state_on = timer_state_on
-            self.device_data.timer_time = timer_time
-            self.async_write_ha_state()
-            return
-
+            return await self.coordinator.async_request_refresh()
         raise HomeAssistantError(f"Could not set timer for device {self.name}")
