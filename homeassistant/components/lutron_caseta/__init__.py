@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+from itertools import chain
 import logging
 import ssl
 
@@ -358,3 +359,47 @@ class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
+
+
+def _id_to_identifier(lutron_id: str) -> None:
+    """Convert a lutron caseta identifier to a device identifier."""
+    return (DOMAIN, lutron_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove lutron_caseta config entry from a device."""
+    bridge: Smartbridge = hass.data[DOMAIN][entry.entry_id][BRIDGE_LEAP]
+    devices = bridge.get_devices()
+    scenes = bridge.get_scenes()
+    buttons = bridge.buttons
+    occupancy_groups = bridge.occupancy_groups
+    bridge_device = devices[BRIDGE_DEVICE_ID]
+    bridge_unique_id = bridge_device["serial"]
+    all_identifiers: set[tuple[str, str]] = {
+        # Base bridge
+        _id_to_identifier(bridge_unique_id),
+        # Motion sensors and occupancy groups
+        *(
+            _id_to_identifier(
+                f"occupancygroup_{bridge_unique_id}_{device['occupancy_group_id']}"
+            )
+            for device in occupancy_groups.values()
+        ),
+        # Scenes
+        *(
+            _id_to_identifier(f"scene_{bridge_unique_id}_{device['scene_id']}")
+            for device in scenes.values()
+        ),
+        # Button devices such as pico remotes and all other devices
+        *(
+            _id_to_identifier(device["serial"])
+            for device in chain(devices.values(), buttons.values())
+        ),
+    }
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier in all_identifiers
+    )
