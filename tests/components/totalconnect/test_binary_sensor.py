@@ -29,7 +29,7 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     entry_low_battery = entity_registry.async_get(ZONE_LOW_BATTERY_ID)
     entry_tamper = entity_registry.async_get(ZONE_TAMPER_ID)
 
-    assert entry.unique_id == f"{LOCATION_ID} {ZONE_NORMAL['ZoneID']}"
+    assert entry.unique_id == f"{LOCATION_ID} {ZONE_NORMAL['ZoneID']} zone"
     assert (
         entry_low_battery.unique_id
         == f"{LOCATION_ID} {ZONE_NORMAL['ZoneID']} low battery"
