@@ -241,7 +241,7 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.6.0
+aioskybell==22.6.1
 
 # homeassistant.components.slimproto
 aioslimproto==2.0.1
@@ -354,7 +354,7 @@ atenpdu==0.3.2
 auroranoaa==0.0.2
 
 # homeassistant.components.aurora_abb_powerone
-aurorapy==0.2.6
+aurorapy==0.2.7
 
 # homeassistant.components.generic
 # homeassistant.components.stream
@@ -1541,7 +1541,7 @@ pyheos==0.7.2
 pyhik==0.3.0
 
 # homeassistant.components.hive
-pyhiveapi==0.5.9
+pyhiveapi==0.5.10
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -2271,7 +2271,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.1.3
+systembridgeconnector==3.1.5
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
@@ -2531,7 +2531,7 @@ zigpy==0.46.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.37.1
+zwave-js-server-python==0.37.2
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4
