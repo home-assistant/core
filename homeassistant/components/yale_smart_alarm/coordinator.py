@@ -144,8 +144,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(
                     "Yale Base Error initializing Yale updater", error
                 ) from error
-            except Exception as error:
-                raise UpdateFailed("Unknown error occurred ", error) from error
 
         try:
 
@@ -160,9 +158,6 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
             raise UpdateFailed("Yale Base Error occurred ", error) from error
-        except Exception as error:
-            LOGGER.error("Unexpected error updating Yale", exc_info=True)
-            raise UpdateFailed("Unknown error occurred ", error) from error
 
         return {
             "arm_status": arm_status,
