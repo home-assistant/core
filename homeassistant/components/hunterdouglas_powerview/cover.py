@@ -323,8 +323,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
 
     async def _async_force_refresh_state(self) -> None:
         """Refresh the cover state and force the device cache to be bypassed."""
-        await self._shade.refresh()
-        self._async_update_shade_data(self._shade.raw_data)
+        await self.async_update()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:

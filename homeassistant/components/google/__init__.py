@@ -43,6 +43,16 @@ from .const import (
     DATA_SERVICE,
     DEVICE_AUTH_IMPL,
     DOMAIN,
+    EVENT_DESCRIPTION,
+    EVENT_END_DATE,
+    EVENT_END_DATETIME,
+    EVENT_IN,
+    EVENT_IN_DAYS,
+    EVENT_IN_WEEKS,
+    EVENT_START_DATE,
+    EVENT_START_DATETIME,
+    EVENT_SUMMARY,
+    EVENT_TYPES_CONF,
     FeatureAccess,
 )
 
@@ -61,18 +71,6 @@ CONF_MAX_RESULTS = "max_results"
 DEFAULT_CONF_OFFSET = "!!"
 
 EVENT_CALENDAR_ID = "calendar_id"
-EVENT_DESCRIPTION = "description"
-EVENT_END_CONF = "end"
-EVENT_END_DATE = "end_date"
-EVENT_END_DATETIME = "end_date_time"
-EVENT_IN = "in"
-EVENT_IN_DAYS = "days"
-EVENT_IN_WEEKS = "weeks"
-EVENT_START_CONF = "start"
-EVENT_START_DATE = "start_date"
-EVENT_START_DATETIME = "start_date_time"
-EVENT_SUMMARY = "summary"
-EVENT_TYPES_CONF = "event_types"
 
 NOTIFICATION_ID = "google_calendar_notification"
 NOTIFICATION_TITLE = "Google Calendar Setup"
@@ -138,17 +136,31 @@ _EVENT_IN_TYPES = vol.Schema(
     }
 )
 
-ADD_EVENT_SERVICE_SCHEMA = vol.Schema(
+ADD_EVENT_SERVICE_SCHEMA = vol.All(
+    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
+    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
     {
         vol.Required(EVENT_CALENDAR_ID): cv.string,
         vol.Required(EVENT_SUMMARY): cv.string,
         vol.Optional(EVENT_DESCRIPTION, default=""): cv.string,
-        vol.Exclusive(EVENT_START_DATE, EVENT_START_CONF): cv.date,
-        vol.Exclusive(EVENT_END_DATE, EVENT_END_CONF): cv.date,
-        vol.Exclusive(EVENT_START_DATETIME, EVENT_START_CONF): cv.datetime,
-        vol.Exclusive(EVENT_END_DATETIME, EVENT_END_CONF): cv.datetime,
-        vol.Exclusive(EVENT_IN, EVENT_START_CONF, EVENT_END_CONF): _EVENT_IN_TYPES,
-    }
+        vol.Inclusive(
+            EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+        ): cv.date,
+        vol.Inclusive(
+            EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+        ): cv.date,
+        vol.Inclusive(
+            EVENT_START_DATETIME,
+            "datetimes",
+            "Start and end datetimes must both be specified",
+        ): cv.datetime,
+        vol.Inclusive(
+            EVENT_END_DATETIME,
+            "datetimes",
+            "Start and end datetimes must both be specified",
+        ): cv.datetime,
+        vol.Optional(EVENT_IN): _EVENT_IN_TYPES,
+    },
 )
 
 
@@ -276,6 +288,12 @@ async def async_setup_add_event_service(
 
     async def _add_event(call: ServiceCall) -> None:
         """Add a new event to calendar."""
+        _LOGGER.warning(
+            "The Google Calendar add_event service has been deprecated, and "
+            "will be removed in a future Home Assistant release. Please move "
+            "calls to the create_event service"
+        )
+
         start: DateOrDatetime | None = None
         end: DateOrDatetime | None = None
 
@@ -298,11 +316,11 @@ async def async_setup_add_event_service(
                 start = DateOrDatetime(date=start_in)
                 end = DateOrDatetime(date=end_in)
 
-        elif EVENT_START_DATE in call.data:
+        elif EVENT_START_DATE in call.data and EVENT_END_DATE in call.data:
             start = DateOrDatetime(date=call.data[EVENT_START_DATE])
             end = DateOrDatetime(date=call.data[EVENT_END_DATE])
 
-        elif EVENT_START_DATETIME in call.data:
+        elif EVENT_START_DATETIME in call.data and EVENT_END_DATETIME in call.data:
             start_dt = call.data[EVENT_START_DATETIME]
             end_dt = call.data[EVENT_END_DATETIME]
             start = DateOrDatetime(

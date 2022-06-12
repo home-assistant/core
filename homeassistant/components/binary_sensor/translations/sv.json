@@ -90,7 +90,8 @@
         }
     },
     "device_class": {
-        "motion": "r\u00f6relse"
+        "motion": "r\u00f6relse",
+        "power": "effekt"
     },
     "state": {
         "_": {
