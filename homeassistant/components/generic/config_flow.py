@@ -6,7 +6,7 @@ from errno import EHOSTUNREACH, EIO
 import io
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import Any, Mapping
 
 import PIL
 from async_timeout import timeout
@@ -64,7 +64,7 @@ SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 
 
 def build_schema(
-    user_input: dict[str, Any] | MappingProxyType[str, Any],
+    user_input: Mapping[str, Any] | MappingProxyType[str, Any],
     is_options_flow: bool = False,
     show_advanced_options=False,
 ):
