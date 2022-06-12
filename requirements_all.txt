@@ -2421,7 +2421,7 @@ wallbox==0.4.9
 waqiasync==1.0.0
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.8
+watchdog==2.1.9
 
 # homeassistant.components.waterfurnace
 waterfurnace==1.1.0
