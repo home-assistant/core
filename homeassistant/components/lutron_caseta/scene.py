@@ -47,13 +47,14 @@ class LutronCasetaScene(Scene):
 
     def __init__(self, scene, bridge, bridge_device):
         """Initialize the Lutron Caseta scene."""
-        self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         self._scene_id = scene["scene_id"]
         self._bridge: Smartbridge = bridge
         area, name = _area_and_name_from_name(scene["name"])
-        self._attr_name = full_name = f"{area} {name}"
+        bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
+        full_name = f"{area} {name}"
+        unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
         info = DeviceInfo(
-            identifiers={(CASETA_DOMAIN, self.unique_id)},
+            identifiers={(CASETA_DOMAIN, unique_id)},
             manufacturer=MANUFACTURER,
             model="Lutron Scene",
             name=full_name,
@@ -64,11 +65,8 @@ class LutronCasetaScene(Scene):
         if area != UNASSIGNED_AREA:
             info[ATTR_SUGGESTED_AREA] = area
         self._attr_device_info = info
-
-    @property
-    def unique_id(self):
-        """Return the unique identifier."""
-        return f"scene_{self._bridge_unique_id}_{self._scene_id}"
+        self._attr_name = full_name
+        self._attr_unique_id = unique_id
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
