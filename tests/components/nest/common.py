@@ -5,7 +5,6 @@ import copy
 from dataclasses import dataclass
 import time
 from typing import Any, Generator, TypeVar
-from unittest.mock import patch
 
 from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device import Device
@@ -16,7 +15,6 @@ from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import SDM_SCOPES
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -198,29 +196,3 @@ class CreateDevice:
         data.update(raw_data if raw_data else {})
         data["traits"].update(raw_traits if raw_traits else {})
         self.device_manager.add_device(Device.MakeDevice(data, auth=self.auth))
-
-
-async def async_setup_sdm_platform(
-    hass,
-    platform,
-    devices={},
-):
-    """Set up the platform and prerequisites."""
-    create_config_entry().add_to_hass(hass)
-    subscriber = FakeSubscriber()
-    device_manager = await subscriber.async_get_device_manager()
-    if devices:
-        for device in devices.values():
-            device_manager.add_device(device)
-    platforms = []
-    if platform:
-        platforms = [platform]
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", platforms), patch(
-        "homeassistant.components.nest.api.GoogleNestSubscriber",
-        return_value=subscriber,
-    ):
-        assert await async_setup_component(hass, DOMAIN, CONFIG)
-        await hass.async_block_till_done()
-    return subscriber
