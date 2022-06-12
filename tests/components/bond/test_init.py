@@ -9,7 +9,7 @@ import pytest
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -343,3 +343,15 @@ async def test_device_remove_devices(hass, hass_ws_client):
         )
         is False
     )
+
+
+async def test_smart_by_bond_v3_firmware(hass: HomeAssistant) -> None:
+    """Test we can detect smart by bond with the v3 firmware."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_version={"bondid": "test-hub-id", "target": "breck-northstar"},
+        bond_device_id="test-device-id",
+    )
+    assert ATTR_ASSUMED_STATE not in hass.states.get("fan.name_1").attributes

@@ -15,6 +15,8 @@ MAX_REQUESTS = 6
 
 _LOGGER = logging.getLogger(__name__)
 
+SMART_BY_BOND_PREFIX = "breck-"
+
 
 class BondDevice:
     """Helper device class to hold ID and attributes together."""
@@ -224,4 +226,13 @@ class BondHub:
     @property
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
+        target = self.target
+        if target and target.startswith(SMART_BY_BOND_PREFIX):
+            #
+            # v3 firmwares have the bridge endpoint even
+            # though the docs currently imply they do not
+            #
+            # https://github.com/bondhome/api-v2/blob/26474c1eb4d7a12f9502e4b7ea4fb4d6952c42a3/common/info.yaml#L808
+            #
+            return False
         return bool(self._bridge)
