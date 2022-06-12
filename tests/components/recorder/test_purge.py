@@ -10,7 +10,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE, SupportedDialect
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     EventData,
     Events,
     RecorderRuns,

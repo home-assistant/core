@@ -70,6 +70,8 @@ async def async_setup_platform(
 class TemplateLock(TemplateEntity, LockEntity):
     """Representation of a template lock."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,

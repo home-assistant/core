@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 
+from regenmaschine.controller import Controller
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,8 +15,9 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import EntityCategory, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import utcnow
 
 from . import RainMachineEntity
@@ -133,8 +136,11 @@ async def async_setup_entry(
             entry, coordinator, controller, description
         )
         for description in SENSOR_DESCRIPTIONS
-        if (coordinator := coordinators[description.api_category]) is not None
-        and key_exists(coordinator.data, description.data_key)
+        if (
+            (coordinator := coordinators[description.api_category]) is not None
+            and coordinator.data
+            and key_exists(coordinator.data, description.data_key)
+        )
     ]
 
     zone_coordinator = coordinators[DATA_ZONES]
@@ -202,16 +208,33 @@ class ZoneTimeRemainingSensor(RainMachineEntity, SensorEntity):
 
     entity_description: RainMachineSensorDescriptionUid
 
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator,
+        controller: Controller,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(entry, coordinator, controller, description)
+
+        self._running_or_queued: bool = False
+
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
         data = self.coordinator.data[self.entity_description.uid]
         now = utcnow()
 
-        if RUN_STATE_MAP.get(data["state"]) != RunStates.RUNNING:
-            # If the zone isn't actively running, return immediately:
+        if RUN_STATE_MAP.get(data["state"]) == RunStates.NOT_RUNNING:
+            if self._running_or_queued:
+                # If we go from running to not running, update the state to be right
+                # now (i.e., the time the zone stopped running):
+                self._attr_native_value = now
+                self._running_or_queued = False
             return
 
+        self._running_or_queued = True
         new_timestamp = now + timedelta(seconds=data["remaining"])
 
         if self._attr_native_value:

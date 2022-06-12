@@ -1,7 +1,6 @@
 """Support for MQTT climate devices."""
 from __future__ import annotations
 
-import asyncio
 import functools
 import logging
 
@@ -51,8 +50,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -377,7 +376,11 @@ async def async_setup_platform(
     """Set up MQTT climate configured under the fan platform key (deprecated)."""
     # The use of PLATFORM_SCHEMA is deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, climate.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        climate.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -388,12 +391,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT climate device through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, climate.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(
+            hass, climate.DOMAIN, PLATFORM_SCHEMA_MODERN
         )
     )
     # setup for discovery

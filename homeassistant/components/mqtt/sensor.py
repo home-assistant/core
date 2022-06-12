@@ -1,7 +1,6 @@
 """Support for MQTT sensors."""
 from __future__ import annotations
 
-import asyncio
 from datetime import timedelta
 import functools
 import logging
@@ -42,8 +41,8 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttAvailability,
     MqttEntity,
-    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -133,7 +132,11 @@ async def async_setup_platform(
     """Set up MQTT sensors configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, sensor.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        sensor.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -144,12 +147,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT sensor through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, sensor.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(
+            hass, sensor.DOMAIN, PLATFORM_SCHEMA_MODERN
         )
     )
     # setup for discovery

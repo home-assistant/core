@@ -16,9 +16,11 @@ from homeassistant.components.websocket_api import messages
 from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.helpers.entityfilter import EntityFilter
 from homeassistant.helpers.event import async_track_point_in_utc_time
 import homeassistant.util.dt as dt_util
 
+from .const import LOGBOOK_ENTITIES_FILTER
 from .helpers import (
     async_determine_event_types,
     async_filter_entities,
@@ -65,6 +67,23 @@ async def _async_wait_for_recorder_sync(hass: HomeAssistant) -> None:
         _LOGGER.debug(
             "Recorder is behind more than %s seconds, starting live stream; Some results may be missing"
         )
+
+
+@callback
+def _async_send_empty_response(
+    connection: ActiveConnection, msg_id: int, start_time: dt, end_time: dt | None
+) -> None:
+    """Send an empty response.
+
+    The current case for this is when they ask for entity_ids
+    that will all be filtered away because they have UOMs or
+    state_class.
+    """
+    connection.send_result(msg_id)
+    stream_end_time = end_time or dt_util.utcnow()
+    empty_stream_message = _generate_stream_message([], start_time, stream_end_time)
+    empty_response = messages.event_message(msg_id, empty_stream_message)
+    connection.send_message(JSON_DUMP(empty_response))
 
 
 async def _async_send_historical_events(
@@ -171,6 +190,17 @@ async def _async_get_ws_stream_events(
     )
 
 
+def _generate_stream_message(
+    events: list[dict[str, Any]], start_day: dt, end_day: dt
+) -> dict[str, Any]:
+    """Generate a logbook stream message response."""
+    return {
+        "events": events,
+        "start_time": dt_util.utc_to_timestamp(start_day),
+        "end_time": dt_util.utc_to_timestamp(end_day),
+    }
+
+
 def _ws_stream_get_events(
     msg_id: int,
     start_day: dt,
@@ -184,11 +214,7 @@ def _ws_stream_get_events(
     last_time = None
     if events:
         last_time = dt_util.utc_from_timestamp(events[-1]["when"])
-    message = {
-        "events": events,
-        "start_time": dt_util.utc_to_timestamp(start_day),
-        "end_time": dt_util.utc_to_timestamp(end_day),
-    }
+    message = _generate_stream_message(events, start_day, end_day)
     if partial:
         # This is a hint to consumers of the api that
         # we are about to send a another block of historical
@@ -275,6 +301,10 @@ async def ws_event_stream(
     entity_ids = msg.get("entity_ids")
     if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
+        if not entity_ids:
+            _async_send_empty_response(connection, msg_id, start_time, end_time)
+            return
+
     event_types = async_determine_event_types(hass, entity_ids, device_ids)
     event_processor = EventProcessor(
         hass,
@@ -337,8 +367,18 @@ async def ws_event_stream(
             )
             _unsub()
 
+    entities_filter: EntityFilter | None = None
+    if not event_processor.limited_select:
+        entities_filter = hass.data[LOGBOOK_ENTITIES_FILTER]
+
     async_subscribe_events(
-        hass, subscriptions, _queue_or_cancel, event_types, entity_ids, device_ids
+        hass,
+        subscriptions,
+        _queue_or_cancel,
+        event_types,
+        entities_filter,
+        entity_ids,
+        device_ids,
     )
     subscriptions_setup_complete_time = dt_util.utcnow()
     connection.subscriptions[msg_id] = _unsub
