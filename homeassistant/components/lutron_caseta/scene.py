@@ -6,18 +6,11 @@ from pylutron_caseta.smartbridge import Smartbridge
 from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import _area_and_name_from_name
-from .const import (
-    BRIDGE_DEVICE,
-    BRIDGE_LEAP,
-    CONFIG_URL,
-    DOMAIN as CASETA_DOMAIN,
-    MANUFACTURER,
-)
+from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
 from .util import serial_to_unique_id
 
 
@@ -47,21 +40,12 @@ class LutronCasetaScene(Scene):
         """Initialize the Lutron Caseta scene."""
         self._scene_id = scene["scene_id"]
         self._bridge: Smartbridge = bridge
-        _, name = _area_and_name_from_name(scene["name"])
         bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
-        unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
-        info = DeviceInfo(
-            identifiers={(CASETA_DOMAIN, unique_id)},
-            manufacturer=MANUFACTURER,
-            model="Lutron Scene",
-            name=name,
-            via_device=(CASETA_DOMAIN, bridge_device["serial"]),
-            configuration_url=CONFIG_URL,
-            entry_type=DeviceEntryType.SERVICE,
+        self._attr_device_info = DeviceInfo(
+            identifiers={(CASETA_DOMAIN, bridge_device["serial"])},
         )
-        self._attr_device_info = info
-        self._attr_name = name
-        self._attr_unique_id = unique_id
+        self._attr_name = _area_and_name_from_name(scene["name"])[1]
+        self._attr_unique_id = f"scene_{bridge_unique_id}_{self._scene_id}"
 
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
