@@ -131,7 +131,15 @@ def generate_auth(device_info: Mapping[str, Any]) -> httpx.Auth | None:
 class GenericCamera(Camera):
     """A generic implementation of an IP camera."""
 
-    def __init__(self, hass, device_info, identifier, title):
+    _last_image: bytes | None
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        device_info: Mapping[str, Any],
+        identifier: str,
+        title: str,
+    ) -> None:
         """Initialize a generic camera."""
         super().__init__()
         self.hass = hass
@@ -208,7 +216,7 @@ class GenericCamera(Camera):
         """Return the name of this device."""
         return self._name
 
-    async def stream_source(self):
+    async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if self._stream_source is None:
             return None

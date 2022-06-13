@@ -32,6 +32,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
@@ -119,7 +120,7 @@ def build_schema(
     return vol.Schema(spec)
 
 
-def get_image_type(image):
+def get_image_type(image: bytes) -> str | None:
     """Get the format of downloaded bytes that could be an image."""
     fmt = None
     imagefile = io.BytesIO(image)
@@ -135,7 +136,9 @@ def get_image_type(image):
     return fmt
 
 
-async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
+async def async_test_still(
+    hass: HomeAssistant, info: Mapping[str, Any]
+) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
@@ -147,7 +150,7 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", url, err)
         return {CONF_STILL_IMAGE_URL: "template_error"}, None
-    verify_ssl = info.get(CONF_VERIFY_SSL)
+    verify_ssl = info.get(CONF_VERIFY_SSL, False)
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
@@ -177,7 +180,9 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     return {}, f"image/{fmt}"
 
 
-def slug(hass, template) -> str | None:
+def slug(
+    hass: HomeAssistant, template: str | template_helper.Template | None
+) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not template:
         return None
@@ -193,7 +198,9 @@ def slug(hass, template) -> str | None:
     return None
 
 
-async def async_test_stream(hass, info) -> dict[str, str]:
+async def async_test_stream(
+    hass: HomeAssistant, info: Mapping[str, Any]
+) -> dict[str, str]:
     """Verify that the stream is valid before we create an entity."""
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
         return {}
@@ -240,7 +247,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
         self.cached_user_input: dict[str, Any] = {}
         self.cached_title = ""
@@ -261,45 +268,49 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: Mapping[str, Any] | None = None
     ) -> FlowResult:
         """Handle the start of the config flow."""
         errors = {}
-        hass = self.hass
         if user_input:
+            user_dict = dict(user_input)
+        else:
+            user_dict = None
+        hass = self.hass
+        if user_dict:
             # Secondary validation because serialised vol can't seem to handle this complexity:
-            if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
+            if not user_dict.get(CONF_STILL_IMAGE_URL) and not user_dict.get(
                 CONF_STREAM_SOURCE
             ):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
-                errors, still_format = await async_test_still(self.hass, user_input)
-                errors = errors | await async_test_stream(self.hass, user_input)
-                still_url = user_input.get(CONF_STILL_IMAGE_URL)
-                stream_url = user_input.get(CONF_STREAM_SOURCE)
+                errors, still_format = await async_test_still(self.hass, user_dict)
+                errors = errors | await async_test_stream(self.hass, user_dict)
+                still_url = user_dict.get(CONF_STILL_IMAGE_URL)
+                stream_url = user_dict.get(CONF_STREAM_SOURCE)
                 name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if not errors:
-                    user_input[CONF_CONTENT_TYPE] = still_format
-                    user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+                    user_dict[CONF_CONTENT_TYPE] = still_format
+                    user_dict[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
                     if still_url is None:
                         # If user didn't specify a still image URL,
                         # The automatically generated still image that stream generates
                         # is always jpeg
-                        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
+                        user_dict[CONF_CONTENT_TYPE] = "image/jpeg"
 
                     return self.async_create_entry(
-                        title=name, data={}, options=user_input
+                        title=name, data={}, options=user_dict
                     )
         else:
-            user_input = DEFAULT_DATA.copy()
+            user_dict = DEFAULT_DATA.copy()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=build_schema(user_input),
+            data_schema=build_schema(user_dict),
             errors=errors,
         )
 
-    async def async_step_import(self, import_config) -> FlowResult:
+    async def async_step_import(self, import_config: Mapping[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
@@ -311,11 +322,12 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME,
             slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
         )
+        config = dict(import_config)
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
-            import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
-        import_config[CONF_CONTENT_TYPE] = still_format
-        return self.async_create_entry(title=name, data={}, options=import_config)
+            config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+        still_format = config.get(CONF_CONTENT_TYPE, "image/jpeg")
+        config[CONF_CONTENT_TYPE] = still_format
+        return self.async_create_entry(title=name, data={}, options=config)
 
 
 class GenericOptionsFlowHandler(OptionsFlow):
