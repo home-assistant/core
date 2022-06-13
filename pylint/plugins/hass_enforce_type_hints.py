@@ -22,6 +22,7 @@ class TypeHintMatch:
     function_name: str
     arg_types: dict[int, str]
     return_type: list[str] | str | None | object
+    check_return_type_inheritance: bool = False
 
 
 @dataclass
@@ -381,6 +382,14 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
+                    function_name="async_get_options_flow",
+                    arg_types={
+                        0: "ConfigEntry",
+                    },
+                    return_type="OptionsFlow",
+                    check_return_type_inheritance=True,
+                ),
+                TypeHintMatch(
                     function_name="async_step_dhcp",
                     arg_types={
                         1: "DhcpServiceInfo",
@@ -504,6 +513,32 @@ def _is_valid_type(
     return isinstance(node, nodes.Attribute) and node.attrname == expected_type
 
 
+def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
+    if _is_valid_type(match.return_type, node):
+        return True
+
+    if isinstance(node, nodes.BinOp):
+        return _is_valid_return_type(match, node.left) and _is_valid_return_type(
+            match, node.right
+        )
+
+    if (
+        match.check_return_type_inheritance
+        and isinstance(match.return_type, str)
+        and isinstance(node, nodes.Name)
+    ):
+        ancestor: nodes.ClassDef
+        for infer_node in node.infer():
+            if isinstance(infer_node, nodes.ClassDef):
+                if infer_node.name == match.return_type:
+                    return True
+                for ancestor in infer_node.ancestors():
+                    if ancestor.name == match.return_type:
+                        return True
+
+    return False
+
+
 def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     args = node.args
     annotations: list[nodes.NodeNG | None] = (
@@ -619,8 +654,10 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 )
 
         # Check the return type.
-        if not _is_valid_type(return_type := match.return_type, node.returns):
-            self.add_message("hass-return-type", node=node, args=return_type or "None")
+        if not _is_valid_return_type(match, node.returns):
+            self.add_message(
+                "hass-return-type", node=node, args=match.return_type or "None"
+            )
 
 
 def register(linter: PyLinter) -> None:
