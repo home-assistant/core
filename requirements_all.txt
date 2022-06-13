@@ -2433,7 +2433,7 @@ webexteamssdk==1.1.1
 whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.whois
-whois==0.9.13
+whois==0.9.16
 
 # homeassistant.components.wiffi
 wiffi==1.1.0
