@@ -9,6 +9,7 @@ from ..const import (
     ATTR_ATTRIBUTE_NAME,
     ATTR_VALUE,
     REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_MIN_INT_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
@@ -116,3 +117,47 @@ class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
     REPORT_CONFIG = []
+
+
+@registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
+class IkeaAirPurifierCluster(ZigbeeChannel):
+    """IKEA Air Purifier channel."""
+
+    REPORT_CONFIG = [
+        {
+            "attr": "filter_run_time",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "replace_filter",
+            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "filter_life_time",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "disable_led",
+            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "air_quality_25pm",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "child_lock",
+            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "fan_mode",
+            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "fan_speed",
+            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
+        },
+        {
+            "attr": "device_run_time",
+            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
+        },
+    ]
