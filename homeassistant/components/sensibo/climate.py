@@ -293,7 +293,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             raise HomeAssistantError("No timer to delete")
 
         if state == "on" and minutes is None:
-            raise HomeAssistantError("No value provided for timer")
+            raise ValueError("No value provided for timer")
 
         if state == "off":
             result = await self.async_send_command("del_timer")

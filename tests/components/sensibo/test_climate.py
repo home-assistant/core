@@ -814,7 +814,7 @@ async def test_climate_set_timer_failures(
     assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_TIMER,
