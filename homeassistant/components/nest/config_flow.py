@@ -177,10 +177,14 @@ class NestFlowHandler(
             entry_id := self.context.get("entry_id")
         ):
             return None
-        for entry in self._async_current_entries():
-            if entry.entry_id == entry_id:
-                return entry
-        return None
+        return next(
+            (
+                entry
+                for entry in self._async_current_entries()
+                if entry.entry_id == entry_id
+            ),
+            None,
+        )
 
     @property
     def logger(self) -> logging.Logger:
@@ -200,12 +204,7 @@ class NestFlowHandler(
     async def async_generate_authorize_url(self) -> str:
         """Generate a url for the user to authorize based on user input."""
         config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
-        if not (
-            project_id := self._data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
-        ):
-            raise ValueError(
-                "Config flow has invalid state with no Device Access Project ID"
-            )
+        project_id = self._data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID, ""))
         query = await super().async_generate_authorize_url()
         authorize_url = OAUTH2_AUTHORIZE.format(project_id=project_id)
         return f"{authorize_url}{query}"
@@ -400,17 +399,16 @@ class NestFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Configure and create Pub/Sub subscriber."""
-        data = {}
-        data.update(self._data)
-        if user_input:
-            data.update(user_input)
-        cloud_project_id = data[CONF_CLOUD_PROJECT_ID].strip()
-        project_id = data[CONF_PROJECT_ID]
-        errors: dict[str, str] = {}
+        data = {
+            **self._data,
+            **(user_input if user_input is not None else {}),
+        }
+        cloud_project_id = data.get(CONF_CLOUD_PROJECT_ID, "").strip()
         config = self.hass.data.get(DOMAIN, {}).get(DATA_NEST_CONFIG, {})
         project_id = data.get(CONF_PROJECT_ID, config.get(CONF_PROJECT_ID))
 
-        if cloud_project_id and not errors:
+        errors: dict[str, str] = {}
+        if cloud_project_id:
             # Create the subscriber id and/or verify it already exists. Note that
             # the existing id is used, and create call below is idempotent
             if not (subscriber_id := data.get(CONF_SUBSCRIBER_ID, "")):
