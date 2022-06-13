@@ -327,6 +327,21 @@ class SonosSpeaker:
         """Create event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
 
+        subscriptions = [
+            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
+            for service in SUBSCRIPTION_SERVICES
+        ]
+        results = await asyncio.gather(*subscriptions, return_exceptions=True)
+        for result in results:
+            self.log_subscription_result(
+                result, "Creating subscription", logging.WARNING
+            )
+
+        if any(isinstance(result, Exception) for result in results):
+            _LOGGER.warning("Subscriptions to %s failed", self.zone_name)
+            await self.async_offline()
+            return
+
         # Create a polling task in case subscriptions fail or callback events do not arrive
         if not self._poll_timer:
             self._poll_timer = async_track_time_interval(
@@ -337,16 +352,6 @@ class SonosSpeaker:
                     f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
                 ),
                 SCAN_INTERVAL,
-            )
-
-        subscriptions = [
-            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-            for service in SUBSCRIPTION_SERVICES
-        ]
-        results = await asyncio.gather(*subscriptions, return_exceptions=True)
-        for result in results:
-            self.log_subscription_result(
-                result, "Creating subscription", logging.WARNING
             )
 
     async def _subscribe(
