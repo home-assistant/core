@@ -1596,13 +1596,13 @@ wakeonlan==2.0.1
 wallbox==0.4.9
 
 # homeassistant.components.folder_watcher
-watchdog==2.1.8
+watchdog==2.1.9
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.15.1
 
 # homeassistant.components.whois
-whois==0.9.13
+whois==0.9.16
 
 # homeassistant.components.wiffi
 wiffi==1.1.0

@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "O dispositivo j\u00e1 est\u00e1 configurado",
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
             "cannot_connect": "N\u00e3o \u00e9 poss\u00edvel conectar \u00e0 nuvem Eight Sleep: {error}"
         },
         "error": {
@@ -11,7 +11,7 @@
             "user": {
                 "data": {
                     "password": "Senha",
-                    "username": "Nome de usu\u00e1rio"
+                    "username": "Usu\u00e1rio"
                 }
             }
         }
