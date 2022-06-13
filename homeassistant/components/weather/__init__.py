@@ -1,14 +1,31 @@
 """Weather component that handles meteorological data for your location."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final, TypedDict, final
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_TENTHS, PRECISION_WHOLE, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    PRESSURE_MBAR,
+    PRESSURE_MMHG,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -17,6 +34,12 @@ from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.temperature import display_temp as show_temp
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import (
+    distance as distance_util,
+    pressure as pressure_util,
+    speed as speed_util,
+    temperature as temperature_util,
+)
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -56,6 +79,12 @@ ATTR_WEATHER_VISIBILITY = "visibility"
 ATTR_WEATHER_WIND_BEARING = "wind_bearing"
 ATTR_WEATHER_WIND_SPEED = "wind_speed"
 
+CONF_PRECIPITATION_UOM = "precipitation_unit_of_measurement"
+CONF_PRESSURE_UOM = "pressure_unit_of_measurement"
+CONF_TEMPERATURE_UOM = "temperature_unit_of_measurement"
+CONF_VISIBILITY_UOM = "visibility_unit_of_measurement"
+CONF_WIND_SPEED_UOM = "wind_speed_unit_of_measurement"
+
 DOMAIN = "weather"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -63,6 +92,57 @@ ENTITY_ID_FORMAT = DOMAIN + ".{}"
 SCAN_INTERVAL = timedelta(seconds=30)
 
 ROUNDING_PRECISION = 2
+
+VALID_UNITS_PRESSURE: tuple[str, ...] = (
+    PRESSURE_HPA,
+    PRESSURE_MBAR,
+    PRESSURE_INHG,
+    PRESSURE_MMHG,
+)
+VALID_UNITS_TEMPERATURE: tuple[str, ...] = (
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+VALID_UNITS_PRECIPITATION: tuple[str, ...] = (
+    LENGTH_MILLIMETERS,
+    LENGTH_INCHES,
+)
+VALID_UNITS_VISIBILITY: tuple[str, ...] = (
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+)
+VALID_UNITS_SPEED: tuple[str, ...] = (
+    SPEED_METERS_PER_SECOND,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
+)
+
+UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
+    CONF_PRESSURE_UOM: pressure_util.convert,
+    CONF_TEMPERATURE_UOM: temperature_util.convert,
+    CONF_VISIBILITY_UOM: distance_util.convert,
+    CONF_PRECIPITATION_UOM: distance_util.convert,
+    CONF_WIND_SPEED_UOM: speed_util.convert,
+}
+
+UNIT_RATIOS: dict[str, dict[str, float]] = {
+    CONF_PRESSURE_UOM: pressure_util.UNIT_CONVERSION,
+    CONF_TEMPERATURE_UOM: {
+        TEMP_CELSIUS: 1.0,
+        TEMP_FAHRENHEIT: 1.8,
+    },
+    CONF_VISIBILITY_UOM: distance_util.METERS_TO,
+    CONF_PRECIPITATION_UOM: distance_util.METERS_TO,
+    CONF_WIND_SPEED_UOM: speed_util.UNIT_CONVERSION,
+}
+
+VALID_UNITS: dict[str, tuple[str, ...]] = {
+    CONF_PRESSURE_UOM: VALID_UNITS_PRESSURE,
+    CONF_TEMPERATURE_UOM: VALID_UNITS_TEMPERATURE,
+    CONF_VISIBILITY_UOM: VALID_UNITS_VISIBILITY,
+    CONF_PRECIPITATION_UOM: VALID_UNITS_PRECIPITATION,
+    CONF_WIND_SPEED_UOM: VALID_UNITS_SPEED,
+}
 
 
 class Forecast(TypedDict, total=False):
@@ -115,21 +195,35 @@ class WeatherEntity(Entity):
     _attr_ozone: float | None = None
     _attr_precision: float
     _attr_pressure: float | None = None
-    _attr_pressure_unit: str | None = None
+    _attr_pressure_unit: None = None  # Subclasses of WeatherEntity should not set this
     _attr_native_pressure_unit: str | None = None
     _attr_state: None = None
-    _attr_temperature_unit: str
+    _attr_temperature_unit: None = (
+        None  # Subclasses of WeatherEntity should not set this
+    )
     _attr_native_temperature_unit: str
     _attr_temperature: float | None
     _attr_visibility: float | None = None
-    _attr_visibility_unit: str | None = None
+    _attr_visibility_unit: None = (
+        None  # Subclasses of WeatherEntity should not set this
+    )
     _attr_native_visibility_unit: str | None = None
-    _attr_precipitation_unit: str | None = None
+    _attr_precipitation_unit: None = (
+        None  # Subclasses of WeatherEntity should not set this
+    )
     _attr_native_precipitation_unit: str | None = None
     _attr_wind_bearing: float | str | None = None
     _attr_wind_speed: float | None = None
-    _attr_wind_speed_unit: str | None = None
+    _attr_wind_speed_unit: None = (
+        None  # Subclasses of WeatherEntity should not set this
+    )
     _attr_native_wind_speed_unit: str | None = None
+
+    _weather_option_temperature_uom: str | None = None
+    _weather_option_pressure_uom: str | None = None
+    _weather_option_visibility_uom: str | None = None
+    _weather_option_precipitation_uom: str | None = None
+    _weather_option_wind_speed_uom: str | None = None
 
     @property
     def temperature(self) -> float | None:
@@ -137,9 +231,19 @@ class WeatherEntity(Entity):
         return self._attr_temperature
 
     @property
-    def temperature_unit(self) -> str:
+    def native_temperature_unit(self) -> str | None:
         """Return the native unit of measurement for temperature."""
-        return self._attr_temperature_unit
+        if hasattr(self, "_attr_native_temperature_unit"):
+            return self._attr_native_temperature_unit
+        return None
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement for temperature."""
+        if self._weather_option_temperature_uom:
+            return self._weather_option_temperature_uom
+
+        return self.hass.config.units.temperature_unit
 
     @property
     def pressure(self) -> float | None:
@@ -147,9 +251,21 @@ class WeatherEntity(Entity):
         return self._attr_pressure
 
     @property
-    def pressure_unit(self) -> str | None:
+    def native_pressure_unit(self) -> str | None:
         """Return the native unit of measurement for pressure."""
-        return self._attr_pressure_unit
+        if hasattr(self, "_attr_native_pressure_unit"):
+            return self._attr_native_pressure_unit
+        return None
+
+    @property
+    def pressure_unit(self) -> str | None:
+        """Return the unit of measurement for pressure."""
+        if self._weather_option_pressure_uom:
+            return self._weather_option_pressure_uom
+
+        if self.hass.config.units.is_metric:
+            return PRESSURE_HPA
+        return PRESSURE_INHG
 
     @property
     def humidity(self) -> float | None:
@@ -162,9 +278,21 @@ class WeatherEntity(Entity):
         return self._attr_wind_speed
 
     @property
-    def wind_speed_unit(self) -> str | None:
+    def native_wind_speed_unit(self) -> str | None:
         """Return the native unit of measurement for wind speed."""
-        return self._attr_wind_speed_unit
+        if hasattr(self, "_attr_native_wind_speed_unit"):
+            return self._attr_native_wind_speed_unit
+        return None
+
+    @property
+    def wind_speed_unit(self) -> str | None:
+        """Return the unit of measurement for wind speed."""
+        if self._weather_option_wind_speed_uom:
+            return self._weather_option_wind_speed_uom
+
+        if self.hass.config.units.is_metric:
+            return SPEED_METERS_PER_SECOND
+        return SPEED_MILES_PER_HOUR
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -314,3 +442,19 @@ class WeatherEntity(Entity):
     def condition(self) -> str | None:
         """Return the current condition."""
         return self._attr_condition
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        weather_options = self.registry_entry.options.get(DOMAIN)
+        if (
+            weather_options
+            and (custom_unit_temperature := weather_options.get(CONF_TEMPERATURE_UOM))
+            and self.native_temperature_unit in VALID_UNITS[CONF_TEMPERATURE_UOM]
+            and custom_unit_temperature in VALID_UNITS[CONF_TEMPERATURE_UOM]
+        ):
+            self._weather_option_temperature_uom = custom_unit_temperature
+            return
+
+        self._weather_option_temperature_uom = None
