@@ -173,7 +173,6 @@ async def test_weather_sensor_enabling(
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         states_before = len(hass.states.async_all())
         assert hass.states.get(f"sensor.{name}") is None
-        print(f"sensor.{name}")
 
         registry = er.async_get(hass)
         registry.async_get_or_create(
