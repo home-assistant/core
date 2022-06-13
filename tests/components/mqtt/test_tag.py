@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
+from homeassistant.const import Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -43,9 +44,9 @@ DEFAULT_TAG_SCAN_JSON = (
 
 
 @pytest.fixture(autouse=True)
-def no_platforms():
-    """Skip platform setup to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+def binary_sensor_only():
+    """Only setup the binary_sensor platform to speed up test."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
         yield
 
 

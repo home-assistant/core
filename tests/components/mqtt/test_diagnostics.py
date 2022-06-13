@@ -6,6 +6,7 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.const import Platform
 
 from tests.common import async_fire_mqtt_message, mock_device_registry
 from tests.components.diagnostics import (
@@ -32,9 +33,12 @@ default_config = {
 
 
 @pytest.fixture(autouse=True)
-def no_platforms():
-    """Skip platform setup to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+def sensor_only():
+    """Only setup the sensor platform to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS",
+        [Platform.DEVICE_TRACKER, Platform.SENSOR],
+    ):
         yield
 
 
