@@ -1790,13 +1790,7 @@ async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
     assert hass.states.get(f"{domain}.test_new_3")
 
 
-async def help_test_setup_manual_entity_from_yaml(
-    hass,
-    caplog,
-    tmp_path,
-    platform,
-    config,
-):
+async def help_test_setup_manual_entity_from_yaml(hass, platform, config):
     """Help to test setup from yaml through configuration entry."""
     config_structure = {mqtt.DOMAIN: {platform: config}}
 

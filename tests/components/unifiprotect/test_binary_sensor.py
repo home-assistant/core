@@ -71,7 +71,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 9)
 
     yield camera_obj
 
@@ -103,7 +103,7 @@ async def light_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     yield light_obj
 
@@ -138,7 +138,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     yield camera_obj
 
@@ -179,7 +179,7 @@ async def sensor_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
 
     yield sensor_obj
 
@@ -215,7 +215,7 @@ async def sensor_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
 
     yield sensor_obj
 

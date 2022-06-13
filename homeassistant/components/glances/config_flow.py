@@ -1,4 +1,6 @@
 """Config flow for Glances."""
+from __future__ import annotations
+
 import glances_api
 import voluptuous as vol
 
@@ -59,7 +61,9 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> GlancesOptionsFlowHandler:
         """Get the options flow for this handler."""
         return GlancesOptionsFlowHandler(config_entry)
 
@@ -86,7 +90,7 @@ class GlancesFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class GlancesOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Glances client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Glances options flow."""
         self.config_entry = config_entry
 

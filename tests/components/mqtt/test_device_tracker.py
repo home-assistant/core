@@ -244,9 +244,7 @@ async def test_legacy_matching_source_type(
     assert hass.states.get(entity_id).attributes["source_type"] == SOURCE_TYPE_BLUETOOTH
 
 
-async def test_setup_with_modern_schema(
-    hass, caplog, tmp_path, mock_device_tracker_conf
-):
+async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
     """Test setup using the modern schema."""
     dev_id = "jan"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -255,8 +253,6 @@ async def test_setup_with_modern_schema(
     hass.config.components = {"zone"}
     config = {"name": dev_id, "state_topic": topic}
 
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, DOMAIN, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, DOMAIN, config)
 
     assert hass.states.get(entity_id) is not None
