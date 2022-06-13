@@ -146,10 +146,24 @@ async def test_process_health(health, expected):
             "9",
         ),
         (
+            "12:34:56:03:1b:e4-rf_strength",
+            "netatmoindoor_garden_rf_strength",
+            "Full",
+        ),
+        (
             "12:34:56:26:68:92-health_idx",
             "baby_bedroom_health",
             "Fine",
         ),
+        (
+            "12:34:56:26:68:92-wifi_strength",
+            "baby_bedroom_wifi",
+            "High",
+        ),
+        ("Home-max-wind_angle", "home_max_wind_angle", "17"),
+        ("Home-max-gust_angle", "home_max_gust_angle", "217"),
+        ("Home-max-gust_strength", "home_max_gust_strength", "31"),
+        ("Home-max-sum_rain_1", "home_max_sum_rain_1", "0.2"),
     ],
 )
 async def test_weather_sensor_enabling(
@@ -159,7 +173,6 @@ async def test_weather_sensor_enabling(
     with patch("time.time", return_value=TEST_TIME), selected_platforms(["sensor"]):
         states_before = len(hass.states.async_all())
         assert hass.states.get(f"sensor.{name}") is None
-        print(f"sensor.{name}")
 
         registry = er.async_get(hass)
         registry.async_get_or_create(

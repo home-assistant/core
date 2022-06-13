@@ -300,7 +300,10 @@ class NetatmoCamera(NetatmoBase, Camera):
     async def _service_set_camera_light(self, **kwargs: Any) -> None:
         """Service to set light mode."""
         if not isinstance(self._camera, NaModules.netatmo.NOC):
-            raise HomeAssistantError(f"{self._model} does not have a floodlight")
+            raise HomeAssistantError(
+                f"{self._model} <{self.name}> does not have a floodlight"
+            )
+
         mode = str(kwargs.get(ATTR_CAMERA_LIGHT_MODE))
         _LOGGER.debug("Turn %s camera light for '%s'", mode, self._attr_name)
         await self._camera.async_set_floodlight_state(mode)
