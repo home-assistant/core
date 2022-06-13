@@ -106,7 +106,7 @@ class ConfigEntryState(Enum):
     def recoverable(self) -> bool:
         """Get if the state is recoverable.
 
-        If the entry is state is recoverable, unloads
+        If the entry state is recoverable, unloads
         and reloads are allowed.
         """
         return self._recoverable
