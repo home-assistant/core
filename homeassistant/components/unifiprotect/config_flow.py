@@ -8,6 +8,7 @@ from typing import Any
 from aiohttp import CookieJar
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import NVR
+from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,7 +23,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 from homeassistant.helpers.typing import DiscoveryInfoType
 from homeassistant.loader import async_get_integration
 from homeassistant.util.network import is_ip_address
@@ -43,6 +47,11 @@ from .utils import _async_resolve, _async_short_mac, _async_unifi_mac_from_hass
 
 _LOGGER = logging.getLogger(__name__)
 
+ENTRY_FAILURE_STATES = (
+    config_entries.ConfigEntryState.SETUP_ERROR,
+    config_entries.ConfigEntryState.SETUP_RETRY,
+)
+
 
 async def async_local_user_documentation_url(hass: HomeAssistant) -> str:
     """Get the documentation url for creating a local user."""
@@ -55,15 +64,23 @@ def _host_is_direct_connect(host: str) -> bool:
     return host.endswith(".ui.direct")
 
 
-def _async_entry_is_in_failure_state(
+async def _async_console_is_offline(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
 ) -> bool:
-    """Check if an entry is in a failure state."""
-    return entry.state in (
-        config_entries.ConfigEntryState.SETUP_ERROR,
-        config_entries.ConfigEntryState.SETUP_RETRY,
-    ) or not async_last_update_was_successful(hass, entry)
+    """Check if a console is offline.
+
+    We define offline by the config entry
+    is in a failure/retry state or the updates
+    are failing and the console is unreachable
+    since protect may be updating.
+    """
+    return bool(
+        entry.state in ENTRY_FAILURE_STATES
+        or not async_last_update_was_successful(hass, entry)
+    ) and not await async_console_is_alive(
+        async_get_clientsession(hass, verify_ssl=False), entry.data[CONF_HOST]
+    )
 
 
 class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -124,7 +141,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     not entry_has_direct_connect
                     and is_ip_address(entry_host)
                     and entry_host != source_ip
-                    and _async_entry_is_in_failure_state(self.hass, entry)
+                    and await _async_console_is_offline(self.hass, entry)
                 ):
                     new_host = source_ip
                 if new_host:

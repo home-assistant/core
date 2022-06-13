@@ -26,6 +26,16 @@ from .utils import async_get_adoptable_devices_by_type, async_get_devices
 _LOGGER = logging.getLogger(__name__)
 
 
+@callback
+def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Check if the last update was successful for a config entry."""
+    return bool(
+        DOMAIN in hass.data
+        and entry.entry_id in hass.data[DOMAIN]
+        and hass.data[DOMAIN][entry.entry_id].last_update_success
+    )
+
+
 class ProtectData:
     """Coordinate updates."""
 
@@ -196,13 +206,3 @@ def async_ufp_instance_for_config_entry_ids(
             protect_data: ProtectData = domain_data[config_entry_id]
             return protect_data.api
     return None
-
-
-@callback
-def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Check if the last update was successful for a config entry."""
-    return bool(
-        DOMAIN in hass.data
-        and entry.entry_id in hass.data[DOMAIN]
-        and hass.data[DOMAIN][entry.entry_id].last_update_success
-    )
