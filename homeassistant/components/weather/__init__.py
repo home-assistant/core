@@ -116,15 +116,20 @@ class WeatherEntity(Entity):
     _attr_precision: float
     _attr_pressure: float | None = None
     _attr_pressure_unit: str | None = None
+    _attr_native_pressure_unit: str | None = None
     _attr_state: None = None
     _attr_temperature_unit: str
+    _attr_native_temperature_unit: str
     _attr_temperature: float | None
     _attr_visibility: float | None = None
     _attr_visibility_unit: str | None = None
+    _attr_native_visibility_unit: str | None = None
     _attr_precipitation_unit: str | None = None
+    _attr_native_precipitation_unit: str | None = None
     _attr_wind_bearing: float | str | None = None
     _attr_wind_speed: float | None = None
     _attr_wind_speed_unit: str | None = None
+    _attr_native_wind_speed_unit: str | None = None
 
     @property
     def temperature(self) -> float | None:
