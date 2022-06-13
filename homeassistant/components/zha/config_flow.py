@@ -260,8 +260,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ): str
         }
         radio_schema = app_cls.SCHEMA_DEVICE.schema
-        if isinstance(radio_schema, vol.Schema):
-            radio_schema = radio_schema.schema
+        assert not isinstance(radio_schema, vol.Schema)
 
         for param, value in radio_schema.items():
             if param in SUPPORTED_PORT_SETTINGS:
