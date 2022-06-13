@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -49,6 +50,13 @@ class RecordCallsPartial(partial):
     """Wrapper class for partial."""
 
     __name__ = "RecordCallPartialTest"
+
+
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Only setup the light platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+        yield
 
 
 @pytest.fixture(autouse=True)

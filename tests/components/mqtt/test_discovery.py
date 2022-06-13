@@ -44,6 +44,13 @@ def entity_reg(hass):
     return mock_registry(hass)
 
 
+@pytest.fixture(autouse=True)
+def no_platforms():
+    """Skip platform setup to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        yield
+
+
 @pytest.mark.parametrize(
     "mqtt_config",
     [{mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_DISCOVERY: False}],

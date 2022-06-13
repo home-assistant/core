@@ -1,7 +1,7 @@
 """Test MQTT diagnostics."""
 
 import json
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -29,6 +29,13 @@ default_config = {
         "topic": "homeassistant/status",
     },
 }
+
+
+@pytest.fixture(autouse=True)
+def no_platforms():
+    """Skip platform setup to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        yield
 
 
 @pytest.fixture

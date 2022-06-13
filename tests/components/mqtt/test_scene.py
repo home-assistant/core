@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import scene
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN
+from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_ON, STATE_UNKNOWN, Platform
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -32,6 +32,13 @@ DEFAULT_CONFIG = {
         "payload_on": "test-payload-on",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def scene_platform_only():
+    """Only setup the scene platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SCENE]):
+        yield
 
 
 async def test_sending_mqtt_commands(hass, mqtt_mock_entry_with_yaml_config):

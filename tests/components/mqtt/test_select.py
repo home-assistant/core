@@ -13,7 +13,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    STATE_UNKNOWN,
+    Platform,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -57,6 +62,13 @@ DEFAULT_CONFIG = {
         "options": ["milk", "beer"],
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def select_platform_only():
+    """Only setup the select platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
+        yield
 
 
 async def test_run_select_setup(hass, mqtt_mock_entry_with_yaml_config):
