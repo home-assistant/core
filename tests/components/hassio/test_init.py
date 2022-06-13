@@ -21,12 +21,18 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture()
-def os_info():
+def extra_os_info():
+    """Extra os/info."""
+    return {}
+
+
+@pytest.fixture()
+def os_info(extra_os_info):
     """Mock os/info."""
     return {
         "json": {
             "result": "ok",
-            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
+            "data": {"version_latest": "1.0.0", "version": "1.0.0", **extra_os_info},
         }
     }
 
@@ -715,21 +721,24 @@ async def test_coordinator_updates(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "os_info",
+    "extra_os_info, integration",
     [
-        {
-            "json": {
-                "result": "ok",
-                "data": {"version_latest": "1.0.0", "version": "1.0.0", "board": "rpi"},
-            }
-        }
+        ({"board": "odroid-c2"}, "hardkernel"),
+        ({"board": "odroid-c4"}, "hardkernel"),
+        ({"board": "odroid-n2"}, "hardkernel"),
+        ({"board": "odroid-xu4"}, "hardkernel"),
+        ({"board": "rpi2"}, "raspberry_pi"),
+        ({"board": "rpi3"}, "raspberry_pi"),
+        ({"board": "rpi3-64"}, "raspberry_pi"),
+        ({"board": "rpi4"}, "raspberry_pi"),
+        ({"board": "rpi4-64"}, "raspberry_pi"),
     ],
 )
-async def test_setup_hardware_integration(hass, aioclient_mock):
+async def test_setup_hardware_integration(hass, aioclient_mock, integration):
     """Test setup initiates hardware integration."""
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.raspberry_pi.async_setup_entry",
+        f"homeassistant.components.{integration}.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await async_setup_component(hass, "hassio", {"hassio": {}})

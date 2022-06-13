@@ -80,6 +80,7 @@ class NetgearRouter:
         self.hardware_version = ""
         self.serial_number = ""
 
+        self.track_devices = True
         self.method_version = 1
         consider_home_int = entry.options.get(
             CONF_CONSIDER_HOME, DEFAULT_CONSIDER_HOME.total_seconds()
@@ -112,11 +113,23 @@ class NetgearRouter:
         self.serial_number = self._info["SerialNumber"]
         self.mode = self._info.get("DeviceMode", MODE_ROUTER)
 
+        enabled_entries = [
+            entry
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            if entry.disabled_by is None
+        ]
+        self.track_devices = self.mode == MODE_ROUTER or len(enabled_entries) == 1
+        _LOGGER.debug(
+            "Netgear track_devices = '%s', device mode '%s'",
+            self.track_devices,
+            self.mode,
+        )
+
         for model in MODELS_V2:
             if self.model.startswith(model):
                 self.method_version = 2
 
-        if self.method_version == 2 and self.mode == MODE_ROUTER:
+        if self.method_version == 2 and self.track_devices:
             if not self._api.get_attached_devices_2():
                 _LOGGER.error(
                     "Netgear Model '%s' in MODELS_V2 list, but failed to get attached devices using V2",
@@ -133,7 +146,7 @@ class NetgearRouter:
                 return False
 
         # set already known devices to away instead of unavailable
-        if self.mode == MODE_ROUTER:
+        if self.track_devices:
             device_registry = dr.async_get(self.hass)
             devices = dr.async_entries_for_config_entry(device_registry, self.entry_id)
             for device_entry in devices:

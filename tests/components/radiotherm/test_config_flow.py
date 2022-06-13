@@ -7,7 +7,7 @@ from radiotherm.validate import RadiothermTstatError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import dhcp
-from homeassistant.components.radiotherm.const import CONF_HOLD_TEMP, DOMAIN
+from homeassistant.components.radiotherm.const import DOMAIN
 from homeassistant.const import CONF_HOST
 
 from tests.common import MockConfigEntry
@@ -110,17 +110,12 @@ async def test_import(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: "1.2.3.4", CONF_HOLD_TEMP: True},
+            data={CONF_HOST: "1.2.3.4"},
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == "My Name"
-    assert result["data"] == {
-        CONF_HOST: "1.2.3.4",
-    }
-    assert result["options"] == {
-        CONF_HOLD_TEMP: True,
-    }
+    assert result["data"] == {CONF_HOST: "1.2.3.4"}
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -133,7 +128,7 @@ async def test_import_cannot_connect(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: "1.2.3.4", CONF_HOLD_TEMP: True},
+            data={CONF_HOST: "1.2.3.4"},
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
@@ -268,35 +263,3 @@ async def test_user_unique_id_already_exists(hass):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result2["reason"] == "already_configured"
-
-
-async def test_options_flow(hass):
-    """Test config flow options."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_HOST: "1.2.3.4"},
-        unique_id="aa:bb:cc:dd:ee:ff",
-        options={CONF_HOLD_TEMP: False},
-    )
-
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.radiotherm.data.radiotherm.get_thermostat",
-        return_value=_mock_radiotherm(),
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-    await hass.async_block_till_done()
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_HOLD_TEMP: True}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert entry.options == {CONF_HOLD_TEMP: True}
