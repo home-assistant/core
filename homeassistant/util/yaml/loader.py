@@ -97,8 +97,8 @@ class Secrets:
         return secrets
 
 
-class FastestSafeLoader(FastestAvailableSafeLoader):
-    """The fast C safe loader."""
+class SafeLoader(FastestAvailableSafeLoader):
+    """The fastest available safe loader."""
 
     def __init__(self, stream: Any, secrets: Secrets | None = None) -> None:
         """Initialize a safe line loader."""
@@ -145,7 +145,7 @@ class SafeLineLoader(yaml.SafeLoader):
         return self.stream.name or ""
 
 
-LoaderType = Union[SafeLineLoader, FastestSafeLoader]
+LoaderType = Union[SafeLineLoader, SafeLoader]
 
 
 def load_yaml(fname: str, secrets: Secrets | None = None) -> JSON_TYPE:
@@ -165,7 +165,7 @@ def parse_yaml(
     if not HAS_C_LOADER:
         return _parse_yaml_pure_python(content, secrets)
     try:
-        return _parse_yaml(FastestSafeLoader, content, secrets)
+        return _parse_yaml(SafeLoader, content, secrets)
     except yaml.YAMLError:
         # Loading failed, so we now load with the slow line loader
         # since the C one will not give us line numbers
@@ -187,7 +187,7 @@ def _parse_yaml_pure_python(
 
 
 def _parse_yaml(
-    loader: type[FastestSafeLoader] | type[SafeLineLoader],
+    loader: type[SafeLoader] | type[SafeLineLoader],
     content: str | TextIO,
     secrets: Secrets | None = None,
 ) -> JSON_TYPE:
@@ -380,7 +380,7 @@ def secret_yaml(loader: LoaderType, node: yaml.nodes.Node) -> JSON_TYPE:
 
 def add_constructor(tag: Any, constructor: Any) -> None:
     """Add to constructor to all loaders."""
-    for yaml_loader in (FastestSafeLoader, SafeLineLoader):
+    for yaml_loader in (SafeLoader, SafeLineLoader):
         yaml_loader.add_constructor(tag, constructor)
 
 
