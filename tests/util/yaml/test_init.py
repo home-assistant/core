@@ -30,6 +30,20 @@ def disable_c_loader():
     importlib.reload(yaml_loader)
 
 
+@pytest.fixture()
+def disable_c_dumper():
+    """Disable the yaml c dumper."""
+    try:
+        cdumper = pyyaml.CSafeDumper
+    except ImportError:
+        return
+    del pyyaml.CSafeDumper
+    importlib.reload(yaml_loader)
+    yield
+    pyyaml.CSafeDumper = cdumper
+    importlib.reload(yaml_loader)
+
+
 def test_simple_list():
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
@@ -285,7 +299,17 @@ def test_dump():
     assert yaml.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
 
 
+def test_dump_disable_c_dumper(disable_c_dumper):
+    """The that the dump method returns empty None values."""
+    assert yaml.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
+
+
 def test_dump_unicode():
+    """The that the dump method returns empty None values."""
+    assert yaml.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
+
+
+def test_dump_unicode_disable_c_dumper(disable_c_dumper):
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
 
@@ -477,6 +501,12 @@ def test_input_class():
 
 
 def test_input():
+    """Test loading inputs."""
+    data = {"hello": yaml.Input("test_name")}
+    assert yaml.parse_yaml(yaml.dump(data)) == data
+
+
+def test_input_disable_c(disable_c_dumper, disable_c_loader):
     """Test loading inputs."""
     data = {"hello": yaml.Input("test_name")}
     assert yaml.parse_yaml(yaml.dump(data)) == data
