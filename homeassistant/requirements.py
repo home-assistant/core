@@ -57,8 +57,7 @@ async def async_process_requirements(
     This method is a coroutine. It will raise RequirementsNotFound
     if an requirement can't be satisfied.
     """
-    manager = _async_get_manager(hass)
-    await manager.async_process_requirements(name, requirements)
+    await _async_get_manager(hass).async_process_requirements(name, requirements)
 
 
 @callback
@@ -75,8 +74,7 @@ def _async_get_manager(hass: HomeAssistant) -> RequirementsManager:
 @callback
 def async_clear_install_history(hass: HomeAssistant) -> None:
     """Forget the install history."""
-    if requirements_manager := hass.data.get(DATA_REQUIREMENTS_MANAGER):
-        requirements_manager.install_failure_history.clear()
+    _async_get_manager(hass).install_failure_history.clear()
 
 
 def pip_kwargs(config_dir: str | None) -> dict[str, Any]:
