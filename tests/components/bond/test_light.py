@@ -249,7 +249,7 @@ async def test_sbb_trust_state(hass: core.HomeAssistant):
     """Assumed state should be False if device is a Smart by Bond."""
     version = {
         "model": "MR123A",
-        "bondid": "test-bond-id",
+        "bondid": "KXXX12345",
     }
     await setup_platform(
         hass, LIGHT_DOMAIN, ceiling_fan("name-1"), bond_version=version, bridge={}
