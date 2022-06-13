@@ -53,9 +53,12 @@ class RecordCallsPartial(partial):
 
 
 @pytest.fixture(autouse=True)
-def light_platform_only():
-    """Only setup the light platform to speed up tests."""
-    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+def sensor_platforms_only():
+    """Only setup the sensor platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS",
+        [Platform.SENSOR, Platform.BINARY_SENSOR],
+    ):
         yield
 
 
@@ -1370,6 +1373,7 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
     config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
@@ -1380,6 +1384,7 @@ async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     )
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
 async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
     config = {"name": "test"}
@@ -2021,6 +2026,7 @@ async def test_mqtt_ws_get_device_debug_info(
     assert response["result"] == expected_result
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
     hass, device_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):
