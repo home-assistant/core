@@ -43,6 +43,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -81,6 +82,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     cover.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def cover_platform_only():
+    """Only setup the cover platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.COVER]):
+        yield
 
 
 async def test_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_config):

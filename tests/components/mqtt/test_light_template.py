@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -88,6 +89,13 @@ DEFAULT_CONFIG = {
         "command_off_template": "off,{{ transition|d }}",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Only setup the light platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+        yield
 
 
 @pytest.mark.parametrize(

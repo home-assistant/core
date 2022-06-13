@@ -209,6 +209,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -249,6 +250,13 @@ from tests.components.light import common
 DEFAULT_CONFIG = {
     light.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def light_platform_only():
+    """Only setup the light platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT]):
+        yield
 
 
 async def test_fail_setup_if_no_command_topic(hass, mqtt_mock_entry_no_yaml_config):

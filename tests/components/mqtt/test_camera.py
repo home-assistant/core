@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components import camera
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
+from homeassistant.const import Platform
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -44,6 +45,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     camera.DOMAIN: {"platform": "mqtt", "name": "test", "topic": "test_topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def camera_platform_only():
+    """Only setup the camera platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA]):
+        yield
 
 
 async def test_run_camera_setup(
