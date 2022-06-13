@@ -14,7 +14,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .hub import MikrotikHub
+from .hub import MikrotikDataUpdateCoordinator
 
 # These are normalized to ATTR_IP and ATTR_MAC to conform
 # to device_tracker
@@ -29,7 +29,7 @@ async def async_setup_entry(
     """Set up device tracker for Mikrotik component."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    tracked: dict[str, MikrotikHubTracker] = {}
+    tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
     registry = entity_registry.async_get(hass)
 
@@ -64,17 +64,17 @@ def update_items(hub, async_add_entities, tracked):
     new_tracked = []
     for mac, device in hub.api.devices.items():
         if mac not in tracked:
-            tracked[mac] = MikrotikHubTracker(device, hub)
+            tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, hub)
             new_tracked.append(tracked[mac])
 
     if new_tracked:
         async_add_entities(new_tracked)
 
 
-class MikrotikHubTracker(CoordinatorEntity, ScannerEntity):
+class MikrotikDataUpdateCoordinatorTracker(CoordinatorEntity, ScannerEntity):
     """Representation of network device."""
 
-    coordinator: MikrotikHub
+    coordinator: MikrotikDataUpdateCoordinator
 
     def __init__(self, device, hub):
         """Initialize the tracked device."""

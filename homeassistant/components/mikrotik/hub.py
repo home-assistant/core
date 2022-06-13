@@ -39,7 +39,6 @@ from .const import (
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
-    PLATFORMS,
     WIRELESS,
 )
 from .errors import CannotConnect, LoginError
@@ -282,7 +281,7 @@ class MikrotikData:
         return response if response else None
 
 
-class MikrotikHub(DataUpdateCoordinator):
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
     """Mikrotik Hub Object."""
 
     def __init__(self, hass, config_entry):
@@ -376,20 +375,17 @@ class MikrotikHub(DataUpdateCoordinator):
         self._mk_data = MikrotikData(self.hass, self.config_entry, api)
         await self.async_add_options()
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
-        await self.async_refresh()
 
-        self.config_entry.async_on_unload(
-            self.config_entry.add_update_listener(async_options_updated)
-        )
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
         return True
 
-
-async def async_options_updated(hass, entry):
-    """Triggered by config entry options updates."""
-    coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-    coordinator.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
-    await coordinator.async_request_refresh()
+    @staticmethod
+    async def async_options_updated(hass, entry):
+        """Triggered by config entry options updates."""
+        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+        coordinator.update_interval = timedelta(
+            seconds=entry.options[CONF_SCAN_INTERVAL]
+        )
+        await coordinator.async_request_refresh()
 
 
 def get_api(hass, entry):
