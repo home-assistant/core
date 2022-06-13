@@ -33,8 +33,8 @@ default_config = {
 
 
 @pytest.fixture(autouse=True)
-def sensor_only():
-    """Only setup the sensor platform to speed up tests."""
+def device_tracker_sensor_only():
+    """Only setup the device_tracekr and sensor platforms to speed up tests."""
     with patch(
         "homeassistant.components.mqtt.PLATFORMS",
         [Platform.DEVICE_TRACKER, Platform.SENSOR],
