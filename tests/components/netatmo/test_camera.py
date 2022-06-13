@@ -124,6 +124,7 @@ async def test_setup_component_with_webhook(hass, config_entry, netatmo_auth):
                 ]
             }
         )
+    # assert False
 
 
 IMAGE_BYTES_FROM_STREAM = b"test stream image bytes"
