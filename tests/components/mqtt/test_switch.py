@@ -11,6 +11,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -51,6 +52,13 @@ from tests.components.switch import common
 DEFAULT_CONFIG = {
     switch.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def switch_platform_only():
+    """Only setup the switch platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SWITCH]):
+        yield
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_config):
