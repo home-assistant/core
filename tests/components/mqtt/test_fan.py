@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -72,6 +73,13 @@ DEFAULT_CONFIG = {
         "command_topic": "command-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def fan_platform_only():
+    """Only setup the fan platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
+        yield
 
 
 async def test_fail_setup_if_no_command_topic(

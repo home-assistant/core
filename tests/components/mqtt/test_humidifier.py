@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -73,6 +74,13 @@ DEFAULT_CONFIG = {
         "target_humidity_command_topic": "humidity-command-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def humidifer_platform_only():
+    """Only setup the humidifer platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
+        yield
 
 
 async def async_turn_on(
