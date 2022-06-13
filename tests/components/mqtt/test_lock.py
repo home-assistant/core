@@ -738,7 +738,5 @@ async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
