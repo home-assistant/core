@@ -5,7 +5,7 @@ import logging
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
-from bond_async import Action, Bond
+from bond_async import Action, Bond, BondType
 
 from homeassistant.util.async_ import gather_with_concurrency
 
@@ -224,4 +224,5 @@ class BondHub:
     @property
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
-        return bool(self._bridge)
+        bondid = self._version["bondid"]
+        return bool(BondType.is_bridge_from_serial(bondid))

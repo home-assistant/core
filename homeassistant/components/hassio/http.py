@@ -28,6 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 
 MAX_UPLOAD_SIZE = 1024 * 1024 * 1024
 
+# pylint: disable=implicit-str-concat
 NO_TIMEOUT = re.compile(
     r"^(?:"
     r"|homeassistant/update"
@@ -44,10 +45,11 @@ NO_TIMEOUT = re.compile(
 NO_AUTH_ONBOARDING = re.compile(r"^(?:" r"|supervisor/logs" r"|backups/[^/]+/.+" r")$")
 
 NO_AUTH = re.compile(
-    r"^(?:" r"|app/.*" r"|addons/[^/]+/logo" r"|addons/[^/]+/icon" r")$"
+    r"^(?:" r"|app/.*" r"|[store\/]*addons/[^/]+/(logo|dark_logo|icon|dark_icon)" r")$"
 )
 
 NO_STORE = re.compile(r"^(?:" r"|app/entrypoint.js" r")$")
+# pylint: enable=implicit-str-concat
 
 
 class HassIOView(HomeAssistantView):

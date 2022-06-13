@@ -35,6 +35,7 @@ from .const import (
     SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_INTERVAL_MOVING,
 )
+from .gateway import device_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,13 +194,12 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         if blind.device_type in DEVICE_TYPES_WIFI:
             via_device = ()
             connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
-            name = blind.blind_type
         else:
             via_device = (DOMAIN, blind._gateway.mac)
             connections = {}
-            name = f"{blind.blind_type} {blind.mac[12:]}"
             sw_version = None
 
+        name = device_name(blind)
         self._attr_device_class = device_class
         self._attr_name = name
         self._attr_unique_id = blind.mac
@@ -422,7 +422,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
-        self._attr_name = f"{blind.blind_type} {blind.mac[12:]} {motor}"
+        self._attr_name = f"{device_name(blind)} {motor}"
         self._attr_unique_id = f"{blind.mac}-{motor}"
 
         if self._motor not in ["Bottom", "Top", "Combined"]:

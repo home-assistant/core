@@ -30,7 +30,7 @@ async def async_process_devices(hass, manager):
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' power & energy usage as separate sensors
+        # Expose outlets' voltage, power & energy usage as separate sensors
         devices[VS_SENSORS].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
 
