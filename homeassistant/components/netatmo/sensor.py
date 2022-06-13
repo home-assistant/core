@@ -37,7 +37,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import pyatmo
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_WEATHER,
@@ -46,7 +45,6 @@ from .const import (
     DOMAIN,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
-    NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
@@ -288,25 +286,6 @@ async def async_setup_entry(
         async_dispatcher_connect(
             hass, NETATMO_CREATE_WEATHER_SENSOR, _create_weather_sensor_entity
         )
-    )
-
-    @callback
-    def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        _LOGGER.debug(
-            "Adding %s sensor %s",
-            netatmo_device.device.device_category,
-            netatmo_device.device.name,
-        )
-        async_add_entities(
-            [
-                NetatmoSensor(netatmo_device, description)
-                for description in SENSOR_TYPES
-                if description.key in netatmo_device.device.features
-            ]
-        )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, NETATMO_CREATE_SENSOR, _create_sensor_entity)
     )
 
     @callback
