@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Siga as [instru\u00e7\u00f5es]( {more_info_url} ) para [tela de consentimento da OAuth]( {oauth_consent_url} ) para conceder ao Home Assistant acesso ao seu Google Agenda. Voc\u00ea tamb\u00e9m precisa criar credenciais de aplicativo vinculadas ao seu calend\u00e1rio:\n 1. Acesse [Credentials]( {oauth_creds_url} ) e clique em **Create Credentials**.\n 1. Na lista suspensa, selecione **ID do cliente OAuth**.\n 1. Selecione **TV e dispositivos de entrada limitada** para o tipo de aplicativo. \n\n"
+    },
     "config": {
         "abort": {
             "already_configured": "A conta j\u00e1 foi configurada",

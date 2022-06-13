@@ -21,6 +21,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.helpers import device_registry as dr
 
 from .activity import ActivityStream
 from .const import DOMAIN, MIN_TIME_BETWEEN_DETAIL_UPDATES, PLATFORMS
@@ -283,12 +284,15 @@ class AugustData(AugustSubscriberMixin):
             device.device_id,
         )
 
-    def _get_device_name(self, device_id):
+    def get_device(self, device_id: str) -> Doorbell | Lock | None:
+        """Get a device by id."""
+        return self._locks_by_id.get(device_id) or self._doorbells_by_id.get(device_id)
+
+    def _get_device_name(self, device_id: str) -> str | None:
         """Return doorbell or lock name as August has it stored."""
-        if device_id in self._locks_by_id:
-            return self._locks_by_id[device_id].device_name
-        if device_id in self._doorbells_by_id:
-            return self._doorbells_by_id[device_id].device_name
+        if device := self.get_device(device_id):
+            return device.device_name
+        return None
 
     async def async_lock(self, device_id):
         """Lock the device."""
@@ -403,3 +407,15 @@ def _restore_live_attrs(lock_detail, attrs):
     """Restore the non-cache attributes after a cached update."""
     for attr, value in attrs.items():
         setattr(lock_detail, attr, value)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove august config entry from a device if its no longer present."""
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier[0] == DOMAIN and data.get_device(identifier[1])
+    )

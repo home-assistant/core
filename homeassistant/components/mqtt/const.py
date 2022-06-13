@@ -35,6 +35,7 @@ DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_MQTT = "mqtt"
 DATA_MQTT_CONFIG = "mqtt_config"
 DATA_MQTT_RELOAD_NEEDED = "mqtt_reload_needed"
+DATA_MQTT_UPDATED_CONFIG = "mqtt_updated_config"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
@@ -63,6 +64,7 @@ DOMAIN = "mqtt"
 
 MQTT_CONNECTED = "mqtt_connected"
 MQTT_DISCONNECTED = "mqtt_disconnected"
+MQTT_RELOADED = "mqtt_reloaded"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
