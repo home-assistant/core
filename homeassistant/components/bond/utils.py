@@ -5,7 +5,7 @@ import logging
 from typing import Any, cast
 
 from aiohttp import ClientResponseError
-from bond_async import Action, Bond
+from bond_async import Action, Bond, BondType
 
 from homeassistant.util.async_ import gather_with_concurrency
 
@@ -14,8 +14,6 @@ from .const import BRIDGE_MAKE
 MAX_REQUESTS = 6
 
 _LOGGER = logging.getLogger(__name__)
-
-SMART_BY_BOND_PREFIXES = ["breck-"]
 
 
 class BondDevice:
@@ -226,15 +224,5 @@ class BondHub:
     @property
     def is_bridge(self) -> bool:
         """Return if the Bond is a Bond Bridge."""
-        target = self.target
-        if target and any(
-            target.startswith(prefix) for prefix in SMART_BY_BOND_PREFIXES
-        ):
-            #
-            # v3 firmwares have the bridge endpoint even
-            # though the docs currently imply they do not
-            #
-            # https://github.com/bondhome/api-v2/blob/26474c1eb4d7a12f9502e4b7ea4fb4d6952c42a3/common/info.yaml#L808
-            #
-            return False
-        return bool(self._bridge)
+        bondid = self._version["bondid"]
+        return bool(BondType.is_bridge_from_serial(bondid))
