@@ -16,3 +16,31 @@ assume_state:
           options:
             - "on"
             - "off"
+timer:
+  name: Timer
+  description: Set or delete timer for device.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    state:
+      name: State
+      description: Timer on or off.
+      required: true
+      example: "on"
+      selector:
+        select:
+          options:
+            - "on"
+            - "off"
+    minutes:
+      name: Minutes
+      description: Countdown for timer (for timer state on)
+      required: false
+      example: 30
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
