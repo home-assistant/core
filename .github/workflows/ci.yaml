@@ -788,7 +788,7 @@ jobs:
           . venv/bin/activate
           python --version
           python3 -X dev -m pytest \
-            -qq \
+            -vvv -qq \
             --timeout=9 \
             --durations=10 \
             -n auto \
