@@ -3787,13 +3787,11 @@ async def test_sending_mqtt_effect_command_with_template(
     assert state.attributes.get("effect") == "colorloop"
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = light.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

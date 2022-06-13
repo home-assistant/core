@@ -90,7 +90,7 @@ class ConfigEntryState(Enum):
     """The config entry has not been loaded"""
     FAILED_UNLOAD = "failed_unload", False
     """An error occurred when trying to unload the entry"""
-    SETUP_IN_PROGRESS = "setup_in_progress", True
+    SETUP_IN_PROGRESS = "setup_in_progress", False
     """The config entry is setting up."""
 
     _recoverable: bool
@@ -104,7 +104,11 @@ class ConfigEntryState(Enum):
 
     @property
     def recoverable(self) -> bool:
-        """Get if the state is recoverable."""
+        """Get if the state is recoverable.
+
+        If the entry is state is recoverable, unloads
+        and reloads are allowed.
+        """
         return self._recoverable
 
 

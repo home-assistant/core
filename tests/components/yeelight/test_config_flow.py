@@ -739,7 +739,7 @@ async def test_discovered_zeroconf(hass):
 
 
 async def test_discovery_updates_ip(hass: HomeAssistant):
-    """Test discovery updtes ip."""
+    """Test discovery updates ip."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data={CONF_HOST: "1.2.2.3"}, unique_id=ID
     )
@@ -759,6 +759,35 @@ async def test_discovery_updates_ip(hass: HomeAssistant):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+async def test_discovery_updates_ip_no_reload_setup_in_progress(hass: HomeAssistant):
+    """Test discovery updates ip does not reload if setup is an an error state."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "1.2.2.3"},
+        unique_id=ID,
+        state=config_entries.ConfigEntryState.SETUP_ERROR,
+    )
+    config_entry.add_to_hass(hass)
+
+    mocked_bulb = _mocked_bulb()
+    with patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_setup_entry, _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=ZEROCONF_DATA,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
+    assert len(mock_setup_entry.mock_calls) == 0
 
 
 async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
