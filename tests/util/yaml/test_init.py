@@ -464,3 +464,12 @@ def test_input(try_both_loaders):
     """Test loading inputs."""
     data = {"hello": yaml.Input("test_name")}
     assert yaml.parse_yaml(yaml.dump(data)) == data
+
+
+@pytest.mark.skipif(
+    not os.environ.get("HASS_CI"),
+    reason="This test validates that the CI has the C loader available",
+)
+def test_c_loader_is_available_in_ci():
+    """Verify we are testing the C loader in the CI."""
+    assert yaml.loader.HAS_C_LOADER is True
