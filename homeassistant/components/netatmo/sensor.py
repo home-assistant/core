@@ -5,6 +5,8 @@ from dataclasses import dataclass
 import logging
 from typing import cast
 
+import pyatmo
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -34,7 +36,6 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import pyatmo
 from .const import (
     CONF_URL_ENERGY,
     CONF_URL_WEATHER,
@@ -43,7 +44,6 @@ from .const import (
     DOMAIN,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
-    NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
@@ -280,25 +280,6 @@ async def async_setup_entry(
     )
 
     @callback
-    def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
-        _LOGGER.debug(
-            "Adding %s sensor %s",
-            netatmo_device.device.device_category,
-            netatmo_device.device.name,
-        )
-        async_add_entities(
-            [
-                NetatmoSensor(netatmo_device, description)
-                for description in SENSOR_TYPES
-                if description.key in netatmo_device.device.features
-            ]
-        )
-
-    entry.async_on_unload(
-        async_dispatcher_connect(hass, NETATMO_CREATE_SENSOR, _create_sensor_entity)
-    )
-
-    @callback
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
         _LOGGER.debug("Adding %s sensor", netatmo_device.room.name)
         async_add_entities(
@@ -435,12 +416,7 @@ class NetatmoWeatherSensor(NetatmoBase, SensorEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         try:
-            if self.entity_description.key.endswith("_value"):
-                key = self.entity_description.key[:-6]
-            else:
-                key = self.entity_description.key
-
-            if (state := getattr(self._module, key)) is None:
+            if (state := getattr(self._module, self.entity_description.key)) is None:
                 return
 
             if self.entity_description.key in {"temperature", "pressure", "sum_rain_1"}:
@@ -526,72 +502,6 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
         self._attr_native_value = self._module.battery
 
 
-class NetatmoSensor(NetatmoBase, SensorEntity):
-    """Implementation of a Netatmo sensor."""
-
-    def __init__(
-        self,
-        netatmo_device: NetatmoDevice,
-        description: NetatmoSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(netatmo_device.data_handler)
-        self.entity_description = description
-
-        self._module = netatmo_device.device
-        self._id = self._module.entity_id
-
-        self._publishers.extend(
-            [
-                {
-                    "name": HOME,
-                    "home_id": netatmo_device.device.home.entity_id,
-                    SIGNAL_NAME: netatmo_device.signal_name,
-                },
-            ]
-        )
-
-        self._attr_name = f"{self._module.name} {self.entity_description.name}"
-        self._room_id = self._module.room_id
-        self._model = getattr(self._module.device_type, "value")
-        self._config_url = CONF_URL_ENERGY
-
-        self._attr_unique_id = (
-            f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Entity created."""
-        await super().async_added_to_hass()
-
-    @callback
-    def async_update_callback(self) -> None:
-        """Update the entity's state."""
-        try:
-            key = self.entity_description.key
-
-            if (state := getattr(self._module, key)) is None:
-                return
-
-            if self.entity_description.key == "rf_strength":
-                self._attr_native_value = process_rf(state)
-            elif self.entity_description.key == "wifi_strength":
-                self._attr_native_value = process_wifi(state)
-            else:
-                self._attr_native_value = state
-        except KeyError:
-            if self.state:
-                _LOGGER.debug(
-                    "No %s data found for %s",
-                    self.entity_description.key,
-                    self._device_name,
-                )
-            self._attr_native_value = None
-            return
-
-        self.async_write_ha_state()
-
-
 def process_health(health: int) -> str:
     """Process health index and return string for display."""
     if health == 0:
@@ -669,17 +579,11 @@ class NetatmoRoomSensor(NetatmoBase, SensorEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         try:
-            key = self.entity_description.key
-
-            if (state := getattr(self._room, key)) is None:
+            if (state := getattr(self._room, self.entity_description.key)) is None:
                 return
 
-            if self.entity_description.key == "rf_strength":
-                self._attr_native_value = process_rf(state)
-            elif self.entity_description.key == "wifi_strength":
-                self._attr_native_value = process_wifi(state)
-            else:
-                self._attr_native_value = state
+            self._attr_native_value = state
+
         except KeyError:
             if self.state:
                 _LOGGER.debug(
