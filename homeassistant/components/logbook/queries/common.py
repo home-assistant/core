@@ -216,7 +216,7 @@ def _missing_state_matcher() -> sqlalchemy.and_:
     # or the new_state is missing (removed entities)
     return sqlalchemy.and_(
         OLD_STATE.state_id.isnot(None),
-        (States.state != OLD_STATE.state),
+        (OLD_STATE.state != States.state),
         States.state.isnot(None),
     )
 
