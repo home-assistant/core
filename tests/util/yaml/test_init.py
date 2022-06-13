@@ -33,6 +33,23 @@ def try_both_loaders(request):
     importlib.reload(yaml_loader)
 
 
+@pytest.fixture(params=["enable_c_dumper", "disable_c_dumper"])
+def try_both_dumpers(request):
+    """Disable the yaml c dumper."""
+    if not request.param == "disable_c_dumper":
+        yield
+        return
+    try:
+        cdumper = pyyaml.CSafeDumper
+    except ImportError:
+        return
+    del pyyaml.CSafeDumper
+    importlib.reload(yaml_loader)
+    yield
+    pyyaml.CSafeDumper = cdumper
+    importlib.reload(yaml_loader)
+
+
 def test_simple_list(try_both_loaders):
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
@@ -283,12 +300,12 @@ def test_load_yaml_encoding_error(mock_open, try_both_loaders):
         yaml_loader.load_yaml("test")
 
 
-def test_dump():
+def test_dump(try_both_dumpers):
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
 
 
-def test_dump_unicode():
+def test_dump_unicode(try_both_dumpers):
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
 
@@ -424,7 +441,7 @@ class TestSecrets(unittest.TestCase):
             )
 
 
-def test_representing_yaml_loaded_data():
+def test_representing_yaml_loaded_data(try_both_dumpers):
     """Test we can represent YAML loaded data."""
     files = {YAML_CONFIG_FILE: 'key: [1, "2", 3]'}
     with patch_yaml_files(files):
@@ -460,7 +477,7 @@ def test_input_class():
     assert len({input, input2}) == 1
 
 
-def test_input(try_both_loaders):
+def test_input(try_both_loaders, try_both_dumpers):
     """Test loading inputs."""
     data = {"hello": yaml.Input("test_name")}
     assert yaml.parse_yaml(yaml.dump(data)) == data
