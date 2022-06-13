@@ -96,7 +96,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}
                 )
-                reload = True
+                reload = entry.state in (
+                    ConfigEntryState.SETUP_RETRY,
+                    ConfigEntryState.LOADED,
+                )
             if reload:
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(entry.entry_id)
