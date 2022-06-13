@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -60,6 +61,13 @@ DEFAULT_CONFIG = {
         "state_topic": "test-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def binary_sensor_platform_only():
+    """Only setup the binary_sensor platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BINARY_SENSOR]):
+        yield
 
 
 async def test_setting_sensor_value_expires_availability_topic(

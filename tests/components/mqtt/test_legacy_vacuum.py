@@ -29,7 +29,7 @@ from homeassistant.components.vacuum import (
     ATTR_STATUS,
     VacuumEntityFeature,
 )
-from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON
+from homeassistant.const import CONF_NAME, CONF_PLATFORM, STATE_OFF, STATE_ON, Platform
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -87,6 +87,13 @@ DEFAULT_CONFIG = {
 }
 
 DEFAULT_CONFIG_2 = {vacuum.DOMAIN: {"platform": "mqtt", "name": "test"}}
+
+
+@pytest.fixture(autouse=True)
+def vacuum_platform_only():
+    """Only setup the vacuum platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
+        yield
 
 
 async def test_default_supported_features(hass, mqtt_mock_entry_with_yaml_config):
