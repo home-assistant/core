@@ -70,6 +70,7 @@ FAN_MODE_MAP = {
     "OFF": FAN_OFF,
 }
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
+FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 
 MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 MIN_TEMP = 10
@@ -99,6 +100,7 @@ class ThermostatEntity(ClimateEntity):
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
+        self._attr_supported_features = 0
 
     @property
     def should_poll(self) -> bool:
@@ -123,6 +125,7 @@ class ThermostatEntity(ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
+        self._attr_supported_features = self._get_supported_features()
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
@@ -261,13 +264,8 @@ class ThermostatEntity(ClimateEntity):
             self.supported_features & ClimateEntityFeature.FAN_MODE
             and FanTrait.NAME in self._device.traits
         ):
-            return list(FAN_INV_MODE_MAP)
+            return FAN_INV_MODES
         return []
-
-    @property
-    def supported_features(self) -> int:
-        """Bitmap of supported features."""
-        return self._get_supported_features()
 
     def _get_supported_features(self) -> int:
         """Compute the bitmap of supported features from the current state."""
@@ -278,7 +276,7 @@ class ThermostatEntity(ClimateEntity):
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if ThermostatEcoTrait.NAME in self._device.traits:
             features |= ClimateEntityFeature.PRESET_MODE
-        if FanTrait.NAME in self._device.traits and self.hvac_mode != HVACMode.OFF:
+        if FanTrait.NAME in self._device.traits:
             # Fan trait may be present without actually support fan mode
             fan_trait = self._device.traits[FanTrait.NAME]
             if fan_trait.timer_mode is not None:
@@ -333,6 +331,10 @@ class ThermostatEntity(ClimateEntity):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
+        if fan_mode == FAN_ON and self.hvac_mode == HVACMode.OFF:
+            raise ValueError(
+                "Cannot turn on fan, please set an HVAC mode (e.g. heat/cool) first"
+            )
         trait = self._device.traits[FanTrait.NAME]
         duration = None
         if fan_mode != FAN_OFF:

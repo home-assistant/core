@@ -1004,15 +1004,16 @@ async def test_thermostat_set_fan_when_off(
     thermostat = hass.states.get("climate.my_thermostat")
     assert thermostat is not None
     assert thermostat.state == HVAC_MODE_OFF
-    assert ATTR_FAN_MODE not in thermostat.attributes
-    assert ATTR_FAN_MODES not in thermostat.attributes
+    assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
+    assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.FAN_MODE
     )
 
     # Fan cannot be turned on when HVAC is off
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(ValueError):
         await common.async_set_fan_mode(hass, FAN_ON, entity_id="climate.my_thermostat")
 
 
