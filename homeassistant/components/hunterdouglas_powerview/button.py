@@ -7,11 +7,7 @@ from typing import Any, Final
 
 from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
-from homeassistant.components.button import (
-    ButtonDeviceClass,
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -50,7 +46,6 @@ BUTTONS: Final = [
         key="calibrate",
         name="Calibrate",
         icon="mdi:swap-vertical-circle-outline",
-        device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda shade: shade.calibrate(),
     ),
@@ -58,7 +53,6 @@ BUTTONS: Final = [
         key="identify",
         name="Identify",
         icon="mdi:crosshairs-question",
-        device_class=ButtonDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda shade: shade.jog(),
     ),
