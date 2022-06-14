@@ -82,10 +82,9 @@ async def async_get_config_entry_diagnostics(
                 "model": camera.model,
                 "resolution": camera.resolution,
             }
-            camera_data = await camera_diagnostics.async_get_config_entry_diagnostics(
-                hass, entry
-            )
-        if camera_data:
+        if camera_data := await camera_diagnostics.async_get_config_entry_diagnostics(
+            hass, entry
+        ):
             diag_data["surveillance_station"]["camera_diagnostics"] = camera_data
 
     if syno_api.upgrade is not None:
