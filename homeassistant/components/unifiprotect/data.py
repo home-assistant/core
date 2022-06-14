@@ -1,7 +1,7 @@
 """Base class for protect data."""
 from __future__ import annotations
 
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
 from typing import Any
@@ -12,9 +12,10 @@ from pyunifiprotect.data import (
     Event,
     Liveview,
     ModelType,
+    ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -53,7 +54,7 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[CALLBACK_TYPE]] = {}
+        self._subscriptions: dict[str, list[Callable[[ProtectModelWithId], None]]] = {}
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
 
@@ -118,7 +119,7 @@ class ProtectData:
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         if message.new_obj.model in DEVICES_WITH_ENTITIES:
-            self.async_signal_device_id_update(message.new_obj.id)
+            self._async_signal_device_update(message.new_obj)
             # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
             if "doorbell_settings" in message.changed_data:
                 _LOGGER.debug(
@@ -127,15 +128,15 @@ class ProtectData:
                 self.api.bootstrap.nvr.update_all_messages()
                 for camera in self.api.bootstrap.cameras.values():
                     if camera.feature_flags.has_lcd_screen:
-                        self.async_signal_device_id_update(camera.id)
+                        self._async_signal_device_update(camera)
         # trigger updates for camera that the event references
         elif isinstance(message.new_obj, Event):
             if message.new_obj.camera is not None:
-                self.async_signal_device_id_update(message.new_obj.camera.id)
+                self._async_signal_device_update(message.new_obj.camera)
             elif message.new_obj.light is not None:
-                self.async_signal_device_id_update(message.new_obj.light.id)
+                self._async_signal_device_update(message.new_obj.light)
             elif message.new_obj.sensor is not None:
-                self.async_signal_device_id_update(message.new_obj.sensor.id)
+                self._async_signal_device_update(message.new_obj.sensor)
         # alert user viewport needs restart so voice clients can get new options
         elif len(self.api.bootstrap.viewers) > 0 and isinstance(
             message.new_obj, Liveview
@@ -152,13 +153,13 @@ class ProtectData:
         if updates is None:
             return
 
-        self.async_signal_device_id_update(self.api.bootstrap.nvr.id)
+        self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in async_get_devices(self.api, DEVICES_THAT_ADOPT):
-            self.async_signal_device_id_update(device.id)
+            self._async_signal_device_update(device)
 
     @callback
     def async_subscribe_device_id(
-        self, device_id: str, update_callback: CALLBACK_TYPE
+        self, device_id: str, update_callback: Callable[[ProtectModelWithId], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
@@ -174,7 +175,7 @@ class ProtectData:
 
     @callback
     def async_unsubscribe_device_id(
-        self, device_id: str, update_callback: CALLBACK_TYPE
+        self, device_id: str, update_callback: Callable[[ProtectModelWithId], None]
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[device_id].remove(update_callback)
@@ -185,14 +186,15 @@ class ProtectData:
             self._unsub_interval = None
 
     @callback
-    def async_signal_device_id_update(self, device_id: str) -> None:
+    def _async_signal_device_update(self, device: ProtectModelWithId) -> None:
         """Call the callbacks for a device_id."""
+        device_id = device.id
         if not self._subscriptions.get(device_id):
             return
 
         _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
-            update_callback()
+            update_callback(device)
 
 
 @callback
