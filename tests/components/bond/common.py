@@ -113,7 +113,7 @@ def patch_bond_version(
         return nullcontext()
 
     if return_value is None:
-        return_value = {"bondid": "test-bond-id"}
+        return_value = {"bondid": "ZXXX12345"}
 
     return patch(
         "homeassistant.components.bond.Bond.version",
@@ -246,3 +246,12 @@ async def help_test_entity_available(
         async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
+
+
+def ceiling_fan(name: str):
+    """Create a ceiling fan with given name."""
+    return {
+        "name": name,
+        "type": DeviceType.CEILING_FAN,
+        "actions": ["SetSpeed", "SetDirection"],
+    }
