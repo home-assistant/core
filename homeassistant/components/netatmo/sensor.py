@@ -495,10 +495,6 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
             f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Entity created."""
-        await super().async_added_to_hass()
-
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
