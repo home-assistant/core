@@ -197,8 +197,9 @@ def async_register_services(hass):
             device = devices[address]
             if device != devices.modem and device.cat != 0x03:
                 await device.aldb.async_load(
-                    refresh=reload, callback=async_srv_save_devices
+                    refresh=reload
                 )
+                await async_srv_save_devices()
 
     async def async_srv_save_devices():
         """Write the Insteon device configuration to file."""
