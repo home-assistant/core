@@ -69,11 +69,10 @@ class BondFan(BondEntity, FanEntity):
         self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
     ) -> None:
         """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, bpup_subs)
-
         self._power: bool | None = None
         self._speed: int | None = None
         self._direction: int | None = None
+        super().__init__(hub, device, bpup_subs)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
 

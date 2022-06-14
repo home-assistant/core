@@ -39,6 +39,7 @@ class BondDevice:
             "device_id": self.device_id,
             "props": self.props,
             "attrs": self._attrs,
+            "state": self.state,
         }.__repr__()
 
     @property
