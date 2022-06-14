@@ -227,7 +227,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
         await self.coordinator.mill_data_connection.set_target_temperature(
-            int(temperature)
+            float(temperature)
         )
         await self.coordinator.async_request_refresh()
 
