@@ -94,6 +94,13 @@ class SynoApi:
             self._with_surveillance_station,
         )
 
+        # check if upgrade is available
+        try:
+            await self._hass.async_add_executor_job(self.dsm.upgrade.update)
+        except SynologyDSMAPIErrorException as ex:
+            self._with_upgrade = False
+            LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
+
         self._async_setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
