@@ -45,36 +45,67 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = async_get_clientsession(hass)
     api = PecoOutageApi()
-    county: str = entry.data[CONF_COUNTY]
 
-    async def async_update_data() -> PECOCoordinatorData:
-        """Fetch data from API."""
-        try:
-            outages: OutageResults = (
-                await api.get_outage_totals(websession)
-                if county == "TOTAL"
-                else await api.get_outage_count(county, websession)
-            )
-            alerts: AlertResults = await api.get_map_alerts(websession)
-            data = PECOCoordinatorData(outages, alerts)
-        except HttpError as err:
-            raise UpdateFailed(f"Error fetching data: {err}") from err
-        except BadJSONError as err:
-            raise UpdateFailed(f"Error parsing data: {err}") from err
-        return data
+    if "county" in entry.data:
+        # Outage Counter Setup
+        county: str = entry.data[CONF_COUNTY]
 
-    coordinator = DataUpdateCoordinator(
-        hass,
-        LOGGER,
-        name="PECO Outage Count",
-        update_method=async_update_data,
-        update_interval=timedelta(minutes=SCAN_INTERVAL),
-    )
+        async def async_update_outage_data() -> OutageResults:
+            """Fetch data from API."""
+            try:
+                outages: OutageResults = (
+                    await api.get_outage_totals(websession)
+                    if county == "TOTAL"
+                    else await api.get_outage_count(county, websession)
+                )
+                alerts: AlertResults = await api.get_map_alerts(websession)
+                data = PECOCoordinatorData(outages, alerts)
+            except HttpError as err:
+                raise UpdateFailed(f"Error fetching data: {err}") from err
+            except BadJSONError as err:
+                raise UpdateFailed(f"Error parsing data: {err}") from err
+            return data
 
-    await coordinator.async_config_entry_first_refresh()
+        coordinator = DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name="PECO Outage Count",
+            update_method=async_update_outage_data,
+            update_interval=timedelta(minutes=OUTAGE_SCAN_INTERVAL),
+        )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+        await coordinator.async_config_entry_first_refresh()
+
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    else:
+        # Smart Meter Setup
+        phone_number = entry.data[CONF_PHONE_NUMBER]
+
+        async def async_update_meter_data() -> bool:
+            """Fetch data from API."""
+            try:
+                data: bool = await api.meter_check(phone_number, websession)
+            except UnresponsiveMeterError as err:
+                raise UpdateFailed("Unresponsive meter") from err
+            except HttpError as err:
+                raise UpdateFailed(f"Error fetching data: {err}") from err
+            except BadJSONError as err:
+                raise UpdateFailed(f"Error parsing data: {err}") from err
+            return data
+
+        coordinator = DataUpdateCoordinator(
+            hass,
+            LOGGER,
+            name="PECO Smart Meter",
+            update_method=async_update_meter_data,
+            update_interval=timedelta(minutes=SMART_METER_SCAN_INTERVAL),
+        )
+
+        await coordinator.async_config_entry_first_refresh()
+
+        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
