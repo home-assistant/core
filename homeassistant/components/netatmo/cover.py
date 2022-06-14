@@ -8,12 +8,9 @@ from pyatmo import modules as NaModules
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -81,10 +78,10 @@ class NetatmoCover(NetatmoBase, CoverEntity):
     def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
-        supported_features |= SUPPORT_OPEN
-        supported_features |= SUPPORT_CLOSE
-        supported_features |= SUPPORT_STOP
-        supported_features |= SUPPORT_SET_POSITION
+        supported_features |= CoverEntityFeature.OPEN
+        supported_features |= CoverEntityFeature.CLOSE
+        supported_features |= CoverEntityFeature.STOP
+        supported_features |= CoverEntityFeature.SET_POSITION
 
         return supported_features
 
