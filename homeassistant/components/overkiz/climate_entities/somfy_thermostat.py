@@ -48,6 +48,9 @@ TARGET_TEMP_TO_OVERKIZ = {
     PRESET_NIGHT: OverkizState.SOMFY_THERMOSTAT_SLEEPING_MODE_TARGET_TEMPERATURE,
 }
 
+# controllableName is somfythermostat:SomfyThermostatTemperatureSensor
+TEMPERATURE_SENSOR_DEVICE_INDEX = 2
+
 
 class SomfyThermostat(OverkizEntity, ClimateEntity):
     """Representation of Somfy Smart Thermostat."""
@@ -67,7 +70,9 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self.temperature_device = self.executor.linked_device(2)
+        self.temperature_device = self.executor.linked_device(
+            TEMPERATURE_SENSOR_DEVICE_INDEX
+        )
 
     @property
     def hvac_mode(self) -> str:
