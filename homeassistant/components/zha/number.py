@@ -313,7 +313,7 @@ class ZhaNumber(ZhaEntity, NumberEntity):
         resolution = self._analog_output_channel.resolution
         if resolution is not None:
             return resolution
-        return super().step
+        return super().native_step
 
     @property
     def name(self):
