@@ -276,7 +276,7 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
     _LOGGER.warning(
         "Configuration of Nest integration in YAML is deprecated and "
         "will be removed in a future release; Your existing configuration "
-        "(including OAuth Application Credentials) have been imported into "
+        "(including OAuth Application Credentials) has been imported into "
         "the UI automatically and can be safely removed from your "
         "configuration.yaml file"
     )
