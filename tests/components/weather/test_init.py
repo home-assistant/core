@@ -22,15 +22,16 @@ from homeassistant.const import (
     SPEED_METERS_PER_SECOND,
     TEMP_FAHRENHEIT,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
 from homeassistant.util.temperature import convert as convert_temperature
-from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM, UnitSystem
 
 
-async def create_entity(hass, **kwargs):
+async def create_entity(hass: HomeAssistant, **kwargs):
     """Create the weather entity to run tests on."""
     kwargs = {"temperature": None, "temperature_unit": None, **kwargs}
     platform = getattr(hass.components, "test.weather")
@@ -51,9 +52,9 @@ async def create_entity(hass, **kwargs):
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
 async def test_temperature_conversion(
-    hass,
+    hass: HomeAssistant,
     enable_custom_integrations,
-    unit_system,
+    unit_system: UnitSystem,
 ):
     """Test temperature conversion."""
     hass.config.units = unit_system
@@ -79,9 +80,9 @@ async def test_temperature_conversion(
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
 async def test_pressure_conversion(
-    hass,
+    hass: HomeAssistant,
     enable_custom_integrations,
-    unit_system,
+    unit_system: UnitSystem,
 ):
     """Test pressure conversion."""
     hass.config.units = unit_system
@@ -101,9 +102,9 @@ async def test_pressure_conversion(
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
 async def test_wind_speed_conversion(
-    hass,
+    hass: HomeAssistant,
     enable_custom_integrations,
-    unit_system,
+    unit_system: UnitSystem,
 ):
     """Test wind speed conversion."""
     hass.config.units = unit_system
@@ -126,9 +127,9 @@ async def test_wind_speed_conversion(
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
 async def test_visibility_conversion(
-    hass,
+    hass: HomeAssistant,
     enable_custom_integrations,
-    unit_system,
+    unit_system: UnitSystem,
 ):
     """Test visibility conversion."""
     hass.config.units = unit_system
@@ -148,9 +149,9 @@ async def test_visibility_conversion(
 
 @pytest.mark.parametrize("unit_system", [IMPERIAL_SYSTEM, METRIC_SYSTEM])
 async def test_precipitation_conversion(
-    hass,
+    hass: HomeAssistant,
     enable_custom_integrations,
-    unit_system,
+    unit_system: UnitSystem,
 ):
     """Test precipitation conversion."""
     hass.config.units = unit_system
@@ -171,7 +172,7 @@ async def test_precipitation_conversion(
 
 
 async def test_none_forecast(
-    hass,
+    hass: HomeAssistant,
     enable_custom_integrations,
 ):
     """Test that conversion with None values succeeds."""

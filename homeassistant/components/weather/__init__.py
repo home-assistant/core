@@ -189,7 +189,7 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_precision: float
-    _attr_pressure: float | None = None
+    _attr_native_pressure: float | None = None
     _attr_pressure_unit: None = None  # Subclasses of WeatherEntity should not set this
     _attr_native_pressure_unit: str | None = None
     _attr_state: None = None
@@ -197,8 +197,8 @@ class WeatherEntity(Entity):
         None  # Subclasses of WeatherEntity should not set this
     )
     _attr_native_temperature_unit: str
-    _attr_temperature: float | None
-    _attr_visibility: float | None = None
+    _attr_native_temperature: float | None
+    _attr_native_visibility: float | None = None
     _attr_visibility_unit: None = (
         None  # Subclasses of WeatherEntity should not set this
     )
@@ -208,7 +208,7 @@ class WeatherEntity(Entity):
     )
     _attr_native_precipitation_unit: str | None = None
     _attr_wind_bearing: float | str | None = None
-    _attr_wind_speed: float | None = None
+    _attr_native_wind_speed: float | None = None
     _attr_wind_speed_unit: None = (
         None  # Subclasses of WeatherEntity should not set this
     )
@@ -228,9 +228,9 @@ class WeatherEntity(Entity):
         self.async_registry_entry_updated()
 
     @property
-    def temperature(self) -> float | None:
+    def native_temperature(self) -> float | None:
         """Return the platform temperature in native units (i.e. not converted)."""
-        return self._attr_temperature
+        return self._attr_native_temperature
 
     @property
     def native_temperature_unit(self) -> str | None:
@@ -248,9 +248,9 @@ class WeatherEntity(Entity):
         return self.hass.config.units.temperature_unit
 
     @property
-    def pressure(self) -> float | None:
+    def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        return self._attr_pressure
+        return self._attr_native_pressure
 
     @property
     def native_pressure_unit(self) -> str | None:
@@ -275,9 +275,9 @@ class WeatherEntity(Entity):
         return self._attr_humidity
 
     @property
-    def wind_speed(self) -> float | None:
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        return self._attr_wind_speed
+        return self._attr_native_wind_speed
 
     @property
     def native_wind_speed_unit(self) -> str | None:
@@ -307,9 +307,9 @@ class WeatherEntity(Entity):
         return self._attr_ozone
 
     @property
-    def visibility(self) -> float | None:
+    def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
-        return self._attr_visibility
+        return self._attr_native_visibility
 
     @property
     def native_visibility_unit(self) -> str | None:
@@ -374,7 +374,7 @@ class WeatherEntity(Entity):
             else 0
         )
 
-        if (temperature := self.temperature) is not None:
+        if (temperature := self.native_temperature) is not None:
             with suppress(ValueError):
                 float(temperature)
                 value_temp = UNIT_CONVERSIONS[CONF_TEMPERATURE_UOM](
@@ -393,7 +393,7 @@ class WeatherEntity(Entity):
         if (ozone := self.ozone) is not None:
             data[ATTR_WEATHER_OZONE] = ozone
 
-        if (pressure := self.pressure) is not None:
+        if (pressure := self.native_pressure) is not None:
             with suppress(ValueError):
                 float(pressure)
                 value_pressure = UNIT_CONVERSIONS[CONF_PRESSURE_UOM](
@@ -405,7 +405,7 @@ class WeatherEntity(Entity):
         if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
 
-        if (wind_speed := self.wind_speed) is not None:
+        if (wind_speed := self.native_wind_speed) is not None:
             with suppress(ValueError):
                 float(wind_speed)
                 value_wind_speed = UNIT_CONVERSIONS[CONF_WIND_SPEED_UOM](
@@ -416,7 +416,7 @@ class WeatherEntity(Entity):
                 )
                 data[ATTR_WEATHER_WIND_SPEED_UNIT] = self.wind_speed_unit
 
-        if (visibility := self.visibility) is not None:
+        if (visibility := self.native_visibility) is not None:
             with suppress(ValueError):
                 float(visibility)
                 value_visibility = UNIT_CONVERSIONS[CONF_VISIBILITY_UOM](
