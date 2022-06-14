@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "no_plants": "Es wurden keine Pflanzen auf diesem Konto gefunden"
+            "no_plants": "Es wurden keine PV-Anlage in diesem Konto gefunden"
         },
         "error": {
             "invalid_auth": "Ung\u00fcltige Authentifizierung"
@@ -9,9 +9,9 @@
         "step": {
             "plant": {
                 "data": {
-                    "plant_id": "Pflanze"
+                    "plant_id": "PV-Anlage"
                 },
-                "title": "W\u00e4hle deine Pflanze aus"
+                "title": "W\u00e4hle deine PV-Anlage aus"
             },
             "user": {
                 "data": {
