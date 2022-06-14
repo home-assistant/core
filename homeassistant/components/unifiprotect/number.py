@@ -198,15 +198,15 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     ) -> None:
         """Initialize the Number Entities."""
         super().__init__(data, device, description)
-        self._attr_max_value = self.entity_description.ufp_max
-        self._attr_min_value = self.entity_description.ufp_min
-        self._attr_step = self.entity_description.ufp_step
+        self._attr_native_max_value = self.entity_description.ufp_max
+        self._attr_native_min_value = self.entity_description.ufp_min
+        self._attr_native_step = self.entity_description.ufp_step
 
     @callback
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()
-        self._attr_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
