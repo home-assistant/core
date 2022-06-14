@@ -651,12 +651,12 @@ async def test_stream_stopped_while_decoding(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         # Note: There is a race here where the worker could start as soon
         # as the wake event is sent, completing all decode work.
         worker_wake.set()
-        stream.stop()
+        await stream.stop()
 
     # Stream is still considered available when the worker was still active and asked to stop
     assert stream.available
@@ -688,7 +688,7 @@ async def test_update_stream_source(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE
         assert stream.available
@@ -704,7 +704,7 @@ async def test_update_stream_source(hass):
         assert stream.available
 
         # Cleanup
-        stream.stop()
+        await stream.stop()
 
 
 async def test_worker_log(hass, caplog):
@@ -796,7 +796,7 @@ async def test_durations(hass, record_worker_sync):
 
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
 
 async def test_has_keyframe(hass, record_worker_sync, h264_video):
@@ -836,7 +836,7 @@ async def test_has_keyframe(hass, record_worker_sync, h264_video):
 
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
 
 async def test_h265_video_is_hvc1(hass, record_worker_sync):
@@ -871,7 +871,7 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
 
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
@@ -905,4 +905,4 @@ async def test_get_image(hass, record_worker_sync):
 
     assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
-    stream.stop()
+    await stream.stop()

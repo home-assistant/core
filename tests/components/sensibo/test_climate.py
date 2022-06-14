@@ -1,8 +1,8 @@
 """The test for the sensibo binary sensor platform."""
 from __future__ import annotations
 
-from datetime import timedelta
-from unittest.mock import patch
+from datetime import datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
 import pytest
@@ -20,7 +20,12 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
 )
-from homeassistant.components.sensibo.climate import SERVICE_ASSUME_STATE
+from homeassistant.components.sensibo.climate import (
+    ATTR_MINUTES,
+    SERVICE_ASSUME_STATE,
+    SERVICE_TIMER,
+    _find_valid_target_temp,
+)
 from homeassistant.components.sensibo.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -29,12 +34,28 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt
 
 from tests.common import async_fire_time_changed
+
+
+async def test_climate_find_valid_targets():
+    """Test function to return temperature from valid targets."""
+
+    valid_targets = [10, 16, 17, 18, 19, 20]
+
+    assert _find_valid_target_temp(7, valid_targets) == 10
+    assert _find_valid_target_temp(10, valid_targets) == 10
+    assert _find_valid_target_temp(11, valid_targets) == 16
+    assert _find_valid_target_temp(15, valid_targets) == 16
+    assert _find_valid_target_temp(16, valid_targets) == 16
+    assert _find_valid_target_temp(18.5, valid_targets) == 19
+    assert _find_valid_target_temp(20, valid_targets) == 20
+    assert _find_valid_target_temp(25, valid_targets) == 20
 
 
 async def test_climate(
@@ -55,7 +76,7 @@ async def test_climate(
             "fan_only",
             "off",
         ],
-        "min_temp": 17,
+        "min_temp": 10,
         "max_temp": 20,
         "target_temp_step": 1,
         "fan_modes": ["quiet", "low", "medium"],
@@ -244,23 +265,22 @@ async def test_climate_temperatures(
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 17
+    assert state2.attributes["temperature"] == 16
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
         return_value={"result": {"status": "Success"}},
     ):
-        with pytest.raises(ValueError):
-            await hass.services.async_call(
-                CLIMATE_DOMAIN,
-                SERVICE_SET_TEMPERATURE,
-                {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
-                blocking=True,
-            )
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_TEMPERATURE,
+            {ATTR_ENTITY_ID: state1.entity_id, ATTR_TEMPERATURE: 18.5},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     state2 = hass.states.get("climate.hallway")
-    assert state2.attributes["temperature"] == 17
+    assert state2.attributes["temperature"] == 19
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_set_ac_state_property",
@@ -658,3 +678,230 @@ async def test_climate_no_fan_no_swing(
     assert state.attributes["swing_mode"] is None
     assert state.attributes["fan_modes"] is None
     assert state.attributes["swing_modes"] is None
+
+
+async def test_climate_set_timer(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate Set Timer service."""
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("climate.hallway")
+    assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+        return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIMER,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_STATE: "on",
+                ATTR_MINUTES: 30,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_on", True)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_id", "SzTGE4oZ4D")
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_state_on", False)
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"],
+        "timer_time",
+        datetime(2022, 6, 6, 12, 00, 00, tzinfo=dt.UTC),
+    )
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.hallway_timer_end_time").state
+        == "2022-06-06T12:00:00+00:00"
+    )
+    assert hass.states.get("binary_sensor.hallway_timer_running").state == "on"
+    assert hass.states.get("binary_sensor.hallway_timer_running").attributes == {
+        "device_class": "running",
+        "friendly_name": "Hallway Timer Running",
+        "icon": "mdi:timer",
+        "id": "SzTGE4oZ4D",
+        "turn_on": False,
+    }
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
+        return_value={"status": "success"},
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIMER,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_STATE: "off",
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_on", False)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_id", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_state_on", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_time", None)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
+
+
+async def test_climate_set_timer_failures(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate Set Timer service failures."""
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("climate.hallway")
+    assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
+    assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
+
+    with pytest.raises(ValueError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIMER,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_STATE: "on",
+            },
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+        return_value={"status": "success", "result": {"id": ""}},
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIMER,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_STATE: "on",
+                ATTR_MINUTES: 30,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_on", True)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_id", None)
+    monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_state_on", False)
+    monkeypatch.setattr(
+        get_data.parsed["ABC999111"],
+        "timer_time",
+        datetime(2022, 6, 6, 12, 00, 00, tzinfo=dt.UTC),
+    )
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIMER,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_STATE: "off",
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
+        return_value={"status": "failure"},
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_TIMER,
+                {
+                    ATTR_ENTITY_ID: state1.entity_id,
+                    ATTR_STATE: "on",
+                    ATTR_MINUTES: 30,
+                },
+                blocking=True,
+            )
+    await hass.async_block_till_done()

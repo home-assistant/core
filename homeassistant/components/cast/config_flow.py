@@ -1,8 +1,13 @@
 """Config flow for Cast."""
+from __future__ import annotations
+
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
 
@@ -25,7 +30,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._wanted_uuid = set()
 
     @staticmethod
-    def async_get_options_flow(config_entry):
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> CastOptionsFlowHandler:
         """Get the options flow for this handler."""
         return CastOptionsFlowHandler(config_entry)
 
@@ -110,10 +118,10 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class CastOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Google Cast options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Google Cast options flow."""
         self.config_entry = config_entry
-        self.updated_config = {}
+        self.updated_config: dict[str, Any] = {}
 
     async def async_step_init(self, user_input=None):
         """Manage the Google Cast options."""

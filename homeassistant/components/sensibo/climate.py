@@ -1,6 +1,7 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
 
+from bisect import bisect_left
 from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
@@ -17,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -26,6 +27,8 @@ from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
+SERVICE_TIMER = "timer"
+ATTR_MINUTES = "minutes"
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
@@ -54,6 +57,14 @@ AC_STATE_TO_DATA = {
 }
 
 
+def _find_valid_target_temp(target: int, valid_targets: list[int]) -> int:
+    if target <= valid_targets[0]:
+        return valid_targets[0]
+    if target >= valid_targets[-1]:
+        return valid_targets[-1]
+    return valid_targets[bisect_left(valid_targets, target)]
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -75,6 +86,14 @@ async def async_setup_entry(
             vol.Required(ATTR_STATE): vol.In(["on", "off"]),
         },
         "async_assume_state",
+    )
+    platform.async_register_entity_service(
+        SERVICE_TIMER,
+        {
+            vol.Required(ATTR_STATE): vol.In(["on", "off"]),
+            vol.Optional(ATTR_MINUTES): cv.positive_int,
+        },
+        "async_set_timer",
     )
 
 
@@ -203,20 +222,8 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if temperature == self.target_temperature:
             return
 
-        if temperature not in self.device_data.temp_list:
-            # Requested temperature is not supported.
-            if temperature > self.device_data.temp_list[-1]:
-                temperature = self.device_data.temp_list[-1]
-
-            elif temperature < self.device_data.temp_list[0]:
-                temperature = self.device_data.temp_list[0]
-
-            else:
-                raise ValueError(
-                    f"Target temperature has to be one off {str(self.device_data.temp_list)}"
-                )
-
-        await self._async_set_ac_state_property("targetTemperature", int(temperature))
+        new_temp = _find_valid_target_temp(temperature, self.device_data.temp_list)
+        await self._async_set_ac_state_property("targetTemperature", new_temp)
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -279,3 +286,25 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Sync state with api."""
         await self._async_set_ac_state_property("on", state != HVACMode.OFF, True)
         await self.coordinator.async_refresh()
+
+    async def async_set_timer(self, state: str, minutes: int | None = None) -> None:
+        """Set or delete timer."""
+        if state == "off" and self.device_data.timer_id is None:
+            raise HomeAssistantError("No timer to delete")
+
+        if state == "on" and minutes is None:
+            raise ValueError("No value provided for timer")
+
+        if state == "off":
+            result = await self.async_send_command("del_timer")
+        else:
+            new_state = bool(self.device_data.ac_states["on"] is False)
+            params = {
+                "minutesFromNow": minutes,
+                "acState": {**self.device_data.ac_states, "on": new_state},
+            }
+            result = await self.async_send_command("set_timer", params)
+
+        if result["status"] == "success":
+            return await self.coordinator.async_request_refresh()
+        raise HomeAssistantError(f"Could not set timer for device {self.name}")

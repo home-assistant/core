@@ -114,6 +114,7 @@ homeassistant.components.homekit.aidmanager
 homeassistant.components.homekit.config_flow
 homeassistant.components.homekit.diagnostics
 homeassistant.components.homekit.logbook
+homeassistant.components.homekit.type_locks
 homeassistant.components.homekit.type_triggers
 homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
@@ -128,7 +129,6 @@ homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
-homeassistant.components.ialarm_xr.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*

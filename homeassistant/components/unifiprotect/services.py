@@ -24,7 +24,7 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import ATTR_MESSAGE, DOMAIN
-from .data import ProtectData
+from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -59,18 +59,6 @@ CHIME_PAIRED_SCHEMA = vol.All(
 )
 
 
-def _async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: set[str]
-) -> ProtectApiClient | None:
-    """Find the UFP instance for the config entry ids."""
-    domain_data = hass.data[DOMAIN]
-    for config_entry_id in config_entry_ids:
-        if config_entry_id in domain_data:
-            protect_data: ProtectData = domain_data[config_entry_id]
-            return protect_data.api
-    return None
-
-
 @callback
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
@@ -81,7 +69,7 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
     config_entry_ids = device_entry.config_entries
-    if ufp_instance := _async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
+    if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
         return ufp_instance
 
     raise HomeAssistantError(f"No device found for device id: {device_id}")

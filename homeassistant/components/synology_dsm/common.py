@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 
 from synology_dsm import SynologyDSM
@@ -33,7 +32,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-from .const import CONF_DEVICE_TOKEN, DOMAIN, SYSTEM_LOADED
+from .const import CONF_DEVICE_TOKEN
 
 LOGGER = logging.getLogger(__name__)
 
@@ -98,7 +97,7 @@ class SynoApi:
         self._async_setup_api_requests()
 
         await self._hass.async_add_executor_job(self._fetch_device_configuration)
-        await self.async_update()
+        await self.async_update(first_setup=True)
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -218,11 +217,6 @@ class SynoApi:
             )
             self.surveillance_station = self.dsm.surveillance_station
 
-    def _set_system_loaded(self, state: bool = False) -> None:
-        """Set system loaded flag."""
-        dsm_device = self._hass.data[DOMAIN].get(self.information.serial)
-        dsm_device[SYSTEM_LOADED] = state
-
     async def _syno_api_executer(self, api_call: Callable) -> None:
         """Synology api call wrapper."""
         try:
@@ -236,12 +230,10 @@ class SynoApi:
     async def async_reboot(self) -> None:
         """Reboot NAS."""
         await self._syno_api_executer(self.system.reboot)
-        self._set_system_loaded()
 
     async def async_shutdown(self) -> None:
         """Shutdown NAS."""
         await self._syno_api_executer(self.system.shutdown)
-        self._set_system_loaded()
 
     async def async_unload(self) -> None:
         """Stop interacting with the NAS and prepare for removal from hass."""
@@ -251,7 +243,7 @@ class SynoApi:
             # ignore API errors during logout
             pass
 
-    async def async_update(self, now: timedelta | None = None) -> None:
+    async def async_update(self, first_setup: bool = False) -> None:
         """Update function for updating API information."""
         LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._async_setup_api_requests()
@@ -259,14 +251,22 @@ class SynoApi:
             await self._hass.async_add_executor_job(
                 self.dsm.update, self._with_information
             )
-        except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
-            LOGGER.warning(
-                "Connection error during update, fallback by reloading the entry"
-            )
+        except (
+            SynologyDSMLoginFailedException,
+            SynologyDSMRequestException,
+            SynologyDSMAPIErrorException,
+        ) as err:
             LOGGER.debug(
                 "Connection error during update of '%s' with exception: %s",
                 self._entry.unique_id,
                 err,
+            )
+
+            if first_setup:
+                raise err
+
+            LOGGER.warning(
+                "Connection error during update, fallback by reloading the entry"
             )
             await self._hass.config_entries.async_reload(self._entry.entry_id)
             return

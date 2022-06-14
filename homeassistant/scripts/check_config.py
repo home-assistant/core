@@ -191,7 +191,7 @@ def check(config_dir, secrets=False):
 
     if secrets:
         # Ensure !secrets point to the patched function
-        yaml_loader.SafeLineLoader.add_constructor("!secret", yaml_loader.secret_yaml)
+        yaml_loader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     def secrets_proxy(*args):
         secrets = Secrets(*args)
@@ -219,9 +219,7 @@ def check(config_dir, secrets=False):
             pat.stop()
         if secrets:
             # Ensure !secrets point to the original function
-            yaml_loader.SafeLineLoader.add_constructor(
-                "!secret", yaml_loader.secret_yaml
-            )
+            yaml_loader.add_constructor("!secret", yaml_loader.secret_yaml)
 
     return res
 

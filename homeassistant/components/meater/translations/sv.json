@@ -1,5 +1,8 @@
 {
     "config": {
+        "error": {
+            "service_unavailable_error": "Programmeringsgr\u00e4nssnittet g\u00e5r inte att komma \u00e5t f\u00f6r n\u00e4rvarande. F\u00f6rs\u00f6k igen senare."
+        },
         "step": {
             "reauth_confirm": {
                 "data": {

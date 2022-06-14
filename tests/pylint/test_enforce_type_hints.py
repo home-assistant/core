@@ -277,3 +277,160 @@ def test_valid_list_dict_str_any(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_asyncfunctiondef(func_node)
+
+
+def test_invalid_config_flow_step(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for ConfigFlow step."""
+    class_node, func_node, arg_node = astroid.extract_node(
+        """
+    class ConfigFlow():
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        async def async_step_zeroconf( #@
+            self,
+            device_config: dict #@
+        ):
+            pass
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=arg_node,
+            args=(2, "ZeroconfServiceInfo"),
+            line=10,
+            col_offset=8,
+            end_line=10,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="FlowResult",
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=33,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_config_flow_step(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for ConfigFlow step."""
+    class_node = astroid.extract_node(
+        """
+    class ConfigFlow():
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        async def async_step_zeroconf(
+            self,
+            device_config: ZeroconfServiceInfo
+        ) -> FlowResult:
+            pass
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_config_flow_async_get_options_flow(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for ConfigFlow async_get_options_flow."""
+    class_node, func_node, arg_node = astroid.extract_node(
+        """
+    class ConfigFlow():
+        pass
+
+    class AxisOptionsFlow():
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        def async_get_options_flow( #@
+            config_entry #@
+        ) -> AxisOptionsFlow:
+            return AxisOptionsFlow(config_entry)
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=arg_node,
+            args=(1, "ConfigEntry"),
+            line=12,
+            col_offset=8,
+            end_line=12,
+            end_col_offset=20,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="OptionsFlow",
+            line=11,
+            col_offset=4,
+            end_line=11,
+            end_col_offset=30,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_config_flow_async_get_options_flow(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure valid hints are accepted for ConfigFlow async_get_options_flow."""
+    class_node = astroid.extract_node(
+        """
+    class ConfigFlow():
+        pass
+
+    class OptionsFlow():
+        pass
+
+    class AxisOptionsFlow(OptionsFlow):
+        pass
+
+    class OtherOptionsFlow(OptionsFlow):
+        pass
+
+    class AxisFlowHandler( #@
+        ConfigFlow, domain=AXIS_DOMAIN
+    ):
+        def async_get_options_flow(
+            config_entry: ConfigEntry
+        ) -> AxisOptionsFlow | OtherOptionsFlow | OptionsFlow:
+            if self.use_other:
+                return OtherOptionsFlow(config_entry)
+            return AxisOptionsFlow(config_entry)
+
+    """,
+        "homeassistant.components.pylint_test.config_flow",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)

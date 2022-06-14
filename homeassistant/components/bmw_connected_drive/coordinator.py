@@ -74,8 +74,3 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
         if not refresh_token:
             data.pop(CONF_REFRESH_TOKEN)
         self.hass.config_entries.async_update_entry(self._entry, data=data)
-
-    def notify_listeners(self) -> None:
-        """Notify all listeners to refresh HA state machine."""
-        for update_callback in self._listeners:
-            update_callback()

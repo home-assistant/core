@@ -1,9 +1,10 @@
 """Sensor platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -44,7 +45,8 @@ class MotionBaseEntityDescriptionMixin:
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
-    value_fn: Callable[[SensiboDevice], StateType]
+    value_fn: Callable[[SensiboDevice], StateType | datetime]
+    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
 @dataclass
@@ -111,12 +113,25 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         name="PM2.5",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pm25,
+        extra_fn=None,
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
         name="Pure Sensitivity",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
+        extra_fn=None,
+    ),
+)
+
+DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+    SensiboDeviceSensorEntityDescription(
+        key="timer_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        name="Timer End Time",
+        icon="mdi:timer",
+        value_fn=lambda data: data.timer_time,
+        extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
 )
 
@@ -144,6 +159,12 @@ async def async_setup_entry(
         for device_id, device_data in coordinator.data.parsed.items()
         for description in PURE_SENSOR_TYPES
         if device_data.model == "pure"
+    )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
+        for device_id, device_data in coordinator.data.parsed.items()
+        for description in DEVICE_SENSOR_TYPES
+        if device_data.model != "pure"
     )
     async_add_entities(entities)
 
@@ -204,6 +225,13 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.device_data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes."""
+        if self.entity_description.extra_fn is not None:
+            return self.entity_description.extra_fn(self.device_data)
+        return None
