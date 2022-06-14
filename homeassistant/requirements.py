@@ -231,9 +231,9 @@ class RequirementsManager:
 
         async with self.pip_lock:
             # Recaculate missing again now that we have the lock
-            await self._async_process_requirements(
-                name, self._find_missing_requirements(requirements)
-            )
+            missing = self._find_missing_requirements(requirements)
+            if missing:
+                await self._async_process_requirements(name, missing)
 
     def _find_missing_requirements(self, requirements: list[str]) -> list[str]:
         """Find requirements that are missing in the cache."""

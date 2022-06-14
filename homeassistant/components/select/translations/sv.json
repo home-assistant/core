@@ -1,0 +1,7 @@
+{
+    "device_automation": {
+        "condition_type": {
+            "selected_option": "Nuvarande {entity_name} markerad option"
+        }
+    }
+}
