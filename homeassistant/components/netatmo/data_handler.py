@@ -31,6 +31,7 @@ from .const import (
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
+    NETATMO_CREATE_COVER,
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_WEATHER_SENSOR,
@@ -306,6 +307,7 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA,
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
+            NetatmoDeviceCategory.shutter: [NETATMO_CREATE_COVER],
         }
         for module in home.modules.values():
             if not module.device_category:
