@@ -13,7 +13,6 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import BPUP_SUBS, DOMAIN, HUB
@@ -40,14 +39,11 @@ async def async_setup_entry(
     data = hass.data[DOMAIN][entry.entry_id]
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
-
-    covers: list[Entity] = [
+    async_add_entities(
         BondCover(hub, device, bpup_subs)
         for device in hub.devices
         if device.type == DeviceType.MOTORIZED_SHADES
-    ]
-
-    async_add_entities(covers)
+    )
 
 
 class BondCover(BondEntity, CoverEntity):
