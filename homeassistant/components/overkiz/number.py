@@ -28,8 +28,6 @@ class OverkizNumberDescriptionMixin:
 class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
     """Class to describe an Overkiz number."""
 
-    inverted: bool = False
-
 
 NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # Cover: My Position (0 - 100)
@@ -80,16 +78,6 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         max_value=15,
         entity_category=EntityCategory.CONFIG,
     ),
-    # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)
-    # Needs to be inverted since 100 = off, 0 = on
-    OverkizNumberDescription(
-        key=OverkizState.CORE_LEVEL,
-        icon="mdi:patio-heater",
-        command=OverkizCommand.SET_LEVEL,
-        min_value=0,
-        max_value=100,
-        inverted=True,
-    ),
 ]
 
 SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
@@ -133,18 +121,12 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
-            if self.entity_description.inverted:
-                return self._attr_max_value - cast(float, state.value)
-
             return cast(float, state.value)
 
         return None
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
-        if self.entity_description.inverted:
-            value = self._attr_max_value - value
-
         await self.executor.async_execute_command(
             self.entity_description.command, value
         )
