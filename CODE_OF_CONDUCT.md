@@ -15,7 +15,7 @@ diverse, inclusive, and healthy community.
 ## Our Standards
 
 Examples of behavior that contributes to a positive environment for our
-community include:
+community includes:
 
 * Demonstrating empathy and kindness toward other people
 * Being respectful of differing opinions, viewpoints, and experiences
@@ -50,7 +50,7 @@ decisions when appropriate.
 
 ## Scope
 
-This Code of Conduct applies within all community spaces, and also applies when
+This Code of Conduct applies within all community spaces and also applies when
 an individual is officially representing the community in public spaces.
 Examples of representing our community include using an official e-mail address,
 posting via an official social media account, or acting as an appointed
@@ -123,7 +123,7 @@ enforcement ladder][mozilla].
 
 ## Adoption
 
-This Code of Conduct was first adopted January 21st, 2017 and announced in
+This Code of Conduct was first adopted on January 21st, 2017, and announced in
 [this][coc-blog] blog post and has been updated on May 25th, 2020 to version
 2.0 of the [Contributor Covenant][homepage] as announced in [this][coc2-blog]
 blog post.
