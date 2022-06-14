@@ -1646,7 +1646,7 @@ yolink-api==0.0.8
 youless-api==0.16
 
 # homeassistant.components.zeroconf
-zeroconf==0.38.6
+zeroconf==0.38.7
 
 # homeassistant.components.zha
 zha-quirks==0.0.75
