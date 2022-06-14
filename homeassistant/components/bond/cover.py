@@ -47,7 +47,7 @@ async def async_setup_entry(
         if device.type == DeviceType.MOTORIZED_SHADES
     ]
 
-    async_add_entities(covers, True)
+    async_add_entities(covers)
 
 
 class BondCover(BondEntity, CoverEntity):
@@ -78,7 +78,8 @@ class BondCover(BondEntity, CoverEntity):
                 supported_features |= CoverEntityFeature.STOP_TILT
         self._attr_supported_features = supported_features
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         cover_open = state.get("open")
         self._attr_is_closed = None if cover_open is None else cover_open == 0
         if (bond_position := state.get("position")) is not None:

@@ -302,5 +302,5 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             action = Action(self.entity_description.key)
         await self._hub.bond.action(self._device.device_id, action)
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
         """Apply the state."""

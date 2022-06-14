@@ -59,7 +59,7 @@ async def async_setup_entry(
         "async_set_speed_belief",
     )
 
-    async_add_entities(fans, True)
+    async_add_entities(fans)
 
 
 class BondFan(BondEntity, FanEntity):
@@ -77,7 +77,8 @@ class BondFan(BondEntity, FanEntity):
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")

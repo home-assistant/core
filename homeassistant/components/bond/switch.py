@@ -49,14 +49,14 @@ async def async_setup_entry(
         "async_set_power_belief",
     )
 
-    async_add_entities(switches, True)
+    async_add_entities(switches)
 
 
 class BondSwitch(BondEntity, SwitchEntity):
     """Representation of a Bond generic device."""
 
-    def _apply_state(self, state: dict) -> None:
-        self._attr_is_on = state.get("power") == 1
+    def _apply_state(self) -> None:
+        self._attr_is_on = self._device.state.get("power") == 1
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
