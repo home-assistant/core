@@ -45,7 +45,7 @@ async def async_get_service(
 
     _LOGGER.warning(
         "Manually configured simplepush integration found under platform key '%s'. "
-        "Please remove and configure through the UI.",
+        "Please remove and configure through the UI",
         NOTIFY_DOMAIN,
     )
     return SimplePushNotificationService(config)
