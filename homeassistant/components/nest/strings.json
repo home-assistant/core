@@ -33,13 +33,6 @@
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
       },
-      "auth": {
-        "title": "Nest: Link Google Account",
-        "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below ([more info]({more_info_url})).",
-        "data": {
-          "code": "[%key:common::config_flow::data::access_token%]"
-        }
-      },
       "pubsub": {
         "title": "Configure Google Cloud",
         "description": "Visit the [Cloud Console]({url}) to find your Google Cloud Project ID.",

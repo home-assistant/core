@@ -112,8 +112,6 @@ async def new_subscriber(
         implementation, config_entry_oauth2_flow.LocalOAuth2Implementation
     ):
         raise ValueError(f"Unexpected auth implementation {implementation}")
-    # Configuration mode ConfigMode.SDM may have a blend of configuration.yaml and
-    # ConfigEntry parameters, so to simplify just merge and check both
     if not (subscriber_id := entry.data.get(CONF_SUBSCRIBER_ID)):
         raise ValueError("Configuration option 'subscriber_id' missing")
     auth = AsyncConfigEntryAuth(
