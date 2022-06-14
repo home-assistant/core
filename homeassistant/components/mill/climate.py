@@ -202,7 +202,7 @@ class LocalMillHeater(CoordinatorEntity, ClimateEntity):
     _attr_max_temp = MAX_TEMP
     _attr_min_temp = MIN_TEMP
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _attr_target_temperature_step = PRECISION_WHOLE
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = TEMP_CELSIUS
 
     def __init__(self, coordinator):
