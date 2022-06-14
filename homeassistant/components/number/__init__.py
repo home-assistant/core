@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from contextlib import suppress
-from dataclasses import dataclass
+import dataclasses
 from datetime import timedelta
 import inspect
 import logging
@@ -113,7 +113,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await component.async_unload_entry(entry)
 
 
-@dataclass
+@dataclasses.dataclass
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
@@ -422,7 +422,7 @@ class NumberEntity(Entity):
             )
 
 
-@dataclass
+@dataclasses.dataclass
 class NumberExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
@@ -434,33 +434,15 @@ class NumberExtraStoredData(ExtraStoredData):
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the number data."""
-        return {
-            "native_max_value": self.native_max_value,
-            "native_min_value": self.native_min_value,
-            "native_step": self.native_step,
-            "native_unit_of_measurement": self.native_unit_of_measurement,
-            "native_value": self.native_value,
-        }
+        return dataclasses.asdict(self)
 
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> NumberExtraStoredData | None:
         """Initialize a stored number state from a dict."""
         try:
-            native_max_value = restored["native_max_value"]
-            native_min_value = restored["native_min_value"]
-            native_step = restored["native_step"]
-            native_unit_of_measurement = restored["native_unit_of_measurement"]
-            native_value = restored["native_value"]
-        except KeyError:
+            return cls(**restored)
+        except TypeError:
             return None
-
-        return cls(
-            native_max_value,
-            native_min_value,
-            native_step,
-            native_unit_of_measurement,
-            native_value,
-        )
 
 
 class RestoreNumber(NumberEntity, RestoreEntity):
