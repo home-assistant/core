@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_IP_ADDRESS,
     CONF_USERNAME,
+    PRECISION_HALVES,
     PRECISION_WHOLE,
     TEMP_CELSIUS,
 )
@@ -119,6 +120,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
             )
         else:
             self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_target_temperature_step = PRECISION_HALVES
 
         self._update_attr(heater)
 
