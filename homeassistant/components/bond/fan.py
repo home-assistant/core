@@ -26,8 +26,9 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from .const import BPUP_SUBS, DOMAIN, HUB, SERVICE_SET_FAN_SPEED_TRACKED_STATE
+from .const import DOMAIN, SERVICE_SET_FAN_SPEED_TRACKED_STATE
 from .entity import BondEntity
+from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,9 +42,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond fan devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SPEED_TRACKED_STATE,
