@@ -3,7 +3,7 @@
         "abort": {
             "already_configured": "Account is al geconfigureerd",
             "kamereon_no_account": "Kan Kamereon-account niet vinden.",
-            "reauth_successful": "Opnieuw verifi\u00ebren is gelukt"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "invalid_credentials": "Ongeldige authenticatie"
@@ -20,7 +20,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "Werk uw wachtwoord voor {gebruikersnaam} bij",
-                "title": "Integratie opnieuw verifi\u00ebren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

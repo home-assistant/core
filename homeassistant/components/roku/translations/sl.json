@@ -15,9 +15,7 @@
                     "one": "ena",
                     "other": "drugo",
                     "two": "dva"
-                },
-                "description": "Ali \u017eelite nastaviti {name}?",
-                "title": "Roku"
+                }
             },
             "user": {
                 "data": {

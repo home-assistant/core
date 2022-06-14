@@ -37,14 +37,10 @@ async def async_setup_entry(
             return
         async_add_entities([DeconzPowerPlug(switch, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.lights.subscribe(
-            gateway.evaluate_add_device(async_add_switch),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_switch,
+        gateway.api.lights.lights,
     )
-    for switch_id in gateway.api.lights.lights:
-        async_add_switch(EventType.ADDED, switch_id)
 
 
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):

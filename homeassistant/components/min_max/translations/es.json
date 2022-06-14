@@ -25,13 +25,6 @@
                 "data_description": {
                     "round_digits": "Controla el n\u00famero de d\u00edgitos decimales cuando la caracter\u00edstica estad\u00edstica es la media o mediana."
                 }
-            },
-            "options": {
-                "data": {
-                    "entity_ids": "Entidades de entrada",
-                    "round_digits": "Precisi\u00f3n",
-                    "type": "Caracter\u00edstica estad\u00edstica"
-                }
             }
         }
     },

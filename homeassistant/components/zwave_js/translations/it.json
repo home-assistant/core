@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Chiave di rete",
                     "s0_legacy_key": "Chiave S0 (Obsoleta)",
                     "s2_access_control_key": "Chiave di controllo di accesso S2",
                     "s2_authenticated_key": "Chiave S2 autenticata",
@@ -117,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Emula l'hardware",
                     "log_level": "Livello di registro",
-                    "network_key": "Chiave di rete",
                     "s0_legacy_key": "Chiave S0 (Obsoleta)",
                     "s2_access_control_key": "Chiave di controllo di accesso S2",
                     "s2_authenticated_key": "Chiave S2 autenticata",
@@ -146,6 +144,5 @@
                 "title": "Il componente aggiuntivo Z-Wave JS si sta avviando."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

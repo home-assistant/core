@@ -8,16 +8,9 @@
             "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Zdroje"
-                },
-                "title": "Vyberte zdroje, kter\u00e9 chcete sledovat"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Zdroje"
+                    "alias": "Alias"
                 },
                 "title": "Vyberte UPS, kterou chcete sledovat"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Nepoda\u0159ilo se p\u0159ipojit",
-            "unknown": "Neo\u010dek\u00e1van\u00e1 chyba"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Zdroje",
                     "scan_interval": "Interval sledov\u00e1n\u00ed (v sekund\u00e1ch)"
-                },
-                "description": "Zvolte zdroje senzoru."
+                }
             }
         }
     }

@@ -50,10 +50,7 @@ from .const import (
     LOGGER,
 )
 
-DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
-DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 

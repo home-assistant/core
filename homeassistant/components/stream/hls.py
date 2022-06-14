@@ -215,16 +215,6 @@ class HlsPlaylistView(StreamView):
         return web.Response(
             body=None,
             status=HTTPStatus.BAD_REQUEST,
-            # From Appendix B.1 of the RFC:
-            # Successful responses to blocking Playlist requests should be cached
-            # for six Target Durations. Unsuccessful responses (such as 404s) should
-            # be cached for four Target Durations.  Successful responses to non-blocking
-            # Playlist requests should be cached for half the Target Duration.
-            # Unsuccessful responses to non-blocking Playlist requests should be
-            # cached for for one Target Duration.
-            headers={
-                "Cache-Control": f"max-age={(4 if blocking else 1)*target_duration:.0f}"
-            },
         )
 
     @staticmethod
@@ -233,9 +223,6 @@ class HlsPlaylistView(StreamView):
         return web.Response(
             body=None,
             status=HTTPStatus.NOT_FOUND,
-            headers={
-                "Cache-Control": f"max-age={(4 if blocking else 1)*target_duration:.0f}"
-            },
         )
 
     async def handle(
@@ -318,7 +305,6 @@ class HlsPlaylistView(StreamView):
             body=self.render(track).encode("utf-8"),
             headers={
                 "Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER],
-                "Cache-Control": f"max-age={(6 if blocking_request else 0.5)*track.target_duration:.0f}",
             },
         )
         response.enable_compression(web.ContentCoding.gzip)
@@ -373,22 +359,16 @@ class HlsPartView(StreamView):
             return web.Response(
                 body=None,
                 status=HTTPStatus.NOT_FOUND,
-                headers={"Cache-Control": f"max-age={track.target_duration:.0f}"},
             )
         # If the part is ready or has been hinted,
         if int(part_num) == len(segment.parts):
             await track.part_recv(timeout=track.stream_settings.hls_part_timeout)
         if int(part_num) >= len(segment.parts):
-            return web.HTTPRequestRangeNotSatisfiable(
-                headers={
-                    "Cache-Control": f"max-age={track.target_duration:.0f}",
-                }
-            )
+            return web.HTTPRequestRangeNotSatisfiable()
         return web.Response(
             body=segment.parts[int(part_num)].data,
             headers={
                 "Content-Type": "video/iso.segment",
-                "Cache-Control": f"max-age={6*track.target_duration:.0f}",
             },
         )
 
@@ -421,12 +401,10 @@ class HlsSegmentView(StreamView):
             return web.Response(
                 body=None,
                 status=HTTPStatus.NOT_FOUND,
-                headers={"Cache-Control": f"max-age={track.target_duration:.0f}"},
             )
         return web.Response(
             body=segment.get_data(),
             headers={
                 "Content-Type": "video/iso.segment",
-                "Cache-Control": f"max-age={6*track.target_duration:.0f}",
             },
         )

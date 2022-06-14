@@ -101,6 +101,7 @@ PLATFORM_SCHEMA = vol.Schema(
                         vol.Required(CONF_NAME): cv.string,
                         vol.Optional(CONF_ICON): cv.icon,
                         vol.Required(CONF_ENTITIES): STATES_SCHEMA,
+                        vol.Optional("metadata"): dict,
                     }
                 )
             ],

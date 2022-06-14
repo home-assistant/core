@@ -27,5 +27,14 @@
                 "title": "\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u518d\u8a8d\u8a3c"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Home Assistant\u304b\u3089\u3001Google\u30ab\u30ec\u30f3\u30c0\u30fc\u3078\u306e\u30a2\u30af\u30bb\u30b9"
+                }
+            }
+        }
     }
 }

@@ -11,13 +11,6 @@
             "cannot_connect": "\u00dchendamine nurjus"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Salas\u00f5na",
-                    "username": "Kasutajanimi"
-                },
-                "title": "Autentimise seadistamine"
-            },
             "configure": {
                 "data": {
                     "host": "Host",
@@ -40,14 +33,6 @@
                     "host": "Vali avastatud ONVIF seade"
                 },
                 "title": "Vali ONVIF-seade"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "",
-                    "name": "Nimi",
-                    "port": ""
-                },
-                "title": "H\u00e4\u00e4lesta ONVIF-seade"
             },
             "user": {
                 "data": {

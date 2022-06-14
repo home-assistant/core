@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Selecteer verbindingstype",
-                    "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
+                    "connection_type": "Selecteer verbindingstype"
                 },
                 "description": "Selecteer verbindingstype. Lokaal vereist generatie 3 kachels"
             }

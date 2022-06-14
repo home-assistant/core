@@ -3,6 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_ENTITY_ID,
+    LOGBOOK_ENTRY_ICON,
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_ICON
 from homeassistant.core import Event, HomeAssistant, callback
 
@@ -42,12 +48,12 @@ def async_describe_events(
             zone_name = zone_state.attributes.get(ATTR_FRIENDLY_NAME)
             zone_icon = zone_state.attributes.get(ATTR_ICON)
         description = {
-            "name": source_device_name,
-            "message": f"{event_description} {zone_name or zone_entity_id}",
-            "icon": zone_icon or "mdi:crosshairs-gps",
+            LOGBOOK_ENTRY_NAME: source_device_name,
+            LOGBOOK_ENTRY_MESSAGE: f"{event_description} {zone_name or zone_entity_id}",
+            LOGBOOK_ENTRY_ICON: zone_icon or "mdi:crosshairs-gps",
         }
         if zone_entity_id:
-            description["entity_id"] = zone_entity_id
+            description[LOGBOOK_ENTRY_ENTITY_ID] = zone_entity_id
         return description
 
     async_describe_event(DOMAIN, IOS_EVENT_ZONE_ENTERED, async_describe_zone_event)

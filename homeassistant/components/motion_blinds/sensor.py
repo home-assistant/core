@@ -55,9 +55,9 @@ class MotionBatterySensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
 
         if blind.device_type in DEVICE_TYPES_WIFI:
-            name = f"{blind.blind_type}-battery"
+            name = f"{blind.blind_type} battery"
         else:
-            name = f"{blind.blind_type}-battery-{blind.mac[12:]}"
+            name = f"{blind.blind_type} {blind.mac[12:]} battery"
 
         self._blind = blind
         self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, blind.mac)})
@@ -104,9 +104,9 @@ class MotionTDBUBatterySensor(MotionBatterySensor):
         super().__init__(coordinator, blind)
 
         if blind.device_type in DEVICE_TYPES_WIFI:
-            name = f"{blind.blind_type}-{motor}-battery"
+            name = f"{blind.blind_type} {motor} battery"
         else:
-            name = f"{blind.blind_type}-{motor}-battery-{blind.mac[12:]}"
+            name = f"{blind.blind_type} {blind.mac[12:]} {motor} battery"
 
         self._motor = motor
         self._attr_unique_id = f"{blind.mac}-{motor}-battery"
@@ -147,7 +147,7 @@ class MotionSignalStrengthSensor(CoordinatorEntity, SensorEntity):
         elif device.device_type in DEVICE_TYPES_WIFI:
             name = f"{device.blind_type} signal strength"
         else:
-            name = f"{device.blind_type} signal strength - {device.mac[12:]}"
+            name = f"{device.blind_type} {device.mac[12:]} signal strength"
 
         self._device = device
         self._device_type = device_type

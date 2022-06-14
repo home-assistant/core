@@ -42,6 +42,7 @@ from .const import (
     ATTR_KEY,
     ATTR_KEY_NAME,
     ATTR_KEYPAD_ID,
+    ATTR_KEYPAD_NAME,
     CONF_AREA,
     CONF_AUTO_CONFIGURE,
     CONF_COUNTER,
@@ -266,21 +267,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     elk.connect()
 
-    def _element_changed(element: Element, changeset: dict[str, Any]) -> None:
+    def _keypad_changed(keypad: Element, changeset: dict[str, Any]) -> None:
         if (keypress := changeset.get("last_keypress")) is None:
             return
 
         hass.bus.async_fire(
             EVENT_ELKM1_KEYPAD_KEY_PRESSED,
             {
-                ATTR_KEYPAD_ID: element.index + 1,
+                ATTR_KEYPAD_NAME: keypad.name,
+                ATTR_KEYPAD_ID: keypad.index + 1,
                 ATTR_KEY_NAME: keypress[0],
                 ATTR_KEY: keypress[1],
             },
         )
 
     for keypad in elk.keypads:
-        keypad.add_callback(_element_changed)
+        keypad.add_callback(_keypad_changed)
 
     try:
         if not await async_wait_for_elk_to_sync(elk, LOGIN_TIMEOUT, SYNC_TIMEOUT):

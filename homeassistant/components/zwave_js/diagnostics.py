@@ -1,7 +1,8 @@
 """Provides diagnostics for Z-Wave JS."""
 from __future__ import annotations
 
-from dataclasses import astuple
+from copy import deepcopy
+from dataclasses import astuple, dataclass
 from typing import Any
 
 from zwave_js_server.client import Client
@@ -20,25 +21,43 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DATA_CLIENT, DOMAIN
 from .helpers import (
-    ZwaveValueID,
     get_home_and_node_id_from_device_entry,
     get_state_key_from_unique_id,
     get_value_id_from_unique_id,
 )
 
+
+@dataclass
+class ZwaveValueMatcher:
+    """Class to allow matching a Z-Wave Value."""
+
+    property_: str | int | None = None
+    command_class: int | None = None
+    endpoint: int | None = None
+    property_key: str | int | None = None
+
+    def __post_init__(self) -> None:
+        """Post initialization check."""
+        if all(val is None for val in astuple(self)):
+            raise ValueError("At least one of the fields must be set.")
+
+
 KEYS_TO_REDACT = {"homeId", "location"}
 
 VALUES_TO_REDACT = (
-    ZwaveValueID(property_="userCode", command_class=CommandClass.USER_CODE),
+    ZwaveValueMatcher(property_="userCode", command_class=CommandClass.USER_CODE),
 )
 
 
 def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
     """Redact value of a Z-Wave value."""
     for value_to_redact in VALUES_TO_REDACT:
-        zwave_value_id = ZwaveValueID(
-            property_=zwave_value["property"],
-            command_class=CommandClass(zwave_value["commandClass"]),
+        command_class = None
+        if "commandClass" in zwave_value:
+            command_class = CommandClass(zwave_value["commandClass"])
+        zwave_value_id = ZwaveValueMatcher(
+            property_=zwave_value.get("property"),
+            command_class=command_class,
             endpoint=zwave_value.get("endpoint"),
             property_key=zwave_value.get("propertyKey"),
         )
@@ -48,19 +67,19 @@ def redact_value_of_zwave_value(zwave_value: ValueDataType) -> ValueDataType:
                 astuple(value_to_redact), astuple(zwave_value_id)
             )
         ):
-            return {**zwave_value, "value": REDACTED}
+            redacted_value: ValueDataType = deepcopy(zwave_value)
+            redacted_value["value"] = REDACTED
+            return redacted_value
     return zwave_value
 
 
 def redact_node_state(node_state: NodeDataType) -> NodeDataType:
     """Redact node state."""
-    return {
-        **node_state,
-        "values": [
-            redact_value_of_zwave_value(zwave_value)
-            for zwave_value in node_state["values"]
-        ],
-    }
+    redacted_state: NodeDataType = deepcopy(node_state)
+    redacted_state["values"] = [
+        redact_value_of_zwave_value(zwave_value) for zwave_value in node_state["values"]
+    ]
+    return redacted_state
 
 
 def get_device_entities(
@@ -125,15 +144,19 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
-) -> NodeDataType:
+) -> dict:
     """Return diagnostics for a device."""
     client: Client = hass.data[DOMAIN][config_entry.entry_id][DATA_CLIENT]
     identifiers = get_home_and_node_id_from_device_entry(device)
     node_id = identifiers[1] if identifiers else None
-    if node_id is None or node_id not in client.driver.controller.nodes:
+    assert (driver := client.driver)
+    if node_id is None or node_id not in driver.controller.nodes:
         raise ValueError(f"Node for device {device.id} can't be found")
-    node = client.driver.controller.nodes[node_id]
+    node = driver.controller.nodes[node_id]
     entities = get_device_entities(hass, node, device)
+    assert client.version
+    node_state = redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT))
+    node_state["statistics"] = node.statistics.data
     return {
         "versionInfo": {
             "driverVersion": client.version.driver_version,
@@ -142,5 +165,5 @@ async def async_get_device_diagnostics(
             "maxSchemaVersion": client.version.max_schema_version,
         },
         "entities": entities,
-        "state": redact_node_state(async_redact_data(node.data, KEYS_TO_REDACT)),
+        "state": node_state,
     }

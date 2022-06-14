@@ -29,12 +29,6 @@
                 "data_description": {
                     "round": "Controlla il numero di cifre decimali nell'output."
                 }
-            },
-            "options": {
-                "data": {
-                    "round": "Precisione"
-                },
-                "description": "Precisione controlla il numero di cifre decimali nell'uscita."
             }
         }
     },

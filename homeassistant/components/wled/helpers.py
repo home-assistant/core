@@ -2,7 +2,7 @@
 
 from wled import WLEDConnectionError, WLEDError
 
-from .const import LOGGER
+from homeassistant.exceptions import HomeAssistantError
 
 
 def wled_exception_handler(func):
@@ -18,11 +18,11 @@ def wled_exception_handler(func):
             self.coordinator.update_listeners()
 
         except WLEDConnectionError as error:
-            LOGGER.error("Error communicating with API: %s", error)
             self.coordinator.last_update_success = False
             self.coordinator.update_listeners()
+            raise HomeAssistantError("Error communicating with WLED API") from error
 
         except WLEDError as error:
-            LOGGER.error("Invalid response from API: %s", error)
+            raise HomeAssistantError("Invalid response from WLED API") from error
 
     return handler

@@ -121,13 +121,13 @@ def write_version(version):
 
 
 def write_version_metadata(version: Version) -> None:
-    """Update setup.cfg file with new version."""
-    with open("setup.cfg") as fp:
+    """Update pyproject.toml file with new version."""
+    with open("pyproject.toml", encoding="utf8") as fp:
         content = fp.read()
 
-    content = re.sub(r"(version\W+=\W).+\n", f"\\g<1>{version}\n", content, count=1)
+    content = re.sub(r"(version\W+=\W).+\n", f'\\g<1>"{version}"\n', content, count=1)
 
-    with open("setup.cfg", "w") as fp:
+    with open("pyproject.toml", "w", encoding="utf8") as fp:
         fp.write(content)
 
 

@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from motionblinds import DEVICE_TYPES_WIFI, AsyncMotionMulticast, ParseException
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -25,6 +25,8 @@ from .const import (
     KEY_COORDINATOR,
     KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
+    KEY_SETUP_LOCK,
+    KEY_UNSUB_STOP,
     KEY_VERSION,
     MANUFACTURER,
     PLATFORMS,
@@ -106,6 +108,7 @@ class DataUpdateCoordinatorMotionBlinds(DataUpdateCoordinator):
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the motion_blinds components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    setup_lock = hass.data[DOMAIN].setdefault(KEY_SETUP_LOCK, asyncio.Lock())
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
@@ -113,33 +116,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    # check multicast interface
-    check_multicast_class = ConnectMotionGateway(hass, interface=multicast_interface)
-    working_interface = await check_multicast_class.async_check_interface(host, key)
-    if working_interface != multicast_interface:
-        data = {**entry.data, CONF_INTERFACE: working_interface}
-        hass.config_entries.async_update_entry(entry, data=data)
-        _LOGGER.debug(
-            "Motion Blinds interface updated from %s to %s, "
-            "this should only occur after a network change",
-            multicast_interface,
-            working_interface,
-        )
-
     # Create multicast Listener
-    if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-        multicast = AsyncMotionMulticast(interface=working_interface)
-        hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
-        # start listening for local pushes (only once)
-        await multicast.Start_listen()
+    async with setup_lock:
+        if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
+            # check multicast interface
+            check_multicast_class = ConnectMotionGateway(
+                hass, interface=multicast_interface
+            )
+            working_interface = await check_multicast_class.async_check_interface(
+                host, key
+            )
+            if working_interface != multicast_interface:
+                data = {**entry.data, CONF_INTERFACE: working_interface}
+                hass.config_entries.async_update_entry(entry, data=data)
+                _LOGGER.debug(
+                    "Motion Blinds interface updated from %s to %s, "
+                    "this should only occur after a network change",
+                    multicast_interface,
+                    working_interface,
+                )
 
-        # register stop callback to shutdown listening for local pushes
-        def stop_motion_multicast(event):
-            """Stop multicast thread."""
-            _LOGGER.debug("Shutting down Motion Listener")
-            multicast.Stop_listen()
+            multicast = AsyncMotionMulticast(interface=working_interface)
+            hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
+            # start listening for local pushes (only once)
+            await multicast.Start_listen()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_motion_multicast)
+            # register stop callback to shutdown listening for local pushes
+            def stop_motion_multicast(event):
+                """Stop multicast thread."""
+                _LOGGER.debug("Shutting down Motion Listener")
+                multicast.Stop_listen()
+
+            unsub = hass.bus.async_listen_once(
+                EVENT_HOMEASSISTANT_STOP, stop_motion_multicast
+            )
+            hass.data[DOMAIN][KEY_UNSUB_STOP] = unsub
 
     # Connect to motion gateway
     multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
@@ -205,10 +216,19 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     )
 
     if unload_ok:
+        multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
+        multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
         hass.data[DOMAIN].pop(config_entry.entry_id)
 
-    if len(hass.data[DOMAIN]) == 1:
+    loaded_entries = [
+        entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.state == ConfigEntryState.LOADED
+    ]
+    if len(loaded_entries) == 1:
         # No motion gateways left, stop Motion multicast
+        unsub_stop = hass.data[DOMAIN].pop(KEY_UNSUB_STOP)
+        unsub_stop()
         _LOGGER.debug("Shutting down Motion Listener")
         multicast = hass.data[DOMAIN].pop(KEY_MULTICAST_LISTENER)
         multicast.Stop_listen()

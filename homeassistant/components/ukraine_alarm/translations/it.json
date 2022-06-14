@@ -8,34 +8,21 @@
             "timeout": "Tempo scaduto per stabile la connessione.",
             "unknown": "Errore imprevisto"
         },
-        "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "invalid_api_key": "Chiave API non valida",
-            "timeout": "Tempo scaduto per stabile la connessione.",
-            "unknown": "Errore imprevisto"
-        },
         "step": {
             "community": {
                 "data": {
-                    "region": "Regione"
+                    "region": "[%key:component::ukraine_alarm::config::step::state::data::region%]"
                 },
                 "description": "Se vuoi monitorare non solo stato e distretto, scegli la sua comunit\u00e0 specifica"
             },
             "district": {
                 "data": {
-                    "region": "Regione"
+                    "region": "[%key:component::ukraine_alarm::config::step::state::data::region%]"
                 },
                 "description": "Se vuoi monitorare non solo lo stato, scegli il suo distretto specifico"
             },
-            "state": {
-                "data": {
-                    "region": "Regione"
-                },
-                "description": "Scegli lo stato da monitorare"
-            },
             "user": {
                 "data": {
-                    "api_key": "Chiave API",
                     "region": "Regione"
                 },
                 "description": "Scegli lo stato da monitorare"

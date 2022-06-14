@@ -9,6 +9,7 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
+from homeassistant.config import async_log_exception
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -48,14 +49,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import (
-    DATA_MQTT,
-    PLATFORMS,
-    MqttValueTemplate,
-    async_publish,
-    debug_info,
-    subscription,
-)
+from . import debug_info, subscription
+from .client import async_publish
 from .const import (
     ATTR_DISCOVERY_HASH,
     ATTR_DISCOVERY_PAYLOAD,
@@ -64,6 +59,8 @@ from .const import (
     CONF_ENCODING,
     CONF_QOS,
     CONF_TOPIC,
+    DATA_MQTT,
+    DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
     DEFAULT_ENCODING,
     DEFAULT_PAYLOAD_AVAILABLE,
@@ -71,6 +68,7 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    PLATFORMS,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -80,7 +78,7 @@ from .discovery import (
     clear_discovery_hash,
     set_discovery_hash,
 )
-from .models import PublishPayloadType, ReceiveMessage
+from .models import MqttValueTemplate, PublishPayloadType, ReceiveMessage
 from .subscription import (
     async_prepare_subscribe_topics,
     async_subscribe_topics,
@@ -223,6 +221,31 @@ MQTT_ENTITY_COMMON_SCHEMA = MQTT_AVAILABILITY_SCHEMA.extend(
 )
 
 
+def warn_for_legacy_schema(domain: str) -> Callable:
+    """Warn once when a legacy platform schema is used."""
+    warned = set()
+
+    def validator(config: ConfigType) -> ConfigType:
+        """Return a validator."""
+        nonlocal warned
+
+        if domain in warned:
+            return config
+
+        _LOGGER.warning(
+            "Manually configured MQTT %s(s) found under platform key '%s', "
+            "please move to the mqtt integration key, see "
+            "https://www.home-assistant.io/integrations/%s.mqtt/#new_format",
+            domain,
+            domain,
+            domain,
+        )
+        warned.add(domain)
+        return config
+
+    return validator
+
+
 class SetupEntity(Protocol):
     """Protocol type for async_setup_entities."""
 
@@ -235,6 +258,31 @@ class SetupEntity(Protocol):
         discovery_data: dict[str, Any] | None = None,
     ) -> None:
         """Define setup_entities type."""
+
+
+async def async_get_platform_config_from_yaml(
+    hass: HomeAssistant, domain: str, schema: vol.Schema
+) -> list[ConfigType]:
+    """Return a list of validated configurations for the domain."""
+
+    def async_validate_config(
+        hass: HomeAssistant,
+        config: list[ConfigType],
+    ) -> list[ConfigType]:
+        """Validate config."""
+        validated_config = []
+        for config_item in config:
+            try:
+                validated_config.append(schema(config_item))
+            except vol.MultipleInvalid as err:
+                async_log_exception(err, domain, config_item, hass)
+
+        return validated_config
+
+    config_yaml: ConfigType = hass.data.get(DATA_MQTT_CONFIG, {})
+    if not (platform_configs := config_yaml.get(domain)):
+        return []
+    return async_validate_config(hass, platform_configs)
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):

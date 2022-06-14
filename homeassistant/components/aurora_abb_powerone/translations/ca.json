@@ -7,8 +7,7 @@
         "error": {
             "cannot_connect": "No s'ha pogut connectar, comprova el port s\u00e8rie, l'adre\u00e7a, la connexi\u00f3 el\u00e8ctrica i que l'inversor estigui enc\u00e8s",
             "cannot_open_serial_port": "No s'ha pogut obrir el port s\u00e8rie, comprova'l i torna-ho a provar",
-            "invalid_serial_port": "El port s\u00e8rie no t\u00e9 un dispositiu v\u00e0lid o no s'ha pogut obrir",
-            "unknown": "Error inesperat"
+            "invalid_serial_port": "El port s\u00e8rie no t\u00e9 un dispositiu v\u00e0lid o no s'ha pogut obrir"
         },
         "step": {
             "user": {

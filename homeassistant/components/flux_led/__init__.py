@@ -15,7 +15,10 @@ from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.event import (
     async_track_time_change,
     async_track_time_interval,
@@ -27,6 +30,7 @@ from .const import (
     DISCOVER_SCAN_TIMEOUT,
     DOMAIN,
     FLUX_LED_DISCOVERY,
+    FLUX_LED_DISCOVERY_SIGNAL,
     FLUX_LED_EXCEPTIONS,
     SIGNAL_STATE_UPDATED,
     STARTUP_SCAN_TIMEOUT,
@@ -196,6 +200,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # to avoid a race condition where the add_update_listener is not
     # in place in time for the check in async_update_entry_from_discovery
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
+    async def _async_handle_discovered_device() -> None:
+        """Handle device discovery."""
+        # Force a refresh if the device is now available
+        if not coordinator.last_update_success:
+            coordinator.force_next_update = True
+            await coordinator.async_refresh()
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            FLUX_LED_DISCOVERY_SIGNAL.format(entry_id=entry.entry_id),
+            _async_handle_discovered_device,
+        )
+    )
     return True
 
 

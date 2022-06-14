@@ -561,9 +561,10 @@ async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
     )
 
     entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    # Do not forward the entry setup to the components here
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     mqtt_component_mock = MagicMock(
         return_value=hass.data["mqtt"],

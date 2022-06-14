@@ -6,7 +6,7 @@ from typing import Any
 
 from aiohttp import CookieJar
 from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
-from pyunifiprotect.data.nvr import NVR
+from pyunifiprotect.data import NVR
 import voluptuous as vol
 
 from homeassistant import config_entries

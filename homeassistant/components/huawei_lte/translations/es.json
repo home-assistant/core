@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Este dispositivo ya ha sido configurado",
-            "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "not_huawei_lte": "No es un dispositivo Huawei LTE"
         },
         "error": {
@@ -34,7 +32,6 @@
                 "data": {
                     "name": "Nombre del servicio de notificaci\u00f3n (el cambio requiere reiniciar)",
                     "recipient": "Destinatarios de notificaciones por SMS",
-                    "track_new_devices": "Rastrea nuevos dispositivos",
                     "track_wired_clients": "Seguir clientes de red cableados",
                     "unauthenticated_mode": "Modo no autenticado (el cambio requiere recarga)"
                 }

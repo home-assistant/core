@@ -32,7 +32,8 @@
             "init": {
                 "data": {
                     "scan_interval": "Interval d'actualitzaci\u00f3",
-                    "show_on_map": "Mostra les estacions al mapa"
+                    "show_on_map": "Mostra les estacions al mapa",
+                    "stations": "Estacions"
                 },
                 "title": "Opcions de Tankerkoenig"
             }

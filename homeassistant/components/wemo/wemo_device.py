@@ -3,7 +3,7 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from pywemo import Insight, WeMoDevice
+from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
@@ -159,7 +159,7 @@ async def async_register_device(
     registry.on(wemo, None, device.subscription_callback)
     await hass.async_add_executor_job(registry.register, wemo)
 
-    if device.supports_long_press:
+    if isinstance(wemo, LongPressMixin):
         try:
             await hass.async_add_executor_job(wemo.ensure_long_press_virtual_device)
         # Temporarily handling all exceptions for #52996 & pywemo/pywemo/issues/276

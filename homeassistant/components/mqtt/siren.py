@@ -1,6 +1,7 @@
 """Support for MQTT sirens."""
 from __future__ import annotations
 
+import asyncio
 import copy
 import functools
 import json
@@ -34,8 +35,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -51,9 +52,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_get_platform_config_from_yaml,
     async_setup_entry_helper,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -71,7 +75,7 @@ CONF_SUPPORT_VOLUME_SET = "support_volume_set"
 
 STATE = "state"
 
-PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_AVAILABLE_TONES): cv.ensure_list,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
@@ -88,7 +92,13 @@ PLATFORM_SCHEMA = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA.extend({}, extra=vol.REMOVE_EXTRA))
+# Configuring MQTT Sirens under the siren platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(siren.DOMAIN),
+)
+
+DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
 MQTT_SIREN_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -116,7 +126,8 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT siren through configuration.yaml."""
+    """Set up MQTT sirens configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
         hass, siren.DOMAIN, config, async_add_entities, _async_setup_entity
     )
@@ -127,7 +138,17 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT siren dynamically through MQTT discovery."""
+    """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, siren.DOMAIN, PLATFORM_SCHEMA_MODERN
+            )
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )

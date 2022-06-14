@@ -3,9 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "after": "Acceso dopo",
                     "after_time": "Ora di accensione",
-                    "before": "Spento dopo",
                     "before_time": "Ora di spegnimento",
                     "name": "Nome"
                 },
@@ -18,12 +16,9 @@
         "step": {
             "init": {
                 "data": {
-                    "after": "Acceso dopo",
                     "after_time": "Ora di accensione",
-                    "before": "Spento dopo",
                     "before_time": "Ora di spegnimento"
-                },
-                "description": "Crea un sensore binario che si accende o si spegne a seconda dell'ora."
+                }
             }
         }
     },

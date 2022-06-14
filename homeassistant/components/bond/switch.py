@@ -4,7 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_api import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, BPUPSubscriptions, DeviceType
 import voluptuous as vol
 
 from homeassistant.components.switch import SwitchEntity

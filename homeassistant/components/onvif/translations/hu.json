@@ -11,13 +11,6 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s"
         },
         "step": {
-            "auth": {
-                "data": {
-                    "password": "Jelsz\u00f3",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
-                },
-                "title": "Hiteles\u00edt\u00e9s konfigur\u00e1l\u00e1sa"
-            },
             "configure": {
                 "data": {
                     "host": "C\u00edm",
@@ -40,14 +33,6 @@
                     "host": "V\u00e1lassza ki a felfedezett ONVIF eszk\u00f6zt"
                 },
                 "title": "ONVIF eszk\u00f6z kiv\u00e1laszt\u00e1sa"
-            },
-            "manual_input": {
-                "data": {
-                    "host": "C\u00edm",
-                    "name": "Elnevez\u00e9s",
-                    "port": "Port"
-                },
-                "title": "ONVIF eszk\u00f6z konfigur\u00e1l\u00e1sa"
             },
             "user": {
                 "data": {

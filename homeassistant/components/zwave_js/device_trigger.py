@@ -254,7 +254,7 @@ async def async_get_triggers(
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
-    triggers = []
+    triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
@@ -534,7 +534,9 @@ async def async_get_trigger_capabilities(
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
                             CommandClass(cc.id).value: cc.name
-                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            for cc in sorted(
+                                node.command_classes, key=lambda cc: cc.name
+                            )
                             if cc.id != CommandClass.CONFIGURATION
                         }
                     ),

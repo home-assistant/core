@@ -30,15 +30,10 @@ async def async_setup_entry(
         scene = gateway.api.scenes[scene_id]
         async_add_entities([DeconzScene(scene, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.scenes.subscribe(
-            async_add_scene,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_scene,
+        gateway.api.scenes,
     )
-
-    for scene_id in gateway.api.scenes:
-        async_add_scene(EventType.ADDED, scene_id)
 
 
 class DeconzScene(DeconzSceneMixin, Scene):

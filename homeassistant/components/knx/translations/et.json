@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Host",
-                    "individual_address": "\u00dchenduse individuaalne aadress",
                     "local_ip": "Home Assistanti kohalik IP aadress",
                     "port": "Port",
-                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim",
                     "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
                 },
                 "data_description": {
@@ -110,9 +108,7 @@
             "tunnel": {
                 "data": {
                     "host": "Host",
-                    "local_ip": "Kohalik IP (j\u00e4ta t\u00fchjaks, kui ei ole kindel)",
                     "port": "Port",
-                    "route_back": "Marsruudi tagasitee / NAT-re\u017eiim",
                     "tunneling_type": "KNX tunneli t\u00fc\u00fcp"
                 },
                 "data_description": {

@@ -3,6 +3,7 @@
 DOMAIN = "nest"
 DATA_SDM = "sdm"
 DATA_SUBSCRIBER = "subscriber"
+DATA_DEVICE_MANAGER = "device_manager"
 DATA_NEST_CONFIG = "nest_config"
 
 WEB_AUTH_DOMAIN = DOMAIN

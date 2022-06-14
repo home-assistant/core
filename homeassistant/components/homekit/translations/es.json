@@ -26,7 +26,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Arranque autom\u00e1tico (desactivado si se utiliza Z-Wave u otro sistema de arranque retardado)",
                     "devices": "Dispositivos (disparadores)"
                 },
                 "description": "Esta configuraci\u00f3n solo necesita ser ajustada si el puente HomeKit no es funcional.",

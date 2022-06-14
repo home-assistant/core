@@ -1535,6 +1535,11 @@ def as_datetime(value):
         return dt_util.parse_datetime(value)
 
 
+def as_timedelta(value: str) -> timedelta | None:
+    """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
+    return dt_util.parse_duration(value)
+
+
 def strptime(string, fmt, default=_SENTINEL):
     """Parse a time string to datetime."""
     try:
@@ -1902,6 +1907,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["atan2"] = arc_tangent2
         self.filters["sqrt"] = square_root
         self.filters["as_datetime"] = as_datetime
+        self.filters["as_timedelta"] = as_timedelta
         self.filters["as_timestamp"] = forgiving_as_timestamp
         self.filters["today_at"] = today_at
         self.filters["as_local"] = dt_util.as_local
@@ -1947,6 +1953,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["float"] = forgiving_float
         self.globals["as_datetime"] = as_datetime
         self.globals["as_local"] = dt_util.as_local
+        self.globals["as_timedelta"] = as_timedelta
         self.globals["as_timestamp"] = forgiving_as_timestamp
         self.globals["today_at"] = today_at
         self.globals["relative_time"] = relative_time

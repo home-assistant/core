@@ -9,7 +9,6 @@
                     "entity_id": "Sensor de entrada",
                     "hysteresis": "Histerese",
                     "lower": "Limite inferior",
-                    "mode": "Modo Threshold",
                     "name": "Nome",
                     "upper": "Limite superior"
                 },
@@ -28,7 +27,6 @@
                     "entity_id": "Sensor de entrada",
                     "hysteresis": "Histerese",
                     "lower": "Limite inferior",
-                    "mode": "Modo Threshold",
                     "name": "Nome",
                     "upper": "Limite superior"
                 },

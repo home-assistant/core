@@ -101,6 +101,8 @@ class ConnectMotionGateway:
                 await check_multicast.Start_listen()
             except socket.gaierror:
                 continue
+            except OSError:
+                continue
 
             # trigger test multicast
             self._gateway_device = MotionGateway(

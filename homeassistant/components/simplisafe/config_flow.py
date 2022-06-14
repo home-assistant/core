@@ -20,7 +20,7 @@ from homeassistant.helpers import aiohttp_client, config_validation as cv
 from .const import DOMAIN, LOGGER
 
 DEFAULT_EMAIL_2FA_SLEEP = 3
-DEFAULT_EMAIL_2FA_TIMEOUT = 300
+DEFAULT_EMAIL_2FA_TIMEOUT = 600
 
 STEP_REAUTH_SCHEMA = vol.Schema(
     {

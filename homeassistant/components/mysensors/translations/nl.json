@@ -75,6 +75,5 @@
                 "description": "Kies de verbindingsmethode met de gateway"
             }
         }
-    },
-    "title": "MySensors"
+    }
 }

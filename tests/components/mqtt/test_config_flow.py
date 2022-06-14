@@ -235,7 +235,8 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
                 "port": 1883,
                 "username": "mock-user",
                 "password": "mock-pass",
-                "protocol": "3.1.1",
+                "protocol": "3.1.1",  # Set by the addon's discovery, ignored by HA
+                "ssl": False,  # Set by the addon's discovery, ignored by HA
             }
         ),
         context={"source": config_entries.SOURCE_HASSIO},
@@ -255,7 +256,6 @@ async def test_hassio_confirm(hass, mock_try_connection_success, mock_finish_set
         "port": 1883,
         "username": "mock-user",
         "password": "mock-pass",
-        "protocol": "3.1.1",
         "discovery": True,
     }
     # Check we tried the connection

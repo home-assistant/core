@@ -341,6 +341,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_innr = False
             self.is_ewelink = False
             self.is_livarno = False
+            self.is_s31litezb = False
             self.gamut_typ = GAMUT_TYPE_UNAVAILABLE
             self.gamut = None
         else:
@@ -349,6 +350,7 @@ class HueLight(CoordinatorEntity, LightEntity):
             self.is_innr = light.manufacturername == "innr"
             self.is_ewelink = light.manufacturername == "eWeLink"
             self.is_livarno = light.manufacturername.startswith("_TZ3000_")
+            self.is_s31litezb = light.modelid == "S31 Lite zb"
             self.gamut_typ = self.light.colorgamuttype
             self.gamut = self.light.colorgamut
             LOGGER.debug("Color gamut of %s: %s", self.name, str(self.gamut))
@@ -554,7 +556,12 @@ class HueLight(CoordinatorEntity, LightEntity):
         elif flash == FLASH_SHORT:
             command["alert"] = "select"
             del command["on"]
-        elif not self.is_innr and not self.is_ewelink and not self.is_livarno:
+        elif (
+            not self.is_innr
+            and not self.is_ewelink
+            and not self.is_livarno
+            and not self.is_s31litezb
+        ):
             command["alert"] = "none"
 
         if ATTR_EFFECT in kwargs:

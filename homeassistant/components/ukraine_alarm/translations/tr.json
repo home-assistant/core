@@ -8,12 +8,6 @@
             "timeout": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131",
             "unknown": "Beklenmeyen hata"
         },
-        "error": {
-            "cannot_connect": "Ba\u011flanma hatas\u0131",
-            "invalid_api_key": "Ge\u00e7ersiz API anahtar\u0131",
-            "timeout": "Ba\u011flant\u0131 kurulurken zaman a\u015f\u0131m\u0131",
-            "unknown": "Beklenmeyen hata"
-        },
         "step": {
             "community": {
                 "data": {
@@ -27,15 +21,8 @@
                 },
                 "description": "Sadece eyaleti izlemek istemiyorsan\u0131z, belirli bir b\u00f6lgeyi se\u00e7in"
             },
-            "state": {
-                "data": {
-                    "region": "B\u00f6lge"
-                },
-                "description": "\u0130zlenecek durumu se\u00e7in"
-            },
             "user": {
                 "data": {
-                    "api_key": "API Anahtar\u0131",
                     "region": "B\u00f6lge"
                 },
                 "description": "\u0130zlenecek durumu se\u00e7in"

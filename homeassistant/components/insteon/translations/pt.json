@@ -35,8 +35,7 @@
                 "data": {
                     "modem_type": "Tipo de modem."
                 },
-                "description": "Selecione o tipo de modem Insteon.",
-                "title": "Insteon"
+                "description": "Selecione o tipo de modem Insteon."
             }
         }
     },
@@ -62,8 +61,7 @@
             "init": {
                 "data": {
                     "remove_x10": "Remova um dispositivo X10."
-                },
-                "description": "Selecione uma op\u00e7\u00e3o para configurar."
+                }
             }
         }
     }

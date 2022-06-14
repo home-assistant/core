@@ -1,11 +1,4 @@
 {
-    "config": {
-        "step": {
-            "init": {
-                "description": "Seleccione el interruptor de la l\u00e1mpara."
-            }
-        }
-    },
     "device_automation": {
         "action_type": {
             "toggle": "Alternar {entity_name}",
@@ -18,7 +11,6 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} activado o desactivado",
-            "toggled": "{entity_name} activado o desactivado",
             "turned_off": "{entity_name} apagado",
             "turned_on": "{entity_name} encendido"
         }

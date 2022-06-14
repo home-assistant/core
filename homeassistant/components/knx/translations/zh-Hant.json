@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
-                    "individual_address": "\u9023\u7dda\u500b\u5225\u4f4d\u5740",
                     "local_ip": "Home Assistant \u672c\u5730\u7aef IP",
                     "port": "\u901a\u8a0a\u57e0",
-                    "route_back": "\u8def\u7531\u8fd4\u56de / NAT \u6a21\u5f0f",
                     "tunneling_type": "KNX \u901a\u9053\u985e\u5225"
                 },
                 "data_description": {
@@ -110,9 +108,7 @@
             "tunnel": {
                 "data": {
                     "host": "\u4e3b\u6a5f\u7aef",
-                    "local_ip": "\u672c\u5730\u7aef IP\uff08\u5047\u5982\u4e0d\u78ba\u5b9a\uff0c\u4fdd\u7559\u7a7a\u767d\uff09",
                     "port": "\u901a\u8a0a\u57e0",
-                    "route_back": "\u8def\u7531\u8fd4\u56de / NAT \u6a21\u5f0f",
                     "tunneling_type": "KNX \u901a\u9053\u985e\u5225"
                 },
                 "data_description": {

@@ -1,14 +1,16 @@
 """Models for SQLAlchemy."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import datetime, timedelta
-import json
 import logging
 from typing import Any, TypedDict, cast, overload
 
 import ciso8601
 from fnvhash import fnv1a_32
+import orjson
 from sqlalchemy import (
+    JSON,
     BigInteger,
     Boolean,
     Column,
@@ -22,11 +24,12 @@ from sqlalchemy import (
     String,
     Text,
     distinct,
+    type_coerce,
 )
 from sqlalchemy.dialects import mysql, oracle, postgresql, sqlite
 from sqlalchemy.engine.row import Row
 from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import declarative_base, relationship
+from sqlalchemy.orm import aliased, declarative_base, relationship
 from sqlalchemy.orm.session import Session
 
 from homeassistant.components.websocket_api.const import (
@@ -43,15 +46,16 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
+from homeassistant.helpers.json import JSON_DUMP, json_bytes
 import homeassistant.util.dt as dt_util
 
-from .const import ALL_DOMAIN_EXCLUDE_ATTRS, JSON_DUMP
+from .const import ALL_DOMAIN_EXCLUDE_ATTRS
 
 # SQLAlchemy Schema
 # pylint: disable=invalid-name
 Base = declarative_base()
 
-SCHEMA_VERSION = 28
+SCHEMA_VERSION = 29
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,6 +109,9 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):  # type: ignore[misc]
 JSON_VARIENT_CAST = Text().with_variant(
     postgresql.JSON(none_as_null=True), "postgresql"
 )
+JSONB_VARIENT_CAST = Text().with_variant(
+    postgresql.JSONB(none_as_null=True), "postgresql"
+)
 DATETIME_TYPE = (
     DateTime(timezone=True)
     .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql")
@@ -116,8 +123,27 @@ DOUBLE_TYPE = (
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
+
+
+class JSONLiteral(JSON):  # type: ignore[misc]
+    """Teach SA how to literalize json."""
+
+    def literal_processor(self, dialect: str) -> Callable[[Any], str]:
+        """Processor to convert a value to JSON."""
+
+        def process(value: Any) -> str:
+            """Dump json."""
+            return JSON_DUMP(value)
+
+        return process
+
+
 EVENT_ORIGIN_ORDER = [EventOrigin.local, EventOrigin.remote]
 EVENT_ORIGIN_TO_IDX = {origin: idx for idx, origin in enumerate(EVENT_ORIGIN_ORDER)}
+
+
+class UnsupportedDialect(Exception):
+    """The dialect or its version is not supported."""
 
 
 class Events(Base):  # type: ignore[misc,valid-type]
@@ -174,7 +200,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                json.loads(self.event_data) if self.event_data else {},
+                orjson.loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
@@ -182,7 +208,7 @@ class Events(Base):  # type: ignore[misc,valid-type]
                 context=context,
             )
         except ValueError:
-            # When json.loads fails
+            # When orjson.loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
 
@@ -210,25 +236,26 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     @staticmethod
     def from_event(event: Event) -> EventData:
         """Create object from an event."""
-        shared_data = JSON_DUMP(event.data)
+        shared_data = json_bytes(event.data)
         return EventData(
-            shared_data=shared_data, hash=EventData.hash_shared_data(shared_data)
+            shared_data=shared_data.decode("utf-8"),
+            hash=EventData.hash_shared_data_bytes(shared_data),
         )
 
     @staticmethod
-    def shared_data_from_event(event: Event) -> str:
-        """Create shared_attrs from an event."""
-        return JSON_DUMP(event.data)
+    def shared_data_bytes_from_event(event: Event) -> bytes:
+        """Create shared_data from an event."""
+        return json_bytes(event.data)
 
     @staticmethod
-    def hash_shared_data(shared_data: str) -> int:
+    def hash_shared_data_bytes(shared_data_bytes: bytes) -> int:
         """Return the hash of json encoded shared data."""
-        return cast(int, fnv1a_32(shared_data.encode("utf-8")))
+        return cast(int, fnv1a_32(shared_data_bytes))
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], json.loads(self.shared_data))
+            return cast(dict[str, Any], orjson.loads(self.shared_data))
         except ValueError:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
@@ -315,9 +342,9 @@ class States(Base):  # type: ignore[misc,valid-type]
             parent_id=self.context_parent_id,
         )
         try:
-            attrs = json.loads(self.attributes) if self.attributes else {}
+            attrs = orjson.loads(self.attributes) if self.attributes else {}
         except ValueError:
-            # When json.loads fails
+            # When orjson.loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
         if self.last_changed is None or self.last_changed == self.last_updated:
@@ -363,40 +390,39 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
         """Create object from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
-        dbstate = StateAttributes(
-            shared_attrs="{}" if state is None else JSON_DUMP(state.attributes)
-        )
-        dbstate.hash = StateAttributes.hash_shared_attrs(dbstate.shared_attrs)
+        attr_bytes = b"{}" if state is None else json_bytes(state.attributes)
+        dbstate = StateAttributes(shared_attrs=attr_bytes.decode("utf-8"))
+        dbstate.hash = StateAttributes.hash_shared_attrs_bytes(attr_bytes)
         return dbstate
 
     @staticmethod
-    def shared_attrs_from_event(
+    def shared_attrs_bytes_from_event(
         event: Event, exclude_attrs_by_domain: dict[str, set[str]]
-    ) -> str:
+    ) -> bytes:
         """Create shared_attrs from a state_changed event."""
         state: State | None = event.data.get("new_state")
         # None state means the state was removed from the state machine
         if state is None:
-            return "{}"
+            return b"{}"
         domain = split_entity_id(state.entity_id)[0]
         exclude_attrs = (
             exclude_attrs_by_domain.get(domain, set()) | ALL_DOMAIN_EXCLUDE_ATTRS
         )
-        return JSON_DUMP(
+        return json_bytes(
             {k: v for k, v in state.attributes.items() if k not in exclude_attrs}
         )
 
     @staticmethod
-    def hash_shared_attrs(shared_attrs: str) -> int:
-        """Return the hash of json encoded shared attributes."""
-        return cast(int, fnv1a_32(shared_attrs.encode("utf-8")))
+    def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
+        """Return the hash of orjson encoded shared attributes."""
+        return cast(int, fnv1a_32(shared_attrs_bytes))
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], json.loads(self.shared_attrs))
+            return cast(dict[str, Any], orjson.loads(self.shared_attrs))
         except ValueError:
-            # When json.loads fails
+            # When orjson.loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
             return {}
 
@@ -508,7 +534,7 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     )
     __tablename__ = TABLE_STATISTICS_META
     id = Column(Integer, Identity(), primary_key=True)
-    statistic_id = Column(String(255), index=True)
+    statistic_id = Column(String(255), index=True, unique=True)
     source = Column(String(32))
     unit_of_measurement = Column(String(255))
     has_mean = Column(Boolean)
@@ -603,6 +629,26 @@ class StatisticsRuns(Base):  # type: ignore[misc,valid-type]
             f"id={self.run_id}, start='{self.start.isoformat(sep=' ', timespec='seconds')}', "
             f")>"
         )
+
+
+EVENT_DATA_JSON = type_coerce(
+    EventData.shared_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+)
+OLD_FORMAT_EVENT_DATA_JSON = type_coerce(
+    Events.event_data.cast(JSONB_VARIENT_CAST), JSONLiteral(none_as_null=True)
+)
+
+SHARED_ATTRS_JSON = type_coerce(
+    StateAttributes.shared_attrs.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+OLD_FORMAT_ATTRS_JSON = type_coerce(
+    States.attributes.cast(JSON_VARIENT_CAST), JSON(none_as_null=True)
+)
+
+ENTITY_ID_IN_EVENT: Column = EVENT_DATA_JSON["entity_id"]
+OLD_ENTITY_ID_IN_EVENT: Column = OLD_FORMAT_EVENT_DATA_JSON["entity_id"]
+DEVICE_ID_IN_EVENT: Column = EVENT_DATA_JSON["device_id"]
+OLD_STATE = aliased(States, name="old_state")
 
 
 @overload
@@ -701,7 +747,7 @@ class LazyState(State):
     def context(self) -> Context:  # type: ignore[override]
         """State context."""
         if self._context is None:
-            self._context = Context(id=None)  # type: ignore[arg-type]
+            self._context = Context(id=None)
         return self._context
 
     @context.setter
@@ -790,7 +836,7 @@ def decode_attributes_from_row(
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     try:
-        attr_cache[source] = attributes = json.loads(source)
+        attr_cache[source] = attributes = orjson.loads(source)
     except ValueError:
         _LOGGER.exception("Error converting row to state attributes: %s", source)
         attr_cache[source] = attributes = {}

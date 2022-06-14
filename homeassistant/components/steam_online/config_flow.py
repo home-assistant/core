@@ -23,11 +23,16 @@ from .const import (
 )
 
 
-def validate_input(user_input: dict[str, str | int]) -> list[dict[str, str | int]]:
+def validate_input(
+    user_input: dict[str, str | int], multi: bool = False
+) -> list[dict[str, str | int]]:
     """Handle common flow input validation."""
     steam.api.key.set(user_input[CONF_API_KEY])
     interface = steam.api.interface("ISteamUser")
-    names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
+    if multi:
+        names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNTS])
+    else:
+        names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
     return names["response"]["players"]["player"]
 
 
@@ -75,6 +80,9 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
                 if self.source == config_entries.SOURCE_IMPORT:
+                    res = await self.hass.async_add_executor_job(
+                        validate_input, user_input, True
+                    )
                     accounts_data = {
                         CONF_ACCOUNTS: {
                             acc["steamid"]: acc["personaname"] for acc in res
@@ -166,11 +174,14 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
             }
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
+        error = None
         try:
             users = {
                 name["steamid"]: name["personaname"]
                 for name in await self.hass.async_add_executor_job(self.get_accounts)
             }
+            if not users:
+                error = {"base": "unauthorized"}
 
         except steam.api.HTTPTimeoutError:
             users = self.options[CONF_ACCOUNTS]
@@ -183,12 +194,17 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         }
         self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(options), errors=error
+        )
 
     def get_accounts(self) -> list[dict[str, str | int]]:
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
-        friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
-        _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        try:
+            friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
+            _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        except steam.api.HTTPError:
+            return []
         names = interface.GetPlayerSummaries(steamids=_users_str)
         return names["response"]["players"]["player"]

@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",
-                    "individual_address": "\u63a5\u7d9a\u7528\u306e\u500b\u5225\u30a2\u30c9\u30ec\u30b9",
                     "local_ip": "\u30ed\u30fc\u30ab\u30ebIP(\u4e0d\u660e\u306a\u5834\u5408\u306f\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u3066\u304f\u3060\u3055\u3044)",
                     "port": "\u30dd\u30fc\u30c8",
-                    "route_back": "\u30eb\u30fc\u30c8\u30d0\u30c3\u30af / NAT\u30e2\u30fc\u30c9",
                     "tunneling_type": "KNX\u30c8\u30f3\u30cd\u30ea\u30f3\u30b0\u30bf\u30a4\u30d7"
                 },
                 "data_description": {
@@ -110,9 +108,7 @@
             "tunnel": {
                 "data": {
                     "host": "\u30db\u30b9\u30c8",
-                    "local_ip": "\u30ed\u30fc\u30ab\u30ebIP(\u4e0d\u660e\u306a\u5834\u5408\u306f\u7a7a\u767d\u306e\u307e\u307e\u306b\u3057\u3066\u304f\u3060\u3055\u3044)",
                     "port": "\u30dd\u30fc\u30c8",
-                    "route_back": "\u30eb\u30fc\u30c8\u30d0\u30c3\u30af / NAT\u30e2\u30fc\u30c9",
                     "tunneling_type": "KNX\u30c8\u30f3\u30cd\u30ea\u30f3\u30b0\u30bf\u30a4\u30d7"
                 },
                 "data_description": {

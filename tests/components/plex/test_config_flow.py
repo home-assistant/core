@@ -193,6 +193,8 @@ async def test_single_available_server(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
+    await hass.config_entries.async_unload(result["result"].entry_id)
+
 
 async def test_multiple_servers_with_selection(
     hass,
@@ -249,6 +251,8 @@ async def test_multiple_servers_with_selection(
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
 
+    await hass.config_entries.async_unload(result["result"].entry_id)
+
 
 async def test_adding_last_unconfigured_server(
     hass,
@@ -304,6 +308,8 @@ async def test_adding_last_unconfigured_server(
             result["data"][PLEX_SERVER_CONFIG][CONF_URL] == mock_plex_server.url_in_use
         )
         assert result["data"][PLEX_SERVER_CONFIG][CONF_TOKEN] == MOCK_TOKEN
+
+    await hass.config_entries.async_unload(result["result"].entry_id)
 
 
 async def test_all_available_servers_configured(

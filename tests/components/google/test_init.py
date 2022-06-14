@@ -6,7 +6,7 @@ import datetime
 import http
 import time
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -19,6 +19,7 @@ from homeassistant.components.google import (
     SERVICE_ADD_EVENT,
     SERVICE_SCAN_CALENDARS,
 )
+from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
@@ -46,7 +47,7 @@ HassApi = Callable[[], Awaitable[dict[str, Any]]]
 
 def assert_state(actual: State | None, expected: State | None) -> None:
     """Assert that the two states are equal."""
-    if actual is None:
+    if actual is None or expected is None:
         assert actual == expected
         return
     assert actual.entity_id == expected.entity_id
@@ -95,6 +96,24 @@ async def test_existing_token_missing_scope(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize("config_entry_options", [{CONF_CALENDAR_ACCESS: "read_only"}])
+async def test_config_entry_scope_reauth(
+    hass: HomeAssistant,
+    token_scopes: list[str],
+    component_setup: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test setup where the config entry options requires reauth to match the scope."""
+    config_entry.add_to_hass(hass)
+    assert await component_setup()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -153,57 +172,6 @@ async def test_calendar_yaml_error(
     assert hass.states.get(TEST_API_ENTITY)
 
 
-@pytest.mark.parametrize(
-    "google_config_track_new,calendars_config,expected_state",
-    [
-        (
-            None,
-            [],
-            State(
-                TEST_API_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_API_ENTITY_NAME,
-                },
-            ),
-        ),
-        (
-            True,
-            [],
-            State(
-                TEST_API_ENTITY,
-                STATE_OFF,
-                attributes={
-                    "offset_reached": False,
-                    "friendly_name": TEST_API_ENTITY_NAME,
-                },
-            ),
-        ),
-        (False, [], None),
-    ],
-    ids=["default", "True", "False"],
-)
-async def test_track_new(
-    hass: HomeAssistant,
-    component_setup: ComponentSetup,
-    mock_calendars_list: ApiResult,
-    test_api_calendar: dict[str, Any],
-    mock_events_list: ApiResult,
-    mock_calendars_yaml: None,
-    expected_state: State,
-    setup_config_entry: MockConfigEntry,
-) -> None:
-    """Test behavior of configuration.yaml settings for tracking new calendars not in the config."""
-
-    mock_calendars_list({"items": [test_api_calendar]})
-    mock_events_list({})
-    assert await component_setup()
-
-    state = hass.states.get(TEST_API_ENTITY)
-    assert_state(state, expected_state)
-
-
 @pytest.mark.parametrize("calendars_config", [[]])
 async def test_found_calendar_from_api(
     hass: HomeAssistant,
@@ -229,7 +197,10 @@ async def test_found_calendar_from_api(
     assert not hass.states.get(TEST_YAML_ENTITY)
 
 
-@pytest.mark.parametrize("calendars_config,google_config", [([], {})])
+@pytest.mark.parametrize(
+    "calendars_config,google_config,config_entry_options",
+    [([], {}, {CONF_CALENDAR_ACCESS: "read_write"})],
+)
 async def test_load_application_credentials(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
@@ -259,7 +230,7 @@ async def test_load_application_credentials(
 
 
 @pytest.mark.parametrize(
-    "calendars_config_track,expected_state",
+    "calendars_config_track,expected_state,google_config_track_new",
     [
         (
             True,
@@ -271,8 +242,35 @@ async def test_load_application_credentials(
                     "friendly_name": TEST_YAML_ENTITY_NAME,
                 },
             ),
+            None,
         ),
-        (False, None),
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+            True,
+        ),
+        (
+            True,
+            State(
+                TEST_YAML_ENTITY,
+                STATE_OFF,
+                attributes={
+                    "offset_reached": False,
+                    "friendly_name": TEST_YAML_ENTITY_NAME,
+                },
+            ),
+            False,  # Has no effect
+        ),
+        (False, None, None),
+        (False, None, True),
+        (False, None, False),
     ],
 )
 async def test_calendar_config_track_new(
@@ -604,3 +602,94 @@ async def test_expired_token_requires_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+@pytest.mark.parametrize(
+    "calendars_config,expect_write_calls",
+    [
+        (
+            [
+                {
+                    "cal_id": "ignored",
+                    "entities": {"device_id": "existing", "name": "existing"},
+                }
+            ],
+            True,
+        ),
+        ([], False),
+    ],
+    ids=["has_yaml", "no_yaml"],
+)
+async def test_calendar_yaml_update(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_yaml: Mock,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    setup_config_entry: MockConfigEntry,
+    calendars_config: dict[str, Any],
+    expect_write_calls: bool,
+) -> None:
+    """Test updating the yaml file with a new calendar."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    mock_calendars_yaml().read.assert_called()
+    mock_calendars_yaml().write.called is expect_write_calls
+
+    state = hass.states.get(TEST_API_ENTITY)
+    assert state
+    assert state.name == TEST_API_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # No yaml config loaded that overwrites the entity name
+    assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+async def test_update_will_reload(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    setup_config_entry: Any,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test updating config entry options will trigger a reload."""
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    await component_setup()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.options == {}  # read_write is default
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_reload",
+        return_value=None,
+    ) as mock_reload:
+        # No-op does not reload
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_CALENDAR_ACCESS: "read_write"}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # Data change does not trigger reload
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                "example": "field",
+            },
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        # Reload when options changed
+        hass.config_entries.async_update_entry(
+            config_entry, options={CONF_CALENDAR_ACCESS: "read_only"}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()

@@ -2,13 +2,6 @@
     "config": {
         "abort": {
             "cannot_connect": "Nepodarilo sa pripoji\u0165"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "name": "N\u00e1zov"
-                }
-            }
         }
     }
 }

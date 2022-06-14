@@ -7,14 +7,12 @@
         "error": {
             "cannot_connect": "No se pudo conectar",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
-            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Actualice UniFi Protect y vuelva a intentarlo.",
-            "unknown": "Error inesperado"
+            "protect_version": "La versi\u00f3n m\u00ednima requerida es v1.20.0. Actualice UniFi Protect y vuelva a intentarlo."
         },
         "step": {
             "discovery_confirm": {
                 "data": {
-                    "username": "Usuario",
-                    "verify_ssl": "Verifica el certificado SSL"
+                    "username": "Usuario"
                 }
             },
             "reauth_confirm": {

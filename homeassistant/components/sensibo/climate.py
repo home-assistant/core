@@ -1,6 +1,8 @@
 """Support for Sensibo wifi-enabled home thermostats."""
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Any
+
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
@@ -24,6 +26,7 @@ from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
+PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
     "fanLevel": ClimateEntityFeature.FAN_MODE,
@@ -107,70 +110,87 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation."""
-        if self.device_data.device_on:
+        if self.device_data.device_on and self.device_data.hvac_mode:
             return SENSIBO_TO_HA[self.device_data.hvac_mode]
         return HVACMode.OFF
 
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
-        return [SENSIBO_TO_HA[mode] for mode in self.device_data.hvac_modes]
+        hvac_modes = []
+        if TYPE_CHECKING:
+            assert self.device_data.hvac_modes
+        for mode in self.device_data.hvac_modes:
+            hvac_modes.append(SENSIBO_TO_HA[mode])
+        return hvac_modes if hvac_modes else [HVACMode.OFF]
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return convert_temperature(
-            self.device_data.temp,
-            TEMP_CELSIUS,
-            self.temperature_unit,
-        )
+        if self.device_data.temp:
+            return convert_temperature(
+                self.device_data.temp,
+                TEMP_CELSIUS,
+                self.temperature_unit,
+            )
+        return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.device_data.target_temp
+        target_temp: int | None = self.device_data.target_temp
+        return target_temp
 
     @property
     def target_temperature_step(self) -> float | None:
         """Return the supported step of target temperature."""
-        return self.device_data.temp_step
+        target_temp_step: int = self.device_data.temp_step
+        return target_temp_step
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
-        return self.device_data.fan_mode
+        fan_mode: str | None = self.device_data.fan_mode
+        return fan_mode
 
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
-        return self.device_data.fan_modes
+        if self.device_data.fan_modes:
+            return self.device_data.fan_modes
+        return None
 
     @property
     def swing_mode(self) -> str | None:
         """Return the swing setting."""
-        return self.device_data.swing_mode
+        swing_mode: str | None = self.device_data.swing_mode
+        return swing_mode
 
     @property
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes."""
-        return self.device_data.swing_modes
+        if self.device_data.swing_modes:
+            return self.device_data.swing_modes
+        return None
 
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return self.device_data.temp_list[0]
+        min_temp: int = self.device_data.temp_list[0]
+        return min_temp
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return self.device_data.temp_list[-1]
+        max_temp: int = self.device_data.temp_list[-1]
+        return max_temp
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.device_data.available and super().available
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if "targetTemperature" not in self.device_data.active_features:
             raise HomeAssistantError(
@@ -255,7 +275,7 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             f"Could not set state for device {self.name} due to reason {failure}"
         )
 
-    async def async_assume_state(self, state) -> None:
+    async def async_assume_state(self, state: str) -> None:
         """Sync state with api."""
         await self._async_set_ac_state_property("on", state != HVACMode.OFF, True)
         await self.coordinator.async_refresh()

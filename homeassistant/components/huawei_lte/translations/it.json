@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato",
-            "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
             "not_huawei_lte": "Non \u00e8 un dispositivo Huawei LTE"
         },
         "error": {
@@ -34,7 +32,6 @@
                 "data": {
                     "name": "Nome del servizio di notifica (la modifica richiede il riavvio)",
                     "recipient": "Destinatari della notifica SMS",
-                    "track_new_devices": "Traccia nuovi dispositivi",
                     "track_wired_clients": "Tieni traccia dei client di rete cablata",
                     "unauthenticated_mode": "Modalit\u00e0 non autenticata (la modifica richiede il ricaricamento)"
                 }

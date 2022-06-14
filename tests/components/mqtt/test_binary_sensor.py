@@ -41,6 +41,7 @@ from .test_common import (
     help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -973,3 +974,15 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
         assert await async_setup_component(hass, domain, {domain: config3})
         await hass.async_block_till_done()
     assert "Skip state recovery after reload for binary_sensor.test3" in caplog.text
+
+
+async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+    """Test setup manual configured MQTT entity."""
+    platform = binary_sensor.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(
+        hass, caplog, tmp_path, platform, config
+    )
+    assert hass.states.get(f"{platform}.test") is not None

@@ -666,7 +666,9 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         """Play a URI."""
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         if media_type == MEDIA_TYPE_MUSIC:

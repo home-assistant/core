@@ -5,8 +5,7 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera, StateType
-from pyunifiprotect.data.devices import CameraChannel
+from pyunifiprotect.data import Camera as UFPCamera, CameraChannel, StateType
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry

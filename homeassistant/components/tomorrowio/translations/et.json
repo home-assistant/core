@@ -10,9 +10,7 @@
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti",
-                    "latitude": "Laiuskraad",
                     "location": "Asukoht",
-                    "longitude": "Pikkuskraad",
                     "name": "Nimi"
                 },
                 "description": "API v\u00f5tme saamiseks registreeru aadressil [Tomorrow.io](https://app.tomorrow.io/signup)."

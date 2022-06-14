@@ -32,7 +32,7 @@
       "init": {
         "title": "Tankerkoenig options",
         "data": {
-          "scan_interval": "Update Interval",
+          "stations": "Stations",
           "show_on_map": "Show stations on map"
         }
       }

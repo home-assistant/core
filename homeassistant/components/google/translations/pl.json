@@ -27,5 +27,14 @@
                 "title": "Ponownie uwierzytelnij integracj\u0119"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "calendar_access": "Dost\u0119p Home Assistanta do Kalendarza Google"
+                }
+            }
+        }
     }
 }

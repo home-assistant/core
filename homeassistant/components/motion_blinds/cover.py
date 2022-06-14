@@ -182,7 +182,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         else:
             via_device = (DOMAIN, blind._gateway.mac)
             connections = {}
-            name = f"{blind.blind_type}-{blind.mac[12:]}"
+            name = f"{blind.blind_type} {blind.mac[12:]}"
             sw_version = None
 
         self._attr_device_class = device_class
@@ -364,7 +364,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
-        self._attr_name = f"{blind.blind_type}-{motor}-{blind.mac[12:]}"
+        self._attr_name = f"{blind.blind_type} {blind.mac[12:]} {motor}"
         self._attr_unique_id = f"{blind.mac}-{motor}"
 
         if self._motor not in ["Bottom", "Top", "Combined"]:
