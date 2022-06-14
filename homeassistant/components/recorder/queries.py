@@ -9,7 +9,7 @@ from sqlalchemy.sql.lambdas import StatementLambdaElement
 from sqlalchemy.sql.selectable import Select
 
 from .const import MAX_ROWS_TO_PURGE
-from .models import (
+from .db_schema import (
     EventData,
     Events,
     RecorderRuns,

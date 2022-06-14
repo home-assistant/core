@@ -275,6 +275,7 @@ build.json @home-assistant/supervisor
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eight_sleep/ @mezz64 @raman325
+/tests/components/eight_sleep/ @mezz64 @raman325
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -330,7 +331,6 @@ build.json @home-assistant/supervisor
 /tests/components/firmata/ @DaAwesomeP
 /homeassistant/components/fivem/ @Sander0542
 /tests/components/fivem/ @Sander0542
-/homeassistant/components/fixer/ @fabaff
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flick_electric/ @ZephireNZ
@@ -449,6 +449,8 @@ build.json @home-assistant/supervisor
 /tests/components/home_plus_control/ @chemaaa
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
+/homeassistant/components/homeassistant_yellow/ @home-assistant/core
+/tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
@@ -478,8 +480,6 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
-/homeassistant/components/ialarm_xr/ @bigmoby
-/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -828,7 +828,8 @@ build.json @home-assistant/supervisor
 /tests/components/rachio/ @bdraco
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
-/homeassistant/components/radiotherm/ @vinnyfuria
+/homeassistant/components/radiotherm/ @bdraco @vinnyfuria
+/tests/components/radiotherm/ @bdraco @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin

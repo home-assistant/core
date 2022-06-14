@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -49,6 +50,16 @@ class RecordCallsPartial(partial):
     """Wrapper class for partial."""
 
     __name__ = "RecordCallPartialTest"
+
+
+@pytest.fixture(autouse=True)
+def sensor_platforms_only():
+    """Only setup the sensor platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS",
+        [Platform.SENSOR, Platform.BINARY_SENSOR],
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -1362,48 +1373,32 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
-async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
     config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
         "Invalid config for [light]: [platform] is an invalid option for [light]. "
         "Check: light->platform. (See ?, line ?)" in caplog.text
     )
 
 
-async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
     config = {"name": "test"}
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
         "Invalid config for [light]: required key not provided @ data['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
     )
 
 
-async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
+async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
     config = None
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
@@ -1780,13 +1775,12 @@ async def test_setup_entry_with_config_override(
     # mqtt present in yaml config
     assert await async_setup_component(hass, mqtt.DOMAIN, {})
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     # User sets up a config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Discover a device to verify the entry was setup correctly
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
@@ -2032,6 +2026,7 @@ async def test_mqtt_ws_get_device_debug_info(
     assert response["result"] == expected_result
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
     hass, device_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):

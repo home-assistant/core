@@ -1,0 +1,17 @@
+{
+    "config": {
+        "abort": {
+            "no_serial_ports": "Inga com portar funna. M\u00e5ste ha en RS485 enhet f\u00f6r att kommunicera"
+        },
+        "error": {
+            "cannot_open_serial_port": "Kan inte \u00f6ppna serieporten, kontrollera och f\u00f6rs\u00f6k igen."
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "RS485 eller USB-RS485 adapter port"
+                }
+            }
+        }
+    }
+}

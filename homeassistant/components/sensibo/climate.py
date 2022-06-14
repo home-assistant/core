@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.temperature import convert as convert_temperature
 
@@ -27,6 +27,8 @@ from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
+SERVICE_TIMER = "timer"
+ATTR_MINUTES = "minutes"
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
@@ -84,6 +86,14 @@ async def async_setup_entry(
             vol.Required(ATTR_STATE): vol.In(["on", "off"]),
         },
         "async_assume_state",
+    )
+    platform.async_register_entity_service(
+        SERVICE_TIMER,
+        {
+            vol.Required(ATTR_STATE): vol.In(["on", "off"]),
+            vol.Optional(ATTR_MINUTES): cv.positive_int,
+        },
+        "async_set_timer",
     )
 
 
@@ -276,3 +286,25 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Sync state with api."""
         await self._async_set_ac_state_property("on", state != HVACMode.OFF, True)
         await self.coordinator.async_refresh()
+
+    async def async_set_timer(self, state: str, minutes: int | None = None) -> None:
+        """Set or delete timer."""
+        if state == "off" and self.device_data.timer_id is None:
+            raise HomeAssistantError("No timer to delete")
+
+        if state == "on" and minutes is None:
+            raise ValueError("No value provided for timer")
+
+        if state == "off":
+            result = await self.async_send_command("del_timer")
+        else:
+            new_state = bool(self.device_data.ac_states["on"] is False)
+            params = {
+                "minutesFromNow": minutes,
+                "acState": {**self.device_data.ac_states, "on": new_state},
+            }
+            result = await self.async_send_command("set_timer", params)
+
+        if result["status"] == "success":
+            return await self.coordinator.async_request_refresh()
+        raise HomeAssistantError(f"Could not set timer for device {self.name}")

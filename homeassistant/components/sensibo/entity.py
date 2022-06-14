@@ -57,7 +57,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         )
 
     async def async_send_command(
-        self, command: str, params: dict[str, Any]
+        self, command: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Send command to Sensibo api."""
         try:
@@ -72,16 +72,20 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         return result
 
     async def async_send_api_call(
-        self, command: str, params: dict[str, Any]
+        self, command: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Send api call."""
         result: dict[str, Any] = {"status": None}
         if command == "set_calibration":
+            if TYPE_CHECKING:
+                assert params is not None
             result = await self._client.async_set_calibration(
                 self._device_id,
                 params["data"],
             )
         if command == "set_ac_state":
+            if TYPE_CHECKING:
+                assert params is not None
             result = await self._client.async_set_ac_state_property(
                 self._device_id,
                 params["name"],
@@ -89,6 +93,12 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
                 params["ac_states"],
                 params["assumed_state"],
             )
+        if command == "set_timer":
+            if TYPE_CHECKING:
+                assert params is not None
+            result = await self._client.async_set_timer(self._device_id, params)
+        if command == "del_timer":
+            result = await self._client.async_del_timer(self._device_id)
         return result
 
 

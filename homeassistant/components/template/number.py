@@ -100,6 +100,8 @@ async def async_setup_platform(
 class TemplateNumber(TemplateEntity, NumberEntity):
     """Representation of a template number."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
