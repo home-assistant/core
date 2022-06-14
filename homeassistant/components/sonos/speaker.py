@@ -326,7 +326,6 @@ class SonosSpeaker:
             except SonosSubscriptionsFailed:
                 _LOGGER.warning("Creating subscriptions failed for %s", self.zone_name)
                 await self._async_offline()
-                await self.async_unsubscribe()
 
     async def _async_subscribe(self) -> None:
         """Create event subscriptions."""
@@ -585,7 +584,6 @@ class SonosSpeaker:
         """Handle removal of speaker when unavailable."""
         async with self._subscription_lock:
             await self._async_offline()
-            await self.async_unsubscribe()
 
     async def _async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
@@ -604,6 +602,8 @@ class SonosSpeaker:
         if self._poll_timer:
             self._poll_timer()
             self._poll_timer = None
+
+        await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
 
