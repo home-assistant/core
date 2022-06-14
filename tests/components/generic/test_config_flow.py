@@ -8,7 +8,7 @@ import httpx
 import pytest
 import respx
 
-from homeassistant import config_entries, data_entry_flow, setup
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.camera import async_get_image
 from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
@@ -86,7 +86,6 @@ async def test_form(hass, fakeimg_png, user_flow, mock_create_stream):
 @respx.mock
 async def test_form_only_stillimage(hass, fakeimg_png, user_flow):
     """Test we complete ok if the user wants still images only."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -242,7 +241,6 @@ async def test_form_rtsp_mode(hass, fakeimg_png, user_flow, mock_create_stream):
 
 async def test_form_only_stream(hass, fakeimgbytes_jpg, mock_create_stream):
     """Test we complete ok if the user wants stream only."""
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -454,7 +452,6 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
     """Test the options flow with a template error."""
     respx.get("http://127.0.0.1/testurl/1").respond(stream=fakeimgbytes_png)
     respx.get("http://127.0.0.1/testurl/2").respond(stream=fakeimgbytes_png)
-    await setup.async_setup_component(hass, "persistent_notification", {})
 
     mock_entry = MockConfigEntry(
         title="Test Camera",
