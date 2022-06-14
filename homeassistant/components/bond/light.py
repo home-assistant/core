@@ -18,13 +18,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTR_POWER_STATE,
-    BPUP_SUBS,
     DOMAIN,
-    HUB,
     SERVICE_SET_LIGHT_BRIGHTNESS_TRACKED_STATE,
     SERVICE_SET_LIGHT_POWER_TRACKED_STATE,
 )
 from .entity import BondEntity
+from .models import BondData
 from .utils import BondDevice, BondHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,9 +45,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond light devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
     platform = entity_platform.async_get_current_platform()
 
     platform = entity_platform.async_get_current_platform()

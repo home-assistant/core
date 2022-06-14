@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from bond_async import Action, BPUPSubscriptions
@@ -12,11 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BPUP_SUBS, DOMAIN, HUB
+from .const import DOMAIN
 from .entity import BondEntity
+from .models import BondData
 from .utils import BondDevice, BondHub
-
-_LOGGER = logging.getLogger(__name__)
 
 # The api requires a step size even though it does not
 # seem to matter what is is as the underlying device is likely
@@ -246,9 +244,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond button devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
     entities: list[BondButtonEntity] = []
 
     for device in hub.devices:

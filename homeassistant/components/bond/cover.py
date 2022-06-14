@@ -16,8 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BPUP_SUBS, DOMAIN, HUB
+from .const import DOMAIN
 from .entity import BondEntity
+from .models import BondData
 from .utils import BondDevice, BondHub
 
 
@@ -37,9 +38,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond cover devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
 
     covers: list[Entity] = [
         BondCover(hub, device, bpup_subs)
