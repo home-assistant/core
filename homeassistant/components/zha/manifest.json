@@ -87,7 +87,7 @@
       "name": "*zigate*"
     }
   ],
-  "after_dependencies": ["usb", "zeroconf"],
+  "after_dependencies": ["onboarding", "usb", "zeroconf"],
   "iot_class": "local_polling",
   "loggers": [
     "aiosqlite",

@@ -236,9 +236,7 @@ async def _async_config_entry_updated(hass: HomeAssistant, entry: ConfigEntry) -
         await _async_setup_discovery(hass, mqtt_client.conf, entry)
 
 
-async def async_setup_entry(  # noqa: C901
-    hass: HomeAssistant, entry: ConfigEntry
-) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     # Merge basic configuration, and add missing defaults for basic options
     _merge_basic_config(hass, entry, hass.data.get(DATA_MQTT_CONFIG, {}))
@@ -386,25 +384,33 @@ async def async_setup_entry(  # noqa: C901
         hass.data[DATA_MQTT_UPDATED_CONFIG] = config_yaml.get(DOMAIN, {})
         async_dispatcher_send(hass, MQTT_RELOADED)
 
-    async def async_forward_entry_setup():
-        """Forward the config entry setup to the platforms."""
-        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-            for component in PLATFORMS:
-                config_entries_key = f"{component}.mqtt"
-                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                    await hass.config_entries.async_forward_entry_setup(
-                        entry, component
-                    )
+    async def async_forward_entry_setup_and_setup_discovery(config_entry):
+        """Forward the config entry setup to the platforms and set up discovery."""
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation, tag
+
+        await asyncio.gather(
+            *(
+                [
+                    device_automation.async_setup_entry(hass, config_entry),
+                    tag.async_setup_entry(hass, config_entry),
+                ]
+                + [
+                    hass.config_entries.async_forward_entry_setup(entry, component)
+                    for component in PLATFORMS
+                ]
+            )
+        )
+        # Setup discovery
+        if conf.get(CONF_DISCOVERY):
+            await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
         entry.async_on_unload(
             hass.bus.async_listen("event_mqtt_reloaded", _async_reload_platforms)
         )
 
-    hass.async_create_task(async_forward_entry_setup())
-
-    if conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, conf, entry)
+    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
 
     if DATA_MQTT_RELOAD_NEEDED in hass.data:
         hass.data.pop(DATA_MQTT_RELOAD_NEEDED)

@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -62,6 +63,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     number.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def number_platform_only():
+    """Only setup the number platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.NUMBER]):
+        yield
 
 
 async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
@@ -784,13 +792,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = number.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
