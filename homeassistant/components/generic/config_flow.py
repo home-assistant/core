@@ -1,12 +1,13 @@
 """Config flow for generic (IP Camera)."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import contextlib
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
 from types import MappingProxyType
-from typing import Any, Mapping
+from typing import Any
 
 import PIL
 from async_timeout import timeout

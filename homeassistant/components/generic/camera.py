@@ -1,8 +1,9 @@
 """Support for IP Cameras."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from typing import Any, Mapping
+from typing import Any
 
 import httpx
 import voluptuous as vol
