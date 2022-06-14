@@ -7,13 +7,15 @@ from bond_async import DeviceType
 import pytest
 
 from homeassistant.components.bond.const import DOMAIN
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
+from homeassistant.const import ATTR_ASSUMED_STATE, CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .common import (
+    ceiling_fan,
     patch_bond_bridge,
     patch_bond_device,
     patch_bond_device_ids,
@@ -23,6 +25,7 @@ from .common import (
     patch_setup_entry,
     patch_start_bpup,
     setup_bond_entity,
+    setup_platform,
 )
 
 from tests.common import MockConfigEntry
@@ -81,7 +84,7 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
 
     with patch_bond_bridge(), patch_bond_version(
         return_value={
-            "bondid": "test-bond-id",
+            "bondid": "ZXXX12345",
             "target": "test-model",
             "fw_ver": "test-version",
             "mcu_ver": "test-hw-version",
@@ -99,11 +102,11 @@ async def test_async_setup_entry_sets_up_hub_and_supported_domains(hass: HomeAss
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.unique_id == "test-bond-id"
+    assert config_entry.unique_id == "ZXXX12345"
 
     # verify hub device is registered correctly
     device_registry = dr.async_get(hass)
-    hub = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
+    hub = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert hub.name == "bond-name"
     assert hub.manufacturer == "Olibra"
     assert hub.model == "test-model"
@@ -151,7 +154,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
     )
 
     old_identifers = (DOMAIN, "device_id")
-    new_identifiers = (DOMAIN, "test-bond-id", "device_id")
+    new_identifiers = (DOMAIN, "ZXXX12345", "device_id")
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -164,7 +167,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
 
     with patch_bond_bridge(), patch_bond_version(
         return_value={
-            "bondid": "test-bond-id",
+            "bondid": "ZXXX12345",
             "target": "test-model",
             "fw_ver": "test-version",
         }
@@ -185,7 +188,7 @@ async def test_old_identifiers_are_removed(hass: HomeAssistant):
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.unique_id == "test-bond-id"
+    assert config_entry.unique_id == "ZXXX12345"
 
     # verify the device info is cleaned up
     assert device_registry.async_get_device(identifiers={old_identifers}) is None
@@ -205,7 +208,7 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
         side_effect=ClientResponseError(Mock(), Mock(), status=404)
     ), patch_bond_version(
         return_value={
-            "bondid": "test-bond-id",
+            "bondid": "KXXX12345",
             "target": "test-model",
             "fw_ver": "test-version",
         }
@@ -227,10 +230,10 @@ async def test_smart_by_bond_device_suggested_area(hass: HomeAssistant):
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.unique_id == "test-bond-id"
+    assert config_entry.unique_id == "KXXX12345"
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "KXXX12345")})
     assert device is not None
     assert device.suggested_area == "Den"
 
@@ -251,7 +254,7 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant):
         }
     ), patch_bond_version(
         return_value={
-            "bondid": "test-bond-id",
+            "bondid": "ZXXX12345",
             "target": "test-model",
             "fw_ver": "test-version",
         }
@@ -273,9 +276,21 @@ async def test_bridge_device_suggested_area(hass: HomeAssistant):
 
     assert config_entry.entry_id in hass.data[DOMAIN]
     assert config_entry.state is ConfigEntryState.LOADED
-    assert config_entry.unique_id == "test-bond-id"
+    assert config_entry.unique_id == "ZXXX12345"
 
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "test-bond-id")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "ZXXX12345")})
     assert device is not None
     assert device.suggested_area == "Office"
+
+
+async def test_smart_by_bond_v3_firmware(hass: HomeAssistant) -> None:
+    """Test we can detect smart by bond with the v3 firmware."""
+    await setup_platform(
+        hass,
+        FAN_DOMAIN,
+        ceiling_fan("name-1"),
+        bond_version={"bondid": "KXXXX12345", "target": "breck-northstar"},
+        bond_device_id="test-device-id",
+    )
+    assert ATTR_ASSUMED_STATE not in hass.states.get("fan.name_1").attributes
