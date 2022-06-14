@@ -1,6 +1,9 @@
 ARG BUILD_VERSION
 FROM homeassistant/armhf-homeassistant:$BUILD_VERSION
 
+ARG \
+    QEMU_CPU
+
 RUN apk --no-cache add \
         raspberrypi \
         raspberrypi-libs \
