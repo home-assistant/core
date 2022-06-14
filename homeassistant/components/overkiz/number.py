@@ -134,7 +134,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
             if self.entity_description.inverted:
-                return self._attr_max_value - cast(float, state.value)
+                return self.max_value - cast(float, state.value)
 
             return cast(float, state.value)
 
@@ -143,7 +143,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.inverted:
-            value = self._attr_max_value - value
+            value = self.max_value - value
 
         await self.executor.async_execute_command(
             self.entity_description.command, value

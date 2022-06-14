@@ -402,7 +402,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     )
     mock_config.add_to_hass(hass)
 
-    with _patch_discovery():
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.config_flow.async_console_is_alive",
+        return_value=False,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -413,6 +416,41 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "127.0.0.1"
+
+
+async def test_discovered_by_unifi_discovery_does_not_update_ip_when_console_is_still_online(
+    hass: HomeAssistant, mock_nvr: NVR
+) -> None:
+    """Test a discovery from unifi-discovery does not update the ip unless the console at the old ip is offline."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "host": "1.2.2.2",
+            "username": "test-username",
+            "password": "test-password",
+            "id": "UnifiProtect",
+            "port": 443,
+            "verify_ssl": False,
+        },
+        version=2,
+        unique_id=DEVICE_MAC_ADDRESS.replace(":", "").upper(),
+    )
+    mock_config.add_to_hass(hass)
+
+    with _patch_discovery(), patch(
+        "homeassistant.components.unifiprotect.config_flow.async_console_is_alive",
+        return_value=True,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=UNIFI_DISCOVERY_DICT,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == "1.2.2.2"
 
 
 async def test_discovered_host_not_updated_if_existing_is_a_hostname(
