@@ -41,17 +41,17 @@ NUMBERS = [
         name="Speed",
         icon="mdi:speedometer",
         entity_category=EntityCategory.CONFIG,
-        step=1,
-        min_value=0,
-        max_value=255,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=255,
     ),
     NumberEntityDescription(
         key=ATTR_INTENSITY,
         name="Intensity",
         entity_category=EntityCategory.CONFIG,
-        step=1,
-        min_value=0,
-        max_value=255,
+        native_step=1,
+        native_min_value=0,
+        native_max_value=255,
     ),
 ]
 
@@ -93,7 +93,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         return super().available
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current WLED segment number value."""
         return getattr(
             self.coordinator.data.state.segments[self._segment],
@@ -101,7 +101,7 @@ class WLEDNumber(WLEDEntity, NumberEntity):
         )
 
     @wled_exception_handler
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the WLED segment value."""
         key = self.entity_description.key
         if key == ATTR_SPEED:
