@@ -1,7 +1,10 @@
 """Binary sensor to read Proxmox VE data."""
 from __future__ import annotations
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
+    BinarySensorEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -66,7 +69,7 @@ def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):
     return ProxmoxBinarySensor(
         coordinator=coordinator,
         unique_id=f"proxmox_{node_name}_{vm_id}_running",
-        name=f"{node_name}_{name}_running",
+        name=f"{node_name}_{name}",
         icon="",
         host_name=host_name,
         node_name=node_name,
@@ -105,3 +108,9 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         """Return sensor availability."""
 
         return super().available and self.coordinator.data is not None
+
+    @property
+    def device_class(self):
+        """Return device class."""
+
+        return BinarySensorDeviceClass.RUNNING
