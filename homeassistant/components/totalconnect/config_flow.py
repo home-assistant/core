@@ -1,4 +1,6 @@
 """Config flow for the Total Connect component."""
+from __future__ import annotations
+
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
 import voluptuous as vol
@@ -166,7 +168,9 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> TotalConnectOptionsFlowHandler:
         """Get options flow."""
         return TotalConnectOptionsFlowHandler(config_entry)
 
@@ -174,7 +178,7 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class TotalConnectOptionsFlowHandler(config_entries.OptionsFlow):
     """TotalConnect options flow handler."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

@@ -48,6 +48,9 @@ async def camera_fixture(
 ):
     """Fixture for a single camera for testing the camera platform."""
 
+    # disable pydantic validation so mocking can happen
+    ProtectCamera.__config__.validate_assignment = False
+
     camera_obj = mock_camera.copy(deep=True)
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
@@ -68,7 +71,9 @@ async def camera_fixture(
 
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    return (camera_obj, "camera.test_camera_high")
+    yield (camera_obj, "camera.test_camera_high")
+
+    ProtectCamera.__config__.validate_assignment = True
 
 
 @pytest.fixture(name="camera_package")
@@ -572,3 +577,43 @@ async def test_camera_ws_update_offline(
 
     state = hass.states.get(camera[1])
     assert state and state.state == "idle"
+
+
+async def test_camera_enable_motion(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    camera: tuple[ProtectCamera, str],
+):
+    """Tests generic entity update service."""
+
+    camera[0].__fields__["set_motion_detection"] = Mock()
+    camera[0].set_motion_detection = AsyncMock()
+
+    await hass.services.async_call(
+        "camera",
+        "enable_motion_detection",
+        {ATTR_ENTITY_ID: camera[1]},
+        blocking=True,
+    )
+
+    camera[0].set_motion_detection.assert_called_once_with(True)
+
+
+async def test_camera_disable_motion(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    camera: tuple[ProtectCamera, str],
+):
+    """Tests generic entity update service."""
+
+    camera[0].__fields__["set_motion_detection"] = Mock()
+    camera[0].set_motion_detection = AsyncMock()
+
+    await hass.services.async_call(
+        "camera",
+        "disable_motion_detection",
+        {ATTR_ENTITY_ID: camera[1]},
+        blocking=True,
+    )
+
+    camera[0].set_motion_detection.assert_called_once_with(False)

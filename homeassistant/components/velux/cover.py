@@ -17,6 +17,8 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -97,12 +99,11 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position_percent = 100 - kwargs[ATTR_POSITION]
+        position_percent = 100 - kwargs[ATTR_POSITION]
 
-            await self.node.set_position(
-                Position(position_percent=position_percent), wait_for_completion=False
-            )
+        await self.node.set_position(
+            Position(position_percent=position_percent), wait_for_completion=False
+        )
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""

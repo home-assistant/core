@@ -16,7 +16,8 @@
                     "flow_type": "Jenis koneksi",
                     "host": "Alamat IP",
                     "password": "ID Smile",
-                    "port": "Port"
+                    "port": "Port",
+                    "username": "Nama Pengguna Smile"
                 },
                 "description": "Masukkan",
                 "title": "Hubungkan ke Smile"

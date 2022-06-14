@@ -123,12 +123,6 @@ class DeviceCoordinator(DataUpdateCoordinator):
             except ActionException as err:
                 raise UpdateFailed("WeMo update failed") from err
 
-    @callback
-    def async_update_listeners(self) -> None:
-        """Update all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
-
 
 def _device_info(wemo: WeMoDevice) -> DeviceInfo:
     return DeviceInfo(
