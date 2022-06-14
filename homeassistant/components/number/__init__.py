@@ -22,6 +22,7 @@ from homeassistant.helpers.config_validation import (  # noqa: F401
 )
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import temperature as temperature_util
 
@@ -324,7 +325,7 @@ class NumberEntity(Entity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the value reported by the sensor."""
+        """Return the value reported by the number."""
         return self._attr_native_value
 
     @property
@@ -419,3 +420,65 @@ class NumberEntity(Entity):
                 type(self),
                 report_issue,
             )
+
+
+@dataclass
+class NumberExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    native_max_value: float | None
+    native_min_value: float | None
+    native_step: float | None
+    native_unit_of_measurement: str | None
+    native_value: float | None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the number data."""
+        return {
+            "native_max_value": self.native_max_value,
+            "native_min_value": self.native_min_value,
+            "native_step": self.native_step,
+            "native_unit_of_measurement": self.native_unit_of_measurement,
+            "native_value": self.native_value,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> NumberExtraStoredData | None:
+        """Initialize a stored number state from a dict."""
+        try:
+            native_max_value = restored["native_max_value"]
+            native_min_value = restored["native_min_value"]
+            native_step = restored["native_step"]
+            native_unit_of_measurement = restored["native_unit_of_measurement"]
+            native_value = restored["native_value"]
+        except KeyError:
+            return None
+
+        return cls(
+            native_max_value,
+            native_min_value,
+            native_step,
+            native_unit_of_measurement,
+            native_value,
+        )
+
+
+class RestoreNumber(NumberEntity, RestoreEntity):
+    """Mixin class for restoring previous number state."""
+
+    @property
+    def extra_restore_state_data(self) -> NumberExtraStoredData:
+        """Return number specific state data to be restored."""
+        return NumberExtraStoredData(
+            self.native_max_value,
+            self.native_min_value,
+            self.native_step,
+            self.native_unit_of_measurement,
+            self.native_value,
+        )
+
+    async def async_get_last_number_data(self) -> NumberExtraStoredData | None:
+        """Restore native_*."""
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+        return NumberExtraStoredData.from_dict(restored_last_extra_data.as_dict())
