@@ -57,7 +57,7 @@ from .const import (
     SONOS_VANISHED,
     SUBSCRIPTION_TIMEOUT,
 )
-from .exception import S1BatteryMissing, SonosUpdateError
+from .exception import S1BatteryMissing, SonosSubscriptionsFailed, SonosUpdateError
 from .favorites import SonosFavorites
 from .helpers import soco_error
 from .media import SonosMedia
@@ -321,7 +321,11 @@ class SonosSpeaker:
         async with self._subscription_lock:
             if self._subscriptions:
                 return
-            await self._async_subscribe()
+            try:
+                await self._async_subscribe()
+            except SonosSubscriptionsFailed:
+                _LOGGER.warning("Creating subscriptions failed for %s", self.zone_name)
+                await self._async_offline()
 
     async def _async_subscribe(self) -> None:
         """Create event subscriptions."""
@@ -338,9 +342,7 @@ class SonosSpeaker:
             )
 
         if any(isinstance(result, Exception) for result in results):
-            _LOGGER.warning("Subscriptions to %s failed", self.zone_name)
-            await self.async_offline()
-            return
+            raise SonosSubscriptionsFailed
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
         if not self._poll_timer:
@@ -580,6 +582,11 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        async with self._subscription_lock:
+            await self._async_offline()
+
+    async def _async_offline(self) -> None:
+        """Handle removal of speaker when unavailable."""
         if not self.available:
             return
 
@@ -596,8 +603,7 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        async with self._subscription_lock:
-            await self.async_unsubscribe()
+        await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
 
