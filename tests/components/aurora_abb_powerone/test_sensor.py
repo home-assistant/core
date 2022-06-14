@@ -4,6 +4,7 @@ from unittest.mock import patch
 from aurorapy.client import AuroraError, AuroraTimeoutError
 from datetime import timedelta
 
+
 from homeassistant.components.aurora_abb_powerone.const import (
     ATTR_DEVICE_NAME,
     ATTR_FIRMWARE,
@@ -100,6 +101,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
     """Test that darkness (no comms) is handled correctly."""
     mock_entry = _mock_config_entry()
 
+    utcnow = dt_util.utcnow()
     # sun is up
     with patch("aurorapy.client.AuroraSerialClient.connect", return_value=None), patch(
         "aurorapy.client.AuroraSerialClient.measure", side_effect=_simulated_returns
@@ -135,7 +137,7 @@ async def test_sensor_dark(hass: HomeAssistant) -> None:
         side_effect=AuroraTimeoutError("No response after 10 seconds"),
     ), patch(
         "aurorapy.client.AuroraSerialClient.cumulated_energy",
-        side_effect=AuroraError("No response after 10 seconds"),
+        side_effect=AuroraTimeoutError("No response after 3 tries"),
     ):
         async_fire_time_changed(hass, utcnow + SCAN_INTERVAL * 2)
         await hass.async_block_till_done()
