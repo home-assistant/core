@@ -440,8 +440,14 @@ class NumberExtraStoredData(ExtraStoredData):
     def from_dict(cls, restored: dict[str, Any]) -> NumberExtraStoredData | None:
         """Initialize a stored number state from a dict."""
         try:
-            return cls(**restored)
-        except TypeError:
+            return cls(
+                restored["native_max_value"],
+                restored["native_min_value"],
+                restored["native_step"],
+                restored["native_unit_of_measurement"],
+                restored["native_value"],
+            )
+        except KeyError:
             return None
 
 
