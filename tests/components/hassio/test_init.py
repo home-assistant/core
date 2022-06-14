@@ -732,6 +732,7 @@ async def test_coordinator_updates(hass, caplog):
         ({"board": "rpi3-64"}, "raspberry_pi"),
         ({"board": "rpi4"}, "raspberry_pi"),
         ({"board": "rpi4-64"}, "raspberry_pi"),
+        ({"board": "yellow"}, "homeassistant_yellow"),
     ],
 )
 async def test_setup_hardware_integration(hass, aioclient_mock, integration):
