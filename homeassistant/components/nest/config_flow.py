@@ -262,7 +262,7 @@ class NestFlowHandler(
                     "more_info_url": UPGRADE_MORE_INFO_URL,
                 },
             )
-        # Abort this flow and ask the user to application credentials. The frontend
+        # Abort this flow and ask the user for application credentials. The frontend
         # will restart a new config flow after the user finishes so schedule a new
         # re-auth config flow for the same entry so the user may resume.
         if reauth_entry := self._async_reauth_entry():
