@@ -6,6 +6,7 @@ import contextlib
 from itertools import chain
 import logging
 import ssl
+from typing import Any
 
 import async_timeout
 from pylutron_caseta import BUTTON_STATUS_PRESSED
@@ -16,7 +17,7 @@ from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SUGGESTED_AREA, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
@@ -106,6 +107,33 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Migrate entities since the occupancygroup were not actually unique."""
+
+    dev_reg = dr.async_get(hass)
+    bridge_unique_id = entry.unique_id
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        if not (unique_id := entity_entry.unique_id):
+            return None
+        if not unique_id.startswith("occupancygroup_") or unique_id.startswith(
+            f"occupancygroup_{bridge_unique_id}"
+        ):
+            return None
+        sensor_id = unique_id.split("_")[1]
+        new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
+        if dev_entry := dev_reg.async_get_device({(DOMAIN, unique_id)}):
+            dev_reg.async_update_device(
+                dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
+            )
+        return {"new_unique_id": f"occupancygroup_{bridge_unique_id}_{sensor_id}"}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
@@ -116,6 +144,8 @@ async def async_setup_entry(
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
+
+    await _async_migrate_unique_ids(hass, config_entry)
 
     try:
         bridge = Smartbridge.create_tls(
@@ -144,7 +174,7 @@ async def async_setup_entry(
     bridge_device = devices[BRIDGE_DEVICE_ID]
     if not config_entry.unique_id:
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=hex(bridge_device["serial"])[2:].zfill(8)
+            config_entry, unique_id=serial_to_unique_id(bridge_device["serial"])
         )
 
     buttons = bridge.buttons
@@ -312,6 +342,7 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
+        self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         if "serial" not in self._device:
             return
         area, name = _area_and_name_from_name(device["name"])
