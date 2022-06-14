@@ -6,8 +6,13 @@ from typing import cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizState
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -58,8 +63,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Eco Room Temperature",
         icon="mdi:thermometer",
         command=OverkizCommand.SET_ECO_TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=6,
         native_max_value=29,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -67,8 +74,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Comfort Room Temperature",
         icon="mdi:home-thermometer-outline",
         command=OverkizCommand.SET_COMFORT_TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=7,
         native_max_value=30,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -76,8 +85,10 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Freeze Protection Temperature",
         icon="mdi:sun-thermometer-outline",
         command=OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
+        device_class=NumberDeviceClass.TEMPERATURE,
         native_min_value=5,
         native_max_value=15,
+        native_unit_of_measurement=TEMP_CELSIUS,
         entity_category=EntityCategory.CONFIG,
     ),
     # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)
