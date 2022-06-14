@@ -69,7 +69,6 @@ class NetatmoSwitch(NetatmoBase, SwitchEntity):
         )
         self._attr_unique_id = f"{self._id}-{self._model}"
         self._attr_is_on = self._switch.on
-        print("switch_name", self._attr_unique_id, self._attr_name)
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
