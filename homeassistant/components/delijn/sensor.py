@@ -113,9 +113,9 @@ class DeLijnPublicTransportSensor(SensorEntity):
             if (first_passage := first["due_at_realtime"]) is None:
                 first_passage = first["due_at_schedule"]
             self._attr_native_value = datetime.strptime(
-                first_passage, '%Y-%m-%dT%H:%M:%S%z'
+                first_passage, "%Y-%m-%dT%H:%M:%S%z"
             )
-             
+
             for key in AUTO_ATTRIBUTES:
                 self._attr_extra_state_attributes[key] = first[key]
             self._attr_extra_state_attributes["next_passages"] = self.line.passages
