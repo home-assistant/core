@@ -40,6 +40,7 @@ from .const import (
     DOMAIN,
     NETATMO_CREATE_BATTERY,
     NETATMO_CREATE_ROOM_SENSOR,
+    NETATMO_CREATE_SENSOR,
     NETATMO_CREATE_WEATHER_SENSOR,
     SIGNAL_NAME,
 )
@@ -276,6 +277,25 @@ async def async_setup_entry(
     )
 
     @callback
+    def _create_sensor_entity(netatmo_device: NetatmoDevice) -> None:
+        _LOGGER.debug(
+            "Adding %s sensor %s",
+            netatmo_device.device.device_category,
+            netatmo_device.device.name,
+        )
+        async_add_entities(
+            [
+                NetatmoSensor(netatmo_device, description)
+                for description in SENSOR_TYPES
+                if description.key in netatmo_device.device.features
+            ]
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, NETATMO_CREATE_SENSOR, _create_sensor_entity)
+    )
+
+    @callback
     def _create_room_sensor_entity(netatmo_device: NetatmoRoom) -> None:
         _LOGGER.debug("Adding %s sensor", netatmo_device.room.name)
         async_add_entities(
@@ -496,6 +516,66 @@ class NetatmoClimateBatterySensor(NetatmoBase, SensorEntity):
 
         self._attr_available = True
         self._attr_native_value = self._module.battery
+
+
+class NetatmoSensor(NetatmoBase, SensorEntity):
+    """Implementation of a Netatmo sensor."""
+
+    def __init__(
+        self,
+        netatmo_device: NetatmoDevice,
+        description: NetatmoSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(netatmo_device.data_handler)
+        self.entity_description = description
+
+        self._module = netatmo_device.device
+        self._id = self._module.entity_id
+
+        self._publishers.extend(
+            [
+                {
+                    "name": HOME,
+                    "home_id": netatmo_device.device.home.entity_id,
+                    SIGNAL_NAME: netatmo_device.signal_name,
+                },
+            ]
+        )
+
+        self._attr_name = f"{self._module.name} {self.entity_description.name}"
+        self._room_id = self._module.room_id
+        self._model = getattr(self._module.device_type, "value")
+        self._config_url = CONF_URL_ENERGY
+
+        self._attr_unique_id = (
+            f"{self._id}-{self._module.entity_id}-{self.entity_description.key}"
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Entity created."""
+        await super().async_added_to_hass()
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Update the entity's state."""
+        try:
+            if (state := getattr(self._module, self.entity_description.key)) is None:
+                return
+
+            self._attr_native_value = state
+
+        except KeyError:
+            if self.state:
+                _LOGGER.debug(
+                    "No %s data found for %s",
+                    self.entity_description.key,
+                    self._device_name,
+                )
+            self._attr_native_value = None
+            return
+
+        self.async_write_ha_state()
 
 
 def process_health(health: int) -> str:
