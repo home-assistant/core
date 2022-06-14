@@ -31,11 +31,8 @@ from .const import (
     ATTR_LEAP_BUTTON_NUMBER,
     ATTR_SERIAL,
     ATTR_TYPE,
-    BRIDGE_DEVICE,
     BRIDGE_DEVICE_ID,
-    BRIDGE_LEAP,
     BRIDGE_TIMEOUT,
-    BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -49,6 +46,7 @@ from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
 )
+from .models import LutronCasetaData
 from .util import serial_to_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -156,11 +154,9 @@ async def async_setup_entry(
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
-    hass.data[DOMAIN][entry_id] = {
-        BRIDGE_LEAP: bridge,
-        BRIDGE_DEVICE: bridge_device,
-        BUTTON_DEVICES: button_devices,
-    }
+    hass.data[DOMAIN][entry_id] = LutronCasetaData(
+        bridge, bridge_device, button_devices
+    )
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -289,9 +285,8 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload the bridge bridge from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    smartbridge: Smartbridge = data[BRIDGE_LEAP]
-    await smartbridge.close()
+    data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
+    await data.bridge.close()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
@@ -371,7 +366,8 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove lutron_caseta config entry from a device."""
-    bridge: Smartbridge = hass.data[DOMAIN][entry.entry_id][BRIDGE_LEAP]
+    data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
+    bridge = data.bridge
     devices = bridge.get_devices()
     buttons = bridge.buttons
     occupancy_groups = bridge.occupancy_groups
