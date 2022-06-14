@@ -96,7 +96,7 @@ def redact_credentials(data: str) -> str:
 def create_stream(
     hass: HomeAssistant,
     stream_source: str,
-    options: dict[str, str | bool | float],
+    options: Mapping[str, str | bool | float],
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
