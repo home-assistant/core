@@ -73,11 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryAuthFailed(f"reason: {details}") from err
     except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
-        _LOGGER.debug(
-            "Connection error during update of '%s' with exception: %s",
-            entry.unique_id,
-            err,
-        )
         if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:

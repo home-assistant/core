@@ -104,9 +104,17 @@ class SynoApi:
             self._with_upgrade = False
             LOGGER.debug("Disabled fetching upgrade data during setup: %s", ex)
 
-        self._setup_api_requests()
         self._fetch_device_configuration()
-        self._update()
+
+        try:
+            self._update()
+        except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+            LOGGER.debug(
+                "Connection error during setup of '%s' with exception: %s",
+                self._entry.unique_id,
+                err,
+            )
+            raise err
 
     @callback
     def subscribe(self, api_key: str, unique_id: str) -> Callable[[], None]:
@@ -251,19 +259,23 @@ class SynoApi:
             # ignore API errors during logout
             pass
 
+    async def async_update(self) -> None:
+        """Update function for updating API information."""
+        try:
+            await self._hass.async_add_executor_job(self._update)
+        except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
+            LOGGER.debug(
+                "Connection error during update of '%s' with exception: %s",
+                self._entry.unique_id,
+                err,
+            )
+            LOGGER.warning(
+                "Connection error during update, fallback by reloading the entry"
+            )
+            await self._hass.config_entries.async_reload(self._entry.entry_id)
+
     def _update(self) -> None:
         """Update function for updating API information."""
         LOGGER.debug("Start data update for '%s'", self._entry.unique_id)
         self._setup_api_requests()
         self.dsm.update(self._with_information)
-
-    async def async_update(self) -> None:
-        """Update function for updating API information."""
-        try:
-            await self._hass.async_add_executor_job(self._update)
-        except SYNOLOGY_CONNECTION_EXCEPTIONS as ex:
-            LOGGER.warning(
-                "Connection error during update: %s, fallback by reloading the entry",
-                ex,
-            )
-            await self._hass.config_entries.async_reload(self._entry.entry_id)
