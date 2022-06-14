@@ -94,9 +94,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [PecoSensor(sensor, county, coordinator) for sensor in SENSOR_LIST],
-        True,
     )
-    return
 
 
 class PecoSensor(
