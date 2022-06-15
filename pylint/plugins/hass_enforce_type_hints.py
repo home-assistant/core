@@ -12,6 +12,9 @@ from homeassistant.const import Platform
 
 UNDEFINED = object()
 
+# Keep default as True on CI, but adds ability to enable locally
+# when methods do not have any type hints
+_IGNORE_MISSING_ANNOTATIONS = True
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 
@@ -641,7 +644,11 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def _check_function(self, node: nodes.FunctionDef, match: TypeHintMatch) -> None:
         # Check that at least one argument is annotated.
         annotations = _get_all_annotations(node)
-        if node.returns is None and not _has_valid_annotations(annotations):
+        if (
+            _IGNORE_MISSING_ANNOTATIONS
+            and node.returns is None
+            and not _has_valid_annotations(annotations)
+        ):
             return
 
         # Check that all arguments are correctly annotated.
