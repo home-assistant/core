@@ -1,8 +1,10 @@
 """Common libraries for test setup."""
 
+from __future__ import annotations
+
 from collections.abc import Awaitable, Callable
 import copy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import time
 from typing import Any, Generator, TypeVar
 
@@ -13,6 +15,7 @@ from google_nest_sdm.event import EventMessage
 from google_nest_sdm.event_media import CachePolicy
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
 
+from homeassistant.components.application_credentials import ClientCredential
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import SDM_SCOPES
 
@@ -73,8 +76,10 @@ def create_config_entry(token_expiration_time=None) -> MockConfigEntry:
 class NestTestConfig:
     """Holder for integration configuration."""
 
-    config: dict[str, Any]
-    config_entry_data: dict[str, Any]
+    config: dict[str, Any] = field(default_factory=dict)
+    config_entry_data: dict[str, Any] | None = None
+    auth_implementation: str = WEB_AUTH_DOMAIN
+    credential: ClientCredential | None = None
 
 
 # Exercises mode where all configuration is in configuration.yaml
@@ -86,7 +91,7 @@ TEST_CONFIG_YAML_ONLY = NestTestConfig(
     },
 )
 TEST_CONFIGFLOW_YAML_ONLY = NestTestConfig(
-    config=TEST_CONFIG_YAML_ONLY.config, config_entry_data=None
+    config=TEST_CONFIG_YAML_ONLY.config,
 )
 
 # Exercises mode where subscriber id is created in the config flow, but
@@ -106,8 +111,24 @@ TEST_CONFIG_HYBRID = NestTestConfig(
         "subscriber_id": SUBSCRIBER_ID,
     },
 )
-TEST_CONFIGFLOW_HYBRID = NestTestConfig(
-    TEST_CONFIG_HYBRID.config, config_entry_data=None
+TEST_CONFIGFLOW_HYBRID = NestTestConfig(TEST_CONFIG_HYBRID.config)
+
+# Exercises mode where all configuration is from the config flow
+TEST_CONFIG_APP_CREDS = NestTestConfig(
+    config_entry_data={
+        "sdm": {},
+        "token": create_token_entry(),
+        "project_id": PROJECT_ID,
+        "cloud_project_id": CLOUD_PROJECT_ID,
+        "subscriber_id": SUBSCRIBER_ID,
+    },
+    auth_implementation="imported-cred",
+    credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
+)
+TEST_CONFIGFLOW_APP_CREDS = NestTestConfig(
+    config=TEST_CONFIG_APP_CREDS.config,
+    auth_implementation="imported-cred",
+    credential=ClientCredential(CLIENT_ID, CLIENT_SECRET),
 )
 
 TEST_CONFIG_LEGACY = NestTestConfig(
@@ -126,6 +147,7 @@ TEST_CONFIG_LEGACY = NestTestConfig(
             },
         },
     },
+    credential=None,
 )
 
 

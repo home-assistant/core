@@ -443,9 +443,7 @@ async def test_structure_update_event(hass, subscriber, setup_platform):
         },
         auth=None,
     )
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
+    with patch("homeassistant.components.nest.PLATFORMS", [PLATFORM]), patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber",
         return_value=subscriber,
     ):
