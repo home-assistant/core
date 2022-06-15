@@ -14,6 +14,9 @@ from google_nest_sdm.auth import AbstractAuth
 from google_nest_sdm.device_manager import DeviceManager
 import pytest
 
+from homeassistant.components.application_credentials import (
+    async_import_client_credential,
+)
 from homeassistant.components.nest import DOMAIN
 from homeassistant.components.nest.const import CONF_SUBSCRIBER_ID
 from homeassistant.core import HomeAssistant
@@ -22,9 +25,8 @@ from homeassistant.setup import async_setup_component
 from .common import (
     DEVICE_ID,
     SUBSCRIBER_ID,
-    TEST_CONFIG_HYBRID,
+    TEST_CONFIG_APP_CREDS,
     TEST_CONFIG_YAML_ONLY,
-    WEB_AUTH_DOMAIN,
     CreateDevice,
     FakeSubscriber,
     NestTestConfig,
@@ -183,14 +185,14 @@ def subscriber_id() -> str:
 
 
 @pytest.fixture
-def auth_implementation() -> str | None:
+def auth_implementation(nest_test_config: NestTestConfig) -> str | None:
     """Fixture to let tests override the auth implementation in the config entry."""
-    return WEB_AUTH_DOMAIN
+    return nest_test_config.auth_implementation
 
 
 @pytest.fixture(
-    params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_HYBRID],
-    ids=["yaml-config-only", "hybrid-config"],
+    params=[TEST_CONFIG_YAML_ONLY, TEST_CONFIG_APP_CREDS],
+    ids=["yaml-config-only", "app-creds"],
 )
 def nest_test_config(request) -> NestTestConfig:
     """Fixture that sets up the configuration used for the test."""
@@ -230,6 +232,20 @@ def config_entry(
     return MockConfigEntry(domain=DOMAIN, data=data)
 
 
+@pytest.fixture(autouse=True)
+async def credential(hass: HomeAssistant, nest_test_config: NestTestConfig) -> None:
+    """Fixture that provides the ClientCredential for the test if any."""
+    if not nest_test_config.credential:
+        return
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        nest_test_config.credential,
+        nest_test_config.auth_implementation,
+    )
+
+
 @pytest.fixture
 async def setup_base_platform(
     hass: HomeAssistant,
@@ -240,9 +256,7 @@ async def setup_base_platform(
     """Fixture to setup the integration platform."""
     if config_entry:
         config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation"
-    ), patch("homeassistant.components.nest.PLATFORMS", platforms):
+    with patch("homeassistant.components.nest.PLATFORMS", platforms):
 
         async def _setup_func() -> bool:
             assert await async_setup_component(hass, DOMAIN, config)
