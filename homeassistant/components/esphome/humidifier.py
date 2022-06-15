@@ -4,7 +4,6 @@ from __future__ import annotations
 from typing import Any
 
 from aioesphomeapi import (
-    HumidifierAction,
     HumidifierInfo,
     HumidifierMode,
     HumidifierPreset,
@@ -13,10 +12,6 @@ from aioesphomeapi import (
 
 from homeassistant.components.humidifier import HumidifierDeviceClass, HumidifierEntity
 from homeassistant.components.humidifier.const import (
-    CURRENT_HUMIDIFIER_DEHUMIDIFY,
-    CURRENT_HUMIDIFIER_HUMIDIFY,
-    CURRENT_HUMIDIFIER_IDLE,
-    CURRENT_HUMIDIFIER_OFF,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AWAY,
@@ -81,14 +76,7 @@ _HUMIDIFIER_PRESET_MODES: EsphomeEnumMapper[HumidifierPreset, str] = EsphomeEnum
         HumidifierPreset.SLEEP: MODE_SLEEP,
     }
 )
-_HUMIDIFIER_ACTIONS: EsphomeEnumMapper[HumidifierAction, str] = EsphomeEnumMapper(
-    {
-        HumidifierAction.OFF: CURRENT_HUMIDIFIER_OFF,
-        HumidifierAction.DEHUMIDIFYING: CURRENT_HUMIDIFIER_DEHUMIDIFY,
-        HumidifierAction.HUMIDIFYING: CURRENT_HUMIDIFIER_HUMIDIFY,
-        HumidifierAction.IDLE: CURRENT_HUMIDIFIER_IDLE,
-    }
-)
+
 
 # https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
 # pylint: disable=invalid-overridden-method
@@ -189,11 +177,3 @@ class EsphomeHumidifierEntity(
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Set humidifier to off operation mode."""
         await self.async_set_ops_mode(OPS_MODE_OFF)
-
-    @esphome_state_property
-    def humidifier_action(self) -> str | None:
-        """Return current action."""
-        # HA has no support feature field for humidifier_action
-        if not self._static_info.supports_action:
-            return None
-        return _HUMIDIFIER_ACTIONS.from_esphome(self._state.action)
