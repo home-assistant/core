@@ -252,8 +252,6 @@ class NumberEntity(Entity):
     @property
     def native_step(self) -> float | None:
         """Return the increment/decrement step."""
-        if hasattr(self, "_attr_native_step"):
-            return self._attr_native_step
         if (
             hasattr(self, "entity_description")
             and self.entity_description.native_step is not None
@@ -273,6 +271,8 @@ class NumberEntity(Entity):
         ):
             self._report_deprecated_number_entity()
             return self.entity_description.step
+        if hasattr(self, "_attr_native_step"):
+            return self._attr_native_step
         if (native_step := self.native_step) is not None:
             return native_step
         step = DEFAULT_STEP
