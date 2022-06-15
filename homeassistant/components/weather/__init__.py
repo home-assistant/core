@@ -82,6 +82,7 @@ ATTR_WEATHER_VISIBILITY_UNIT = "visibility_unit"
 ATTR_WEATHER_WIND_BEARING = "wind_bearing"
 ATTR_WEATHER_WIND_SPEED = "wind_speed"
 ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
+ATTR_WEATHER_PRECIPITATION = "precipitation"
 ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
 
 
@@ -197,12 +198,13 @@ class WeatherEntity(Entity):
         None  # Subclasses of WeatherEntity should not set this
     )
     _attr_native_temperature_unit: str
-    _attr_native_temperature: float | None
+    _attr_native_temperature: float
     _attr_native_visibility: float | None = None
     _attr_visibility_unit: None = (
         None  # Subclasses of WeatherEntity should not set this
     )
     _attr_native_visibility_unit: str | None = None
+    _attr_native_precipitation: float | None = None
     _attr_precipitation_unit: None = (
         None  # Subclasses of WeatherEntity should not set this
     )
@@ -228,7 +230,7 @@ class WeatherEntity(Entity):
         self.async_registry_entry_updated()
 
     @property
-    def native_temperature(self) -> float | None:
+    def native_temperature(self) -> float:
         """Return the platform temperature in native units (i.e. not converted)."""
         return self._attr_native_temperature
 
@@ -334,6 +336,11 @@ class WeatherEntity(Entity):
         return self._attr_forecast
 
     @property
+    def native_precipitation(self) -> float | None:
+        """Return the precipitation in native units."""
+        return self._attr_native_precipitation
+
+    @property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
         if hasattr(self, "_attr_native_precipitation_unit"):
@@ -427,8 +434,18 @@ class WeatherEntity(Entity):
                 )
                 data[ATTR_WEATHER_VISIBILITY_UNIT] = self.visibility_unit
 
-        if precipitation_unit := self.precipitation_unit:
-            data[ATTR_WEATHER_PRECIPITATION_UNIT] = precipitation_unit
+        if (precipitation := self.native_precipitation) is not None:
+            with suppress(ValueError):
+                float(precipitation)
+                value_precipitation = UNIT_CONVERSIONS[CONF_PRECIPITATION_UOM](
+                    precipitation,
+                    self.native_precipitation_unit,
+                    self.precipitation_unit,
+                )
+                data[ATTR_WEATHER_PRECIPITATION] = round(
+                    value_precipitation, ROUNDING_PRECISION
+                )
+                data[ATTR_WEATHER_PRECIPITATION_UNIT] = self.precipitation_unit
 
         if self.forecast is not None:
             forecast = []
