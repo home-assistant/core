@@ -107,7 +107,7 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
                 default=self.config_entry.options.get(
                     CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                 ),
-            ): int,
+            ): vol.All(vol.Coerce(int), vol.Range(min=10, min_included=True)),
             vol.Optional(
                 CONF_DETECTION_TIME,
                 default=self.config_entry.options.get(
