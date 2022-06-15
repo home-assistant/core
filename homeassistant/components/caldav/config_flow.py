@@ -2,6 +2,7 @@
 import logging
 
 import voluptuous as vol
+from yarl import URL as yurl
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
@@ -95,6 +96,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await async_caldav_connect(self.hass, user_input)
+                url = yurl(user_input[CONF_URL])
             except CALDAV_EXCEPTIONS:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
@@ -102,7 +104,7 @@ class CaldavFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 return self.async_create_entry(
-                    title=DOMAIN,
+                    title=f"{url.host} ({user_input[CONF_USERNAME]})",
                     data=user_input,
                     options={
                         CONF_CALENDARS: user_input.get(CONF_CALENDARS, []),
