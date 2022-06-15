@@ -134,14 +134,22 @@ class RecorderOutput(StreamOutput):
 
             source.close()
 
+        # Write lookback segments
+        while len(self._segments) > 1:  # The last segment is in progress
+            await self._hass.async_add_executor_job(
+                write_segment, self._segments.popleft()
+            )
+        # Make sure the first segment has been added
+        if not self._segments:
+            await self.recv()
+        # Write segments as soon as they are completed
         while not self.idle:
             await self.recv()
-            if len(self._segments) > 1:  # The last segment is in progress
-                await self._hass.async_add_executor_job(
-                    write_segment, self._segments.popleft()
-                )
-        # Clean up remaining segments
-        while self._segments:
+            await self._hass.async_add_executor_job(
+                write_segment, self._segments.popleft()
+            )
+        # Write last segment, if any
+        if self._segments:
             await self._hass.async_add_executor_job(
                 write_segment, self._segments.popleft()
             )
