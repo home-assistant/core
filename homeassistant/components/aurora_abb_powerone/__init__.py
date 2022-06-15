@@ -12,7 +12,7 @@
 
 import logging
 
-from aurorapy.client import AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ADDRESS, CONF_PORT, Platform
@@ -85,21 +85,14 @@ class AuroraAbbDataUpdateCoordinator(DataUpdateCoordinator):
             self.available = True
             self.data = data
 
+        except AuroraTimeoutError:
+            self.data = {}
+            self.available = False
+            _LOGGER.debug("No response from inverter (could be dark)")
         except AuroraError as error:
             self.data = {}
             self.available = False
-            # aurorapy does not have different exceptions (yet) for dealing
-            # with timeout vs other comms errors.
-            # This means the (normal) situation of no response during darkness
-            # raises an exception.
-            # aurorapy (gitlab) pull request merged 29/5/2019. When >0.2.6 is
-            # released, this could be modified to :
-            # except AuroraTimeoutError as e:
-            # Workaround: look at the text of the exception
-            if "No response after" in str(error):
-                _LOGGER.debug("No response from inverter (could be dark)")
-            else:
-                raise error
+            raise error
         finally:
             if self.available != self.available_prev:
                 if self.available:
