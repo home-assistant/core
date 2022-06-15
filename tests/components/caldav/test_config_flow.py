@@ -2,7 +2,6 @@
 from unittest.mock import patch
 
 from caldav.lib.error import DAVError
-import pytest
 
 from homeassistant.components.caldav.const import (
     CONF_ADD_CUSTOM_CALENDAR,
@@ -75,15 +74,6 @@ OPTIONS_INPUT = {
         {CONF_NAME: "name_1", CONF_CALENDAR: "calendar_1", CONF_SEARCH: "search_1"},
     ],
 }
-
-
-@pytest.fixture
-def mock_connect():
-    """Mock the dav client."""
-    with patch(
-        "homeassistant.components.caldav.caldav.DAVClient.principal",
-    ):
-        yield
 
 
 async def test_user_form(hass, mock_connect):
