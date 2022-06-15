@@ -2599,9 +2599,6 @@ yalexs-ble==1.9.5
 # homeassistant.components.august
 yalexs==1.2.6
 
-# homeassistant.components.caldav
-yarl==1.7.2
-
 # homeassistant.components.yeelight
 yeelight==0.7.10
 
