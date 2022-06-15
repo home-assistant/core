@@ -443,9 +443,9 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ),
     ],
 }
-# Properties are normally checked by mypy, and will only be checked
-# by pylint when --ignore-missing-annotations is False
-_PROPERTY_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+# Overriden properties and functions are normally checked by mypy, and will only
+# be checked by pylint when --ignore-missing-annotations is False
+_INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "lock": [
         ClassTypeHintMatch(
             base_class="LockEntity",
@@ -473,6 +473,36 @@ _PROPERTY_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="is_jammed",
                     return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="lock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_lock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="unlock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_unlock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="open",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_open",
+                    kwargs_type="Any",
+                    return_type=None,
                 ),
             ],
         ),
@@ -660,7 +690,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self._class_matchers.extend(class_matches)
 
         if not self.linter.config.ignore_missing_annotations and (
-            property_matches := _PROPERTY_MATCH.get(module_platform)
+            property_matches := _INHERITANCE_MATCH.get(module_platform)
         ):
             self._class_matchers.extend(property_matches)
 
