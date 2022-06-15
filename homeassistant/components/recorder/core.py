@@ -755,7 +755,7 @@ class Recorder(threading.Thread):
 
         try:
             shared_data_bytes = EventData.shared_data_bytes_from_event(event)
-        except (TypeError, ValueError) as ex:
+        except (UnicodeEncodeError, TypeError, ValueError) as ex:
             _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
             return
 
@@ -789,7 +789,7 @@ class Recorder(threading.Thread):
             shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
                 event, self._exclude_attributes_by_domain
             )
-        except (TypeError, ValueError) as ex:
+        except (UnicodeEncodeError, TypeError, ValueError) as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
                 event.data.get("new_state"),
