@@ -38,8 +38,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="My Position",
         icon="mdi:content-save-cog",
         command=OverkizCommand.SET_MEMORIZED_1_POSITION,
-        min_value=0,
-        max_value=100,
+        native_min_value=0,
+        native_max_value=100,
         entity_category=EntityCategory.CONFIG,
     ),
     # WaterHeater: Expected Number Of Shower (2 - 4)
@@ -48,8 +48,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Expected Number Of Shower",
         icon="mdi:shower-head",
         command=OverkizCommand.SET_EXPECTED_NUMBER_OF_SHOWER,
-        min_value=2,
-        max_value=4,
+        native_min_value=2,
+        native_max_value=4,
         entity_category=EntityCategory.CONFIG,
     ),
     # SomfyHeatingTemperatureInterface
@@ -58,8 +58,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Eco Room Temperature",
         icon="mdi:thermometer",
         command=OverkizCommand.SET_ECO_TEMPERATURE,
-        min_value=6,
-        max_value=29,
+        native_min_value=6,
+        native_max_value=29,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -67,8 +67,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Comfort Room Temperature",
         icon="mdi:home-thermometer-outline",
         command=OverkizCommand.SET_COMFORT_TEMPERATURE,
-        min_value=7,
-        max_value=30,
+        native_min_value=7,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
     ),
     OverkizNumberDescription(
@@ -76,8 +76,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         name="Freeze Protection Temperature",
         icon="mdi:sun-thermometer-outline",
         command=OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
-        min_value=5,
-        max_value=15,
+        native_min_value=5,
+        native_max_value=15,
         entity_category=EntityCategory.CONFIG,
     ),
     # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)
@@ -86,8 +86,8 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         key=OverkizState.CORE_LEVEL,
         icon="mdi:patio-heater",
         command=OverkizCommand.SET_LEVEL,
-        min_value=0,
-        max_value=100,
+        native_min_value=0,
+        native_max_value=100,
         inverted=True,
     ),
 ]
@@ -134,7 +134,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
             if self.entity_description.inverted:
-                return self.max_value - cast(float, state.value)
+                return self.native_max_value - cast(float, state.value)
 
             return cast(float, state.value)
 
@@ -143,7 +143,7 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         if self.entity_description.inverted:
-            value = self.max_value - value
+            value = self.native_max_value - value
 
         await self.executor.async_execute_command(
             self.entity_description.command, value
