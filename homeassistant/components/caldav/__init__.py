@@ -15,6 +15,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import CALDAV_EXCEPTIONS, DOMAIN
 
@@ -29,6 +30,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         calendars = await async_caldav_connect(hass, entry.data)
     except CALDAV_EXCEPTIONS as error:
         raise ConfigEntryNotReady from error
+
+    device_registry = dr.async_get(hass)
+    for stable_parent_url in {calendar.parent.canonical_url for calendar in calendars}:
+        device_registry.async_get_or_create(
+            name=entry.data[CONF_USERNAME],
+            config_entry_id=entry.entry_id,
+            model="CalDAV Service",
+            configuration_url=stable_parent_url,
+            entry_type=dr.DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, stable_parent_url)},
+        )
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 

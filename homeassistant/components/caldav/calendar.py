@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 import logging
 import re
 
+from caldav import Calendar
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -26,10 +27,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import generate_entity_id
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo, generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import Throttle, dt
+from homeassistant.util import Throttle, dt, slugify
 
 from .const import (
     CONF_CALENDAR,
@@ -101,7 +103,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WebDav Calendar entry."""
-    calendars = hass.data[DOMAIN][config_entry.entry_id]
+    calendars: list[Calendar] = hass.data[DOMAIN][config_entry.entry_id]
     days = config_entry.data[CONF_DAYS]
 
     calendar_devices = []
@@ -151,6 +153,20 @@ class WebDavCalendarEntity(CalendarEntity):
         self.entity_id = entity_id
         self._event: CalendarEvent | None = None
         self._attr_name = name
+        # CalDAV urls are expected to be stable for the life of the config entry
+        unique_id = stable_url = calendar.canonical_url
+        if search:
+            unique_id = f"{stable_url}_{slugify(search)}"
+        parent_stable_url = calendar.parent.canonical_url
+        self._attr_unique_id = unique_id
+        self._attr_device_info = DeviceInfo(
+            name=name,
+            model="CalDAV Calendar",
+            identifiers={(DOMAIN, stable_url)},
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url=stable_url,
+            via_device=(DOMAIN, parent_stable_url),
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
