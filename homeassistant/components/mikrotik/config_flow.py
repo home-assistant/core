@@ -1,4 +1,6 @@
 """Config flow for Mikrotik."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -32,7 +34,9 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MikrotikOptionsFlowHandler:
         """Get the options flow for this handler."""
         return MikrotikOptionsFlowHandler(config_entry)
 
@@ -78,7 +82,7 @@ class MikrotikFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Mikrotik options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Mikrotik options flow."""
         self.config_entry = config_entry
 

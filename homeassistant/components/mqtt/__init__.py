@@ -28,7 +28,14 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
+from homeassistant.helpers.reload import (
+    async_integration_yaml_config,
+    async_setup_reload_service,
+)
 from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
@@ -60,12 +67,14 @@ from .const import (  # noqa: F401
     DATA_MQTT,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_NEEDED,
+    DATA_MQTT_UPDATED_CONFIG,
     DEFAULT_ENCODING,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
+    MQTT_RELOADED,
     PLATFORMS,
 )
 from .models import (  # noqa: F401
@@ -364,21 +373,44 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
-    async def async_forward_entry_setup():
-        """Forward the config entry setup to the platforms."""
-        async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-            for component in PLATFORMS:
-                config_entries_key = f"{component}.mqtt"
-                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-                    await hass.config_entries.async_forward_entry_setup(
-                        entry, component
-                    )
+    # Setup reload service. Once support for legacy config is removed in 2022.9, we
+    # should no longer call async_setup_reload_service but instead implement a custom
+    # service
+    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
 
-    hass.async_create_task(async_forward_entry_setup())
+    async def _async_reload_platforms(_: Event | None) -> None:
+        """Discover entities for a platform."""
+        config_yaml = await async_integration_yaml_config(hass, DOMAIN) or {}
+        hass.data[DATA_MQTT_UPDATED_CONFIG] = config_yaml.get(DOMAIN, {})
+        async_dispatcher_send(hass, MQTT_RELOADED)
 
-    if conf.get(CONF_DISCOVERY):
-        await _async_setup_discovery(hass, conf, entry)
+    async def async_forward_entry_setup_and_setup_discovery(config_entry):
+        """Forward the config entry setup to the platforms and set up discovery."""
+        # Local import to avoid circular dependencies
+        # pylint: disable-next=import-outside-toplevel
+        from . import device_automation, tag
+
+        await asyncio.gather(
+            *(
+                [
+                    device_automation.async_setup_entry(hass, config_entry),
+                    tag.async_setup_entry(hass, config_entry),
+                ]
+                + [
+                    hass.config_entries.async_forward_entry_setup(entry, component)
+                    for component in PLATFORMS
+                ]
+            )
+        )
+        # Setup discovery
+        if conf.get(CONF_DISCOVERY):
+            await _async_setup_discovery(hass, conf, entry)
+        # Setup reload service after all platforms have loaded
+        entry.async_on_unload(
+            hass.bus.async_listen("event_mqtt_reloaded", _async_reload_platforms)
+        )
+
+    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
 
     if DATA_MQTT_RELOAD_NEEDED in hass.data:
         hass.data.pop(DATA_MQTT_RELOAD_NEEDED)

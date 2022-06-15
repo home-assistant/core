@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -73,6 +74,13 @@ DEFAULT_CONFIG = {
         "target_humidity_command_topic": "humidity-command-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def humidifer_platform_only():
+    """Only setup the humidifer platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.HUMIDIFIER]):
+        yield
 
 
 async def async_turn_on(
@@ -1267,13 +1275,11 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = humidifier.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

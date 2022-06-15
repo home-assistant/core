@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 import async_timeout
 from synology_dsm.api.surveillance_station.camera import SynoCamera
@@ -65,7 +66,7 @@ class SynologyDSMSwitchUpdateCoordinator(SynologyDSMUpdateCoordinator):
         )
         self.version = info["data"]["CMSMinVersion"]
 
-    async def _async_update_data(self) -> dict[str, dict[str, SynoCamera]] | None:
+    async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch all data from api."""
         surveillance_station = self.api.surveillance_station
         return {
@@ -96,7 +97,7 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator):
             ),
         )
 
-    async def _async_update_data(self) -> dict[str, dict[str, SynoCamera]] | None:
+    async def _async_update_data(self) -> None:
         """Fetch all data from api."""
         try:
             await self.api.async_update()
@@ -117,7 +118,7 @@ class SynologyDSMCameraUpdateCoordinator(SynologyDSMUpdateCoordinator):
         """Initialize DataUpdateCoordinator for cameras."""
         super().__init__(hass, entry, api, timedelta(seconds=30))
 
-    async def _async_update_data(self) -> dict[str, dict[str, SynoCamera]] | None:
+    async def _async_update_data(self) -> dict[str, dict[str, SynoCamera]]:
         """Fetch all camera data from api."""
         surveillance_station = self.api.surveillance_station
         current_data: dict[str, SynoCamera] = {

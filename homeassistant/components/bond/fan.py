@@ -19,7 +19,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     int_states_in_range,
@@ -46,20 +45,17 @@ async def async_setup_entry(
     hub: BondHub = data[HUB]
     bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
     platform = entity_platform.async_get_current_platform()
-
-    fans: list[Entity] = [
-        BondFan(hub, device, bpup_subs)
-        for device in hub.devices
-        if DeviceType.is_fan(device.type)
-    ]
-
     platform.async_register_entity_service(
         SERVICE_SET_FAN_SPEED_TRACKED_STATE,
         {vol.Required("speed"): vol.All(vol.Number(scale=0), vol.Range(0, 100))},
         "async_set_speed_belief",
     )
 
-    async_add_entities(fans, True)
+    async_add_entities(
+        BondFan(hub, device, bpup_subs)
+        for device in hub.devices
+        if DeviceType.is_fan(device.type)
+    )
 
 
 class BondFan(BondEntity, FanEntity):
@@ -69,15 +65,15 @@ class BondFan(BondEntity, FanEntity):
         self, hub: BondHub, device: BondDevice, bpup_subs: BPUPSubscriptions
     ) -> None:
         """Create HA entity representing Bond fan."""
-        super().__init__(hub, device, bpup_subs)
-
         self._power: bool | None = None
         self._speed: int | None = None
         self._direction: int | None = None
+        super().__init__(hub, device, bpup_subs)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         self._power = state.get("power")
         self._speed = state.get("speed")
         self._direction = state.get("direction")
