@@ -17,13 +17,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         return False
 
     await hub.async_config_entry_first_refresh()
+    
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
 
     config_entry.async_on_unload(
         config_entry.add_update_listener(hub.async_options_updated)
     )
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
-
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = hub
+    
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
