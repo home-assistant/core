@@ -100,7 +100,8 @@ class AladdinDevice(CoverEntity):
             self.async_write_ha_state()
 
         self._acc.register_callback(update_callback, self._number)
-        await self.async_update()
+        await self._acc.get_doors(self._number)
+        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""
