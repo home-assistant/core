@@ -222,7 +222,9 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     }
 
 
-async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None:
+async def test_options_flow_name_previously_removed(
+    hass: HomeAssistant, recorder_mock
+) -> None:
     """Test options config flow where the name was missing."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -238,9 +240,8 @@ async def test_options_flow_name_previously_removed(hass: HomeAssistant) -> None
     )
     entry.add_to_hass(hass)
 
-    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 

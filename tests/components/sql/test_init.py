@@ -1,6 +1,4 @@
 """Test for SQL component Init."""
-from unittest.mock import patch
-
 from homeassistant import config_entries
 from homeassistant.components.recorder import get_instance
 from homeassistant.core import HomeAssistant
@@ -8,17 +6,15 @@ from homeassistant.core import HomeAssistant
 from . import init_integration
 
 
-async def test_setup_entry(hass: HomeAssistant) -> None:
+async def test_setup_entry(hass: HomeAssistant, recorder_mock) -> None:
     """Test setup entry."""
-    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
-        config_entry = await init_integration(hass)
+    config_entry = await init_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
 
-async def test_unload_entry(hass: HomeAssistant) -> None:
+async def test_unload_entry(hass: HomeAssistant, recorder_mock) -> None:
     """Test unload an entry."""
-    with patch("homeassistant.components.sql.remove_configured_db_url_if_not_needed"):
-        config_entry = await init_integration(hass)
+    config_entry = await init_integration(hass)
     assert config_entry.state == config_entries.ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
