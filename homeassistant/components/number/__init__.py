@@ -133,8 +133,11 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            caller = inspect.stack()[2]
-            module = inspect.getmodule(caller[0])
+            if self.__class__.__name__ == "NumberEntityDescription":
+                caller = inspect.stack()[2]
+                module = inspect.getmodule(caller[0])
+            else:
+                module = inspect.getmodule(self)
             if module and module.__file__ and "custom_components" in module.__file__:
                 report_issue = "report it to the custom component author."
             else:
@@ -186,6 +189,38 @@ class NumberEntity(Entity):
     _attr_native_value: float
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
+
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if any(
+            method in cls.__dict__
+            for method in (
+                "async_set_value",
+                "max_value",
+                "min_value",
+                "set_value",
+                "step",
+                "unit_of_measurement",
+                "value",
+            )
+        ):
+            module = inspect.getmodule(cls)
+            if module and module.__file__ and "custom_components" in module.__file__:
+                report_issue = "report it to the custom component author."
+            else:
+                report_issue = (
+                    "create a bug report at "
+                    "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                )
+            _LOGGER.warning(
+                "%s::%s is overriding deprecated methods on an instance of "
+                "NumberEntity, this is not valid and will be unsupported "
+                "from Home Assistant 2022.10. Please %s",
+                cls.__module__,
+                cls.__name__,
+                report_issue,
+            )
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
