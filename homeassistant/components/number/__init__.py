@@ -8,7 +8,7 @@ from datetime import timedelta
 import inspect
 import logging
 from math import ceil, floor
-from typing import Any, final
+from typing import Any, Final, final
 
 import voluptuous as vol
 
@@ -52,6 +52,9 @@ class NumberDeviceClass(StrEnum):
 
     # temperature (C/F)
     TEMPERATURE = "temperature"
+
+
+DEVICE_CLASSES_SCHEMA: Final = vol.All(vol.Lower, vol.Coerce(NumberDeviceClass))
 
 
 class NumberMode(StrEnum):
