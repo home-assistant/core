@@ -40,6 +40,7 @@ async def async_setup_entry(
     data: BondData = hass.data[DOMAIN][entry.entry_id]
     hub = data.hub
     bpup_subs = data.bpup_subs
+
     async_add_entities(
         BondCover(hub, device, bpup_subs)
         for device in hub.devices
