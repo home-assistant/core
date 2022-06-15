@@ -1122,12 +1122,6 @@ omit =
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
     homeassistant/components/soma/utils.py
-    homeassistant/components/somfy/__init__.py
-    homeassistant/components/somfy/api.py
-    homeassistant/components/somfy/climate.py
-    homeassistant/components/somfy/cover.py
-    homeassistant/components/somfy/sensor.py
-    homeassistant/components/somfy/switch.py
     homeassistant/components/somfy_mylink/__init__.py
     homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/__init__.py
