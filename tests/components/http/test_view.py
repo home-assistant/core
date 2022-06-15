@@ -37,7 +37,7 @@ async def test_invalid_json(caplog):
     with pytest.raises(HTTPInternalServerError):
         view.json("\ud800")
 
-    assert "\ud800" in caplog.text
+    assert "Unable to serialize to JSON" in caplog.text
 
 
 async def test_nan_serialized_to_null(caplog):
