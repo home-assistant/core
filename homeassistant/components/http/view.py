@@ -53,7 +53,7 @@ class HomeAssistantView:
         """Return a JSON response."""
         try:
             msg = json_bytes(result)
-        except (ValueError, TypeError) as err:
+        except (UnicodeEncodeError, ValueError, TypeError) as err:
             _LOGGER.error("Unable to serialize to JSON: %s\n%s", err, result)
             raise HTTPInternalServerError from err
         response = web.Response(
