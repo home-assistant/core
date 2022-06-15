@@ -148,8 +148,9 @@ class RecorderOutput(StreamOutput):
             await self._hass.async_add_executor_job(
                 write_segment, self._segments.popleft()
             )
-        # Write last segment, if any
-        if self._segments:
+        # Write remaining segments
+        # Should only have 0 or 1 segments, but loop through just in case
+        while self._segments:
             await self._hass.async_add_executor_job(
                 write_segment, self._segments.popleft()
             )
