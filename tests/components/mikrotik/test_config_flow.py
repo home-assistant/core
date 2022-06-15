@@ -17,7 +17,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -122,7 +121,6 @@ async def test_options(hass, api):
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 10,
             CONF_DETECTION_TIME: 30,
             CONF_ARP_PING: True,
             CONF_FORCE_DHCP: False,
@@ -131,7 +129,6 @@ async def test_options(hass, api):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
-        CONF_SCAN_INTERVAL: 10,
         CONF_DETECTION_TIME: 30,
         CONF_ARP_PING: True,
         CONF_FORCE_DHCP: False,
