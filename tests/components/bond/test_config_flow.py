@@ -18,6 +18,7 @@ from .common import (
     patch_bond_device,
     patch_bond_device_ids,
     patch_bond_device_properties,
+    patch_bond_device_state,
     patch_bond_token,
     patch_bond_version,
 )
@@ -38,7 +39,7 @@ async def test_user_form(hass: core.HomeAssistant):
         return_value={"bondid": "ZXXX12345"}
     ), patch_bond_device_ids(
         return_value=["f6776c11", "f6776c12"]
-    ), patch_bond_bridge(), patch_bond_device_properties(), patch_bond_device(), _patch_async_setup_entry() as mock_setup_entry:
+    ), patch_bond_bridge(), patch_bond_device_properties(), patch_bond_device(), patch_bond_device_state(), _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
@@ -73,7 +74,7 @@ async def test_user_form_with_non_bridge(hass: core.HomeAssistant):
         }
     ), patch_bond_bridge(
         return_value={}
-    ), _patch_async_setup_entry() as mock_setup_entry:
+    ), patch_bond_device_state(), _patch_async_setup_entry() as mock_setup_entry:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_HOST: "some host", CONF_ACCESS_TOKEN: "test-token"},
