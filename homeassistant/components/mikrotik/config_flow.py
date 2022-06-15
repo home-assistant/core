@@ -7,7 +7,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -20,7 +19,6 @@ from .const import (
     DEFAULT_API_PORT,
     DEFAULT_DETECTION_TIME,
     DEFAULT_NAME,
-    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
 from .errors import CannotConnect, LoginError
@@ -102,12 +100,6 @@ class MikrotikOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_ARP_PING,
                 default=self.config_entry.options.get(CONF_ARP_PING, False),
             ): bool,
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                ),
-            ): vol.All(vol.Coerce(int), vol.Range(min=10, min_included=True)),
             vol.Optional(
                 CONF_DETECTION_TIME,
                 default=self.config_entry.options.get(

@@ -7,13 +7,7 @@ import ssl
 import librouteros
 from librouteros.login import plain as login_plain, token as login_token
 
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_SCAN_INTERVAL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
@@ -30,7 +24,6 @@ from .const import (
     CONF_DETECTION_TIME,
     CONF_FORCE_DHCP,
     DEFAULT_DETECTION_TIME,
-    DEFAULT_SCAN_INTERVAL,
     DHCP,
     DOMAIN,
     IDENTITY,
@@ -294,11 +287,7 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=f"{DOMAIN} - {self.host}",
             update_method=self.async_update,
-            update_interval=timedelta(
-                seconds=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+            update_interval=timedelta(seconds=10),
         )
 
     @property
@@ -377,15 +366,6 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
 
         return True
-
-    @staticmethod
-    async def async_options_updated(hass, entry):
-        """Triggered by config entry options updates."""
-        coordinator: DataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-        coordinator.update_interval = timedelta(
-            seconds=entry.options[CONF_SCAN_INTERVAL]
-        )
-        await coordinator.async_request_refresh()
 
 
 def get_api(hass, entry):
