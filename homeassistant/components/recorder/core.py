@@ -36,6 +36,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
@@ -755,7 +756,7 @@ class Recorder(threading.Thread):
 
         try:
             shared_data_bytes = EventData.shared_data_bytes_from_event(event)
-        except (UnicodeEncodeError, TypeError, ValueError) as ex:
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
             return
 
@@ -789,7 +790,7 @@ class Recorder(threading.Thread):
             shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
                 event, self._exclude_attributes_by_domain
             )
-        except (UnicodeEncodeError, TypeError, ValueError) as ex:
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
                 event.data.get("new_state"),
