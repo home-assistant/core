@@ -140,8 +140,7 @@ class RecorderOutput(StreamOutput):
                 await self._hass.async_add_executor_job(
                     write_segment, self._segments.popleft()
                 )
-        # clean up remaining segments
-        await self.recv()
+        # Clean up remaining segments
         while self._segments:
             await self._hass.async_add_executor_job(
                 write_segment, self._segments.popleft()
