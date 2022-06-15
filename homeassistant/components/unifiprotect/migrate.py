@@ -47,7 +47,6 @@ async def async_migrate_buttons(
         _LOGGER.debug("No button entities need migration")
         return
 
-    _LOGGER.info("Migrating %s reboot button entities", len(to_migrate))
     bootstrap = await protect.get_bootstrap()
     count = 0
     for button in to_migrate:
@@ -82,5 +81,3 @@ async def async_migrate_buttons(
 
     if count < len(to_migrate):
         _LOGGER.warning("Failed to migate %s reboot buttons", len(to_migrate) - count)
-    else:
-        _LOGGER.info("Migrated %s reboot button entities", count)
