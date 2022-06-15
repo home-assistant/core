@@ -6,7 +6,6 @@ import contextlib
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from types import MappingProxyType
 from typing import Any
 
 import PIL
@@ -66,7 +65,7 @@ SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 
 
 def build_schema(
-    user_input: Mapping[str, Any] | MappingProxyType[str, Any],
+    user_input: Mapping[str, Any],
     is_options_flow: bool = False,
     show_advanced_options=False,
 ):
@@ -151,7 +150,7 @@ async def async_test_still(
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", url, err)
         return {CONF_STILL_IMAGE_URL: "template_error"}, None
-    verify_ssl = info.get(CONF_VERIFY_SSL, False)
+    verify_ssl = info[CONF_VERIFY_SSL]
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)

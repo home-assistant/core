@@ -129,6 +129,7 @@ async def test_form_only_stillimage_gif(hass, fakeimg_gif, user_flow):
             user_flow["flow_id"],
             data,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result2["options"][CONF_CONTENT_TYPE] == "image/gif"
 
@@ -145,6 +146,7 @@ async def test_form_only_svg_whitespace(hass, fakeimgbytes_svg, user_flow):
             user_flow["flow_id"],
             data,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
@@ -171,6 +173,7 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
             user_flow["flow_id"],
             data,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
 
 
@@ -214,6 +217,7 @@ async def test_still_template(
             user_flow["flow_id"],
             data,
         )
+        await hass.async_block_till_done()
     assert result2["type"] == expected_result
 
 
@@ -262,6 +266,7 @@ async def test_form_only_stream(hass, fakeimgbytes_jpg, mock_create_stream):
             result["flow_id"],
             data,
         )
+        await hass.async_block_till_done()
 
     assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result3["title"] == "127_0_0_1"
