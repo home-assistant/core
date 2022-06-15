@@ -80,6 +80,8 @@ def create_binary_sensor(coordinator, host_name, node_name, vm_id, name):
 class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
     """A binary sensor for reading Proxmox VE data."""
 
+    _attr_device_class = BinarySensorDeviceClass.RUNNING
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -108,9 +110,3 @@ class ProxmoxBinarySensor(ProxmoxEntity, BinarySensorEntity):
         """Return sensor availability."""
 
         return super().available and self.coordinator.data is not None
-
-    @property
-    def device_class(self):
-        """Return device class."""
-
-        return BinarySensorDeviceClass.RUNNING
