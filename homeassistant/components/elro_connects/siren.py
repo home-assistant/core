@@ -1,9 +1,10 @@
 """The Elro Connects siren platform."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 import logging
 
-from elro.command import SILENCE_ALARM, TEST_ALARM
+from elro.command import SILENCE_ALARM, TEST_ALARM, TEST_ALARM_WATER, CommandAttributes
 from elro.device import (
     ALARM_CO,
     ALARM_FIRE,
@@ -27,38 +28,57 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .device import ElroConnectsEntity, ElroConnectsK1
 
+
+@dataclass
+class ElroSirenEntityDescription(SirenEntityDescription):
+    """A class that describes elro siren entities."""
+
+    test_alarm: CommandAttributes | None = None
+    silence_alarm: CommandAttributes | None = None
+
+
 _LOGGER = logging.getLogger(__name__)
 
 SIREN_DEVICE_TYPES = {
-    ALARM_CO: SirenEntityDescription(
+    ALARM_CO: ElroSirenEntityDescription(
         key=ALARM_CO,
         device_class="carbon_monoxide",
         name="CO Alarm",
         icon="mdi:molecule-co",
+        test_alarm=TEST_ALARM,
+        silence_alarm=SILENCE_ALARM,
     ),
-    ALARM_FIRE: SirenEntityDescription(
+    ALARM_FIRE: ElroSirenEntityDescription(
         key=ALARM_FIRE,
         device_class="smoke",
         name="Fire Alarm",
         icon="mdi:fire-alert",
+        test_alarm=TEST_ALARM,
+        silence_alarm=SILENCE_ALARM,
     ),
-    ALARM_HEAT: SirenEntityDescription(
+    ALARM_HEAT: ElroSirenEntityDescription(
         key=ALARM_HEAT,
         device_class="heat",
         name="Heat Alarm",
         icon="mdi:fire-alert",
+        test_alarm=TEST_ALARM,
+        silence_alarm=SILENCE_ALARM,
     ),
-    ALARM_SMOKE: SirenEntityDescription(
+    ALARM_SMOKE: ElroSirenEntityDescription(
         key=ALARM_SMOKE,
         device_class="smoke",
         name="Smoke Alarm",
         icon="mdi:smoke",
+        test_alarm=TEST_ALARM,
+        silence_alarm=SILENCE_ALARM,
     ),
-    ALARM_WATER: SirenEntityDescription(
+    ALARM_WATER: ElroSirenEntityDescription(
         key=ALARM_WATER,
         device_class="moisture",
         name="Water Alarm",
-        icon="mid:water-alert",
+        icon="mdi:water-alert",
+        test_alarm=TEST_ALARM_WATER,
+        silence_alarm=SILENCE_ALARM,
     ),
 }
 
@@ -94,11 +114,12 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
         elro_connects_api: ElroConnectsK1,
         entry: ConfigEntry,
         device_id: int,
-        description: SirenEntityDescription,
+        description: ElroSirenEntityDescription,
     ) -> None:
         """Initialize a Fire Alarm Entity."""
         self._device_id = device_id
         self._elro_connects_api = elro_connects_api
+        self._description = description
         self._attr_supported_features = (
             SirenEntityFeature.TURN_ON | SirenEntityFeature.TURN_OFF
         )
@@ -122,7 +143,7 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
         _LOGGER.debug("Sending test alarm request for entity %s", self.entity_id)
         await self._elro_connects_api.async_connect()
         await self._elro_connects_api.async_process_command(
-            TEST_ALARM, device_ID=self._device_id
+            self._description.test_alarm, device_ID=self._device_id
         )
 
         self.data[ATTR_DEVICE_STATE] = STATE_TEST_ALARM
@@ -133,7 +154,7 @@ class ElroConnectsSiren(ElroConnectsEntity, SirenEntity):
         _LOGGER.debug("Sending silence alarm request for entity %s", self.entity_id)
         await self._elro_connects_api.async_connect()
         await self._elro_connects_api.async_process_command(
-            SILENCE_ALARM, device_ID=self._device_id
+            self._description.silence_alarm, device_ID=self._device_id
         )
 
         self.data[ATTR_DEVICE_STATE] = STATE_SILENCE

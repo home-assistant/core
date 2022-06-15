@@ -38,6 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await elro_connects_api.async_update()
             device_update = copy.deepcopy(elro_connects_api.data)
             for device_id, device_data in device_update.items():
+                if ATTR_DEVICE_STATE not in device_data:
+                    # Skip entries without device state
+                    continue
                 if device_id not in coordinator_update:
                     # new device, or known state
                     coordinator_update[device_id] = device_data

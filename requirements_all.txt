@@ -977,7 +977,7 @@ laundrify_aio==1.1.2
 led-ble==0.9.1
 
 # homeassistant.components.elro_connects
-lib-elro-connects==0.4.2
+lib-elro-connects==0.4.4
 
 # homeassistant.components.foscam
 libpyfoscam==1.0

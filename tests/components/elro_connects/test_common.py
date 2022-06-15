@@ -53,4 +53,7 @@ MOCK_DEVICE_STATUS_DATA = {
         },
         "name": "Corner",
     },
+    6: {
+        "name": "Device with unknown state",
+    },
 }
