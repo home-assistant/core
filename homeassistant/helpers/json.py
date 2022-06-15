@@ -6,6 +6,8 @@ from typing import Any, Final
 
 import orjson
 
+JSON_ENCODE_EXCEPTIONS = (UnicodeEncodeError, TypeError, ValueError)
+
 
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
