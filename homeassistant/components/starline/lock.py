@@ -1,4 +1,6 @@
 """Support for StarLine lock."""
+from typing import Any
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -68,10 +70,10 @@ class StarlineLock(StarlineEntity, LockEntity):
         """Return true if lock is locked."""
         return self._device.car_state.get("arm")
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", True)
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the car."""
         self._account.api.set_car_state(self._device.device_id, "arm", False)
