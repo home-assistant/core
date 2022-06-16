@@ -104,7 +104,7 @@ async def async_setup_entry(
     if params:
         hass.config_entries.async_update_entry(
             config_entry,
-            **params,  # type:ignore[arg-type]
+            **params,  # type: ignore[arg-type]
         )
 
     device = VizioAsync(
