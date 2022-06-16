@@ -1031,7 +1031,8 @@ class ConfigEntries:
 
         @callback
         def _async_future_reload() -> None:
-            asyncio.create_task(self._async_reload(entry_id))
+            _LOGGER.debug("Trigging deferred reload of %s", entry_id)
+            self.hass.async_create_task(self._async_reload(entry_id))
 
         if rate_limit_expire_time := ratelimit.async_schedule_action(
             entry_id, RELOAD_COOLDOWN, now, _async_future_reload
@@ -1048,6 +1049,7 @@ class ConfigEntries:
 
     async def _async_reload(self, entry_id: str) -> bool:
         """Reload the entry."""
+        _LOGGER.debug("_async_reload running for %s", entry_id)
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1056,7 +1058,11 @@ class ConfigEntries:
         if not unload_result or entry.disabled_by:
             return unload_result
 
-        return await self.async_setup(entry_id)
+        result = await self.async_setup(entry_id)
+        _LOGGER.debug(
+            "_async_reload completed for %s with result: %s", entry_id, result
+        )
+        return result
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
