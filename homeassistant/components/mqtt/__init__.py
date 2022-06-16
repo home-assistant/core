@@ -47,7 +47,11 @@ from .client import (  # noqa: F401
     publish,
     subscribe,
 )
-from .config import CONFIG_SCHEMA_BASE, DEFAULT_VALUES, DEPRECATED_CONFIG_KEYS
+from .config_integration import (
+    CONFIG_SCHEMA_BASE,
+    DEFAULT_VALUES,
+    DEPRECATED_CONFIG_KEYS,
+)
 from .const import (  # noqa: F401
     ATTR_PAYLOAD,
     ATTR_QOS,
