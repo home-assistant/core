@@ -1032,6 +1032,7 @@ class ConfigEntries:
             if not self._reload_ratelimit.async_schedule_action(
                 entry_id, RELOAD_COOLDOWN, now, self._async_reload, entry_id
             ):
+                self._reload_ratelimit.async_triggered(entry, now)
                 return await self._async_reload(entry_id)
 
             _LOGGER.debug(
