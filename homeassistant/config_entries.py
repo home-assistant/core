@@ -6,6 +6,7 @@ from collections import ChainMap
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
+from datetime import timedelta
 from enum import Enum
 import functools
 import logging
@@ -22,9 +23,10 @@ from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistan
 from .helpers import device_registry, entity_registry, storage
 from .helpers.event import async_call_later
 from .helpers.frame import report
+from .helpers.ratelimit import KeyedRateLimit
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
-from .util import uuid as uuid_util
+from .util import dt as dt_util, uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
@@ -71,6 +73,7 @@ STORAGE_VERSION = 1
 PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
+
 
 _T = TypeVar("_T", bound="ConfigEntryState")
 
@@ -142,6 +145,7 @@ class ConfigEntryDisabler(StrEnum):
 DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
+RELOAD_COOLDOWN = timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY)
 
 # Deprecated: Connection classes
 # These aren't used anymore since 2021.6.0
@@ -818,6 +822,7 @@ class ConfigEntries:
         self._entries: dict[str, ConfigEntry] = {}
         self._domain_index: dict[str, list[str]] = {}
         self._store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._reload_ratelimit = KeyedRateLimit(hass)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -1015,17 +1020,38 @@ class ConfigEntries:
         """Reload an entry.
 
         If an entry was not loaded, will just load.
+
+        Returns True if the entry was reloaded, or
+        a reload was successfully scheduled.
         """
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
         async with entry.reload_lock:
-            unload_result = await self.async_unload(entry_id)
+            now = dt_util.utcnow()
+            if not self._reload_ratelimit.async_schedule_action(
+                entry_id, RELOAD_COOLDOWN, now, self._async_reload, entry_id
+            ):
+                return await self._async_reload(entry_id)
 
-            if not unload_result or entry.disabled_by:
-                return unload_result
+            _LOGGER.debug(
+                "Reload of %s deferred due to cooldown ratelimit: %s",
+                entry_id,
+                RELOAD_AFTER_UPDATE_DELAY,
+            )
+            return True
 
-            return await self.async_setup(entry_id)
+    async def _async_reload(self, entry_id: str) -> bool:
+        """Reload the entry."""
+        if (entry := self.async_get_entry(entry_id)) is None:
+            raise UnknownEntry
+
+        unload_result = await self.async_unload(entry_id)
+
+        if not unload_result or entry.disabled_by:
+            return unload_result
+
+        return await self.async_setup(entry_id)
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
