@@ -144,7 +144,8 @@ class ConfigEntryDisabler(StrEnum):
 # DISABLED_* is deprecated, to be removed in 2022.3
 DISABLED_USER = ConfigEntryDisabler.USER.value
 
-RELOAD_COOLDOWN = timedelta(seconds=30)
+RELOAD_AFTER_UPDATE_DELAY = 30
+RELOAD_COOLDOWN = timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY)
 
 # Deprecated: Connection classes
 # These aren't used anymore since 2021.6.0
@@ -1040,7 +1041,7 @@ class ConfigEntries:
                 entry_id,
                 rate_limit_expire_time,
             )
-            return not entry.disabled_by
+            return entry.state.recoverable and not entry.disabled_by
 
         ratelimit.async_triggered(entry_id, now)
         return await self._async_reload(entry_id)
