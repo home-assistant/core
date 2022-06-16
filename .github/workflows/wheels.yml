@@ -47,6 +47,9 @@ jobs:
             # execinfo-dev when building wheels. The setuptools build setup does not have an option for
             # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
             echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
+
+            # Fix out of memory issues with rust
+            echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
           ) > .env_file
 
       - name: Upload env_file
@@ -137,7 +140,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.1
+        uses: home-assistant/wheels@2022.06.2
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -270,7 +273,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.1
+        uses: home-assistant/wheels@2022.06.2
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -279,6 +282,7 @@ jobs:
           env-file: true
           apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev"
           skip-binary: aiohttp;grpcio
+          legacy: true
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txt"
