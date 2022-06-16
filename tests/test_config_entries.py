@@ -1438,21 +1438,6 @@ async def test_support_entry_unload(hass):
     assert not await config_entries.support_entry_unload(hass, "auth")
 
 
-async def test_reload_entry_entity_registry_ignores_no_entry(hass):
-    """Test reloading entry in entity registry skips if no config entry linked."""
-    handler = config_entries.EntityRegistryDisabledHandler(hass)
-    registry = mock_registry(hass)
-
-    # Test we ignore entities without config entry
-    entry = registry.async_get_or_create("light", "hue", "123")
-    registry.async_update_entity(
-        entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
-    )
-    await hass.async_block_till_done()
-    assert not handler.changed
-    assert handler._remove_call_later is None
-
-
 async def test_reload_entry_entity_registry_works(hass):
     """Test we schedule an entry to be reloaded if disabled_by is updated."""
     handler = config_entries.EntityRegistryDisabledHandler(hass)
@@ -2851,6 +2836,8 @@ async def test_entry_reload_calls_on_unload_listeners(hass, manager):
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
     assert await manager.async_reload(entry.entry_id)
+    async_fire_time_changed(hass, dt.utcnow() + config_entries.RELOAD_COOLDOWN)
+    await hass.async_block_till_done()
     assert len(async_unload_entry.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 2
     # Since we did not register another async_on_unload it should
