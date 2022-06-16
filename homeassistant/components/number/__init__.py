@@ -120,13 +120,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
-    max_value: float | None = None
-    min_value: float | None = None
+    max_value: None = None
+    min_value: None = None
     native_max_value: float | None = None
     native_min_value: float | None = None
     native_unit_of_measurement: str | None = None
     native_step: float | None = None
-    step: float | None = None
+    step: None = None
+    unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
     def __post_init__(self) -> None:
         """Post initialisation processing."""
@@ -136,7 +137,7 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            if self.__class__.__name__ == "NumberEntityDescription":
+            if self.__class__.__name__ == "NumberEntityDescription":  # type: ignore[unreachable]
                 caller = inspect.stack()[2]
                 module = inspect.getmodule(caller[0])
             else:
@@ -180,12 +181,12 @@ class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     entity_description: NumberEntityDescription
-    _attr_max_value: float
-    _attr_min_value: float
+    _attr_max_value: None
+    _attr_min_value: None
     _attr_state: None = None
-    _attr_step: float
+    _attr_step: None
     _attr_mode: NumberMode = NumberMode.AUTO
-    _attr_value: float
+    _attr_value: None
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
@@ -248,16 +249,17 @@ class NumberEntity(Entity):
         return DEFAULT_MIN_VALUE
 
     @property
+    @final
     def min_value(self) -> float:
         """Return the minimum value."""
         if hasattr(self, "_attr_min_value"):
             self._report_deprecated_number_entity()
-            return self._attr_min_value
+            return self._attr_min_value  # type: ignore[return-value]
         if (
             hasattr(self, "entity_description")
             and self.entity_description.min_value is not None
         ):
-            self._report_deprecated_number_entity()
+            self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.min_value
         return self._convert_to_state_value(self.native_min_value, floor_decimal)
 
@@ -274,16 +276,17 @@ class NumberEntity(Entity):
         return DEFAULT_MAX_VALUE
 
     @property
+    @final
     def max_value(self) -> float:
         """Return the maximum value."""
         if hasattr(self, "_attr_max_value"):
             self._report_deprecated_number_entity()
-            return self._attr_max_value
+            return self._attr_max_value  # type: ignore[return-value]
         if (
             hasattr(self, "entity_description")
             and self.entity_description.max_value is not None
         ):
-            self._report_deprecated_number_entity()
+            self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.max_value
         return self._convert_to_state_value(self.native_max_value, ceil_decimal)
 
@@ -298,16 +301,17 @@ class NumberEntity(Entity):
         return None
 
     @property
+    @final
     def step(self) -> float:
         """Return the increment/decrement step."""
         if hasattr(self, "_attr_step"):
             self._report_deprecated_number_entity()
-            return self._attr_step
+            return self._attr_step  # type: ignore[return-value]
         if (
             hasattr(self, "entity_description")
             and self.entity_description.step is not None
         ):
-            self._report_deprecated_number_entity()
+            self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.step
         if hasattr(self, "_attr_native_step"):
             return self._attr_native_step
@@ -341,6 +345,7 @@ class NumberEntity(Entity):
         return None
 
     @property
+    @final
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         if hasattr(self, "_attr_unit_of_measurement"):
@@ -349,7 +354,7 @@ class NumberEntity(Entity):
             hasattr(self, "entity_description")
             and self.entity_description.unit_of_measurement is not None
         ):
-            return self.entity_description.unit_of_measurement
+            return self.entity_description.unit_of_measurement  # type: ignore[unreachable]
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
@@ -367,6 +372,7 @@ class NumberEntity(Entity):
         return self._attr_native_value
 
     @property
+    @final
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if hasattr(self, "_attr_value"):
@@ -385,10 +391,12 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_native_value, value)
 
+    @final
     def set_value(self, value: float) -> None:
         """Set new value."""
         raise NotImplementedError()
 
+    @final
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
