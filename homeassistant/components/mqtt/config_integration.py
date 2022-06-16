@@ -93,7 +93,7 @@ PLATFORM_SCHEMAS_MODERN: dict[Platform, vol.Schema] = {
         cv.ensure_list, [cover_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
     ),
     Platform.DEVICE_TRACKER: vol.All(
-        cv.ensure_list, [device_tracker_platform.PLATFORM_SCHEMA]  # type: ignore[has-type]
+        cv.ensure_list, [device_tracker_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
     ),
     Platform.FAN: vol.All(
         cv.ensure_list, [fan_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
