@@ -144,8 +144,7 @@ class ConfigEntryDisabler(StrEnum):
 # DISABLED_* is deprecated, to be removed in 2022.3
 DISABLED_USER = ConfigEntryDisabler.USER.value
 
-RELOAD_AFTER_UPDATE_DELAY = 30
-RELOAD_COOLDOWN = timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY)
+RELOAD_COOLDOWN = timedelta(seconds=30)
 
 # Deprecated: Connection classes
 # These aren't used anymore since 2021.6.0
