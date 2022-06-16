@@ -282,12 +282,14 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 errors, still_format = await async_test_still(hass, user_input)
                 errors = errors | await async_test_stream(hass, user_input)
-                still_url = user_input.get(CONF_STILL_IMAGE_URL)
-                stream_url = user_input.get(CONF_STREAM_SOURCE)
-                name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+                    still_url = user_input.get(CONF_STILL_IMAGE_URL)
+                    stream_url = user_input.get(CONF_STREAM_SOURCE)
+                    name = (
+                        slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
+                    )
                     if still_url is None:
                         # If user didn't specify a still image URL,
                         # The automatically generated still image that stream generates
