@@ -338,9 +338,9 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             description.key, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._number = int_type
-            self._attr_max_value = self._number.max_scaled
-            self._attr_min_value = self._number.min_scaled
-            self._attr_step = self._number.step_scaled
+            self._attr_native_max_value = self._number.max_scaled
+            self._attr_native_min_value = self._number.min_scaled
+            self._attr_native_step = self._number.step_scaled
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
@@ -373,8 +373,14 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             if self.device_class:
                 self._attr_icon = None
 
+            # Found unit of measurement, use the standardized Unit
+            # Use the target conversion unit (if set)
+            self._attr_native_unit_of_measurement = (
+                self._uom.conversion_unit or self._uom.unit
+            )
+
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         # Unknown or unsupported data type
         if self._number is None:
@@ -386,7 +392,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         return self._number.scale_value(value)
 
-    def set_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
             raise RuntimeError("Cannot set value, device doesn't provide type data")
