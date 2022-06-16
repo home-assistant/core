@@ -595,10 +595,8 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                 "default": True,
                 "type": "yn",
                 "metavar": "<y or n>",
-                "help": (
-                    "Set to ``no`` if you wish to check functions that do not ",
-                    "have any type hints.",
-                ),
+                "help": "Set to ``no`` if you wish to check functions that do not "
+                "have any type hints.",
             },
         ),
     )
