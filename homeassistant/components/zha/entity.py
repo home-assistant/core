@@ -29,7 +29,7 @@ from .core.const import (
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
-from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
+from .core.typing import CALLABLE_T
 
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
@@ -127,7 +127,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @callback
     def async_accept_signal(
-        self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
+        self,
+        channel: ZigbeeChannel,
+        signal: str,
+        func: CALLABLE_T,
+        signal_override=False,
     ):
         """Accept a signal from a channel."""
         unsub = None
@@ -181,8 +185,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
