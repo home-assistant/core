@@ -1027,11 +1027,13 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
+        ratelimit = self._reload_ratelimit
         async with entry.reload_lock:
             now = dt_util.utcnow()
-            if not self._reload_ratelimit.async_schedule_action(
+            if not ratelimit.async_schedule_action(
                 entry_id, RELOAD_COOLDOWN, now, self._async_reload, entry_id
             ):
+                ratelimit.async_triggered(entry, now)
                 return await self._async_reload(entry_id)
 
             _LOGGER.debug(
