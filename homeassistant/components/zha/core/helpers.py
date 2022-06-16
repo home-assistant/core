@@ -35,7 +35,7 @@ from .const import (
     DATA_ZHA_GATEWAY,
 )
 from .registries import BINDABLE_CLUSTERS
-from .typing import ZhaDeviceType, ZigpyClusterType
+from .typing import ZigpyClusterType
 
 if TYPE_CHECKING:
     from .device import ZHADevice
@@ -82,7 +82,7 @@ async def safe_read(
 
 
 async def get_matched_clusters(
-    source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
+    source_zha_device: ZHADevice, target_zha_device: ZHADevice
 ) -> list[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
