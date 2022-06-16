@@ -144,7 +144,7 @@ jobs:
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev"
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;yaml-dev"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
