@@ -12,9 +12,6 @@ from homeassistant.const import Platform
 
 UNDEFINED = object()
 
-# Keep default as True on CI, but adds ability to enable locally
-# when methods do not have any type hints
-_IGNORE_MISSING_ANNOTATIONS = True
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
 
 
@@ -591,7 +588,20 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             "Used when method return type is incorrect",
         ),
     }
-    options = ()
+    options = (
+        (
+            "ignore-missing-annotations",
+            {
+                "default": True,
+                "type": "yn",
+                "metavar": "<y or n>",
+                "help": (
+                    "Set to ``no`` if you wish to check functions that do not ",
+                    "have any type hints.",
+                ),
+            },
+        ),
+    )
 
     def __init__(self, linter: PyLinter | None = None) -> None:
         super().__init__(linter)
@@ -645,7 +655,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         # Check that at least one argument is annotated.
         annotations = _get_all_annotations(node)
         if (
-            _IGNORE_MISSING_ANNOTATIONS
+            self.linter.config.ignore_missing_annotations
             and node.returns is None
             and not _has_valid_annotations(annotations)
         ):
