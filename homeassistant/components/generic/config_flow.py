@@ -259,7 +259,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler(config_entry)
 
-    def check_for_existing(self, options):
+    def check_for_existing(self, options: dict[str, Any]) -> bool:
         """Check whether an existing entry is using the same URLs."""
         return any(
             entry.options.get(CONF_STILL_IMAGE_URL) == options.get(CONF_STILL_IMAGE_URL)
@@ -268,49 +268,45 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: Mapping[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the start of the config flow."""
         errors = {}
-        if user_input:
-            user_dict = dict(user_input)
-        else:
-            user_dict = None
         hass = self.hass
-        if user_dict:
+        if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
-            if not user_dict.get(CONF_STILL_IMAGE_URL) and not user_dict.get(
+            if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
                 CONF_STREAM_SOURCE
             ):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
-                errors, still_format = await async_test_still(self.hass, user_dict)
-                errors = errors | await async_test_stream(self.hass, user_dict)
-                still_url = user_dict.get(CONF_STILL_IMAGE_URL)
-                stream_url = user_dict.get(CONF_STREAM_SOURCE)
+                errors, still_format = await async_test_still(hass, user_input)
+                errors = errors | await async_test_stream(hass, user_input)
+                still_url = user_input.get(CONF_STILL_IMAGE_URL)
+                stream_url = user_input.get(CONF_STREAM_SOURCE)
                 name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
                 if not errors:
-                    user_dict[CONF_CONTENT_TYPE] = still_format
-                    user_dict[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+                    user_input[CONF_CONTENT_TYPE] = still_format
+                    user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
                     if still_url is None:
                         # If user didn't specify a still image URL,
                         # The automatically generated still image that stream generates
                         # is always jpeg
-                        user_dict[CONF_CONTENT_TYPE] = "image/jpeg"
+                        user_input[CONF_CONTENT_TYPE] = "image/jpeg"
 
                     return self.async_create_entry(
-                        title=name, data={}, options=user_dict
+                        title=name, data={}, options=user_input
                     )
         else:
-            user_dict = DEFAULT_DATA.copy()
+            user_input = DEFAULT_DATA.copy()
 
         return self.async_show_form(
             step_id="user",
-            data_schema=build_schema(user_dict),
+            data_schema=build_schema(user_input),
             errors=errors,
         )
 
-    async def async_step_import(self, import_config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
@@ -322,12 +318,12 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME,
             slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
         )
-        config = dict(import_config)
+
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
-            config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
-        still_format = config.get(CONF_CONTENT_TYPE, "image/jpeg")
-        config[CONF_CONTENT_TYPE] = still_format
-        return self.async_create_entry(title=name, data={}, options=config)
+            import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+        still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
+        import_config[CONF_CONTENT_TYPE] = still_format
+        return self.async_create_entry(title=name, data={}, options=import_config)
 
 
 class GenericOptionsFlowHandler(OptionsFlow):
@@ -348,9 +344,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             errors, still_format = await async_test_still(
-                self.hass, self.config_entry.options | user_input
+                hass, self.config_entry.options | user_input
             )
-            errors = errors | await async_test_stream(self.hass, user_input)
+            errors = errors | await async_test_stream(hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:
