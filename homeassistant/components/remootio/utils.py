@@ -42,8 +42,8 @@ async def _check_sensor_installed(
             raise UnsupportedRemootioDeviceError
 
         _LOGGER.error(
-            "Your Remootio device isn't supported, possibly because it hasn't a sensor installed. IP [%s]",
-            remootio_client.ip_address,
+            "Your Remootio device isn't supported, possibly because it hasn't a sensor installed. Host [%s]",
+            remootio_client.host,
         )
 
 
@@ -63,7 +63,7 @@ async def get_serial_number(
                 await _check_sensor_installed(remootio_client)
                 await _check_api_version(remootio_client)
 
-                result = await remootio_client.serial_number
+                result = remootio_client.serial_number
 
     return result
 
