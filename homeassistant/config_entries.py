@@ -196,7 +196,6 @@ class ConfigEntry:
         "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
-        "reload_future",
     )
 
     def __init__(
@@ -285,9 +284,6 @@ class ConfigEntry:
 
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
-
-        # Reload future to prevent conflicting reloads
-        self.reload_future: asyncio.Future[bool] | None = None
 
     async def async_setup(
         self,
@@ -1027,38 +1023,28 @@ class ConfigEntries:
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
+        if not entry.state.recoverable:
+            raise OperationNotAllowed
+
         ratelimit = self._reload_ratelimit
         now = dt_util.utcnow()
 
         @callback
         def _async_future_reload() -> None:
-            assert entry is not None
-            asyncio.create_task(self._async_future_reload(entry))
+            asyncio.create_task(self._async_reload(entry_id))
 
         if rate_limit_expire_time := ratelimit.async_schedule_action(
             entry_id, RELOAD_COOLDOWN, now, _async_future_reload
         ):
-            if not entry.reload_future:
-                entry.reload_future = asyncio.Future()
             _LOGGER.debug(
                 "Reload of %s deferred until %s due to cooldown ratelimit",
                 entry_id,
                 rate_limit_expire_time,
             )
-            await entry.reload_future
+            return not entry.disabled_by
 
         ratelimit.async_triggered(entry_id, now)
         return await self._async_reload(entry_id)
-
-    async def _async_future_reload(self, entry: ConfigEntry) -> None:
-        """Handle a future reload."""
-        assert entry.reload_future is not None
-        try:
-            entry.reload_future.set_result(await self._async_reload(entry.entry_id))
-        except Exception as ex:  # pylint: disable=broad-except
-            entry.reload_future.set_exception(ex)
-        finally:
-            entry.reload_future = None
 
     async def _async_reload(self, entry_id: str) -> bool:
         """Reload the entry."""
@@ -1609,8 +1595,6 @@ class EntityRegistryDisabledHandler:
         """Initialize the handler."""
         self.hass = hass
         self.registry: entity_registry.EntityRegistry | None = None
-        self.changed: set[str] = set()
-        self._remove_call_later: Callable[[], None] | None = None
 
     @callback
     def async_setup(self) -> None:
@@ -1644,36 +1628,12 @@ class EntityRegistryDisabledHandler:
         )
         assert config_entry is not None
 
-        if config_entry.entry_id not in self.changed and config_entry.supports_unload:
-            self.changed.add(config_entry.entry_id)
-
-        if not self.changed:
+        if not config_entry.entry_id or not config_entry.supports_unload:
             return
 
-        # We are going to delay reloading on *every* entity registry change so that
-        # if a user is happily clicking along, it will only reload at the end.
-
-        if self._remove_call_later:
-            self._remove_call_later()
-
-        self._remove_call_later = async_call_later(
-            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
-        )
-
-    async def _handle_reload(self, _now: Any) -> None:
-        """Handle a reload."""
-        self._remove_call_later = None
-        to_reload = self.changed
-        self.changed = set()
-
-        _LOGGER.info(
-            "Reloading configuration entries because disabled_by changed in entity registry: %s",
-            ", ".join(self.changed),
-        )
-
-        await asyncio.gather(
-            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
-        )
+        # Reloads now have a cooldown so if we
+        # call it multiple times this is now safe
+        await self.hass.config_entries.async_reload(config_entry.entry_id)
 
 
 @callback

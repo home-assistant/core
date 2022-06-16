@@ -1337,6 +1337,9 @@ async def test_entry_disable_succeed(hass, manager):
 
     # Enable
     assert await manager.async_set_disabled_by(entry.entry_id, None)
+    assert len(async_setup.mock_calls) == 0
+    async_fire_time_changed(hass, dt.utcnow() + config_entries.RELOAD_COOLDOWN)
+    await hass.async_block_till_done()
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
@@ -1407,6 +1410,8 @@ async def test_entry_enable_without_reload_support(hass, manager):
     assert not await manager.async_set_disabled_by(
         entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
+    async_fire_time_changed(hass, dt.utcnow() + config_entries.RELOAD_COOLDOWN)
+    await hass.async_block_till_done()
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
@@ -1477,23 +1482,18 @@ async def test_reload_entry_entity_registry_works(hass):
     )
     registry.async_update_entity(entity_entry.entity_id, name="yo")
     await hass.async_block_till_done()
-    assert not handler.changed
-    assert handler._remove_call_later is None
 
     # Disable entity, we should not do anything, only act when enabled.
     registry.async_update_entity(
         entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
-    assert not handler.changed
-    assert handler._remove_call_later is None
 
     # Enable entity, check we are reloading config entry.
     registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
-    assert handler.changed == {config_entry.entry_id}
-    assert handler._remove_call_later is not None
 
+    await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
         dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
