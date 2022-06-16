@@ -158,6 +158,14 @@ async def get_life360_data(
                 name = first or last
 
             loc = member["location"]
+            if not loc:
+                if err_msg := member["issues"]["title"]:
+                    if member["issues"]["dialog"]:
+                        err_msg += f": {member['issues']['dialog']}"
+                else:
+                    err_msg = "Location information missing"
+                LOGGER.error("%s: %s", name, err_msg)
+                continue
 
             place = loc["name"] or None
 
