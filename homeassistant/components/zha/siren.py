@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from zigpy.zcl.clusters.security import IasWd as WD
 
@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .core import discovery
+from .core.channels.base import ZigbeeChannel
 from .core.channels.security import IasWd
 from .core.const import (
     CHANNEL_IAS_WD,
@@ -38,8 +39,10 @@ from .core.const import (
     Strobe,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.device import ZHADevice
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SIREN)
 DEFAULT_DURATION = 5  # seconds
@@ -72,8 +75,8 @@ class ZHASiren(ZhaEntity, SirenEntity):
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this siren."""
