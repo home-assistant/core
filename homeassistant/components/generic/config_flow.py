@@ -209,7 +209,7 @@ async def async_test_stream(hass, info) -> dict[str, str]:
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
         return {CONF_STREAM_SOURCE: "template_error"}
-    stream_options: dict[str, bool | str] = {}
+    stream_options: dict[str, str | bool | float] = {}
     if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
         stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
     if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):

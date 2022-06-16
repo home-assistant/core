@@ -20,6 +20,7 @@ from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.camera.const import StreamType
+from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -67,6 +68,7 @@ class NestCamera(Camera):
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
     def should_poll(self) -> bool:
