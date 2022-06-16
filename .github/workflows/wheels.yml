@@ -127,7 +127,7 @@ jobs:
 
       - name: Adjust ENV / CP310
         run: |
-          if [ "${{ matrix.arch }}" = "i386" ];
+          if [ "${{ matrix.arch }}" = "i386" ]; then
             echo "NPY_DISABLE_SVML=1" >> .env_file
           fi
 
@@ -260,7 +260,7 @@ jobs:
 
       - name: Adjust ENV / CP310
         run: |
-          if [ "${{ matrix.arch }}" = "i386" ];
+          if [ "${{ matrix.arch }}" = "i386" ]; then
             echo "NPY_DISABLE_SVML=1" >> .env_file
           fi
 
