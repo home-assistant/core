@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Mapping
 from typing import Any, cast
 
@@ -17,10 +16,9 @@ from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_NAME,
-    CONF_PREFIX,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback, EntityPlatform
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -57,8 +55,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the device tracker platform."""
-    account = hass.data[DOMAIN]["accounts"][entry.unique_id]
-    coordinator = account["coordinator"]
+    coordinator = hass.data[DOMAIN]["coordinators"][entry.unique_id]
     tracked_members = hass.data[DOMAIN]["tracked_members"]
     logged_circles = hass.data[DOMAIN]["logged_circles"]
     logged_places = hass.data[DOMAIN]["logged_places"]
@@ -69,7 +66,7 @@ async def async_setup_entry(
         for circle_id, circle in coordinator.data["circles"].items():
             if circle_id not in logged_circles:
                 logged_circles.append(circle_id)
-                LOGGER.info("Circle: %s", circle["name"])
+                LOGGER.debug("Circle: %s", circle["name"])
 
             new_places = []
             for place_id, place in circle["places"].items():
@@ -101,16 +98,17 @@ async def async_setup_entry(
             async_add_entities(new_entities)
 
     process_data(new_members_only=False)
-    account["unsub"] = coordinator.async_add_listener(process_data)
+    entry.async_on_unload(coordinator.async_add_listener(process_data))
 
 
 class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     """Life360 Device Tracker."""
 
+    _attr_attribution = ATTRIBUTION
+
     def __init__(self, coordinator: DataUpdateCoordinator, member_id: str) -> None:
         """Initialize Life360 Entity."""
         super().__init__(coordinator)
-        self._attr_attribution = ATTRIBUTION
         self._attr_unique_id = member_id
 
         self._data = coordinator.data["members"][self.unique_id]
@@ -132,17 +130,6 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     def _options(self) -> Mapping[str, Any]:
         """Shortcut to config entry options."""
         return cast(Mapping[str, Any], self.coordinator.config_entry.options)
-
-    @callback
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        platform.entity_namespace = self._options.get(CONF_PREFIX)
-        super().add_to_platform_start(hass, platform, parallel_updates)
 
     @callback
     def _handle_coordinator_update(self) -> None:

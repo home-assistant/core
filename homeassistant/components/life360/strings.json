@@ -5,15 +5,7 @@
         "title": "Configure Life360 Account",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]",
-          "use_prefix": "Use an object ID prefix",
-          "prefix": "Entity namespace",
-          "limit_gps_acc": "Limit GPS accuracy",
-          "max_gps_accuracy": "Max GPS accuracy (meters)",
-          "set_drive_speed": "Set driving speed threshold",
-          "driving_speed": "Driving speed",
-          "interval_seconds": "Life360 server query period (seconds)",
-          "driving": "Show driving as state"
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "reauth_confirm": {
@@ -40,8 +32,6 @@
       "init": {
         "title": "Account Options",
         "data": {
-          "use_prefix": "Use an object ID prefix",
-          "prefix": "Entity namespace",
           "limit_gps_acc": "Limit GPS accuracy",
           "max_gps_accuracy": "Max GPS accuracy (meters)",
           "set_drive_speed": "Set driving speed threshold",

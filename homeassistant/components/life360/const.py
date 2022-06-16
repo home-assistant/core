@@ -4,7 +4,6 @@ import logging
 
 from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
 from homeassistant.components.device_tracker.const import SCAN_INTERVAL
-from homeassistant.const import CONF_PREFIX
 
 DOMAIN = "life360"
 LOGGER = logging.getLogger(__package__)
@@ -38,10 +37,10 @@ CONF_WARNING_THRESHOLD = "warning_threshold"
 SHOW_DRIVING = "driving"
 SHOW_MOVING = "moving"
 
-OPTIONS = (
-    CONF_DRIVING_SPEED,
-    CONF_MAX_GPS_ACCURACY,
-    CONF_PREFIX,
-    CONF_SCAN_INTERVAL,
-    SHOW_DRIVING,
-)
+DEFAULT_OPTIONS = {
+    CONF_DRIVING_SPEED: None,
+    CONF_MAX_GPS_ACCURACY: None,
+    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL_SEC,
+    SHOW_DRIVING: False,
+}
+OPTIONS = list(DEFAULT_OPTIONS.keys())

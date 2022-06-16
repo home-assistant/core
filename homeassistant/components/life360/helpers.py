@@ -43,21 +43,12 @@ from .const import (
 )
 
 
-class AccountData(TypedDict, total=False):
-    """Account data."""
-
-    api: Life360
-    coordinator: DataUpdateCoordinator
-    unsub: Callable[[], None]
-    re_add_entry: bool
-
-
 class IntegData(TypedDict):
     """Integration data."""
 
     cfg_options: dict[str, Any]
-    # ConfigEntry.unique_id: AccountData
-    accounts: dict[str, AccountData]
+    # ConfigEntry.unique_id: DataUpdateCoordinator
+    coordinators: dict[str, DataUpdateCoordinator]
     # member_id: ConfigEntry.unique_id
     tracked_members: dict[str, str]
     logged_circles: list[str]
@@ -72,7 +63,7 @@ def init_integ_data(
         DOMAIN,
         IntegData(
             cfg_options=cfg_options or {},
-            accounts={},
+            coordinators={},
             tracked_members={},
             logged_circles=[],
             logged_places=[],
