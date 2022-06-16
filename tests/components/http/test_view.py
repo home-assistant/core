@@ -35,7 +35,7 @@ async def test_invalid_json(caplog):
     view = HomeAssistantView()
 
     with pytest.raises(HTTPInternalServerError):
-        view.json(b"\ud800")
+        view.json(br"\ud800")
 
     assert "Unable to serialize to JSON" in caplog.text
 
