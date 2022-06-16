@@ -363,7 +363,7 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
     """Representation of a ZHA number configuration entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_step: float = 1.0
+    _attr_native_step: float = 1.0
     _zcl_attribute: str
 
     @classmethod
@@ -404,11 +404,11 @@ class ZHANumberConfigurationEntity(ZhaEntity, NumberEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current value."""
         return self._channel.cluster.get(self._zcl_attribute)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         try:
             res = await self._channel.cluster.write_attributes(
@@ -439,8 +439,8 @@ class AqaraMotionDetectionInterval(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    _attr_min_value: float = 2
-    _attr_max_value: float = 65535
+    _attr_native_min_value: float = 2
+    _attr_native_max_value: float = 65535
     _zcl_attribute: str = "detection_interval"
 
 
@@ -450,8 +450,8 @@ class OnOffTransitionTimeConfigurationEntity(
 ):
     """Representation of a ZHA on off transition time configuration entity."""
 
-    _attr_min_value: float = 0x0000
-    _attr_max_value: float = 0xFFFF
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFF
     _zcl_attribute: str = "on_off_transition_time"
 
 
@@ -459,8 +459,8 @@ class OnOffTransitionTimeConfigurationEntity(
 class OnLevelConfigurationEntity(ZHANumberConfigurationEntity, id_suffix="on_level"):
     """Representation of a ZHA on level configuration entity."""
 
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0xFF
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "on_level"
 
 
@@ -470,8 +470,8 @@ class OnTransitionTimeConfigurationEntity(
 ):
     """Representation of a ZHA on transition time configuration entity."""
 
-    _attr_min_value: float = 0x0000
-    _attr_max_value: float = 0xFFFE
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "on_transition_time"
 
 
@@ -481,8 +481,8 @@ class OffTransitionTimeConfigurationEntity(
 ):
     """Representation of a ZHA off transition time configuration entity."""
 
-    _attr_min_value: float = 0x0000
-    _attr_max_value: float = 0xFFFE
+    _attr_native_min_value: float = 0x0000
+    _attr_native_max_value: float = 0xFFFE
     _zcl_attribute: str = "off_transition_time"
 
 
@@ -492,8 +492,8 @@ class DefaultMoveRateConfigurationEntity(
 ):
     """Representation of a ZHA default move rate configuration entity."""
 
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0xFE
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFE
     _zcl_attribute: str = "default_move_rate"
 
 
@@ -503,8 +503,8 @@ class StartUpCurrentLevelConfigurationEntity(
 ):
     """Representation of a ZHA startup current level configuration entity."""
 
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0xFF
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFF
     _zcl_attribute: str = "start_up_current_level"
 
 
@@ -519,7 +519,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon: str = ICONS[14]
-    _attr_min_value: float = 0x00
-    _attr_max_value: float = 0x257
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0x257
     _attr_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
