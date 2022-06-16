@@ -103,7 +103,7 @@ class MillHeater(CoordinatorEntity, ClimateEntity):
         self._id = heater.device_id
         self._attr_unique_id = heater.device_id
         self._attr_name = heater.name
-        self.__attr_generation = heater.generation
+        self._generation = heater.generation
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, heater.device_id)},
             manufacturer=MANUFACTURER,
