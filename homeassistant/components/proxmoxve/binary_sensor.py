@@ -35,31 +35,18 @@ async def async_setup_platform(
         for node_config in host_config["nodes"]:
             node_name = node_config["node"]
 
-            for vm_id in node_config["vms"]:
-                coordinator = host_name_coordinators[node_name][vm_id]
+            for dev_id in node_config["vms"] + node_config["containers"]:
+                coordinator = host_name_coordinators[node_name][dev_id]
 
-                # unfound vm case
+                # unfound case
                 if (coordinator_data := coordinator.data) is None:
                     continue
 
-                vm_name = coordinator_data["name"]
-                vm_sensor = create_binary_sensor(
-                    coordinator, host_name, node_name, vm_id, vm_name
+                name = coordinator_data["name"]
+                sensor = create_binary_sensor(
+                    coordinator, host_name, node_name, dev_id, name
                 )
-                sensors.append(vm_sensor)
-
-            for container_id in node_config["containers"]:
-                coordinator = host_name_coordinators[node_name][container_id]
-
-                # unfound container case
-                if (coordinator_data := coordinator.data) is None:
-                    continue
-
-                container_name = coordinator_data["name"]
-                container_sensor = create_binary_sensor(
-                    coordinator, host_name, node_name, container_id, container_name
-                )
-                sensors.append(container_sensor)
+                sensors.append(sensor)
 
     add_entities(sensors)
 
