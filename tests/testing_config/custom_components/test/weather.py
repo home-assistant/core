@@ -98,11 +98,6 @@ class MockWeather(MockEntity, WeatherEntity):
         return self._handle("forecast")
 
     @property
-    def native_precipitation(self) -> float | None:
-        """Return the accumulated precipitation."""
-        return self._handle("native_precipitation")
-
-    @property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
         return self._handle("native_precipitation_unit")
@@ -126,6 +121,6 @@ class MockWeatherMockForecast(MockWeather):
                 ATTR_FORECAST_PRESSURE: self.native_pressure,
                 ATTR_FORECAST_WIND_SPEED: self.native_wind_speed,
                 ATTR_FORECAST_WIND_BEARING: self.wind_bearing,
-                ATTR_FORECAST_PRECIPITATION: self.native_precipitation,
+                ATTR_FORECAST_PRECIPITATION: self._values.get("native_precipitation"),
             }
         ]

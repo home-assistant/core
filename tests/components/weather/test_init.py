@@ -10,7 +10,6 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_SPEED,
-    ATTR_WEATHER_PRECIPITATION,
     ATTR_WEATHER_PRESSURE,
     ATTR_WEATHER_TEMPERATURE,
     ATTR_WEATHER_VISIBILITY,
@@ -150,9 +149,6 @@ async def test_precipitation(
     forecast = state.attributes[ATTR_FORECAST][0]
 
     expected = native_value
-    assert float(state.attributes[ATTR_WEATHER_PRECIPITATION]) == approx(
-        expected, rel=1e-2
-    )
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-2)
 
 
@@ -183,8 +179,6 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     """Test custom unit."""
     wind_speed_value = 5
     wind_speed_unit = SPEED_METERS_PER_SECOND
-    precipitation_value = 2
-    precipitation_unit = LENGTH_MILLIMETERS
     pressure_value = 110
     pressure_unit = PRESSURE_HPA
     temperature_value = 20
@@ -218,8 +212,6 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
             native_wind_speed_unit=wind_speed_unit,
             native_pressure=pressure_value,
             native_pressure_unit=pressure_unit,
-            native_precipitation=precipitation_value,
-            native_precipitation_unit=precipitation_unit,
             native_visibility=visibility_value,
             native_visibility_unit=visibility_unit,
             unique_id="very_unique",
@@ -244,10 +236,6 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
         convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
         ROUNDING_PRECISION,
     )
-    expected_precipitation = round(
-        convert_distance(precipitation_value, precipitation_unit, LENGTH_INCHES),
-        ROUNDING_PRECISION,
-    )
     expected_visibility = round(
         convert_distance(visibility_value, visibility_unit, LENGTH_MILES),
         ROUNDING_PRECISION,
@@ -260,9 +248,6 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
         expected_temperature, rel=0.1
     )
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected_pressure)
-    assert float(state.attributes[ATTR_WEATHER_PRECIPITATION]) == approx(
-        expected_precipitation
-    )
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
         expected_visibility
     )

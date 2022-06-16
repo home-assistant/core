@@ -5,6 +5,7 @@ from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
+import inspect
 import logging
 from typing import Any, Final, TypedDict, final
 
@@ -82,9 +83,7 @@ ATTR_WEATHER_VISIBILITY_UNIT = "visibility_unit"
 ATTR_WEATHER_WIND_BEARING = "wind_bearing"
 ATTR_WEATHER_WIND_SPEED = "wind_speed"
 ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
-ATTR_WEATHER_PRECIPITATION = "precipitation"
 ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
-
 
 CONF_PRECIPITATION_UOM = "precipitation_unit_of_measurement"
 CONF_PRESSURE_UOM = "pressure_unit_of_measurement"
@@ -190,22 +189,23 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_precision: float
-    _attr_native_pressure: float | None = None
     _attr_pressure_unit: str | None = None
-    _attr_native_pressure_unit: str | None = None
     _attr_state: None = None
     _attr_temperature_unit: str | None = None
-    _attr_native_temperature_unit: str
-    _attr_native_temperature: float
-    _attr_native_visibility: float | None = None
     _attr_visibility_unit: str | None = None
+    _attr_precipitation_unit: str | None = None
+    _attr_wind_bearing: float | str | None = None
+    _attr_wind_speed_unit: str | None = None
+
+    _attr_native_pressure: float | None = None
+    _attr_native_pressure_unit: str | None = None
+    _attr_native_temperature: float
+    _attr_native_temperature_unit: str
+    _attr_native_visibility: float | None = None
     _attr_native_visibility_unit: str | None = None
     _attr_native_precipitation: float | None = None
-    _attr_precipitation_unit: str | None = None
     _attr_native_precipitation_unit: str | None = None
-    _attr_wind_bearing: float | str | None = None
     _attr_native_wind_speed: float | None = None
-    _attr_wind_speed_unit: str | None = None
     _attr_native_wind_speed_unit: str | None = None
 
     _weather_option_temperature_uom: str | None = None
@@ -214,14 +214,69 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_uom: str | None = None
     _weather_option_wind_speed_uom: str | None = None
 
-    _deprecated_weather_entity_report = False
-    _deprecated_weather_entity_reported = False
+    _override_temperature: bool = False
+    _override_pressure: bool = False
+    _override_visibility: bool = False
+    _override_precipitation: bool = False
+    _override_wind_speed: bool = False
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
-        if "temperature_unit" in cls.__dict__:
-            cls._deprecated_weather_entity_report = True
+        _reported = False
+        for method in (
+            "temperature",
+            "temperature_unit",
+            "_attr_temperature",
+            "_attr_temperature_unit",
+            "pressure",
+            "pressure_unit",
+            "_attr_pressure",
+            "_attr_pressure_unit",
+            "wind_speed",
+            "wind_speed_unit",
+            "_attr_wind_speed",
+            "_attr_wind_speed_unit",
+            "visibility",
+            "visibility_unit",
+            "_attr_visibility",
+            "_attr_visibility_unit",
+            "precipitation_unit",
+            "_attr_precipitation_unit",
+        ):
+            if method in cls.__dict__:
+                if "temperature" in method:
+                    WeatherEntity._override_temperature = True
+                if "pressure" in method:
+                    WeatherEntity._override_pressure = True
+                if "wind_speed" in method:
+                    WeatherEntity._override_wind_speed = True
+                if "visibility" in method:
+                    WeatherEntity._override_visibility = True
+                if "precipitation" in method:
+                    WeatherEntity._override_precipitation = True
+                module = inspect.getmodule(cls)
+                if _reported is False:
+                    _reported = True
+                    if (
+                        module
+                        and module.__file__
+                        and "custom_components" in module.__file__
+                    ):
+                        report_issue = "report it to the custom component author."
+                    else:
+                        report_issue = (
+                            "create a bug report at "
+                            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
+                        )
+                    _LOGGER.warning(
+                        "%s::%s is overriding deprecated methods on an instance of "
+                        "WeatherEntity, this is not valid and will be unsupported "
+                        "from Home Assistant 2022.10. Please %s",
+                        cls.__module__,
+                        cls.__name__,
+                        report_issue,
+                    )
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
@@ -233,11 +288,21 @@ class WeatherEntity(Entity):
     @property
     def native_temperature(self) -> float:
         """Return the platform temperature in native units (i.e. not converted)."""
+        if self._override_temperature:
+            if hasattr(self, "_attr_temperature"):
+                return self._attr_temperature  # type: ignore[no-any-return, attr-defined]
+            if hasattr(self, "temperature"):
+                return self.temperature  # type: ignore[no-any-return, attr-defined]
         return self._attr_native_temperature
 
     @property
     def native_temperature_unit(self) -> str | None:
         """Return the native unit of measurement for temperature."""
+        if self._override_temperature:
+            if hasattr(self, "_attr_temperature_unit"):
+                return self._attr_temperature_unit
+            if hasattr(self, "temperature"):
+                return self.temperature_unit
         if hasattr(self, "_attr_native_temperature_unit"):
             return self._attr_native_temperature_unit
         return None
@@ -245,28 +310,29 @@ class WeatherEntity(Entity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement for temperature."""
-        if (
-            self._deprecated_weather_entity_report is True
-            and self._deprecated_weather_entity_reported is False
-        ):
-            self._report_deprecated_weather_entity()
+        if weather_option_temperature_uom := self._weather_option_temperature_uom:
+            return weather_option_temperature_uom
 
-        if self.native_temperature_unit is None:
-            return None  # type: ignore[return-value]
-
-        if self._weather_option_temperature_uom:
-            return self._weather_option_temperature_uom
-
-        return self.native_temperature_unit
+        return self.native_temperature_unit  # type: ignore[return-value]
 
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
+        if self._override_pressure:
+            if hasattr(self, "_attr_pressure"):
+                return self._attr_pressure  # type: ignore[no-any-return, attr-defined]
+            if hasattr(self, "pressure"):
+                return self.pressure  # type: ignore[no-any-return, attr-defined]
         return self._attr_native_pressure
 
     @property
     def native_pressure_unit(self) -> str | None:
         """Return the native unit of measurement for pressure."""
+        if self._override_pressure:
+            if hasattr(self, "_attr_pressure_unit"):
+                return self._attr_pressure_unit
+            if hasattr(self, "pressure_unit"):
+                return self.pressure_unit
         if hasattr(self, "_attr_native_pressure_unit"):
             return self._attr_native_pressure_unit
         return None
@@ -274,13 +340,13 @@ class WeatherEntity(Entity):
     @property
     def pressure_unit(self) -> str | None:
         """Return the unit of measurement for pressure."""
-        if self.native_pressure_unit is None:
+        if (native_pressure_unit := self.native_pressure_unit) is None:
             return None
 
-        if self._weather_option_pressure_uom:
-            return self._weather_option_pressure_uom
+        if weather_option_pressure_uom := self._weather_option_pressure_uom:
+            return weather_option_pressure_uom
 
-        return self.native_pressure_unit
+        return native_pressure_unit
 
     @property
     def humidity(self) -> float | None:
@@ -290,11 +356,21 @@ class WeatherEntity(Entity):
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
+        if self._override_wind_speed:
+            if hasattr(self, "_attr_wind_speed"):
+                return self._attr_wind_speed  # type: ignore[no-any-return, attr-defined]
+            if hasattr(self, "wind_speed"):
+                return self.wind_speed  # type: ignore[no-any-return, attr-defined]
         return self._attr_native_wind_speed
 
     @property
     def native_wind_speed_unit(self) -> str | None:
         """Return the native unit of measurement for wind speed."""
+        if self._override_wind_speed:
+            if hasattr(self, "_attr_wind_speed_unit"):
+                return self._attr_wind_speed_unit
+            if hasattr(self, "wind_speed_unit"):
+                return self.wind_speed_unit
         if hasattr(self, "_attr_native_wind_speed_unit"):
             return self._attr_native_wind_speed_unit
         return None
@@ -302,13 +378,13 @@ class WeatherEntity(Entity):
     @property
     def wind_speed_unit(self) -> str | None:
         """Return the unit of measurement for wind speed."""
-        if self.native_wind_speed_unit is None:
+        if (native_wind_speed_unit := self.native_wind_speed_unit) is None:
             return None
 
-        if self._weather_option_wind_speed_uom:
-            return self._weather_option_wind_speed_uom
+        if weather_option_wind_speed_uom := self._weather_option_wind_speed_uom:
+            return weather_option_wind_speed_uom
 
-        return self.native_wind_speed_unit
+        return native_wind_speed_unit
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -323,11 +399,21 @@ class WeatherEntity(Entity):
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
+        if self._override_visibility:
+            if hasattr(self, "_attr_visibility"):
+                return self._attr_visibility  # type: ignore[no-any-return, attr-defined]
+            if hasattr(self, "visibility"):
+                return self.visibility  # type: ignore[no-any-return, attr-defined]
         return self._attr_native_visibility
 
     @property
     def native_visibility_unit(self) -> str | None:
         """Return the native unit of measurement for visibility."""
+        if self._override_visibility:
+            if hasattr(self, "_attr_visibility_unit"):
+                return self._attr_visibility_unit
+            if hasattr(self, "visibility_unit"):
+                return self.visibility_unit
         if hasattr(self, "_attr_native_visibility_unit"):
             return self._attr_native_visibility_unit
         return None
@@ -335,13 +421,13 @@ class WeatherEntity(Entity):
     @property
     def visibility_unit(self) -> str | None:
         """Return the unit of measurement for visibility."""
-        if self.native_visibility_unit is None:
+        if (native_visibility_unit := self.native_visibility_unit) is None:
             return None
 
-        if self._weather_option_visibility_uom:
-            return self._weather_option_visibility_uom
+        if weather_option_visibility_uom := self._weather_option_visibility_uom:
+            return weather_option_visibility_uom
 
-        return self.native_visibility_unit
+        return native_visibility_unit
 
     @property
     def forecast(self) -> list[Forecast] | None:
@@ -349,13 +435,13 @@ class WeatherEntity(Entity):
         return self._attr_forecast
 
     @property
-    def native_precipitation(self) -> float | None:
-        """Return the precipitation in native units."""
-        return self._attr_native_precipitation
-
-    @property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
+        if self._override_precipitation:
+            if hasattr(self, "_attr_precipitation_unit"):
+                return self._attr_precipitation_unit
+            if hasattr(self, "precipitation_unit"):
+                return self.precipitation_unit
         if hasattr(self, "_attr_native_precipitation_unit"):
             return self._attr_native_precipitation_unit
         return None
@@ -363,13 +449,13 @@ class WeatherEntity(Entity):
     @property
     def precipitation_unit(self) -> str | None:
         """Return the unit of measurement for precipitation."""
-        if self.native_precipitation_unit is None:
+        if (native_precipitation_unit := self.native_precipitation_unit) is None:
             return None
 
-        if self._weather_option_precipitation_uom:
-            return self._weather_option_precipitation_uom
+        if weather_option_precipitation_uom := self._weather_option_precipitation_uom:
+            return weather_option_precipitation_uom
 
-        return self.native_precipitation_unit
+        return native_precipitation_unit
 
     @property
     def precision(self) -> float:
@@ -464,31 +550,13 @@ class WeatherEntity(Entity):
                 )
                 data[ATTR_WEATHER_VISIBILITY_UNIT] = visibility_unit
 
-        if (
-            (precipitation := self.native_precipitation) is not None
-            and (precipitation_unit := self.precipitation_unit) is not None
-            and (native_precipitation_unit := self.native_precipitation_unit)
-            is not None
-        ):
-            with suppress(ValueError):
-                precipitation_f = float(precipitation)
-                value_precipitation = UNIT_CONVERSIONS[CONF_PRECIPITATION_UOM](
-                    precipitation_f,
-                    native_precipitation_unit,
-                    precipitation_unit,
-                )
-                data[ATTR_WEATHER_PRECIPITATION] = round(
-                    value_precipitation, ROUNDING_PRECISION
-                )
-                data[ATTR_WEATHER_PRECIPITATION_UNIT] = precipitation_unit
-
         if self.forecast is not None:
             forecast = []
             for forecast_entry in self.forecast:
                 forecast_entry_new = {}
                 forecast_entry = dict(forecast_entry)
                 temperature = forecast_entry[ATTR_FORECAST_TEMP]
-                print(f"{self.temperature_unit} and {self.native_temperature_unit}")
+
                 if (
                     self.temperature_unit is not None
                     and self.native_temperature_unit is not None
@@ -638,16 +706,3 @@ class WeatherEntity(Entity):
                 and self.native_visibility_unit in VALID_UNITS[CONF_VISIBILITY_UOM]
             ):
                 self._weather_option_visibility_uom = custom_unit_visibility
-
-    def _report_deprecated_weather_entity(self) -> None:
-        """Report that the weather entity has not been upgraded."""
-        if not self._deprecated_weather_entity_reported:
-            self._deprecated_weather_entity_reported = True
-            report_issue = self._suggest_report_issue()
-            _LOGGER.warning(
-                "Entity %s (%s) is using deprecated WeatherEntity features which will "
-                "be unsupported from Home Assistant Core 2022.10, please %s",
-                self.entity_id,
-                type(self),
-                report_issue,
-            )
