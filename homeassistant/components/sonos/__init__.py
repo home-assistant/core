@@ -402,10 +402,11 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
+    known_devices = hass.data[DATA_SONOS].discovered.keys()
     for identifier in device_entry.identifiers:
         if identifier[0] != DOMAIN:
             continue
         uid = identifier[1]
-        if uid not in hass.data[DATA_SONOS].discovered:
+        if uid not in known_devices:
             return True
     return False
