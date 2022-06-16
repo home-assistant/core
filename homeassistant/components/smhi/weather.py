@@ -140,6 +140,9 @@ class SmhiWeather(WeatherEntity):
         )
         self._attr_condition = None
         self._attr_temperature = None
+        self._attr_wind_speed = None
+        self._attr_visibility = None
+        self._attr_pressure = None
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     async def async_update(self) -> None:
