@@ -29,6 +29,15 @@
                 "description": "Per enlla\u00e7ar un compte de Google, [autoritza el compte]({url}). \n\nDespr\u00e9s de l'autoritzaci\u00f3, copia i enganxa a continuaci\u00f3 el codi 'token' d'autenticaci\u00f3 proporcionat.",
                 "title": "Vinculaci\u00f3 amb compte de Google"
             },
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "ID de projecte Google Cloud"
+                },
+                "title": "Nest: introdueix l'identificador del projecte Cloud"
+            },
+            "create_cloud_project": {
+                "title": "Nest: crea i configura el projecte Cloud"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Prove\u00efdor"

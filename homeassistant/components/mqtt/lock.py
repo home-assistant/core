@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
 
 import voluptuous as vol
 
@@ -183,7 +184,7 @@ class MqttLock(MqttEntity, LockEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state
 
@@ -197,7 +198,7 @@ class MqttLock(MqttEntity, LockEntity):
         """Flag supported features."""
         return LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in self._config else 0
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.
 
         This method is a coroutine.
@@ -214,7 +215,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device.
 
         This method is a coroutine.
@@ -231,7 +232,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._state = False
             self.async_write_ha_state()
 
-    async def async_open(self, **kwargs):
+    async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch.
 
         This method is a coroutine.

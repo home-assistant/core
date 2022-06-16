@@ -287,10 +287,10 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         description: BondButtonEntityDescription,
     ) -> None:
         """Init Bond button."""
+        self.entity_description = description
         super().__init__(
             hub, device, bpup_subs, description.name, description.key.lower()
         )
-        self.entity_description = description
 
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
@@ -302,5 +302,5 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             action = Action(self.entity_description.key)
         await self._hub.bond.action(self._device.device_id, action)
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
         """Apply the state."""
