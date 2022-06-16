@@ -29,8 +29,8 @@
                 "data": {
                     "code": "Access Token"
                 },
-                "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below ([more info]({more_info_url})).",
-                "title": "Nest: Link Google Account"
+                "description": "To link your Google account, [authorize your account]({url}).\n\nAfter authorization, copy-paste the provided Auth Token code below.",
+                "title": "Link Google Account"
             },
             "auth_upgrade": {
                 "description": "App Auth has been deprecated by Google to improve security, and you need to take action by creating new application credentials.\n\nOpen the [documentation]({more_info_url}) to follow along as the next steps will guide you through the steps you need to take to restore access to your Nest devices.",
@@ -51,7 +51,7 @@
                 "data": {
                     "project_id": "Device Access Project ID"
                 },
-                "description": "Create a Nest Device Access project which **requires a US$5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Click on **Create project**\n1. Give your Device Access project a name and click **Next**.\n1. Enter your OAuth Client ID\n1. Enable events by clicking **Enable** and **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).\n",
+                "description": "Create a Nest Device Access project which **requires a US $5 fee** to set up.\n1. Go to the [Device Access Console]({device_access_console_url}), and through the payment flow.\n1. Click on **Create project**\n1. Give your Device Access project a name and click **Next**.\n1. Enter your OAuth Client ID\n1. Enable events by clicking **Enable** and **Create project**.\n\nEnter your Device Access Project ID below ([more info]({more_info_url})).\n",
                 "title": "Nest: Create a Device Access Project"
             },
             "device_project_upgrade": {
