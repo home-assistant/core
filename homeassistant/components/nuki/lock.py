@@ -2,6 +2,7 @@
 from abc import ABC, abstractmethod
 from typing import Any
 
+from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
@@ -74,11 +75,6 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
         return self._nuki_device.nuki_id
 
     @property
-    @abstractmethod
-    def is_locked(self):
-        """Return true if lock is locked."""
-
-    @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
@@ -108,8 +104,10 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
 class NukiLockEntity(NukiDeviceEntity):
     """Representation of a Nuki lock."""
 
+    _nuki_device: NukiLock
+
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._nuki_device.is_locked
 
@@ -137,8 +135,10 @@ class NukiLockEntity(NukiDeviceEntity):
 class NukiOpenerEntity(NukiDeviceEntity):
     """Representation of a Nuki opener."""
 
+    _nuki_device: NukiOpener
+
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if either ring-to-open or continuous mode is enabled."""
         return not (
             self._nuki_device.is_rto_activated
