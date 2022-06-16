@@ -196,7 +196,7 @@ class ConfigEntry:
         "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
-        "reload_lock",
+        "reload_future",
     )
 
     def __init__(
@@ -286,8 +286,8 @@ class ConfigEntry:
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
 
-        # Reload lock to prevent conflicting reloads
-        self.reload_lock = asyncio.Lock()
+        # Reload future to prevent conflicting reloads
+        self.reload_future: asyncio.Future[bool] | None = None
 
     async def async_setup(
         self,
@@ -1028,20 +1028,37 @@ class ConfigEntries:
             raise UnknownEntry
 
         ratelimit = self._reload_ratelimit
-        async with entry.reload_lock:
-            now = dt_util.utcnow()
-            if rate_limit_expire_time := ratelimit.async_schedule_action(
-                entry_id, RELOAD_COOLDOWN, now, self._async_reload, entry_id
-            ):
-                _LOGGER.debug(
-                    "Reload of %s deferred until %s due to cooldown ratelimit",
-                    entry_id,
-                    rate_limit_expire_time,
-                )
-                return True
+        now = dt_util.utcnow()
 
-            ratelimit.async_triggered(entry_id, now)
-            return await self._async_reload(entry_id)
+        @callback
+        def _async_future_reload() -> None:
+            assert entry is not None
+            asyncio.create_task(self._async_future_reload(entry))
+
+        if rate_limit_expire_time := ratelimit.async_schedule_action(
+            entry_id, RELOAD_COOLDOWN, now, _async_future_reload
+        ):
+            if not entry.reload_future:
+                entry.reload_future = asyncio.Future()
+            _LOGGER.debug(
+                "Reload of %s deferred until %s due to cooldown ratelimit",
+                entry_id,
+                rate_limit_expire_time,
+            )
+            await entry.reload_future
+
+        ratelimit.async_triggered(entry_id, now)
+        return await self._async_reload(entry_id)
+
+    async def _async_future_reload(self, entry: ConfigEntry) -> None:
+        """Handle a future reload."""
+        assert entry.reload_future is not None
+        try:
+            entry.reload_future.set_result(await self._async_reload(entry.entry_id))
+        except Exception as ex:  # pylint: disable=broad-except
+            entry.reload_future.set_exception(ex)
+        finally:
+            entry.reload_future = None
 
     async def _async_reload(self, entry_id: str) -> bool:
         """Reload the entry."""
