@@ -1030,18 +1030,18 @@ class ConfigEntries:
         ratelimit = self._reload_ratelimit
         async with entry.reload_lock:
             now = dt_util.utcnow()
-            if not ratelimit.async_schedule_action(
+            if rate_limit_expire_time := ratelimit.async_schedule_action(
                 entry_id, RELOAD_COOLDOWN, now, self._async_reload, entry_id
             ):
-                ratelimit.async_triggered(entry, now)
-                return await self._async_reload(entry_id)
+                _LOGGER.debug(
+                    "Reload of %s deferred until %s due to cooldown ratelimit",
+                    entry_id,
+                    rate_limit_expire_time,
+                )
+                return True
 
-            _LOGGER.debug(
-                "Reload of %s deferred due to cooldown ratelimit: %s",
-                entry_id,
-                RELOAD_AFTER_UPDATE_DELAY,
-            )
-            return True
+            ratelimit.async_triggered(entry_id, now)
+            return await self._async_reload(entry_id)
 
     async def _async_reload(self, entry_id: str) -> bool:
         """Reload the entry."""
