@@ -1022,7 +1022,6 @@ class ConfigEntries:
         """
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
-
         if not entry.state.recoverable:
             raise OperationNotAllowed
 
@@ -1042,7 +1041,7 @@ class ConfigEntries:
                 entry_id,
                 rate_limit_expire_time,
             )
-            return entry.state.recoverable and not entry.disabled_by
+            return not entry.disabled_by
 
         ratelimit.async_triggered(entry_id, now)
         return await self._async_reload(entry_id)
