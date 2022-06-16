@@ -1,4 +1,6 @@
 """ONVIF event parsers."""
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 import datetime
 from typing import Any
@@ -12,15 +14,15 @@ from .models import Event
 PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event]]] = Registry()
 
 
-def datetime_or_zero(value: str) -> datetime:
-    """Convert strings to datetimes, if invalid, return datetime.min."""
+def datetime_or_zero(value: str) -> datetime | None:
+    """Convert strings to datetimes, if invalid, return None."""
     # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
     try:
         ret = dt_util.parse_datetime(value)
     except ValueError:
-        return datetime.datetime.min
+        return None
     if ret is None:
-        return datetime.datetime.min
+        return None
     return ret
 
 
