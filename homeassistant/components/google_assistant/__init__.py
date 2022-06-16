@@ -6,7 +6,7 @@ import logging
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
@@ -24,6 +24,7 @@ from .const import (
     CONF_ROOM_HINT,
     CONF_SECURE_DEVICES_PIN,
     CONF_SERVICE_ACCOUNT,
+    DATA_CONFIG,
     DEFAULT_EXPOSE_BY_DEFAULT,
     DEFAULT_EXPOSED_DOMAINS,
     DOMAIN,
@@ -37,7 +38,8 @@ from .const import EVENT_COMMAND_RECEIVED, EVENT_SYNC_RECEIVED  # noqa: F401, is
 _LOGGER = logging.getLogger(__name__)
 
 CONF_ALLOW_UNLOCK = "allow_unlock"
-DATA_CONFIG = "config"
+
+PLATFORMS = [Platform.BUTTON]
 
 ENTITY_SCHEMA = vol.Schema(
     {
@@ -161,5 +163,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.services.async_register(
             DOMAIN, SERVICE_REQUEST_SYNC, request_sync_service_handler
         )
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
