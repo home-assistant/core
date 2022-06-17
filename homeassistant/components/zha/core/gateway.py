@@ -672,7 +672,7 @@ class ZHAGateway:
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
         if not (group := self.groups.get(group_id)):
-            _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
+            _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
         if group.members:
             tasks = []
