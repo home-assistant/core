@@ -24,9 +24,18 @@ from flux_led.protocol import (
 from flux_led.scanner import FluxLEDDiscovery
 
 from homeassistant.components import dhcp
-from homeassistant.components.flux_led.const import DOMAIN
+from homeassistant.components.flux_led.const import (
+    CONF_MINOR_VERSION,
+    CONF_MODEL_DESCRIPTION,
+    CONF_MODEL_INFO,
+    CONF_MODEL_NUM,
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
+    DOMAIN,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -75,6 +84,19 @@ FLUX_DISCOVERY = FluxLEDDiscovery(
     remote_access_host="the.cloud",
     remote_access_port=8816,
 )
+
+DEFAULT_ENTRY_DATA = {
+    CONF_MINOR_VERSION: 4,
+    CONF_HOST: IP_ADDRESS,
+    CONF_MODEL: MODEL,
+    CONF_MODEL_NUM: MODEL_NUM,
+    CONF_MODEL_INFO: MODEL,
+    CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
+    CONF_REMOTE_ACCESS_ENABLED: True,
+    CONF_REMOTE_ACCESS_HOST: "the.cloud",
+    CONF_REMOTE_ACCESS_PORT: 8816,
+    CONF_MINOR_VERSION: 0x04,
+}
 
 
 def _mock_config_entry_for_bulb(hass: HomeAssistant) -> ConfigEntry:
