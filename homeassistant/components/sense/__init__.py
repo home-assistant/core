@@ -5,6 +5,7 @@ import logging
 
 from sense_energy import (
     ASyncSenseable,
+    SenseAPIException,
     SenseAuthenticationException,
     SenseMFARequiredException,
 )
@@ -84,6 +85,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             str(err) or "Timed out during authentication"
         ) from err
+    except SenseAPIException as err:
+        raise ConfigEntryNotReady(str(err)) from err
 
     sense_devices_data = SenseDevicesData()
     try:
