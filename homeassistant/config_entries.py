@@ -1027,8 +1027,12 @@ class ConfigEntries:
             raise UnknownEntry
         if not entry.state.recoverable:
             raise OperationNotAllowed
-        if not entry.supports_unload:
-            return entry.state == ConfigEntryState.NOT_LOADED
+        if (
+            entry.state != ConfigEntryState.NOT_LOADED
+            and not await support_entry_unload(self.hass, entry.domain)
+        ):
+            entry.state = ConfigEntryState.FAILED_UNLOAD
+            return False
 
         ratelimit = self._reload_ratelimit
         now = dt_util.utcnow()
