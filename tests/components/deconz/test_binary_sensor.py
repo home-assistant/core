@@ -753,28 +753,3 @@ async def test_add_new_binary_sensor_ignored_load_entities_on_options_change(
 
     assert len(hass.states.async_all()) == 1
     assert hass.states.get("binary_sensor.presence_sensor")
-
-
-# async def test_binary_sensor_update_unique_id(hass, aioclient_mock):
-#     """Test successful creation of binary sensor entities."""
-#     ent_reg = er.async_get(hass)
-
-#     with patch.dict(DECONZ_WEB_REQUEST, {"sensors": {"1": sensor_data}}):
-#         config_entry = await setup_deconz_integration(
-#             hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: True}
-#         )
-
-#     assert len(hass.states.async_all()) == expected["entity_count"]
-
-#     # Verify state data
-
-#     sensor = hass.states.get(expected["entity_id"])
-#     assert sensor.state == expected["state"]
-#     assert sensor.attributes.get(ATTR_DEVICE_CLASS) == expected["device_class"]
-#     assert sensor.attributes == expected["attributes"]
-
-#     # Verify entity registry data
-
-#     ent_reg_entry = ent_reg.async_get(expected["entity_id"])
-#     assert ent_reg_entry.entity_category is expected["entity_category"]
-#     assert ent_reg_entry.unique_id == expected["unique_id"]

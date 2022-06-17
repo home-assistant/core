@@ -180,47 +180,6 @@ BINARY_SENSOR_DESCRIPTIONS = [
 ]
 
 
-# async def async_update_unique_ids(
-#     hass: HomeAssistant, config_entry: ConfigEntry
-# ) -> None:
-#     """Update unique ID to always have a suffix."""
-
-#     all_descriptions = list(ENTITY_DESCRIPTIONS.values()) + [BINARY_SENSOR_DESCRIPTIONS]
-#     all_keys = [
-#         description.key
-#         for descriptions in all_descriptions
-#         for description in descriptions
-#     ]
-
-#     @callback
-#     def update_unique_id(entity_entry: er.RegistryEntry) -> dict[str, str] | None:
-#         """Update unique ID of entity entry."""
-#         if (
-#             entity_entry.domain != DOMAIN
-#             or entity_entry.unique_id.rsplit("-", 1)[-1] in all_keys
-#         ):
-#             return None
-#         print(
-#             entity_entry.entity_category,
-#             entity_entry.original_device_class,
-#             entity_entry.unique_id,
-#             entity_entry.unique_id.rsplit("-", 1),
-#         )
-#         for descriptions in all_descriptions:
-#             for description in descriptions:
-#                 if entity_entry.entity_category != description.entity_category:
-#                     continue
-#                 if entity_entry.original_device_class != description.device_class:
-#                     continue
-#                 unique_id = entity_entry.unique_id.split("-")[0]
-#                 print({"new_unique_id": f"{unique_id}-{description.key}"})
-#                 return {"new_unique_id": f"{unique_id}-{description.key}"}
-
-#         return None
-
-#     await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
-
-
 @callback
 def async_update_unique_id(
     hass: HomeAssistant, unique_id: str, description: DeconzBinarySensorDescription
