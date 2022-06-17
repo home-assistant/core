@@ -18,12 +18,9 @@ def datetime_or_zero(value: str) -> datetime | None:
     """Convert strings to datetimes, if invalid, return None."""
     # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
     try:
-        ret = dt_util.parse_datetime(value)
+        return dt_util.parse_datetime(value)
     except ValueError:
         return None
-    if ret is None:
-        return None
-    return ret
 
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")
