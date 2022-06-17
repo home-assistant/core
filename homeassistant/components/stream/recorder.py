@@ -47,6 +47,11 @@ class RecorderOutput(StreamOutput):
         """Prepend segments to existing list."""
         self._segments.extendleft(reversed(segments))
 
+    def cleanup(self) -> None:
+        """Handle cleanup."""
+        self.idle_timer.idle = True
+        super().cleanup()
+
     async def async_record(self) -> None:
         """Handle saving stream."""
 
