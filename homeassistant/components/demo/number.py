@@ -99,11 +99,11 @@ class DemoNumber(NumberEntity):
         self._attr_mode = mode
 
         if native_min_value is not None:
-            self._attr_min_value = native_min_value
+            self._attr_native_min_value = native_min_value
         if native_max_value is not None:
-            self._attr_max_value = native_max_value
+            self._attr_native_max_value = native_max_value
         if native_step is not None:
-            self._attr_step = native_step
+            self._attr_native_step = native_step
 
         self._attr_device_info = DeviceInfo(
             identifiers={
