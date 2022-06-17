@@ -18,11 +18,12 @@ async def async_setup_entry(
 ) -> bool:
     """Set up platform from a ConfigEntry."""
     hass.data.setdefault(DOMAIN, {})
-    # Verify the device is reachable before setting up the platform
-    try:
-        test_connect(entry.options[CONF_HOST], entry.options[CONF_PORT])
-    except ConnectionError as err:
-        raise ConfigEntryNotReady from err
+    # Verify the device is reachable with the given config before setting up the platform
+    if CONF_HOST in entry.data.keys() and CONF_PORT in entry.data.keys():
+        try:
+            test_connect(entry.data[CONF_HOST], entry.data[CONF_PORT])
+        except ConnectionError as err:
+            raise ConfigEntryNotReady from err
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True

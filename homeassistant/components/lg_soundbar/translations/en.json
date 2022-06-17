@@ -8,7 +8,7 @@
             "cannot_connect": "Failed to connect"
         },
         "step": {
-            "details": {
+            "user": {
                 "data": {
                     "host": "Host",
                     "port": "Port"

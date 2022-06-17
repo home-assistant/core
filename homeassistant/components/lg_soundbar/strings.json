@@ -1,7 +1,7 @@
 {
   "config": {
     "step": {
-      "details": {
+      "user": {
         "title": "LG Soundbar Connection details",
         "description": "Enter your Connection details.",
         "data": {
