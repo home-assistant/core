@@ -140,7 +140,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.4
+        uses: home-assistant/wheels@2022.06.5
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -273,7 +273,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.4
+        uses: home-assistant/wheels@2022.06.5
         with:
           abi: cp310
           tag: musllinux_1_2
