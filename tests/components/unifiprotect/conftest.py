@@ -271,7 +271,6 @@ async def enable_entity(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    await hass.async_block_till_done()
     await async_fire_reload_cooldown(hass)
     await hass.async_block_till_done()
 
