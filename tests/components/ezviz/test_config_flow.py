@@ -182,19 +182,6 @@ async def test_step_reauth_abort_if_cloud_account_missing(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
     )
-    assert result["type"] == RESULT_TYPE_FORM
-    assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-        },
-    )
-    await hass.async_block_till_done()
-
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "ezviz_cloud_account_missing"
 
@@ -592,7 +579,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "invalid_host"}
 
     ezviz_config_flow.side_effect = EzvizAuthVerificationCode()
     result = await hass.config_entries.flow.async_configure(

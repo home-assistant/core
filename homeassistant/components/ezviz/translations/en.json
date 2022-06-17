@@ -2,8 +2,9 @@
     "config": {
         "abort": {
             "already_configured_account": "Account is already configured",
-            "ezviz_cloud_account_missing": "EZVIZ cloud account missing. Please reconfigure EZVIZ cloud account",
-            "unknown": "Unexpected error"
+            "ezviz_cloud_account_missing": "Ezviz cloud account missing. Please reconfigure Ezviz cloud account",
+            "unknown": "Unexpected error",
+            "reauth_successful": "Re-authentication was successful"
         },
         "error": {
             "cannot_connect": "Failed to connect",
@@ -43,7 +44,7 @@
                     "password": "Password",
                     "username": "Username"
                 },
-                "title": "Connect to Ezviz Cloud"
+                "title": "Reauthenticate Integration"
             }
         }
     },
