@@ -15,8 +15,7 @@
       "stream_not_permitted": "Operation not permitted while trying to connect to stream. Wrong RTSP transport protocol?"
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {
       "user": {
