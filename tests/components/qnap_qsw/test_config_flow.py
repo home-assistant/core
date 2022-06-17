@@ -17,6 +17,12 @@ from .util import CONFIG, LIVE_MOCK, SYSTEM_BOARD_MOCK, USERS_LOGIN_MOCK
 
 from tests.common import MockConfigEntry
 
+DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+    hostname="qsw-m408-4c",
+    ip="192.168.1.200",
+    macaddress="245EBE000000",
+)
+
 TEST_PASSWORD = "test-password"
 TEST_URL = "test-url"
 TEST_USERNAME = "test-username"
@@ -149,16 +155,12 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            data=dhcp.DhcpServiceInfo(
-                hostname="qsw-m408-4c",
-                ip="192.168.1.200",
-                macaddress="245EBE000000",
-            ),
+            data=DHCP_SERVICE_INFO,
             context={"source": config_entries.SOURCE_DHCP},
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == config_entries.SOURCE_USER
+    assert result["step_id"] == "discovered_connection"
 
     with patch(
         "homeassistant.components.qnap_qsw.async_setup_entry",
@@ -176,7 +178,6 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_URL: TEST_URL,
                 CONF_USERNAME: TEST_USERNAME,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
@@ -184,7 +185,6 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
 
     assert result2["type"] == "create_entry"
     assert result2["data"] == {
-        CONF_URL: TEST_URL,
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
     }
@@ -201,13 +201,71 @@ async def test_dhcp_flow_error(hass: HomeAssistant) -> None:
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            data=dhcp.DhcpServiceInfo(
-                hostname="qsw-m408-4c",
-                ip="192.168.1.200",
-                macaddress="245EBE000000",
-            ),
+            data=DHCP_SERVICE_INFO,
             context={"source": config_entries.SOURCE_DHCP},
         )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_dhcp_connection_error(hass: HomeAssistant):
+    """Test DHCP connection to host error."""
+
+    with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+        return_value=LIVE_MOCK,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "discovered_connection"
+
+    with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.validate",
+        side_effect=QswError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+
+        assert result["errors"] == {CONF_URL: "cannot_connect"}
+
+
+async def test_dhcp_login_error(hass: HomeAssistant):
+    """Test DHCP login error."""
+
+    with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_live",
+        return_value=LIVE_MOCK,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DHCP_SERVICE_INFO,
+            context={"source": config_entries.SOURCE_DHCP},
+        )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "discovered_connection"
+
+    with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.validate",
+        side_effect=LoginError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: TEST_USERNAME,
+                CONF_PASSWORD: TEST_PASSWORD,
+            },
+        )
+
+        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
