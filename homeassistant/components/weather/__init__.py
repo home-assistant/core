@@ -307,15 +307,15 @@ class WeatherEntity(Entity):
         self.async_registry_entry_updated()
 
     @property
-    def temperature(self) -> float:
+    def temperature(self) -> float | None:
         """Return the temperature for backward compatibility."""
         if self._override_temperature is not None:
             return self._override_temperature
         self._override_temperature = self._attr_temperature
-        return self._attr_temperature  # type: ignore[return-value]
+        return self._attr_temperature
 
     @property
-    def native_temperature(self) -> float:
+    def native_temperature(self) -> float | None:
         """Return the platform temperature in native units (i.e. not converted)."""
         if hasattr(self, "_attr_native_temperature"):
             return self._attr_native_temperature

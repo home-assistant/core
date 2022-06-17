@@ -292,15 +292,38 @@ async def test_backwards_compability(
             unique_id="very_unique",
         )
     )
+    platform.ENTITIES.append(
+        platform.MockWeatherMockForecastCompat(
+            name="Test2",
+            condition=ATTR_CONDITION_SUNNY,
+            temperature=temperature_value,
+            temperature_unit=temperature_unit,
+            wind_speed=wind_speed_value,
+            wind_speed_unit=None,
+            pressure=pressure_value,
+            pressure_unit=None,
+            visibility=visibility_value,
+            visibility_unit=None,
+            precipitation=precipitation_value,
+            precipitation_unit=None,
+            unique_id="very_unique2",
+        )
+    )
 
     entity0 = platform.ENTITIES[0]
+    entity1 = platform.ENTITIES[1]
     assert await async_setup_component(
         hass, "weather", {"weather": {"platform": "test"}}
+    )
+    assert await async_setup_component(
+        hass, "weather", {"weather": {"platform": "test2"}}
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
+    state1 = hass.states.get(entity1.entity_id)
+    forecast1 = state1.attributes[ATTR_FORECAST][0]
 
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
     assert state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_METERS_PER_SECOND
@@ -316,3 +339,18 @@ async def test_backwards_compability(
         precipitation_value, rel=1e-2
     )
     assert state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == LENGTH_MILLIMETERS
+
+    assert float(state1.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
+    assert float(state1.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+        temperature_value, rel=0.1
+    )
+    assert state1.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
+    assert float(state1.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
+    assert float(state1.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
+    assert float(forecast1[ATTR_FORECAST_PRECIPITATION]) == approx(
+        precipitation_value, rel=1e-2
+    )
+    assert ATTR_WEATHER_WIND_SPEED_UNIT not in state1.attributes
+    assert ATTR_WEATHER_PRESSURE_UNIT not in state1.attributes
+    assert ATTR_WEATHER_VISIBILITY_UNIT not in state1.attributes
+    assert ATTR_WEATHER_PRECIPITATION_UNIT not in state1.attributes
