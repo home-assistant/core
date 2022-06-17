@@ -219,11 +219,9 @@ async def test_calendar_yaml_error(
     assert hass.states.get(TEST_API_ENTITY)
 
 
-@pytest.mark.parametrize("calendars_config", [[]])
-async def test_found_calendar_from_api(
+async def test_init_calendar(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
@@ -273,6 +271,55 @@ async def test_load_application_credentials(
 
     # No yaml config loaded that overwrites the entity name
     assert not hass.states.get(TEST_YAML_ENTITY)
+
+
+async def test_multiple_config_entries(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test finding a calendar from the API."""
+
+    assert await component_setup()
+
+    config_entry1 = MockConfigEntry(domain=DOMAIN, data=config_entry.data)
+    calendar1 = {
+        **test_api_calendar,
+        "id": "calendar-id1",
+        "summary": "Example Calendar 1",
+    }
+
+    mock_calendars_list({"items": [calendar1]})
+    mock_events_list({}, calendar_id="calendar-id1")
+    config_entry1.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry1.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.example_calendar_1")
+    assert state
+    assert state.name == "Example Calendar 1"
+    assert state.state == STATE_OFF
+
+    config_entry2 = MockConfigEntry(domain=DOMAIN, data=config_entry.data)
+    calendar2 = {
+        **test_api_calendar,
+        "id": "calendar-id2",
+        "summary": "Example Calendar 2",
+    }
+    aioclient_mock.clear_requests()
+    mock_calendars_list({"items": [calendar2]})
+    mock_events_list({}, calendar_id="calendar-id2")
+    config_entry2.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry2.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("calendar.example_calendar_2")
+    assert state
+    assert state.name == "Example Calendar 2"
 
 
 @pytest.mark.parametrize(
