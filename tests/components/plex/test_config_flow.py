@@ -42,7 +42,7 @@ from .const import DEFAULT_OPTIONS, MOCK_SERVERS, MOCK_TOKEN, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
 from .mock_classes import MockGDM
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_reload_cooldown
 
 
 async def test_bad_credentials(hass, current_request_with_host):
@@ -757,6 +757,7 @@ async def test_trigger_reauth(
 
     assert len(hass.config_entries.flow.async_progress()) == 0
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    await async_fire_reload_cooldown(hass)
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.data[CONF_SERVER] == mock_plex_server.friendly_name

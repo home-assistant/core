@@ -14,7 +14,7 @@ from homeassistant.util import dt
 
 from .helpers import trigger_plex_update, wait_for_debouncer
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_reload_cooldown, async_fire_time_changed
 
 LIBRARY_UPDATE_PAYLOAD = {"StatusNotification": [{"title": "Library scan complete"}]}
 
@@ -120,10 +120,7 @@ async def test_library_sensor_values(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
+    await async_fire_reload_cooldown(hass)
 
     media = [MockPlexTVEpisode()]
     with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
