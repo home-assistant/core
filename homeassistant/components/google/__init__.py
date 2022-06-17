@@ -220,6 +220,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
+
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -249,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     calendar_service = GoogleCalendarService(
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
-    hass.data[DOMAIN][DATA_SERVICE] = calendar_service
+    hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:

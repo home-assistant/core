@@ -105,7 +105,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the google calendar platform."""
-    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
+    calendar_service = hass.data[DOMAIN][entry.entry_id][DATA_SERVICE]
     try:
         result = await calendar_service.async_list_calendars()
     except ApiException as err:
