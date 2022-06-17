@@ -17,13 +17,18 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
-from .conftest import CALENDAR_ID, TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
+from .conftest import (
+    CALENDAR_ID,
+    TEST_API_ENTITY,
+    TEST_API_ENTITY_NAME,
+    TEST_YAML_ENTITY,
+)
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
-TEST_ENTITY = TEST_YAML_ENTITY
-TEST_ENTITY_NAME = TEST_YAML_ENTITY_NAME
+TEST_ENTITY = TEST_API_ENTITY
+TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
 
 TEST_EVENT = {
     "summary": "Test All Day Event",
@@ -58,7 +63,6 @@ TEST_EVENT = {
 @pytest.fixture(autouse=True)
 def mock_test_setup(
     hass,
-    mock_calendars_yaml,
     test_api_calendar,
     mock_calendars_list,
     config_entry,
@@ -87,12 +91,12 @@ def upcoming_date() -> dict[str, Any]:
     }
 
 
-def upcoming_event_url() -> str:
+def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
     """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
     start = (now - datetime.timedelta(minutes=60)).isoformat()
     end = (now + datetime.timedelta(minutes=60)).isoformat()
-    return f"/api/calendars/{TEST_ENTITY}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
+    return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
 
 
 async def test_all_day_event(
@@ -551,6 +555,7 @@ async def test_http_api_event_paging(
 async def test_opaque_event(
     hass,
     hass_client,
+    mock_calendars_yaml,
     mock_events_list_items,
     component_setup,
     transparency,
@@ -566,7 +571,7 @@ async def test_opaque_event(
     assert await component_setup()
 
     client = await hass_client()
-    response = await client.get(upcoming_event_url())
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
