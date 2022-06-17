@@ -104,6 +104,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _async_get_component(hass: HomeAssistant) -> EntityComponent:
+    if (component := hass.data.get(DOMAIN)) is None:
+        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+    return component
+
+
 class GroupIntegrationRegistry:
     """Class to hold a registry of integrations."""
 
@@ -440,10 +446,7 @@ async def _async_process_config(hass, config, component):
         hass.data[GROUP_ORDER] += 1
 
     # If called before the platform async_setup is called (test cases)
-    if (component := hass.data.get(DOMAIN)) is None:
-        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
-
-    await component.async_add_entities(entities)
+    await _async_get_component(hass).async_add_entities(entities)
 
 
 class GroupEntity(Entity):
@@ -586,10 +589,7 @@ class Group(Entity):
         )
 
         # If called before the platform async_setup is called (test cases)
-        if (component := hass.data.get(DOMAIN)) is None:
-            component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
-
-        await component.async_add_entities([group])
+        await _async_get_component(hass).async_add_entities([group])
         return group
 
     @property
