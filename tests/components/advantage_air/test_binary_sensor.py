@@ -1,12 +1,9 @@
 """Test the Advantage Air Binary Sensor Platform."""
-from datetime import timedelta
 
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util import dt
 
-from tests.common import async_fire_time_changed
+from tests.common import async_fire_reload_cooldown
 from tests.components.advantage_air import (
     TEST_SET_RESPONSE,
     TEST_SET_URL,
@@ -81,11 +78,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+    await async_fire_reload_cooldown(hass)
 
     state = hass.states.get(entity_id)
     assert state
@@ -103,11 +96,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+    await async_fire_reload_cooldown(hass)
 
     state = hass.states.get(entity_id)
     assert state
