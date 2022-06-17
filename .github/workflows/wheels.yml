@@ -140,7 +140,7 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.3
+        uses: home-assistant/wheels@2022.06.4
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -273,14 +273,14 @@ jobs:
           done
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.3
+        uses: home-assistant/wheels@2022.06.4
         with:
           abi: cp310
           tag: musllinux_1_2
           arch: ${{ matrix.arch }}
           wheels-key: ${{ secrets.WHEELS_KEY }}
           env-file: true
-          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev"
+          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran"
           skip-binary: aiohttp;grpcio
           legacy: true
           constraints: "homeassistant/package_constraints.txt"
