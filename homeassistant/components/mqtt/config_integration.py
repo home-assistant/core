@@ -73,69 +73,65 @@ DEFAULT_VALUES = {
     CONF_WILL_MESSAGE: DEFAULT_WILL,
 }
 
-PLATFORM_SCHEMAS_MODERN: dict[Platform, vol.Schema] = {
-    Platform.ALARM_CONTROL_PANEL: vol.All(
-        cv.ensure_list, [alarm_control_panel_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.BINARY_SENSOR: vol.All(
-        cv.ensure_list, [binary_sensor_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.BUTTON: vol.All(
-        cv.ensure_list, [button_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.CAMERA: vol.All(
-        cv.ensure_list, [camera_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.CLIMATE: vol.All(
-        cv.ensure_list, [climate_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.COVER: vol.All(
-        cv.ensure_list, [cover_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.DEVICE_TRACKER: vol.All(
-        cv.ensure_list, [device_tracker_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.FAN: vol.All(
-        cv.ensure_list, [fan_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.HUMIDIFIER: vol.All(
-        cv.ensure_list, [humidifier_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.LOCK: vol.All(
-        cv.ensure_list, [lock_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.LIGHT: vol.All(
-        cv.ensure_list, [light_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.NUMBER: vol.All(
-        cv.ensure_list, [number_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.SCENE: vol.All(
-        cv.ensure_list, [scene_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.SELECT: vol.All(
-        cv.ensure_list, [select_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.SENSOR: vol.All(
-        cv.ensure_list, [sensor_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.SIREN: vol.All(
-        cv.ensure_list, [siren_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.SWITCH: vol.All(
-        cv.ensure_list, [switch_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-    Platform.VACUUM: vol.All(
-        cv.ensure_list, [vacuum_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
-    ),
-}
-
 PLATFORM_CONFIG_SCHEMA_BASE = vol.Schema(
     {
-        vol.Optional(platform.value): schema
-        for platform, schema in PLATFORM_SCHEMAS_MODERN.items()
+        Platform.ALARM_CONTROL_PANEL.value: vol.All(
+            cv.ensure_list, [alarm_control_panel_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.BINARY_SENSOR.value: vol.All(
+            cv.ensure_list, [binary_sensor_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.BUTTON.value: vol.All(
+            cv.ensure_list, [button_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.CAMERA.value: vol.All(
+            cv.ensure_list, [camera_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.CLIMATE.value: vol.All(
+            cv.ensure_list, [climate_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.COVER.value: vol.All(
+            cv.ensure_list, [cover_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.DEVICE_TRACKER.value: vol.All(
+            cv.ensure_list, [device_tracker_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.FAN.value: vol.All(
+            cv.ensure_list, [fan_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.HUMIDIFIER.value: vol.All(
+            cv.ensure_list, [humidifier_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.LOCK.value: vol.All(
+            cv.ensure_list, [lock_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.LIGHT.value: vol.All(
+            cv.ensure_list, [light_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.NUMBER.value: vol.All(
+            cv.ensure_list, [number_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.SCENE.value: vol.All(
+            cv.ensure_list, [scene_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.SELECT.value: vol.All(
+            cv.ensure_list, [select_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.SENSOR.value: vol.All(
+            cv.ensure_list, [sensor_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.SIREN.value: vol.All(
+            cv.ensure_list, [siren_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.SWITCH.value: vol.All(
+            cv.ensure_list, [switch_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
+        Platform.VACUUM.value: vol.All(
+            cv.ensure_list, [vacuum_platform.PLATFORM_SCHEMA_MODERN]  # type: ignore[has-type]
+        ),
     }
 )
+
 
 CLIENT_KEY_AUTH_MSG = (
     "client_key and client_cert must both be present in "
