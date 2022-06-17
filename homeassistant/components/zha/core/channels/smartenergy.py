@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import enum
 from functools import partialmethod
+from typing import TYPE_CHECKING
 
 from zigpy.zcl.clusters import smartenergy
 
@@ -14,6 +15,9 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .base import ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
@@ -115,7 +119,7 @@ class Metering(ZigbeeChannel):
         SUMMATION = 1
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
     ) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)

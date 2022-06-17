@@ -1,5 +1,8 @@
 """Manufacturer specific channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
 
 from homeassistant.core import callback
 
@@ -15,6 +18,9 @@ from ..const import (
     UNKNOWN,
 )
 from .base import ClientChannel, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +61,7 @@ class OppleRemote(ZigbeeChannel):
     REPORT_CONFIG = []
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
     ) -> None:
         """Initialize Opple channel."""
         super().__init__(cluster, ch_pool)

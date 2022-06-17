@@ -10,7 +10,6 @@ import zigpy.zdo
 
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
-ChannelPoolType = "ChannelPool"
 ClientChannelType = "ClientChannel"
 ZDOChannelType = "ZDOChannel"
 ZhaEntityType = "ZHAEntity"
@@ -25,10 +24,9 @@ ZigpyZdoType = zigpy.zdo.ZDO
 if TYPE_CHECKING:
     import homeassistant.components.zha.entity
 
-    from . import channels, gateway, group
+    from . import gateway, group
     from .channels import base as base_channels
 
-    ChannelPoolType = channels.ChannelPool
     ClientChannelType = base_channels.ClientChannel
     ZDOChannelType = base_channels.ZDOChannel
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity
