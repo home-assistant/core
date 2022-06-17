@@ -19,7 +19,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import ClientChannel, ZigbeeChannel
+from .base import ClientChannel, ReportConfig, ZigbeeChannel
 
 if TYPE_CHECKING:
     from . import ChannelPool
@@ -44,7 +44,7 @@ class SmartThingsHumidity(ZigbeeChannel):
 class OsramButton(ZigbeeChannel):
     """Osram button channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG: list[ReportConfig] = []
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
@@ -52,7 +52,7 @@ class OsramButton(ZigbeeChannel):
 class PhillipsRemote(ZigbeeChannel):
     """Phillips remote channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG: list[ReportConfig] = []
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
@@ -60,7 +60,7 @@ class PhillipsRemote(ZigbeeChannel):
 class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG: list[ReportConfig] = []
 
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Opple channel."""
@@ -88,10 +88,10 @@ class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
     REPORT_CONFIG = [
-        {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
-        {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
-        {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
-        {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
+        ReportConfig(attr="acceleration", config=REPORT_CONFIG_ASAP),
+        ReportConfig(attr="x_axis", config=REPORT_CONFIG_ASAP),
+        ReportConfig(attr="y_axis", config=REPORT_CONFIG_ASAP),
+        ReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
     ]
 
     @callback
@@ -121,4 +121,4 @@ class SmartThingsAcceleration(ZigbeeChannel):
 class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG: list[ReportConfig] = []
