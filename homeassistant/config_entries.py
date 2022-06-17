@@ -1031,8 +1031,7 @@ class ConfigEntries:
             entry.state != ConfigEntryState.NOT_LOADED
             and not await support_entry_unload(self.hass, entry.domain)
         ):
-            entry.state = ConfigEntryState.FAILED_UNLOAD
-            return False
+            return await self.async_unload(entry_id)
 
         ratelimit = self._reload_ratelimit
         now = dt_util.utcnow()
