@@ -38,6 +38,15 @@
             "create_cloud_project": {
                 "title": "Nest: crea i configura el projecte Cloud"
             },
+            "device_project": {
+                "data": {
+                    "project_id": "ID de projecte Device Access"
+                },
+                "title": "Nest: crea un projecte Device Access"
+            },
+            "device_project_upgrade": {
+                "title": "Nest: actualitza projecte Device Access"
+            },
             "init": {
                 "data": {
                     "flow_impl": "Prove\u00efdor"

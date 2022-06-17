@@ -22,7 +22,7 @@
             "subscriber_error": "Unbekannter Abonnentenfehler, siehe Protokolle",
             "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
             "unknown": "Unerwarteter Fehler",
-            "wrong_project_id": "Bitte gib eine g\u00fcltige Cloud-Projekt-ID ein (gefundene Ger\u00e4tezugriffs-Projekt-ID)"
+            "wrong_project_id": "Gib eine g\u00fcltige Cloud-Projekt-ID ein (identisch mit der Projekt-ID f\u00fcr den Ger\u00e4tezugriff)."
         },
         "step": {
             "auth": {
