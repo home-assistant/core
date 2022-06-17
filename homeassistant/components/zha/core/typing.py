@@ -13,7 +13,6 @@ CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
 ClientChannelType = "ClientChannel"
 ZDOChannelType = "ZDOChannel"
 ZhaEntityType = "ZHAEntity"
-ZhaGatewayType = "ZHAGateway"
 ZhaGroupType = "ZHAGroupType"
 ZigpyClusterType = zigpy.zcl.Cluster
 ZigpyDeviceType = zigpy.device.Device
@@ -24,11 +23,10 @@ ZigpyZdoType = zigpy.zdo.ZDO
 if TYPE_CHECKING:
     import homeassistant.components.zha.entity
 
-    from . import gateway, group
+    from . import group
     from .channels import base as base_channels
 
     ClientChannelType = base_channels.ClientChannel
     ZDOChannelType = base_channels.ZDOChannel
     ZhaEntityType = homeassistant.components.zha.entity.ZhaEntity
-    ZhaGatewayType = gateway.ZHAGateway
     ZhaGroupType = group.ZHAGroup
