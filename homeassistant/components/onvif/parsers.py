@@ -1,4 +1,6 @@
 """ONVIF event parsers."""
+from __future__ import annotations
+
 from collections.abc import Callable, Coroutine
 import datetime
 from typing import Any
@@ -9,7 +11,9 @@ from homeassistant.util.decorator import Registry
 
 from .models import Event
 
-PARSERS: Registry[str, Callable[[str, Any], Coroutine[Any, Any, Event]]] = Registry()
+PARSERS: Registry[
+    str, Callable[[str, Any], Coroutine[Any, Any, Event | None]]
+] = Registry()
 
 
 def datetime_or_zero(value: str) -> datetime:
@@ -26,7 +30,7 @@ def datetime_or_zero(value: str) -> datetime:
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")
 # pylint: disable=protected-access
-async def async_parse_motion_alarm(uid: str, msg) -> Event:
+async def async_parse_motion_alarm(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:VideoSource/MotionAlarm
@@ -49,7 +53,7 @@ async def async_parse_motion_alarm(uid: str, msg) -> Event:
 @PARSERS.register("tns1:VideoSource/ImageTooBlurry/ImagingService")
 @PARSERS.register("tns1:VideoSource/ImageTooBlurry/RecordingService")
 # pylint: disable=protected-access
-async def async_parse_image_too_blurry(uid: str, msg) -> Event:
+async def async_parse_image_too_blurry(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:VideoSource/ImageTooBlurry/*
@@ -73,7 +77,7 @@ async def async_parse_image_too_blurry(uid: str, msg) -> Event:
 @PARSERS.register("tns1:VideoSource/ImageTooDark/ImagingService")
 @PARSERS.register("tns1:VideoSource/ImageTooDark/RecordingService")
 # pylint: disable=protected-access
-async def async_parse_image_too_dark(uid: str, msg) -> Event:
+async def async_parse_image_too_dark(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:VideoSource/ImageTooDark/*
@@ -97,7 +101,7 @@ async def async_parse_image_too_dark(uid: str, msg) -> Event:
 @PARSERS.register("tns1:VideoSource/ImageTooBright/ImagingService")
 @PARSERS.register("tns1:VideoSource/ImageTooBright/RecordingService")
 # pylint: disable=protected-access
-async def async_parse_image_too_bright(uid: str, msg) -> Event:
+async def async_parse_image_too_bright(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:VideoSource/ImageTooBright/*
@@ -121,7 +125,7 @@ async def async_parse_image_too_bright(uid: str, msg) -> Event:
 @PARSERS.register("tns1:VideoSource/GlobalSceneChange/ImagingService")
 @PARSERS.register("tns1:VideoSource/GlobalSceneChange/RecordingService")
 # pylint: disable=protected-access
-async def async_parse_scene_change(uid: str, msg) -> Event:
+async def async_parse_scene_change(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:VideoSource/GlobalSceneChange/*
@@ -142,7 +146,7 @@ async def async_parse_scene_change(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:AudioAnalytics/Audio/DetectedSound")
 # pylint: disable=protected-access
-async def async_parse_detected_sound(uid: str, msg) -> Event:
+async def async_parse_detected_sound(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:AudioAnalytics/Audio/DetectedSound
@@ -173,7 +177,7 @@ async def async_parse_detected_sound(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:RuleEngine/FieldDetector/ObjectsInside")
 # pylint: disable=protected-access
-async def async_parse_field_detector(uid: str, msg) -> Event:
+async def async_parse_field_detector(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/FieldDetector/ObjectsInside
@@ -205,7 +209,7 @@ async def async_parse_field_detector(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:RuleEngine/CellMotionDetector/Motion")
 # pylint: disable=protected-access
-async def async_parse_cell_motion_detector(uid: str, msg) -> Event:
+async def async_parse_cell_motion_detector(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/CellMotionDetector/Motion
@@ -236,7 +240,7 @@ async def async_parse_cell_motion_detector(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:RuleEngine/MotionRegionDetector/Motion")
 # pylint: disable=protected-access
-async def async_parse_motion_region_detector(uid: str, msg) -> Event:
+async def async_parse_motion_region_detector(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/MotionRegionDetector/Motion
@@ -267,7 +271,7 @@ async def async_parse_motion_region_detector(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:RuleEngine/TamperDetector/Tamper")
 # pylint: disable=protected-access
-async def async_parse_tamper_detector(uid: str, msg) -> Event:
+async def async_parse_tamper_detector(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:RuleEngine/TamperDetector/Tamper
@@ -299,7 +303,7 @@ async def async_parse_tamper_detector(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Device/Trigger/DigitalInput")
 # pylint: disable=protected-access
-async def async_parse_digital_input(uid: str, msg) -> Event:
+async def async_parse_digital_input(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Device/Trigger/DigitalInput
@@ -320,7 +324,7 @@ async def async_parse_digital_input(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Device/Trigger/Relay")
 # pylint: disable=protected-access
-async def async_parse_relay(uid: str, msg) -> Event:
+async def async_parse_relay(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Device/Trigger/Relay
@@ -341,7 +345,7 @@ async def async_parse_relay(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Device/HardwareFailure/StorageFailure")
 # pylint: disable=protected-access
-async def async_parse_storage_failure(uid: str, msg) -> Event:
+async def async_parse_storage_failure(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Device/HardwareFailure/StorageFailure
@@ -363,7 +367,7 @@ async def async_parse_storage_failure(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Monitoring/ProcessorUsage")
 # pylint: disable=protected-access
-async def async_parse_processor_usage(uid: str, msg) -> Event:
+async def async_parse_processor_usage(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/ProcessorUsage
@@ -388,7 +392,7 @@ async def async_parse_processor_usage(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Monitoring/OperatingTime/LastReboot")
 # pylint: disable=protected-access
-async def async_parse_last_reboot(uid: str, msg) -> Event:
+async def async_parse_last_reboot(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/OperatingTime/LastReboot
@@ -410,7 +414,7 @@ async def async_parse_last_reboot(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Monitoring/OperatingTime/LastReset")
 # pylint: disable=protected-access
-async def async_parse_last_reset(uid: str, msg) -> Event:
+async def async_parse_last_reset(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/OperatingTime/LastReset
@@ -433,7 +437,7 @@ async def async_parse_last_reset(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Monitoring/Backup/Last")
 # pylint: disable=protected-access
-async def async_parse_backup_last(uid: str, msg) -> Event:
+async def async_parse_backup_last(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/Backup/Last
@@ -457,7 +461,7 @@ async def async_parse_backup_last(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:Monitoring/OperatingTime/LastClockSynchronization")
 # pylint: disable=protected-access
-async def async_parse_last_clock_sync(uid: str, msg) -> Event:
+async def async_parse_last_clock_sync(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:Monitoring/OperatingTime/LastClockSynchronization
@@ -480,7 +484,7 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event:
 
 @PARSERS.register("tns1:RecordingConfig/JobState")
 # pylint: disable=protected-access
-async def async_parse_jobstate(uid: str, msg) -> Event:
+async def async_parse_jobstate(uid: str, msg) -> Event | None:
     """Handle parsing event message.
 
     Topic: tns1:RecordingConfig/JobState
