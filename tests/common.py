@@ -407,6 +407,19 @@ def async_fire_time_changed(
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
+async def async_fire_reload_cooldown(hass: HomeAssistant) -> None:
+    """Simulate the reload cooldown."""
+    config_entries = hass.config_entries
+    for entry in config_entries.async_entries():
+        for timer in config_entries._reload_ratelimit._rate_limit_timers.values():
+            if timer.cancelled():
+                continue
+            timer._run()
+            timer.cancel()
+        config_entries._reload_ratelimit.async_cancel_timer(entry.entry_id)
+    await hass.async_block_till_done()
+
+
 def get_fixture_path(filename: str, integration: str | None = None) -> pathlib.Path:
     """Get path of fixture."""
     if integration is None and "/" in filename and not filename.startswith("helpers/"):
