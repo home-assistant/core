@@ -304,11 +304,6 @@ class ConfigEntry:
         if self.domain == integration.domain:
             self.state = ConfigEntryState.SETUP_IN_PROGRESS
 
-        self.supports_unload = await support_entry_unload(hass, self.domain)
-        self.supports_remove_device = await support_remove_from_device(
-            hass, self.domain
-        )
-
         try:
             component = integration.get_component()
         except ImportError as err:
@@ -324,6 +319,11 @@ class ConfigEntry:
             return
 
         if self.domain == integration.domain:
+            self.supports_unload = hasattr(component, "async_unload_entry")
+            self.supports_remove_device = hasattr(
+                component, "async_remove_config_entry_device"
+            )
+
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -476,9 +476,7 @@ class ConfigEntry:
                 self.reason = None
                 return True
 
-        supports_unload = hasattr(component, "async_unload_entry")
-
-        if not supports_unload:
+        if not self.supports_unload:
             if integration.domain == self.domain:
                 self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unload not supported"
@@ -1024,6 +1022,8 @@ class ConfigEntries:
             raise UnknownEntry
         if not entry.state.recoverable:
             raise OperationNotAllowed
+        if not entry.supports_unload:
+            return entry.state == ConfigEntryState.NOT_LOADED
 
         ratelimit = self._reload_ratelimit
         now = dt_util.utcnow()
@@ -1041,7 +1041,7 @@ class ConfigEntries:
                 entry_id,
                 rate_limit_expire_time,
             )
-            return not entry.disabled_by
+            return True
 
         ratelimit.async_triggered(entry_id, now)
         return await self._async_reload(entry_id)

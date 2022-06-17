@@ -76,21 +76,21 @@ async def test_call_setup_entry(hass):
 
     mock_setup_entry = AsyncMock(return_value=True)
     mock_migrate_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
         MockModule(
             "comp",
             async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
             async_migrate_entry=mock_migrate_entry,
         ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
-        result = await async_setup_component(hass, "comp", {})
-        await hass.async_block_till_done()
-    assert result
+    assert await async_setup_component(hass, "comp", {})
+    await hass.async_block_till_done()
     assert len(mock_migrate_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
@@ -116,10 +116,8 @@ async def test_call_setup_entry_without_reload_support(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=False):
-        result = await async_setup_component(hass, "comp", {})
-        await hass.async_block_till_done()
-    assert result
+    assert await async_setup_component(hass, "comp", {})
+    await hass.async_block_till_done()
     assert len(mock_migrate_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
