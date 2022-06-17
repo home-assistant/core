@@ -5,15 +5,10 @@ import logging
 from typing import Any
 
 from aiohttp.client_exceptions import ClientResponseError
-from bond_api import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, BPUPSubscriptions, DeviceType
 import voluptuous as vol
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -120,15 +115,14 @@ async def async_setup_entry(
 
     async_add_entities(
         fan_lights + fan_up_lights + fan_down_lights + fireplaces + fp_lights + lights,
-        True,
     )
 
 
 class BondBaseLight(BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    _attr_color_mode = COLOR_MODE_ONOFF
-    _attr_supported_color_modes = {COLOR_MODE_ONOFF}
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     async def async_set_brightness_belief(self, brightness: int) -> None:
         """Set the belief state of the light."""
@@ -172,10 +166,11 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         """Create HA entity representing Bond light."""
         super().__init__(hub, device, bpup_subs, sub_device)
         if device.supports_set_brightness():
-            self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-            self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         self._attr_is_on = state.get("light") == 1
         brightness = state.get("brightness")
         self._attr_brightness = round(brightness * 255 / 100) if brightness else None
@@ -232,7 +227,8 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
 class BondDownLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         self._attr_is_on = bool(state.get("down_light") and state.get("light"))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -251,7 +247,8 @@ class BondDownLight(BondBaseLight, BondEntity, LightEntity):
 class BondUpLight(BondBaseLight, BondEntity, LightEntity):
     """Representation of a Bond light."""
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         self._attr_is_on = bool(state.get("up_light") and state.get("light"))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -270,10 +267,11 @@ class BondUpLight(BondBaseLight, BondEntity, LightEntity):
 class BondFireplace(BondEntity, LightEntity):
     """Representation of a Bond-controlled fireplace."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         power = state.get("power")
         flame = state.get("flame")
         self._attr_is_on = power == 1

@@ -7,9 +7,6 @@
             "switchbot_unsupported_type": "\u4e0d\u652f\u6301\u7684 Switchbot \u985e\u5225\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
-        "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
-        },
         "flow_title": "{name}",
         "step": {
             "user": {

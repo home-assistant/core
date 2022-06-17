@@ -11,10 +11,7 @@ import voluptuous as vol
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -95,6 +92,11 @@ async def async_setup_platform(
 class NX584Alarm(alarm.AlarmControlPanelEntity):
     """Representation of a NX584-based alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
+
     def __init__(self, name, alarm_client, url):
         """Init the nx584 alarm panel."""
         self._name = name
@@ -110,17 +112,12 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return alarm.FORMAT_NUMBER
+        return alarm.CodeFormat.NUMBER
 
     @property
     def state(self):
         """Return the state of the device."""
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
 
     def update(self):
         """Process new events from panel."""

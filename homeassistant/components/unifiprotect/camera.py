@@ -5,10 +5,9 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera, StateType
-from pyunifiprotect.data.devices import CameraChannel
+from pyunifiprotect.data import Camera as UFPCamera, CameraChannel, StateType
 
-from homeassistant.components.camera import SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -134,16 +133,16 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
             None if disable_stream else rtsp_url
         )
         self._attr_supported_features: int = (
-            SUPPORT_STREAM if self._stream_source else 0
+            CameraEntityFeature.STREAM if self._stream_source else 0
         )
 
     @callback
     def _async_update_device_from_protect(self) -> None:
         super()._async_update_device_from_protect()
         self.channel = self.device.channels[self.channel.id]
+        motion_enabled = self.device.recording_settings.enable_motion_detection
         self._attr_motion_detection_enabled = (
-            self.device.state == StateType.CONNECTED
-            and self.device.feature_flags.has_motion_zones
+            motion_enabled if motion_enabled is not None else True
         )
         self._attr_is_recording = (
             self.device.state == StateType.CONNECTED and self.device.is_recording
@@ -172,3 +171,11 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     async def stream_source(self) -> str | None:
         """Return the Stream Source."""
         return self._stream_source
+
+    async def async_enable_motion_detection(self) -> None:
+        """Call the job and enable motion detection."""
+        await self.device.set_motion_detection(True)
+
+    async def async_disable_motion_detection(self) -> None:
+        """Call the job and disable motion detection."""
+        await self.device.set_motion_detection(False)

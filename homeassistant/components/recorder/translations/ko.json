@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "\ud604\uc7ac \uc2e4\ud589 \uc2dc\uc791 \uc2dc\uac04",
+            "estimated_db_size": "\uc608\uc0c1 \ub370\uc774\ud130\ubca0\uc774\uc2a4 \ud06c\uae30(MiB)",
+            "oldest_recorder_run": "\uac00\uc7a5 \uc624\ub798\ub41c \uc2e4\ud589 \uc2dc\uc791 \uc2dc\uac04"
+        }
+    }
+}

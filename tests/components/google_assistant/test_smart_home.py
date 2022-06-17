@@ -385,7 +385,7 @@ async def test_query_message(hass):
                 "light.another_light": {
                     "on": True,
                     "online": True,
-                    "brightness": 30,
+                    "brightness": 31,
                     "color": {
                         "spectrumHsv": {
                             "hue": 180,
@@ -1510,7 +1510,7 @@ async def test_query_recover(hass, caplog):
         "payload": {
             "devices": {
                 "light.bad": {"online": False},
-                "light.good": {"on": True, "online": True, "brightness": 19},
+                "light.good": {"on": True, "online": True, "brightness": 20},
             }
         },
     }

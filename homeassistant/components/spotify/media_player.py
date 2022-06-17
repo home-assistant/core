@@ -10,7 +10,11 @@ import requests
 from spotipy import SpotifyException
 from yarl import URL
 
-from homeassistant.components.media_player import BrowseMedia, MediaPlayerEntity
+from homeassistant.components.media_player import (
+    BrowseMedia,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_EPISODE,
     MEDIA_TYPE_MUSIC,
@@ -19,17 +23,6 @@ from homeassistant.components.media_player.const import (
     REPEAT_MODE_ALL,
     REPEAT_MODE_OFF,
     REPEAT_MODE_ONE,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_REPEAT_SET,
-    SUPPORT_SEEK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_VOLUME_SET,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, STATE_IDLE, STATE_PAUSED, STATE_PLAYING
@@ -50,17 +43,17 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 SUPPORT_SPOTIFY = (
-    SUPPORT_BROWSE_MEDIA
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PAUSE
-    | SUPPORT_PLAY
-    | SUPPORT_PLAY_MEDIA
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_REPEAT_SET
-    | SUPPORT_SEEK
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_VOLUME_SET
+    MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.REPEAT_SET
+    | MediaPlayerEntityFeature.SEEK
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.SHUFFLE_SET
+    | MediaPlayerEntityFeature.VOLUME_SET
 )
 
 REPEAT_MODE_MAPPING_TO_HA = {

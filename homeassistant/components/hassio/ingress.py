@@ -183,7 +183,7 @@ def _init_header(request: web.Request, token: str) -> CIMultiDict | dict[str, st
         headers[name] = value
 
     # Inject token / cleanup later on Supervisor
-    headers[X_HASSIO] = os.environ.get("HASSIO_TOKEN", "")
+    headers[X_HASSIO] = os.environ.get("SUPERVISOR_TOKEN", "")
 
     # Ingress information
     headers[X_INGRESS_PATH] = f"/api/hassio_ingress/{token}"

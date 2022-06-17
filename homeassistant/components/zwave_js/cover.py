@@ -15,24 +15,20 @@ from zwave_js_server.const.command_class.multilevel_switch import (
     COVER_OPEN_PROPERTY,
     COVER_UP_PROPERTY,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -40,6 +36,8 @@ from .const import DATA_CLIENT, DOMAIN
 from .discovery import ZwaveDiscoveryInfo
 from .discovery_data_template import CoverTiltDataTemplate
 from .entity import ZWaveBaseEntity
+
+PARALLEL_UPDATES = 0
 
 LOGGER = logging.getLogger(__name__)
 
@@ -55,13 +53,15 @@ async def async_setup_entry(
     @callback
     def async_add_cover(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave cover."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
         if info.platform_hint == "motorized_barrier":
-            entities.append(ZwaveMotorizedBarrier(config_entry, client, info))
+            entities.append(ZwaveMotorizedBarrier(config_entry, driver, info))
         elif info.platform_hint == "window_shutter_tilt":
-            entities.append(ZWaveTiltCover(config_entry, client, info))
+            entities.append(ZWaveTiltCover(config_entry, driver, info))
         else:
-            entities.append(ZWaveCover(config_entry, client, info))
+            entities.append(ZWaveCover(config_entry, driver, info))
         async_add_entities(entities)
 
     config_entry.async_on_unload(
@@ -109,11 +109,11 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZWaveCover entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
 
         # Entity class attributes
         self._attr_device_class = CoverDeviceClass.WINDOW
@@ -141,6 +141,8 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        if target_value is None:
+            raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(
             target_value, percent_to_zwave_position(kwargs[ATTR_POSITION])
         )
@@ -148,11 +150,15 @@ class ZWaveCover(ZWaveBaseEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        if target_value is None:
+            raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, 99)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         target_value = self.get_zwave_value(TARGET_VALUE_PROPERTY)
+        if target_value is None:
+            raise HomeAssistantError("Missing target value on device.")
         await self.info.node.async_set_value(target_value, 0)
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
@@ -180,23 +186,23 @@ class ZWaveTiltCover(ZWaveCover):
     """Representation of a Z-Wave Cover device with tilt."""
 
     _attr_supported_features = (
-        SUPPORT_OPEN
-        | SUPPORT_CLOSE
-        | SUPPORT_STOP
-        | SUPPORT_SET_POSITION
-        | SUPPORT_OPEN_TILT
-        | SUPPORT_CLOSE_TILT
-        | SUPPORT_SET_TILT_POSITION
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
     )
 
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZWaveCover entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.data_template = cast(
             CoverTiltDataTemplate, self.info.platform_data_template
         )
@@ -208,7 +214,9 @@ class ZWaveTiltCover(ZWaveCover):
         None is unknown, 0 is closed, 100 is fully open.
         """
         value = self.data_template.current_tilt_value(self.info.platform_data)
-        return zwave_tilt_to_percent(value.value) if value else None
+        if value is None or value.value is None:
+            return None
+        return zwave_tilt_to_percent(int(value.value))
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
@@ -231,19 +239,21 @@ class ZWaveTiltCover(ZWaveCover):
 class ZwaveMotorizedBarrier(ZWaveBaseEntity, CoverEntity):
     """Representation of a Z-Wave motorized barrier device."""
 
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
     _attr_device_class = CoverDeviceClass.GARAGE
 
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
     ) -> None:
         """Initialize a ZwaveMotorizedBarrier entity."""
-        super().__init__(config_entry, client, info)
-        self._target_state: ZwaveValue = self.get_zwave_value(
-            TARGET_STATE_PROPERTY, add_to_watched_value_ids=False
+        super().__init__(config_entry, driver, info)
+        # TARGET_STATE_PROPERTY is required in the discovery schema.
+        self._target_state = cast(
+            ZwaveValue,
+            self.get_zwave_value(TARGET_STATE_PROPERTY, add_to_watched_value_ids=False),
         )
 
     @property

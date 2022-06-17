@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from bond_api import Action, BPUPSubscriptions
+from bond_async import Action, BPUPSubscriptions
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -223,6 +223,20 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         mutually_exclusive=Action.OPEN,
         argument=None,
     ),
+    BondButtonEntityDescription(
+        key=Action.INCREASE_POSITION,
+        name="Increase Position",
+        icon="mdi:plus-box",
+        mutually_exclusive=Action.SET_POSITION,
+        argument=STEP_SIZE,
+    ),
+    BondButtonEntityDescription(
+        key=Action.DECREASE_POSITION,
+        name="Decrease Position",
+        icon="mdi:minus-box",
+        mutually_exclusive=Action.SET_POSITION,
+        argument=STEP_SIZE,
+    ),
 )
 
 
@@ -273,10 +287,10 @@ class BondButtonEntity(BondEntity, ButtonEntity):
         description: BondButtonEntityDescription,
     ) -> None:
         """Init Bond button."""
+        self.entity_description = description
         super().__init__(
             hub, device, bpup_subs, description.name, description.key.lower()
         )
-        self.entity_description = description
 
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
@@ -288,5 +302,5 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             action = Action(self.entity_description.key)
         await self._hub.bond.action(self._device.device_id, action)
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
         """Apply the state."""

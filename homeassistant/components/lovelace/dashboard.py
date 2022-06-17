@@ -69,12 +69,10 @@ class LovelaceConfig(ABC):
 
     async def async_save(self, config):
         """Save config."""
-        # pylint: disable=no-self-use
         raise HomeAssistantError("Not supported")
 
     async def async_delete(self):
         """Delete config."""
-        # pylint: disable=no-self-use
         raise HomeAssistantError("Not supported")
 
     @callback

@@ -73,7 +73,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         name_suffix = level_type.replace("_", " ").title()
         self._attr_name = f"{self.speaker.zone_name} {name_suffix}"
         self.level_type = level_type
-        self._attr_min_value, self._attr_max_value = valid_range
+        self._attr_native_min_value, self._attr_native_max_value = valid_range
 
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
@@ -86,11 +86,11 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
         setattr(self.speaker, self.level_type, state)
 
     @soco_error()
-    def set_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set a new value."""
         setattr(self.soco, self.level_type, value)
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current value."""
         return getattr(self.speaker, self.level_type)

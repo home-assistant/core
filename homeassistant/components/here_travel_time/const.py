@@ -8,20 +8,19 @@ from homeassistant.const import (
 DOMAIN = "here_travel_time"
 DEFAULT_SCAN_INTERVAL = 300
 
-CONF_DESTINATION = "destination"
-CONF_ORIGIN = "origin"
+
+CONF_DESTINATION_LATITUDE = "destination_latitude"
+CONF_DESTINATION_LONGITUDE = "destination_longitude"
+CONF_DESTINATION_ENTITY_ID = "destination_entity_id"
+CONF_ORIGIN_LATITUDE = "origin_latitude"
+CONF_ORIGIN_LONGITUDE = "origin_longitude"
+CONF_ORIGIN_ENTITY_ID = "origin_entity_id"
 CONF_TRAFFIC_MODE = "traffic_mode"
 CONF_ROUTE_MODE = "route_mode"
 CONF_ARRIVAL = "arrival"
 CONF_DEPARTURE = "departure"
 CONF_ARRIVAL_TIME = "arrival_time"
 CONF_DEPARTURE_TIME = "departure_time"
-CONF_TIME_TYPE = "time_type"
-CONF_TIME = "time"
-
-ARRIVAL_TIME = "Arrival Time"
-DEPARTURE_TIME = "Departure Time"
-TIME_TYPES = [ARRIVAL_TIME, DEPARTURE_TIME]
 
 DEFAULT_NAME = "HERE Travel Time"
 

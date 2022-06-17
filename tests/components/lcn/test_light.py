@@ -8,10 +8,11 @@ from pypck.lcn_defs import RelayStateModifier
 from homeassistant.components.lcn.helpers import get_device_connection
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
     DOMAIN as DOMAIN_LIGHT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
+    ColorMode,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -22,6 +23,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModuleConnection
 
@@ -42,19 +44,18 @@ async def test_entity_state(hass, lcn_connection):
     """Test state of entity."""
     state = hass.states.get("light.light_output1")
     assert state
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
-    )
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
 
     state = hass.states.get("light.light_output2")
     assert state
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
 
 
 async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entity_output = entity_registry.async_get("light.light_output1")
 

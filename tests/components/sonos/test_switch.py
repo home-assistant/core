@@ -28,12 +28,13 @@ async def test_entity_registry(hass, async_autosetup_sonos):
 
     assert "media_player.zone_a" in entity_registry.entities
     assert "switch.sonos_alarm_14" in entity_registry.entities
-    assert "switch.sonos_zone_a_status_light" in entity_registry.entities
-    assert "switch.sonos_zone_a_night_sound" in entity_registry.entities
-    assert "switch.sonos_zone_a_speech_enhancement" in entity_registry.entities
-    assert "switch.sonos_zone_a_subwoofer_enabled" in entity_registry.entities
-    assert "switch.sonos_zone_a_surround_enabled" in entity_registry.entities
-    assert "switch.sonos_zone_a_touch_controls" in entity_registry.entities
+    assert "switch.zone_a_status_light" in entity_registry.entities
+    assert "switch.zone_a_loudness" in entity_registry.entities
+    assert "switch.zone_a_night_sound" in entity_registry.entities
+    assert "switch.zone_a_speech_enhancement" in entity_registry.entities
+    assert "switch.zone_a_subwoofer_enabled" in entity_registry.entities
+    assert "switch.zone_a_surround_enabled" in entity_registry.entities
+    assert "switch.zone_a_touch_controls" in entity_registry.entities
 
 
 async def test_switch_attributes(hass, async_autosetup_sonos, soco):
@@ -51,32 +52,34 @@ async def test_switch_attributes(hass, async_autosetup_sonos, soco):
     assert alarm_state.attributes.get(ATTR_PLAY_MODE) == "SHUFFLE_NOREPEAT"
     assert not alarm_state.attributes.get(ATTR_INCLUDE_LINKED_ZONES)
 
-    night_sound = entity_registry.entities["switch.sonos_zone_a_night_sound"]
+    night_sound = entity_registry.entities["switch.zone_a_night_sound"]
     night_sound_state = hass.states.get(night_sound.entity_id)
     assert night_sound_state.state == STATE_ON
 
-    speech_enhancement = entity_registry.entities[
-        "switch.sonos_zone_a_speech_enhancement"
-    ]
+    loudness = entity_registry.entities["switch.zone_a_loudness"]
+    loudness_state = hass.states.get(loudness.entity_id)
+    assert loudness_state.state == STATE_ON
+
+    speech_enhancement = entity_registry.entities["switch.zone_a_speech_enhancement"]
     speech_enhancement_state = hass.states.get(speech_enhancement.entity_id)
     assert speech_enhancement_state.state == STATE_ON
 
-    crossfade = entity_registry.entities["switch.sonos_zone_a_crossfade"]
+    crossfade = entity_registry.entities["switch.zone_a_crossfade"]
     crossfade_state = hass.states.get(crossfade.entity_id)
     assert crossfade_state.state == STATE_ON
 
     # Ensure switches are disabled
-    status_light = entity_registry.entities["switch.sonos_zone_a_status_light"]
+    status_light = entity_registry.entities["switch.zone_a_status_light"]
     assert hass.states.get(status_light.entity_id) is None
 
-    touch_controls = entity_registry.entities["switch.sonos_zone_a_touch_controls"]
+    touch_controls = entity_registry.entities["switch.zone_a_touch_controls"]
     assert hass.states.get(touch_controls.entity_id) is None
 
-    sub_switch = entity_registry.entities["switch.sonos_zone_a_subwoofer_enabled"]
+    sub_switch = entity_registry.entities["switch.zone_a_subwoofer_enabled"]
     sub_switch_state = hass.states.get(sub_switch.entity_id)
     assert sub_switch_state.state == STATE_OFF
 
-    surround_switch = entity_registry.entities["switch.sonos_zone_a_surround_enabled"]
+    surround_switch = entity_registry.entities["switch.zone_a_surround_enabled"]
     surround_switch_state = hass.states.get(surround_switch.entity_id)
     assert surround_switch_state.state == STATE_ON
 
@@ -106,7 +109,7 @@ async def test_switch_attributes(hass, async_autosetup_sonos, soco):
     status_light_state = hass.states.get(status_light.entity_id)
     assert status_light_state.state == STATE_ON
 
-    touch_controls = entity_registry.entities["switch.sonos_zone_a_touch_controls"]
+    touch_controls = entity_registry.entities["switch.zone_a_touch_controls"]
     touch_controls_state = hass.states.get(touch_controls.entity_id)
     assert touch_controls_state.state == STATE_ON
 

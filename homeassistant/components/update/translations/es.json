@@ -1,0 +1,10 @@
+{
+    "device_automation": {
+        "trigger_type": {
+            "changed_states": "La disponibilidad de la actualizaci\u00f3n de {entity_name} cambie",
+            "turned_off": "{entity_name} se actualice",
+            "turned_on": "{entity_name} tenga una actualizaci\u00f3n disponible"
+        }
+    },
+    "title": "Actualizar"
+}

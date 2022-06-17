@@ -102,6 +102,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -109,6 +110,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHAKEN,
             "subtype": SHAKEN,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -116,6 +118,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": DOUBLE_PRESS,
             "subtype": DOUBLE_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -123,6 +126,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": SHORT_PRESS,
             "subtype": SHORT_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -130,6 +134,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_PRESS,
             "subtype": LONG_PRESS,
+            "metadata": {},
         },
         {
             "device_id": reg_device.id,
@@ -137,6 +142,7 @@ async def test_triggers(hass, mock_devices):
             "platform": "device",
             "type": LONG_RELEASE,
             "subtype": LONG_RELEASE,
+            "metadata": {},
         },
     ]
     assert _same_lists(triggers, expected_triggers)
@@ -161,6 +167,7 @@ async def test_no_triggers(hass, mock_devices):
             "platform": "device",
             "type": "device_offline",
             "subtype": "device_offline",
+            "metadata": {},
         }
     ]
 

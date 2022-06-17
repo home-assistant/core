@@ -20,9 +20,7 @@
                     "device_class": "Il tipo di dispositivo",
                     "host": "Host",
                     "port": "Porta"
-                },
-                "description": "Imposta i parametri richiesti per connetterti al tuo dispositivo Android TV",
-                "title": "Android TV"
+                }
             }
         }
     },
@@ -49,8 +47,7 @@
                     "state_detection_rules": "Configura le regole di rilevamento dello stato",
                     "turn_off_command": "Comando di disattivazione della shell ADB (lascia vuoto per impostazione predefinita)",
                     "turn_on_command": "Comando di attivazione della shell ADB (lascia vuoto per impostazione predefinita)"
-                },
-                "title": "Opzioni Android TV"
+                }
             },
             "rules": {
                 "data": {

@@ -2,13 +2,9 @@
 from onvif.exceptions import ONVIFAuthError, ONVIFError, ONVIFTimeoutError
 
 from homeassistant.components.ffmpeg import CONF_EXTRA_ARGUMENTS
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.stream import CONF_RTSP_TRANSPORT, RTSP_TRANSPORTS
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
     EVENT_HOMEASSISTANT_STOP,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
@@ -16,49 +12,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_per_platform
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_RTSP_TRANSPORT,
-    CONF_SNAPSHOT_AUTH,
-    DEFAULT_ARGUMENTS,
-    DEFAULT_NAME,
-    DEFAULT_PASSWORD,
-    DEFAULT_PORT,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    RTSP_TRANS_PROTOCOLS,
-)
+from .const import CONF_SNAPSHOT_AUTH, DEFAULT_ARGUMENTS, DOMAIN
 from .device import ONVIFDevice
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the ONVIF component."""
-    # Import from yaml
-    configs = {}
-    for p_type, p_config in config_per_platform(config, "camera"):
-        if p_type != DOMAIN:
-            continue
-
-        config = p_config.copy()
-        if config[CONF_HOST] not in configs:
-            configs[config[CONF_HOST]] = {
-                CONF_HOST: config[CONF_HOST],
-                CONF_NAME: config.get(CONF_NAME, DEFAULT_NAME),
-                CONF_PASSWORD: config.get(CONF_PASSWORD, DEFAULT_PASSWORD),
-                CONF_PORT: config.get(CONF_PORT, DEFAULT_PORT),
-                CONF_USERNAME: config.get(CONF_USERNAME, DEFAULT_USERNAME),
-            }
-
-    for conf in configs.values():
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=conf
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -138,7 +94,7 @@ async def async_populate_options(hass, entry):
     """Populate default options for device."""
     options = {
         CONF_EXTRA_ARGUMENTS: DEFAULT_ARGUMENTS,
-        CONF_RTSP_TRANSPORT: RTSP_TRANS_PROTOCOLS[0],
+        CONF_RTSP_TRANSPORT: next(iter(RTSP_TRANSPORTS)),
     }
 
     hass.config_entries.async_update_entry(entry, options=options)

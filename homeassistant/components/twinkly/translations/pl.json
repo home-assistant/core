@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Nazwa hosta lub adres IP"
-                },
-                "description": "Konfiguracja Twinkly",
-                "title": "Twinkly"
+                }
             }
         }
     }

@@ -12,10 +12,8 @@ from homeassistant.components.fan import (
     ATTR_OSCILLATING,
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
-    SUPPORT_OSCILLATE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -35,8 +33,8 @@ from homeassistant.util.percentage import (
     ranged_value_to_percentage,
 )
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -52,8 +50,12 @@ from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
     async_setup_entry_helper,
+    async_setup_platform_discovery,
     async_setup_platform_helper,
+    warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
+from .util import valid_publish_topic, valid_subscribe_topic
 
 CONF_PERCENTAGE_STATE_TOPIC = "percentage_state_topic"
 CONF_PERCENTAGE_COMMAND_TOPIC = "percentage_command_topic"
@@ -124,28 +126,28 @@ def valid_preset_mode_configuration(config):
     return config
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+_PLATFORM_SCHEMA_BASE = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_OSCILLATION_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_OSCILLATION_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_OSCILLATION_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_OSCILLATION_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): mqtt.valid_publish_topic,
+        vol.Optional(CONF_PERCENTAGE_COMMAND_TOPIC): valid_publish_topic,
         vol.Optional(CONF_PERCENTAGE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PERCENTAGE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PERCENTAGE_VALUE_TEMPLATE): cv.template,
         # CONF_PRESET_MODE_COMMAND_TOPIC and CONF_PRESET_MODES_LIST must be used together
         vol.Inclusive(
             CONF_PRESET_MODE_COMMAND_TOPIC, "preset_modes"
-        ): mqtt.valid_publish_topic,
+        ): valid_publish_topic,
         vol.Inclusive(
             CONF_PRESET_MODES_LIST, "preset_modes", default=[]
         ): cv.ensure_list,
         vol.Optional(CONF_PRESET_MODE_COMMAND_TEMPLATE): cv.template,
-        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_PRESET_MODE_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_PRESET_MODE_VALUE_TEMPLATE): cv.template,
         vol.Optional(
             CONF_SPEED_RANGE_MIN, default=DEFAULT_SPEED_RANGE_MIN
@@ -167,14 +169,22 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
         vol.Optional(
             CONF_PAYLOAD_OSCILLATION_ON, default=OSCILLATE_ON_PAYLOAD
         ): cv.string,
-        vol.Optional(CONF_SPEED_COMMAND_TOPIC): mqtt.valid_publish_topic,
-        vol.Optional(CONF_SPEED_STATE_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Optional(CONF_SPEED_COMMAND_TOPIC): valid_publish_topic,
+        vol.Optional(CONF_SPEED_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_SPEED_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_STATE_VALUE_TEMPLATE): cv.template,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
+# Configuring MQTT Fans under the fan platform key is deprecated in HA Core 2022.6
 PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(_PLATFORM_SCHEMA_BASE.schema),
+    valid_speed_range_configuration,
+    valid_preset_mode_configuration,
+    warn_for_legacy_schema(fan.DOMAIN),
+)
+
+PLATFORM_SCHEMA_MODERN = vol.All(
     _PLATFORM_SCHEMA_BASE,
     valid_speed_range_configuration,
     valid_preset_mode_configuration,
@@ -203,9 +213,14 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT fan through configuration.yaml."""
+    """Set up MQTT fans configured under the fan platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, fan.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        fan.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -214,7 +229,12 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT fan dynamically through MQTT discovery."""
+    """Set up MQTT fan through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    config_entry.async_on_unload(
+        await async_setup_platform_discovery(hass, fan.DOMAIN, PLATFORM_SCHEMA_MODERN)
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -326,12 +346,12 @@ class MqttFan(MqttEntity, FanEntity):
         self._supported_features = 0
         self._supported_features |= (
             self._topic[CONF_OSCILLATION_COMMAND_TOPIC] is not None
-            and SUPPORT_OSCILLATE
+            and FanEntityFeature.OSCILLATE
         )
         if self._feature_percentage:
-            self._supported_features |= SUPPORT_SET_SPEED
+            self._supported_features |= FanEntityFeature.SET_SPEED
         if self._feature_preset_mode:
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._supported_features |= FanEntityFeature.PRESET_MODE
 
         for key, tpl in self._command_templates.items():
             self._command_templates[key] = MqttCommandTemplate(

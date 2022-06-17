@@ -143,7 +143,7 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
 def _prepare_config_flow_result_json(result, prepare_result_json):
     """Convert result to JSON."""
-    if result["type"] != data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+    if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
     data = result.copy()
@@ -160,7 +160,6 @@ class ConfigManagerFlowIndexView(FlowManagerIndexView):
 
     async def get(self, request):
         """Not implemented."""
-        # pylint: disable=no-self-use
         raise aiohttp.web_exceptions.HTTPMethodNotAllowed("GET", ["POST"])
 
     # pylint: disable=arguments-differ

@@ -2,7 +2,7 @@
 from pyeconet.equipment import EquipmentType
 from pyeconet.equipment.thermostat import ThermostatFanMode, ThermostatOperationMode
 
-from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature
+from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -10,11 +10,8 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    HVAC_MODE_COOL,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
@@ -25,11 +22,11 @@ from . import EcoNetEntity
 from .const import DOMAIN, EQUIPMENT
 
 ECONET_STATE_TO_HA = {
-    ThermostatOperationMode.HEATING: HVAC_MODE_HEAT,
-    ThermostatOperationMode.COOLING: HVAC_MODE_COOL,
-    ThermostatOperationMode.OFF: HVAC_MODE_OFF,
-    ThermostatOperationMode.AUTO: HVAC_MODE_HEAT_COOL,
-    ThermostatOperationMode.FAN_ONLY: HVAC_MODE_FAN_ONLY,
+    ThermostatOperationMode.HEATING: HVACMode.HEAT,
+    ThermostatOperationMode.COOLING: HVACMode.COOL,
+    ThermostatOperationMode.OFF: HVACMode.OFF,
+    ThermostatOperationMode.AUTO: HVACMode.HEAT_COOL,
+    ThermostatOperationMode.FAN_ONLY: HVACMode.FAN_ONLY,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
@@ -108,23 +105,23 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
     @property
     def target_temperature(self):
         """Return the temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_COOL:
+        if self.hvac_mode == HVACMode.COOL:
             return self._econet.cool_set_point
-        if self.hvac_mode == HVAC_MODE_HEAT:
+        if self.hvac_mode == HVACMode.HEAT:
             return self._econet.heat_set_point
         return None
 
     @property
     def target_temperature_low(self):
         """Return the lower bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._econet.heat_set_point
         return None
 
     @property
     def target_temperature_high(self):
         """Return the higher bound temperature we try to reach."""
-        if self.hvac_mode == HVAC_MODE_HEAT_COOL:
+        if self.hvac_mode == HVACMode.HEAT_COOL:
             return self._econet.cool_set_point
         return None
 
@@ -158,7 +155,7 @@ class EcoNetThermostat(EcoNetEntity, ClimateEntity):
         Needs to be one of HVAC_MODE_*.
         """
         econet_mode = self._econet.mode
-        _current_op = HVAC_MODE_OFF
+        _current_op = HVACMode.OFF
         if econet_mode is not None:
             _current_op = ECONET_STATE_TO_HA[econet_mode]
 

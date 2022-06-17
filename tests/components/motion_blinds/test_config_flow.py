@@ -336,10 +336,14 @@ async def test_dhcp_flow(hass):
     assert result["step_id"] == "connect"
     assert result["errors"] == {}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_API_KEY: TEST_API_KEY},
-    )
+    with patch(
+        "homeassistant.components.motion_blinds.gateway.AsyncMotionMulticast.Start_listen",
+        side_effect=OSError,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_API_KEY: TEST_API_KEY},
+        )
 
     assert result["type"] == "create_entry"
     assert result["title"] == DEFAULT_GATEWAY_NAME

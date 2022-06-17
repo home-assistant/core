@@ -6,6 +6,7 @@
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
             "cannot_connect": "Tilkobling mislyktes",
             "discover_timeout": "Kunne ikke oppdage Hue Bridger",
+            "invalid_host": "Ugyldig vert",
             "no_bridges": "Ingen Philips Hue Bridger oppdaget",
             "not_hue_bridge": "Ikke en Hue bro",
             "unknown": "Uventet feil"

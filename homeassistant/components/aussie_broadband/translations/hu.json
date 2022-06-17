@@ -11,13 +11,6 @@
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "step": {
-            "reauth": {
-                "data": {
-                    "password": "Jelsz\u00f3"
-                },
-                "description": "Jelsz\u00f3 friss\u00edt\u00e9se {username} sz\u00e1m\u00e1ra",
-                "title": "Integr\u00e1ci\u00f3 \u00fajrahiteles\u00edt\u00e9se"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Jelsz\u00f3"

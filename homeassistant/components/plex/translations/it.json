@@ -35,14 +35,12 @@
                 "title": "Seleziona il server Plex"
             },
             "user": {
-                "description": "Continua su [plex.tv](https://plex.tv) per collegare un server Plex.",
-                "title": "Plex Media Server"
+                "description": "Continua su [plex.tv](https://plex.tv) per collegare un server Plex."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Metodo di impostazione"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },

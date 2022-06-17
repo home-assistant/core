@@ -23,18 +23,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cloud.http_api",
     "homeassistant.components.conversation",
     "homeassistant.components.conversation.default_agent",
-    "homeassistant.components.deconz.alarm_control_panel",
-    "homeassistant.components.deconz.binary_sensor",
-    "homeassistant.components.deconz.climate",
-    "homeassistant.components.deconz.cover",
-    "homeassistant.components.deconz.fan",
-    "homeassistant.components.deconz.light",
-    "homeassistant.components.deconz.lock",
-    "homeassistant.components.deconz.logbook",
-    "homeassistant.components.deconz.number",
-    "homeassistant.components.deconz.sensor",
-    "homeassistant.components.deconz.siren",
-    "homeassistant.components.deconz.switch",
     "homeassistant.components.denonavr.config_flow",
     "homeassistant.components.denonavr.media_player",
     "homeassistant.components.denonavr.receiver",
@@ -153,10 +141,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xbox.browse_media",
     "homeassistant.components.xbox.media_source",
     "homeassistant.components.xbox.sensor",
-    "homeassistant.components.xiaomi_aqara",
-    "homeassistant.components.xiaomi_aqara.binary_sensor",
-    "homeassistant.components.xiaomi_aqara.lock",
-    "homeassistant.components.xiaomi_aqara.sensor",
     "homeassistant.components.xiaomi_miio",
     "homeassistant.components.xiaomi_miio.air_quality",
     "homeassistant.components.xiaomi_miio.binary_sensor",
@@ -211,7 +195,11 @@ IGNORED_MODULES: Final[list[str]] = [
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
+    "homeassistant.components.application_credentials.*",
     "homeassistant.components.diagnostics.*",
+    "homeassistant.components.spotify.*",
+    "homeassistant.components.stream.*",
+    "homeassistant.components.update.*",
 }
 
 HEADER: Final = """
@@ -233,6 +221,8 @@ GENERAL_SETTINGS: Final[dict[str, str]] = {
     "warn_unused_configs": "true",
     "warn_unused_ignores": "true",
     "enable_error_code": "ignore-without-code",
+    # Strict_concatenate breaks passthrough ParamSpec typing
+    "strict_concatenate": "false",
 }
 
 # This is basically the list of checks which is enabled for "strict=true".
@@ -373,7 +363,9 @@ def generate_and_validate(config: Config) -> str:
         if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
-    for reexport_module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
+    for reexport_module in sorted(
+        NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules)
+    ):
         reexport_section = f"mypy-{reexport_module}"
         mypy_config.add_section(reexport_section)
         mypy_config.set(reexport_section, "no_implicit_reexport", "true")

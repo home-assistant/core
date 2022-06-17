@@ -17,6 +17,7 @@ from homeassistant.components.cover import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
 )
+from homeassistant.components.zha.core.const import ZHA_EVENT
 from homeassistant.const import (
     ATTR_COMMAND,
     STATE_CLOSED,
@@ -104,17 +105,14 @@ def zigpy_keen_vent(zigpy_device_mock):
     )
 
 
-@patch(
-    "homeassistant.components.zha.core.channels.closures.WindowCovering.async_initialize"
-)
-async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
+async def test_cover(hass, zha_device_joined_restored, zigpy_cover_device):
     """Test zha cover platform."""
 
     # load up cover domain
     cluster = zigpy_cover_device.endpoints.get(1).window_covering
     cluster.PLUGGED_ATTR_READS = {"current_position_lift_percentage": 100}
     zha_device = await zha_device_joined_restored(zigpy_cover_device)
-    assert cluster.read_attributes.call_count == 2
+    assert cluster.read_attributes.call_count == 1
     assert "current_position_lift_percentage" in cluster.read_attributes.call_args[0][0]
 
     entity_id = await find_entity_id(Platform.COVER, zha_device, hass)
@@ -193,6 +191,7 @@ async def test_cover(m1, hass, zha_device_joined_restored, zigpy_cover_device):
         assert cluster.request.call_args[1]["expect_reply"] is True
 
     # test rejoin
+    cluster.PLUGGED_ATTR_READS = {"current_position_lift_percentage": 0}
     await async_test_rejoin(hass, zigpy_cover_device, [cluster], (1,))
     assert hass.states.get(entity_id).state == STATE_OPEN
 
@@ -412,7 +411,7 @@ async def test_cover_remote(hass, zha_device_joined_restored, zigpy_cover_remote
     cluster = zigpy_cover_remote.endpoints[1].out_clusters[
         closures.WindowCovering.cluster_id
     ]
-    zha_events = async_capture_events(hass, "zha_event")
+    zha_events = async_capture_events(hass, ZHA_EVENT)
 
     # up command
     hdr = make_zcl_header(0, global_command=False)

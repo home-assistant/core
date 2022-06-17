@@ -7,16 +7,14 @@
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "protect_version": "La versi\u00f3 m\u00ednima necess\u00e0ria \u00e9s la v1.20.0. Actualitza UniFi Protect i torna-ho a provar.",
-            "unknown": "Error inesperat"
+            "protect_version": "La versi\u00f3 m\u00ednima necess\u00e0ria \u00e9s la v1.20.0. Actualitza UniFi Protect i torna-ho a provar."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Contrasenya",
-                    "username": "Nom d'usuari",
-                    "verify_ssl": "Verifica el certificat SSL"
+                    "username": "Nom d'usuari"
                 },
                 "description": "Vols configurar {name} ({ip_address})? Necessites un usuari local per iniciar sessi\u00f3, creat mitjan\u00e7ant la consola d'UniFi OS. Els usuaris d'Ubiquiti Cloud no funcionen. Per a m\u00e9s informaci\u00f3: {local_user_documentation_url}",
                 "title": "UniFi Protect descobert"

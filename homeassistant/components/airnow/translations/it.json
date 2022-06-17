@@ -17,10 +17,8 @@
                     "longitude": "Logitudine",
                     "radius": "Raggio stazione (miglia; opzionale)"
                 },
-                "description": "Configura l'integrazione per la qualit\u00e0 dell'aria AirNow. Per generare la chiave API, vai su https://docs.airnowapi.org/account/request/",
-                "title": "AirNow"
+                "description": "Per generare la chiave API vai su https://docs.airnowapi.org/account/request/"
             }
         }
-    },
-    "title": "AirNow"
+    }
 }

@@ -6,6 +6,7 @@
             "already_in_progress": "El flux de configuraci\u00f3 ja est\u00e0 en curs",
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "discover_timeout": "No s'han pogut descobrir enlla\u00e7os Hue",
+            "invalid_host": "Amfitri\u00f3 inv\u00e0lid",
             "no_bridges": "No s'han trobat enlla\u00e7os Philips Hue",
             "not_hue_bridge": "No \u00e9s un enlla\u00e7 Hue",
             "unknown": "Error inesperat"

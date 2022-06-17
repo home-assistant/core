@@ -4,6 +4,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from homeassistant.helpers.entity import EntityCategory
+
 
 @dataclass
 class DeviceInfo:
@@ -72,4 +74,5 @@ class Event:
     device_class: str = None
     unit_of_measurement: str = None
     value: Any = None
+    entity_category: EntityCategory | None = None
     entity_enabled: bool = True

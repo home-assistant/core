@@ -14,7 +14,6 @@ from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
@@ -90,7 +89,6 @@ class APIEventStream(HomeAssistantView):
 
     async def get(self, request):
         """Provide a streaming interface for the event bus."""
-        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         hass = request.app["hass"]
@@ -102,9 +100,6 @@ class APIEventStream(HomeAssistantView):
 
         async def forward_events(event):
             """Forward events to the open request."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
-
             if restrict and event.event_type not in restrict:
                 return
 
@@ -383,7 +378,6 @@ class APIErrorLog(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve API error log."""
-        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         return web.FileResponse(request.app["hass"].data[DATA_LOGGING])

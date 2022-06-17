@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Clave de red",
                     "s0_legacy_key": "Clave S0 (heredada)",
                     "s2_access_control_key": "Clave de control de acceso S2",
                     "s2_authenticated_key": "Clave autenticada de S2",
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "\u00bfQuieres configurar {name} con el complemento Z-Wave JS?"
+            },
+            "zeroconf_confirm": {
+                "description": "\u00bfQuieres a\u00f1adir el servidor Z-Wave JS con ID {home_id} que se encuentra en {url} en Home Assistant?",
+                "title": "Servidor Z-Wave JS descubierto"
             }
         }
     },
@@ -113,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Emular el hardware",
                     "log_level": "Nivel de registro",
-                    "network_key": "Clave de red",
                     "s0_legacy_key": "Tecla S0 (heredada)",
                     "s2_access_control_key": "Clave de control de acceso S2",
                     "s2_authenticated_key": "Clave autenticada de S2",
@@ -142,6 +144,5 @@
                 "title": "Se est\u00e1 iniciando el complemento Z-Wave JS."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

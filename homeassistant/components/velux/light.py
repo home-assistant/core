@@ -2,18 +2,15 @@
 from __future__ import annotations
 
 from pyvlx import Intensity, LighteningDevice
-from pyvlx.node import Node
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_platform(
@@ -33,12 +30,8 @@ async def async_setup_platform(
 class VeluxLight(VeluxEntity, LightEntity):
     """Representation of a Velux light."""
 
-    def __init__(self, node: Node) -> None:
-        """Initialize the Velux light."""
-        super().__init__(node)
-
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
 
     @property
     def brightness(self):

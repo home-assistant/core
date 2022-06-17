@@ -268,17 +268,24 @@ class MockPyAv:
         return self.container
 
 
-def run_worker(hass, stream, stream_source):
+def run_worker(hass, stream, stream_source, stream_settings=None):
     """Run the stream worker under test."""
     stream_state = StreamState(hass, stream.outputs, stream._diagnostics)
     stream_worker(
-        stream_source, {}, stream_state, KeyFrameConverter(hass), threading.Event()
+        stream_source,
+        {},
+        stream_settings or hass.data[DOMAIN][ATTR_SETTINGS],
+        stream_state,
+        KeyFrameConverter(hass),
+        threading.Event(),
     )
 
 
-async def async_decode_stream(hass, packets, py_av=None):
+async def async_decode_stream(hass, packets, py_av=None, stream_settings=None):
     """Start a stream worker that decodes incoming stream packets into output segments."""
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(
+        hass, STREAM_SOURCE, {}, stream_settings or hass.data[DOMAIN][ATTR_SETTINGS]
+    )
     stream.add_provider(HLS_PROVIDER)
 
     if not py_av:
@@ -290,7 +297,7 @@ async def async_decode_stream(hass, packets, py_av=None):
         side_effect=py_av.capture_buffer.capture_output_segment,
     ):
         try:
-            run_worker(hass, stream, STREAM_SOURCE)
+            run_worker(hass, stream, STREAM_SOURCE, stream_settings)
         except StreamEndedError:
             # Tests only use a limited number of packets, then the worker exits as expected. In
             # production, stream ending would be unexpected.
@@ -304,7 +311,7 @@ async def async_decode_stream(hass, packets, py_av=None):
 
 async def test_stream_open_fails(hass):
     """Test failure on stream open."""
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError):
         av_open.side_effect = av.error.InvalidDataError(-2, "error")
@@ -637,7 +644,7 @@ async def test_stream_stopped_while_decoding(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
 
     py_av = MockPyAv()
@@ -651,12 +658,12 @@ async def test_stream_stopped_while_decoding(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         # Note: There is a race here where the worker could start as soon
         # as the wake event is sent, completing all decode work.
         worker_wake.set()
-        stream.stop()
+        await stream.stop()
 
     # Stream is still considered available when the worker was still active and asked to stop
     assert stream.available
@@ -667,7 +674,7 @@ async def test_update_stream_source(hass):
     worker_open = threading.Event()
     worker_wake = threading.Event()
 
-    stream = Stream(hass, STREAM_SOURCE, {})
+    stream = Stream(hass, STREAM_SOURCE, {}, hass.data[DOMAIN][ATTR_SETTINGS])
     stream.add_provider(HLS_PROVIDER)
     # Note that retries are disabled by default in tests, however the stream is "restarted" when
     # the stream source is updated.
@@ -688,7 +695,7 @@ async def test_update_stream_source(hass):
         return py_av.open(stream_source, args, kwargs)
 
     with patch("av.open", new=blocking_open):
-        stream.start()
+        await stream.start()
         assert worker_open.wait(TIMEOUT)
         assert last_stream_source == STREAM_SOURCE
         assert stream.available
@@ -704,12 +711,14 @@ async def test_update_stream_source(hass):
         assert stream.available
 
         # Cleanup
-        stream.stop()
+        await stream.stop()
 
 
 async def test_worker_log(hass, caplog):
     """Test that the worker logs the url without username and password."""
-    stream = Stream(hass, "https://abcd:efgh@foo.bar", {})
+    stream = Stream(
+        hass, "https://abcd:efgh@foo.bar", {}, hass.data[DOMAIN][ATTR_SETTINGS]
+    )
     stream.add_provider(HLS_PROVIDER)
 
     with patch("av.open") as av_open, pytest.raises(StreamWorkerError) as err:
@@ -796,7 +805,7 @@ async def test_durations(hass, record_worker_sync):
 
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
 
 async def test_has_keyframe(hass, record_worker_sync, h264_video):
@@ -836,7 +845,7 @@ async def test_has_keyframe(hass, record_worker_sync, h264_video):
 
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
 
 async def test_h265_video_is_hvc1(hass, record_worker_sync):
@@ -871,7 +880,7 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
 
     await record_worker_sync.join()
 
-    stream.stop()
+    await stream.stop()
 
     assert stream.get_diagnostics() == {
         "container_format": "mov,mp4,m4a,3gp,3g2,mj2",
@@ -905,4 +914,25 @@ async def test_get_image(hass, record_worker_sync):
 
     assert await stream.async_get_image() == EMPTY_8_6_JPEG
 
-    stream.stop()
+    await stream.stop()
+
+
+async def test_worker_disable_ll_hls(hass):
+    """Test that the worker disables ll-hls for hls inputs."""
+    stream_settings = StreamSettings(
+        ll_hls=True,
+        min_segment_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS
+        - SEGMENT_DURATION_ADJUSTER,
+        part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        hls_advance_part_limit=3,
+        hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+    )
+    py_av = MockPyAv()
+    py_av.container.format.name = "hls"
+    await async_decode_stream(
+        hass,
+        PacketSequence(TEST_SEQUENCE_LENGTH),
+        py_av=py_av,
+        stream_settings=stream_settings,
+    )
+    assert stream_settings.ll_hls is False

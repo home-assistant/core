@@ -1,5 +1,4 @@
 """Support for ZHA sirens."""
-
 from __future__ import annotations
 
 import functools
@@ -9,17 +8,10 @@ from zigpy.zcl.clusters.security import IasWd as WD
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
-from homeassistant.components.siren.const import (
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
-    SUPPORT_TONES,
-    SUPPORT_VOLUME_SET,
-)
+from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -68,7 +60,6 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
@@ -87,11 +78,11 @@ class ZHASiren(ZhaEntity, SirenEntity):
     ) -> None:
         """Init this siren."""
         self._attr_supported_features = (
-            SUPPORT_TURN_ON
-            | SUPPORT_TURN_OFF
-            | SUPPORT_DURATION
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_TONES
+            SirenEntityFeature.TURN_ON
+            | SirenEntityFeature.TURN_OFF
+            | SirenEntityFeature.DURATION
+            | SirenEntityFeature.VOLUME_SET
+            | SirenEntityFeature.TONES
         )
         self._attr_available_tones: list[int | str] | dict[int, str] | None = {
             WARNING_DEVICE_MODE_BURGLAR: "Burglar",

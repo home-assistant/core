@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Gagal terhubung",
+            "not_insteon_device": "Perangkat yang ditemukan bukan perangkat Insteon",
             "single_instance_allowed": "Sudah dikonfigurasi. Hanya satu konfigurasi yang diizinkan."
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
             "select_single": "Pilih satu opsi."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Ingin menyiapkan {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Alamat IP",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Jenis modem."
                 },
-                "description": "Pilih jenis modem Insteon.",
-                "title": "Insteon"
+                "description": "Pilih jenis modem Insteon."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Kategori perangkat (mis. 0x10)",
                     "subcat": "Subkategori perangkat (mis. 0x0a)"
                 },
-                "description": "Tambahkan penimpaan nilai perangkat.",
-                "title": "Insteon"
+                "description": "Tambahkan penimpaan nilai perangkat."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Langkah peredup (hanya untuk perangkat ringan, nilai bawaan adalah 22)",
                     "unitcode": "Unitcode (1 - 16)"
                 },
-                "description": "Ubah kata sandi Insteon Hub.",
-                "title": "Insteon"
+                "description": "Ubah kata sandi Insteon Hub."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Port",
                     "username": "Nama Pengguna"
                 },
-                "description": "Ubah informasi koneksi Insteon Hub. Anda harus memulai ulang Home Assistant setelah melakukan perubahan ini. Ini tidak mengubah konfigurasi Hub itu sendiri. Untuk mengubah konfigurasi di Hub, gunakan aplikasi Hub.",
-                "title": "Insteon"
+                "description": "Ubah informasi koneksi Insteon Hub. Anda harus memulai ulang Home Assistant setelah melakukan perubahan ini. Ini tidak mengubah konfigurasi Hub itu sendiri. Untuk mengubah konfigurasi di Hub, gunakan aplikasi Hub."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Ubah konfigurasi Hub.",
                     "remove_override": "Hapus penimpaan nilai perangkat.",
                     "remove_x10": "Hapus perangkat X10."
-                },
-                "description": "Pilih opsi untuk dikonfigurasi.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Pilih alamat perangkat untuk dihapus"
                 },
-                "description": "Hapus penimpaan nilai perangkat",
-                "title": "Insteon"
+                "description": "Hapus penimpaan nilai perangkat"
             },
             "remove_x10": {
                 "data": {
                     "address": "Pilih alamat perangkat untuk dihapus"
                 },
-                "description": "Hapus perangkat X10",
-                "title": "Insteon"
+                "description": "Hapus perangkat X10"
             }
         }
     }

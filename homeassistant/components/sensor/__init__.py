@@ -5,6 +5,7 @@ from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal, InvalidOperation as DecimalInvalidOperation
 import logging
 from math import floor, log10
 from typing import Any, Final, cast, final
@@ -99,6 +100,9 @@ class SensorDeviceClass(StrEnum):
 
     # date (ISO8601)
     DATE = "date"
+
+    # fixed duration (TIME_DAYS, TIME_HOURS, TIME_MINUTES, TIME_SECONDS)
+    DURATION = "duration"
 
     # energy (Wh, kWh, MWh)
     ENERGY = "energy"
@@ -422,7 +426,7 @@ class SensorEntity(Entity):
         if (
             value is not None
             and native_unit_of_measurement != unit_of_measurement
-            and self.device_class in UNIT_CONVERSIONS
+            and device_class in UNIT_CONVERSIONS
         ):
             assert unit_of_measurement
             assert native_unit_of_measurement
@@ -435,8 +439,8 @@ class SensorEntity(Entity):
             ratio_log = max(
                 0,
                 log10(
-                    UNIT_RATIOS[self.device_class][native_unit_of_measurement]
-                    / UNIT_RATIOS[self.device_class][unit_of_measurement]
+                    UNIT_RATIOS[device_class][native_unit_of_measurement]
+                    / UNIT_RATIOS[device_class][unit_of_measurement]
                 ),
             )
             prec = prec + floor(ratio_log)
@@ -444,7 +448,7 @@ class SensorEntity(Entity):
             # Suppress ValueError (Could not convert sensor_value to float)
             with suppress(ValueError):
                 value_f = float(value)  # type: ignore[arg-type]
-                value_f_new = UNIT_CONVERSIONS[self.device_class](
+                value_f_new = UNIT_CONVERSIONS[device_class](
                     value_f,
                     native_unit_of_measurement,
                     unit_of_measurement,
@@ -487,16 +491,23 @@ class SensorEntity(Entity):
 class SensorExtraStoredData(ExtraStoredData):
     """Object to hold extra stored data."""
 
-    native_value: StateType | date | datetime
+    native_value: StateType | date | datetime | Decimal
     native_unit_of_measurement: str | None
 
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the sensor data."""
-        native_value: StateType | date | datetime | dict[str, str] = self.native_value
+        native_value: StateType | date | datetime | Decimal | dict[
+            str, str
+        ] = self.native_value
         if isinstance(native_value, (date, datetime)):
             native_value = {
                 "__type": str(type(native_value)),
                 "isoformat": native_value.isoformat(),
+            }
+        if isinstance(native_value, Decimal):
+            native_value = {
+                "__type": str(type(native_value)),
+                "decimal_str": str(native_value),
             }
         return {
             "native_value": native_value,
@@ -517,11 +528,16 @@ class SensorExtraStoredData(ExtraStoredData):
                 native_value = dt_util.parse_datetime(native_value["isoformat"])
             elif type_ == "<class 'datetime.date'>":
                 native_value = dt_util.parse_date(native_value["isoformat"])
+            elif type_ == "<class 'decimal.Decimal'>":
+                native_value = Decimal(native_value["decimal_str"])
         except TypeError:
             # native_value is not a dict
             pass
         except KeyError:
             # native_value is a dict, but does not have all values
+            return None
+        except DecimalInvalidOperation:
+            # native_value coulnd't be returned from decimal_str
             return None
 
         return cls(native_value, native_unit_of_measurement)

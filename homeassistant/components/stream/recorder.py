@@ -17,7 +17,7 @@ from .const import (
     RECORDER_PROVIDER,
     SEGMENT_CONTAINER_FORMAT,
 )
-from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
+from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +60,10 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
             "r",
             format=SEGMENT_CONTAINER_FORMAT,
         )
+        # Skip this segment if it doesn't have data
+        if source.duration is None:
+            source.close()
+            continue
         source_v = source.streams.video[0]
         source_a = source.streams.audio[0] if len(source.streams.audio) > 0 else None
 
@@ -117,9 +121,14 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
+    ) -> None:
         """Initialize recorder output."""
-        super().__init__(hass, idle_timer)
+        super().__init__(hass, idle_timer, stream_settings)
         self.video_path: str
 
     @property
@@ -137,7 +146,7 @@ class RecorderOutput(StreamOutput):
         thread = threading.Thread(
             name="recorder_save_worker",
             target=recorder_save_worker,
-            args=(self.video_path, self._segments),
+            args=(self.video_path, self._segments.copy()),
         )
         thread.start()
 

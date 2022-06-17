@@ -3,11 +3,7 @@ from total_connect_client import ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -71,6 +67,12 @@ async def async_setup_entry(
 
 class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
     """Represent an TotalConnect status."""
+
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
 
     def __init__(self, coordinator, name, location_id, partition_id):
         """Initialize the TotalConnect status."""
@@ -155,11 +157,6 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         self._extra_state_attributes = attr
 
         return self._state
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     @property
     def extra_state_attributes(self):

@@ -36,6 +36,7 @@ SUPPORTED_IOT_CLASSES = [
 NO_IOT_CLASS = [
     *{platform.value for platform in Platform},
     "api",
+    "application_credentials",
     "auth",
     "automation",
     "blueprint",
@@ -51,8 +52,11 @@ NO_IOT_CLASS = [
     "downloader",
     "ffmpeg",
     "frontend",
+    "hardkernel",
+    "hardware",
     "history",
     "homeassistant",
+    "homeassistant_yellow",
     "image",
     "input_boolean",
     "input_button",
@@ -75,6 +79,7 @@ NO_IOT_CLASS = [
     "profiler",
     "proxy",
     "python_script",
+    "raspberry_pi",
     "safe_mode",
     "script",
     "search",
@@ -152,7 +157,7 @@ MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
-        vol.Optional("integration_type"): "helper",
+        vol.Optional("integration_type"): vol.In(["hardware", "helper"]),
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
         vol.Optional("zeroconf"): [

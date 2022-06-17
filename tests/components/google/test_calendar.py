@@ -2,22 +2,25 @@
 
 from __future__ import annotations
 
+import copy
 import datetime
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import patch
 import urllib
 
-import httplib2
+from aiohttp.client_exceptions import ClientError
+from gcal_sync.auth import API_BASE_URL
 import pytest
 
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
-from .conftest import TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
+from .conftest import CALENDAR_ID, TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
 
 from tests.common import async_fire_time_changed
+from tests.test_util.aiohttp import AiohttpClientMockResponse
 
 TEST_ENTITY = TEST_YAML_ENTITY
 TEST_ENTITY_NAME = TEST_YAML_ENTITY_NAME
@@ -272,17 +275,49 @@ async def test_all_day_offset_event(hass, mock_events_list_items, component_setu
     }
 
 
+async def test_missing_summary(hass, mock_events_list_items, component_setup):
+    """Test that we can create an event trigger on device."""
+    start_event = dt_util.now() + datetime.timedelta(minutes=14)
+    end_event = start_event + datetime.timedelta(minutes=60)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": start_event.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    del event["summary"]
+    mock_events_list_items([event])
+
+    assert await component_setup()
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert dict(state.attributes) == {
+        "friendly_name": TEST_ENTITY_NAME,
+        "message": "",
+        "all_day": False,
+        "offset_reached": False,
+        "start_time": start_event.strftime(DATE_STR_FORMAT),
+        "end_time": end_event.strftime(DATE_STR_FORMAT),
+        "location": event["location"],
+        "description": event["description"],
+    }
+
+
 async def test_update_error(
-    hass, calendar_resource, component_setup, test_api_calendar
+    hass,
+    component_setup,
+    mock_calendars_list,
+    mock_events_list,
+    test_api_calendar,
+    aioclient_mock,
 ):
     """Test that the calendar update handles a server error."""
 
     now = dt_util.now()
-    with patch("homeassistant.components.google.api.google_discovery.build") as mock:
-        mock.return_value.calendarList.return_value.list.return_value.execute.return_value = {
-            "items": [test_api_calendar]
-        }
-        mock.return_value.events.return_value.list.return_value.execute.return_value = {
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list(
+        {
             "items": [
                 {
                     **TEST_EVENT,
@@ -295,7 +330,8 @@ async def test_update_error(
                 }
             ]
         }
-        assert await component_setup()
+    )
+    assert await component_setup()
 
     state = hass.states.get(TEST_ENTITY)
     assert state.name == TEST_ENTITY_NAME
@@ -303,10 +339,11 @@ async def test_update_error(
 
     # Advance time to avoid throttling
     now += datetime.timedelta(minutes=30)
-    with patch(
-        "homeassistant.components.google.api.google_discovery.build",
-        side_effect=httplib2.ServerNotFoundError("unit test"),
-    ), patch("homeassistant.util.utcnow", return_value=now):
+
+    aioclient_mock.clear_requests()
+    mock_events_list({}, exc=ClientError())
+
+    with patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
@@ -317,10 +354,10 @@ async def test_update_error(
 
     # Advance time beyond update/throttle point
     now += datetime.timedelta(minutes=30)
-    with patch(
-        "homeassistant.components.google.api.google_discovery.build"
-    ) as mock, patch("homeassistant.util.utcnow", return_value=now):
-        mock.return_value.events.return_value.list.return_value.execute.return_value = {
+
+    aioclient_mock.clear_requests()
+    mock_events_list(
+        {
             "items": [
                 {
                     **TEST_EVENT,
@@ -333,6 +370,9 @@ async def test_update_error(
                 }
             ]
         }
+    )
+
+    with patch("homeassistant.util.utcnow", return_value=now):
         async_fire_time_changed(hass, now)
         await hass.async_block_till_done()
 
@@ -342,8 +382,11 @@ async def test_update_error(
     assert state.state == "off"
 
 
-async def test_calendars_api(hass, hass_client, component_setup):
+async def test_calendars_api(
+    hass, hass_client, component_setup, mock_events_list_items
+):
     """Test the Rest API returns the calendar."""
+    mock_events_list_items([])
     assert await component_setup()
 
     client = await hass_client()
@@ -359,14 +402,21 @@ async def test_calendars_api(hass, hass_client, component_setup):
 
 
 async def test_http_event_api_failure(
-    hass, hass_client, calendar_resource, component_setup
+    hass,
+    hass_client,
+    component_setup,
+    mock_calendars_list,
+    mock_events_list,
+    aioclient_mock,
 ):
     """Test the Rest API response during a calendar failure."""
+    mock_events_list({})
     assert await component_setup()
 
     client = await hass_client()
 
-    calendar_resource.side_effect = httplib2.ServerNotFoundError("unit test")
+    aioclient_mock.clear_requests()
+    mock_events_list({}, exc=ClientError())
 
     response = await client.get(upcoming_event_url())
     assert response.status == HTTPStatus.OK
@@ -424,6 +474,66 @@ async def test_http_api_all_day_event(
     }
 
 
+@pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
+async def test_http_api_event_paging(
+    hass, hass_client, aioclient_mock, component_setup
+):
+    """Test paging through results from the server."""
+    hass.config.set_time_zone("Asia/Baghdad")
+
+    responses = [
+        {
+            "nextPageToken": "page-token",
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "summary": "event 1",
+                    **upcoming(),
+                }
+            ],
+        },
+        {
+            "items": [
+                {
+                    **TEST_EVENT,
+                    "summary": "event 2",
+                    **upcoming(),
+                }
+            ],
+        },
+    ]
+
+    def next_response(response_list):
+        results = copy.copy(response_list)
+
+        async def get(method, url, data):
+            return AiohttpClientMockResponse(method, url, json=results.pop(0))
+
+        return get
+
+    # Setup response for initial entity load
+    aioclient_mock.get(
+        f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events",
+        side_effect=next_response(responses),
+    )
+    assert await component_setup()
+
+    # Setup response for API request
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        f"{API_BASE_URL}/calendars/{CALENDAR_ID}/events",
+        side_effect=next_response(responses),
+    )
+
+    client = await hass_client()
+    response = await client.get(upcoming_event_url())
+    assert response.status == HTTPStatus.OK
+    events = await response.json()
+    assert len(events) == 2
+    assert events[0]["summary"] == "event 1"
+    assert events[1]["summary"] == "event 2"
+
+
 @pytest.mark.parametrize(
     "calendars_config_ignore_availability,transparency,expect_visible_event",
     [
@@ -462,17 +572,91 @@ async def test_opaque_event(
     assert (len(events) > 0) == expect_visible_event
 
 
+@pytest.mark.parametrize("mock_test_setup", [None])
 async def test_scan_calendar_error(
     hass,
-    calendar_resource,
     component_setup,
     test_api_calendar,
+    mock_calendars_list,
+    config_entry,
 ):
     """Test that the calendar update handles a server error."""
-    with patch(
-        "homeassistant.components.google.api.google_discovery.build",
-        side_effect=httplib2.ServerNotFoundError("unit test"),
-    ):
-        assert await component_setup()
+    config_entry.add_to_hass(hass)
+    mock_calendars_list({}, exc=ClientError())
+    assert await component_setup()
 
     assert not hass.states.get(TEST_ENTITY)
+
+
+async def test_future_event_update_behavior(
+    hass, mock_events_list_items, component_setup
+):
+    """Test an future event that becomes active."""
+    now = dt_util.now()
+    now_utc = dt_util.utcnow()
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # Event has not started yet
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+
+    # Advance time until event has started
+    now += datetime.timedelta(minutes=60)
+    now_utc += datetime.timedelta(minutes=30)
+    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
+        "homeassistant.util.dt.now", return_value=now
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # Event has started
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_ON
+
+
+async def test_future_event_offset_update_behavior(
+    hass, mock_events_list_items, component_setup
+):
+    """Test an future event that becomes active."""
+    now = dt_util.now()
+    now_utc = dt_util.utcnow()
+    one_hour_from_now = now + datetime.timedelta(minutes=60)
+    end_event = one_hour_from_now + datetime.timedelta(minutes=90)
+    event_summary = "Test Event in Progress"
+    event = {
+        **TEST_EVENT,
+        "start": {"dateTime": one_hour_from_now.isoformat()},
+        "end": {"dateTime": end_event.isoformat()},
+        "summary": f"{event_summary} !!-15",
+    }
+    mock_events_list_items([event])
+    assert await component_setup()
+
+    # Event has not started yet
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == STATE_OFF
+    assert not state.attributes["offset_reached"]
+
+    # Advance time until event has started
+    now += datetime.timedelta(minutes=45)
+    now_utc += datetime.timedelta(minutes=45)
+    with patch("homeassistant.util.dt.utcnow", return_value=now_utc), patch(
+        "homeassistant.util.dt.now", return_value=now
+    ):
+        async_fire_time_changed(hass, now)
+        await hass.async_block_till_done()
+
+    # Event has not started, but the offset was reached
+    state = hass.states.get(TEST_ENTITY)
+    assert state.state == STATE_OFF
+    assert state.attributes["offset_reached"]

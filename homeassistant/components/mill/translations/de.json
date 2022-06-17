@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "Verbindungstyp ausw\u00e4hlen",
-                    "password": "Passwort",
-                    "username": "Benutzername"
+                    "connection_type": "Verbindungstyp ausw\u00e4hlen"
                 },
                 "description": "W\u00e4hle die Anschlussart. Lokal erfordert Heizger\u00e4te der Generation 3"
             }

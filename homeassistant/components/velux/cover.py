@@ -7,22 +7,17 @@ from pyvlx.opening_device import Awning, Blind, GarageDoor, Gate, RollerShutter,
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DATA_VELUX, VeluxEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_platform(
@@ -46,14 +41,17 @@ class VeluxCover(VeluxEntity, CoverEntity):
     def supported_features(self):
         """Flag supported features."""
         supported_features = (
-            SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION | SUPPORT_STOP
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+            | CoverEntityFeature.STOP
         )
         if self.current_cover_tilt_position is not None:
             supported_features |= (
-                SUPPORT_OPEN_TILT
-                | SUPPORT_CLOSE_TILT
-                | SUPPORT_SET_TILT_POSITION
-                | SUPPORT_STOP_TILT
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
+                | CoverEntityFeature.STOP_TILT
             )
         return supported_features
 
@@ -101,12 +99,11 @@ class VeluxCover(VeluxEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if ATTR_POSITION in kwargs:
-            position_percent = 100 - kwargs[ATTR_POSITION]
+        position_percent = 100 - kwargs[ATTR_POSITION]
 
-            await self.node.set_position(
-                Position(position_percent=position_percent), wait_for_completion=False
-            )
+        await self.node.set_position(
+            Position(position_percent=position_percent), wait_for_completion=False
+        )
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""

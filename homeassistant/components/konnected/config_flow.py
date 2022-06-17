@@ -1,4 +1,6 @@
 """Config flow for konnected.io integration."""
+from __future__ import annotations
+
 import asyncio
 import copy
 import logging
@@ -373,7 +375,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Return the Options Flow."""
         return OptionsFlowHandler(config_entry)
 

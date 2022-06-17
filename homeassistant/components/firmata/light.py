@@ -3,11 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
@@ -56,8 +52,8 @@ async def async_setup_entry(
 class FirmataLight(FirmataPinEntity, LightEntity):
     """Representation of a light on a Firmata board."""
 
-    _attr_color_mode = COLOR_MODE_BRIGHTNESS
-    _attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(
         self,

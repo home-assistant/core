@@ -1,24 +1,19 @@
 """Support for Lutron Caseta shades."""
-import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
-    SUPPORT_STOP,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LutronCasetaDevice
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from . import LutronCasetaDeviceUpdatableEntity
+from .const import DOMAIN as CASETA_DOMAIN
+from .models import LutronCasetaData
 
 
 async def async_setup_entry(
@@ -31,26 +26,26 @@ async def async_setup_entry(
     Adds shades from the Caseta bridge associated with the config_entry as
     cover entities.
     """
-    entities = []
-    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[BRIDGE_LEAP]
-    bridge_device = data[BRIDGE_DEVICE]
+    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data.bridge
+    bridge_device = data.bridge_device
     cover_devices = bridge.get_devices_by_domain(DOMAIN)
-
-    for cover_device in cover_devices:
-        entity = LutronCasetaCover(cover_device, bridge, bridge_device)
-        entities.append(entity)
-
-    async_add_entities(entities, True)
+    async_add_entities(
+        LutronCasetaCover(cover_device, bridge, bridge_device)
+        for cover_device in cover_devices
+    )
 
 
-class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
+class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     """Representation of a Lutron shade."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
+    _attr_device_class = CoverDeviceClass.SHADE
 
     @property
     def is_closed(self):
@@ -61,11 +56,6 @@ class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
     def current_cover_position(self):
         """Return the current position of cover."""
         return self._device["current_state"]
-
-    @property
-    def device_class(self):
-        """Return the device class."""
-        return CoverDeviceClass.SHADE
 
     async def async_stop_cover(self, **kwargs):
         """Top the cover."""
@@ -88,8 +78,3 @@ class LutronCasetaCover(LutronCasetaDevice, CoverEntity):
         if ATTR_POSITION in kwargs:
             position = kwargs[ATTR_POSITION]
             await self._smartbridge.set_value(self.device_id, position)
-
-    async def async_update(self):
-        """Call when forcing a refresh of the device."""
-        self._device = self._smartbridge.get_device_by_id(self.device_id)
-        _LOGGER.debug(self._device)

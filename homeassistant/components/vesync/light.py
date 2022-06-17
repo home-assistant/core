@@ -4,8 +4,7 @@ import logging
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -88,7 +87,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
         """Turn the device on."""
         attribute_adjustment_only = False
         # set white temperature
-        if self.color_mode in (COLOR_MODE_COLOR_TEMP,) and ATTR_COLOR_TEMP in kwargs:
+        if self.color_mode == ColorMode.COLOR_TEMP and ATTR_COLOR_TEMP in kwargs:
             # get white temperature from HA data
             color_temp = int(kwargs[ATTR_COLOR_TEMP])
             # ensure value between min-max supported Mireds
@@ -108,7 +107,7 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
             attribute_adjustment_only = True
         # set brightness level
         if (
-            self.color_mode in (COLOR_MODE_BRIGHTNESS, COLOR_MODE_COLOR_TEMP)
+            self.color_mode in (ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP)
             and ATTR_BRIGHTNESS in kwargs
         ):
             # get brightness from HA data
@@ -133,19 +132,15 @@ class VeSyncBaseLight(VeSyncDevice, LightEntity):
 class VeSyncDimmableLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync dimmable light device."""
 
-    @property
-    def color_mode(self):
-        """Set color mode for this entity."""
-        return COLOR_MODE_BRIGHTNESS
-
-    @property
-    def supported_color_modes(self):
-        """Flag supported color_modes (in an array format)."""
-        return [COLOR_MODE_BRIGHTNESS]
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
 
 class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     """Representation of a VeSync Tunable White Light device."""
+
+    _attr_color_mode = ColorMode.COLOR_TEMP
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP}
 
     @property
     def color_temp(self):
@@ -183,13 +178,3 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLight, LightEntity):
     def max_mireds(self):
         """Set device warmest white temperature."""
         return 370  # 370 Mireds  ( 1,000,000 divided by 2700 Kelvin = 370 Mireds)
-
-    @property
-    def color_mode(self):
-        """Set color mode for this entity."""
-        return COLOR_MODE_COLOR_TEMP
-
-    @property
-    def supported_color_modes(self):
-        """Flag supported color_modes (in an array format)."""
-        return [COLOR_MODE_COLOR_TEMP]

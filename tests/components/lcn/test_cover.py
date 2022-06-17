@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_OPENING,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModuleConnection
 
@@ -35,7 +36,7 @@ async def test_setup_lcn_cover(hass, entry, lcn_connection):
 
 async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entity_outputs = entity_registry.async_get("cover.cover_outputs")
 

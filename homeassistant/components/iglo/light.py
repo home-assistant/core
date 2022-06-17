@@ -12,11 +12,10 @@ from homeassistant.components.light import (
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
-    SUPPORT_EFFECT,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -53,8 +52,8 @@ def setup_platform(
 class IGloLamp(LightEntity):
     """Representation of an iGlo light."""
 
-    _attr_supported_color_modes = {COLOR_MODE_COLOR_TEMP, COLOR_MODE_HS}
-    _attr_supported_features = SUPPORT_EFFECT
+    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+    _attr_supported_features = LightEntityFeature.EFFECT
 
     def __init__(self, name, host, port):
         """Initialize the light."""
@@ -73,13 +72,13 @@ class IGloLamp(LightEntity):
         return int((self._lamp.state()["brightness"] / 200.0) * 255)
 
     @property
-    def color_mode(self) -> str | None:
+    def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._lamp.state()["mode"] == MODE_WHITE:
-            return COLOR_MODE_COLOR_TEMP
+            return ColorMode.COLOR_TEMP
         # The iglo library reports MODE_WHITE when an effect is active, this is not
-        # supported by Home Assistant, just report COLOR_MODE_HS
-        return COLOR_MODE_HS
+        # supported by Home Assistant, just report ColorMode.HS
+        return ColorMode.HS
 
     @property
     def color_temp(self):

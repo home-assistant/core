@@ -5,35 +5,17 @@ import pytest
 import requests_mock
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.wallbox import CONF_LOCKED_UNLOCKED_KEY
+from homeassistant.components.wallbox import CHARGER_LOCKED_UNLOCKED_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
 from tests.components.wallbox import (
+    authorisation_response,
     entry,
     setup_integration,
     setup_integration_read_only,
 )
-from tests.components.wallbox.const import (
-    CONF_ERROR,
-    CONF_JWT,
-    CONF_MOCK_LOCK_ENTITY_ID,
-    CONF_STATUS,
-    CONF_TTL,
-    CONF_USER_ID,
-)
-
-authorisation_response = json.loads(
-    json.dumps(
-        {
-            CONF_JWT: "fakekeyhere",
-            CONF_USER_ID: 12345,
-            CONF_TTL: 145656758,
-            CONF_ERROR: "false",
-            CONF_STATUS: 200,
-        }
-    )
-)
+from tests.components.wallbox.const import MOCK_LOCK_ENTITY_ID
 
 
 async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
@@ -41,19 +23,19 @@ async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
 
     await setup_integration(hass)
 
-    state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
+    state = hass.states.get(MOCK_LOCK_ENTITY_ID)
     assert state
     assert state.state == "unlocked"
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=200,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CONF_LOCKED_UNLOCKED_KEY: False})),
+            json=json.loads(json.dumps({CHARGER_LOCKED_UNLOCKED_KEY: False})),
             status_code=200,
         )
 
@@ -61,7 +43,7 @@ async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
             "lock",
             SERVICE_LOCK,
             {
-                ATTR_ENTITY_ID: CONF_MOCK_LOCK_ENTITY_ID,
+                ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )
@@ -70,7 +52,7 @@ async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
             "lock",
             SERVICE_UNLOCK,
             {
-                ATTR_ENTITY_ID: CONF_MOCK_LOCK_ENTITY_ID,
+                ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
             },
             blocking=True,
         )
@@ -85,13 +67,13 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=200,
         )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
-            json=json.loads(json.dumps({CONF_LOCKED_UNLOCKED_KEY: False})),
+            json=json.loads(json.dumps({CHARGER_LOCKED_UNLOCKED_KEY: False})),
             status_code=404,
         )
 
@@ -100,7 +82,7 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
                 "lock",
                 SERVICE_LOCK,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_LOCK_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
                 },
                 blocking=True,
             )
@@ -109,7 +91,7 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
                 "lock",
                 SERVICE_UNLOCK,
                 {
-                    ATTR_ENTITY_ID: CONF_MOCK_LOCK_ENTITY_ID,
+                    ATTR_ENTITY_ID: MOCK_LOCK_ENTITY_ID,
                 },
                 blocking=True,
             )
@@ -122,7 +104,7 @@ async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant) -> N
 
     await setup_integration_read_only(hass)
 
-    state = hass.states.get(CONF_MOCK_LOCK_ENTITY_ID)
+    state = hass.states.get(MOCK_LOCK_ENTITY_ID)
 
     assert state is None
 

@@ -13,9 +13,7 @@
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "description": "Set up your Twinkly led string",
-                "title": "Twinkly"
+                }
             }
         }
     }

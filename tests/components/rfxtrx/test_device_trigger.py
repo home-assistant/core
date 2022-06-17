@@ -90,7 +90,13 @@ async def test_get_triggers(hass, device_reg, event: EventTestData, expected):
     device_entry = device_reg.async_get_device(event.device_identifiers, set())
 
     expected_triggers = [
-        {"domain": DOMAIN, "device_id": device_entry.id, "platform": "device", **expect}
+        {
+            "domain": DOMAIN,
+            "device_id": device_entry.id,
+            "platform": "device",
+            "metadata": {},
+            **expect,
+        }
         for expect in expected
     ]
 

@@ -85,6 +85,11 @@ def mac_from_device_info(info: dict[str, Any]) -> str | None:
     return None
 
 
+def model_requires_encryption(model: str | None) -> bool:
+    """H and J models need pairing with PIN."""
+    return model is not None and len(model) > 4 and model[4] in ("H", "J")
+
+
 async def async_get_device_info(
     hass: HomeAssistant,
     host: str,
@@ -99,17 +104,19 @@ async def async_get_device_info(
                 port,
                 info,
             )
-            encrypted_bridge = SamsungTVEncryptedBridge(
-                hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
-            )
-            result = await encrypted_bridge.async_try_connect()
-            if result != RESULT_CANNOT_CONNECT:
-                return (
-                    result,
-                    ENCRYPTED_WEBSOCKET_PORT,
-                    METHOD_ENCRYPTED_WEBSOCKET,
-                    info,
+            # Check the encrypted port if the model requires encryption
+            if model_requires_encryption(info.get("device", {}).get("modelName")):
+                encrypted_bridge = SamsungTVEncryptedBridge(
+                    hass, METHOD_ENCRYPTED_WEBSOCKET, host, ENCRYPTED_WEBSOCKET_PORT
                 )
+                result = await encrypted_bridge.async_try_connect()
+                if result != RESULT_CANNOT_CONNECT:
+                    return (
+                        result,
+                        ENCRYPTED_WEBSOCKET_PORT,
+                        METHOD_ENCRYPTED_WEBSOCKET,
+                        info,
+                    )
             return RESULT_SUCCESS, port, METHOD_WEBSOCKET, info
 
     # Try legacy port
@@ -300,9 +307,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         if self._remote is None:
             # We need to create a new instance to reconnect.
             try:
-                LOGGER.debug(
-                    "Create SamsungTVLegacyBridge for %s (%s)", CONF_NAME, self.host
-                )
+                LOGGER.debug("Create SamsungTVLegacyBridge for %s", self.host)
                 self._remote = Remote(self.config.copy())
             # This is only happening when the auth was switched to DENY
             # A removed auth will lead to socket timeout because waiting for auth popup is just an open socket

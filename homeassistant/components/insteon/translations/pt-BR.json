@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Falha ao conectar",
+            "not_insteon_device": "O dispositivo descoberto n\u00e3o \u00e9 um dispositivo Insteon",
             "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
         },
         "error": {
             "cannot_connect": "Falha ao conectar",
             "select_single": "Selecione uma op\u00e7\u00e3o."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Deseja configurar {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "Endere\u00e7o IP",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Tipo de modem."
                 },
-                "description": "Selecione o tipo de modem Insteon.",
-                "title": "Insteon"
+                "description": "Selecione o tipo de modem Insteon."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Subcategoria de dispositivo (ou seja, 0x10)",
                     "subcat": "Subcategoria de dispositivo (ou seja, 0x0a)"
                 },
-                "description": "Escolha um dispositivo para sobrescrever",
-                "title": "Insteon"
+                "description": "Escolha um dispositivo para sobrescrever"
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Etapas de dimmer (apenas para dispositivos de lux, padr\u00e3o 22)",
                     "unitcode": "C\u00f3digo de unidade (1 - 16)"
                 },
-                "description": "Altere a senha do Insteon Hub.",
-                "title": "Insteon"
+                "description": "Altere a senha do Insteon Hub."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Porta",
                     "username": "Usu\u00e1rio"
                 },
-                "description": "Altere as informa\u00e7\u00f5es de conex\u00e3o do Hub Insteon. Voc\u00ea deve reiniciar o Home Assistant depois de fazer essa altera\u00e7\u00e3o. Isso n\u00e3o altera a configura\u00e7\u00e3o do pr\u00f3prio Hub. Para alterar a configura\u00e7\u00e3o no Hub, use o aplicativo Hub.",
-                "title": "Insteon"
+                "description": "Altere as informa\u00e7\u00f5es de conex\u00e3o do Hub Insteon. Voc\u00ea deve reiniciar o Home Assistant depois de fazer essa altera\u00e7\u00e3o. Isso n\u00e3o altera a configura\u00e7\u00e3o do pr\u00f3prio Hub. Para alterar a configura\u00e7\u00e3o no Hub, use o aplicativo Hub."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Altere a configura\u00e7\u00e3o do Hub.",
                     "remove_override": "Remova uma substitui\u00e7\u00e3o de dispositivo.",
                     "remove_x10": "Remova um dispositivo X10."
-                },
-                "description": "Selecione uma op\u00e7\u00e3o para configurar.",
-                "title": "Insteon"
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Selecione um endere\u00e7o de dispositivo para remover"
                 },
-                "description": "Remover uma substitui\u00e7\u00e3o de dispositivo",
-                "title": "Insteon"
+                "description": "Remover uma substitui\u00e7\u00e3o de dispositivo"
             },
             "remove_x10": {
                 "data": {
                     "address": "Selecione um endere\u00e7o de dispositivo para remover"
                 },
-                "description": "Remover um dispositivo X10",
-                "title": "Insteon"
+                "description": "Remover um dispositivo X10"
             }
         }
     }

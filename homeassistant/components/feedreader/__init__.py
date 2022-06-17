@@ -70,6 +70,7 @@ class FeedManager:
         self._last_entry_timestamp = None
         self._last_update_successful = False
         self._has_published_parsed = False
+        self._has_updated_parsed = False
         self._event_type = EVENT_FEEDREADER
         self._feed_id = url
         hass.bus.listen_once(EVENT_HOMEASSISTANT_START, lambda _: self._update())
@@ -122,7 +123,7 @@ class FeedManager:
                 )
                 self._filter_entries()
                 self._publish_new_entries()
-                if self._has_published_parsed:
+                if self._has_published_parsed or self._has_updated_parsed:
                     self._storage.put_timestamp(
                         self._feed_id, self._last_entry_timestamp
                     )
@@ -143,7 +144,7 @@ class FeedManager:
 
     def _update_and_fire_entry(self, entry):
         """Update last_entry_timestamp and fire entry."""
-        # Check if the entry has a published date.
+        # Check if the entry has a published or updated date.
         if "published_parsed" in entry and entry.published_parsed:
             # We are lucky, `published_parsed` data available, let's make use of
             # it to publish only new available entries since the last run
@@ -151,9 +152,20 @@ class FeedManager:
             self._last_entry_timestamp = max(
                 entry.published_parsed, self._last_entry_timestamp
             )
+        elif "updated_parsed" in entry and entry.updated_parsed:
+            # We are lucky, `updated_parsed` data available, let's make use of
+            # it to publish only new available entries since the last run
+            self._has_updated_parsed = True
+            self._last_entry_timestamp = max(
+                entry.updated_parsed, self._last_entry_timestamp
+            )
         else:
             self._has_published_parsed = False
-            _LOGGER.debug("No published_parsed info available for entry %s", entry)
+            self._has_updated_parsed = False
+            _LOGGER.debug(
+                "No published_parsed or updated_parsed info available for entry %s",
+                entry,
+            )
         entry.update({"feed_url": self._url})
         self._hass.bus.fire(self._event_type, entry)
 
@@ -167,9 +179,16 @@ class FeedManager:
             # Set last entry timestamp as epoch time if not available
             self._last_entry_timestamp = datetime.utcfromtimestamp(0).timetuple()
         for entry in self._feed.entries:
-            if self._firstrun or (
-                "published_parsed" in entry
-                and entry.published_parsed > self._last_entry_timestamp
+            if (
+                self._firstrun
+                or (
+                    "published_parsed" in entry
+                    and entry.published_parsed > self._last_entry_timestamp
+                )
+                or (
+                    "updated_parsed" in entry
+                    and entry.updated_parsed > self._last_entry_timestamp
+                )
             ):
                 self._update_and_fire_entry(entry)
                 new_entries = True
@@ -199,7 +218,7 @@ class StoredData:
                 with self._lock, open(self._data_file, "rb") as myfile:
                     self._data = pickle.load(myfile) or {}
                     self._cache_outdated = False
-            except:  # noqa: E722 pylint: disable=bare-except
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.error(
                     "Error loading data from pickled file %s", self._data_file
                 )
@@ -221,6 +240,6 @@ class StoredData:
             )
             try:
                 pickle.dump(self._data, myfile)
-            except:  # noqa: E722 pylint: disable=bare-except
+            except Exception:  # pylint: disable=broad-except
                 _LOGGER.error("Error saving pickled data to %s", self._data_file)
         self._cache_outdated = True
