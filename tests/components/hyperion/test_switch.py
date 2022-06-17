@@ -33,7 +33,7 @@ from . import (
     setup_test_config_entry,
 )
 
-from tests.common import async_fire_reload_cooldown
+from tests.common import async_fire_deferred_config_entry_reloads
 
 TEST_COMPONENTS = [
     {"enabled": True, "name": "ALL"},
@@ -211,7 +211,7 @@ async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
             assert not updated_entry.disabled
             await hass.async_block_till_done()
 
-            await async_fire_reload_cooldown(hass)
+            await async_fire_deferred_config_entry_reloads(hass)
 
         entity_state = hass.states.get(entity_id)
         assert entity_state

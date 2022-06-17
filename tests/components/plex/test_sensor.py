@@ -13,7 +13,10 @@ from homeassistant.util import dt
 
 from .helpers import trigger_plex_update, wait_for_debouncer
 
-from tests.common import async_fire_reload_cooldown, async_fire_time_changed
+from tests.common import (
+    async_fire_deferred_config_entry_reloads,
+    async_fire_time_changed,
+)
 
 LIBRARY_UPDATE_PAYLOAD = {"StatusNotification": [{"title": "Library scan complete"}]}
 
@@ -184,7 +187,7 @@ async def test_library_sensor_values(
 
     media = [MockPlexMovie()]
     with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
-        await async_fire_reload_cooldown(hass)
+        await async_fire_deferred_config_entry_reloads(hass)
 
     library_movies_sensor = hass.states.get("sensor.plex_server_1_library_movies")
     assert library_movies_sensor.state == "1"
@@ -213,7 +216,7 @@ async def test_library_sensor_values(
     )
     media = [MockPlexMusic()]
     with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
-        await async_fire_reload_cooldown(hass)
+        await async_fire_deferred_config_entry_reloads(hass)
 
     library_music_sensor = hass.states.get("sensor.plex_server_1_library_music")
     assert library_music_sensor.state == "1"

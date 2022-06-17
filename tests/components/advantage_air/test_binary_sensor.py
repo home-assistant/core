@@ -3,7 +3,7 @@
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as er
 
-from tests.common import async_fire_reload_cooldown
+from tests.common import async_fire_deferred_config_entry_reloads
 from tests.components.advantage_air import (
     TEST_SET_RESPONSE,
     TEST_SET_URL,
@@ -78,7 +78,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
-    await async_fire_reload_cooldown(hass)
+    await async_fire_deferred_config_entry_reloads(hass)
 
     state = hass.states.get(entity_id)
     assert state
@@ -96,7 +96,7 @@ async def test_binary_sensor_async_setup_entry(hass, aioclient_mock):
     registry.async_update_entity(entity_id=entity_id, disabled_by=None)
     await hass.async_block_till_done()
 
-    await async_fire_reload_cooldown(hass)
+    await async_fire_deferred_config_entry_reloads(hass)
 
     state = hass.states.get(entity_id)
     assert state

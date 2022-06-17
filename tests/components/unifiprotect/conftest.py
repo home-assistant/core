@@ -35,7 +35,7 @@ from . import _patch_discovery
 
 from tests.common import (
     MockConfigEntry,
-    async_fire_reload_cooldown,
+    async_fire_deferred_config_entry_reloads,
     async_fire_time_changed,
     load_fixture,
 )
@@ -271,7 +271,7 @@ async def enable_entity(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    await async_fire_reload_cooldown(hass)
+    await async_fire_deferred_config_entry_reloads(hass)
     await hass.async_block_till_done()
 
     return updated_entity

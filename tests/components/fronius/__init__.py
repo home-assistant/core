@@ -10,7 +10,7 @@ from homeassistant.util import dt
 
 from tests.common import (
     MockConfigEntry,
-    async_fire_reload_cooldown,
+    async_fire_deferred_config_entry_reloads,
     async_fire_time_changed,
     load_fixture,
 )
@@ -100,6 +100,6 @@ async def enable_all_entities(hass, config_entry_id, time_till_next_update):
         if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ]:
         registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
-    await async_fire_reload_cooldown(hass)
+    await async_fire_deferred_config_entry_reloads(hass)
     async_fire_time_changed(hass, dt.utcnow() + time_till_next_update)
     await hass.async_block_till_done()

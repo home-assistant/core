@@ -407,7 +407,7 @@ def async_fire_time_changed(
 fire_time_changed = threadsafe_callback_factory(async_fire_time_changed)
 
 
-async def async_fire_reload_cooldown(hass: HomeAssistant) -> None:
+async def async_fire_deferred_config_entry_reloads(hass: HomeAssistant) -> None:
     """Simulate the reload cooldown."""
     # Make sure any events that generate a reload
     # have finished
