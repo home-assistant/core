@@ -99,7 +99,7 @@ def calendars_config(calendars_config_entity: dict[str, Any]) -> list[dict[str, 
     ]
 
 
-@pytest.fixture(autouse=True)
+@pytest.fixture
 def mock_calendars_yaml(
     hass: HomeAssistant,
     calendars_config: list[dict[str, Any]],
