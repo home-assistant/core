@@ -467,6 +467,11 @@ class ConfigEntry:
                 return True
 
         component = integration.get_component()
+
+        # Tests that rely on calling hass.config_entries.async_forward_entry_unload
+        # need this to be called. If we are able to refactor these away in the future,
+        # we can move self._async_set_supported(component) into the if block
+        # of integration.domain == self.domain
         self._async_set_supported(component)
 
         if integration.domain == self.domain:
