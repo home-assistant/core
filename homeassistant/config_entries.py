@@ -467,10 +467,9 @@ class ConfigEntry:
                 return True
 
         component = integration.get_component()
+        self._async_set_supported(component)
 
         if integration.domain == self.domain:
-            self._async_set_supported(component)
-
             if not self.state.recoverable:
                 return False
 
