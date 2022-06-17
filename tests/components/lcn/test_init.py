@@ -13,18 +13,11 @@ from homeassistant import config_entries
 import homeassistant.components.lcn
 from homeassistant.components.lcn.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import (
-    CONNECTION_DATA,
-    DATA,
-    OPTIONS,
-    MockPchkConnectionManager,
-    setup_component,
-)
+from .conftest import MockPchkConnectionManager, setup_component
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import load_fixture
 
 
 async def test_async_setup_entry(hass, entry, lcn_connection):
@@ -133,24 +126,3 @@ async def test_async_setup_from_configuration_yaml(hass):
         await setup_component(hass)
 
         assert async_setup_entry.await_count == 2
-
-
-async def test_migrate_entry(hass):
-    """Test successful migration of entry data."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title=CONNECTION_DATA[CONF_HOST],
-        unique_id="test",
-        data=CONNECTION_DATA,
-    )
-
-    assert entry.unique_id == "test"
-    assert entry.version == 1
-    assert entry.data == CONNECTION_DATA
-
-    await entry.async_migrate(hass)
-
-    assert entry.unique_id == "test"
-    assert entry.version == 2
-    assert entry.data == {CONF_HOST: "pchk"} | DATA
-    assert entry.options == OPTIONS

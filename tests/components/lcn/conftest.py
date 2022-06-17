@@ -24,11 +24,6 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, async_mock_service, load_fixture
 
-DATA = {
-    CONF_DEVICES: [],
-    CONF_ENTITIES: [],
-}
-
 OPTIONS = {
     CONF_IP_ADDRESS: "127.0.0.1",
     CONF_PORT: 4114,
@@ -38,7 +33,11 @@ OPTIONS = {
     CONF_DIM_MODE: "STEPS200",
 }
 
-CONNECTION_DATA = {CONF_HOST: "pchk"} | OPTIONS | DATA
+CONNECTION_DATA = OPTIONS | {
+    CONF_HOST: "pchk",
+    CONF_DEVICES: [],
+    CONF_ENTITIES: [],
+}
 
 
 class MockModuleConnection(ModuleConnection):
@@ -87,29 +86,12 @@ def create_config_entry(name):
     """Set up config entries with configuration data."""
     fixture_filename = f"lcn/config_entry_{name}.json"
     config_data = json.loads(load_fixture(fixture_filename))
-    host_name = config_data[CONF_HOST]
-    data = {key: config_data[key] for key in (CONF_DEVICES, CONF_ENTITIES)}
-    options = {
-        key: config_data[key]
-        for key in (
-            CONF_IP_ADDRESS,
-            CONF_PORT,
-            CONF_USERNAME,
-            CONF_PASSWORD,
-            CONF_SK_NUM_TRIES,
-            CONF_DIM_MODE,
-        )
-    }
-
-    title = host_name
-    unique_id = fixture_filename
     entry = MockConfigEntry(
         domain=DOMAIN,
-        version=2,
-        title=title,
-        unique_id=unique_id,
-        data=data,
-        options=options,
+        version=1,
+        title=config_data[CONF_HOST],
+        unique_id=fixture_filename,
+        data=config_data,
     )
     return entry
 

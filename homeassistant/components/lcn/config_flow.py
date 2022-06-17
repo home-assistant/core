@@ -85,7 +85,7 @@ async def validate_connection(host_name: str, data: dict[str, Any]) -> str | Non
 class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
-    VERSION = 2
+    VERSION = 1
 
     @staticmethod
     @callback
@@ -98,44 +98,34 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, config_data: dict[str, Any]) -> FlowResult:
         """Import existing configuration from LCN."""
         host_name = config_data[CONF_HOST]
-        data = {key: config_data[key] for key in (CONF_DEVICES, CONF_ENTITIES)}
 
         if entry := get_config_entry(self.hass, host_name):
             entry.source = config_entries.SOURCE_IMPORT
             # Cleanup entity and device registry, if we imported from configuration.yaml to
             # remove orphans when entities were removed from configuration
-            purge_entity_registry(self.hass, entry.entry_id, data)
-            purge_device_registry(self.hass, entry.entry_id, data)
+            purge_entity_registry(self.hass, entry.entry_id, config_data)
+            purge_device_registry(self.hass, entry.entry_id, config_data)
 
-            if entry.version == 1:
-                self.hass.config_entries.async_update_entry(entry, data=config_data)
-            else:
-                self.hass.config_entries.async_update_entry(entry, data=data)
+            data = dict(entry.data)
+            data.update(config_data)
+
+            # validate the imported connection parameters
+            if (error := await validate_connection(host_name, data)) is not None:
+                return self.async_abort(reason=error)
+
+            self.hass.config_entries.async_update_entry(entry, data=data)
             return self.async_abort(reason="existing_configuration_updated")
 
-        # try import connection parameters
-        try:
-            options = {
-                key: config_data[key]
-                for key in (
-                    CONF_IP_ADDRESS,
-                    CONF_PORT,
-                    CONF_USERNAME,
-                    CONF_PASSWORD,
-                    CONF_SK_NUM_TRIES,
-                    CONF_DIM_MODE,
-                )
-            }
-        except KeyError:
+        if CONF_IP_ADDRESS not in config_data:
             # expected connection parameters not defined in configuration.yaml
             _LOGGER.warning('No connection parameters defined for host "%s"', host_name)
             return self.async_abort(reason="import_connection_error")
 
         # validate the imported connection parameters
-        if (error := await validate_connection(host_name, options)) is not None:
+        if (error := await validate_connection(host_name, config_data)) is not None:
             return self.async_abort(reason=error)
 
-        return self.async_create_entry(title=f"{host_name}", data=data, options=options)
+        return self.async_create_entry(title=f"{host_name}", data=config_data)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -144,7 +134,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         data_schema = vol.Schema(
             {
                 vol.Required(CONF_HOST, default="pchk"): str,
-                vol.Required(CONF_IP_ADDRESS, default="192.168.2.41"): str,
+                vol.Required(CONF_IP_ADDRESS): str,
                 vol.Required(CONF_PORT, default=4114): cv.positive_int,
                 vol.Required(CONF_USERNAME, default="lcn"): str,
                 vol.Required(CONF_PASSWORD, default="lcn"): str,
@@ -157,23 +147,16 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(step_id="user", data_schema=data_schema)
 
         host_name = user_input[CONF_HOST]
-        data: dict = {CONF_DEVICES: [], CONF_ENTITIES: []}
-        options = {
-            key: user_input[key]
-            for key in (
-                CONF_IP_ADDRESS,
-                CONF_PORT,
-                CONF_USERNAME,
-                CONF_PASSWORD,
-                CONF_SK_NUM_TRIES,
-                CONF_DIM_MODE,
-            )
+        data: dict = {
+            **user_input,
+            CONF_DEVICES: [],
+            CONF_ENTITIES: [],
         }
 
         errors = None
         if get_config_entry(self.hass, host_name):
             errors = {CONF_HOST: "already_configured"}
-        elif (error := await validate_connection(host_name, options)) is not None:
+        elif (error := await validate_connection(host_name, data)) is not None:
             errors = {CONF_BASE: error}
 
         if errors is not None:
@@ -181,7 +164,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=data_schema, errors=errors
             )
 
-        return self.async_create_entry(title=host_name, data=data, options=options)
+        return self.async_create_entry(title=host_name, data=data)
 
 
 class LcnOptionsFlowHandler(config_entries.OptionsFlow):
@@ -190,7 +173,7 @@ class LcnOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize LCN options flow."""
         self.config_entry = config_entry
-        self.options = dict(config_entry.options)
+        self.data = dict(config_entry.data)
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -207,27 +190,27 @@ class LcnOptionsFlowHandler(config_entries.OptionsFlow):
             if (
                 error := await validate_connection(self.config_entry.title, user_input)
             ) is None:
-                self.options.update(user_input)
-                return self.async_create_entry(title="", data=self.options)
+                self.data.update(user_input)
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry, data=self.data
+                )
+
+                return self.async_create_entry(title="", data={})
 
             errors = {CONF_BASE: error}
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_IP_ADDRESS, default=self.options[CONF_IP_ADDRESS]
-                ): str,
-                vol.Required(
-                    CONF_PORT, default=self.options[CONF_PORT]
-                ): cv.positive_int,
-                vol.Required(CONF_USERNAME, default=self.options[CONF_USERNAME]): str,
-                vol.Required(CONF_PASSWORD, default=self.options[CONF_PASSWORD]): str,
+                vol.Required(CONF_IP_ADDRESS, default=self.data[CONF_IP_ADDRESS]): str,
+                vol.Required(CONF_PORT, default=self.data[CONF_PORT]): cv.positive_int,
+                vol.Required(CONF_USERNAME, default=self.data[CONF_USERNAME]): str,
+                vol.Required(CONF_PASSWORD, default=self.data[CONF_PASSWORD]): str,
                 vol.Optional(
-                    CONF_SK_NUM_TRIES, default=self.options[CONF_SK_NUM_TRIES]
+                    CONF_SK_NUM_TRIES, default=self.data[CONF_SK_NUM_TRIES]
                 ): cv.positive_int,
-                vol.Optional(
-                    CONF_DIM_MODE, default=self.options[CONF_DIM_MODE]
-                ): vol.In(DIM_MODES),
+                vol.Optional(CONF_DIM_MODE, default=self.data[CONF_DIM_MODE]): vol.In(
+                    DIM_MODES
+                ),
             }
         )
         return self.async_show_form(
