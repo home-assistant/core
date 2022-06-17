@@ -118,8 +118,6 @@ async def test_library_sensor_values(
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_tv_shows", disabled_by=None
     )
-    await hass.async_block_till_done()
-
     await async_fire_reload_cooldown(hass)
 
     media = [MockPlexTVEpisode()]
