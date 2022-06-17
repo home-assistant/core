@@ -510,7 +510,7 @@ class Stream:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segments())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments - 1 : -1])
 
     async def async_get_image(
         self,
