@@ -31,7 +31,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
     port = data.get("port", 502)
     client = Client(sungrow_register.regmap, data["host"], port)
-    client.load_register()
+    await hass.async_add_executor_job(client.load_register)
     if "4990 ~ 4999 - Serial number" not in client.inverter:
         raise CannotConnect
 
