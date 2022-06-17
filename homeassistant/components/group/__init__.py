@@ -410,7 +410,7 @@ async def _async_process_config(hass, config, component):
     """Process group configuration."""
     hass.data.setdefault(GROUP_ORDER, 0)
 
-    tasks = []
+    entities = []
 
     for object_id, conf in config.get(DOMAIN, {}).items():
         name = conf.get(CONF_NAME, object_id)
@@ -422,8 +422,8 @@ async def _async_process_config(hass, config, component):
         # in the same way that async_create_group does to make
         # sure we use the same ordering system.  This overcomes
         # the problem with concurrently creating the groups
-        tasks.append(
-            Group.async_create_group(
+        entities.append(
+            Group.async_create_group_entity(
                 hass,
                 name,
                 entity_ids,
@@ -439,7 +439,11 @@ async def _async_process_config(hass, config, component):
         # we setup a new group
         hass.data[GROUP_ORDER] += 1
 
-    await asyncio.gather(*tasks)
+    # If called before the platform async_setup is called (test cases)
+    if (component := hass.data.get(DOMAIN)) is None:
+        component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    await component.async_add_entities(entities)
 
 
 class GroupEntity(Entity):
@@ -526,7 +530,8 @@ class Group(Entity):
         ).result()
 
     @staticmethod
-    async def async_create_group(
+    @callback
+    def async_create_group_entity(
         hass,
         name,
         entity_ids=None,
@@ -536,10 +541,7 @@ class Group(Entity):
         mode=None,
         order=None,
     ):
-        """Initialize a group.
-
-        This method must be run in the event loop.
-        """
+        """Create a group entity."""
         if order is None:
             hass.data.setdefault(GROUP_ORDER, 0)
             order = hass.data[GROUP_ORDER]
@@ -562,12 +564,32 @@ class Group(Entity):
             ENTITY_ID_FORMAT, object_id or name, hass=hass
         )
 
+        return group
+
+    @staticmethod
+    async def async_create_group(
+        hass,
+        name,
+        entity_ids=None,
+        user_defined=True,
+        icon=None,
+        object_id=None,
+        mode=None,
+        order=None,
+    ):
+        """Initialize a group.
+
+        This method must be run in the event loop.
+        """
+        group = Group.async_create_group_entity(
+            hass, name, entity_ids, user_defined, icon, object_id, mode, order
+        )
+
         # If called before the platform async_setup is called (test cases)
         if (component := hass.data.get(DOMAIN)) is None:
             component = hass.data[DOMAIN] = EntityComponent(_LOGGER, DOMAIN, hass)
 
         await component.async_add_entities([group])
-
         return group
 
     @property
