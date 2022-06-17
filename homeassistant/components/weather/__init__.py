@@ -189,12 +189,16 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_precision: float
+    _attr_pressure: float | None = None  # Provide backwards compatibility
     _attr_pressure_unit: str | None = None
     _attr_state: None = None
+    _attr_temperature: float | None = None  # Provide backwards compatibility
     _attr_temperature_unit: str | None = None
+    _attr_visibility: float | None = None  # Provide backwards compatibility
     _attr_visibility_unit: str | None = None
     _attr_precipitation_unit: str | None = None
     _attr_wind_bearing: float | str | None = None
+    _attr_wind_speed: float | None = None  # Provide backwards compatibility
     _attr_wind_speed_unit: str | None = None
 
     _attr_native_pressure: float | None = None
@@ -214,49 +218,66 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_uom: str | None = None
     _weather_option_wind_speed_uom: str | None = None
 
-    _override_temperature: bool = False
-    _override_pressure: bool = False
-    _override_visibility: bool = False
-    _override_precipitation: bool = False
-    _override_wind_speed: bool = False
+    _override_temperature: float | None = None
+    _override_pressure: float | None = None
+    _override_visibility: float | None = None
+    _override_precipitation: float | None = None
+    _override_wind_speed: float | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         _reported = False
         for method in (
-            "temperature",
-            "temperature_unit",
             "_attr_temperature",
+            "temperature",
             "_attr_temperature_unit",
-            "pressure",
-            "pressure_unit",
+            "temperature_unit",
             "_attr_pressure",
+            "pressure",
             "_attr_pressure_unit",
-            "wind_speed",
-            "wind_speed_unit",
+            "pressure_unit",
             "_attr_wind_speed",
+            "wind_speed",
             "_attr_wind_speed_unit",
-            "visibility",
-            "visibility_unit",
+            "wind_speed_unit",
             "_attr_visibility",
+            "visibility",
             "_attr_visibility_unit",
-            "precipitation_unit",
+            "visibility_unit",
             "_attr_precipitation_unit",
+            "precipitation_unit",
         ):
             if method in cls.__dict__:
-                if "temperature" in method:
-                    WeatherEntity._override_temperature = True
-                if "pressure" in method:
-                    WeatherEntity._override_pressure = True
-                if "wind_speed" in method:
-                    WeatherEntity._override_wind_speed = True
-                if "visibility" in method:
-                    WeatherEntity._override_visibility = True
-                if "precipitation" in method:
-                    WeatherEntity._override_precipitation = True
-                module = inspect.getmodule(cls)
+                if method in ("temperature", "_attr_temperature"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_override_temperature", value)
+                if method in ("temperature_unit", "_attr_temperature_unit"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_attr_native_temperature_unit", value)
+                if method in ("pressure", "_attr_pressure"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_override_pressure", value)
+                if method in ("pressure_unit", "_attr_pressure_unit"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_attr_native_pressure_unit", value)
+                if method in ("wind_speed", "_attr_wind_speed"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_override_wind_speed", value)
+                if method in ("wind_speed_unit", "_attr_wind_speed_unit"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_attr_native_wind_speed_unit", value)
+                if method in ("visibility", "_attr_visibility"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_override_visibility", value)
+                if method in ("visibility_unit", "_attr_visibility_unit"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_attr_native_visibility_unit", value)
+                if method in ("precipitation_unit", "_attr_precipitation_unit"):
+                    value = getattr(cls, method)
+                    setattr(cls, "_attr_native_precipitation_unit", value)
                 if _reported is False:
+                    module = inspect.getmodule(cls)
                     _reported = True
                     if (
                         module
@@ -286,23 +307,23 @@ class WeatherEntity(Entity):
         self.async_registry_entry_updated()
 
     @property
+    def temperature(self) -> float:
+        """Return the temperature for backward compatibility."""
+        if self._override_temperature is not None:
+            return self._override_temperature
+        self._override_temperature = self._attr_temperature
+        return self._attr_temperature  # type: ignore[return-value]
+
+    @property
     def native_temperature(self) -> float:
         """Return the platform temperature in native units (i.e. not converted)."""
-        if self._override_temperature:
-            if hasattr(self, "_attr_temperature"):
-                return self._attr_temperature  # type: ignore[no-any-return, attr-defined]
-            if hasattr(self, "temperature"):
-                return self.temperature  # type: ignore[no-any-return, attr-defined]
-        return self._attr_native_temperature
+        if hasattr(self, "_attr_native_temperature"):
+            return self._attr_native_temperature
+        return self.temperature
 
     @property
     def native_temperature_unit(self) -> str | None:
         """Return the native unit of measurement for temperature."""
-        if self._override_temperature:
-            if hasattr(self, "_attr_temperature_unit"):
-                return self._attr_temperature_unit
-            if hasattr(self, "temperature"):
-                return self.temperature_unit
         if hasattr(self, "_attr_native_temperature_unit"):
             return self._attr_native_temperature_unit
         return None
@@ -316,23 +337,25 @@ class WeatherEntity(Entity):
         return self.native_temperature_unit  # type: ignore[return-value]
 
     @property
+    def pressure(self) -> float | None:
+        """Return the pressure for backward compatibility."""
+        if self._override_pressure is not None:
+            return self._override_pressure
+        if hasattr(self, "_attr_pressure"):
+            self._override_pressure = self._attr_pressure
+            return self._attr_pressure
+        return None
+
+    @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
-        if self._override_pressure:
-            if hasattr(self, "_attr_pressure"):
-                return self._attr_pressure  # type: ignore[no-any-return, attr-defined]
-            if hasattr(self, "pressure"):
-                return self.pressure  # type: ignore[no-any-return, attr-defined]
+        if (pressure := self.pressure) is not None:
+            return pressure
         return self._attr_native_pressure
 
     @property
     def native_pressure_unit(self) -> str | None:
         """Return the native unit of measurement for pressure."""
-        if self._override_pressure:
-            if hasattr(self, "_attr_pressure_unit"):
-                return self._attr_pressure_unit
-            if hasattr(self, "pressure_unit"):
-                return self.pressure_unit
         if hasattr(self, "_attr_native_pressure_unit"):
             return self._attr_native_pressure_unit
         return None
@@ -354,23 +377,25 @@ class WeatherEntity(Entity):
         return self._attr_humidity
 
     @property
+    def wind_speed(self) -> float | None:
+        """Return the wind_speed for backward compatibility."""
+        if self._override_wind_speed is not None:
+            return self._override_wind_speed
+        if hasattr(self, "_attr_wind_speed"):
+            self._override_wind_speed = self._attr_wind_speed
+            return self._attr_wind_speed
+        return None
+
+    @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
-        if self._override_wind_speed:
-            if hasattr(self, "_attr_wind_speed"):
-                return self._attr_wind_speed  # type: ignore[no-any-return, attr-defined]
-            if hasattr(self, "wind_speed"):
-                return self.wind_speed  # type: ignore[no-any-return, attr-defined]
+        if (wind_speed := self.wind_speed) is not None:
+            return wind_speed
         return self._attr_native_wind_speed
 
     @property
     def native_wind_speed_unit(self) -> str | None:
         """Return the native unit of measurement for wind speed."""
-        if self._override_wind_speed:
-            if hasattr(self, "_attr_wind_speed_unit"):
-                return self._attr_wind_speed_unit
-            if hasattr(self, "wind_speed_unit"):
-                return self.wind_speed_unit
         if hasattr(self, "_attr_native_wind_speed_unit"):
             return self._attr_native_wind_speed_unit
         return None
@@ -397,23 +422,25 @@ class WeatherEntity(Entity):
         return self._attr_ozone
 
     @property
+    def visibility(self) -> float | None:
+        """Return the visibility for backward compatibility."""
+        if self._override_visibility is not None:
+            return self._override_visibility
+        if hasattr(self, "_attr_visibility"):
+            self._override_visibility = self._attr_visibility
+            return self._attr_visibility
+        return None
+
+    @property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
-        if self._override_visibility:
-            if hasattr(self, "_attr_visibility"):
-                return self._attr_visibility  # type: ignore[no-any-return, attr-defined]
-            if hasattr(self, "visibility"):
-                return self.visibility  # type: ignore[no-any-return, attr-defined]
+        if (visibility := self.visibility) is not None:
+            return visibility
         return self._attr_native_visibility
 
     @property
     def native_visibility_unit(self) -> str | None:
         """Return the native unit of measurement for visibility."""
-        if self._override_visibility:
-            if hasattr(self, "_attr_visibility_unit"):
-                return self._attr_visibility_unit
-            if hasattr(self, "visibility_unit"):
-                return self.visibility_unit
         if hasattr(self, "_attr_native_visibility_unit"):
             return self._attr_native_visibility_unit
         return None
@@ -437,11 +464,6 @@ class WeatherEntity(Entity):
     @property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
-        if self._override_precipitation:
-            if hasattr(self, "_attr_precipitation_unit"):
-                return self._attr_precipitation_unit
-            if hasattr(self, "precipitation_unit"):
-                return self.precipitation_unit
         if hasattr(self, "_attr_native_precipitation_unit"):
             return self._attr_native_precipitation_unit
         return None
@@ -497,6 +519,16 @@ class WeatherEntity(Entity):
                     else round(value_temp, precision)
                 )
                 data[ATTR_WEATHER_TEMPERATURE_UNIT] = temp_unit
+        elif (temperature := self.native_temperature) is not None and (
+            self._override_temperature
+        ):
+            with suppress(ValueError):
+                temperature_f = float(temperature)
+                data[ATTR_WEATHER_TEMPERATURE] = (
+                    round(temperature_f)
+                    if precision == 0
+                    else round(temperature_f, precision)
+                )
 
         if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)
@@ -516,6 +548,12 @@ class WeatherEntity(Entity):
                 )
                 data[ATTR_WEATHER_PRESSURE] = round(value_pressure, ROUNDING_PRECISION)
                 data[ATTR_WEATHER_PRESSURE_UNIT] = pressure_unit
+        elif (pressure := self.native_pressure) is not None and (
+            self._override_pressure
+        ):
+            with suppress(ValueError):
+                pressure_f = float(pressure)
+                data[ATTR_WEATHER_PRESSURE] = round(pressure_f, ROUNDING_PRECISION)
 
         if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
@@ -534,6 +572,12 @@ class WeatherEntity(Entity):
                     value_wind_speed, ROUNDING_PRECISION
                 )
                 data[ATTR_WEATHER_WIND_SPEED_UNIT] = wind_speed_unit
+        elif (wind_speed := self.native_wind_speed) is not None and (
+            self._override_wind_speed
+        ):
+            with suppress(ValueError):
+                wind_speed_f = float(wind_speed)
+                data[ATTR_WEATHER_WIND_SPEED] = round(wind_speed_f, ROUNDING_PRECISION)
 
         if (
             (visibility := self.native_visibility) is not None
@@ -549,6 +593,15 @@ class WeatherEntity(Entity):
                     value_visibility, ROUNDING_PRECISION
                 )
                 data[ATTR_WEATHER_VISIBILITY_UNIT] = visibility_unit
+        elif (visibility := self.native_visibility) is not None and (
+            self._override_visibility
+        ):
+            with suppress(ValueError):
+                visibility_f = float(visibility)
+                data[ATTR_WEATHER_VISIBILITY] = round(visibility_f, ROUNDING_PRECISION)
+
+        if (precipitation_unit := self.precipitation_unit) is not None:
+            data[ATTR_WEATHER_PRECIPITATION_UNIT] = precipitation_unit
 
         if self.forecast is not None:
             forecast = []

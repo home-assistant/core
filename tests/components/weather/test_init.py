@@ -10,10 +10,15 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_WIND_SPEED,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_PRESSURE_UNIT,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_TEMPERATURE_UNIT,
     ATTR_WEATHER_VISIBILITY,
+    ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
     ROUNDING_PRECISION,
 )
 from homeassistant.const import (
@@ -251,3 +256,63 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
         expected_visibility
     )
+
+
+async def test_backwards_compability(
+    hass: HomeAssistant, enable_custom_integrations
+) -> None:
+    """Test custom unit."""
+    wind_speed_value = 5
+    wind_speed_unit = SPEED_METERS_PER_SECOND
+    pressure_value = 110
+    pressure_unit = PRESSURE_HPA
+    temperature_value = 20
+    temperature_unit = TEMP_CELSIUS
+    visibility_value = 11
+    visibility_unit = LENGTH_KILOMETERS
+    precipitation_value = 1
+    precipitation_unit = LENGTH_MILLIMETERS
+
+    platform: WeatherPlatform = getattr(hass.components, "test.weather")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockWeatherMockForecastCompat(
+            name="Test",
+            condition=ATTR_CONDITION_SUNNY,
+            temperature=temperature_value,
+            temperature_unit=temperature_unit,
+            wind_speed=wind_speed_value,
+            wind_speed_unit=wind_speed_unit,
+            pressure=pressure_value,
+            pressure_unit=pressure_unit,
+            visibility=visibility_value,
+            visibility_unit=visibility_unit,
+            precipitation=precipitation_value,
+            precipitation_unit=precipitation_unit,
+            unique_id="very_unique",
+        )
+    )
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(
+        hass, "weather", {"weather": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_METERS_PER_SECOND
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+        temperature_value, rel=0.1
+    )
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
+    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_HPA
+    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
+    assert state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == LENGTH_KILOMETERS
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
+        precipitation_value, rel=1e-2
+    )
+    assert state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == LENGTH_MILLIMETERS
