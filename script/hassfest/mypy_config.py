@@ -91,7 +91,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.camera",
     "homeassistant.components.onvif.config_flow",
     "homeassistant.components.onvif.device",
-    "homeassistant.components.onvif.event",
     "homeassistant.components.onvif.sensor",
     "homeassistant.components.philips_js",
     "homeassistant.components.philips_js.config_flow",
