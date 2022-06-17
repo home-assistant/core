@@ -17,7 +17,7 @@ from .const import (
     RECORDER_PROVIDER,
     SEGMENT_CONTAINER_FORMAT,
 )
-from .core import PROVIDERS, IdleTimer, Segment, StreamOutput
+from .core import PROVIDERS, IdleTimer, Segment, StreamOutput, StreamSettings
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,9 +121,14 @@ def recorder_save_worker(file_out: str, segments: deque[Segment]) -> None:
 class RecorderOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
+    ) -> None:
         """Initialize recorder output."""
-        super().__init__(hass, idle_timer)
+        super().__init__(hass, idle_timer, stream_settings)
         self.video_path: str
 
     @property

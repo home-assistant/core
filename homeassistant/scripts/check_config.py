@@ -13,6 +13,7 @@ from unittest.mock import patch
 
 from homeassistant import core
 from homeassistant.config import get_default_config_dir
+from homeassistant.config_entries import ConfigEntries
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry, device_registry, entity_registry
 from homeassistant.helpers.check_config import async_check_ha_config_file
@@ -228,6 +229,7 @@ async def async_check_config(config_dir):
     """Check the HA config."""
     hass = core.HomeAssistant()
     hass.config.config_dir = config_dir
+    hass.config_entries = ConfigEntries(hass, {})
     await area_registry.async_load(hass)
     await device_registry.async_load(hass)
     await entity_registry.async_load(hass)
