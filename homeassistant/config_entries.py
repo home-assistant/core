@@ -10,7 +10,7 @@ from datetime import timedelta
 from enum import Enum
 import functools
 import logging
-from types import MappingProxyType, MethodType
+from types import MappingProxyType, MethodType, ModuleType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
@@ -285,6 +285,13 @@ class ConfigEntry:
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
 
+    @callback
+    def _async_set_supported(self, component: ModuleType) -> None:
+        self.supports_unload = hasattr(component, "async_unload_entry")
+        self.supports_remove_device = hasattr(
+            component, "async_remove_config_entry_device"
+        )
+
     async def async_setup(
         self,
         hass: HomeAssistant,
@@ -319,11 +326,7 @@ class ConfigEntry:
             return
 
         if self.domain == integration.domain:
-            self.supports_unload = hasattr(component, "async_unload_entry")
-            self.supports_remove_device = hasattr(
-                component, "async_remove_config_entry_device"
-            )
-
+            self._async_set_supported(component)
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -466,6 +469,8 @@ class ConfigEntry:
         component = integration.get_component()
 
         if integration.domain == self.domain:
+            self._async_set_supported(component)
+
             if not self.state.recoverable:
                 return False
 
