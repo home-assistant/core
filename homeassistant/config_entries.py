@@ -10,7 +10,7 @@ from datetime import timedelta
 from enum import Enum
 import functools
 import logging
-from types import MappingProxyType, MethodType
+from types import MappingProxyType, MethodType, ModuleType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
@@ -285,6 +285,13 @@ class ConfigEntry:
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
 
+    @callback
+    def _async_set_supported(self, component: ModuleType) -> None:
+        self.supports_unload = hasattr(component, "async_unload_entry")
+        self.supports_remove_device = hasattr(
+            component, "async_remove_config_entry_device"
+        )
+
     async def async_setup(
         self,
         hass: HomeAssistant,
@@ -304,11 +311,6 @@ class ConfigEntry:
         if self.domain == integration.domain:
             self.state = ConfigEntryState.SETUP_IN_PROGRESS
 
-        self.supports_unload = await support_entry_unload(hass, self.domain)
-        self.supports_remove_device = await support_remove_from_device(
-            hass, self.domain
-        )
-
         try:
             component = integration.get_component()
         except ImportError as err:
@@ -324,6 +326,7 @@ class ConfigEntry:
             return
 
         if self.domain == integration.domain:
+            self._async_set_supported(component)
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -465,6 +468,12 @@ class ConfigEntry:
 
         component = integration.get_component()
 
+        # Tests that rely on calling hass.config_entries.async_forward_entry_unload
+        # need this to be called. If we are able to refactor these away in the future,
+        # we can move self._async_set_supported(component) into the if block
+        # of integration.domain == self.domain
+        self._async_set_supported(component)
+
         if integration.domain == self.domain:
             if not self.state.recoverable:
                 return False
@@ -476,9 +485,7 @@ class ConfigEntry:
                 self.reason = None
                 return True
 
-        supports_unload = hasattr(component, "async_unload_entry")
-
-        if not supports_unload:
+        if not self.supports_unload:
             if integration.domain == self.domain:
                 self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unload not supported"
@@ -1022,16 +1029,24 @@ class ConfigEntries:
         """
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
-
         if not entry.state.recoverable:
             raise OperationNotAllowed
+        if (
+            entry.state != ConfigEntryState.NOT_LOADED
+            and not await support_entry_unload(self.hass, entry.domain)
+        ):
+            # If its already loaded and it doesn't support
+            # unloads let async_unload take care of handling
+            # this situation
+            return await self.async_unload(entry_id)
 
         ratelimit = self._reload_ratelimit
         now = dt_util.utcnow()
 
         @callback
         def _async_future_reload() -> None:
-            asyncio.create_task(self._async_reload(entry_id))
+            _LOGGER.debug("Trigging deferred reload of %s", entry_id)
+            self.hass.async_create_task(self._async_reload(entry_id))
 
         if rate_limit_expire_time := ratelimit.async_schedule_action(
             entry_id, RELOAD_COOLDOWN, now, _async_future_reload
@@ -1041,13 +1056,14 @@ class ConfigEntries:
                 entry_id,
                 rate_limit_expire_time,
             )
-            return entry.state.recoverable and not entry.disabled_by
+            return True
 
         ratelimit.async_triggered(entry_id, now)
         return await self._async_reload(entry_id)
 
     async def _async_reload(self, entry_id: str) -> bool:
         """Reload the entry."""
+        _LOGGER.debug("_async_reload running for %s", entry_id)
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
 
@@ -1056,7 +1072,11 @@ class ConfigEntries:
         if not unload_result or entry.disabled_by:
             return unload_result
 
-        return await self.async_setup(entry_id)
+        result = await self.async_setup(entry_id)
+        _LOGGER.debug(
+            "_async_reload completed for %s with result: %s", entry_id, result
+        )
+        return result
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None

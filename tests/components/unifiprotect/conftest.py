@@ -33,7 +33,12 @@ import homeassistant.util.dt as dt_util
 
 from . import _patch_discovery
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_deferred_config_entry_reloads,
+    async_fire_time_changed,
+    load_fixture,
+)
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
 
@@ -266,7 +271,7 @@ async def enable_entity(
 
     updated_entity = entity_registry.async_update_entity(entity_id, disabled_by=None)
     assert not updated_entity.disabled
-    await hass.config_entries.async_reload(entry_id)
+    await async_fire_deferred_config_entry_reloads(hass)
     await hass.async_block_till_done()
 
     return updated_entity
