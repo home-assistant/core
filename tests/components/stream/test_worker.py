@@ -13,6 +13,7 @@ pushed to the output streams. The packet sequence can be used to exercise
 failure modes or corner cases like how out of order packets are handled.
 """
 
+import asyncio
 import fractions
 import io
 import logging
@@ -33,6 +34,7 @@ from homeassistant.components.stream.const import (
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     PACKETS_TO_WAIT_FOR_AUDIO,
+    RECORDER_PROVIDER,
     SEGMENT_DURATION_ADJUSTER,
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
@@ -732,7 +734,23 @@ async def test_worker_log(hass, caplog):
     assert "https://abcd:efgh@foo.bar" not in caplog.text
 
 
-async def test_durations(hass, record_worker_sync):
+@pytest.fixture
+def worker_finished_stream():
+    """Fixture that helps call a stream and wait for the worker to finish."""
+    worker_finished = asyncio.Event()
+
+    class MockStream(Stream):
+        """Mock Stream so we can patch remove_provider."""
+
+        async def remove_provider(self, provider):
+            """Add a finished event to Stream.remove_provider."""
+            await Stream.remove_provider(self, provider)
+            worker_finished.set()
+
+    return worker_finished, MockStream
+
+
+async def test_durations(hass, worker_finished_stream):
     """Test that the duration metadata matches the media."""
 
     # Use a target part duration which has a slight mismatch
@@ -751,13 +769,17 @@ async def test_durations(hass, record_worker_sync):
     )
 
     source = generate_h264_video(duration=SEGMENT_DURATION + 1)
-    stream = create_stream(hass, source, {}, stream_label="camera")
+    worker_finished, mock_stream = worker_finished_stream
 
-    # use record_worker_sync to grab output segments
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
+        stream = create_stream(hass, source, {}, stream_label="camera")
 
-    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
+    await stream.start()
+    await worker_finished.wait()
+
+    complete_segments = list(recorder_output.get_segments())[:-1]
+
     assert len(complete_segments) >= 1
 
     # check that the Part duration metadata matches the durations in the media
@@ -803,12 +825,10 @@ async def test_durations(hass, record_worker_sync):
             abs_tol=1e-6,
         )
 
-    await record_worker_sync.join()
-
     await stream.stop()
 
 
-async def test_has_keyframe(hass, record_worker_sync, h264_video):
+async def test_has_keyframe(hass, h264_video, worker_finished_stream):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(
         hass,
@@ -824,13 +844,17 @@ async def test_has_keyframe(hass, record_worker_sync, h264_video):
         },
     )
 
-    stream = create_stream(hass, h264_video, {}, stream_label="camera")
+    worker_finished, mock_stream = worker_finished_stream
 
-    # use record_worker_sync to grab output segments
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
+        stream = create_stream(hass, h264_video, {}, stream_label="camera")
 
-    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
+    await stream.start()
+    await worker_finished.wait()
+
+    complete_segments = list(recorder_output.get_segments())[:-1]
+
     assert len(complete_segments) >= 1
 
     # check that the Part has_keyframe metadata matches the keyframes in the media
@@ -843,12 +867,10 @@ async def test_has_keyframe(hass, record_worker_sync, h264_video):
             av_part.close()
             assert part.has_keyframe == media_has_keyframe
 
-    await record_worker_sync.join()
-
     await stream.stop()
 
 
-async def test_h265_video_is_hvc1(hass, record_worker_sync):
+async def test_h265_video_is_hvc1(hass, worker_finished_stream):
     """Test that a h265 video gets muxed as hvc1."""
     await async_setup_component(
         hass,
@@ -863,13 +885,16 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     )
 
     source = generate_h265_video()
-    stream = create_stream(hass, source, {}, stream_label="camera")
 
-    # use record_worker_sync to grab output segments
-    with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
+    worker_finished, mock_stream = worker_finished_stream
+    with patch("homeassistant.components.stream.Stream", wraps=mock_stream):
+        stream = create_stream(hass, source, {}, stream_label="camera")
 
-    complete_segments = list(await record_worker_sync.get_segments())[:-1]
+    recorder_output = stream.add_provider(RECORDER_PROVIDER, timeout=30)
+    await stream.start()
+    await worker_finished.wait()
+
+    complete_segments = list(recorder_output.get_segments())[:-1]
     assert len(complete_segments) >= 1
 
     segment = complete_segments[0]
@@ -877,8 +902,6 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     av_part = av.open(io.BytesIO(segment.init + part.data))
     assert av_part.streams.video[0].codec_tag == "hvc1"
     av_part.close()
-
-    await record_worker_sync.join()
 
     await stream.stop()
 
@@ -891,7 +914,7 @@ async def test_h265_video_is_hvc1(hass, record_worker_sync):
     }
 
 
-async def test_get_image(hass, record_worker_sync):
+async def test_get_image(hass):
     """Test that the has_keyframe metadata matches the media."""
     await async_setup_component(hass, "stream", {"stream": {}})
 
@@ -904,13 +927,10 @@ async def test_get_image(hass, record_worker_sync):
         mock_turbo_jpeg_singleton.instance.return_value = mock_turbo_jpeg()
         stream = create_stream(hass, source, {})
 
-    # use record_worker_sync to grab output segments
     with patch.object(hass.config, "is_allowed_path", return_value=True):
-        await stream.async_record("/example/path")
-
+        make_recording = hass.async_create_task(stream.async_record("/example/path"))
+        await make_recording
     assert stream._keyframe_converter._image is None
-
-    await record_worker_sync.join()
 
     assert await stream.async_get_image() == EMPTY_8_6_JPEG
 

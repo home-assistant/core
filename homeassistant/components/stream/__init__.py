@@ -502,7 +502,6 @@ class Stream:
         recorder.video_path = video_path
 
         await self.start()
-        self._logger.debug("Started a stream recording of %s seconds", duration)
 
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
@@ -511,6 +510,9 @@ class Stream:
             # Wait for latest segment, then add the lookback
             await hls.recv()
             recorder.prepend(list(hls.get_segments())[-num_segments - 1 : -1])
+
+        self._logger.debug("Started a stream recording of %s seconds", duration)
+        await recorder.async_record()
 
     async def async_get_image(
         self,
