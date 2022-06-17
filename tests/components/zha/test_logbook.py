@@ -1,11 +1,13 @@
 """ZHA logbook describe events tests."""
 
+from unittest.mock import patch
+
 import pytest
 import zigpy.profiles.zha
 import zigpy.zcl.clusters.general as general
 
 from homeassistant.components.zha.core.const import ZHA_EVENT
-from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID
+from homeassistant.const import CONF_DEVICE_ID, CONF_UNIQUE_ID, Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
@@ -27,6 +29,13 @@ LONG_PRESS = "remote_button_long_press"
 LONG_RELEASE = "remote_button_long_release"
 UP = "up"
 DOWN = "down"
+
+
+@pytest.fixture(autouse=True)
+def sensor_platform_only():
+    """Only setup the sensor and required base platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
+        yield
 
 
 @pytest.fixture
