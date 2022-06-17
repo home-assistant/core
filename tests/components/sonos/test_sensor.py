@@ -1,19 +1,20 @@
 """Tests for the Sonos battery sensor platform."""
-from datetime import timedelta
 from unittest.mock import PropertyMock, patch
 
 from soco.exceptions import NotSupportedException
 
 from homeassistant.components.sensor import SCAN_INTERVAL
 from homeassistant.components.sonos.binary_sensor import ATTR_BATTERY_POWER_SOURCE
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as ent_reg
 from homeassistant.util import dt as dt_util
 
 from .conftest import SonosMockEvent
 
-from tests.common import async_fire_time_changed
+from tests.common import (
+    async_fire_deferred_config_entry_reloads,
+    async_fire_time_changed,
+)
 
 
 async def test_entity_registry_unsupported(hass, async_setup_sonos, soco):
@@ -199,14 +200,9 @@ async def test_favorites_sensor(hass, async_autosetup_sonos, soco):
     empty_event = SonosMockEvent(soco, service, {})
     subscription = service.subscribe.return_value
     subscription.callback(event=empty_event)
-    await hass.async_block_till_done()
 
     # Reload the integration to enable the sensor
-    async_fire_time_changed(
-        hass,
-        dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-    await hass.async_block_till_done()
+    await async_fire_deferred_config_entry_reloads(hass)
 
     favorites_updated_event = SonosMockEvent(
         soco, service, {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"}
