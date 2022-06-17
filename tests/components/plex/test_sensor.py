@@ -6,7 +6,6 @@ from unittest.mock import patch
 import requests.exceptions
 
 from homeassistant.components.plex.const import PLEX_UPDATE_LIBRARY_SIGNAL
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -115,13 +114,11 @@ async def test_library_sensor_values(
 
     # Enable sensor and validate values
     entity_registry = er.async_get(hass)
-    entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_tv_shows", disabled_by=None
-    )
-    await async_fire_reload_cooldown(hass)
-
     media = [MockPlexTVEpisode()]
     with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
+        entity_registry.async_update_entity(
+            entity_id="sensor.plex_server_1_library_tv_shows", disabled_by=None
+        )
         await hass.async_block_till_done()
 
     library_tv_sensor = hass.states.get("sensor.plex_server_1_library_tv_shows")
@@ -186,11 +183,6 @@ async def test_library_sensor_values(
     )
     await hass.async_block_till_done()
 
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-
     media = [MockPlexMovie()]
     with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
         await hass.async_block_till_done()
@@ -220,16 +212,9 @@ async def test_library_sensor_values(
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_music", disabled_by=None
     )
-    await hass.async_block_till_done()
-
-    async_fire_time_changed(
-        hass,
-        dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-    )
-
     media = [MockPlexMusic()]
     with patch("plexapi.library.LibrarySection.recentlyAdded", return_value=media):
-        await hass.async_block_till_done()
+        await async_fire_reload_cooldown(hass)
 
     library_music_sensor = hass.states.get("sensor.plex_server_1_library_music")
     assert library_music_sensor.state == "1"
