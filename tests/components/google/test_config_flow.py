@@ -327,24 +327,58 @@ async def test_exchange_error(
     assert len(entries) == 1
 
 
-async def test_existing_config_entry(
+@pytest.mark.parametrize("google_config", [None])
+async def test_multiple_config_entries(
     hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    config: dict[str, Any],
     config_entry: MockConfigEntry,
     component_setup: ComponentSetup,
 ) -> None:
-    """Test can't configure when config entry already exists."""
+    """Test successful creds setup."""
+    assert await component_setup()
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "imported-cred"
+    )
+
+    # Load a config entry
     config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
 
-    assert await component_setup()
-
+    # Start a new config flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "abort"
-    assert result.get("reason") == "already_configured"
+    assert result.get("type") == "progress"
+    assert result.get("step_id") == "auth"
+    assert "description_placeholders" in result
+    assert "url" in result["description_placeholders"]
+
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        # Run one tick to invoke the credential exchange check
+        now = utcnow()
+        await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(
+            flow_id=result["flow_id"]
+        )
+    assert result.get("type") == "create_entry"
+    assert result.get("title") == EMAIL_ADDRESS
+    assert len(mock_setup.mock_calls) == 1
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
 
 
 async def test_missing_configuration(
