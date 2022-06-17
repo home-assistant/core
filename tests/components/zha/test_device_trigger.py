@@ -1,6 +1,7 @@
 """ZHA device automation trigger tests."""
 from datetime import timedelta
 import time
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
@@ -8,6 +9,7 @@ import zigpy.zcl.clusters.general as general
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.const import Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -34,6 +36,13 @@ DOUBLE_PRESS = "remote_button_double_press"
 SHORT_PRESS = "remote_button_short_press"
 LONG_PRESS = "remote_button_long_press"
 LONG_RELEASE = "remote_button_long_release"
+
+
+@pytest.fixture(autouse=True)
+def sensor_platforms_only():
+    """Only setup the sensor platform and required base platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", (Platform.SENSOR,)):
+        yield
 
 
 def _same_lists(list_a, list_b):
