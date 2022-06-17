@@ -31,6 +31,8 @@ def required_platforms_only():
         "homeassistant.components.zha.PLATFORMS",
         (
             Platform.BINARY_SENSOR,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
             Platform.SELECT,
             Platform.SENSOR,
             Platform.SIREN,
