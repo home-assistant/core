@@ -10,7 +10,6 @@ import zigpy.zdo
 
 # pylint: disable=invalid-name
 CALLABLE_T = TypeVar("CALLABLE_T", bound=Callable)
-ChannelsType = "Channels"
 ChannelPoolType = "ChannelPool"
 ClientChannelType = "ClientChannel"
 ZDOChannelType = "ZDOChannel"
@@ -29,7 +28,6 @@ if TYPE_CHECKING:
     from . import channels, gateway, group
     from .channels import base as base_channels
 
-    ChannelsType = channels.Channels
     ChannelPoolType = channels.ChannelPool
     ClientChannelType = base_channels.ClientChannel
     ZDOChannelType = base_channels.ZDOChannel

@@ -155,12 +155,12 @@ class ZHADevice(LogMixin):
         return self._zigpy_device
 
     @property
-    def channels(self) -> zha_typing.ChannelsType:
+    def channels(self) -> channels.Channels:
         """Return ZHA channels."""
         return self._channels
 
     @channels.setter
-    def channels(self, value: zha_typing.ChannelsType) -> None:
+    def channels(self, value: channels.Channels) -> None:
         """Channels setter."""
         assert isinstance(value, channels.Channels)
         self._channels = value
