@@ -27,7 +27,13 @@ def required_platforms_only():
     """Only setup the required platform and required base platforms to speed up tests."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
-        (Platform.SENSOR, Platform.SELECT, Platform.SWITCH, Platform.BINARY_SENSOR),
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.SENSOR,
+            Platform.SELECT,
+            Platform.SWITCH,
+            Platform.BINARY_SENSOR,
+        ),
     ):
         yield
 
