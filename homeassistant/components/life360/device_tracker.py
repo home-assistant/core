@@ -87,7 +87,7 @@ async def async_setup_entry(
             tracked_by_account = tracked_members.get(member_id)
             if new_member := not tracked_by_account:
                 tracked_members[member_id] = entry.unique_id
-                LOGGER.info("Member: %s", member[ATTR_NAME])
+                LOGGER.debug("Member: %s", member[ATTR_NAME])
             if (
                 new_member
                 or tracked_by_account == entry.unique_id

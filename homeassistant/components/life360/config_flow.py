@@ -19,7 +19,6 @@ from .const import (
     CONF_MAX_GPS_ACCURACY,
     CONF_SCAN_INTERVAL,
     DEFAULT_OPTIONS,
-    DEFAULT_SCAN_INTERVAL_SEC,
     DOMAIN,
     LOGGER,
     OPTIONS,
@@ -154,12 +153,12 @@ class Life360OptionsFlow(OptionsFlow):
 
 def _account_options_schema(options: Mapping[str, Any]) -> dict[vol.Marker, Any]:
     """Create schema for account options form."""
-    def_limit_gps_acc = CONF_MAX_GPS_ACCURACY in options
-    def_max_gps = options.get(CONF_MAX_GPS_ACCURACY, vol.UNDEFINED)
-    def_set_drive_speed = CONF_DRIVING_SPEED in options
-    def_speed = options.get(CONF_DRIVING_SPEED, vol.UNDEFINED)
-    def_scan_interval = options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL_SEC)
-    def_show_driving = options.get(SHOW_DRIVING, vol.UNDEFINED)
+    def_limit_gps_acc = options[CONF_MAX_GPS_ACCURACY] is not None
+    def_max_gps = options[CONF_MAX_GPS_ACCURACY] or vol.UNDEFINED
+    def_set_drive_speed = options[CONF_DRIVING_SPEED] is not None
+    def_speed = options[CONF_DRIVING_SPEED] or vol.UNDEFINED
+    def_scan_interval = options[CONF_SCAN_INTERVAL]
+    def_show_driving = options[SHOW_DRIVING]
 
     return {
         vol.Required("limit_gps_acc", default=def_limit_gps_acc): bool,
