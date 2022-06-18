@@ -1,11 +1,7 @@
 """The test for the sensibo binary sensor platform."""
 from __future__ import annotations
 
-<<<<<<< HEAD
 from datetime import datetime, timedelta
-=======
-from datetime import timedelta
->>>>>>> 2303cc034d (Pure Boost Service)
 from unittest.mock import AsyncMock, patch
 
 from pysensibo.model import SensiboData
@@ -25,19 +21,15 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.components.sensibo.climate import (
-<<<<<<< HEAD
-    ATTR_MINUTES,
-    SERVICE_ASSUME_STATE,
-    SERVICE_TIMER,
-=======
     ATTR_AC_INTEGRATION,
     ATTR_GEO_INTEGRATION,
     ATTR_INDOOR_INTEGRATION,
+    ATTR_MINUTES,
     ATTR_OUTDOOR_INTEGRATION,
     ATTR_SENSITIVITY,
     SERVICE_ASSUME_STATE,
     SERVICE_PURE_BOOST,
->>>>>>> 2303cc034d (Pure Boost Service)
+    SERVICE_TIMER,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
@@ -694,22 +686,14 @@ async def test_climate_no_fan_no_swing(
     assert state.attributes["swing_modes"] is None
 
 
-<<<<<<< HEAD
 async def test_climate_set_timer(
-=======
-async def test_climate_pure_boost(
->>>>>>> 2303cc034d (Pure Boost Service)
     hass: HomeAssistant,
     entity_registry_enabled_by_default: AsyncMock,
     load_int: ConfigEntry,
     monkeypatch: pytest.MonkeyPatch,
     get_data: SensiboData,
 ) -> None:
-<<<<<<< HEAD
     """Test the Sensibo climate Set Timer service."""
-=======
-    """Test the Sensibo climate assumed state service."""
->>>>>>> 2303cc034d (Pure Boost Service)
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -721,21 +705,14 @@ async def test_climate_pure_boost(
         )
         await hass.async_block_till_done()
 
-<<<<<<< HEAD
     state1 = hass.states.get("climate.hallway")
     assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
-=======
-    state1 = hass.states.get("climate.kitchen")
-    state2 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
-    assert state2.state == "off"
->>>>>>> 2303cc034d (Pure Boost Service)
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
         return_value=get_data,
     ), patch(
-<<<<<<< HEAD
         "homeassistant.components.sensibo.util.SensiboClient.async_set_timer",
         return_value={"status": "success", "result": {"id": "SzTGE4oZ4D"}},
     ):
@@ -796,48 +773,15 @@ async def test_climate_pure_boost(
             {
                 ATTR_ENTITY_ID: state1.entity_id,
                 ATTR_STATE: "off",
-=======
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
-        return_value={
-            "status": "success",
-            "result": {
-                "enabled": True,
-                "sensitivity": "S",
-                "measurements_integration": True,
-                "ac_integration": False,
-                "geo_integration": False,
-                "prime_integration": True,
-            },
-        },
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_PURE_BOOST,
-            {
-                ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: True,
-                ATTR_AC_INTEGRATION: False,
-                ATTR_GEO_INTEGRATION: False,
-                ATTR_INDOOR_INTEGRATION: True,
-                ATTR_OUTDOOR_INTEGRATION: True,
-                ATTR_SENSITIVITY: "Sensitive",
->>>>>>> 2303cc034d (Pure Boost Service)
             },
             blocking=True,
         )
     await hass.async_block_till_done()
 
-<<<<<<< HEAD
     monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_on", False)
     monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_id", None)
     monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_state_on", None)
     monkeypatch.setattr(get_data.parsed["ABC999111"], "timer_time", None)
-=======
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", True)
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_measure_integration", True)
-    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_prime_integration", True)
->>>>>>> 2303cc034d (Pure Boost Service)
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -849,7 +793,6 @@ async def test_climate_pure_boost(
         )
         await hass.async_block_till_done()
 
-<<<<<<< HEAD
     assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
 
@@ -968,7 +911,79 @@ async def test_climate_set_timer_failures(
                 blocking=True,
             )
     await hass.async_block_till_done()
-=======
+
+
+async def test_climate_pure_boost(
+    hass: HomeAssistant,
+    entity_registry_enabled_by_default: AsyncMock,
+    load_int: ConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the Sensibo climate assumed state service."""
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("climate.kitchen")
+    state2 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
+    assert state2.state == "off"
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+        return_value={
+            "status": "success",
+            "result": {
+                "enabled": True,
+                "sensitivity": "S",
+                "measurements_integration": True,
+                "ac_integration": False,
+                "geo_integration": False,
+                "prime_integration": True,
+            },
+        },
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PURE_BOOST,
+            {
+                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_STATE: True,
+                ATTR_AC_INTEGRATION: False,
+                ATTR_GEO_INTEGRATION: False,
+                ATTR_INDOOR_INTEGRATION: True,
+                ATTR_OUTDOOR_INTEGRATION: True,
+                ATTR_SENSITIVITY: "Sensitive",
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", True)
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_measure_integration", True)
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_prime_integration", True)
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
     state1 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
     state2 = hass.states.get(
         "binary_sensor.kitchen_pure_boost_linked_with_indoor_air_quality"
@@ -981,4 +996,3 @@ async def test_climate_set_timer_failures(
     assert state2.state == "on"
     assert state3.state == "on"
     assert state4.state == "s"
->>>>>>> 2303cc034d (Pure Boost Service)
