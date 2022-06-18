@@ -76,6 +76,11 @@ class MockRequest:
         """Return the body as text."""
         return self._text
 
+    @property
+    def body_exists(self) -> bool:
+        """Return True if request has HTTP BODY, False otherwise."""
+        return bool(self._text)
+
 
 def serialize_response(response: web.Response) -> dict[str, Any]:
     """Serialize an aiohttp response to a dictionary."""
