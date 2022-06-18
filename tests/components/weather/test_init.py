@@ -20,12 +20,16 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED,
     ATTR_WEATHER_WIND_SPEED_UNIT,
     ROUNDING_PRECISION,
+    round_temperature,
 )
 from homeassistant.const import (
     LENGTH_INCHES,
     LENGTH_KILOMETERS,
     LENGTH_MILES,
     LENGTH_MILLIMETERS,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_PA,
@@ -394,3 +398,11 @@ async def test_backwards_compatibility_convert_temperature(
         expected_temperature, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_FAHRENHEIT
+
+
+async def test_backwards_compatibility_round_temperature(hass: HomeAssistant) -> None:
+    """Test backward compatibility for rounding temperature."""
+
+    assert round_temperature(20.3, PRECISION_HALVES) == 20.5
+    assert round_temperature(20.3, PRECISION_TENTHS) == 20.3
+    assert round_temperature(20.3, PRECISION_WHOLE) == 20

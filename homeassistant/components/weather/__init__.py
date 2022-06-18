@@ -119,7 +119,7 @@ VALID_UNITS_VISIBILITY: tuple[str, ...] = (
     LENGTH_KILOMETERS,
     LENGTH_MILES,
 )
-VALID_UNITS_SPEED: tuple[str, ...] = (
+VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
     SPEED_METERS_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
     SPEED_MILES_PER_HOUR,
@@ -138,7 +138,7 @@ VALID_UNITS: dict[str, tuple[str, ...]] = {
     CONF_TEMPERATURE_UOM: VALID_UNITS_TEMPERATURE,
     CONF_VISIBILITY_UOM: VALID_UNITS_VISIBILITY,
     CONF_PRECIPITATION_UOM: VALID_UNITS_PRECIPITATION,
-    CONF_WIND_SPEED_UOM: VALID_UNITS_SPEED,
+    CONF_WIND_SPEED_UOM: VALID_UNITS_WIND_SPEED,
 }
 
 
@@ -208,17 +208,35 @@ class WeatherEntity(Entity):
     _attr_humidity: float | None = None
     _attr_ozone: float | None = None
     _attr_precision: float
-    _attr_pressure: float | None = None  # Provide backwards compatibility
-    _attr_pressure_unit: str | None = None  # Provide backwards compatibility
+    _attr_pressure: float | None = (
+        None  # Provide backwards compatibility. Use _attr_native_pressure
+    )
+    _attr_pressure_unit: str | None = (
+        None  # Provide backwards compatibility. Use _attr_native_pressure_unit
+    )
     _attr_state: None = None
-    _attr_temperature: float | None = None  # Provide backwards compatibility
-    _attr_temperature_unit: str | None = None  # Provide backwards compatibility
-    _attr_visibility: float | None = None  # Provide backwards compatibility
-    _attr_visibility_unit: str | None = None  # Provide backwards compatibility
-    _attr_precipitation_unit: str | None = None  # Provide backwards compatibility
+    _attr_temperature: float | None = (
+        None  # Provide backwards compatibility. Use _attr_native_temperature
+    )
+    _attr_temperature_unit: str | None = (
+        None  # Provide backwards compatibility. Use _attr_native_temperature_unit
+    )
+    _attr_visibility: float | None = (
+        None  # Provide backwards compatibility. Use _attr_native_visibility
+    )
+    _attr_visibility_unit: str | None = (
+        None  # Provide backwards compatibility. Use _attr_native_visibility_unit
+    )
+    _attr_precipitation_unit: str | None = (
+        None  # Provide backwards compatibility. Use _attr_native_precipitation_unit
+    )
     _attr_wind_bearing: float | str | None = None
-    _attr_wind_speed: float | None = None  # Provide backwards compatibility
-    _attr_wind_speed_unit: str | None = None  # Provide backwards compatibility
+    _attr_wind_speed: float | None = (
+        None  # Provide backwards compatibility. Use _attr_native_wind_speed
+    )
+    _attr_wind_speed_unit: str | None = (
+        None  # Provide backwards compatibility. Use _attr_native_wind_speed_unit
+    )
 
     _attr_native_pressure: float | None = None
     _attr_native_pressure_unit: str | None = None
@@ -237,56 +255,58 @@ class WeatherEntity(Entity):
     _weather_option_precipitation_uom: str | None = None
     _weather_option_wind_speed_uom: str | None = None
 
-    _override: bool = False  # Override for backward compatibility
+    _override: bool = False  # Override for backward compatibility check
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
         super().__init_subclass__(**kwargs)
         _reported = False
-        for method in (
-            "_attr_temperature",
-            "temperature",
-            "_attr_temperature_unit",
-            "temperature_unit",
-            "_attr_pressure",
-            "pressure",
-            "_attr_pressure_unit",
-            "pressure_unit",
-            "_attr_wind_speed",
-            "wind_speed",
-            "_attr_wind_speed_unit",
-            "wind_speed_unit",
-            "_attr_visibility",
-            "visibility",
-            "_attr_visibility_unit",
-            "visibility_unit",
-            "_attr_precipitation_unit",
-            "precipitation_unit",
+        if any(
+            method in cls.__dict__
+            for method in (
+                "_attr_temperature",
+                "temperature",
+                "_attr_temperature_unit",
+                "temperature_unit",
+                "_attr_pressure",
+                "pressure",
+                "_attr_pressure_unit",
+                "pressure_unit",
+                "_attr_wind_speed",
+                "wind_speed",
+                "_attr_wind_speed_unit",
+                "wind_speed_unit",
+                "_attr_visibility",
+                "visibility",
+                "_attr_visibility_unit",
+                "visibility_unit",
+                "_attr_precipitation_unit",
+                "precipitation_unit",
+            )
         ):
-            if method in cls.__dict__:
-                setattr(cls, "_override", True)
-                if _reported is False:
-                    module = inspect.getmodule(cls)
-                    _reported = True
-                    if (
-                        module
-                        and module.__file__
-                        and "custom_components" in module.__file__
-                    ):
-                        report_issue = "report it to the custom component author."
-                    else:
-                        report_issue = (
-                            "create a bug report at "
-                            "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
-                        )
-                    _LOGGER.warning(
-                        "%s::%s is overriding deprecated methods on an instance of "
-                        "WeatherEntity, this is not valid and will be unsupported "
-                        "from Home Assistant 2022.10. Please %s",
-                        cls.__module__,
-                        cls.__name__,
-                        report_issue,
+            setattr(cls, "_override", True)
+            if _reported is False:
+                module = inspect.getmodule(cls)
+                _reported = True
+                if (
+                    module
+                    and module.__file__
+                    and "custom_components" in module.__file__
+                ):
+                    report_issue = "report it to the custom component author."
+                else:
+                    report_issue = (
+                        "create a bug report at "
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue"
                     )
+                _LOGGER.warning(
+                    "%s::%s is overriding deprecated methods on an instance of "
+                    "WeatherEntity, this is not valid and will be unsupported "
+                    "from Home Assistant 2022.10. Please %s",
+                    cls.__module__,
+                    cls.__name__,
+                    report_issue,
+                )
 
     async def async_internal_added_to_hass(self) -> None:
         """Call when the sensor entity is added to hass."""
