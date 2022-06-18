@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import NamedTuple
 
 from miio.airfresh import LedBrightness as AirfreshLedBrightness
 from miio.airfresh_t2017 import (
@@ -64,29 +65,56 @@ class XiaomiMiioSelectDescription(SelectEntityDescription):
     options: tuple = ()
 
 
+class AttributeEnumMapping(NamedTuple):
+    """Class to mapping Attribute to Enum Class."""
+
+    attr_name: str
+    options: type
+
+
 MODEL_TO_ATTR_MAP: dict[str, list] = {
     MODEL_AIRFRESH_T2017: [
-        (ATTR_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation),
-        (ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
+        AttributeEnumMapping(ATTR_DISPLAY_ORIENTATION, AirfreshT2017DisplayOrientation),
+        AttributeEnumMapping(ATTR_PTC_LEVEL, AirfreshT2017PtcLevel),
     ],
-    MODEL_AIRFRESH_VA2: [(ATTR_LED_BRIGHTNESS, AirfreshLedBrightness)],
-    MODEL_AIRHUMIDIFIER_CA1: [(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)],
+    MODEL_AIRFRESH_VA2: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirfreshLedBrightness)
+    ],
+    MODEL_AIRHUMIDIFIER_CA1: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
+    ],
     MODEL_AIRHUMIDIFIER_CA4: [
-        (ATTR_LED_BRIGHTNESS_HUMIDIFIER_MIOT, AirhumidifierMiotLedBrightness)
+        AttributeEnumMapping(
+            ATTR_LED_BRIGHTNESS_HUMIDIFIER_MIOT, AirhumidifierMiotLedBrightness
+        )
     ],
-    MODEL_AIRHUMIDIFIER_CB1: [(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)],
-    MODEL_AIRHUMIDIFIER_V1: [(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)],
-    MODEL_AIRPURIFIER_3: [(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)],
-    MODEL_AIRPURIFIER_3H: [(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)],
-    MODEL_AIRPURIFIER_M1: [(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)],
-    MODEL_AIRPURIFIER_M2: [(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)],
-    MODEL_AIRPURIFIER_PROH: [(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)],
-    MODEL_FAN_SA1: [(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
-    MODEL_FAN_V2: [(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
-    MODEL_FAN_V3: [(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
-    MODEL_FAN_ZA1: [(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
-    MODEL_FAN_ZA3: [(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
-    MODEL_FAN_ZA4: [(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
+    MODEL_AIRHUMIDIFIER_CB1: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
+    ],
+    MODEL_AIRHUMIDIFIER_V1: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_3: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_3H: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_M1: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_M2: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierLedBrightness)
+    ],
+    MODEL_AIRPURIFIER_PROH: [
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirpurifierMiotLedBrightness)
+    ],
+    MODEL_FAN_SA1: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
+    MODEL_FAN_V2: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
+    MODEL_FAN_V3: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
+    MODEL_FAN_ZA1: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
+    MODEL_FAN_ZA3: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
+    MODEL_FAN_ZA4: [AttributeEnumMapping(ATTR_LED_BRIGHTNESS, FanLedBrightness)],
 }
 
 SELECTOR_TYPES = (
@@ -162,7 +190,7 @@ async def async_setup_entry(
 
     for description in SELECTOR_TYPES:
         for attribute in attributes:
-            if description.key == attribute[0]:
+            if description.key == attribute.attr_name:
                 entities.append(
                     XiaomiGenericSelector(
                         f"{config_entry.title} {description.name}",
@@ -171,7 +199,7 @@ async def async_setup_entry(
                         f"{description.key}_{unique_id}",
                         coordinator,
                         description,
-                        attribute[1],
+                        attribute.options,
                     )
                 )
 
