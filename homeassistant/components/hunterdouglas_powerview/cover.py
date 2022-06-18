@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from contextlib import suppress
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -73,6 +74,8 @@ RESYNC_DELAY = 60
 # The means currently 491.5125 or less is closed position
 # implemented for top/down shades, but also works fine with normal shades
 CLOSED_POSITION = (0.75 / 100) * (MAX_POSITION - MIN_POSITION)
+
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_entry(
@@ -152,8 +155,6 @@ def hass_position_to_hd(hass_position: int, max_val: int = MAX_POSITION) -> int:
 class PowerViewShadeBase(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
-    # The hub frequently reports stale states
-    _attr_assumed_state = True
     _attr_device_class = CoverDeviceClass.SHADE
     _attr_supported_features = 0
 
@@ -173,6 +174,26 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
+
+    @property
+    def assumed_state(self) -> bool:
+        """If the device is hard wired we are polling state.
+
+        The hub will frequently provide the wrong state
+        for battery power devices so we set assumed
+        state in this case.
+        """
+        return not self._is_hard_wired
+
+    @property
+    def should_poll(self) -> bool:
+        """Only poll if the device is hard wired.
+
+        We cannot poll battery powered devices
+        are it would drain their batteries in a matter
+        of days.
+        """
+        return self._is_hard_wired
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -336,14 +357,28 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Cancel any pending refreshes."""
         self._async_cancel_scheduled_transition_update()
 
+    @property
+    def _update_in_progress(self) -> bool:
+        """Check if an update is already in progress."""
+        return bool(self._scheduled_transition_update or self._forced_resync)
+
     @callback
     def _async_update_shade_from_group(self) -> None:
         """Update with new data from the coordinator."""
-        if self._scheduled_transition_update or self._forced_resync:
+        if self._update_in_progress:
             # If a transition is in progress the data will be wrong
             return
         self.data.update_from_group_data(self._shade.id)
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Refresh shade position."""
+        if self._update_in_progress:
+            # The update will likely timeout and
+            # error if are already have on in flight
+            return
+        await self._shade.refresh()
+        self._async_update_shade_data(self._shade.raw_data)
 
 
 class PowerViewShade(PowerViewShadeBase):
