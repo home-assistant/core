@@ -28,8 +28,10 @@ from homeassistant.components.sensibo.climate import (
     ATTR_OUTDOOR_INTEGRATION,
     ATTR_SENSITIVITY,
     SERVICE_ASSUME_STATE,
-    SERVICE_PURE_BOOST,
-    SERVICE_TIMER,
+    SERVICE_DISABLE_PURE_BOOST,
+    SERVICE_DISABLE_TIMER,
+    SERVICE_ENABLE_PURE_BOOST,
+    SERVICE_ENABLE_TIMER,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
@@ -718,10 +720,9 @@ async def test_climate_set_timer(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIMER,
+            SERVICE_ENABLE_TIMER,
             {
                 ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: "on",
                 ATTR_MINUTES: 30,
             },
             blocking=True,
@@ -769,10 +770,9 @@ async def test_climate_set_timer(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIMER,
+            SERVICE_DISABLE_TIMER,
             {
                 ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: "off",
             },
             blocking=True,
         )
@@ -820,13 +820,12 @@ async def test_climate_set_timer_failures(
     assert hass.states.get("sensor.hallway_timer_end_time").state == STATE_UNKNOWN
     assert hass.states.get("binary_sensor.hallway_timer_running").state == "off"
 
-    with pytest.raises(ValueError):
+    with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIMER,
+            SERVICE_ENABLE_TIMER,
             {
                 ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: "on",
             },
             blocking=True,
         )
@@ -841,10 +840,9 @@ async def test_climate_set_timer_failures(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_TIMER,
+            SERVICE_ENABLE_TIMER,
             {
                 ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: "on",
                 ATTR_MINUTES: 30,
             },
             blocking=True,
@@ -870,17 +868,20 @@ async def test_climate_set_timer_failures(
         )
         await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TIMER,
-            {
-                ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: "off",
-            },
-            blocking=True,
-        )
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_del_timer",
+        return_value={"status": "failure"},
+    ):
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_DISABLE_TIMER,
+                {
+                    ATTR_ENTITY_ID: state1.entity_id,
+                },
+                blocking=True,
+            )
+        await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -902,10 +903,9 @@ async def test_climate_set_timer_failures(
         with pytest.raises(HomeAssistantError):
             await hass.services.async_call(
                 DOMAIN,
-                SERVICE_TIMER,
+                SERVICE_ENABLE_TIMER,
                 {
                     ATTR_ENTITY_ID: state1.entity_id,
-                    ATTR_STATE: "on",
                     ATTR_MINUTES: 30,
                 },
                 blocking=True,
@@ -932,9 +932,28 @@ async def test_climate_pure_boost(
         )
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("climate.kitchen")
+    state_climate = hass.states.get("climate.kitchen")
     state2 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
     assert state2.state == "off"
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+    ), patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+    ):
+        with pytest.raises(MultipleInvalid):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_ENABLE_PURE_BOOST,
+                {
+                    ATTR_ENTITY_ID: state_climate.entity_id,
+                    ATTR_INDOOR_INTEGRATION: True,
+                    ATTR_OUTDOOR_INTEGRATION: True,
+                    ATTR_SENSITIVITY: "Sensitive",
+                },
+                blocking=True,
+            )
+    await hass.async_block_till_done()
 
     with patch(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
@@ -955,10 +974,9 @@ async def test_climate_pure_boost(
     ):
         await hass.services.async_call(
             DOMAIN,
-            SERVICE_PURE_BOOST,
+            SERVICE_ENABLE_PURE_BOOST,
             {
-                ATTR_ENTITY_ID: state1.entity_id,
-                ATTR_STATE: True,
+                ATTR_ENTITY_ID: state_climate.entity_id,
                 ATTR_AC_INTEGRATION: False,
                 ATTR_GEO_INTEGRATION: False,
                 ATTR_INDOOR_INTEGRATION: True,
@@ -995,4 +1013,50 @@ async def test_climate_pure_boost(
     assert state1.state == "on"
     assert state2.state == "on"
     assert state3.state == "on"
+    assert state4.state == "s"
+
+    with patch(
+        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ), patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_set_pureboost",
+        return_value={
+            "status": "success",
+            "result": {
+                "enabled": False,
+                "sensitivity": "S",
+                "measurements_integration": True,
+                "ac_integration": False,
+                "geo_integration": False,
+                "prime_integration": True,
+            },
+        },
+    ) as mock_set_pureboost:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_DISABLE_PURE_BOOST,
+            {
+                ATTR_ENTITY_ID: state_climate.entity_id,
+            },
+            blocking=True,
+        )
+    await hass.async_block_till_done()
+    mock_set_pureboost.assert_called_once()
+
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", False)
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
+
+    with patch(
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
+        return_value=get_data,
+    ):
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(minutes=5),
+        )
+        await hass.async_block_till_done()
+
+    state1 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
+    state4 = hass.states.get("sensor.kitchen_pure_sensitivity")
+    assert state1.state == "off"
     assert state4.state == "s"
