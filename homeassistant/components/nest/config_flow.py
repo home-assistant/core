@@ -276,10 +276,6 @@ class NestFlowHandler(
         if self.config_mode == ConfigMode.LEGACY:
             return await self.async_step_init(user_input)
         self._data[DATA_SDM] = {}
-        # Reauth will update an existing entry
-        entries = self._async_current_entries()
-        if entries and self.source != SOURCE_REAUTH:
-            return self.async_abort(reason="single_instance_allowed")
         if self.source == SOURCE_REAUTH:
             return await super().async_step_user(user_input)
         # Application Credentials setup needs information from the user
@@ -466,9 +462,7 @@ class NestFlowHandler(
         """Create an entry for the SDM flow."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
         await self.async_set_unique_id(DOMAIN)
-        # Update existing config entry when in the reauth flow.  This
-        # integration only supports one config entry so remove any prior entries
-        # added before the "single_instance_allowed" check was added
+        # Update existing config entry when in the reauth flow.
         if entry := self._async_reauth_entry():
             self.hass.config_entries.async_update_entry(
                 entry, data=self._data, unique_id=DOMAIN

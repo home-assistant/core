@@ -415,15 +415,23 @@ async def test_web_reauth(hass, oauth, setup_platform, config_entry):
     assert entry.data.get("subscriber_id") == orig_subscriber_id  # Not updated
 
 
-async def test_single_config_entry(hass, setup_platform):
-    """Test that only a single config entry is allowed."""
+async def test_multiple_config_entrties(hass, oauth, setup_platform):
+    """Verify config flow can be started when existing config entry exists."""
     await setup_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == "abort"
-    assert result["reason"] == "single_instance_allowed"
+    await oauth.async_app_creds_flow(result)
+    entry = await oauth.async_finish_setup(result)
+    assert entry.title == "Mock Title"
+    assert "token" in entry.data
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 2
 
 
 async def test_unexpected_existing_config_entries(

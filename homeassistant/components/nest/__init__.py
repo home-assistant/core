@@ -179,6 +179,7 @@ class SignalUpdateCallback:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
+    hass.data[DOMAIN][entry.entry_id] = {}
 
     config_mode = config_flow.get_config_mode(hass)
     if config_mode == config_flow.ConfigMode.LEGACY:
@@ -214,7 +215,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except SubscriberException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Subscriber error: %s", err)
-            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
+            hass.data[DOMAIN][entry.entry_id][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
@@ -223,13 +224,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ApiException as err:
         if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
             _LOGGER.error("Device manager error: %s", err)
-            hass.data[DOMAIN][DATA_NEST_UNAVAILABLE] = True
+            hass.data[DOMAIN][entry.entry_id][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
         raise ConfigEntryNotReady from err
 
-    hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
-    hass.data[DOMAIN][DATA_SUBSCRIBER] = subscriber
-    hass.data[DOMAIN][DATA_DEVICE_MANAGER] = device_manager
+    hass.data[DOMAIN][entry.entry_id] = {
+        DATA_SUBSCRIBER: subscriber,
+        DATA_DEVICE_MANAGER: device_manager,
+    }
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
@@ -288,13 +290,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         # Legacy API
         return True
     _LOGGER.debug("Stopping nest subscriber")
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
+    subscriber = hass.data[DOMAIN][entry.entry_id][DATA_SUBSCRIBER]
     subscriber.stop_async()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(DATA_SUBSCRIBER)
-        hass.data[DOMAIN].pop(DATA_DEVICE_MANAGER)
-        hass.data[DOMAIN].pop(DATA_NEST_UNAVAILABLE, None)
+        hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
 
