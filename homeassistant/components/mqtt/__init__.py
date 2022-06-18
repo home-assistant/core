@@ -267,12 +267,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)
 
-    mqtt = hass.data[DATA_MQTT] = MQTT(
+    hass.data[DATA_MQTT] = MQTT(
         hass,
         entry,
         conf,
     )
     entry.add_update_listener(_async_config_entry_updated)
+
+    await hass.data[DATA_MQTT].async_connect()
 
     async def async_stop_mqtt(_event: Event):
         """Stop MQTT component."""
@@ -407,10 +409,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry.async_on_unload(
             hass.bus.async_listen("event_mqtt_reloaded", _async_reload_platforms)
         )
-
-        # Defer connect until after everything is setup
-        # so we can do all the subscribes at once
-        await mqtt.async_connect()
 
     hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
 
