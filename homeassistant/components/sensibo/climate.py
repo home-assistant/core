@@ -29,6 +29,15 @@ from .entity import SensiboDeviceBaseEntity
 SERVICE_ASSUME_STATE = "assume_state"
 SERVICE_TIMER = "timer"
 ATTR_MINUTES = "minutes"
+SERVICE_PURE_BOOST = "pure_boost"
+
+ATTR_AC_INTEGRATION = "ac_integration"
+ATTR_GEO_INTEGRATION = "geo_integration"
+ATTR_INDOOR_INTEGRATION = "indoor_integration"
+ATTR_OUTDOOR_INTEGRATION = "outdoor_integration"
+ATTR_SENSITIVITY = "sensitivity"
+BOOST_INCLUSIVE = "boost_inclusive"
+
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
@@ -94,6 +103,18 @@ async def async_setup_entry(
             vol.Optional(ATTR_MINUTES): cv.positive_int,
         },
         "async_set_timer",
+    )
+    platform.async_register_entity_service(
+        SERVICE_PURE_BOOST,
+        {
+            vol.Required(ATTR_STATE): bool,
+            vol.Required(ATTR_AC_INTEGRATION): bool,
+            vol.Required(ATTR_GEO_INTEGRATION): bool,
+            vol.Required(ATTR_INDOOR_INTEGRATION): bool,
+            vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
+            vol.Required(ATTR_SENSITIVITY): vol.In(["Normal", "Sensitive"]),
+        },
+        "async_pure_boost",
     )
 
 
@@ -308,3 +329,26 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if result["status"] == "success":
             return await self.coordinator.async_request_refresh()
         raise HomeAssistantError(f"Could not set timer for device {self.name}")
+
+    async def async_pure_boost(
+        self,
+        state: bool,
+        ac_integration: bool,
+        geo_integration: bool,
+        indoor_integration: bool,
+        outdoor_integration: bool,
+        sensitivity: str,
+    ) -> None:
+        """Set Pure Boost Configuration."""
+
+        params = {
+            "enabled": state,
+            "sensitivity": sensitivity[0],
+            "measurementsIntegration": indoor_integration,
+            "acIntegration": ac_integration,
+            "geoIntegration": geo_integration,
+            "primeIntegration": outdoor_integration,
+        }
+
+        await self.async_send_command("set_pure_boost", params)
+        await self.coordinator.async_refresh()
