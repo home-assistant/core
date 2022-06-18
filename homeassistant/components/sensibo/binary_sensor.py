@@ -98,6 +98,13 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="filter_clean",
+        name="Filter Clean Required",
+        icon="mdi:timer",
+        value_fn=lambda data: data.filter_clean,
+        extra_fn=None,
+    ),
 )
 
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
