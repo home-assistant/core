@@ -190,7 +190,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Only poll if the device is hard wired.
 
         We cannot poll battery powered devices
-        are it would drain their batteries in a matter
+        as it would drain their batteries in a matter
         of days.
         """
         return self._is_hard_wired
