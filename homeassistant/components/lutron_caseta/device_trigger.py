@@ -29,11 +29,11 @@ from .const import (
     ATTR_ACTION,
     ATTR_BUTTON_NUMBER,
     ATTR_SERIAL,
-    BUTTON_DEVICES,
     CONF_SUBTYPE,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
+from .models import LutronCasetaData
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
@@ -411,9 +411,9 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
     if DOMAIN not in hass.data:
         return None
 
-    for config_entry in hass.data[DOMAIN]:
-        button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        if device := button_devices.get(device_id):
+    for entry_id in hass.data[DOMAIN]:
+        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
+        if device := data.button_devices.get(device_id):
             return device
 
     return None

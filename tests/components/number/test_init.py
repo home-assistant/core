@@ -229,8 +229,8 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_4.value is None
 
 
-async def test_attributes_deprecated(hass: HomeAssistant, caplog) -> None:
-    """Test overriding the deprecated attributes."""
+async def test_deprecation_warnings(hass: HomeAssistant, caplog) -> None:
+    """Test overriding the deprecated attributes is possible and warnings are logged."""
     number = MockDefaultNumberEntityDeprecated()
     number.hass = hass
     assert number.max_value == 100.0
@@ -263,6 +263,10 @@ async def test_attributes_deprecated(hass: HomeAssistant, caplog) -> None:
     assert number_4.unit_of_measurement == "rabbits"
     assert number_4.value == 0.5
 
+    assert (
+        "tests.components.number.test_init::MockNumberEntityDeprecated is overriding "
+        " deprecated methods on an instance of NumberEntity"
+    )
     assert (
         "Entity None (<class 'tests.components.number.test_init.MockNumberEntityAttrDeprecated'>) "
         "is using deprecated NumberEntity features" in caplog.text

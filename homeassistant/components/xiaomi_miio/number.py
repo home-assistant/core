@@ -1,6 +1,7 @@
 """Motor speed support for Xiaomi Mi Air Humidifier."""
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -273,9 +274,12 @@ async def async_setup_entry(
                 description.key == ATTR_OSCILLATION_ANGLE
                 and model in OSCILLATION_ANGLE_VALUES
             ):
-                description.max_value = OSCILLATION_ANGLE_VALUES[model].max_value
-                description.min_value = OSCILLATION_ANGLE_VALUES[model].min_value
-                description.step = OSCILLATION_ANGLE_VALUES[model].step
+                description = dataclasses.replace(
+                    description,
+                    native_max_value=OSCILLATION_ANGLE_VALUES[model].max_value,
+                    native_min_value=OSCILLATION_ANGLE_VALUES[model].min_value,
+                    native_step=OSCILLATION_ANGLE_VALUES[model].step,
+                )
 
             entities.append(
                 XiaomiNumberEntity(
