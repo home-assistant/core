@@ -455,9 +455,15 @@ class WeatherEntity(Entity):
         """Return the precision of the temperature value, after unit conversion."""
         if hasattr(self, "_attr_precision"):
             return self._attr_precision
+        if self._override:
+            return (
+                PRECISION_TENTHS
+                if self.hass.config.units.temperature_unit == TEMP_CELSIUS
+                else PRECISION_WHOLE
+            )
         return (
             PRECISION_TENTHS
-            if self.native_temperature_unit == TEMP_CELSIUS
+            if self.temperature_unit == TEMP_CELSIUS
             else PRECISION_WHOLE
         )
 
