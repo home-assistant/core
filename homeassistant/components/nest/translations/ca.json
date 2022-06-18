@@ -19,7 +19,7 @@
             "subscriber_error": "Error de subscriptor desconegut, consulta els registres",
             "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi.",
             "unknown": "Error inesperat",
-            "wrong_project_id": "Introdueix un ID de projecte Cloud v\u00e0lid (s'ha trobat un ID de projecte d'Acc\u00e9s de Dispositiu)"
+            "wrong_project_id": "Introdueix un ID de projecte Cloud v\u00e0lid (era el mateix que l'ID de projecte Device Access)"
         },
         "step": {
             "auth": {

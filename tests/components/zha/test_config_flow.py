@@ -34,6 +34,13 @@ from homeassistant.data_entry_flow import (
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
+
+
 def com_port():
     """Mock of a serial port."""
     port = serial.tools.list_ports_common.ListPortInfo("/dev/ttyUSB1234")
