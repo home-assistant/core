@@ -16,24 +16,14 @@ assume_state:
           options:
             - "on"
             - "off"
-timer:
-  name: Timer
-  description: Set or delete timer for device.
+enable_timer:
+  name: Enable Timer
+  description: Enable the timer.
   target:
     entity:
       integration: sensibo
       domain: climate
   fields:
-    state:
-      name: State
-      description: Timer on or off.
-      required: true
-      example: "on"
-      selector:
-        select:
-          options:
-            - "on"
-            - "off"
     minutes:
       name: Minutes
       description: Countdown for timer (for timer state on)
@@ -44,6 +34,13 @@ timer:
           min: 0
           step: 1
           mode: box
+disable_timer:
+  name: Disable Timer
+  description: Disable the timer.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
 enable_pure_boost:
   name: Enable Pure Boost
   description: Enable and configure Pure Boost settings.
