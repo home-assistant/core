@@ -87,6 +87,7 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="filter_clean",
+        device_class=BinarySensorDeviceClass.PROBLEM,
         name="Filter Clean Required",
         icon="mdi:timer",
         value_fn=lambda data: data.filter_clean,
@@ -133,6 +134,14 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Outdoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
+    ),
+    SensiboDeviceBinarySensorEntityDescription(
+        key="filter_clean",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+        name="Filter Clean Required",
+        icon="mdi:timer",
+        value_fn=lambda data: data.filter_clean,
+        extra_fn=None,
     ),
 )
 

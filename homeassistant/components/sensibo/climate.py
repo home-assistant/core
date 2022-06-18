@@ -31,6 +31,7 @@ SERVICE_ENABLE_TIMER = "enable_timer"
 ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
+SERVICE_RESET_FILTER = "reset_filter"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
@@ -121,6 +122,11 @@ async def async_setup_entry(
         SERVICE_DISABLE_PURE_BOOST,
         {},
         "async_disable_pure_boost",
+    )
+    platform.async_register_entity_service(
+        SERVICE_RESET_FILTER,
+        {},
+        "async_reset_filter",
     )
 
 
@@ -358,4 +364,9 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         """Disable Pure Boost Configuration."""
 
         await self.async_send_command("set_pure_boost", {"enabled": False})
+        await self.coordinator.async_refresh()
+
+    async def async_reset_filter(self) -> None:
+        """Reset filter service."""
+        await self.async_send_command("reset_filter")
         await self.coordinator.async_refresh()
