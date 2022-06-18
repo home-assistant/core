@@ -1757,9 +1757,12 @@ async def test_mqtt_subscribes_topics_on_connect(
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
-    expected = {"topic/test": 0, "home/sensor": 2, "still/pending": 1}
-    calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
-    assert calls == expected
+    assert len(hass.add_job.mock_calls) == 1
+    assert set(hass.add_job.mock_calls[0][1][1]) == {
+        ("home/sensor", 2),
+        ("still/pending", 1),
+        ("topic/test", 0),
+    }
 
 
 async def test_setup_entry_with_config_override(
