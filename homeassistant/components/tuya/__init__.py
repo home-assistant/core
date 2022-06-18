@@ -257,7 +257,11 @@ class DeviceListener(TuyaDeviceListener):
                 device.id,
                 self.device_manager.device_map[device.id].status,
             )
-            dispatcher_send(self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}")
+
+            if not self.hass.loop.is_closed():
+                dispatcher_send(
+                    self.hass, f"{TUYA_HA_SIGNAL_UPDATE_ENTITY}_{device.id}"
+                )
 
     def add_device(self, device: TuyaDevice) -> None:
         """Add device added listener."""
