@@ -1044,6 +1044,7 @@ async def test_climate_pure_boost(
     await hass.async_block_till_done()
 
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", False)
+    monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
 
     with patch(
         "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
@@ -1056,4 +1057,6 @@ async def test_climate_pure_boost(
         await hass.async_block_till_done()
 
     state1 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
+    state4 = hass.states.get("sensor.kitchen_pure_sensitivity")
     assert state1.state == "off"
+    assert state4.state == "s"
