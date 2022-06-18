@@ -75,7 +75,7 @@ RESYNC_DELAY = 60
 # implemented for top/down shades, but also works fine with normal shades
 CLOSED_POSITION = (0.75 / 100) * (MAX_POSITION - MIN_POSITION)
 
-SCAN_INTERVAL = timedelta(seconds=90)
+SCAN_INTERVAL = timedelta(minutes=5)
 
 
 async def async_setup_entry(
