@@ -29,7 +29,8 @@ from .entity import SensiboDeviceBaseEntity
 SERVICE_ASSUME_STATE = "assume_state"
 SERVICE_TIMER = "timer"
 ATTR_MINUTES = "minutes"
-SERVICE_PURE_BOOST = "pure_boost"
+SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
+SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
 
 ATTR_AC_INTEGRATION = "ac_integration"
 ATTR_GEO_INTEGRATION = "geo_integration"
@@ -105,16 +106,22 @@ async def async_setup_entry(
         "async_set_timer",
     )
     platform.async_register_entity_service(
-        SERVICE_PURE_BOOST,
+        SERVICE_ENABLE_PURE_BOOST,
         {
-            vol.Required(ATTR_STATE): bool,
-            vol.Required(ATTR_AC_INTEGRATION): bool,
-            vol.Required(ATTR_GEO_INTEGRATION): bool,
-            vol.Required(ATTR_INDOOR_INTEGRATION): bool,
-            vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
-            vol.Required(ATTR_SENSITIVITY): vol.In(["Normal", "Sensitive"]),
+            vol.Inclusive(ATTR_AC_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_GEO_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_INDOOR_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_OUTDOOR_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_SENSITIVITY, "settings"): vol.In(
+                ["Normal", "Sensitive"]
+            ),
         },
-        "async_pure_boost",
+        "async_enable_pure_boost",
+    )
+    platform.async_register_entity_service(
+        SERVICE_DISABLE_PURE_BOOST,
+        {},
+        "async_disable_pure_boost",
     )
 
 
@@ -330,25 +337,37 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             return await self.coordinator.async_request_refresh()
         raise HomeAssistantError(f"Could not set timer for device {self.name}")
 
-    async def async_pure_boost(
+    async def async_enable_pure_boost(
         self,
-        state: bool,
-        ac_integration: bool,
-        geo_integration: bool,
-        indoor_integration: bool,
-        outdoor_integration: bool,
-        sensitivity: str,
+        ac_integration: bool | None = None,
+        geo_integration: bool | None = None,
+        indoor_integration: bool | None = None,
+        outdoor_integration: bool | None = None,
+        sensitivity: str | None = None,
     ) -> None:
-        """Set Pure Boost Configuration."""
+        """Enable Pure Boost Configuration."""
 
-        params = {
-            "enabled": state,
-            "sensitivity": sensitivity[0],
-            "measurementsIntegration": indoor_integration,
-            "acIntegration": ac_integration,
-            "geoIntegration": geo_integration,
-            "primeIntegration": outdoor_integration,
+        params: dict[str, str | bool] = {
+            "enabled": True,
         }
+        if sensitivity:
+            params["sensitivity"] = sensitivity[0]
+        if indoor_integration:
+            params["measurementsIntegration"] = indoor_integration
+        if ac_integration:
+            params["acIntegration"] = ac_integration
+        if geo_integration:
+            params["geoIntegration"] = geo_integration
+        if outdoor_integration:
+            params["primeIntegration"] = outdoor_integration
+
+        await self.async_send_command("set_pure_boost", params)
+        await self.coordinator.async_refresh()
+
+    async def async_disable_pure_boost(self) -> None:
+        """Disable Pure Boost Configuration."""
+
+        params = {"enabled": False}
 
         await self.async_send_command("set_pure_boost", params)
         await self.coordinator.async_refresh()
