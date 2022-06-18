@@ -33,7 +33,7 @@ async def test_setup_entry(hass: HomeAssistant, get_ferries: list[FerryStop]) ->
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert len(mock_tvt_ferry.mock_calls) == 1
 
 
@@ -55,7 +55,7 @@ async def test_unload_entry(hass: HomeAssistant, get_ferries: list[FerryStop]) -
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert entry.state is config_entries.ConfigEntryState.LOADED
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
