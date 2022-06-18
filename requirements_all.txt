@@ -969,7 +969,7 @@ locationsharinglib==4.1.5
 logi_circle==0.2.3
 
 # homeassistant.components.london_underground
-london-tube-status==0.2
+london-tube-status==0.5
 
 # homeassistant.components.recorder
 lru-dict==1.1.7
