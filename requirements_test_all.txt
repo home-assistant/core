@@ -1187,7 +1187,7 @@ pyplaato==0.0.18
 pypoint==2.3.0
 
 # homeassistant.components.poolstation
-pypoolstation==0.4.5
+pypoolstation==0.4.8
 
 # homeassistant.components.profiler
 pyprof2calltree==1.4.5

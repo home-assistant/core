@@ -1,5 +1,6 @@
 """Support for Poolstation sensors."""
 from __future__ import annotations
+import logging
 
 from pypoolstation import Pool
 
@@ -13,10 +14,14 @@ from . import PoolstationDataUpdateCoordinator
 from .const import COORDINATORS, DEVICES, DOMAIN
 from .entity import PoolEntity
 
+_LOGGER = logging.getLogger(__name__)
+
 PH_SUFFIX = " pH"
 TEMPERATURE_SUFFIX = " Temperature"
 SALT_SUFFIX = " Salt concentration"
 ELECTROLYSIS_SUFFIX = " Electrolysis"
+ORP_SUFFIX = " ORP"
+FREE_CHLORINE_SUFFIX = " Chlorine"
 
 
 async def async_setup_entry(
@@ -29,11 +34,15 @@ async def async_setup_entry(
     coordinators = hass.data[DOMAIN][config_entry.entry_id][COORDINATORS]
     entities: list[PoolEntity] = []
     for pool_id, pool in stations.items():
+        _LOGGER.warn("INITIALIZING THE SENSORS. POOL IS")
+        _LOGGER.warn(pool)
         coordinator = coordinators[pool_id]
         entities.append(PoolPhSensor(pool, coordinator))
         entities.append(PoolTemperatureSensor(pool, coordinator))
         entities.append(PoolSaltConcentrationSensor(pool, coordinator))
         entities.append(PoolElectrolysisSensor(pool, coordinator))
+        entities.append(PoolORPSensor(pool, coordinator))
+        entities.append(PoolFreeChlorineSensor(pool, coordinator))
 
     async_add_entities(entities)
 
@@ -108,3 +117,37 @@ class PoolElectrolysisSensor(PoolEntity, SensorEntity):
     def native_value(self) -> str:
         """Return the state of the electrolysis production sensor."""
         return self._pool.percentage_electrolysis
+
+
+class PoolORPSensor(PoolEntity, SensorEntity):
+    """Representation of a pool's ORP sensor."""
+
+    _attr_icon = "mdi:atom"
+
+    def __init__(
+        self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator
+    ) -> None:
+        """Initialize the ORP sensor."""
+        super().__init__(pool, coordinator, ORP_SUFFIX)
+
+    @property
+    def native_value(self) -> str:
+        """Return the state of the ORP sensor."""
+        return self._pool.current_orp
+
+
+class PoolFreeChlorineSensor(PoolEntity, SensorEntity):
+    """Representation of a pool's free chlorine sensor."""
+
+    _attr_icon = "mdi:cup-water"
+
+    def __init__(
+        self, pool: Pool, coordinator: PoolstationDataUpdateCoordinator
+    ) -> None:
+        """Initialize the free chroline sensor."""
+        super().__init__(pool, coordinator, FREE_CHLORINE_SUFFIX)
+
+    @property
+    def native_value(self) -> str:
+        """Return the state of the free chlorine sensor."""
+        return self._pool.current_clppm
