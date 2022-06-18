@@ -71,7 +71,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> AppleTVOptionsFlow:
         """Get options flow for this handler."""
         return AppleTVOptionsFlow(config_entry)
 
@@ -523,7 +525,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class AppleTVOptionsFlow(config_entries.OptionsFlow):
     """Handle Apple TV options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Apple TV options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)

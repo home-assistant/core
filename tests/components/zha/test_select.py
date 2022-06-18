@@ -1,6 +1,6 @@
 """Test ZHA select entities."""
 
-from unittest.mock import call
+from unittest.mock import call, patch
 
 import pytest
 from zigpy.const import SIG_EP_PROFILE
@@ -14,6 +14,24 @@ from homeassistant.util import dt as dt_util
 
 from .common import find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+
+
+@pytest.fixture(autouse=True)
+def select_select_only():
+    """Only setup the select and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.SIREN,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture

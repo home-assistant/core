@@ -28,7 +28,7 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        min_value=6,
+        native_min_value=6,
     ),
 }
 
@@ -74,17 +74,17 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum available current."""
         return cast(float, self._coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY])
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return cast(
             Optional[float], self._coordinator.data[CHARGER_MAX_CHARGING_CURRENT_KEY]
         )
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the value of the entity."""
         await self._coordinator.async_set_charging_current(value)

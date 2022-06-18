@@ -1,4 +1,6 @@
 """Config flow for Transmission Bittorent Client."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -44,7 +46,9 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
         return TransmissionOptionsFlowHandler(config_entry)
 
@@ -87,7 +91,7 @@ class TransmissionFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class TransmissionOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Transmission client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Transmission options flow."""
         self.config_entry = config_entry
 
