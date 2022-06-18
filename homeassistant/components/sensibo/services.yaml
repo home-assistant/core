@@ -18,7 +18,7 @@ assume_state:
             - "off"
 enable_timer:
   name: Enable Timer
-  description: Enable the timer.
+  description: Enable the timer with custom time.
   target:
     entity:
       integration: sensibo
@@ -34,13 +34,6 @@ enable_timer:
           min: 0
           step: 1
           mode: box
-disable_timer:
-  name: Disable Timer
-  description: Disable the timer.
-  target:
-    entity:
-      integration: sensibo
-      domain: climate
 enable_pure_boost:
   name: Enable Pure Boost
   description: Enable and configure Pure Boost settings.
