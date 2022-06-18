@@ -7,7 +7,7 @@ import logging
 from bimmer_connected.account import MyBMWAccount
 from bimmer_connected.api.regions import get_region_from_name
 from bimmer_connected.models import GPSPosition
-from httpx import HTTPError, TimeoutException
+from httpx import HTTPError, HTTPStatusError, TimeoutException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
@@ -53,9 +53,20 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             await self.account.get_vehicles()
-        except (HTTPError, TimeoutException) as err:
-            self._update_config_entry_refresh_token(None)
-            raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
+        except (HTTPError, HTTPStatusError, TimeoutException) as err:
+            if isinstance(err, HTTPStatusError) and err.response.status_code == 429:
+                _LOGGER.warning(
+                    "Too many requests when communicating with BMW API, API allows retry in %s seconds",
+                    err.response.headers.get("Retry-After") or "UNKNOWN",
+                )
+            else:
+                if isinstance(err, HTTPStatusError) and err.response.status_code in (
+                    401,
+                    403,
+                ):
+                    # Clear refresh token only on issues with authorization
+                    self._update_config_entry_refresh_token(None)
+                raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
