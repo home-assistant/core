@@ -10,6 +10,8 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
+    ATTR_BATTERY_KIND,
+    BATTERY_KIND_HARDWIRED,
     DEVICE_FIRMWARE,
     DEVICE_MAC_ADDRESS,
     DEVICE_MODEL,
@@ -83,6 +85,9 @@ class ShadeEntity(HDEntity):
         super().__init__(coordinator, device_info, room_name, shade.id)
         self._shade_name = shade_name
         self._shade = shade
+        self._is_hard_wired = bool(
+            shade.raw_data.get(ATTR_BATTERY_KIND) == BATTERY_KIND_HARDWIRED
+        )
 
     @property
     def positions(self) -> PowerviewShadePositions:
