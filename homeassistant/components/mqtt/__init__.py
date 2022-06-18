@@ -267,7 +267,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Merge advanced configuration values from configuration.yaml
     conf = _merge_extended_config(entry, conf)
 
-    hass.data[DATA_MQTT] = MQTT(
+    mqtt = hass.data[DATA_MQTT] = MQTT(
         hass,
         entry,
         conf,
@@ -410,7 +410,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Defer connect until after everything is setup
         # so we can do all the subscribes at once
-        await hass.data[DATA_MQTT].async_connect()
+        await mqtt.async_connect()
 
     hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
 
