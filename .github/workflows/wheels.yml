@@ -141,7 +141,7 @@ jobs:
           echo "numpy==1.22.4" >> homeassistant/package_constraints.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.5
+        uses: home-assistant/wheels@2022.06.6
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -275,7 +275,7 @@ jobs:
           echo "numpy==1.22.4" >> homeassistant/package_constraints.txt
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.5
+        uses: home-assistant/wheels@2022.06.6
         with:
           abi: cp310
           tag: musllinux_1_2
