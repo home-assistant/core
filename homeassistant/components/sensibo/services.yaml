@@ -97,10 +97,3 @@ disable_pure_boost:
     entity:
       integration: sensibo
       domain: climate
-reset_filter:
-  name: Reset Filter
-  description: Tell device filter has been cleaned/replaced.
-  target:
-    entity:
-      integration: sensibo
-      domain: climate

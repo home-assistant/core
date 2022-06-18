@@ -30,7 +30,6 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ASSUME_STATE,
     SERVICE_DISABLE_PURE_BOOST,
     SERVICE_ENABLE_PURE_BOOST,
-    SERVICE_RESET_FILTER,
     SERVICE_TIMER,
     _find_valid_target_temp,
 )
@@ -1062,67 +1061,3 @@ async def test_climate_pure_boost(
     state4 = hass.states.get("sensor.kitchen_pure_sensitivity")
     assert state1.state == "off"
     assert state4.state == "s"
-
-
-async def test_reset_filter(
-    hass: HomeAssistant,
-    entity_registry_enabled_by_default: AsyncMock,
-    load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: SensiboData,
-) -> None:
-    """Test the Sensibo climate assumed state service."""
-
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
-
-    state_climate = hass.states.get("climate.hallway")
-    state1 = hass.states.get("sensor.hallway_filter_last_reset")
-    state2 = hass.states.get("binary_sensor.hallway_filter_clean_required")
-    assert state1.state == "2022-03-12T15:24:26+00:00"
-    assert state2.state == "on"
-
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_reset_filter",
-        return_value={"status": "success"},
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RESET_FILTER,
-            {
-                ATTR_ENTITY_ID: state_climate.entity_id,
-            },
-            blocking=True,
-        )
-    await hass.async_block_till_done()
-
-    monkeypatch.setattr(get_data.parsed["ABC999111"], "filter_clean", False)
-    monkeypatch.setattr(
-        get_data.parsed["ABC999111"],
-        "filter_last_reset",
-        datetime(2022, 6, 18, 20, 42, tzinfo=dt.UTC),
-    )
-    with patch(
-        "homeassistant.components.sensibo.coordinator.SensiboClient.async_get_devices_data",
-        return_value=get_data,
-    ):
-        async_fire_time_changed(
-            hass,
-            dt.utcnow() + timedelta(minutes=5),
-        )
-        await hass.async_block_till_done()
-
-    state1 = hass.states.get("sensor.hallway_filter_last_reset")
-    state2 = hass.states.get("binary_sensor.hallway_filter_clean_required")
-    assert state1.state == "2022-06-18T20:42:00+00:00"
-    assert state2.state == "off"
