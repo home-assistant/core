@@ -190,7 +190,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Only poll if the device is hard wired.
 
         We cannot poll battery powered devices
-        are it would drain their batteries in a matter
+        as it would drain their batteries in a matter
         of days.
         """
         return self._is_hard_wired
@@ -375,7 +375,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Refresh shade position."""
         if self._update_in_progress:
             # The update will likely timeout and
-            # error if are already have on in flight
+            # error if are already have one in flight
             return
         await self._shade.refresh()
         self._async_update_shade_data(self._shade.raw_data)
