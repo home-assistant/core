@@ -499,7 +499,9 @@ class WeatherEntity(Entity):
                 )
 
         if (temp_unit := self.temperature_unit) is not None:
-            data[ATTR_WEATHER_TEMPERATURE_UNIT] = temp_unit
+            data[ATTR_WEATHER_TEMPERATURE_UNIT] = (
+                self.hass.config.units.temperature_unit if self._override else temp_unit
+            )
 
         if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)

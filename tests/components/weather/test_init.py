@@ -41,6 +41,7 @@ from homeassistant.util.distance import convert as convert_distance
 from homeassistant.util.pressure import convert as convert_pressure
 from homeassistant.util.speed import convert as convert_speed
 from homeassistant.util.temperature import convert as convert_temperature
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from tests.testing_config.custom_components.test import weather as WeatherPlatform
 
@@ -259,10 +260,10 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     )
 
 
-async def test_backwards_compability(
+async def test_backwards_compatibility(
     hass: HomeAssistant, enable_custom_integrations
 ) -> None:
-    """Test custom unit."""
+    """Test backwards compatibility."""
     wind_speed_value = 5
     wind_speed_unit = SPEED_METERS_PER_SECOND
     pressure_value = 110
@@ -355,3 +356,41 @@ async def test_backwards_compability(
     assert ATTR_WEATHER_PRESSURE_UNIT not in state1.attributes
     assert ATTR_WEATHER_VISIBILITY_UNIT not in state1.attributes
     assert ATTR_WEATHER_PRECIPITATION_UNIT not in state1.attributes
+
+
+async def test_backwards_compatibility_convert_temperature(
+    hass: HomeAssistant, enable_custom_integrations
+) -> None:
+    """Test backward compatibility for converting temperature."""
+    temperature_value = 20
+    temperature_unit = TEMP_CELSIUS
+
+    platform: WeatherPlatform = getattr(hass.components, "test.weather")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockWeatherMockForecastCompat(
+            name="Test",
+            condition=ATTR_CONDITION_SUNNY,
+            temperature=temperature_value,
+            temperature_unit=temperature_unit,
+            unique_id="very_unique",
+        )
+    )
+
+    hass.config.units = IMPERIAL_SYSTEM
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(
+        hass, "weather", {"weather": {"platform": "test"}}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity0.entity_id)
+
+    expected_temperature = convert_temperature(
+        temperature_value, temperature_unit, TEMP_FAHRENHEIT
+    )
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+        expected_temperature, rel=0.1
+    )
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_FAHRENHEIT

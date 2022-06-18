@@ -53,20 +53,3 @@ async def test_attributes(hass):
         data.get(ATTR_FORECAST)[6].get(ATTR_FORECAST_PRECIPITATION_PROBABILITY) == 100
     )
     assert len(data.get(ATTR_FORECAST)) == 7
-
-
-async def test_temperature_convert(hass):
-    """Test temperature conversion."""
-    assert await async_setup_component(
-        hass, weather.DOMAIN, {"weather": {"platform": "demo"}}
-    )
-    hass.config.units = METRIC_SYSTEM
-    await hass.async_block_till_done()
-
-    state = hass.states.get("weather.demo_weather_north")
-    assert state is not None
-
-    assert state.state == "rainy"
-
-    data = state.attributes
-    assert data.get(ATTR_WEATHER_TEMPERATURE) == -24.4
