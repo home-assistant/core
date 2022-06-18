@@ -28,6 +28,7 @@ from homeassistant.const import (
     LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_PA,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -265,7 +266,7 @@ async def test_backwards_compability(
     wind_speed_value = 5
     wind_speed_unit = SPEED_METERS_PER_SECOND
     pressure_value = 110
-    pressure_unit = PRESSURE_HPA
+    pressure_unit = PRESSURE_PA
     temperature_value = 20
     temperature_unit = TEMP_CELSIUS
     visibility_value = 11
@@ -332,7 +333,7 @@ async def test_backwards_compability(
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
-    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_HPA
+    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_PA
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
     assert state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == LENGTH_KILOMETERS
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
