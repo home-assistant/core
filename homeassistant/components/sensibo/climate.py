@@ -350,15 +350,15 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         params: dict[str, str | bool] = {
             "enabled": True,
         }
-        if sensitivity:
+        if sensitivity is not None:
             params["sensitivity"] = sensitivity[0]
-        if indoor_integration:
+        if indoor_integration is not None:
             params["measurementsIntegration"] = indoor_integration
-        if ac_integration:
+        if ac_integration is not None:
             params["acIntegration"] = ac_integration
-        if geo_integration:
+        if geo_integration is not None:
             params["geoIntegration"] = geo_integration
-        if outdoor_integration:
+        if outdoor_integration is not None:
             params["primeIntegration"] = outdoor_integration
 
         await self.async_send_command("set_pure_boost", params)
@@ -367,7 +367,5 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     async def async_disable_pure_boost(self) -> None:
         """Disable Pure Boost Configuration."""
 
-        params = {"enabled": False}
-
-        await self.async_send_command("set_pure_boost", params)
+        await self.async_send_command("set_pure_boost", {"enabled": False})
         await self.coordinator.async_refresh()

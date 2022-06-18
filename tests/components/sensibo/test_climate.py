@@ -933,7 +933,7 @@ async def test_climate_pure_boost(
         )
         await hass.async_block_till_done()
 
-    state1 = hass.states.get("climate.kitchen")
+    state_climate = hass.states.get("climate.kitchen")
     state2 = hass.states.get("binary_sensor.kitchen_pure_boost_enabled")
     assert state2.state == "off"
 
@@ -947,7 +947,7 @@ async def test_climate_pure_boost(
                 DOMAIN,
                 SERVICE_ENABLE_PURE_BOOST,
                 {
-                    ATTR_ENTITY_ID: state1.entity_id,
+                    ATTR_ENTITY_ID: state_climate.entity_id,
                     ATTR_INDOOR_INTEGRATION: True,
                     ATTR_OUTDOOR_INTEGRATION: True,
                     ATTR_SENSITIVITY: "Sensitive",
@@ -977,7 +977,7 @@ async def test_climate_pure_boost(
             DOMAIN,
             SERVICE_ENABLE_PURE_BOOST,
             {
-                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_ENTITY_ID: state_climate.entity_id,
                 ATTR_AC_INTEGRATION: False,
                 ATTR_GEO_INTEGRATION: False,
                 ATTR_INDOOR_INTEGRATION: True,
@@ -1020,7 +1020,7 @@ async def test_climate_pure_boost(
         "homeassistant.components.sensibo.util.SensiboClient.async_get_devices_data",
         return_value=get_data,
     ), patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_set_pureboost",
+        "homeassistant.components.sensibo.coordinator.SensiboClient.async_set_pureboost",
         return_value={
             "status": "success",
             "result": {
@@ -1032,16 +1032,17 @@ async def test_climate_pure_boost(
                 "prime_integration": True,
             },
         },
-    ):
+    ) as mock_set_pureboost:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_DISABLE_PURE_BOOST,
             {
-                ATTR_ENTITY_ID: state1.entity_id,
+                ATTR_ENTITY_ID: state_climate.entity_id,
             },
             blocking=True,
         )
     await hass.async_block_till_done()
+    mock_set_pureboost.assert_called_once()
 
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_boost_enabled", False)
     monkeypatch.setattr(get_data.parsed["AAZZAAZZ"], "pure_sensitivity", "s")
