@@ -375,7 +375,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Refresh shade position."""
         if self._update_in_progress:
             # The update will likely timeout and
-            # error if are already have on in flight
+            # error if are already have one in flight
             return
         await self._shade.refresh()
         self._async_update_shade_data(self._shade.raw_data)
