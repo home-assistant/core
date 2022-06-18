@@ -9,7 +9,7 @@ from aiohttp import web
 import aiohttp.web_exceptions
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow, loader
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.auth.permissions.const import CAT_CONFIG_ENTRIES, POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
@@ -20,7 +20,12 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
 )
-from homeassistant.loader import Integration, async_get_config_flows
+from homeassistant.loader import (
+    Integration,
+    IntegrationNotFound,
+    async_get_config_flows,
+    async_get_integration,
+)
 
 
 async def async_setup(hass):
@@ -415,23 +420,17 @@ async def async_matching_config_entries(
         return [entry_json(entry) for entry in entries]
 
     integrations = {}
-
-    async def load_integration(hass: HomeAssistant, domain: str) -> Integration | None:
-        """Load integration."""
-        try:
-            return await loader.async_get_integration(hass, domain)
-        except loader.IntegrationNotFound:
-            return None
-
     # Fetch all the integrations so we can check their type
-    for integration in await asyncio.gather(
-        *(
-            load_integration(hass, domain)
-            for domain in {entry.domain for entry in entries}
-        )
-    ):
-        if integration:
-            integrations[integration.domain] = integration
+    tasks = (
+        async_get_integration(hass, domain)
+        for domain in {entry.domain for entry in entries}
+    )
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+    for integration_or_exc in results:
+        if isinstance(integration_or_exc, Integration):
+            integrations[integration_or_exc.domain] = integration_or_exc
+        elif not isinstance(integration_or_exc, IntegrationNotFound):
+            raise integration_or_exc
 
     entries = [
         entry
