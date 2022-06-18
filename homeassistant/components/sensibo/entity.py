@@ -99,6 +99,13 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             result = await self._client.async_set_timer(self._device_id, params)
         if command == "del_timer":
             result = await self._client.async_del_timer(self._device_id)
+        if command == "set_pure_boost":
+            if TYPE_CHECKING:
+                assert params is not None
+            result = await self._client.async_set_pureboost(
+                self._device_id,
+                params,
+            )
         return result
 
 
