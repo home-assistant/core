@@ -232,7 +232,7 @@ async def test_climate_device_without_cooling_support(
         "e": "changed",
         "r": "sensors",
         "id": "1",
-        "config": {"mode": None},
+        "config": {"mode": "other"},
         "state": {"on": True},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
@@ -471,7 +471,7 @@ async def test_climate_device_with_fan_support(
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "config": {"fanmode": None},
+        "config": {"fanmode": "unsupported"},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -485,7 +485,7 @@ async def test_climate_device_with_fan_support(
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "config": {"fanmode": None},
+        "config": {"fanmode": "unsupported"},
         "state": {"on": True},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
@@ -500,7 +500,7 @@ async def test_climate_device_with_fan_support(
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "config": {"fanmode": None},
+        "config": {"fanmode": "unsupported"},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
@@ -618,7 +618,7 @@ async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_webs
         "e": "changed",
         "r": "sensors",
         "id": "0",
-        "config": {"preset": None},
+        "config": {"preset": "unsupported"},
     }
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
