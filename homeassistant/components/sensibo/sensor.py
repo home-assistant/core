@@ -133,6 +133,14 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         value_fn=lambda data: data.timer_time,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
+    SensiboDeviceSensorEntityDescription(
+        key="filter_last_reset",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        name="Filter Last Reset",
+        icon="mdi:timer",
+        value_fn=lambda data: data.filter_last_reset,
+        extra_fn=None,
+    ),
 )
 
 
