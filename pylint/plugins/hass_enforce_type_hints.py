@@ -588,7 +588,18 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             "Used when method return type is incorrect",
         ),
     }
-    options = ()
+    options = (
+        (
+            "ignore-missing-annotations",
+            {
+                "default": True,
+                "type": "yn",
+                "metavar": "<y or n>",
+                "help": "Set to ``no`` if you wish to check functions that do not "
+                "have any type hints.",
+            },
+        ),
+    )
 
     def __init__(self, linter: PyLinter | None = None) -> None:
         super().__init__(linter)
@@ -641,7 +652,11 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def _check_function(self, node: nodes.FunctionDef, match: TypeHintMatch) -> None:
         # Check that at least one argument is annotated.
         annotations = _get_all_annotations(node)
-        if node.returns is None and not _has_valid_annotations(annotations):
+        if (
+            self.linter.config.ignore_missing_annotations
+            and node.returns is None
+            and not _has_valid_annotations(annotations)
+        ):
             return
 
         # Check that all arguments are correctly annotated.

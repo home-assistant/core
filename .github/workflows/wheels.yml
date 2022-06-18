@@ -47,6 +47,9 @@ jobs:
             # execinfo-dev when building wheels. The setuptools build setup does not have an option for
             # adding a single LDFLAG so copy all relevant linux flags here (as of 1.43.0)
             echo "GRPC_PYTHON_LDFLAGS=-lpthread -Wl,-wrap,memcpy -static-libgcc -lexecinfo"
+
+            # Fix out of memory issues with rust
+            echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
           ) > .env_file
 
       - name: Upload env_file
@@ -97,6 +100,55 @@ jobs:
           env-file: true
           apk: "build-base;cmake;git;linux-headers;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;cargo"
           pip: "Cython;numpy==1.21.6"
+          skip-binary: aiohttp
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements.txt"
+
+  core_musllinux:
+    name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for core
+    if: github.repository_owner == 'home-assistant'
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3.0.2
+
+      - name: Download env_file
+        uses: actions/download-artifact@v3
+        with:
+          name: env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@v3
+        with:
+          name: requirements_diff
+
+      - name: Adjust ENV / CP310
+        run: |
+          if [ "${{ matrix.arch }}" = "i386" ]; then
+            echo "NPY_DISABLE_SVML=1" >> .env_file
+          fi
+
+          requirement_files="requirements_all.txt requirements_diff.txt"
+          for requirement_file in ${requirement_files}; do
+            sed -i "s|numpy==1.21.6|numpy==1.22.4|g" ${requirement_file}
+          done
+          echo "numpy==1.22.4" >> homeassistant/package_constraints.txt
+
+      - name: Build wheels
+        uses: home-assistant/wheels@2022.06.6
+        with:
+          abi: cp310
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;yaml-dev"
           skip-binary: aiohttp
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
@@ -161,6 +213,78 @@ jobs:
           apk: "build-base;cmake;git;linux-headers;libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;autoconf;automake;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;cargo"
           pip: "Cython;numpy;scikit-build"
           skip-binary: aiohttp,grpcio
+          constraints: "homeassistant/package_constraints.txt"
+          requirements-diff: "requirements_diff.txt"
+          requirements: "requirements_all.txt"
+
+  integrations_musllinux:
+    name: Build musllinux wheels with musllinux_1_2 / cp310 at ${{ matrix.arch }} for integrations
+    if: github.repository_owner == 'home-assistant'
+    needs: init
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: ${{ fromJson(needs.init.outputs.architectures) }}
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3.0.2
+
+      - name: Download env_file
+        uses: actions/download-artifact@v3
+        with:
+          name: env_file
+
+      - name: Download requirements_diff
+        uses: actions/download-artifact@v3
+        with:
+          name: requirements_diff
+
+      - name: Uncomment packages
+        run: |
+          requirement_files="requirements_all.txt requirements_diff.txt"
+          for requirement_file in ${requirement_files}; do
+            sed -i "s|# pybluez|pybluez|g" ${requirement_file}
+            sed -i "s|# bluepy|bluepy|g" ${requirement_file}
+            sed -i "s|# beacontools|beacontools|g" ${requirement_file}
+            sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
+            sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
+            sed -i "s|# evdev|evdev|g" ${requirement_file}
+            sed -i "s|# python-eq3bt|python-eq3bt|g" ${requirement_file}
+            sed -i "s|# pycups|pycups|g" ${requirement_file}
+            sed -i "s|# homekit|homekit|g" ${requirement_file}
+            sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
+            sed -i "s|# decora|decora|g" ${requirement_file}
+            sed -i "s|# avion|avion|g" ${requirement_file}
+            sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
+            sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
+            sed -i "s|# face_recognition|face_recognition|g" ${requirement_file}
+            sed -i "s|# python-gammu|python-gammu|g" ${requirement_file}
+          done
+
+      - name: Adjust ENV / CP310
+        run: |
+          if [ "${{ matrix.arch }}" = "i386" ]; then
+            echo "NPY_DISABLE_SVML=1" >> .env_file
+          fi
+
+          requirement_files="requirements_all.txt requirements_diff.txt"
+          for requirement_file in ${requirement_files}; do
+            sed -i "s|numpy==1.21.6|numpy==1.22.4|g" ${requirement_file}
+          done
+          echo "numpy==1.22.4" >> homeassistant/package_constraints.txt
+
+      - name: Build wheels
+        uses: home-assistant/wheels@2022.06.6
+        with:
+          abi: cp310
+          tag: musllinux_1_2
+          arch: ${{ matrix.arch }}
+          wheels-key: ${{ secrets.WHEELS_KEY }}
+          env-file: true
+          apk: "libexecinfo-dev;bluez-dev;libffi-dev;openssl-dev;glib-dev;eudev-dev;libxml2-dev;libxslt-dev;libpng-dev;libjpeg-turbo-dev;tiff-dev;cups-dev;gmp-dev;mpfr-dev;mpc1-dev;ffmpeg-dev;gammu-dev;yaml-dev;openblas-dev;fftw-dev;lapack-dev;gfortran"
+          skip-binary: aiohttp;grpcio
+          legacy: true
           constraints: "homeassistant/package_constraints.txt"
           requirements-diff: "requirements_diff.txt"
           requirements: "requirements_all.txt"

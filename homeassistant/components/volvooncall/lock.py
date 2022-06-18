@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from volvooncall.dashboard import Lock
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,8 +29,10 @@ async def async_setup_platform(
 class VolvoLock(VolvoEntity, LockEntity):
     """Represents a car lock."""
 
+    instrument: Lock
+
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         return self.instrument.is_locked
 
