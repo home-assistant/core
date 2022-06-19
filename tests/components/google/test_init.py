@@ -74,7 +74,7 @@ def setup_config_entry(
         (
             SERVICE_CREATE_EVENT,
             {},
-            {"entity_id": TEST_YAML_ENTITY},
+            {"entity_id": TEST_API_ENTITY},
         ),
     ],
     ids=("add_event", "create_event"),
@@ -245,13 +245,12 @@ async def test_found_calendar_from_api(
 
 
 @pytest.mark.parametrize(
-    "calendars_config,google_config,config_entry_options",
-    [([], {}, {CONF_CALENDAR_ACCESS: "read_write"})],
+    "google_config,config_entry_options",
+    [({}, {CONF_CALENDAR_ACCESS: "read_write"})],
 )
 async def test_load_application_credentials(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
-    mock_calendars_yaml: None,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
@@ -464,7 +463,6 @@ async def test_add_event_invalid_params(
     component_setup: ComponentSetup,
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
@@ -504,7 +502,6 @@ async def test_add_event_date_in_x(
     mock_calendars_list: ApiResult,
     mock_insert_event: Callable[[..., dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
     date_fields: dict[str, Any],
     start_timedelta: datetime.timedelta,
@@ -544,7 +541,6 @@ async def test_add_event_date(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_insert_event: Callable[[str, dict[str, Any]], None],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,
@@ -586,7 +582,6 @@ async def test_add_event_date_time(
     mock_calendars_list: ApiResult,
     mock_insert_event: Callable[[str, dict[str, Any]], None],
     test_api_calendar: dict[str, Any],
-    mock_calendars_yaml: None,
     mock_events_list: ApiResult,
     setup_config_entry: MockConfigEntry,
     aioclient_mock: AiohttpClientMocker,

@@ -21,9 +21,19 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES, DOMAIN
-from .utils import async_get_adoptable_devices_by_type, async_get_devices
+from .utils import async_get_devices, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Check if the last update was successful for a config entry."""
+    return bool(
+        DOMAIN in hass.data
+        and entry.entry_id in hass.data[DOMAIN]
+        and hass.data[DOMAIN][entry.entry_id].last_update_success
+    )
 
 
 class ProtectData:
@@ -60,8 +70,8 @@ class ProtectData:
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
         """Get all devices matching types."""
         for device_type in device_types:
-            yield from async_get_adoptable_devices_by_type(
-                self.api, device_type
+            yield from async_get_devices_by_type(
+                self.api.bootstrap, device_type
             ).values()
 
     async def async_setup(self) -> None:
@@ -143,7 +153,7 @@ class ProtectData:
             return
 
         self.async_signal_device_id_update(self.api.bootstrap.nvr.id)
-        for device in async_get_devices(self.api, DEVICES_THAT_ADOPT):
+        for device in async_get_devices(self.api.bootstrap, DEVICES_THAT_ADOPT):
             self.async_signal_device_id_update(device.id)
 
     @callback

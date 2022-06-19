@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
@@ -89,7 +90,7 @@ class KiwiLock(LockEntity):
         return name or specifier
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state == STATE_LOCKED
 
@@ -104,7 +105,7 @@ class KiwiLock(LockEntity):
         self._state = STATE_LOCKED
         self.async_write_ha_state()
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
 
         try:

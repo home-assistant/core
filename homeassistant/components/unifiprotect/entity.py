@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
 from .models import ProtectRequiredKeysMixin
-from .utils import async_get_adoptable_devices_by_type, get_nested_attr
+from .utils import async_device_by_id, get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,11 +117,11 @@ class ProtectDeviceEntity(Entity):
         self.device = device
 
         if description is None:
-            self._attr_unique_id = f"{self.device.id}"
+            self._attr_unique_id = f"{self.device.mac}"
             self._attr_name = f"{self.device.name}"
         else:
             self.entity_description = description
-            self._attr_unique_id = f"{self.device.id}_{description.key}"
+            self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
 
@@ -153,10 +153,11 @@ class ProtectDeviceEntity(Entity):
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
             assert self.device.model
-            devices = async_get_adoptable_devices_by_type(
-                self.data.api, self.device.model
+            device = async_device_by_id(
+                self.data.api.bootstrap, self.device.id, device_type=self.device.model
             )
-            self.device = devices[self.device.id]
+            assert device is not None
+            self.device = device
 
         is_connected = (
             self.data.last_update_success and self.device.state == StateType.CONNECTED

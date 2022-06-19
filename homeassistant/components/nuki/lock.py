@@ -1,6 +1,8 @@
 """Nuki.io lock platform."""
 from abc import ABC, abstractmethod
+from typing import Any
 
+from pynuki import NukiLock, NukiOpener
 from pynuki.constants import MODE_OPENER_CONTINUOUS
 import voluptuous as vol
 
@@ -73,11 +75,6 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
         return self._nuki_device.nuki_id
 
     @property
-    @abstractmethod
-    def is_locked(self):
-        """Return true if lock is locked."""
-
-    @property
     def extra_state_attributes(self):
         """Return the device specific state attributes."""
         data = {
@@ -92,35 +89,37 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
         return super().available and self._nuki_device.state not in ERROR_STATES
 
     @abstractmethod
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
 
     @abstractmethod
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
 
     @abstractmethod
-    def open(self, **kwargs):
+    def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
 
 
 class NukiLockEntity(NukiDeviceEntity):
     """Representation of a Nuki lock."""
 
+    _nuki_device: NukiLock
+
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._nuki_device.is_locked
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._nuki_device.lock()
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self._nuki_device.unlock()
 
-    def open(self, **kwargs):
+    def open(self, **kwargs: Any) -> None:
         """Open the door latch."""
         self._nuki_device.unlatch()
 
@@ -136,23 +135,25 @@ class NukiLockEntity(NukiDeviceEntity):
 class NukiOpenerEntity(NukiDeviceEntity):
     """Representation of a Nuki opener."""
 
+    _nuki_device: NukiOpener
+
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if either ring-to-open or continuous mode is enabled."""
         return not (
             self._nuki_device.is_rto_activated
             or self._nuki_device.mode == MODE_OPENER_CONTINUOUS
         )
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Disable ring-to-open."""
         self._nuki_device.deactivate_rto()
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Enable ring-to-open."""
         self._nuki_device.activate_rto()
 
-    def open(self, **kwargs):
+    def open(self, **kwargs: Any) -> None:
         """Buzz open the door."""
         self._nuki_device.electric_strike_actuation()
 

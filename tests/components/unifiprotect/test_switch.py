@@ -238,7 +238,7 @@ async def test_switch_setup_light(
 
     description = LIGHT_SWITCHES[0]
 
-    unique_id = f"{light.id}_{description.key}"
+    unique_id = f"{light.mac}_{description.key}"
     entity_id = f"switch.test_light_{description.name.lower().replace(' ', '_')}"
 
     entity = entity_registry.async_get(entity_id)
@@ -282,7 +282,7 @@ async def test_switch_setup_camera_all(
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
     )
-    unique_id = f"{camera.id}_{description.key}"
+    unique_id = f"{camera.mac}_{description.key}"
     entity_id = f"switch.test_camera_{description_entity_name}"
 
     entity = entity_registry.async_get(entity_id)
@@ -329,7 +329,7 @@ async def test_switch_setup_camera_none(
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
     )
-    unique_id = f"{camera_none.id}_{description.key}"
+    unique_id = f"{camera_none.mac}_{description.key}"
     entity_id = f"switch.test_camera_{description_entity_name}"
 
     entity = entity_registry.async_get(entity_id)
