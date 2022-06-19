@@ -128,5 +128,5 @@ async def async_remove_config_entry_device(
     assert api is not None
     return api.bootstrap.nvr.mac not in unifi_macs and not any(
         device.mac in unifi_macs
-        for device in async_get_devices(api, DEVICES_THAT_ADOPT)
+        for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT)
     )

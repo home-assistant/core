@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
-from .conftest import MockBootstrap, MockEntityFixture
+from .conftest import MockBootstrap, MockEntityFixture, regenerate_device_ids
 
 from tests.common import MockConfigEntry
 
@@ -212,8 +212,7 @@ async def test_device_remove_devices(
     light1 = mock_light.copy()
     light1._api = mock_entry.api
     light1.name = "Test Light 1"
-    light1.id = "lightid1"
-    light1.mac = "AABBCCDDEEFF"
+    regenerate_device_ids(light1)
 
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,

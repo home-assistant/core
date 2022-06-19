@@ -60,7 +60,7 @@ async def test_lock_setup(
 ):
     """Test lock entity setup."""
 
-    unique_id = f"{doorlock[0].id}_lock"
+    unique_id = f"{doorlock[0].mac}_lock"
     entity_id = doorlock[1]
 
     entity_registry = er.async_get(hass)

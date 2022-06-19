@@ -23,6 +23,7 @@ from pyunifiprotect.data import (
     Viewer,
     WSSubscriptionMessage,
 )
+from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
@@ -79,6 +80,26 @@ class MockBootstrap:
             "doorlocks": [c.unifi_dict() for c in self.doorlocks.values()],
             "chimes": [c.unifi_dict() for c in self.chimes.values()],
         }
+
+    def get_device_from_mac(self, mac: str) -> ProtectAdoptableDeviceModel | None:
+        """Return device for MAC address."""
+
+        mac = mac.lower().replace(":", "").replace("-", "").replace("_", "")
+
+        all_devices = (
+            self.cameras.values(),
+            self.lights.values(),
+            self.sensors.values(),
+            self.viewers.values(),
+            self.liveviews.values(),
+            self.doorlocks.values(),
+            self.chimes.values(),
+        )
+        for devices in all_devices:
+            for device in devices:
+                if device.mac.lower() == mac:
+                    return device
+        return None
 
 
 @dataclass
@@ -301,7 +322,19 @@ def ids_from_device_description(
         description.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
     )
 
-    unique_id = f"{device.id}_{description.key}"
+    unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
 
     return unique_id, entity_id
+
+
+def generate_random_ids() -> tuple[str, str]:
+    """Generate random IDs for device."""
+
+    return random_hex(24).upper(), random_hex(12).upper()
+
+
+def regenerate_device_ids(device: ProtectAdoptableDeviceModel) -> None:
+    """Regenerate the IDs on UFP device."""
+
+    device.id, device.mac = generate_random_ids()
