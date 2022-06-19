@@ -38,7 +38,7 @@ async def async_setup_entry(
         coordinator.async_add_listener(router_update)
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     restore_entities(registry, coordinator, entry, async_add_entities, tracked)
 
 

@@ -35,14 +35,10 @@ async def async_setup_entry(
         siren = gateway.api.lights.sirens[siren_id]
         async_add_entities([DeconzSiren(siren, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.sirens.subscribe(
-            async_add_siren,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_siren,
+        gateway.api.lights.sirens,
     )
-    for siren_id in gateway.api.lights.sirens:
-        async_add_siren(EventType.ADDED, siren_id)
 
 
 class DeconzSiren(DeconzDevice, SirenEntity):

@@ -7,14 +7,5 @@
                 }
             }
         }
-    },
-    "options": {
-        "step": {
-            "options": {
-                "data": {
-                    "round": "Presnos\u0165"
-                }
-            }
-        }
     }
 }

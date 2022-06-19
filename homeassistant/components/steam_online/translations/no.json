@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Begrenset venneliste: Se dokumentasjonen for hvordan du ser alle andre venner"
+        },
         "step": {
             "init": {
                 "data": {

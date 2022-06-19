@@ -5,8 +5,13 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light
-from pyunifiprotect.data.types import RecordingMode, SmartDetectObjectType, VideoMode
+from pyunifiprotect.data import (
+    Camera,
+    Light,
+    RecordingMode,
+    SmartDetectObjectType,
+    VideoMode,
+)
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.switch import (
@@ -113,7 +118,7 @@ async def camera_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 12, 11)
+    assert_entity_counts(hass, Platform.SWITCH, 13, 12)
 
     yield camera_obj
 
@@ -156,7 +161,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 5, 4)
+    assert_entity_counts(hass, Platform.SWITCH, 6, 5)
 
     yield camera_obj
 
@@ -200,7 +205,7 @@ async def camera_privacy_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.SWITCH, 6, 5)
+    assert_entity_counts(hass, Platform.SWITCH, 7, 6)
 
     yield camera_obj
 
@@ -233,7 +238,7 @@ async def test_switch_setup_light(
 
     description = LIGHT_SWITCHES[0]
 
-    unique_id = f"{light.id}_{description.key}"
+    unique_id = f"{light.mac}_{description.key}"
     entity_id = f"switch.test_light_{description.name.lower().replace(' ', '_')}"
 
     entity = entity_registry.async_get(entity_id)
@@ -277,7 +282,7 @@ async def test_switch_setup_camera_all(
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
     )
-    unique_id = f"{camera.id}_{description.key}"
+    unique_id = f"{camera.mac}_{description.key}"
     entity_id = f"switch.test_camera_{description_entity_name}"
 
     entity = entity_registry.async_get(entity_id)
@@ -324,7 +329,7 @@ async def test_switch_setup_camera_none(
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
     )
-    unique_id = f"{camera_none.id}_{description.key}"
+    unique_id = f"{camera_none.mac}_{description.key}"
     entity_id = f"switch.test_camera_{description_entity_name}"
 
     entity = entity_registry.async_get(entity_id)

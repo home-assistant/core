@@ -5,34 +5,10 @@ from pynzbgetapi import NZBGetAPIException
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
-from homeassistant.setup import async_setup_component
 
-from . import (
-    ENTRY_CONFIG,
-    YAML_CONFIG,
-    _patch_async_setup_entry,
-    _patch_history,
-    _patch_status,
-    _patch_version,
-    init_integration,
-)
+from . import ENTRY_CONFIG, _patch_version, init_integration
 
 from tests.common import MockConfigEntry
-
-
-async def test_import_from_yaml(hass) -> None:
-    """Test import from YAML."""
-    with _patch_version(), _patch_status(), _patch_history(), _patch_async_setup_entry():
-        assert await async_setup_component(hass, DOMAIN, {DOMAIN: YAML_CONFIG})
-        await hass.async_block_till_done()
-
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
-
-    assert entries[0].data[CONF_NAME] == "GetNZBsTest"
-    assert entries[0].data[CONF_HOST] == "10.10.10.30"
-    assert entries[0].data[CONF_PORT] == 6789
 
 
 async def test_unload_entry(hass, nzbget_api):

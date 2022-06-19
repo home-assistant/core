@@ -1,10 +1,10 @@
-"""Device tracker for BMW Connected Drive vehicles."""
+"""Device tracker for MyBMW vehicles."""
 from __future__ import annotations
 
 import logging
 from typing import Literal
 
-from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle import MyBMWVehicle
 
 from homeassistant.components.device_tracker import SOURCE_TYPE_GPS
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
@@ -12,7 +12,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BMWConnectedDriveBaseEntity
+from . import BMWBaseEntity
 from .const import ATTR_DIRECTION, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
 
@@ -24,7 +24,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the BMW ConnectedDrive tracker from config entry."""
+    """Set up the MyBMW tracker from config entry."""
     coordinator: BMWDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[BMWDeviceTracker] = []
 
@@ -39,8 +39,8 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
-    """BMW Connected Drive device tracker."""
+class BMWDeviceTracker(BMWBaseEntity, TrackerEntity):
+    """MyBMW device tracker."""
 
     _attr_force_update = False
     _attr_icon = "mdi:car"
@@ -48,7 +48,7 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     def __init__(
         self,
         coordinator: BMWDataUpdateCoordinator,
-        vehicle: ConnectedDriveVehicle,
+        vehicle: MyBMWVehicle,
     ) -> None:
         """Initialize the Tracker."""
         super().__init__(coordinator, vehicle)
@@ -59,13 +59,13 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Return entity specific state attributes."""
-        return dict(self._attrs, **{ATTR_DIRECTION: self.vehicle.status.gps_heading})
+        return {**self._attrs, ATTR_DIRECTION: self.vehicle.vehicle_location.heading}
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         return (
-            self.vehicle.status.gps_position[0]
+            self.vehicle.vehicle_location.location[0]
             if self.vehicle.is_vehicle_tracking_enabled
             else None
         )
@@ -74,7 +74,7 @@ class BMWDeviceTracker(BMWConnectedDriveBaseEntity, TrackerEntity):
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return (
-            self.vehicle.status.gps_position[1]
+            self.vehicle.vehicle_location.location[1]
             if self.vehicle.is_vehicle_tracking_enabled
             else None
         )

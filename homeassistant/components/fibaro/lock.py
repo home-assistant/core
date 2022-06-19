@@ -1,6 +1,8 @@
 """Support for Fibaro locks."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.lock import ENTITY_ID_FORMAT, LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -37,18 +39,18 @@ class FibaroLock(FibaroDevice, LockEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
-    def lock(self, **kwargs):
+    def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self.action("secure")
         self._state = True
 
-    def unlock(self, **kwargs):
+    def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         self.action("unsecure")
         self._state = False
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if device is locked."""
         return self._state
 

@@ -15,6 +15,7 @@
             "stream_no_video": "Strumie\u0144 nie zawiera wideo",
             "stream_not_permitted": "Operacja nie jest dozwolona podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
             "stream_unauthorised": "Autoryzacja nie powiod\u0142a si\u0119 podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
+            "template_error": "B\u0142\u0105d renderowania szablonu. Przejrzyj log, aby uzyska\u0107 wi\u0119cej informacji.",
             "timeout": "Przekroczono limit czasu podczas \u0142adowania adresu URL",
             "unable_still_load": "Nie mo\u017cna za\u0142adowa\u0107 prawid\u0142owego obrazu z adresu URL nieruchomego obrazu (np. nieprawid\u0142owy host, adres URL lub b\u0142\u0105d uwierzytelniania). Przejrzyj logi, aby uzyska\u0107 wi\u0119cej informacji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
@@ -32,7 +33,6 @@
             "user": {
                 "data": {
                     "authentication": "Uwierzytelnianie",
-                    "content_type": "Typ zawarto\u015bci",
                     "framerate": "Od\u015bwie\u017canie (Hz)",
                     "limit_refetch_to_url_change": "Ogranicz pobieranie do zmiany adresu URL",
                     "password": "Has\u0142o",
@@ -58,6 +58,7 @@
             "stream_no_video": "Strumie\u0144 nie zawiera wideo",
             "stream_not_permitted": "Operacja nie jest dozwolona podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
             "stream_unauthorised": "Autoryzacja nie powiod\u0142a si\u0119 podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
+            "template_error": "B\u0142\u0105d renderowania szablonu. Przejrzyj log, aby uzyska\u0107 wi\u0119cej informacji.",
             "timeout": "Przekroczono limit czasu podczas \u0142adowania adresu URL",
             "unable_still_load": "Nie mo\u017cna za\u0142adowa\u0107 prawid\u0142owego obrazu z adresu URL nieruchomego obrazu (np. nieprawid\u0142owy host, adres URL lub b\u0142\u0105d uwierzytelniania). Przejrzyj logi, aby uzyska\u0107 wi\u0119cej informacji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
@@ -72,7 +73,6 @@
             "init": {
                 "data": {
                     "authentication": "Uwierzytelnianie",
-                    "content_type": "Typ zawarto\u015bci",
                     "framerate": "Od\u015bwie\u017canie (Hz)",
                     "limit_refetch_to_url_change": "Ogranicz pobieranie do zmiany adresu URL",
                     "password": "Has\u0142o",

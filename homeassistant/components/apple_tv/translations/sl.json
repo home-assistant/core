@@ -1,11 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured_device": "Naprava je \u017ee name\u0161\u010dena",
             "already_in_progress": "Name\u0161\u010danje se \u017ee izvaja",
             "backoff": "Naprav v tem trenutku ne sprejema zahtev za seznanitev (morda ste preve\u010dkrat vnesli napa\u010den PIN). Pokusitve znova kasneje.",
             "device_did_not_pair": "Iz te naprave ni bilo poskusov zaklju\u010diti seznanjanja.",
-            "invalid_config": "Namestitev te naprave ni bila zaklju\u010dena. Poskusite ponovno.",
             "no_devices_found": "Ni najdenih  naprav v omre\u017eju",
             "unknown": "Nepri\u010dakovana napaka"
         },
@@ -13,7 +11,6 @@
             "already_configured": "Naprava je \u017ee name\u0161\u010dena",
             "invalid_auth": "Napaka pri overjanju",
             "no_devices_found": "Ni najdenih  naprav v omre\u017eju",
-            "no_usable_service": "Najdena je bila naprava, za katero ni znan na\u010din povezovanja. \u010ce boste \u0161e vedno videli to sporo\u010dilo, poskusite dolo\u010diti IP naslov ali pa ponovno za\u017eenite Apple TV.",
             "unknown": "Nepri\u010dakovana napaka"
         },
         "flow_title": "Apple TV: {name}",
@@ -59,6 +56,5 @@
                 "description": "Konfiguracija splo\u0161nih nastavitev naprave"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

@@ -17,8 +17,7 @@
                     "mode": "Tryb",
                     "name": "Nazwa"
                 },
-                "description": "Aby wygenerowa\u0107 klucz API, przejd\u017a do https://openweathermap.org/appid",
-                "title": "OpenWeatherMap"
+                "description": "Aby wygenerowa\u0107 klucz API, przejd\u017a do https://openweathermap.org/appid"
             }
         }
     },

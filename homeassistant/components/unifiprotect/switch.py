@@ -5,8 +5,12 @@ from dataclasses import dataclass
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Camera, RecordingMode, VideoMode
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import (
+    Camera,
+    ProtectAdoptableDeviceModel,
+    RecordingMode,
+    VideoMode,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -128,6 +132,14 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_debug_enabled",
         ufp_set_method="set_osd_bitrate",
+    ),
+    ProtectSwitchEntityDescription(
+        key="motion",
+        name="Detections: Motion",
+        icon="mdi:run-fast",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="recording_settings.enable_motion_detection",
+        ufp_set_method="set_motion_detection",
     ),
     ProtectSwitchEntityDescription(
         key="smart_person",

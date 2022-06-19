@@ -20,6 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
@@ -27,14 +28,17 @@ from .const import (
     CONF_OVERRIDE_CHOST,
     DEFAULT_SCAN_INTERVAL,
     DEVICES_FOR_SUBSCRIBE,
+    DEVICES_THAT_ADOPT,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
     OUTDATED_LOG_MESSAGE,
     PLATFORMS,
 )
-from .data import ProtectData
+from .data import ProtectData, async_ufp_instance_for_config_entry_ids
 from .discovery import async_start_discovery
+from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
+from .utils import _async_unifi_mac_from_hass, async_get_devices
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,6 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         return False
 
+    await async_migrate_data(hass, entry, protect)
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=nvr_info.mac)
 
@@ -108,3 +113,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_cleanup_services(hass)
 
     return bool(unload_ok)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove ufp config entry from a device."""
+    unifi_macs = {
+        _async_unifi_mac_from_hass(connection[1])
+        for connection in device_entry.connections
+        if connection[0] == dr.CONNECTION_NETWORK_MAC
+    }
+    api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
+    assert api is not None
+    return api.bootstrap.nvr.mac not in unifi_macs and not any(
+        device.mac in unifi_macs
+        for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT)
+    )

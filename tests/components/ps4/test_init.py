@@ -155,7 +155,7 @@ async def test_config_flow_entry_migrate(hass):
         "homeassistant.util.location.async_detect_location_info",
         return_value=MOCK_LOCATION,
     ), patch(
-        "homeassistant.helpers.entity_registry.async_get_registry",
+        "homeassistant.helpers.entity_registry.async_get",
         return_value=mock_e_registry,
     ):
         await ps4.async_migrate_entry(hass, mock_entry)

@@ -66,7 +66,7 @@ async def test_media_player_setup(
 ):
     """Test media_player entity setup."""
 
-    unique_id = f"{camera[0].id}_speaker"
+    unique_id = f"{camera[0].mac}_speaker"
     entity_id = camera[1]
 
     entity_registry = er.async_get(hass)

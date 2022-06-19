@@ -1,13 +1,4 @@
 {
-    "config": {
-        "step": {
-            "owserver": {
-                "data": {
-                    "port": "Port"
-                }
-            }
-        }
-    },
     "options": {
         "step": {
             "device_selection": {

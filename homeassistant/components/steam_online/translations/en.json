@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Friends list restricted: Please refer to the documentation on how to see all other friends"
+        },
         "step": {
             "init": {
                 "data": {

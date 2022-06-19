@@ -24,7 +24,8 @@
             "manual_device_entry": {
                 "data": {
                     "host": "Host (direcci\u00f3n IP)"
-                }
+                },
+                "description": "Configuraci\u00f3n local"
             },
             "pick_device": {
                 "data": {
@@ -32,11 +33,6 @@
                 },
                 "description": "Se han descubierto los siguientes dispositivos IntelliFire. Selecciona lo que quieras configurar.",
                 "title": "Selecci\u00f3n de dispositivo"
-            },
-            "user": {
-                "data": {
-                    "host": "Host"
-                }
             }
         }
     }

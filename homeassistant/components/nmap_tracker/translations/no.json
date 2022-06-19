@@ -30,8 +30,7 @@
                     "home_interval": "Minimum antall minutter mellom skanninger av aktive enheter (lagre batteri)",
                     "hosts": "Nettverksadresser (atskilt med komma) som skal skannes",
                     "interval_seconds": "Skanneintervall",
-                    "scan_options": "R\u00e5 konfigurerbare skannealternativer for Nmap",
-                    "track_new_devices": "Spor nye enheter"
+                    "scan_options": "R\u00e5 konfigurerbare skannealternativer for Nmap"
                 },
                 "description": "Konfigurer verter som skal skannes av Nmap. Nettverksadresse og ekskluderer kan v\u00e6re IP-adresser (192.168.1.1), IP-nettverk (192.168.0.0/24) eller IP-omr\u00e5der (192.168.1.0-32)."
             }

@@ -58,4 +58,5 @@ async def test_hass_stop(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        assert async_disconnect.assert_called_once
+        await hass.async_block_till_done()
+        async_disconnect.assert_called_once()

@@ -28,7 +28,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.data_entry_flow import BaseServiceInfo
-from homeassistant.helpers import discovery_flow
+from homeassistant.helpers import discovery_flow, instance_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.network import NoURLAvailableError, get_url
 from homeassistant.helpers.typing import ConfigType
@@ -198,7 +198,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(hass)
         await _async_register_hass_zc_service(hass, aio_zc, uuid)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:

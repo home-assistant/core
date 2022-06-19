@@ -6,9 +6,11 @@ import array
 import asyncio
 from datetime import datetime, timedelta
 import functools
+import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
@@ -1055,13 +1057,7 @@ def test_config_is_allowed_external_url():
 
 async def test_event_on_update(hass):
     """Test that event is fired on update."""
-    events = []
-
-    @ha.callback
-    def callback(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
 
     assert hass.config.latitude != 12
 
@@ -1141,13 +1137,7 @@ async def test_service_executed_with_subservices(hass):
 
 async def test_service_call_event_contains_original_data(hass):
     """Test that service call event contains original data."""
-    events = []
-
-    @ha.callback
-    def callback(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, callback)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(
         hass, "test", "service", vol.Schema({"number": vol.Coerce(int)})
@@ -1787,14 +1777,7 @@ def _ulid_timestamp(ulid: str) -> int:
 
 async def test_state_change_events_context_id_match_state_time(hass):
     """Test last_updated, timed_fired, and the ulid all have the same time."""
-    events = []
-
-    @ha.callback
-    def _event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
-
+    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
     hass.states.async_set("light.bedroom", "on")
     await hass.async_block_till_done()
     state: State = hass.states.get("light.bedroom")
@@ -1808,14 +1791,7 @@ async def test_state_change_events_context_id_match_state_time(hass):
 
 async def test_state_firing_event_matches_context_id_ulid_time(hass):
     """Test timed_fired and the ulid have the same time."""
-    events = []
-
-    @ha.callback
-    def _event_listener(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_HOMEASSISTANT_STARTED, _event_listener)
-
+    events = async_capture_events(hass, EVENT_HOMEASSISTANT_STARTED)
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -1825,3 +1801,76 @@ async def test_state_firing_event_matches_context_id_ulid_time(hass):
     assert _ulid_timestamp(event.context.id) == int(
         events[0].time_fired.timestamp() * 1000
     )
+
+
+async def test_event_context(hass):
+    """Test we can lookup the origin of a context from an event."""
+    events = []
+
+    @ha.callback
+    def capture_events(event):
+        nonlocal events
+        events.append(event)
+
+    cancel = hass.bus.async_listen("dummy_event", capture_events)
+    cancel2 = hass.bus.async_listen("dummy_event_2", capture_events)
+
+    hass.bus.async_fire("dummy_event")
+    await hass.async_block_till_done()
+
+    dummy_event: ha.Event = events[0]
+
+    hass.bus.async_fire("dummy_event_2", context=dummy_event.context)
+    await hass.async_block_till_done()
+    context_id = dummy_event.context.id
+
+    dummy_event2: ha.Event = events[1]
+    assert dummy_event2.context == dummy_event.context
+    assert dummy_event2.context.id == context_id
+    cancel()
+    cancel2()
+
+    assert dummy_event2.context.origin_event == dummy_event
+
+
+def _get_full_name(obj) -> str:
+    """Get the full name of an object in memory."""
+    objtype = type(obj)
+    name = objtype.__name__
+    if module := getattr(objtype, "__module__", None):
+        return f"{module}.{name}"
+    return name
+
+
+def _get_by_type(full_name: str) -> list[Any]:
+    """Get all objects in memory with a specific type."""
+    return [obj for obj in gc.get_objects() if _get_full_name(obj) == full_name]
+
+
+# The logger will hold a strong reference to the event for the life of the tests
+# so we must patch it out
+@pytest.mark.skipif(
+    not os.environ.get("DEBUG_MEMORY"),
+    reason="Takes too long on the CI",
+)
+@patch.object(ha._LOGGER, "debug", lambda *args: None)
+async def test_state_changed_events_to_not_leak_contexts(hass):
+    """Test state changed events do not leak contexts."""
+    gc.collect()
+    # Other tests can log Contexts which keep them in memory
+    # so we need to look at how many exist at the start
+    init_count = len(_get_by_type("homeassistant.core.Context"))
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count
+    for i in range(20):
+        hass.states.async_set("light.switch", str(i))
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count + 2
+
+    hass.states.async_remove("light.switch")
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count

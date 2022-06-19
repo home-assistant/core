@@ -55,7 +55,12 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
 
     def shutdown(self) -> None:
         """Close the connection."""
-        if self.recorder_or_dbworker and self._conn and (conn := self._conn.current()):
+        if (
+            self.recorder_or_dbworker
+            and self._conn
+            and hasattr(self._conn, "current")
+            and (conn := self._conn.current())
+        ):
             conn.close()
 
     def dispose(self) -> None:
@@ -82,9 +87,7 @@ class RecorderPool(SingletonThreadPool, NullPool):  # type: ignore[misc]
             exclude_integrations={"recorder"},
             error_if_core=False,
         )
-        return super(  # pylint: disable=bad-super-call
-            NullPool, self
-        )._create_connection()
+        return super(NullPool, self)._create_connection()
 
 
 class MutexPool(StaticPool):  # type: ignore[misc]

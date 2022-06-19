@@ -26,7 +26,6 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Klucz sieci",
                     "s0_legacy_key": "Klucz S0 (Legacy)",
                     "s2_access_control_key": "Klucz kontroli dost\u0119pu S2",
                     "s2_authenticated_key": "Klucz uwierzytelniony S2",
@@ -117,7 +116,6 @@
                 "data": {
                     "emulate_hardware": "Emulacja sprz\u0119tu",
                     "log_level": "Poziom loga",
-                    "network_key": "Klucz sieci",
                     "s0_legacy_key": "Klucz S0 (Legacy)",
                     "s2_access_control_key": "Klucz kontroli dost\u0119pu S2",
                     "s2_authenticated_key": "Klucz uwierzytelniony S2",
@@ -146,6 +144,5 @@
                 "title": "Dodatek Z-Wave JS uruchamia si\u0119..."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

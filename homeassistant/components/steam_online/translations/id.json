@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Daftar teman dibatasi: Rujuk ke dokumentasi tentang cara melihat semua teman lain"
+        },
         "step": {
             "init": {
                 "data": {

@@ -5,6 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
 
 from .account import IcloudAccount
@@ -81,7 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         hass.config_entries.async_update_entry(entry, unique_id=username)
 
-    icloud_dir = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+    icloud_dir = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     account = IcloudAccount(
         hass,

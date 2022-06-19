@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Bar\u00e1ti lista korl\u00e1tozott: K\u00e9rj\u00fck, olvassa el a dokument\u00e1ci\u00f3t arr\u00f3l, hogyan l\u00e1thatja az \u00f6sszes t\u00f6bbi bar\u00e1tot."
+        },
         "step": {
             "init": {
                 "data": {

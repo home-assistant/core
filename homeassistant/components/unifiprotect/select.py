@@ -11,17 +11,18 @@ from typing import Any, Final
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
     Camera,
+    ChimeType,
     DoorbellMessageType,
     Doorlock,
     IRLEDMode,
     Light,
     LightModeEnableType,
     LightModeType,
+    MountType,
     RecordingMode,
     Sensor,
     Viewer,
 )
-from pyunifiprotect.data.types import ChimeType, MountType
 import voluptuous as vol
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription

@@ -5,6 +5,7 @@ from enum import Enum
 import functools
 import logging
 
+from zigpy import types
 from zigpy.zcl.clusters.general import OnOff
 from zigpy.zcl.clusters.security import IasWd
 
@@ -208,3 +209,19 @@ class ZHAStartupOnOffSelectEntity(
 
     _select_attr = "start_up_on_off"
     _enum: Enum = OnOff.StartUpOnOff
+
+
+class AqaraMotionSensitivities(types.enum8):
+    """Aqara motion sensitivities."""
+
+    Low = 0x01
+    Medium = 0x02
+    High = 0x03
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
+class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"):
+    """Representation of a ZHA on off transition time configuration entity."""
+
+    _select_attr = "motion_sensitivity"
+    _enum: Enum = AqaraMotionSensitivities

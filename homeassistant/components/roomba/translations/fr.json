@@ -11,13 +11,6 @@
         },
         "flow_title": "{name} ({host})",
         "step": {
-            "init": {
-                "data": {
-                    "host": "H\u00f4te"
-                },
-                "description": "S\u00e9lectionnez un Roomba ou un Braava.",
-                "title": "Se connecter automatiquement \u00e0 l'appareil"
-            },
             "link": {
                 "description": "Appuyez sur le bouton Accueil et maintenez-le enfonc\u00e9 jusqu'\u00e0 ce que l'appareil \u00e9mette un son (environ deux secondes).",
                 "title": "R\u00e9cup\u00e9rer le mot de passe"
@@ -31,7 +24,6 @@
             },
             "manual": {
                 "data": {
-                    "blid": "BLID",
                     "host": "H\u00f4te"
                 },
                 "description": "Aucun Roomba ou Braava n'a \u00e9t\u00e9 d\u00e9couvert sur votre r\u00e9seau.",
@@ -39,11 +31,7 @@
             },
             "user": {
                 "data": {
-                    "blid": "BLID",
-                    "continuous": "En continu",
-                    "delay": "D\u00e9lai",
-                    "host": "H\u00f4te",
-                    "password": "Mot de passe"
+                    "host": "H\u00f4te"
                 },
                 "description": "La r\u00e9cup\u00e9ration du BLID et du mot de passe est actuellement un processus manuel. Veuillez suivre les \u00e9tapes d\u00e9crites dans la documentation \u00e0 l'adresse: https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials",
                 "title": "Se connecter automatiquement \u00e0 l'appareil"

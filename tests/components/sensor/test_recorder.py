@@ -11,10 +11,8 @@ from pytest import approx
 from homeassistant import loader
 from homeassistant.components.recorder import history
 from homeassistant.components.recorder.const import DATA_INSTANCE
-from homeassistant.components.recorder.models import (
-    StatisticsMeta,
-    process_timestamp_to_utc_isoformat,
-)
+from homeassistant.components.recorder.db_schema import StatisticsMeta
+from homeassistant.components.recorder.models import process_timestamp_to_utc_isoformat
 from homeassistant.components.recorder.statistics import (
     get_metadata,
     list_statistic_ids,
@@ -2279,13 +2277,7 @@ def test_compile_hourly_statistics_changing_statistics(
     assert "Error while processing event StatisticsTask" not in caplog.text
 
 
-@pytest.mark.parametrize(
-    "db_supports_row_number,in_log,not_in_log",
-    [(True, "row_number", None), (False, None, "row_number")],
-)
-def test_compile_statistics_hourly_daily_monthly_summary(
-    hass_recorder, caplog, db_supports_row_number, in_log, not_in_log
-):
+def test_compile_statistics_hourly_daily_monthly_summary(hass_recorder, caplog):
     """Test compiling hourly statistics + monthly and daily summary."""
     zero = dt_util.utcnow()
     # August 31st, 23:00 local time
@@ -2293,13 +2285,12 @@ def test_compile_statistics_hourly_daily_monthly_summary(
         year=2021, month=9, day=1, hour=5, minute=0, second=0, microsecond=0
     )
     with patch(
-        "homeassistant.components.recorder.models.dt_util.utcnow", return_value=zero
+        "homeassistant.components.recorder.db_schema.dt_util.utcnow", return_value=zero
     ):
         hass = hass_recorder()
         # Remove this after dropping the use of the hass_recorder fixture
         hass.config.set_time_zone("America/Regina")
     recorder = hass.data[DATA_INSTANCE]
-    recorder._db_supports_row_number = db_supports_row_number
     setup_component(hass, "sensor", {})
     wait_recording_done(hass)  # Wait for the sensor recorder platform to be added
     attributes = {
@@ -2693,10 +2684,6 @@ def test_compile_statistics_hourly_daily_monthly_summary(
     assert stats == expected_stats
 
     assert "Error while processing event StatisticsTask" not in caplog.text
-    if in_log:
-        assert in_log in caplog.text
-    if not_in_log:
-        assert not_in_log not in caplog.text
 
 
 def record_states(hass, zero, entity_id, attributes, seq=None):

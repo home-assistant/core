@@ -103,6 +103,12 @@ class AirzoneSensor(AirzoneEntity, SensorEntity):
     """Define an Airzone sensor."""
 
     @callback
+    def _handle_coordinator_update(self) -> None:
+        """Update attributes when the coordinator updates."""
+        self._async_update_attrs()
+        super()._handle_coordinator_update()
+
+    @callback
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         self._attr_native_value = self.get_airzone_value(self.entity_description.key)

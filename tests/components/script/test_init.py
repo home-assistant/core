@@ -377,7 +377,7 @@ async def test_async_get_descriptions_script(hass):
     }
 
     await async_setup_component(hass, DOMAIN, script_config)
-    descriptions = await hass.helpers.service.async_get_all_descriptions()
+    descriptions = await async_get_all_descriptions(hass)
 
     assert descriptions[DOMAIN]["test1"]["description"] == ""
     assert not descriptions[DOMAIN]["test1"]["fields"]

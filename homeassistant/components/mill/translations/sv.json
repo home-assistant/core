@@ -3,7 +3,7 @@
         "step": {
             "user": {
                 "data": {
-                    "username": "Anv\u00e4ndarnamn"
+                    "connection_type": "V\u00e4lj anslutningstyp"
                 }
             }
         }

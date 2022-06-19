@@ -17,7 +17,7 @@ from homeassistant.components.insteon.api.device import (
     async_device_name,
 )
 from homeassistant.components.insteon.const import DOMAIN, MULTIPLE
-from homeassistant.helpers.device_registry import async_get_registry
+from homeassistant.helpers import device_registry as dr
 
 from .const import MOCK_USER_INPUT_PLM
 from .mock_devices import MockDevices
@@ -40,7 +40,7 @@ async def _async_setup(hass, hass_ws_client):
     devices = MockDevices()
     await devices.async_load()
 
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
     # Create device registry entry for mock node
     ha_device = dev_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -94,7 +94,7 @@ async def test_no_insteon_device(hass, hass_ws_client):
     devices = MockDevices()
     await devices.async_load()
 
-    dev_reg = await async_get_registry(hass)
+    dev_reg = dr.async_get(hass)
     # Create device registry entry for a Insteon device not in the Insteon devices list
     ha_device_1 = dev_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,

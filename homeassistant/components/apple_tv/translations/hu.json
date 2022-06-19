@@ -2,13 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "backoff": "Az eszk\u00f6z jelenleg nem fogadja el a p\u00e1ros\u00edt\u00e1si k\u00e9relmeket (lehet, hogy t\u00fal sokszor adott meg \u00e9rv\u00e9nytelen PIN-k\u00f3dot), pr\u00f3b\u00e1lkozzon \u00fajra k\u00e9s\u0151bb.",
             "device_did_not_pair": "A p\u00e1ros\u00edt\u00e1s folyamat\u00e1t az eszk\u00f6zr\u0151l nem pr\u00f3b\u00e1lt\u00e1k befejezni.",
             "device_not_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a felder\u00edt\u00e9s sor\u00e1n, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni.",
             "inconsistent_device": "Az elv\u00e1rt protokollok nem tal\u00e1lhat\u00f3k a felder\u00edt\u00e9s sor\u00e1n. Ez \u00e1ltal\u00e1ban a multicast DNS (Zeroconf) probl\u00e9m\u00e1j\u00e1t jelzi. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni az eszk\u00f6zt.",
-            "invalid_config": "Az eszk\u00f6z konfigur\u00e1l\u00e1sa nem teljes. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni.",
             "ipv6_not_supported": "Az IPv6 nem t\u00e1mogatott.",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
@@ -19,7 +17,6 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
-            "no_usable_service": "Tal\u00e1ltunk egy eszk\u00f6zt, de nem tudtuk azonos\u00edtani, hogyan lehetne kapcsolatot l\u00e9tes\u00edteni vele. Ha tov\u00e1bbra is ezt az \u00fczenetet l\u00e1tja, pr\u00f3b\u00e1lja meg megadni az IP-c\u00edm\u00e9t, vagy ind\u00edtsa \u00fajra az Apple TV-t.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
         "flow_title": "{name} ({type})",
@@ -73,6 +70,5 @@
                 "description": "Konfigur\u00e1lja az eszk\u00f6z \u00e1ltal\u00e1nos be\u00e1ll\u00edt\u00e1sait"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

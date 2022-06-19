@@ -13,8 +13,7 @@
                 "data": {
                     "access_token": "Eri\u015fim Belirteci"
                 },
-                "description": "https://developer.tibber.com/settings/accesstoken adresinden eri\u015fim anahtar\u0131n\u0131z\u0131 girin",
-                "title": "Tibber"
+                "description": "https://developer.tibber.com/settings/accesstoken adresinden eri\u015fim anahtar\u0131n\u0131z\u0131 girin"
             }
         }
     }

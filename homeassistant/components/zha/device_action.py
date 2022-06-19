@@ -48,7 +48,7 @@ async def async_call_action_from_config(
     hass: HomeAssistant,
     config: ConfigType,
     variables: TemplateVarsType,
-    context: Context,
+    context: Context | None,
 ) -> None:
     """Perform an action based on configuration."""
     await ZHA_ACTION_TYPES[DEVICE_ACTION_TYPES[config[CONF_TYPE]]](
@@ -61,7 +61,7 @@ async def async_get_actions(
 ) -> list[dict[str, str]]:
     """List device actions."""
     try:
-        zha_device = await async_get_zha_device(hass, device_id)
+        zha_device = async_get_zha_device(hass, device_id)
     except (KeyError, AttributeError):
         return []
     cluster_channels = [
@@ -89,7 +89,7 @@ async def _execute_service_based_action(
     action_type = config[CONF_TYPE]
     service_name = SERVICE_NAMES[action_type]
     try:
-        zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+        zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
     except (KeyError, AttributeError):
         return
 

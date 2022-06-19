@@ -14,14 +14,16 @@ import pytest
 from pyunifiprotect.data import (
     NVR,
     Camera,
+    Chime,
     Doorlock,
     Light,
     Liveview,
+    ProtectAdoptableDeviceModel,
     Sensor,
     Viewer,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
@@ -49,6 +51,7 @@ class MockBootstrap:
     liveviews: dict[str, Any]
     events: dict[str, Any]
     doorlocks: dict[str, Any]
+    chimes: dict[str, Any]
 
     def reset_objects(self) -> None:
         """Reset all devices on bootstrap for tests."""
@@ -59,10 +62,44 @@ class MockBootstrap:
         self.liveviews = {}
         self.events = {}
         self.doorlocks = {}
+        self.chimes = {}
 
     def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
         """Fake process method for tests."""
         pass
+
+    def unifi_dict(self) -> dict[str, Any]:
+        """Return UniFi formatted dict representation of the NVR."""
+        return {
+            "nvr": self.nvr.unifi_dict(),
+            "cameras": [c.unifi_dict() for c in self.cameras.values()],
+            "lights": [c.unifi_dict() for c in self.lights.values()],
+            "sensors": [c.unifi_dict() for c in self.sensors.values()],
+            "viewers": [c.unifi_dict() for c in self.viewers.values()],
+            "liveviews": [c.unifi_dict() for c in self.liveviews.values()],
+            "doorlocks": [c.unifi_dict() for c in self.doorlocks.values()],
+            "chimes": [c.unifi_dict() for c in self.chimes.values()],
+        }
+
+    def get_device_from_mac(self, mac: str) -> ProtectAdoptableDeviceModel | None:
+        """Return device for MAC address."""
+
+        mac = mac.lower().replace(":", "").replace("-", "").replace("_", "")
+
+        all_devices = (
+            self.cameras.values(),
+            self.lights.values(),
+            self.sensors.values(),
+            self.viewers.values(),
+            self.liveviews.values(),
+            self.doorlocks.values(),
+            self.chimes.values(),
+        )
+        for devices in all_devices:
+            for device in devices:
+                if device.mac.lower() == mac:
+                    return device
+        return None
 
 
 @dataclass
@@ -127,6 +164,7 @@ def mock_bootstrap_fixture(mock_nvr: NVR):
         liveviews={},
         events={},
         doorlocks={},
+        chimes={},
     )
 
 
@@ -221,6 +259,14 @@ def mock_doorlock():
 
 
 @pytest.fixture
+def mock_chime():
+    """Mock UniFi Protect Chime device."""
+
+    data = json.loads(load_fixture("sample_chime.json", integration=DOMAIN))
+    return Chime.from_unifi_dict(**data)
+
+
+@pytest.fixture
 def now():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
@@ -276,7 +322,19 @@ def ids_from_device_description(
         description.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
     )
 
-    unique_id = f"{device.id}_{description.key}"
+    unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
 
     return unique_id, entity_id
+
+
+def generate_random_ids() -> tuple[str, str]:
+    """Generate random IDs for device."""
+
+    return random_hex(24).upper(), random_hex(12).upper()
+
+
+def regenerate_device_ids(device: ProtectAdoptableDeviceModel) -> None:
+    """Regenerate the IDs on UFP device."""
+
+    device.id, device.mac = generate_random_ids()

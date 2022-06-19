@@ -21,7 +21,7 @@ from .const import PLCNET_ATTACHED
 from tests.common import async_fire_time_changed
 
 
-@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
+@pytest.mark.usefixtures("mock_device")
 async def test_binary_sensor_setup(hass: HomeAssistant):
     """Test default setup of the binary sensor component."""
     entry = configure_integration(hass)
@@ -33,7 +33,7 @@ async def test_binary_sensor_setup(hass: HomeAssistant):
     await hass.config_entries.async_unload(entry.entry_id)
 
 
-@pytest.mark.usefixtures("mock_device", "mock_zeroconf")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_device")
 async def test_update_attached_to_router(hass: HomeAssistant):
     """Test state change of a attached_to_router binary sensor device."""
     state_key = f"{DOMAIN}.{CONNECTED_TO_ROUTER}"
@@ -42,12 +42,6 @@ async def test_update_attached_to_router(hass: HomeAssistant):
     er = entity_registry.async_get(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Enable entity
-    er.async_update_entity(state_key, disabled_by=None)
-    await hass.async_block_till_done()
-    async_fire_time_changed(hass, dt.utcnow() + LONG_UPDATE_INTERVAL)
     await hass.async_block_till_done()
 
     state = hass.states.get(state_key)

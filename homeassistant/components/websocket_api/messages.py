@@ -61,7 +61,7 @@ def error_message(iden: int | None, code: str, message: str) -> dict[str, Any]:
     }
 
 
-def event_message(iden: JSON_TYPE, event: Any) -> dict[str, Any]:
+def event_message(iden: JSON_TYPE | int, event: Any) -> dict[str, Any]:
     """Return an event message."""
     return {"id": iden, "type": "event", "event": event}
 

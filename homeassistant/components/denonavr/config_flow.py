@@ -48,7 +48,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input: dict[str, Any] | None = None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
@@ -86,7 +88,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the Denon AVR flow."""
         self.host = None
         self.serial_number = None
@@ -105,7 +107,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input: dict[str, Any] | None = None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         errors = {}
         if user_input is not None:

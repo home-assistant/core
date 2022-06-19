@@ -104,18 +104,14 @@ async def async_setup_entry(
             return
         async_add_entities([DeconzThermostat(climate, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.sensors.thermostat.subscribe(
-            async_add_climate,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_climate,
+        gateway.api.sensors.thermostat,
     )
-    for climate_id in gateway.api.sensors.thermostat:
-        async_add_climate(EventType.ADDED, climate_id)
 
     @callback
     def async_reload_clip_sensors() -> None:
-        """Load clip climate sensors from deCONZ."""
+        """Load clip sensors from deCONZ."""
         for climate_id, climate in gateway.api.sensors.thermostat.items():
             if climate.type.startswith("CLIP"):
                 async_add_climate(EventType.ADDED, climate_id)
