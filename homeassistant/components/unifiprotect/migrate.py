@@ -34,7 +34,7 @@ async def async_migrate_data(
 
 
 async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
-    """Get UniFi Protect bootstrap or raise apporiate HA error."""
+    """Get UniFi Protect bootstrap or raise appropriate HA error."""
 
     try:
         bootstrap = await protect.get_bootstrap()
