@@ -11,7 +11,9 @@
         "step": {
             "user": {
                 "data": {
-                    "port": "Port"
+                    "port": "Port",
+                    "baud": "Baudrate",
+                    "battery_count": "Number of Batteries"
                 }
             }
         }

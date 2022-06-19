@@ -6,6 +6,7 @@ import logging
 
 from aioesphomeapi import Any
 import async_timeout
+from pylontech import PylontechStack
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -13,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .pylontech_stack import PylontechStack
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -25,7 +25,9 @@ SCAN_INTERVAL = timedelta(seconds=30)
 class PylontechCoordinator(DataUpdateCoordinator):
     """Coordinator class to collect data from battery."""
 
-    def __init__(self, hass: HomeAssistant, port: str, baud: int) -> None:
+    def __init__(
+        self, hass: HomeAssistant, port: str, baud: int, battery_count: int
+    ) -> None:
         """Pylontech setup."""
         super().__init__(
             hass,
@@ -33,7 +35,9 @@ class PylontechCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
-        self._stack = PylontechStack(device=port, baud=baud, manualBattcountLimit=7)
+        self._stack = PylontechStack(
+            device=port, baud=baud, manualBattcountLimit=battery_count
+        )
         self._last_result = self._stack.update()
         self._hass = hass
 
@@ -70,7 +74,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # TOODOO Store an API object for your platforms to access
     # hass.data[DOMAIN][entry.entry_id] = MyApi(...)
 
-    coordinator = PylontechCoordinator(hass, port="/dev/ttyUSB0", baud=115200)
+    coordinator = PylontechCoordinator(
+        hass, port="/dev/ttyUSB0", baud=115200, battery_count=7
+    )
 
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][config_entry.entry_id] = coordinator
