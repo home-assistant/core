@@ -146,7 +146,7 @@ async def setup_integration_invalidauth_error(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
 
-async def setup_integration_read_only(hass: HomeAssistant) -> None:
+async def setup_integration_no_set_charger_auth(hass: HomeAssistant) -> None:
     """Test wallbox sensor class setup for read only."""
 
     with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(

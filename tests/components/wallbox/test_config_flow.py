@@ -116,6 +116,12 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
 
 async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test we handle reauth flow."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (config_entries.UnknownEntry):
+        pass
+
     await setup_integration(hass)
     assert entry.state == config_entries.ConfigEntryState.LOADED
 
@@ -149,6 +155,12 @@ async def test_form_reauth(hass: HomeAssistant) -> None:
 
 async def test_form_reauth_invalid(hass: HomeAssistant) -> None:
     """Test we handle reauth invalid flow."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (config_entries.UnknownEntry):
+        pass
+
     await setup_integration(hass)
     assert entry.state == config_entries.ConfigEntryState.LOADED
 

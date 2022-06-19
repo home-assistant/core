@@ -7,6 +7,7 @@ from requests.exceptions import HTTPError
 
 from homeassistant.components.switch import SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.components.wallbox import InvalidAuth
+from homeassistant.config_entries import UnknownEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -16,6 +17,11 @@ from .const import MOCK_SWITCH_ENTITY_ID
 
 async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
     """Test wallbox switch class."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 
@@ -54,6 +60,11 @@ async def test_wallbox_switch_class(hass: HomeAssistant) -> None:
 
 async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox switch class connection error."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 
@@ -97,6 +108,11 @@ async def test_wallbox_switch_class_connection_error(hass: HomeAssistant) -> Non
 
 async def test_wallbox_switch_class_authentication_error(hass: HomeAssistant) -> None:
     """Test wallbox switch class authentication error."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 

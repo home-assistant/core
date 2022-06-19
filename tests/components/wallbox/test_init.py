@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from requests.exceptions import HTTPError
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState, UnknownEntry
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -14,12 +14,16 @@ from . import (
     setup_integration_charger_status_connection_error,
     setup_integration_connection_error,
     setup_integration_invalidauth_error,
-    setup_integration_read_only,
 )
 
 
 async def test_wallbox_setup_unload_entry(hass: HomeAssistant) -> None:
     """Test Wallbox Unload."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
     assert entry.state == ConfigEntryState.LOADED
@@ -31,6 +35,11 @@ async def test_wallbox_setup_unload_entry(hass: HomeAssistant) -> None:
 async def test_wallbox_unload_entry_connection_error(hass: HomeAssistant) -> None:
     """Test Wallbox Unload Connection Error."""
 
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
+
     await setup_integration_connection_error(hass)
     assert entry.state == ConfigEntryState.SETUP_ERROR
 
@@ -40,6 +49,11 @@ async def test_wallbox_unload_entry_connection_error(hass: HomeAssistant) -> Non
 
 async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant) -> None:
     """Test Wallbox setup with authentication error."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
     assert entry.state == ConfigEntryState.LOADED
@@ -70,6 +84,11 @@ async def test_wallbox_refresh_failed_invalid_auth(hass: HomeAssistant) -> None:
 async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant) -> None:
     """Test Wallbox setup with connection error."""
 
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
+
     await setup_integration(hass)
     assert entry.state == ConfigEntryState.LOADED
 
@@ -90,18 +109,13 @@ async def test_wallbox_refresh_failed_connection_error(hass: HomeAssistant) -> N
     assert entry.state == ConfigEntryState.NOT_LOADED
 
 
-async def test_wallbox_refresh_failed_read_only(hass: HomeAssistant) -> None:
-    """Test Wallbox setup for read-only user."""
-
-    await setup_integration_read_only(hass)
-    assert entry.state == ConfigEntryState.LOADED
-
-    assert await hass.config_entries.async_unload(entry.entry_id)
-    assert entry.state == ConfigEntryState.NOT_LOADED
-
-
 async def test_wallbox_refresh_invalid_auth(hass: HomeAssistant) -> None:
     """Test Wallbox setup for read-only user."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration_invalidauth_error(hass)
 
@@ -116,6 +130,11 @@ async def test_wallbox_refresh_charger_data_connection_error(
     hass: HomeAssistant,
 ) -> None:
     """Test Wallbox setup for connection error on charger status."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration_charger_status_connection_error(hass)
 

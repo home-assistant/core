@@ -6,15 +6,21 @@ import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.input_number import ATTR_VALUE, SERVICE_SET_VALUE
+from homeassistant.config_entries import UnknownEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from . import entry, setup_integration, setup_integration_read_only
+from . import entry, setup_integration, setup_integration_no_set_charger_auth
 from .const import MOCK_NUMBER_ENTITY_ID
 
 
 async def test_wallbox_number_class(hass: HomeAssistant) -> None:
     """Test wallbox number class."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 
@@ -40,6 +46,11 @@ async def test_wallbox_number_class(hass: HomeAssistant) -> None:
 
 async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox number class connection error."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 
@@ -72,7 +83,12 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
 async def test_wallbox_number_class_authentication_error(hass: HomeAssistant) -> None:
     """Test wallbox number not loaded on authentication error."""
 
-    await setup_integration_read_only(hass)
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
+
+    await setup_integration_no_set_charger_auth(hass)
 
     state = hass.states.get(MOCK_NUMBER_ENTITY_ID)
 

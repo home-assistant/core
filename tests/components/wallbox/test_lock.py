@@ -7,6 +7,7 @@ from requests import HTTPError
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
 from homeassistant.components.wallbox import InvalidAuth
+from homeassistant.config_entries import UnknownEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -16,6 +17,11 @@ from .const import MOCK_LOCK_ENTITY_ID
 
 async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
     """Test wallbox lock class."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 
@@ -53,6 +59,11 @@ async def test_wallbox_lock_class(hass: HomeAssistant) -> None:
 
 async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
     """Test wallbox lock class connection error."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration(hass)
 
@@ -97,6 +108,11 @@ async def test_wallbox_lock_class_connection_error(hass: HomeAssistant) -> None:
 async def test_wallbox_lock_class_unauthorized_error(hass: HomeAssistant) -> None:
     """Test wallbox lock class unauthorized error."""
 
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
+
     await setup_integration(hass)
 
     with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
@@ -139,6 +155,11 @@ async def test_wallbox_lock_class_unauthorized_error(hass: HomeAssistant) -> Non
 
 async def test_wallbox_lock_class_authentication_error(hass: HomeAssistant) -> None:
     """Test wallbox lock not loaded on authentication error."""
+
+    try:
+        assert await hass.config_entries.async_unload(entry.entry_id)
+    except (UnknownEntry):
+        pass
 
     await setup_integration_no_lock_auth(hass)
 
