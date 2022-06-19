@@ -3,7 +3,7 @@
   "name": "MusicCast",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/yamaha_musiccast",
-  "requirements": ["aiomusiccast==0.14.3"],
+  "requirements": ["aiomusiccast==0.14.4"],
   "ssdp": [
     {
       "manufacturer": "Yamaha Corporation"
