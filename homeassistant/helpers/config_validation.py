@@ -95,7 +95,7 @@ from . import script_variables as script_variables_helper, template as template_
 
 # pylint: disable=invalid-name
 
-TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS' or 'HH:MM:SS.F'"
+TIME_PERIOD_ERROR = "offset {} should be format 'HH:MM', 'HH:MM:SS', 'HH:MM:SS.F', 'DD HH:MM', 'DD HH:MM:SS', or 'DD HH:MM:SS.F'"
 
 # Home Assistant types
 byte = vol.All(vol.Coerce(int), vol.Range(min=0, max=255))
@@ -446,6 +446,12 @@ def time_period_str(value: str) -> timedelta:
     elif value.startswith("+"):
         value = value[1:]
 
+    day = 0
+    date_parsed = value.partition(" ")
+    if date_parsed[1]:
+        day = int(date_parsed[0])
+        value = date_parsed[2]
+
     parsed = value.split(":")
     if len(parsed) not in (2, 3):
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value))
@@ -459,7 +465,7 @@ def time_period_str(value: str) -> timedelta:
     except ValueError as err:
         raise vol.Invalid(TIME_PERIOD_ERROR.format(value)) from err
 
-    offset = timedelta(hours=hour, minutes=minute, seconds=second)
+    offset = timedelta(days=day, hours=hour, minutes=minute, seconds=second)
 
     if negative_offset:
         offset *= -1
