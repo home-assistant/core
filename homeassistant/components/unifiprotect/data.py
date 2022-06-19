@@ -14,15 +14,26 @@ from pyunifiprotect.data import (
     ModelType,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES
+from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES, DOMAIN
+from .utils import async_get_devices, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def async_last_update_was_successful(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Check if the last update was successful for a config entry."""
+    return bool(
+        DOMAIN in hass.data
+        and entry.entry_id in hass.data[DOMAIN]
+        and hass.data[DOMAIN][entry.entry_id].last_update_success
+    )
 
 
 class ProtectData:
@@ -58,13 +69,10 @@ class ProtectData:
         self, device_types: Iterable[ModelType]
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
         """Get all devices matching types."""
-
         for device_type in device_types:
-            attr = f"{device_type.value}s"
-            devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-                self.api.bootstrap, attr
-            )
-            yield from devices.values()
+            yield from async_get_devices_by_type(
+                self.api.bootstrap, device_type
+            ).values()
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
@@ -145,11 +153,8 @@ class ProtectData:
             return
 
         self.async_signal_device_id_update(self.api.bootstrap.nvr.id)
-        for device_type in DEVICES_THAT_ADOPT:
-            attr = f"{device_type.value}s"
-            devices: dict[str, ProtectDeviceModel] = getattr(self.api.bootstrap, attr)
-            for device_id in devices.keys():
-                self.async_signal_device_id_update(device_id)
+        for device in async_get_devices(self.api.bootstrap, DEVICES_THAT_ADOPT):
+            self.async_signal_device_id_update(device.id)
 
     @callback
     def async_subscribe_device_id(
@@ -188,3 +193,16 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s", device_id)
         for update_callback in self._subscriptions[device_id]:
             update_callback()
+
+
+@callback
+def async_ufp_instance_for_config_entry_ids(
+    hass: HomeAssistant, config_entry_ids: set[str]
+) -> ProtectApiClient | None:
+    """Find the UFP instance for the config entry ids."""
+    domain_data = hass.data[DOMAIN]
+    for config_entry_id in config_entry_ids:
+        if config_entry_id in domain_data:
+            protect_data: ProtectData = domain_data[config_entry_id]
+            return protect_data.api
+    return None

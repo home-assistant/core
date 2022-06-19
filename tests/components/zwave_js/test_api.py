@@ -10,6 +10,7 @@ from zwave_js_server.const import (
     InclusionStrategy,
     LogLevel,
     Protocols,
+    ProvisioningEntryStatus,
     QRCodeVersion,
     SecurityClass,
     ZwaveFeature,
@@ -63,8 +64,10 @@ from homeassistant.components.zwave_js.api import (
     PROPERTY_KEY,
     QR_CODE_STRING,
     QR_PROVISIONING_INFORMATION,
+    REQUESTED_SECURITY_CLASSES,
     SECURITY_CLASSES,
     SPECIFIC_DEVICE_CLASS,
+    STATUS,
     TYPE,
     UNPROVISION,
     VALUE,
@@ -195,14 +198,14 @@ async def test_network_status(hass, multisensor_6, integration, hass_ws_client):
     assert msg["error"]["code"] == ERR_INVALID_FORMAT
 
 
-async def test_node_ready(
+async def test_subscribe_node_status(
     hass,
     multisensor_6_state,
     client,
     integration,
     hass_ws_client,
 ):
-    """Test the node ready websocket command."""
+    """Test the subscribe node status websocket command."""
     entry = integration
     ws_client = await hass_ws_client(hass)
     node_data = deepcopy(multisensor_6_state)  # Copy to allow modification in tests.
@@ -219,7 +222,7 @@ async def test_node_ready(
     await ws_client.send_json(
         {
             ID: 3,
-            TYPE: "zwave_js/node_ready",
+            TYPE: "zwave_js/subscribe_node_status",
             DEVICE_ID: device.id,
         }
     )
@@ -243,6 +246,25 @@ async def test_node_ready(
     msg = await ws_client.receive_json()
 
     assert msg["event"]["event"] == "ready"
+    assert msg["event"]["status"] == 1
+    assert msg["event"]["ready"]
+
+    event = Event(
+        "wake up",
+        {
+            "source": "node",
+            "event": "wake up",
+            "nodeId": node.node_id,
+        },
+    )
+    node.receive_event(event)
+    await hass.async_block_till_done()
+
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["event"] == "wake up"
+    assert msg["event"]["status"] == 2
+    assert msg["event"]["ready"]
 
 
 async def test_node_status(hass, multisensor_6, integration, hass_ws_client):
@@ -619,10 +641,65 @@ async def test_add_node(
     client.async_send_command.reset_mock()
     client.async_send_command.return_value = {"success": True}
 
-    # Test S2 QR code string
+    # Test S2 QR provisioning information
     await ws_client.send_json(
         {
             ID: 4,
+            TYPE: "zwave_js/add_node",
+            ENTRY_ID: entry.entry_id,
+            INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
+            QR_PROVISIONING_INFORMATION: {
+                VERSION: 0,
+                SECURITY_CLASSES: [0],
+                DSK: "test",
+                GENERIC_DEVICE_CLASS: 1,
+                SPECIFIC_DEVICE_CLASS: 1,
+                INSTALLER_ICON_TYPE: 1,
+                MANUFACTURER_ID: 1,
+                PRODUCT_TYPE: 1,
+                PRODUCT_ID: 1,
+                APPLICATION_VERSION: "test",
+                STATUS: 1,
+                REQUESTED_SECURITY_CLASSES: [0],
+            },
+        }
+    )
+
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+
+    assert len(client.async_send_command.call_args_list) == 1
+    assert client.async_send_command.call_args[0][0] == {
+        "command": "controller.begin_inclusion",
+        "options": {
+            "strategy": InclusionStrategy.SECURITY_S2,
+            "provisioning": QRProvisioningInformation(
+                version=QRCodeVersion.S2,
+                security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+                dsk="test",
+                generic_device_class=1,
+                specific_device_class=1,
+                installer_icon_type=1,
+                manufacturer_id=1,
+                product_type=1,
+                product_id=1,
+                application_version="test",
+                max_inclusion_request_interval=None,
+                uuid=None,
+                supported_protocols=None,
+                status=ProvisioningEntryStatus.INACTIVE,
+                requested_security_classes=[SecurityClass.S2_UNAUTHENTICATED],
+            ).to_dict(),
+        },
+    }
+
+    client.async_send_command.reset_mock()
+    client.async_send_command.return_value = {"success": True}
+
+    # Test S2 QR code string
+    await ws_client.send_json(
+        {
+            ID: 5,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
@@ -648,7 +725,7 @@ async def test_add_node(
     # Test Smart Start QR provisioning information with S2 inclusion strategy fails
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 6,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
@@ -678,7 +755,7 @@ async def test_add_node(
     # Test QR provisioning information with S0 inclusion strategy fails
     await ws_client.send_json(
         {
-            ID: 5,
+            ID: 7,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S0,
@@ -708,7 +785,7 @@ async def test_add_node(
     # Test ValueError is caught as failure
     await ws_client.send_json(
         {
-            ID: 6,
+            ID: 8,
             TYPE: "zwave_js/add_node",
             ENTRY_ID: entry.entry_id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
@@ -728,7 +805,7 @@ async def test_add_node(
     ):
         await ws_client.send_json(
             {
-                ID: 7,
+                ID: 9,
                 TYPE: "zwave_js/add_node",
                 ENTRY_ID: entry.entry_id,
             }
@@ -744,7 +821,7 @@ async def test_add_node(
     await hass.async_block_till_done()
 
     await ws_client.send_json(
-        {ID: 8, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
+        {ID: 10, TYPE: "zwave_js/add_node", ENTRY_ID: entry.entry_id}
     )
     msg = await ws_client.receive_json()
 
@@ -1511,7 +1588,7 @@ async def test_replace_failed_node(
     dev_reg = dr.async_get(hass)
 
     # Create device registry entry for mock node
-    dev_reg.async_get_or_create(
+    device = dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "3245146787-67")},
         name="Node 67",
@@ -1526,8 +1603,7 @@ async def test_replace_failed_node(
         {
             ID: 1,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
         }
     )
@@ -1607,10 +1683,12 @@ async def test_replace_failed_node(
     assert msg["event"]["event"] == "node removed"
 
     # Verify device was removed from device registry
-    device = dev_reg.async_get_device(
-        identifiers={(DOMAIN, "3245146787-67")},
+    assert (
+        dev_reg.async_get_device(
+            identifiers={(DOMAIN, "3245146787-67")},
+        )
+        is None
     )
-    assert device is None
 
     client.driver.receive_event(nortek_thermostat_added_event)
     msg = await ws_client.receive_json()
@@ -1686,8 +1764,7 @@ async def test_replace_failed_node(
         {
             ID: 2,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
             PLANNED_PROVISIONING_ENTRY: {
                 DSK: "test",
@@ -1719,8 +1796,7 @@ async def test_replace_failed_node(
         {
             ID: 3,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
             QR_PROVISIONING_INFORMATION: {
                 VERSION: 0,
@@ -1772,8 +1848,7 @@ async def test_replace_failed_node(
         {
             ID: 4,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.SECURITY_S2.value,
             QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
@@ -1800,8 +1875,7 @@ async def test_replace_failed_node(
         {
             ID: 6,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
             INCLUSION_STRATEGY: InclusionStrategy.DEFAULT.value,
             QR_CODE_STRING: "90testtesttesttesttesttesttesttesttesttesttesttesttest",
         }
@@ -1821,8 +1895,7 @@ async def test_replace_failed_node(
             {
                 ID: 7,
                 TYPE: "zwave_js/replace_failed_node",
-                ENTRY_ID: entry.entry_id,
-                NODE_ID: 67,
+                DEVICE_ID: device.id,
             }
         )
         msg = await ws_client.receive_json()
@@ -1839,8 +1912,7 @@ async def test_replace_failed_node(
         {
             ID: 8,
             TYPE: "zwave_js/replace_failed_node",
-            ENTRY_ID: entry.entry_id,
-            NODE_ID: 67,
+            DEVICE_ID: device.id,
         }
     )
     msg = await ws_client.receive_json()

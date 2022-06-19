@@ -1,6 +1,7 @@
 """Config flow for Tankerkoenig."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytankerkoenig import customException, getNearbyStations
@@ -30,7 +31,7 @@ from .const import CONF_FUEL_TYPES, CONF_STATIONS, DEFAULT_RADIUS, DOMAIN, FUEL_
 
 
 async def async_get_nearby_stations(
-    hass: HomeAssistant, data: dict[str, Any]
+    hass: HomeAssistant, data: Mapping[str, Any]
 ) -> dict[str, Any]:
     """Fetch nearby stations."""
     try:
@@ -114,14 +115,12 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self._show_form_user(
                 user_input, errors={CONF_API_KEY: "invalid_auth"}
             )
-        if stations := data.get("stations"):
-            for station in stations:
-                self._stations[
-                    station["id"]
-                ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
-
-        else:
+        if len(stations := data.get("stations", [])) == 0:
             return self._show_form_user(user_input, errors={CONF_RADIUS: "no_stations"})
+        for station in stations:
+            self._stations[
+                station["id"]
+            ] = f"{station['brand']} {station['street']} {station['houseNumber']} - ({station['dist']}km)"
 
         self._data = user_input
 
@@ -134,7 +133,7 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not user_input:
             return self.async_show_form(
                 step_id="select_station",
-                description_placeholders={"stations_count": len(self._stations)},
+                description_placeholders={"stations_count": str(len(self._stations))},
                 data_schema=vol.Schema(
                     {vol.Required(CONF_STATIONS): cv.multi_select(self._stations)}
                 ),
@@ -144,6 +143,28 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             data={**self._data, **user_input},
             options={CONF_SHOW_ON_MAP: True},
         )
+
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Perform reauth confirm upon an API authentication error."""
+        if not user_input:
+            return self._show_form_reauth()
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+        user_input = {**entry.data, **user_input}
+        data = await async_get_nearby_stations(self.hass, user_input)
+        if not data.get("ok"):
+            return self._show_form_reauth(user_input, {CONF_API_KEY: "invalid_auth"})
+
+        self.hass.config_entries.async_update_entry(entry, data=user_input)
+        await self.hass.config_entries.async_reload(entry.entry_id)
+        return self.async_abort(reason="reauth_successful")
 
     def _show_form_user(
         self,
@@ -180,12 +201,31 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         CONF_RADIUS, default=user_input.get(CONF_RADIUS, DEFAULT_RADIUS)
                     ): NumberSelector(
                         NumberSelectorConfig(
-                            min=0.1,
+                            min=1.0,
                             max=25,
                             step=0.1,
                             unit_of_measurement=LENGTH_KILOMETERS,
                         ),
                     ),
+                }
+            ),
+            errors=errors,
+        )
+
+    def _show_form_reauth(
+        self,
+        user_input: dict[str, Any] | None = None,
+        errors: dict[str, Any] | None = None,
+    ) -> FlowResult:
+        if user_input is None:
+            user_input = {}
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_API_KEY, default=user_input.get(CONF_API_KEY, "")
+                    ): cv.string,
                 }
             ),
             errors=errors,
@@ -224,7 +264,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data=user_input)
 
         nearby_stations = await async_get_nearby_stations(
-            self.hass, dict(self.config_entry.data)
+            self.hass, self.config_entry.data
         )
         if stations := nearby_stations.get("stations"):
             for station in stations:

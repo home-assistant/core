@@ -70,6 +70,7 @@ FAN_MODE_MAP = {
     "OFF": FAN_OFF,
 }
 FAN_INV_MODE_MAP = {v: k for k, v in FAN_MODE_MAP.items()}
+FAN_INV_MODES = list(FAN_INV_MODE_MAP)
 
 MAX_FAN_DURATION = 43200  # 15 hours is the max in the SDM API
 MIN_TEMP = 10
@@ -99,7 +100,7 @@ class ThermostatEntity(ClimateEntity):
         """Initialize ThermostatEntity."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-        self._supported_features = 0
+        self._attr_supported_features = 0
 
     @property
     def should_poll(self) -> bool:
@@ -124,7 +125,7 @@ class ThermostatEntity(ClimateEntity):
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
-        self._supported_features = self._get_supported_features()
+        self._attr_supported_features = self._get_supported_features()
         self.async_on_remove(
             self._device.add_update_listener(self.async_write_ha_state)
         )
@@ -198,8 +199,6 @@ class ThermostatEntity(ClimateEntity):
             trait = self._device.traits[ThermostatModeTrait.NAME]
             if trait.mode in THERMOSTAT_MODE_MAP:
                 hvac_mode = THERMOSTAT_MODE_MAP[trait.mode]
-        if hvac_mode == HVACMode.OFF and self.fan_mode == FAN_ON:
-            hvac_mode = HVACMode.FAN_ONLY
         return hvac_mode
 
     @property
@@ -209,8 +208,6 @@ class ThermostatEntity(ClimateEntity):
         for mode in self._get_device_hvac_modes:
             if mode in THERMOSTAT_MODE_MAP:
                 supported_modes.append(THERMOSTAT_MODE_MAP[mode])
-        if self.supported_features & ClimateEntityFeature.FAN_MODE:
-            supported_modes.append(HVACMode.FAN_ONLY)
         return supported_modes
 
     @property
@@ -252,7 +249,10 @@ class ThermostatEntity(ClimateEntity):
     @property
     def fan_mode(self) -> str:
         """Return the current fan mode."""
-        if FanTrait.NAME in self._device.traits:
+        if (
+            self.supported_features & ClimateEntityFeature.FAN_MODE
+            and FanTrait.NAME in self._device.traits
+        ):
             trait = self._device.traits[FanTrait.NAME]
             return FAN_MODE_MAP.get(trait.timer_mode, FAN_OFF)
         return FAN_OFF
@@ -260,15 +260,12 @@ class ThermostatEntity(ClimateEntity):
     @property
     def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
-        modes = []
-        if FanTrait.NAME in self._device.traits:
-            modes = list(FAN_INV_MODE_MAP)
-        return modes
-
-    @property
-    def supported_features(self) -> int:
-        """Bitmap of supported features."""
-        return self._supported_features
+        if (
+            self.supported_features & ClimateEntityFeature.FAN_MODE
+            and FanTrait.NAME in self._device.traits
+        ):
+            return FAN_INV_MODES
+        return []
 
     def _get_supported_features(self) -> int:
         """Compute the bitmap of supported features from the current state."""
@@ -290,10 +287,6 @@ class ThermostatEntity(ClimateEntity):
         """Set new target hvac mode."""
         if hvac_mode not in self.hvac_modes:
             raise ValueError(f"Unsupported hvac_mode '{hvac_mode}'")
-        if hvac_mode == HVACMode.FAN_ONLY:
-            # Turn the fan on but also turn off the hvac if it is on
-            await self.async_set_fan_mode(FAN_ON)
-            hvac_mode = HVACMode.OFF
         api_mode = THERMOSTAT_INV_MODE_MAP[hvac_mode]
         trait = self._device.traits[ThermostatModeTrait.NAME]
         try:
@@ -338,6 +331,10 @@ class ThermostatEntity(ClimateEntity):
         """Set new target fan mode."""
         if fan_mode not in self.fan_modes:
             raise ValueError(f"Unsupported fan_mode '{fan_mode}'")
+        if fan_mode == FAN_ON and self.hvac_mode == HVACMode.OFF:
+            raise ValueError(
+                "Cannot turn on fan, please set an HVAC mode (e.g. heat/cool) first"
+            )
         trait = self._device.traits[FanTrait.NAME]
         duration = None
         if fan_mode != FAN_OFF:

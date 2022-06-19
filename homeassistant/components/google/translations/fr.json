@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Suivez les [instructions]({more_info_url}) de l'[\u00e9cran d'autorisation OAuth]({oauth_consent_url}) pour permettre \u00e0 Home Assistant d'acc\u00e9der \u00e0 votre agenda Google. Vous devez \u00e9galement cr\u00e9er des informations d'identification d'application li\u00e9es \u00e0 votre agenda\u00a0:\n1. Rendez-vous sur [Informations d'identification]({oauth_creds_url}) et cliquez sur **Cr\u00e9er des informations d'identification**.\n2. Dans la liste d\u00e9roulante, s\u00e9lectionnez **ID client OAuth**.\n3. S\u00e9lectionnez **TV et p\u00e9riph\u00e9riques d'entr\u00e9e limit\u00e9s** comme type d'application.\n\n"
+    },
     "config": {
         "abort": {
             "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",

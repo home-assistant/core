@@ -5,7 +5,6 @@ import functools
 
 import voluptuous as vol
 from zwave_js_server.const import CommandClass
-from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import Value, get_value_id
 
 from homeassistant.components.automation import (
@@ -20,7 +19,6 @@ from homeassistant.components.zwave_js.const import (
     ATTR_CURRENT_VALUE_RAW,
     ATTR_ENDPOINT,
     ATTR_NODE_ID,
-    ATTR_NODES,
     ATTR_PREVIOUS_VALUE,
     ATTR_PREVIOUS_VALUE_RAW,
     ATTR_PROPERTY,
@@ -79,8 +77,7 @@ async def async_validate_trigger_config(
     if async_bypass_dynamic_config_validation(hass, config):
         return config
 
-    config[ATTR_NODES] = async_get_nodes_from_targets(hass, config)
-    if not config[ATTR_NODES]:
+    if not async_get_nodes_from_targets(hass, config):
         raise vol.Invalid(
             f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
         )
@@ -96,7 +93,11 @@ async def async_attach_trigger(
     platform_type: str = PLATFORM_TYPE,
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    nodes: set[Node] = config[ATTR_NODES]
+    dev_reg = dr.async_get(hass)
+    if not (nodes := async_get_nodes_from_targets(hass, config, dev_reg=dev_reg)):
+        raise ValueError(
+            f"No nodes found for given {ATTR_DEVICE_ID}s or {ATTR_ENTITY_ID}s."
+        )
 
     from_value = config[ATTR_FROM]
     to_value = config[ATTR_TO]
@@ -163,7 +164,6 @@ async def async_attach_trigger(
 
         hass.async_run_hass_job(job, {"trigger": payload})
 
-    dev_reg = dr.async_get(hass)
     for node in nodes:
         driver = node.client.driver
         assert driver is not None  # The node comes from the driver.

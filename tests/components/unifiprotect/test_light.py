@@ -57,7 +57,7 @@ async def test_light_setup(
 ):
     """Test light entity setup."""
 
-    unique_id = light[0].id
+    unique_id = light[0].mac
     entity_id = light[1]
 
     entity_registry = er.async_get(hass)

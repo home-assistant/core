@@ -1,6 +1,7 @@
 """Config flow for Nanoleaf integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 import os
 from typing import Any, Final, cast
@@ -77,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_link()
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle Nanoleaf reauth flow if token is invalid."""
         self.reauth_entry = cast(
             config_entries.ConfigEntry,

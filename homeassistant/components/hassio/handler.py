@@ -246,7 +246,7 @@ class HassIO:
                 method,
                 f"http://{self._ip}{command}",
                 json=payload,
-                headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
+                headers={X_HASSIO: os.environ.get("SUPERVISOR_TOKEN", "")},
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 

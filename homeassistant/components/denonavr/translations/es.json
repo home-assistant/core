@@ -25,6 +25,9 @@
             "user": {
                 "data": {
                     "host": "Direcci\u00f3n IP"
+                },
+                "data_description": {
+                    "host": "D\u00e9jelo en blanco para usar el descubrimiento autom\u00e1tico"
                 }
             }
         }

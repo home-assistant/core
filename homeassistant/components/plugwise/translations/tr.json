@@ -13,7 +13,9 @@
         "step": {
             "user": {
                 "data": {
-                    "flow_type": "Ba\u011flant\u0131 t\u00fcr\u00fc"
+                    "flow_type": "Ba\u011flant\u0131 t\u00fcr\u00fc",
+                    "host": "IP Adresi",
+                    "port": "Port"
                 },
                 "description": "\u00dcr\u00fcn:",
                 "title": "Plugwise tipi"
