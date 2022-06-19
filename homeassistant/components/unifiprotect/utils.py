@@ -8,11 +8,15 @@ import socket
 from typing import Any
 
 from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel, ProtectDeviceModel
+from pyunifiprotect.data import (
+    Bootstrap,
+    ProtectAdoptableDeviceModel,
+    ProtectDeviceModel,
+)
 
 from homeassistant.core import HomeAssistant, callback
 
-from .const import ModelType
+from .const import DEVICES_THAT_ADOPT, ModelType
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -59,24 +63,39 @@ async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
     return None
 
 
+@callback
 def async_get_devices_by_type(
-    api: ProtectApiClient, device_type: ModelType
-) -> dict[str, ProtectDeviceModel]:
-    """Get devices by type."""
-    devices: dict[str, ProtectDeviceModel] = getattr(
-        api.bootstrap, f"{device_type.value}s"
-    )
-    return devices
-
-
-def async_get_adoptable_devices_by_type(
-    api: ProtectApiClient, device_type: ModelType
+    api_bootstrap: ProtectApiClient | Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
-    """Get adoptable devices by type."""
+    """Get devices by type."""
+
+    if isinstance(api_bootstrap, ProtectApiClient):
+        api_bootstrap = api_bootstrap.bootstrap
+
     devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        api.bootstrap, f"{device_type.value}s"
+        api_bootstrap, f"{device_type.value}s"
     )
     return devices
+
+
+@callback
+def async_device_by_id(
+    api_bootstrap: ProtectApiClient | Bootstrap,
+    device_id: str,
+    device_type: ModelType | None = None,
+) -> ProtectAdoptableDeviceModel | None:
+    """Get devices by type."""
+
+    device_types = DEVICES_THAT_ADOPT
+    if device_type is not None:
+        device_types = {device_type}
+
+    device = None
+    for model in device_types:
+        device = async_get_devices_by_type(api_bootstrap, model).get(device_id)
+        if device is not None:
+            break
+    return device
 
 
 @callback

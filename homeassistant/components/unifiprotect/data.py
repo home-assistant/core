@@ -21,7 +21,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_DISABLE_RTSP, DEVICES_THAT_ADOPT, DEVICES_WITH_ENTITIES, DOMAIN
-from .utils import async_get_adoptable_devices_by_type, async_get_devices
+from .utils import async_get_devices, async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -70,9 +70,7 @@ class ProtectData:
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
         """Get all devices matching types."""
         for device_type in device_types:
-            yield from async_get_adoptable_devices_by_type(
-                self.api, device_type
-            ).values()
+            yield from async_get_devices_by_type(self.api, device_type).values()
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""

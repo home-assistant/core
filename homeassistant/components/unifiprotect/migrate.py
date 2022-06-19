@@ -3,14 +3,17 @@ from __future__ import annotations
 
 import logging
 
+from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
-from .const import DEVICES_THAT_ADOPT
+from .utils import async_device_by_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,16 +54,14 @@ async def async_migrate_buttons(
         _LOGGER.debug("No button entities need migration")
         return
 
-    bootstrap = await protect.get_bootstrap()
+    try:
+        bootstrap = await protect.get_bootstrap()
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        raise ConfigEntryNotReady from err
+
     count = 0
     for button in to_migrate:
-        device = None
-        for model in DEVICES_THAT_ADOPT:
-            attr = f"{model.value}s"
-            device = getattr(bootstrap, attr).get(button.unique_id)
-            if device is not None:
-                break
-
+        device = async_device_by_id(bootstrap, button.unique_id)
         if device is None:
             continue
 
@@ -114,17 +115,15 @@ async def async_migrate_device_ids(
         _LOGGER.debug("No entities need migration to MAC address ID")
         return
 
-    bootstrap = await protect.get_bootstrap()
+    try:
+        bootstrap = await protect.get_bootstrap()
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        raise ConfigEntryNotReady from err
+
     count = 0
     for entity in to_migrate:
-        device = None
         parts = entity.unique_id.split("_")
-        for model in DEVICES_THAT_ADOPT:
-            attr = f"{model.value}s"
-            device = getattr(bootstrap, attr).get(parts[0])
-            if device is not None:
-                break
-
+        device = async_device_by_id(bootstrap, parts[0])
         if device is None:
             continue
 
