@@ -28,7 +28,6 @@ from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
 SERVICE_ENABLE_TIMER = "enable_timer"
-SERVICE_DISABLE_TIMER = "disable_timer"
 ATTR_MINUTES = "minutes"
 SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
 SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
@@ -104,11 +103,6 @@ async def async_setup_entry(
             vol.Required(ATTR_MINUTES): cv.positive_int,
         },
         "async_enable_timer",
-    )
-    platform.async_register_entity_service(
-        SERVICE_DISABLE_TIMER,
-        {},
-        "async_disable_timer",
     )
     platform.async_register_entity_service(
         SERVICE_ENABLE_PURE_BOOST,
@@ -332,15 +326,6 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         if result["status"] == "success":
             return await self.coordinator.async_request_refresh()
         raise HomeAssistantError(f"Could not enable timer for device {self.name}")
-
-    async def async_disable_timer(self) -> None:
-        """Delete the timer."""
-
-        result = await self.async_send_command("del_timer")
-
-        if result["status"] == "success":
-            return await self.coordinator.async_request_refresh()
-        raise HomeAssistantError(f"Could not disable timer for device {self.name}")
 
     async def async_enable_pure_boost(
         self,

@@ -89,17 +89,6 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
     ),
 )
 
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
-    SensiboDeviceBinarySensorEntityDescription(
-        key="timer_on",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        name="Timer Running",
-        icon="mdi:timer",
-        value_fn=lambda data: data.timer_on,
-        extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
-    ),
-)
-
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_boost_enabled",
@@ -171,12 +160,6 @@ async def async_setup_entry(
         for description in MOTION_DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
         if device_data.motion_sensors is not None
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for description in DEVICE_SENSOR_TYPES
-        for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.model != "pure"
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
