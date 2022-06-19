@@ -692,7 +692,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.9.0
+gcal-sync==0.10.0
 
 # homeassistant.components.geniushub
 geniushub-client==0.6.30
@@ -1474,7 +1474,7 @@ pyeight==0.3.0
 pyemby==1.8
 
 # homeassistant.components.envisalink
-pyenvisalink==4.4
+pyenvisalink==4.5
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2518,7 +2518,7 @@ zigpy==0.46.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.37.2
+zwave-js-server-python==0.38.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

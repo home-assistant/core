@@ -495,7 +495,7 @@ gTTS==2.2.4
 garages-amsterdam==3.0.0
 
 # homeassistant.components.google
-gcal-sync==0.9.0
+gcal-sync==0.10.0
 
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
@@ -1667,7 +1667,7 @@ zigpy-znp==0.7.0
 zigpy==0.46.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.37.2
+zwave-js-server-python==0.38.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4
