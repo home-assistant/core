@@ -1,9 +1,9 @@
 """Binary Sensor platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -36,7 +36,6 @@ class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
 @dataclass
@@ -85,7 +84,6 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
         name="Room Occupied",
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
-        extra_fn=None,
     ),
 )
 
@@ -96,7 +94,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost Enabled",
         icon="mdi:wind-power-outline",
         value_fn=lambda data: data.pure_boost_enabled,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_ac_integration",
@@ -105,7 +102,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with AC",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_ac_integration,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_geo_integration",
@@ -114,7 +110,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Presence",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_geo_integration,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_measure_integration",
@@ -123,7 +118,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Indoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_measure_integration,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_prime_integration",
@@ -132,7 +126,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Outdoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
-        extra_fn=None,
     ),
 )
 
@@ -230,10 +223,3 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.device_data)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return additional attributes."""
-        if self.entity_description.extra_fn is not None:
-            return self.entity_description.extra_fn(self.device_data)
-        return None
