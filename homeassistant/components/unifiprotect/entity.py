@@ -14,7 +14,6 @@ from pyunifiprotect.data import (
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     Sensor,
     StateType,
     Viewer,
@@ -27,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
 from .models import ProtectRequiredKeysMixin
-from .utils import get_nested_attr
+from .utils import async_device_by_id, get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,17 +117,17 @@ class ProtectDeviceEntity(Entity):
         self.device = device
 
         if description is None:
-            self._attr_unique_id = f"{self.device.id}"
+            self._attr_unique_id = f"{self.device.mac}"
             self._attr_name = f"{self.device.name}"
         else:
             self.entity_description = description
-            self._attr_unique_id = f"{self.device.id}_{description.key}"
+            self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
-        self._async_update_device_from_protect(device)
+        self._async_update_device_from_protect()
 
     async def async_update(self) -> None:
         """Update the entity.
@@ -150,10 +149,14 @@ class ProtectDeviceEntity(Entity):
         )
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self) -> None:
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
-            assert isinstance(device, ProtectAdoptableDeviceModel)
+            assert self.device.model
+            device = async_device_by_id(
+                self.data.api.bootstrap, self.device.id, device_type=self.device.model
+            )
+            assert device is not None
             self.device = device
 
         is_connected = (
@@ -171,9 +174,9 @@ class ProtectDeviceEntity(Entity):
         self._attr_available = is_connected
 
     @callback
-    def _async_updated_event(self, device: ProtectModelWithId) -> None:
+    def _async_updated_event(self) -> None:
         """Call back for incoming data."""
-        self._async_update_device_from_protect(device)
+        self._async_update_device_from_protect()
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -214,7 +217,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         )
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+    def _async_update_device_from_protect(self) -> None:
         if self.data.last_update_success:
             self.device = self.data.api.bootstrap.nvr
 
@@ -251,8 +254,8 @@ class EventThumbnailMixin(ProtectDeviceEntity):
         return attrs
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
         self._event = self._async_get_event()
 
         attrs = self.extra_state_attributes or {}

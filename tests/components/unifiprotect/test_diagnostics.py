@@ -4,7 +4,7 @@ from pyunifiprotect.data import NVR, Light
 
 from homeassistant.core import HomeAssistant
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, regenerate_device_ids
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
@@ -17,7 +17,7 @@ async def test_diagnostics(
     light1 = mock_light.copy()
     light1._api = mock_entry.api
     light1.name = "Test Light 1"
-    light1.id = "lightid1"
+    regenerate_device_ids(light1)
 
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,

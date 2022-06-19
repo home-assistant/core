@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Light, ProtectModelWithId
+from pyunifiprotect.data import Light
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
@@ -59,8 +59,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
         self._attr_is_on = self.device.is_light_on
         self._attr_brightness = unifi_brightness_to_hass(
             self.device.light_device_settings.led_level

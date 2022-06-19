@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Camera, ProtectModelWithId
+from pyunifiprotect.data import Camera
 from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -83,8 +83,8 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         self._attr_media_content_type = MEDIA_TYPE_MUSIC
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
         self._attr_volume_level = float(self.device.speaker_settings.volume / 100)
 
         if (
@@ -110,7 +110,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         ):
             _LOGGER.debug("Stopping playback for %s Speaker", self.device.name)
             await self.device.stop_audio()
-            self._async_updated_event(self.device)
+            self._async_updated_event()
 
     async def async_play_media(
         self, media_type: str, media_id: str, **kwargs: Any
@@ -134,11 +134,11 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             raise HomeAssistantError(err) from err
         else:
             # update state after starting player
-            self._async_updated_event(self.device)
+            self._async_updated_event()
             # wait until player finishes to update state again
             await self.device.wait_until_audio_completes()
 
-        self._async_updated_event(self.device)
+        self._async_updated_event()
 
     async def async_browse_media(
         self, media_content_type: str | None = None, media_content_id: str | None = None

@@ -19,7 +19,6 @@ from pyunifiprotect.data import (
     LightModeEnableType,
     LightModeType,
     MountType,
-    ProtectModelWithId,
     RecordingMode,
     Sensor,
     Viewer,
@@ -356,8 +355,8 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         self._async_set_options()
 
     @callback
-    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
-        super()._async_update_device_from_protect(device)
+    def _async_update_device_from_protect(self) -> None:
+        super()._async_update_device_from_protect()
 
         # entities with categories are not exposed for voice and safe to update dynamically
         if (

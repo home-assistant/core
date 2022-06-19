@@ -121,7 +121,6 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac)
         source_ip = discovery_info["source_ip"]
         direct_connect_domain = discovery_info["direct_connect_domain"]
-
         for entry in self._async_current_entries():
             if entry.source == config_entries.SOURCE_IGNORE:
                 if entry.unique_id == mac:
