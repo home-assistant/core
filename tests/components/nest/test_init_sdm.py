@@ -25,10 +25,13 @@ from homeassistant.components.nest import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 
 from .common import (
+    PROJECT_ID,
+    SUBSCRIBER_ID,
+    TEST_CONFIG_APP_CREDS,
     TEST_CONFIG_HYBRID,
     TEST_CONFIG_YAML_ONLY,
+    TEST_CONFIGFLOW_APP_CREDS,
     FakeSubscriber,
-    NestTestConfig,
     YieldFixture,
 )
 
@@ -170,7 +173,8 @@ async def test_subscriber_configuration_failure(
 
 
 @pytest.mark.parametrize(
-    "nest_test_config", [NestTestConfig(config={}, config_entry_data=None)]
+    "nest_test_config",
+    [TEST_CONFIGFLOW_APP_CREDS],
 )
 async def test_empty_config(hass, error_caplog, config, setup_platform):
     """Test setup is a no-op with not config."""
@@ -205,8 +209,12 @@ async def test_unload_entry(hass, setup_platform):
             TEST_CONFIG_HYBRID,
             True,
         ),  # Integration created subscriber, garbage collect on remove
+        (
+            TEST_CONFIG_APP_CREDS,
+            True,
+        ),  # Integration created subscriber, garbage collect on remove
     ],
-    ids=["yaml-config-only", "hybrid-config"],
+    ids=["yaml-config-only", "hybrid-config", "config-entry"],
 )
 async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_called):
     """Test successful unload of a ConfigEntry."""
@@ -220,6 +228,9 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
     assert len(entries) == 1
     entry = entries[0]
     assert entry.state is ConfigEntryState.LOADED
+    # Assert entry was imported if from configuration.yaml
+    assert entry.data.get("subscriber_id") == SUBSCRIBER_ID
+    assert entry.data.get("project_id") == PROJECT_ID
 
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.subscriber_id"
@@ -234,7 +245,9 @@ async def test_remove_entry(hass, nest_test_config, setup_base_platform, delete_
 
 
 @pytest.mark.parametrize(
-    "nest_test_config", [TEST_CONFIG_HYBRID], ids=["hyrbid-config"]
+    "nest_test_config",
+    [TEST_CONFIG_HYBRID, TEST_CONFIG_APP_CREDS],
+    ids=["hyrbid-config", "app-creds"],
 )
 async def test_remove_entry_delete_subscriber_failure(
     hass, nest_test_config, setup_base_platform

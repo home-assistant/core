@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Folgen Sie den [Anweisungen]({more_info_url}), um die Cloud-Konsole zu konfigurieren:\n\n1. Gehen Sie zum [OAuth-Zustimmungsbildschirm]({oauth_consent_url}) und konfigurieren Sie\n1. Gehen Sie zu [Credentials]({oauth_creds_url}) und klicken Sie auf **Create Credentials**.\n1. W\u00e4hlen Sie in der Dropdown-Liste **OAuth-Client-ID**.\n1. W\u00e4hlen Sie **Webanwendung** f\u00fcr den Anwendungstyp.\n1. F\u00fcgen Sie `{redirect_url}` unter *Authorized redirect URI* hinzu."
+    },
     "config": {
         "abort": {
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
@@ -19,7 +22,7 @@
             "subscriber_error": "Unbekannter Abonnentenfehler, siehe Protokolle",
             "timeout": "Ein zeit\u00fcberschreitungs Fehler ist aufgetreten",
             "unknown": "Unerwarteter Fehler",
-            "wrong_project_id": "Bitte gib eine g\u00fcltige Cloud-Projekt-ID ein (gefundene Ger\u00e4tezugriffs-Projekt-ID)"
+            "wrong_project_id": "Gib eine g\u00fcltige Cloud-Projekt-ID ein (identisch mit der Projekt-ID f\u00fcr den Ger\u00e4tezugriff)."
         },
         "step": {
             "auth": {
@@ -28,6 +31,32 @@
                 },
                 "description": "Um dein Google-Konto zu verkn\u00fcpfen, w\u00e4hle [Konto autorisieren]({url}).\n\nKopiere nach der Autorisierung den unten angegebenen Authentifizierungstoken-Code.",
                 "title": "Google-Konto verkn\u00fcpfen"
+            },
+            "auth_upgrade": {
+                "description": "App Auth wurde von Google abgeschafft, um die Sicherheit zu verbessern, und Sie m\u00fcssen Ma\u00dfnahmen ergreifen, indem Sie neue Anmeldedaten f\u00fcr die Anwendung erstellen.\n\n\u00d6ffnen Sie die [Dokumentation]({more_info_url}) und folgen Sie den n\u00e4chsten Schritten, die Sie durchf\u00fchren m\u00fcssen, um den Zugriff auf Ihre Nest-Ger\u00e4te wiederherzustellen.",
+                "title": "Nest: Einstellung der App-Authentifizierung"
+            },
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "Google Cloud Projekt-ID"
+                },
+                "description": "Geben Sie unten die Cloud-Projekt-ID ein, z. B. *example-project-12345*. Siehe die [Google Cloud Console]({cloud_console_url}) oder die Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).",
+                "title": "Nest: Cloud-Projekt-ID eingeben"
+            },
+            "create_cloud_project": {
+                "description": "Die Nest-Integration erm\u00f6glicht es Ihnen, Ihre Nest-Thermostate, -Kameras und -T\u00fcrklingeln \u00fcber die Smart Device Management API zu integrieren. Die SDM API **erfordert eine einmalige Einrichtungsgeb\u00fchr von US $5**. Siehe Dokumentation f\u00fcr [weitere Informationen]({more_info_url}).\n\n1. Rufen Sie die [Google Cloud Console]({cloud_console_url}) auf.\n1. Wenn dies Ihr erstes Projekt ist, klicken Sie auf **Projekt erstellen** und dann auf **Neues Projekt**.\n1. Geben Sie Ihrem Cloud-Projekt einen Namen und klicken Sie dann auf **Erstellen**.\n1. Speichern Sie die Cloud Project ID, z. B. *example-project-12345*, da Sie diese sp\u00e4ter ben\u00f6tigen.\n1. Gehen Sie zur API-Bibliothek f\u00fcr [Smart Device Management API]({sdm_api_url}) und klicken Sie auf **Aktivieren**.\n1. Wechseln Sie zur API-Bibliothek f\u00fcr [Cloud Pub/Sub API]({pubsub_api_url}) und klicken Sie auf **Aktivieren**.\n\nFahren Sie fort, wenn Ihr Cloud-Projekt eingerichtet ist.",
+                "title": "Nest: Cloud-Projekt erstellen und konfigurieren"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "Ger\u00e4tezugriffsprojekt ID"
+                },
+                "description": "Erstellen Sie ein Nest Ger\u00e4tezugriffsprojekt, f\u00fcr dessen Einrichtung **eine Geb\u00fchr von 5 US-Dollar** anf\u00e4llt.\n1. Gehen Sie zur [Device Access Console]({device_access_console_url}) und durchlaufen Sie den Zahlungsablauf.\n1. Klicken Sie auf **Projekt erstellen**.\n1. Geben Sie Ihrem Device Access-Projekt einen Namen und klicken Sie auf **Weiter**.\n1. Geben Sie Ihre OAuth-Client-ID ein\n1. Aktivieren Sie Ereignisse, indem Sie auf **Aktivieren** und **Projekt erstellen** klicken.\n\nGeben Sie unten Ihre Ger\u00e4tezugriffsprojekt ID ein ([more info]({more_info_url})).\n",
+                "title": "Nest: Erstelle ein Ger\u00e4tezugriffsprojekt"
+            },
+            "device_project_upgrade": {
+                "description": "Aktualisieren Sie das Nest Ger\u00e4tezugriffsprojekt mit Ihrer neuen OAuth Client ID ([more info]({more_info_url}))\n1. Gehen Sie zur [Ger\u00e4tezugriffskonsole]({device_access_console_url}).\n1. Klicken Sie auf das Papierkorbsymbol neben *OAuth Client ID*.\n1. Klicken Sie auf das \u00dcberlaufmen\u00fc und *Client ID hinzuf\u00fcgen*.\n1. Geben Sie Ihre neue OAuth-Client-ID ein und klicken Sie auf **Hinzuf\u00fcgen**.\n\nIhre OAuth-Client-ID lautet: `{client_id}`",
+                "title": "Nest: Aktualisiere das Ger\u00e4tezugriffsprojekt"
             },
             "init": {
                 "data": {

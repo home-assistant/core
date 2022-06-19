@@ -1,28 +1,31 @@
 """Diagnostics support for Synology DSM."""
 from __future__ import annotations
 
+from typing import Any
+
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 
+from homeassistant.components.camera import diagnostics as camera_diagnostics
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import SynoApi
-from .const import CONF_DEVICE_TOKEN, DOMAIN, SYNO_API, SYSTEM_LOADED
+from .const import CONF_DEVICE_TOKEN, DOMAIN
+from .models import SynologyDSMData
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN}
 
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: dict = hass.data[DOMAIN][entry.unique_id]
-    syno_api: SynoApi = data[SYNO_API]
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    syno_api = data.api
     dsm_info = syno_api.dsm.information
 
-    diag_data = {
+    diag_data: dict[str, Any] = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": dsm_info.model,
@@ -33,10 +36,10 @@ async def async_get_config_entry_diagnostics(
         },
         "network": {"interfaces": {}},
         "storage": {"disks": {}, "volumes": {}},
-        "surveillance_station": {"cameras": {}},
+        "surveillance_station": {"cameras": {}, "camera_diagnostics": {}},
         "upgrade": {},
         "utilisation": {},
-        "is_system_loaded": data[SYSTEM_LOADED],
+        "is_system_loaded": True,
         "api_details": {
             "fetching_entities": syno_api._fetching_entities,  # pylint: disable=protected-access
         },
@@ -79,6 +82,10 @@ async def async_get_config_entry_diagnostics(
                 "model": camera.model,
                 "resolution": camera.resolution,
             }
+        if camera_data := await camera_diagnostics.async_get_config_entry_diagnostics(
+            hass, entry
+        ):
+            diag_data["surveillance_station"]["camera_diagnostics"] = camera_data
 
     if syno_api.upgrade is not None:
         diag_data["upgrade"] = {

@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
         },
         "error": {
             "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
             "no_stations": "\u7bc4\u570d\u5167\u627e\u4e0d\u5230\u4efb\u4f55\u52a0\u6cb9\u7ad9\u3002"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API \u91d1\u9470"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "\u52a0\u6cb9\u7ad9"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "\u66f4\u65b0\u983b\u7387",
-                    "show_on_map": "\u65bc\u5730\u5716\u986f\u793a\u52a0\u6cb9\u7ad9"
+                    "show_on_map": "\u65bc\u5730\u5716\u986f\u793a\u52a0\u6cb9\u7ad9",
+                    "stations": "\u52a0\u6cb9\u7ad9"
                 },
                 "title": "Tankerkoenig \u9078\u9805"
             }

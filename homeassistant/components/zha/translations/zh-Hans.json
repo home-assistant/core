@@ -66,7 +66,7 @@
             "device_flipped": "\u8bbe\u5907\u7ffb\u8f6c{subtype}",
             "device_knocked": "\u8bbe\u5907\u8f7b\u6572{subtype}",
             "device_offline": "\u8bbe\u5907\u79bb\u7ebf",
-            "device_rotated": "\u8bbe\u5907\u65cb\u8f6c{subtype}",
+            "device_rotated": "\u8bbe\u5907\u5411{subtype}\u65cb\u8f6c",
             "device_shaken": "\u8bbe\u5907\u6447\u4e00\u6447",
             "device_slid": "\u8bbe\u5907\u5e73\u79fb{subtype}",
             "device_tilted": "\u8bbe\u5907\u503e\u659c",

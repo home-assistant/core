@@ -33,10 +33,10 @@ BANNED_IPS_WITH_SUPERVISOR = BANNED_IPS + [SUPERVISOR_IP]
 @pytest.fixture(name="hassio_env")
 def hassio_env_fixture():
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
+    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"HASSIO_TOKEN": "123456"}):
+    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": "123456"}):
         yield
 
 
