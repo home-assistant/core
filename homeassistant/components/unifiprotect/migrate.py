@@ -5,7 +5,7 @@ import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import ProtectApiClient
-from pyunifiprotect.data import Bootstrap
+from pyunifiprotect.data import NVR, Bootstrap, ProtectAdoptableDeviceModel
 from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,7 +34,7 @@ async def async_migrate_data(
 
 
 async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
-    """Get UniFi Protect bootstrap or raise apporiate HA error."""
+    """Get UniFi Protect bootstrap or raise appropriate HA error."""
 
     try:
         bootstrap = await protect.get_bootstrap()
@@ -127,7 +127,11 @@ async def async_migrate_device_ids(
     count = 0
     for entity in to_migrate:
         parts = entity.unique_id.split("_")
-        device = async_device_by_id(bootstrap, parts[0])
+        if parts[0] == bootstrap.nvr.id:
+            device: NVR | ProtectAdoptableDeviceModel | None = bootstrap.nvr
+        else:
+            device = async_device_by_id(bootstrap, parts[0])
+
         if device is None:
             continue
 
