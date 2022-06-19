@@ -90,7 +90,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(format_mac(mac))
         self._abort_if_unique_id_configured()
 
-        return await self.async_step_discovered_connection(None)
+        return await self.async_step_discovered_connection()
 
     async def async_step_discovered_connection(
         self, user_input: dict[str, Any] | None = None
