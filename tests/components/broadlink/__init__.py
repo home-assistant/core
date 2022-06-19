@@ -159,4 +159,5 @@ class BroadlinkDevice:
 
 def get_device(name):
     """Get a device by name."""
+
     return BroadlinkDevice(name, *BROADLINK_DEVICES[name])
