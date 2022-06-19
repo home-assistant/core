@@ -30,12 +30,7 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ASSUME_STATE,
     SERVICE_DISABLE_PURE_BOOST,
     SERVICE_ENABLE_PURE_BOOST,
-<<<<<<< HEAD
     SERVICE_ENABLE_TIMER,
-    SERVICE_RESET_FILTER,
-=======
-    SERVICE_TIMER,
->>>>>>> f2a5d3cc58 (Use button entity)
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
