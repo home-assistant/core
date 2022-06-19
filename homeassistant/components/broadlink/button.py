@@ -17,10 +17,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Broadlink light."""
     device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
+    store = device.store
 
     entities = [
         BroadlinkButton(device, subdevice, command)
-        for subdevice, commands in device.extract_devices_and_commands().items()
+        for subdevice, commands in store.extract_devices_and_commands().items()
         for command in commands
     ]
 
@@ -43,9 +44,9 @@ class BroadlinkButton(BroadlinkEntity, ButtonEntity):
     async def async_press(self, **kwargs):
         """Trigger code by button press."""
         device = self._device
-        code_list = device.extract_codes([self._command], self._subdevice)
+        code_list = device.store.extract_codes([self._command], self._subdevice)
 
-        for code in device.toggled_codes(code_list, self._subdevice):
+        for code in device.store.toggled_codes(code_list, self._subdevice):
             await device.async_request(device.api.send_data, code)
 
     @property

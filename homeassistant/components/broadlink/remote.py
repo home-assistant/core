@@ -158,7 +158,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             return
 
         try:
-            code_list = device.extract_codes(commands, subdevice)
+            code_list = device.store.extract_codes(commands, subdevice)
         except ValueError as err:
             _LOGGER.error("Failed to call %s: %s", service, err)
             raise
@@ -173,7 +173,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         at_least_one_sent = False
         for _ in range(repeat):
-            for code in device.toggled_codes(code_list, subdevice):
+            for code in device.store.toggled_codes(code_list, subdevice):
 
                 if at_least_one_sent:
                     await asyncio.sleep(delay)
@@ -358,4 +358,4 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
             return
 
-        self._device.delete_commands(subdevice, commands)
+        self._device.store.delete_commands(subdevice, commands)

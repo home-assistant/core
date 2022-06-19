@@ -9,7 +9,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .device import BroadlinkDevice
+from .device import BroadlinkDevice, BroadlinkStores
 from .heartbeat import BroadlinkHeartbeat
 
 CODE_STORAGE_VERSION = 1
@@ -45,8 +45,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     flag_storage = Store(
         hass, FLAG_STORAGE_VERSION, f"broadlink_remote_{entry.unique_id}_flags"
     )
+    store = BroadlinkStores(code_storage, flag_storage)
+    await store.async_setup()
 
-    device = BroadlinkDevice(hass, entry, code_storage, flag_storage)
+    device = BroadlinkDevice(hass, entry, store)
     return await device.async_setup()
 
 
