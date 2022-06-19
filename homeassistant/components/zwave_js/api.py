@@ -417,6 +417,9 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(
         hass, websocket_subscribe_firmware_update_status
     )
+    websocket_api.async_register_command(
+        hass, websocket_get_firmware_update_capabilities
+    )
     websocket_api.async_register_command(hass, websocket_check_for_config_updates)
     websocket_api.async_register_command(hass, websocket_install_config_update)
     websocket_api.async_register_command(
@@ -1942,6 +1945,27 @@ async def websocket_subscribe_firmware_update_status(
                 },
             )
         )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/get_firmware_update_capabilities",
+        vol.Required(DEVICE_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_node
+async def websocket_get_firmware_update_capabilities(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict,
+    node: Node,
+) -> None:
+    """Abort a firmware update."""
+    capabilities = await node.async_get_firmware_update_capabilities()
+    connection.send_result(msg[ID], capabilities.to_dict())
 
 
 class FirmwareUploadView(HomeAssistantView):
