@@ -46,7 +46,7 @@ async def test_reboot_button(
 
     mock_entry.api.reboot_device = AsyncMock()
 
-    unique_id = f"{chime.id}_reboot"
+    unique_id = f"{chime.mac}_reboot"
     entity_id = "button.test_chime_reboot_device"
 
     entity_registry = er.async_get(hass)
@@ -75,7 +75,7 @@ async def test_chime_button(
 
     mock_entry.api.play_speaker = AsyncMock()
 
-    unique_id = f"{chime.id}_play"
+    unique_id = f"{chime.mac}_play"
     entity_id = "button.test_chime_play_chime"
 
     entity_registry = er.async_get(hass)

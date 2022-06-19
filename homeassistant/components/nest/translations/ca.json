@@ -19,7 +19,7 @@
             "subscriber_error": "Error de subscriptor desconegut, consulta els registres",
             "timeout": "S'ha acabat el temps d'espera durant la validaci\u00f3 del codi.",
             "unknown": "Error inesperat",
-            "wrong_project_id": "Introdueix un ID de projecte Cloud v\u00e0lid (s'ha trobat un ID de projecte d'Acc\u00e9s de Dispositiu)"
+            "wrong_project_id": "Introdueix un ID de projecte Cloud v\u00e0lid (era el mateix que l'ID de projecte Device Access)"
         },
         "step": {
             "auth": {
@@ -28,6 +28,24 @@
                 },
                 "description": "Per enlla\u00e7ar un compte de Google, [autoritza el compte]({url}). \n\nDespr\u00e9s de l'autoritzaci\u00f3, copia i enganxa a continuaci\u00f3 el codi 'token' d'autenticaci\u00f3 proporcionat.",
                 "title": "Vinculaci\u00f3 amb compte de Google"
+            },
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "ID de projecte Google Cloud"
+                },
+                "title": "Nest: introdueix l'identificador del projecte Cloud"
+            },
+            "create_cloud_project": {
+                "title": "Nest: crea i configura el projecte Cloud"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "ID de projecte Device Access"
+                },
+                "title": "Nest: crea un projecte Device Access"
+            },
+            "device_project_upgrade": {
+                "title": "Nest: actualitza projecte Device Access"
             },
             "init": {
                 "data": {

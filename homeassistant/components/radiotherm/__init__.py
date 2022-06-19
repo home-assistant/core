@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Coroutine
 from socket import timeout
 from typing import Any, TypeVar
+from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
 
@@ -30,6 +31,9 @@ async def _async_call_or_raise_not_ready(
         return await coro
     except RadiothermTstatError as ex:
         msg = f"{host} was busy (invalid value returned): {ex}"
+        raise ConfigEntryNotReady(msg) from ex
+    except (OSError, URLError) as ex:
+        msg = f"{host} connection error: {ex}"
         raise ConfigEntryNotReady(msg) from ex
     except timeout as ex:
         msg = f"{host} timed out waiting for a response: {ex}"
