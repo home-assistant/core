@@ -430,7 +430,7 @@ class MQTT:
         # Only subscribe if currently connected.
         if self.connected:
             self._last_subscribe = time.time()
-            await self._async_perform_subscription(topic, qos)
+            await self._async_perform_subscriptions(((topic, qos),))
 
         @callback
         def async_remove() -> None:
@@ -463,10 +463,6 @@ class MQTT:
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
         await self._wait_for_mid(mid)
-
-    async def _async_perform_subscription(self, topic: str, qos: int) -> None:
-        """Perform a paho-mqtt subscriptions."""
-        await self._async_perform_subscriptions(((topic, qos),))
 
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
