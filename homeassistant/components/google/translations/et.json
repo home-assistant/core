@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "J\u00e4rgi [OAuth n\u00f5usoleku kuva]({oauth_consent_url}) [OAuth n\u00f5usoleku kuva] ) [juhiseid]({more_info_url}), et anda koduabilisele juurdep\u00e4\u00e4s oma Google'i kalendrile. Samuti pead looma kalendriga lingitud rakenduse identimisteabe.\n1. Mine aadressile [Mandaat]({oauth_creds_url}) ja kl\u00f5psake nuppu **Loo mandaat**.\n2. Vali ripploendist **OAuth kliendi ID**.\n3. Vali rakenduse t\u00fc\u00fcbi jaoks **TV ja piiratud sisendiga seadmed**.\n\n"
+    },
     "config": {
         "abort": {
             "already_configured": "Kasutaja on juba seadistatud",
