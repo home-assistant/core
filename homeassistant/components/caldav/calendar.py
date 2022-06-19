@@ -43,7 +43,7 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Deprecated in Home Assistant 2022.8
+# Deprecated in Home Assistant 2022.9
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         # pylint: disable=no-value-for-parameter
@@ -71,7 +71,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=15)
 
 
-# Deprecated in Home Assistant 2022.8
+# Deprecated in Home Assistant 2022.9
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -89,7 +89,7 @@ async def async_setup_platform(
 
     _LOGGER.warning(
         "Configuration of the Caldav integration in YAML is deprecated and "
-        "will be removed in a future release; Your existing configuration "
+        "will be removed in a 2022.9; Your existing configuration "
         "has been imported into the UI automatically and can be safely removed "
         "from your configuration.yaml file"
     )
