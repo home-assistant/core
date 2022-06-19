@@ -120,7 +120,7 @@ class EntityPlatform:
 
     @callback
     def _get_parallel_updates_semaphore(
-        self, entity_has_async_update: bool
+        self, entity_has_sync_update: bool
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
@@ -138,7 +138,7 @@ class EntityPlatform:
 
         parallel_updates = getattr(self.platform, "PARALLEL_UPDATES", None)
 
-        if parallel_updates is None and not entity_has_async_update:
+        if parallel_updates is None and entity_has_sync_update:
             parallel_updates = 1
 
         if parallel_updates == 0:
@@ -422,7 +422,7 @@ class EntityPlatform:
         entity.add_to_platform_start(
             self.hass,
             self,
-            self._get_parallel_updates_semaphore(hasattr(entity, "async_update")),
+            self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
         # Update properties before we generate the entity_id
@@ -519,8 +519,8 @@ class EntityPlatform:
                 config_entry=self.config_entry,
                 device_id=device_id,
                 disabled_by=disabled_by,
-                hidden_by=hidden_by,
                 entity_category=entity.entity_category,
+                hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,

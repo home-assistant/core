@@ -7,7 +7,7 @@
         },
         "error": {
             "api_error": "Login failed",
-            "cannot_connect": "Could not connect to a fireplace endpoint at url: http://{host}/poll\nVerify IP address and try again",
+            "cannot_connect": "Failed to connect",
             "iftapi_connect": "Error conecting to iftapi.net"
         },
         "flow_title": "{serial} ({host})",
@@ -15,10 +15,8 @@
             "api_config": {
                 "data": {
                     "password": "Password",
-                    "username": "Username (Email)"
-                },
-                "description": "IntelliFire will need to reach out to [iftapi.net](https://iftapi.net/webaccess/login.html) in order to obtain an API key. Once it has obtained this API key, the rest of its interactions will occur completely within the local network. If the API key were to expire it would again need to reach out to https://iftapi.net/webaccess/login.html\n\nUsername and Password are the same information used in your IntelliFire Android/iOS application. ",
-                "title": "IntelliFire - API Configuration"
+                    "username": "Email"
+                }
             },
             "dhcp_confirm": {
                 "description": "Do you want to setup {host}\nSerial: {serial}?"

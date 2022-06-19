@@ -10,10 +10,7 @@ from fiblary3.client.v4.client import (
     Client as FibaroClientV4,
     StateHandler as StateHandlerV4,
 )
-from fiblary3.client.v5.client import (
-    Client as FibaroClientV5,
-    StateHandler as StateHandlerV5,
-)
+from fiblary3.client.v5.client import StateHandler as StateHandlerV5
 from fiblary3.common.exceptions import HTTPException
 import voluptuous as vol
 
@@ -81,6 +78,7 @@ FIBARO_TYPEMAP = {
     "com.fibaro.FGT001": Platform.CLIMATE,
     "com.fibaro.thermostatDanfoss": Platform.CLIMATE,
     "com.fibaro.doorLock": Platform.LOCK,
+    "com.fibaro.binarySensor": Platform.BINARY_SENSOR,
 }
 
 DEVICE_CONFIG_SCHEMA_ENTRY = vol.Schema(
@@ -141,18 +139,12 @@ class FibaroController:
         should do that only when you use the FibaroController for login test as only
         the login and info API's are equal throughout the different versions.
         """
-        if (
-            serial_number is None
-            or serial_number.upper().startswith("HC2")
-            or serial_number.upper().startswith("HCL")
-        ):
-            self._client = FibaroClientV4(
-                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
-        else:
-            self._client = FibaroClientV5(
-                config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
-            )
+
+        # Only use V4 API as it works better even for HC3, after the library is fixed, we should
+        # add here support for the newer library version V5 again.
+        self._client = FibaroClientV4(
+            config[CONF_URL], config[CONF_USERNAME], config[CONF_PASSWORD]
+        )
 
         self._scene_map = None
         # Whether to import devices from plugins
@@ -498,6 +490,9 @@ class FibaroDevice(Entity):
         self.ha_id = fibaro_device.ha_id
         self._attr_name = fibaro_device.friendly_name
         self._attr_unique_id = fibaro_device.unique_id_str
+        # propagate hidden attribute set in fibaro home center to HA
+        if "visible" in fibaro_device and fibaro_device.visible is False:
+            self._attr_entity_registry_visible_default = False
 
     async def async_added_to_hass(self):
         """Call when entity is added to hass."""

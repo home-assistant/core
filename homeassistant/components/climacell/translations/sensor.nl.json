@@ -18,7 +18,7 @@
         },
         "climacell__precipitation_type": {
             "freezing_rain": "IJzel",
-            "ice_pellets": "Hagel",
+            "ice_pellets": "IJskorrels",
             "none": "Geen",
             "rain": "Regen",
             "snow": "Sneeuw"

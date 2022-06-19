@@ -14,10 +14,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow, FlowResult
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    async_get_registry as async_get_device_registry,
-)
+from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN, KNOWN_DEVICES
 from .utils import async_get_controller
@@ -163,9 +160,9 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _hkid_is_homekit(self, hkid):
         """Determine if the device is a homekit bridge or accessory."""
-        dev_reg = await async_get_device_registry(self.hass)
+        dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            identifiers=set(), connections={(CONNECTION_NETWORK_MAC, hkid)}
+            identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
         )
 
         if device is None:

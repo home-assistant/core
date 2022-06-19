@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant.components.vacuum import (
     ATTR_STATUS,
+    DOMAIN as VACUUM_DOMAIN,
     ENTITY_ID_FORMAT,
     VacuumEntity,
     VacuumEntityFeature,
@@ -14,11 +15,13 @@ from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.icon import icon_for_battery_level
 
-from .. import MqttValueTemplate, subscription
-from ... import mqtt
+from .. import subscription
+from ..config import MQTT_BASE_SCHEMA
 from ..const import CONF_COMMAND_TOPIC, CONF_ENCODING, CONF_QOS, CONF_RETAIN
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, warn_for_legacy_schema
+from ..models import MqttValueTemplate
+from ..util import valid_publish_topic
 from .const import MQTT_VACUUM_ATTRIBUTES_BLOCKED
 from .schema import MQTT_VACUUM_SCHEMA, services_to_strings, strings_to_services
 
@@ -94,26 +97,24 @@ MQTT_LEGACY_VACUUM_ATTRIBUTES_BLOCKED = MQTT_VACUUM_ATTRIBUTES_BLOCKED | frozens
     {ATTR_STATUS}
 )
 
-PLATFORM_SCHEMA_LEGACY = (
-    mqtt.MQTT_BASE_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_LEGACY_MODERN = (
+    MQTT_BASE_SCHEMA.extend(
         {
             vol.Inclusive(CONF_BATTERY_LEVEL_TEMPLATE, "battery"): cv.template,
-            vol.Inclusive(
-                CONF_BATTERY_LEVEL_TOPIC, "battery"
-            ): mqtt.valid_publish_topic,
+            vol.Inclusive(CONF_BATTERY_LEVEL_TOPIC, "battery"): valid_publish_topic,
             vol.Inclusive(CONF_CHARGING_TEMPLATE, "charging"): cv.template,
-            vol.Inclusive(CONF_CHARGING_TOPIC, "charging"): mqtt.valid_publish_topic,
+            vol.Inclusive(CONF_CHARGING_TOPIC, "charging"): valid_publish_topic,
             vol.Inclusive(CONF_CLEANING_TEMPLATE, "cleaning"): cv.template,
-            vol.Inclusive(CONF_CLEANING_TOPIC, "cleaning"): mqtt.valid_publish_topic,
+            vol.Inclusive(CONF_CLEANING_TOPIC, "cleaning"): valid_publish_topic,
             vol.Inclusive(CONF_DOCKED_TEMPLATE, "docked"): cv.template,
-            vol.Inclusive(CONF_DOCKED_TOPIC, "docked"): mqtt.valid_publish_topic,
+            vol.Inclusive(CONF_DOCKED_TOPIC, "docked"): valid_publish_topic,
             vol.Inclusive(CONF_ERROR_TEMPLATE, "error"): cv.template,
-            vol.Inclusive(CONF_ERROR_TOPIC, "error"): mqtt.valid_publish_topic,
+            vol.Inclusive(CONF_ERROR_TOPIC, "error"): valid_publish_topic,
             vol.Optional(CONF_FAN_SPEED_LIST, default=[]): vol.All(
                 cv.ensure_list, [cv.string]
             ),
             vol.Inclusive(CONF_FAN_SPEED_TEMPLATE, "fan_speed"): cv.template,
-            vol.Inclusive(CONF_FAN_SPEED_TOPIC, "fan_speed"): mqtt.valid_publish_topic,
+            vol.Inclusive(CONF_FAN_SPEED_TOPIC, "fan_speed"): valid_publish_topic,
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(
                 CONF_PAYLOAD_CLEAN_SPOT, default=DEFAULT_PAYLOAD_CLEAN_SPOT
@@ -134,12 +135,12 @@ PLATFORM_SCHEMA_LEGACY = (
             vol.Optional(
                 CONF_PAYLOAD_TURN_ON, default=DEFAULT_PAYLOAD_TURN_ON
             ): cv.string,
-            vol.Optional(CONF_SEND_COMMAND_TOPIC): mqtt.valid_publish_topic,
-            vol.Optional(CONF_SET_FAN_SPEED_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_SEND_COMMAND_TOPIC): valid_publish_topic,
+            vol.Optional(CONF_SET_FAN_SPEED_TOPIC): valid_publish_topic,
             vol.Optional(
                 CONF_SUPPORTED_FEATURES, default=DEFAULT_SERVICE_STRINGS
             ): vol.All(cv.ensure_list, [vol.In(STRING_TO_SERVICE.keys())]),
-            vol.Optional(CONF_COMMAND_TOPIC): mqtt.valid_publish_topic,
+            vol.Optional(CONF_COMMAND_TOPIC): valid_publish_topic,
             vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         }
     )
@@ -147,7 +148,15 @@ PLATFORM_SCHEMA_LEGACY = (
     .extend(MQTT_VACUUM_SCHEMA.schema)
 )
 
-DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY.extend({}, extra=vol.REMOVE_EXTRA)
+# Configuring MQTT Vacuums under the vacuum platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA_LEGACY = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_LEGACY_MODERN.schema),
+    warn_for_legacy_schema(VACUUM_DOMAIN),
+)
+
+DISCOVERY_SCHEMA_LEGACY = PLATFORM_SCHEMA_LEGACY_MODERN.extend(
+    {}, extra=vol.REMOVE_EXTRA
+)
 
 
 async def async_setup_entity_legacy(

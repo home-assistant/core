@@ -314,7 +314,9 @@ async def test_option_flow(hass):
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 
-    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_init(
+        entry.entry_id, context={"show_advanced_options": True}
+    )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "onvif_devices"
@@ -323,12 +325,14 @@ async def test_option_flow(hass):
         result["flow_id"],
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
-            config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+            config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
+            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
         },
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["data"] == {
         config_flow.CONF_EXTRA_ARGUMENTS: "",
-        config_flow.CONF_RTSP_TRANSPORT: config_flow.RTSP_TRANS_PROTOCOLS[1],
+        config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
+        config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: True,
     }

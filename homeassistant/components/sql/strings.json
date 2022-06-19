@@ -5,13 +5,13 @@
     },
     "error": {
       "db_url_invalid": "Database URL invalid",
-      "query_invalid": "SQL Query invalid",
-      "value_template_invalid": "Value Template invalid"
+      "query_invalid": "SQL Query invalid"
     },
     "step": {
       "user": {
         "data": {
           "db_url": "Database URL",
+          "name": "[%key:common::config_flow::data::name%]",
           "query": "Select Query",
           "column": "Column",
           "unit_of_measurement": "Unit of Measure",
@@ -19,6 +19,7 @@
         },
         "data_description": {
           "db_url": "Database URL, leave empty to use default HA database",
+          "name": "Name that will be used for Config Entry and also the Sensor",
           "query": "Query to run, needs to start with 'SELECT'",
           "column": "Column for returned query to present as state",
           "unit_of_measurement": "Unit of Measure (optional)",
@@ -32,6 +33,7 @@
       "init": {
         "data": {
           "db_url": "[%key:component::sql::config::step::user::data::db_url%]",
+          "name": "[%key:component::sql::config::step::user::data::name%]",
           "query": "[%key:component::sql::config::step::user::data::query%]",
           "column": "[%key:component::sql::config::step::user::data::column%]",
           "unit_of_measurement": "[%key:component::sql::config::step::user::data::unit_of_measurement%]",
@@ -39,6 +41,7 @@
         },
         "data_description": {
           "db_url": "[%key:component::sql::config::step::user::data_description::db_url%]",
+          "name": "[%key:component::sql::config::step::user::data_description::name%]",
           "query": "[%key:component::sql::config::step::user::data_description::query%]",
           "column": "[%key:component::sql::config::step::user::data_description::column%]",
           "unit_of_measurement": "[%key:component::sql::config::step::user::data_description::unit_of_measurement%]",
@@ -48,8 +51,7 @@
     },
     "error": {
       "db_url_invalid": "[%key:component::sql::config::error::db_url_invalid%]",
-      "query_invalid": "[%key:component::sql::config::error::query_invalid%]",
-      "value_template_invalid": "[%key:component::sql::config::error::value_template_invalid%]"
+      "query_invalid": "[%key:component::sql::config::error::query_invalid%]"
     }
   }
 }

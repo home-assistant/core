@@ -3,7 +3,6 @@ from ipaddress import ip_address
 from typing import Any
 from unittest.mock import call, patch
 
-import pytest
 from zeroconf import InterfaceChoice, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceInfo
 
@@ -147,7 +146,17 @@ def get_zeroconf_info_mock_model(model):
 
 async def test_setup(hass, mock_async_zeroconf):
     """Test configured options for a device are loaded via config entry."""
-    with patch.object(
+    mock_zc = {
+        "_http._tcp.local.": [
+            {
+                "domain": "shelly",
+                "name": "shelly*",
+                "properties": {"macaddress": "ffaadd*"},
+            }
+        ],
+        "_Volumio._tcp.local.": [{"domain": "volumio"}],
+    }
+    with patch.dict(zc_gen.ZEROCONF, mock_zc, clear=True,), patch.object(
         hass.config_entries.flow, "async_init"
     ) as mock_config_flow, patch.object(
         zeroconf, "HaAsyncServiceBrowser", side_effect=service_update_mock
@@ -161,7 +170,7 @@ async def test_setup(hass, mock_async_zeroconf):
 
     assert len(mock_service_browser.mock_calls) == 1
     expected_flow_calls = 0
-    for matching_components in zc_gen.ZEROCONF.values():
+    for matching_components in mock_zc.values():
         domains = set()
         for component in matching_components:
             if len(component) == 1:
@@ -1106,33 +1115,3 @@ async def test_no_name(hass, mock_async_zeroconf):
     register_call = mock_async_zeroconf.async_register_service.mock_calls[-1]
     info = register_call.args[0]
     assert info.name == "Home._home-assistant._tcp.local."
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = zeroconf.ZeroconfServiceInfo(
-        host="mock_host",
-        addresses=["mock_host"],
-        port=None,
-        hostname="mock_hostname",
-        type="mock_type",
-        name="mock_name",
-        properties={},
-    )
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["host"] == "mock_host"
-    assert "Detected integration that accessed discovery_info['host']" in caplog.text
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info.get("host") == "mock_host"
-    assert (
-        "Detected integration that accessed discovery_info.get('host')" in caplog.text
-    )
-
-    assert discovery_info.get("host", "fallback_host") == "mock_host"
-    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"

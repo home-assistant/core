@@ -23,13 +23,16 @@
       }
     },
     "error": {
-      "2fa_timed_out": "Timed out while waiting for two-factor authentication",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use.",
+      "email_2fa_timed_out": "Timed out while waiting for email-based two-factor authentication.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "progress": {
+      "email_2fa": "Check your email for a verification link from Simplisafe."
     }
   },
   "options": {

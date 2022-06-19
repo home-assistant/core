@@ -1,21 +1,41 @@
 """Support for Netgear routers."""
+from __future__ import annotations
+
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date, datetime
+from decimal import Decimal
+import logging
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
+from homeassistant.const import (
+    DATA_MEGABYTES,
+    DATA_RATE_MEGABITS_PER_SECOND,
+    PERCENTAGE,
+    TIME_MILLISECONDS,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, KEY_COORDINATOR, KEY_COORDINATOR_TRAFFIC, KEY_ROUTER
+from .const import (
+    DOMAIN,
+    KEY_COORDINATOR,
+    KEY_COORDINATOR_SPEED,
+    KEY_COORDINATOR_TRAFFIC,
+    KEY_ROUTER,
+)
 from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES = {
     "type": SensorEntityDescription(
@@ -97,7 +117,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
         index=0,
-        value=lambda data: data[0] if data is not None else None,
+        value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewWeekUpload",
@@ -106,7 +126,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
         index=1,
-        value=lambda data: data[1] if data is not None else None,
+        value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewWeekDownload",
@@ -115,7 +135,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
         index=0,
-        value=lambda data: data[0] if data is not None else None,
+        value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewWeekDownload",
@@ -124,7 +144,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
         index=1,
-        value=lambda data: data[1] if data is not None else None,
+        value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthUpload",
@@ -133,7 +153,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
         index=0,
-        value=lambda data: data[0] if data is not None else None,
+        value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthUpload",
@@ -142,7 +162,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
         index=1,
-        value=lambda data: data[1] if data is not None else None,
+        value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthDownload",
@@ -151,7 +171,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
         index=0,
-        value=lambda data: data[0] if data is not None else None,
+        value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewMonthDownload",
@@ -160,7 +180,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
         index=1,
-        value=lambda data: data[1] if data is not None else None,
+        value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
@@ -169,7 +189,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
         index=0,
-        value=lambda data: data[0] if data is not None else None,
+        value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthUpload",
@@ -178,7 +198,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:upload",
         index=1,
-        value=lambda data: data[1] if data is not None else None,
+        value=lambda data: data[1],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
@@ -187,7 +207,7 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
         index=0,
-        value=lambda data: data[0] if data is not None else None,
+        value=lambda data: data[0],
     ),
     NetgearSensorEntityDescription(
         key="NewLastMonthDownload",
@@ -196,7 +216,31 @@ SENSOR_TRAFFIC_TYPES = [
         native_unit_of_measurement=DATA_MEGABYTES,
         icon="mdi:download",
         index=1,
-        value=lambda data: data[1] if data is not None else None,
+        value=lambda data: data[1],
+    ),
+]
+
+SENSOR_SPEED_TYPES = [
+    NetgearSensorEntityDescription(
+        key="NewOOKLAUplinkBandwidth",
+        name="Uplink Bandwidth",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:upload",
+    ),
+    NetgearSensorEntityDescription(
+        key="NewOOKLADownlinkBandwidth",
+        name="Downlink Bandwidth",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=DATA_RATE_MEGABITS_PER_SECOND,
+        icon="mdi:download",
+    ),
+    NetgearSensorEntityDescription(
+        key="AveragePing",
+        name="Average Ping",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=TIME_MILLISECONDS,
+        icon="mdi:wan",
     ),
 ]
 
@@ -208,6 +252,7 @@ async def async_setup_entry(
     router = hass.data[DOMAIN][entry.entry_id][KEY_ROUTER]
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
     coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
+    coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
 
     # Router entities
     router_entities = []
@@ -215,6 +260,11 @@ async def async_setup_entry(
     for description in SENSOR_TRAFFIC_TYPES:
         router_entities.append(
             NetgearRouterSensorEntity(coordinator_traffic, router, description)
+        )
+
+    for description in SENSOR_SPEED_TYPES:
+        router_entities.append(
+            NetgearRouterSensorEntity(coordinator_speed, router, description)
         )
 
     async_add_entities(router_entities)
@@ -288,7 +338,7 @@ class NetgearSensorEntity(NetgearDeviceEntity, SensorEntity):
             self._state = self._device[self._attribute]
 
 
-class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
+class NetgearRouterSensorEntity(NetgearRouterEntity, RestoreSensor):
     """Representation of a device connected to a Netgear router."""
 
     _attr_entity_registry_enabled_default = False
@@ -306,7 +356,7 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
         self._name = f"{router.device_name} {entity_description.name}"
         self._unique_id = f"{router.serial_number}-{entity_description.key}-{entity_description.index}"
 
-        self._value = None
+        self._value: StateType | date | datetime | Decimal = None
         self.async_update_device()
 
     @property
@@ -314,9 +364,28 @@ class NetgearRouterSensorEntity(NetgearRouterEntity, SensorEntity):
         """Return the state of the sensor."""
         return self._value
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if self.coordinator.data is None:
+            sensor_data = await self.async_get_last_sensor_data()
+            if sensor_data is not None:
+                self._value = sensor_data.native_value
+
     @callback
     def async_update_device(self) -> None:
         """Update the Netgear device."""
-        if self.coordinator.data is not None:
-            data = self.coordinator.data.get(self.entity_description.key)
-            self._value = self.entity_description.value(data)
+        if self.coordinator.data is None:
+            return
+
+        data = self.coordinator.data.get(self.entity_description.key)
+        if data is None:
+            self._value = None
+            _LOGGER.debug(
+                "key '%s' not in Netgear router response '%s'",
+                self.entity_description.key,
+                data,
+            )
+            return
+
+        self._value = self.entity_description.value(data)

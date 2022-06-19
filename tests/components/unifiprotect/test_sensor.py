@@ -7,10 +7,16 @@ from datetime import datetime, timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import NVR, Camera, Event, Sensor
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Event,
+    EventType,
+    Sensor,
+    SmartDetectObjectType,
+)
 from pyunifiprotect.data.base import WifiConnectionState, WiredConnectionState
 from pyunifiprotect.data.nvr import EventMetadata
-from pyunifiprotect.data.types import EventType, SmartDetectObjectType
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_SCORE,

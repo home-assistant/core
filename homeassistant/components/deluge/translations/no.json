@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Tjenesten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "invalid_auth": "Ugyldig godkjenning"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Vert",
+                    "password": "Passord",
+                    "port": "Port",
+                    "username": "Brukernavn",
+                    "web_port": "Webport (for bes\u00f8kstjeneste)"
+                },
+                "description": "For \u00e5 kunne bruke denne integrasjonen, m\u00e5 du aktivere f\u00f8lgende alternativ i deluge-innstillingene: Daemon > Tillat fjernkontroller"
+            }
+        }
+    }
+}

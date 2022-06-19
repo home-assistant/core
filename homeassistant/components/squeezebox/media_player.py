@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
@@ -238,6 +239,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.CLEAR_PLAYLIST
         | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.GROUPING
     )
 
     def __init__(self, player):
@@ -393,7 +395,7 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         return self._player.shuffle == "song"
 
     @property
-    def sync_group(self):
+    def group_members(self):
         """List players we are synced with."""
         player_ids = {
             p.unique_id: p.entity_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
@@ -403,6 +405,11 @@ class SqueezeBoxEntity(MediaPlayerEntity):
             if player in player_ids:
                 sync_group.append(player_ids[player])
         return sync_group
+
+    @property
+    def sync_group(self):
+        """List players we are synced with. Deprecated."""
+        return self.group_members
 
     @property
     def query_result(self):
@@ -463,20 +470,23 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         await self._player.async_set_power(True)
 
     async def async_play_media(self, media_type, media_id, **kwargs):
-        """
-        Send the play_media command to the media player.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the current playlist.
-        """
-        cmd = "play"
+        """Send the play_media command to the media player."""
         index = None
 
-        if kwargs.get(ATTR_MEDIA_ENQUEUE):
+        enqueue: MediaPlayerEnqueue | None = kwargs.get(ATTR_MEDIA_ENQUEUE)
+
+        if enqueue == MediaPlayerEnqueue.ADD:
             cmd = "add"
+        elif enqueue == MediaPlayerEnqueue.NEXT:
+            cmd = "insert"
+        else:
+            cmd = "play"
 
         if media_source.is_media_source_id(media_id):
             media_type = MEDIA_TYPE_MUSIC
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
 
         if media_type in MEDIA_TYPE_MUSIC:
@@ -560,9 +570,9 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         self._query_result = await self._player.async_query(*all_params)
         _LOGGER.debug("call_query got result %s", self._query_result)
 
-    async def async_sync(self, other_player):
+    async def async_join_players(self, group_members):
         """
-        Add another Squeezebox player to this player's sync group.
+        Add other Squeezebox players to this player's sync group.
 
         If the other player is a member of a sync group, it will leave the current sync group
         without asking.
@@ -570,14 +580,32 @@ class SqueezeBoxEntity(MediaPlayerEntity):
         player_ids = {
             p.entity_id: p.unique_id for p in self.hass.data[DOMAIN][KNOWN_PLAYERS]
         }
-        if other_player_id := player_ids.get(other_player):
-            await self._player.async_sync(other_player_id)
-        else:
-            _LOGGER.info("Could not find player_id for %s. Not syncing", other_player)
 
-    async def async_unsync(self):
+        for other_player in group_members:
+            if other_player_id := player_ids.get(other_player):
+                await self._player.async_sync(other_player_id)
+            else:
+                _LOGGER.info(
+                    "Could not find player_id for %s. Not syncing", other_player
+                )
+
+    async def async_sync(self, other_player):
+        """Sync this Squeezebox player to another. Deprecated."""
+        _LOGGER.warning(
+            "Service squeezebox.sync is deprecated; use media_player.join_players instead"
+        )
+        await self.async_join_players([other_player])
+
+    async def async_unjoin_player(self):
         """Unsync this Squeezebox player."""
         await self._player.async_unsync()
+
+    async def async_unsync(self):
+        """Unsync this Squeezebox player. Deprecated."""
+        _LOGGER.warning(
+            "Service squeezebox.unsync is deprecated; use media_player.unjoin_player instead"
+        )
+        await self.async_unjoin_player()
 
     async def async_browse_media(self, media_content_type=None, media_content_id=None):
         """Implement the websocket media browsing helper."""

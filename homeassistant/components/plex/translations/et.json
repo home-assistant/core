@@ -35,14 +35,12 @@
                 "title": "Vali Plex'i server"
             },
             "user": {
-                "description": "Plexi serveri linkimiseks mine lehele [plex.tv] (https://plex.tv).",
-                "title": ""
+                "description": "Plexi serveri linkimiseks mine lehele [plex.tv] (https://plex.tv)."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Seadistusmeetod"
-                },
-                "title": ""
+                }
             }
         }
     },

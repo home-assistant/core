@@ -129,11 +129,11 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result):
     """Convert result to JSON."""
-    if result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY:
+    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
         data = result.copy()
         return data
 
-    if result["type"] != data_entry_flow.RESULT_TYPE_FORM:
+    if result["type"] != data_entry_flow.FlowResultType.FORM:
         return result
 
     data = result.copy()

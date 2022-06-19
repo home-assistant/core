@@ -4,7 +4,8 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van"
         },
         "error": {
-            "cannot_connect": "Sikertelen csatlakoz\u00e1s"
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
+            "invalid_system_id": "\u00c9rv\u00e9nytelen Airzone rendszerazonos\u00edt\u00f3"
         },
         "step": {
             "user": {

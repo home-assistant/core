@@ -36,7 +36,7 @@ from homeassistant.components.androidtv.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_PORT
 
-from .patchers import isfile
+from .patchers import PATCH_ACCESS, PATCH_ISFILE, PATCH_SETUP_ENTRY
 
 from tests.common import MockConfigEntry
 
@@ -65,16 +65,6 @@ CONFIG_ADB_SERVER = {
 
 CONNECT_METHOD = (
     "homeassistant.components.androidtv.config_flow.async_connect_androidtv"
-)
-PATCH_ACCESS = patch(
-    "homeassistant.components.androidtv.config_flow.os.access", return_value=True
-)
-PATCH_ISFILE = patch(
-    "homeassistant.components.androidtv.config_flow.os.path.isfile", isfile
-)
-PATCH_SETUP_ENTRY = patch(
-    "homeassistant.components.androidtv.async_setup_entry",
-    return_value=True,
 )
 
 

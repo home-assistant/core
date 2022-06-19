@@ -11,9 +11,9 @@
         "step": {
             "user": {
                 "data": {
+                    "password": "Password",
                     "url": "URL",
-                    "username": "Username",
-                    "password": "Password"
+                    "username": "Username"
                 }
             }
         }

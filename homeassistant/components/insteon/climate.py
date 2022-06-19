@@ -1,16 +1,15 @@
 """Support for Insteon thermostat."""
 from __future__ import annotations
 
+from pyinsteon.config import CELSIUS
 from pyinsteon.constants import ThermostatMode
-from pyinsteon.operating_flag import CELSIUS
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_FAN_ONLY,
+    FAN_AUTO,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -24,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import SIGNAL_ADD_ENTITIES
 from .insteon_entity import InsteonEntity
 from .utils import async_add_insteon_entities
+
+FAN_ONLY = "fan_only"
 
 COOLING = 1
 HEATING = 2
@@ -46,7 +47,7 @@ HVAC_MODES = {
     2: HVACMode.COOL,
     3: HVACMode.HEAT_COOL,
 }
-FAN_MODES = {4: HVAC_MODE_AUTO, 8: HVAC_MODE_FAN_ONLY}
+FAN_MODES = {4: FAN_AUTO, 8: FAN_ONLY}
 
 
 async def async_setup_entry(

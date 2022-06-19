@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Account is al geconfigureerd"
+        },
+        "error": {
+            "db_url_invalid": "Database URL ongeldig",
+            "query_invalid": "SQL Query ongeldig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Kolom",
+                    "db_url": "Database URL",
+                    "name": "Naam",
+                    "query": "Selecteer Query",
+                    "unit_of_measurement": "Meeteenheid",
+                    "value_template": "Waardesjabloon"
+                },
+                "data_description": {
+                    "column": "Kolom voor teruggestuurde query om als status te presenteren",
+                    "db_url": "Database URL, leeg laten om de standaard HA database te gebruiken",
+                    "name": "Naam die zal worden gebruikt voor Config Entry en ook de Sensor",
+                    "query": "Query die moet worden uitgevoerd, moet beginnen met 'SELECT'",
+                    "unit_of_measurement": "Meeteenheid (optioneel)",
+                    "value_template": "Waardesjabloon (optioneel)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "Database URL ongeldig",
+            "query_invalid": "SQL Query ongeldig"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Kolom",
+                    "db_url": "Database URL",
+                    "name": "Naam",
+                    "query": "Selecteer Query",
+                    "unit_of_measurement": "Meeteenheid",
+                    "value_template": "Waardesjabloon"
+                },
+                "data_description": {
+                    "column": "Kolom voor teruggestuurde query om als status te presenteren",
+                    "db_url": "Database URL, leeg laten om de standaard HA database te gebruiken",
+                    "name": "Naam die zal worden gebruikt voor Config Entry en ook de Sensor",
+                    "query": "Query die moet worden uitgevoerd, moet beginnen met 'SELECT'",
+                    "unit_of_measurement": "Meeteenheid (optioneel)",
+                    "value_template": "Waardesjabloon (optioneel)"
+                }
+            }
+        }
+    }
+}

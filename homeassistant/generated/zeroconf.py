@@ -42,6 +42,20 @@ ZEROCONF = {
             "domain": "apple_tv"
         }
     ],
+    "_api._tcp.local.": [
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "haiku*"
+            }
+        },
+        {
+            "domain": "baf",
+            "properties": {
+                "model": "i6*"
+            }
+        }
+    ],
     "_api._udp.local.": [
         {
             "domain": "guardian"
@@ -103,7 +117,10 @@ ZEROCONF = {
             "domain": "devolo_home_control"
         },
         {
-            "domain": "devolo_home_network"
+            "domain": "devolo_home_network",
+            "properties": {
+                "MT": "*"
+            }
         }
     ],
     "_easylink._tcp.local.": [
@@ -215,10 +232,6 @@ ZEROCONF = {
     "_kizbox._tcp.local.": [
         {
             "domain": "overkiz",
-            "name": "gateway*"
-        },
-        {
-            "domain": "somfy",
             "name": "gateway*"
         }
     ],
@@ -353,7 +366,7 @@ ZEROCONF = {
             "name": "smappee50*"
         }
     ],
-    "_system-bridge._udp.local.": [
+    "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge"
         }
@@ -378,6 +391,12 @@ ZEROCONF = {
             "domain": "kodi"
         }
     ],
+    "_zigate-zigbee-gateway._tcp.local.": [
+        {
+            "domain": "zha",
+            "name": "*zigate*"
+        }
+    ],
     "_zwave-js-server._tcp.local.": [
         {
             "domain": "zwave_js"
@@ -396,6 +415,7 @@ HOMEKIT = {
     "C105X": "roku",
     "C135X": "roku",
     "EB-*": "ecobee",
+    "HHKBridge*": "hive",
     "Healty Home Coach": "netatmo",
     "Iota": "abode",
     "LIFX A19": "lifx",

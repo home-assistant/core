@@ -173,7 +173,7 @@ async def test_form_invalid_auth(hass: HomeAssistant):
         )
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result2["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_form_unknown_exeption(hass: HomeAssistant):
@@ -679,3 +679,70 @@ async def test_form_dhcp_existing_ignored_entry(hass: HomeAssistant):
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth(hass):
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "bob",
+            CONF_HOST: f"http://{MOCK_HOSTNAME}:1443{ISY_URL_POSTFIX}",
+        },
+        unique_id=MOCK_UUID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH, "unique_id": MOCK_UUID},
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    with patch(
+        PATCH_CONNECTION,
+        side_effect=ISYInvalidAuthError(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"password": "invalid_auth"}
+
+    with patch(
+        PATCH_CONNECTION,
+        side_effect=ISYConnectionError(),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result3["type"] == "form"
+    assert result3["errors"] == {"base": "cannot_connect"}
+
+    with patch(PATCH_CONNECTION, return_value=MOCK_CONFIG_RESPONSE), patch(
+        "homeassistant.components.isy994.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result4 = await hass.config_entries.flow.async_configure(
+            result3["flow_id"],
+            {
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert mock_setup_entry.called
+    assert result4["type"] == "abort"
+    assert result4["reason"] == "reauth_successful"

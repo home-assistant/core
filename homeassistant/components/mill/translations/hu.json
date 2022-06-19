@@ -21,9 +21,7 @@
             },
             "user": {
                 "data": {
-                    "connection_type": "V\u00e1lassza ki a kapcsolat t\u00edpus\u00e1t",
-                    "password": "Jelsz\u00f3",
-                    "username": "Felhaszn\u00e1l\u00f3n\u00e9v"
+                    "connection_type": "V\u00e1lassza ki a kapcsolat t\u00edpus\u00e1t"
                 },
                 "description": "V\u00e1lassza ki a kapcsolat t\u00edpus\u00e1t. A helyi kapcsolat 3. gener\u00e1ci\u00f3s f\u0171t\u0151berendez\u00e9seket ig\u00e9nyel"
             }

@@ -21,7 +21,7 @@ from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
 from homeassistant.helpers.typing import ConfigType
@@ -40,6 +40,7 @@ from .const import (
     SONOS_VANISHED,
     UPNP_ST,
 )
+from .exception import SonosUpdateError
 from .favorites import SonosFavorites
 from .speaker import SonosSpeaker
 
@@ -203,7 +204,7 @@ class SonosDiscoveryManager:
     def _add_speaker(self, soco: SoCo) -> None:
         """Create and set up a new SonosSpeaker instance."""
         try:
-            speaker_info = soco.get_speaker_info(True)
+            speaker_info = soco.get_speaker_info(True, timeout=7)
             if soco.uid not in self.data.boot_counts:
                 self.data.boot_counts[soco.uid] = soco.boot_seqnum
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
@@ -264,18 +265,10 @@ class SonosDiscoveryManager:
                 self._create_visible_speakers(ip_addr)
             elif not known_speaker.available:
                 try:
-                    known_speaker.soco.renderingControl.GetVolume(
-                        [("InstanceID", 0), ("Channel", "Master")], timeout=1
-                    )
-                except OSError:
+                    known_speaker.ping()
+                except SonosUpdateError:
                     _LOGGER.debug(
                         "Manual poll to %s failed, keeping unavailable", ip_addr
-                    )
-                else:
-                    dispatcher_send(
-                        self.hass,
-                        f"{SONOS_SPEAKER_ACTIVITY}-{known_speaker.uid}",
-                        "manual rediscovery",
                     )
 
         self.data.hosts_heartbeat = call_later(
@@ -403,3 +396,17 @@ class SonosDiscoveryManager:
                 AVAILABILITY_CHECK_INTERVAL,
             )
         )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove Sonos config entry from a device."""
+    known_devices = hass.data[DATA_SONOS].discovered.keys()
+    for identifier in device_entry.identifiers:
+        if identifier[0] != DOMAIN:
+            continue
+        uid = identifier[1]
+        if uid not in known_devices:
+            return True
+    return False

@@ -147,7 +147,7 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
         ]
     }
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
@@ -172,7 +172,7 @@ async def test_airzone_climate_turn_on_off(hass: HomeAssistant) -> None:
         ]
     }
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
@@ -204,7 +204,7 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
         ]
     }
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(
@@ -230,7 +230,7 @@ async def test_airzone_climate_set_hvac_mode(hass: HomeAssistant) -> None:
         ]
     }
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         return_value=HVAC_MOCK_2,
     ):
         await hass.services.async_call(
@@ -263,7 +263,7 @@ async def test_airzone_climate_set_hvac_slave_error(hass: HomeAssistant) -> None
     await async_init_integration(hass)
 
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         return_value=HVAC_MOCK,
     ), pytest.raises(HomeAssistantError):
         await hass.services.async_call(
@@ -296,7 +296,7 @@ async def test_airzone_climate_set_temp(hass: HomeAssistant) -> None:
     await async_init_integration(hass)
 
     with patch(
-        "homeassistant.components.airzone.AirzoneLocalApi.http_request",
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
         return_value=HVAC_MOCK,
     ):
         await hass.services.async_call(

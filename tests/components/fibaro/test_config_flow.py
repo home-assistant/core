@@ -53,7 +53,12 @@ async def test_config_flow_user_initiated_success(hass):
 
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=True)
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "fiblary3.client.v4.client.Client.login", login_mock, create=True
+    ), patch(
+        "homeassistant.components.fibaro.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -182,7 +187,12 @@ async def test_config_flow_import(hass):
     """Test for importing config from configuration.yaml."""
     login_mock = Mock()
     login_mock.get.return_value = Mock(status=True)
-    with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
+    with patch(
+        "fiblary3.client.v4.client.Client.login", login_mock, create=True
+    ), patch(
+        "homeassistant.components.fibaro.async_setup_entry",
+        return_value=True,
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},

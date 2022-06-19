@@ -65,7 +65,6 @@ async def async_setup_entry(
     async_add_entities(
         SteamSensor(hass.data[DOMAIN][entry.entry_id], account)
         for account in entry.options[CONF_ACCOUNTS]
-        if entry.options[CONF_ACCOUNTS][account]["enabled"]
     )
 
 
@@ -106,10 +105,7 @@ class SteamSensor(SteamEntity, SensorEntity):
             attrs["game_image_header"] = f"{game_url}{STEAM_HEADER_IMAGE_FILE}"
             attrs["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
             if info := self._get_game_icon(player):
-                attrs["game_icon"] = STEAM_ICON_URL % (
-                    game_id,
-                    info,
-                )
+                attrs["game_icon"] = f"{STEAM_ICON_URL}{game_id}/{info}.jpg"
         self._attr_name = player["personaname"]
         self._attr_entity_picture = player["avatarmedium"]
         if last_online := player.get("lastlogoff"):

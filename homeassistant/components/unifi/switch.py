@@ -20,6 +20,7 @@ from homeassistant.components.switch import DOMAIN, SwitchDeviceClass, SwitchEnt
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceEntryType,
@@ -27,7 +28,6 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -65,8 +65,10 @@ async def async_setup_entry(
 
     # Store previously known POE control entities in case their POE are turned off.
     known_poe_clients = []
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
-    for entry in async_entries_for_config_entry(entity_registry, config_entry.entry_id):
+    entity_registry = er.async_get(hass)
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
 
         if not entry.unique_id.startswith(POE_SWITCH):
             continue

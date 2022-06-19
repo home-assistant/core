@@ -1,6 +1,7 @@
 """Support for interface with a Bose Soundtouch."""
 from __future__ import annotations
 
+from functools import partial
 import logging
 import re
 
@@ -8,10 +9,14 @@ from libsoundtouch import soundtouch_device
 from libsoundtouch.utils import Source
 import voluptuous as vol
 
+from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
+)
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -190,6 +195,7 @@ class SoundTouchDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
 
     def __init__(self, name, config):
@@ -348,6 +354,18 @@ class SoundTouchDevice(MediaPlayerEntity):
             EVENT_HOMEASSISTANT_START, async_update_on_start
         )
 
+    async def async_play_media(self, media_type, media_id, **kwargs):
+        """Play a piece of media."""
+        if media_source.is_media_source_id(media_id):
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
+            media_id = async_process_play_media_url(self.hass, play_item.url)
+
+        await self.hass.async_add_executor_job(
+            partial(self.play_media, media_type, media_id, **kwargs)
+        )
+
     def play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         _LOGGER.debug("Starting media with media_id: %s", media_id)
@@ -449,6 +467,10 @@ class SoundTouchDevice(MediaPlayerEntity):
             attributes[ATTR_SOUNDTOUCH_GROUP] = group_members
 
         return attributes
+
+    async def async_browse_media(self, media_content_type=None, media_content_id=None):
+        """Implement the websocket media browsing helper."""
+        return await media_source.async_browse_media(self.hass, media_content_id)
 
     def get_zone_info(self):
         """Return the current zone info."""

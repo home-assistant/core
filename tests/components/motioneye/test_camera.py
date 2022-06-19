@@ -42,7 +42,6 @@ from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import async_get_registry
 import homeassistant.util.dt as dt_util
 
 from . import (
@@ -138,8 +137,8 @@ async def test_setup_camera_new_data_same(hass: HomeAssistant) -> None:
 
 async def test_setup_camera_new_data_camera_removed(hass: HomeAssistant) -> None:
     """Test a data refresh with a removed camera."""
-    device_registry = await async_get_registry(hass)
-    entity_registry = await er.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
 
     client = create_mock_motioneye_client()
     config_entry = await setup_mock_motioneye_config_entry(hass, client=client)
@@ -328,7 +327,7 @@ async def test_device_info(hass: HomeAssistant) -> None:
     assert device.model == MOTIONEYE_MANUFACTURER
     assert device.name == TEST_CAMERA_NAME
 
-    entity_registry = await er.async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     entities_from_device = [
         entry.entity_id
         for entry in er.async_entries_for_device(entity_registry, device.id)

@@ -18,10 +18,6 @@
             "user": {
                 "data": {
                     "api_key": "API v\u00f5ti",
-                    "base_path": "API asukoht",
-                    "host": "",
-                    "port": "",
-                    "ssl": "Kasutab SSL serti",
                     "url": "URL",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }

@@ -58,7 +58,7 @@ async def test_form(hass, gen):
         "aioshelly.rpc_device.RpcDevice.create",
         new=AsyncMock(
             return_value=Mock(
-                model="SHSW-1",
+                shelly={"model": "SHSW-1", "gen": gen},
                 config=MOCK_CONFIG,
                 shutdown=AsyncMock(),
             )
@@ -175,7 +175,7 @@ async def test_form_auth(hass, test_data):
         "aioshelly.rpc_device.RpcDevice.create",
         new=AsyncMock(
             return_value=Mock(
-                model="SHSW-1",
+                shelly={"model": "SHSW-1", "gen": gen},
                 config=MOCK_CONFIG,
                 shutdown=AsyncMock(),
             )
@@ -223,6 +223,103 @@ async def test_form_errors_get_info(hass, error):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": base_error}
+
+
+async def test_form_missing_model_key(hass):
+    """Test we handle missing Shelly model key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": False, "gen": "2"},
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"gen": 2},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
+
+
+async def test_form_missing_model_key_auth_enabled(hass):
+    """Test we handle missing Shelly model key when auth enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": True, "gen": 2},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"gen": 2},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {"password": "1234"}
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["errors"] == {"base": "firmware_not_fully_provisioned"}
+
+
+async def test_form_missing_model_key_zeroconf(hass, caplog):
+    """Test we handle missing Shelly model key via zeroconf."""
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": False, "gen": 2},
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"gen": 2},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "firmware_not_fully_provisioned"}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
 @pytest.mark.parametrize(

@@ -341,6 +341,8 @@ class CalendarEventView(http.HomeAssistantView):
             [
                 {
                     "summary": event.summary,
+                    "description": event.description,
+                    "location": event.location,
                     "start": _get_api_date(event.start),
                     "end": _get_api_date(event.end),
                 }

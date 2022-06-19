@@ -653,6 +653,120 @@ async def test_this_variable(hass, start_ha):
     assert hass.states.get(TEST_NAME).state == "It Works: " + TEST_NAME
 
 
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
+                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "attributes": {"test": "{{ this.entity_id }}"},
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable_early_hass_not_running(hass, config, count, domain):
+    """Test referencing 'this' variable before the entity is in the state machine.
+
+    Hass is not yet started when the entity is added.
+    Icon, name and picture templates are rendered once in the constructor.
+    """
+    entity_id = "sensor.none_false"
+
+    hass.state = CoreState.not_running
+
+    # Setup template
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Sensor state not rendered, icon, name and picture
+    # templates rendered in constructor with entity_id set to None
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+    assert state.attributes == {
+        "entity_picture": "None:False",
+        "friendly_name": "None:False",
+        "icon": "mdi:None:False",
+    }
+
+    # Signal hass started
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    # Re-render icon, name, pciture + other templates now rendered
+    state = hass.states.get(entity_id)
+    assert state.state == "sensor.none_false: sensor.none_false"
+    assert state.attributes == {
+        "entity_picture": "sensor.none_false:False",
+        "friendly_name": "sensor.none_false:False",
+        "icon": "mdi:sensor.none_false:False",
+        "test": "sensor.none_false",
+    }
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
+                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "attributes": {"test": "{{ this.entity_id }}"},
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable_early_hass_running(hass, config, count, domain):
+    """Test referencing 'this' variable before the entity is in the state machine.
+
+    Hass is already started when the entity is added.
+    Icon, name and picture templates are rendered in the constructor, and again
+    before the entity is added to hass.
+    """
+
+    # Start hass
+    assert hass.state == CoreState.running
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Setup template
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.none_false"
+    # All templated rendered
+    state = hass.states.get(entity_id)
+    assert state.state == "sensor.none_false: sensor.none_false"
+    assert state.attributes == {
+        "entity_picture": "sensor.none_false:False",
+        "friendly_name": "sensor.none_false:False",
+        "icon": "mdi:sensor.none_false:False",
+        "test": "sensor.none_false",
+    }
+
+
 @pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
     "config",

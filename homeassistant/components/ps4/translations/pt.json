@@ -13,23 +13,18 @@
             "login_failed": "Falha ao emparelhar com a PlayStation 4. Verifique se o PIN est\u00e1 correto."
         },
         "step": {
-            "creds": {
-                "title": "PlayStation 4"
-            },
             "link": {
                 "data": {
                     "code": "PIN",
                     "ip_address": "Endere\u00e7o de IP",
                     "name": "Nome",
                     "region": "Regi\u00e3o"
-                },
-                "title": "PlayStation 4"
+                }
             },
             "mode": {
                 "data": {
                     "mode": "Modo de configura\u00e7\u00e3o"
-                },
-                "title": "PlayStation 4"
+                }
             }
         }
     }

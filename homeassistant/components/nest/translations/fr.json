@@ -19,7 +19,7 @@
             "subscriber_error": "Erreur d'abonn\u00e9 inconnue, voir les journaux",
             "timeout": "D\u00e9lai de la validation du code expir\u00e9",
             "unknown": "Erreur inattendue",
-            "wrong_project_id": "Veuillez saisir un ID de projet Cloud valide (ID de projet d'acc\u00e8s \u00e0 l'appareil trouv\u00e9)"
+            "wrong_project_id": "Veuillez saisir un ID de projet Cloud valide (\u00e9tait identique \u00e0 l'ID de projet d'acc\u00e8s \u00e0 l'appareil)"
         },
         "step": {
             "auth": {
@@ -28,6 +28,27 @@
                 },
                 "description": "Pour lier votre compte Google, [autorisez votre compte]( {url} ). \n\n Apr\u00e8s autorisation, copiez-collez le code d'authentification fourni ci-dessous.",
                 "title": "Associer un compte Google"
+            },
+            "auth_upgrade": {
+                "title": "Nest\u00a0: abandon de l'authentification d'application"
+            },
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "ID de projet Google\u00a0Cloud"
+                },
+                "title": "Nest\u00a0: saisissez l'ID du projet Cloud"
+            },
+            "create_cloud_project": {
+                "title": "Nest\u00a0: cr\u00e9er et configurer un projet Cloud"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "ID de projet d'acc\u00e8s \u00e0 l'appareil"
+                },
+                "title": "Nest\u00a0: cr\u00e9er un projet d'acc\u00e8s \u00e0 l'appareil"
+            },
+            "device_project_upgrade": {
+                "title": "Nest\u00a0: mettre \u00e0 jour le projet d'acc\u00e8s \u00e0 l'appareil"
             },
             "init": {
                 "data": {

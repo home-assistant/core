@@ -1,9 +1,10 @@
 """Test the nexia config flow."""
+import asyncio
 from unittest.mock import MagicMock, patch
 
+import aiohttp
 from nexia.const import BRAND_ASAIR, BRAND_NEXIA
 import pytest
-from requests.exceptions import ConnectTimeout, HTTPError
 
 from homeassistant import config_entries
 from homeassistant.components.nexia.const import CONF_BRAND, DOMAIN
@@ -52,7 +53,10 @@ async def test_form_invalid_auth(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("homeassistant.components.nexia.config_flow.NexiaHome.login"):
+    with patch("homeassistant.components.nexia.config_flow.NexiaHome.login",), patch(
+        "homeassistant.components.nexia.config_flow.NexiaHome.get_name",
+        return_value=None,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -74,7 +78,7 @@ async def test_form_cannot_connect(hass):
 
     with patch(
         "homeassistant.components.nexia.config_flow.NexiaHome.login",
-        side_effect=ConnectTimeout,
+        side_effect=asyncio.TimeoutError,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -95,11 +99,11 @@ async def test_form_invalid_auth_http_401(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    response_mock = MagicMock()
-    type(response_mock).status_code = 401
     with patch(
         "homeassistant.components.nexia.config_flow.NexiaHome.login",
-        side_effect=HTTPError(response=response_mock),
+        side_effect=aiohttp.ClientResponseError(
+            status=401, request_info=MagicMock(), history=MagicMock()
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -120,11 +124,11 @@ async def test_form_cannot_connect_not_found(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    response_mock = MagicMock()
-    type(response_mock).status_code = 404
     with patch(
         "homeassistant.components.nexia.config_flow.NexiaHome.login",
-        side_effect=HTTPError(response=response_mock),
+        side_effect=aiohttp.ClientResponseError(
+            status=404, request_info=MagicMock(), history=MagicMock()
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

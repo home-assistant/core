@@ -14,7 +14,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import Context, HomeAssistantError
 from homeassistant.helpers import entity, entity_registry
@@ -816,64 +815,6 @@ async def test_float_conversion(hass):
     assert state.state == "3.6"
 
 
-async def test_temperature_conversion(hass, caplog):
-    """Test conversion of temperatures."""
-    # Non sensor entity reporting a temperature
-    with patch.object(
-        entity.Entity, "state", PropertyMock(return_value=100)
-    ), patch.object(
-        entity.Entity, "unit_of_measurement", PropertyMock(return_value=TEMP_FAHRENHEIT)
-    ):
-        ent = entity.Entity()
-        ent.hass = hass
-        ent.entity_id = "hello.world"
-        ent.async_write_ha_state()
-
-    state = hass.states.get("hello.world")
-    assert state is not None
-    assert state.state == "38"
-    assert (
-        "Entity hello.world (<class 'homeassistant.helpers.entity.Entity'>) relies on automatic "
-        "temperature conversion, this will be unsupported in Home Assistant Core 2022.7. "
-        "Please create a bug report" in caplog.text
-    )
-
-    # Sensor entity, not extending SensorEntity, reporting a temperature
-    with patch.object(
-        entity.Entity, "state", PropertyMock(return_value=100)
-    ), patch.object(
-        entity.Entity, "unit_of_measurement", PropertyMock(return_value=TEMP_FAHRENHEIT)
-    ):
-        ent = entity.Entity()
-        ent.hass = hass
-        ent.entity_id = "sensor.temp"
-        ent.async_write_ha_state()
-
-    state = hass.states.get("sensor.temp")
-    assert state is not None
-    assert state.state == "38"
-    assert (
-        "Temperature sensor sensor.temp (<class 'homeassistant.helpers.entity.Entity'>) "
-        "does not inherit SensorEntity, this will be unsupported in Home Assistant Core "
-        "2022.7.Please create a bug report" in caplog.text
-    )
-
-    # Sensor entity, not extending SensorEntity, not reporting a number
-    with patch.object(
-        entity.Entity, "state", PropertyMock(return_value="really warm")
-    ), patch.object(
-        entity.Entity, "unit_of_measurement", PropertyMock(return_value=TEMP_FAHRENHEIT)
-    ):
-        ent = entity.Entity()
-        ent.hass = hass
-        ent.entity_id = "sensor.temp"
-        ent.async_write_ha_state()
-
-    state = hass.states.get("sensor.temp")
-    assert state is not None
-    assert state.state == "really warm"
-
-
 async def test_attribution_attribute(hass):
     """Test attribution attribute."""
     mock_entity = entity.Entity()
@@ -913,7 +854,6 @@ async def test_entity_category_property(hass):
     (
         ("config", entity.EntityCategory.CONFIG),
         ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
-        ("system", entity.EntityCategory.SYSTEM),
     ),
 )
 def test_entity_category_schema(value, expected):
@@ -930,7 +870,7 @@ def test_entity_category_schema_error(value):
     schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
     with pytest.raises(
         vol.Invalid,
-        match=r"expected EntityCategory or one of 'config', 'diagnostic', 'system'",
+        match=r"expected EntityCategory or one of 'config', 'diagnostic'",
     ):
         schema(value)
 

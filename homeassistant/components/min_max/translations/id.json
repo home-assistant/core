@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Entitas input",
+                    "name": "Nama",
+                    "round_digits": "Presisi",
+                    "type": "Karakteristik statistik"
+                },
+                "data_description": {
+                    "round_digits": "Mengontrol jumlah digit desimal dalam output ketika karakteristik statistik adalah rata-rata atau median."
+                },
+                "description": "Buat sensor yang menghitung nilai min, maks, rata-rata, atau median dari sejumlah sensor input.",
+                "title": "Tambahkan sensor min/maks/rata-rata/median"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Entitas input",
+                    "round_digits": "Presisi",
+                    "type": "Karakteristik statistik"
+                },
+                "data_description": {
+                    "round_digits": "Mengontrol jumlah digit desimal dalam output ketika karakteristik statistik adalah rata-rata atau median."
+                }
+            }
+        }
+    },
+    "title": "Sensor min/maks/rata-rata/median"
+}

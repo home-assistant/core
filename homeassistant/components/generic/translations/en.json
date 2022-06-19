@@ -15,6 +15,7 @@
             "stream_no_video": "Stream has no video",
             "stream_not_permitted": "Operation not permitted while trying to connect to stream. Wrong RTSP transport protocol?",
             "stream_unauthorised": "Authorisation failed while trying to connect to stream",
+            "template_error": "Error rendering template. Review log for more info.",
             "timeout": "Timeout while loading URL",
             "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
             "unknown": "Unexpected error"
@@ -57,6 +58,7 @@
             "stream_no_video": "Stream has no video",
             "stream_not_permitted": "Operation not permitted while trying to connect to stream. Wrong RTSP transport protocol?",
             "stream_unauthorised": "Authorisation failed while trying to connect to stream",
+            "template_error": "Error rendering template. Review log for more info.",
             "timeout": "Timeout while loading URL",
             "unable_still_load": "Unable to load valid image from still image URL (e.g. invalid host, URL or authentication failure).  Review log for more info.",
             "unknown": "Unexpected error"
@@ -77,8 +79,12 @@
                     "rtsp_transport": "RTSP transport protocol",
                     "still_image_url": "Still Image URL (e.g. http://...)",
                     "stream_source": "Stream Source URL (e.g. rtsp://...)",
+                    "use_wallclock_as_timestamps": "Use wallclock as timestamps",
                     "username": "Username",
                     "verify_ssl": "Verify SSL certificate"
+                },
+                "data_description": {
+                    "use_wallclock_as_timestamps": "This option may correct segmenting or crashing issues arising from buggy timestamp implementations on some cameras"
                 }
             }
         }

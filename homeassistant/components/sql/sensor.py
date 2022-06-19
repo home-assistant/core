@@ -6,6 +6,7 @@ import decimal
 import logging
 
 import sqlalchemy
+from sqlalchemy.engine import Result
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import scoped_session, sessionmaker
 import voluptuous as vol
@@ -42,7 +43,7 @@ _QUERY_SCHEME = vol.Schema(
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_QUERY): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-        vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+        vol.Optional(CONF_VALUE_TEMPLATE): cv.string,
     }
 )
 
@@ -73,11 +74,11 @@ async def async_setup_platform(
     for query in config[CONF_QUERIES]:
         new_config = {
             CONF_DB_URL: config.get(CONF_DB_URL, default_db_url),
-            CONF_NAME: query.get(CONF_NAME),
-            CONF_QUERY: query.get(CONF_QUERY),
+            CONF_NAME: query[CONF_NAME],
+            CONF_QUERY: query[CONF_QUERY],
             CONF_UNIT_OF_MEASUREMENT: query.get(CONF_UNIT_OF_MEASUREMENT),
             CONF_VALUE_TEMPLATE: query.get(CONF_VALUE_TEMPLATE),
-            CONF_COLUMN_NAME: query.get(CONF_COLUMN_NAME),
+            CONF_COLUMN_NAME: query[CONF_COLUMN_NAME],
         }
         hass.async_create_task(
             hass.config_entries.flow.async_init(
@@ -111,19 +112,18 @@ async def async_setup_entry(
             value_template.hass = hass
 
     try:
-        engine = sqlalchemy.create_engine(db_url)
-        sessmaker = scoped_session(sessionmaker(bind=engine))
+        engine = sqlalchemy.create_engine(db_url, future=True)
+        sessmaker = scoped_session(sessionmaker(bind=engine, future=True))
     except SQLAlchemyError as err:
         _LOGGER.error("Can not open database %s", {redact_credentials(str(err))})
         return
 
     # MSSQL uses TOP and not LIMIT
     if not ("LIMIT" in query_str.upper() or "SELECT TOP" in query_str.upper()):
-        query_str = (
-            query_str.replace("SELECT", "SELECT TOP 1")
-            if "mssql" in db_url
-            else query_str.replace(";", " LIMIT 1;")
-        )
+        if "mssql" in db_url:
+            query_str = query_str.upper().replace("SELECT", "SELECT TOP 1")
+        else:
+            query_str = query_str.replace(";", "") + " LIMIT 1;"
 
     async_add_entities(
         [
@@ -179,7 +179,7 @@ class SQLSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
         sess: scoped_session = self.sessionmaker()
         try:
-            result = sess.execute(self._query)
+            result: Result = sess.execute(sqlalchemy.text(self._query))
         except SQLAlchemyError as err:
             _LOGGER.error(
                 "Error executing query %s: %s",
@@ -188,10 +188,8 @@ class SQLSensor(SensorEntity):
             )
             return
 
-        _LOGGER.debug("Result %s, ResultMapping %s", result, result.mappings())
-
         for res in result.mappings():
-            _LOGGER.debug("result = %s", res.items())
+            _LOGGER.debug("Query %s result in %s", self._query, res.items())
             data = res[self._column_name]
             for key, value in res.items():
                 if isinstance(value, decimal.Decimal):

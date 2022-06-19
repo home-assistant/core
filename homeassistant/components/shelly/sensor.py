@@ -394,12 +394,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors for device."""
     if get_device_entry_gen(config_entry) == 2:
-        return await async_setup_entry_rpc(
+        return async_setup_entry_rpc(
             hass, config_entry, async_add_entities, RPC_SENSORS, RpcSensor
         )
 
     if config_entry.data[CONF_SLEEP_PERIOD]:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -408,7 +408,7 @@ async def async_setup_entry(
             _build_block_description,
         )
     else:
-        await async_setup_entry_attribute_entities(
+        async_setup_entry_attribute_entities(
             hass,
             config_entry,
             async_add_entities,
@@ -416,7 +416,7 @@ async def async_setup_entry(
             BlockSensor,
             _build_block_description,
         )
-        await async_setup_entry_rest(
+        async_setup_entry_rest(
             hass, config_entry, async_add_entities, REST_SENSORS, RestSensor
         )
 

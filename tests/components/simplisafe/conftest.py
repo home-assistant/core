@@ -102,6 +102,8 @@ def reauth_config_fixture():
 async def setup_simplisafe_fixture(hass, api, config):
     """Define a fixture to set up SimpliSafe."""
     with patch(
+        "homeassistant.components.simplisafe.config_flow.DEFAULT_EMAIL_2FA_SLEEP", 0
+    ), patch(
         "homeassistant.components.simplisafe.config_flow.API.async_from_credentials",
         return_value=api,
     ), patch(

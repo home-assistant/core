@@ -8,14 +8,12 @@
         },
         "step": {
             "discovery_confirm": {
-                "description": "Voulez-vous configurer {name} - {model} ( {host} )\u00a0?"
+                "description": "Voulez-vous configurer {name} - {model} ({host})\u00a0?"
             },
             "user": {
                 "data": {
                     "host": "H\u00f4te"
-                },
-                "description": "Configurer votre Twinkly",
-                "title": "Twinkly"
+                }
             }
         }
     }

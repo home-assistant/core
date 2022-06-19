@@ -80,7 +80,7 @@ async def test_async_browse_media_success(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -301,7 +301,7 @@ async def test_async_browse_media_images_success(hass: HomeAssistant) -> None:
     client = create_mock_motioneye_client()
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -353,7 +353,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -367,6 +367,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
             f"{const.URI_SCHEME}{DOMAIN}"
             f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4"
         ),
+        None,
     )
     assert media == PlayMedia(url="http://movie-url", mime_type="video/mp4")
     assert client.get_movie_url.call_args == call(TEST_CAMERA_ID, "/foo.mp4")
@@ -379,6 +380,7 @@ async def test_async_resolve_media_success(hass: HomeAssistant) -> None:
             f"{const.URI_SCHEME}{DOMAIN}"
             f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#images#/foo.jpg"
         ),
+        None,
     )
     assert media == PlayMedia(url="http://image-url", mime_type="image/jpeg")
     assert client.get_image_url.call_args == call(TEST_CAMERA_ID, "/foo.jpg")
@@ -391,7 +393,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
 
     config = await setup_mock_motioneye_config_entry(hass, client=client)
 
-    device_registry = await dr.async_get_registry(hass)
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=config.entry_id,
         identifiers={TEST_CAMERA_DEVICE_IDENTIFIER},
@@ -409,18 +411,20 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
 
     # URI doesn't contain necessary components.
     with pytest.raises(Unresolvable):
-        await media_source.async_resolve_media(hass, f"{const.URI_SCHEME}{DOMAIN}/foo")
+        await media_source.async_resolve_media(
+            hass, f"{const.URI_SCHEME}{DOMAIN}/foo", None
+        )
 
     # Config entry doesn't exist.
     with pytest.raises(MediaSourceError):
         await media_source.async_resolve_media(
-            hass, f"{const.URI_SCHEME}{DOMAIN}/1#2#3#4"
+            hass, f"{const.URI_SCHEME}{DOMAIN}/1#2#3#4", None
         )
 
     # Device doesn't exist.
     with pytest.raises(MediaSourceError):
         await media_source.async_resolve_media(
-            hass, f"{const.URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#2#3#4"
+            hass, f"{const.URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#2#3#4", None
         )
 
     # Device identifiers are incorrect (no camera id)
@@ -431,6 +435,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
                 f"{const.URI_SCHEME}{DOMAIN}"
                 f"/{TEST_CONFIG_ENTRY_ID}#{broken_device_1.id}#images#4"
             ),
+            None,
         )
 
     # Device identifiers are incorrect (non integer camera id)
@@ -441,6 +446,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
                 f"{const.URI_SCHEME}{DOMAIN}"
                 f"/{TEST_CONFIG_ENTRY_ID}#{broken_device_2.id}#images#4"
             ),
+            None,
         )
 
     # Kind is incorrect.
@@ -448,6 +454,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
         await media_source.async_resolve_media(
             hass,
             f"{const.URI_SCHEME}{DOMAIN}/{TEST_CONFIG_ENTRY_ID}#{device.id}#games#moo",
+            None,
         )
 
     # Playback URL raises exception.
@@ -459,6 +466,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
                 f"{const.URI_SCHEME}{DOMAIN}"
                 f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#/foo.mp4"
             ),
+            None,
         )
 
     # Media path does not start with '/'
@@ -470,6 +478,7 @@ async def test_async_resolve_media_failure(hass: HomeAssistant) -> None:
                 f"{const.URI_SCHEME}{DOMAIN}"
                 f"/{TEST_CONFIG_ENTRY_ID}#{device.id}#movies#foo.mp4"
             ),
+            None,
         )
 
     # Media missing path.
