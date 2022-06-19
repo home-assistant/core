@@ -13,12 +13,15 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.google.const import DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
 from .conftest import (
     CALENDAR_ID,
+    CLIENT_ID,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
@@ -665,3 +668,40 @@ async def test_future_event_offset_update_behavior(
     state = hass.states.get(TEST_ENTITY)
     assert state.state == STATE_OFF
     assert state.attributes["offset_reached"]
+
+
+@pytest.mark.parametrize(
+    "old_unique_id", [CALENDAR_ID, f"{CALENDAR_ID}-we_are_we_are_a_test_calendar"]
+)
+async def test_unique_id_migration(
+    hass,
+    mock_events_list_items,
+    mock_token_read,
+    component_setup,
+    config_entry,
+    old_unique_id,
+):
+    """Test that old unique id format is migrated to the new format that supports multiple accounts."""
+    entity_registry = er.async_get(hass)
+
+    # Create an entity using the old unique id format
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=old_unique_id,
+        config_entry=config_entry,
+    )
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {old_unique_id}
+
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{CLIENT_ID}-{CALENDAR_ID}-we_are_we_are_a_test_calendar"
+    }
