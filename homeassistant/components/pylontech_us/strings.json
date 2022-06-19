@@ -3,7 +3,9 @@
     "step": {
       "user": {
         "data": {
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "baud": "Baud",
+          "battery_count": "Battery Count"
         }
       }
     },

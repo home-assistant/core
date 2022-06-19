@@ -2,8 +2,11 @@
 from __future__ import annotations
 
 import logging
+
+# from pickle import TRUE
 from typing import Any
 
+from pylontech import PylontechStack
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -18,45 +21,42 @@ _LOGGER = logging.getLogger(__name__)
 # TOODOP adjust the data schema to the data that you need
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("port"): str,
-        vol.Required("baud"): int,
+        vol.Required("port", default="/dev/ttyUSB0"): str,
+        vol.Required("baud", default=115200): int,
+        vol.Required("battery_count", default=7): int,
     }
 )
 
 
-# class PylontechHub:
-#     """Placeholder class to make tests pass.
+class PylontechHub:
+    """Communication to Pylontech Battery stack."""
 
-#     TOODOO Remove this placeholder class and replace with things from your PyPI package.
-#     """
+    def __init__(self, config) -> None:
+        """Initialize."""
+        self._config = config
 
-#     def __init__(self, port: str) -> None:
-#         """Initialize."""
-#         self.port = port
+    def validate_config_input(self) -> None:
+        """Validate config options. Raise exception on error."""
+        # If you cannot connect:
+        # throw CannotConnect
+        # If the authentication is wrong:
+        # InvalidAuth
+        # config['port']
 
+        stack = PylontechStack(
+            device=self._config["port"],
+            baud=self._config["baud"],
+            manualBattcountLimit=self._config["battery_count"],
+        )
+        stack.update()
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
+        if stack is None:
+            raise CannotConnect("Connection Error, check Port and Baudrate")
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    # TOODOO validate the data can be used to set up a connection.
-
-    # If your PyPI package is not built with async, pass your methods
-    # to the executor:
-    # await hass.async_add_executor_job(
-    #     your_validate_func, data["username"], data["password"]
-    # )
-
-    # hub = PylontechHub(data["port"])
-
-    # If you cannot connect:
-    # throw CannotConnect
-    # If the authentication is wrong:
-    # InvalidAuth
-
-    # Return info that you want to store in the config entry.
-    return {"title": "Name of the device"}
+        if stack.battcount != self._config["battery_count"]:
+            raise CannotConnect(
+                "Wrong battery count will result in slow update please count again."
+            )
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -64,32 +64,54 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    hub = None
+
+    async def validate_input(
+        self, hass: HomeAssistant, data: dict[str, Any]
+    ) -> dict[str, Any]:
+        """Validate the user input allows us to connect.
+
+        Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+        """
+
+        self.hub = PylontechHub(config=data)
+        await hass.async_add_executor_job(
+            self.hub.validate_config_input
+        )  # !!! no Brackets !!!
+
+        return_data = data
+        return_data["title"] = "Pylontech"
+
+        # Return info that you want to store in the config entry.
+        return return_data
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
+        if user_input is not None:
 
-        errors = {}
+            errors = {}
 
-        try:
-            info = await validate_input(self.hass, user_input)
-        except CannotConnect:
-            errors["base"] = "cannot_connect"
-        except InvalidAuth:
-            errors["base"] = "invalid_auth"
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Unexpected exception")
-            errors["base"] = "unknown"
-        else:
-            return self.async_create_entry(title=info["title"], data=user_input)
+            try:
+                await self.validate_input(self.hass, user_input)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidAuth:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                pass
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
+        return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
+
+        # return self.async_create_entry(title=info["title"], data=user_input)
+
+        # return self.async_show_form(
+        #     step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+        # )
 
 
 class CannotConnect(HomeAssistantError):
