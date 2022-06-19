@@ -366,7 +366,6 @@ async def test_binary_sensor_setup_sensor_none(
 
         state = hass.states.get(entity_id)
         assert state
-        print(entity_id)
         assert state.state == expected[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
