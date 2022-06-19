@@ -187,6 +187,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if config_mode == config_flow.ConfigMode.SDM:
         await async_import_config(hass, entry)
+    elif entry.unique_id != entry.data[CONF_PROJECT_ID]:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=entry.data[CONF_PROJECT_ID]
+        )
 
     subscriber = await api.new_subscriber(hass, entry)
     if not subscriber:
@@ -254,7 +258,9 @@ async def async_import_config(hass: HomeAssistant, entry: ConfigEntry) -> None:
                 CONF_SUBSCRIBER_ID_IMPORTED: True,  # Don't delete user managed subscriber
             }
         )
-    hass.config_entries.async_update_entry(entry, data=new_data)
+    hass.config_entries.async_update_entry(
+        entry, data=new_data, unique_id=new_data[CONF_PROJECT_ID]
+    )
 
     if entry.data["auth_implementation"] == INSTALLED_AUTH_DOMAIN:
         # App Auth credentials have been deprecated and must be re-created

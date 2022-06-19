@@ -335,13 +335,16 @@ class NestFlowHandler(
         """Collect device access project from user input."""
         errors = {}
         if user_input is not None:
-            if user_input[CONF_PROJECT_ID] == self._data[CONF_CLOUD_PROJECT_ID]:
+            project_id = user_input[CONF_PROJECT_ID]
+            if project_id == self._data[CONF_CLOUD_PROJECT_ID]:
                 _LOGGER.error(
                     "Device Access Project ID and Cloud Project ID must not be the same, see documentation"
                 )
                 errors[CONF_PROJECT_ID] = "wrong_project_id"
             else:
                 self._data.update(user_input)
+                await self.async_set_unique_id(project_id)
+                self._abort_if_unique_id_configured()
                 return await super().async_step_user()
 
         return self.async_show_form(
@@ -461,11 +464,11 @@ class NestFlowHandler(
     async def async_step_finish(self, data: dict[str, Any] | None = None) -> FlowResult:
         """Create an entry for the SDM flow."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
-        await self.async_set_unique_id(DOMAIN)
         # Update existing config entry when in the reauth flow.
         if entry := self._async_reauth_entry():
             self.hass.config_entries.async_update_entry(
-                entry, data=self._data, unique_id=DOMAIN
+                entry,
+                data=self._data,
             )
             await self.hass.config_entries.async_reload(entry.entry_id)
             return self.async_abort(reason="reauth_successful")

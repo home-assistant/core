@@ -273,3 +273,18 @@ async def test_remove_entry_delete_subscriber_failure(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert not entries
+
+
+@pytest.mark.parametrize("config_entry_unique_id", [DOMAIN, None])
+async def test_migrate_unique_id(
+    hass, error_caplog, setup_platform, config_entry, config_entry_unique_id
+):
+    """Test successful setup."""
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert config_entry.unique_id == config_entry_unique_id
+
+    await setup_platform()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert config_entry.unique_id == PROJECT_ID
