@@ -5,6 +5,7 @@ import logging
 
 from aiohttp.client_exceptions import ServerDisconnectedError
 from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.data import Bootstrap
 from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.config_entries import ConfigEntry
@@ -32,6 +33,17 @@ async def async_migrate_data(
     _LOGGER.debug("Completed Migrate: async_migrate_device_ids")
 
 
+async def async_get_bootstrap(protect: ProtectApiClient) -> Bootstrap:
+    """Get UniFi Protect bootstrap or raise apporiate HA error."""
+
+    try:
+        bootstrap = await protect.get_bootstrap()
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        raise ConfigEntryNotReady from err
+
+    return bootstrap
+
+
 async def async_migrate_buttons(
     hass: HomeAssistant, entry: ConfigEntry, protect: ProtectApiClient
 ) -> None:
@@ -54,11 +66,7 @@ async def async_migrate_buttons(
         _LOGGER.debug("No button entities need migration")
         return
 
-    try:
-        bootstrap = await protect.get_bootstrap()
-    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-        raise ConfigEntryNotReady from err
-
+    bootstrap = await async_get_bootstrap(protect)
     count = 0
     for button in to_migrate:
         device = async_device_by_id(bootstrap, button.unique_id)
@@ -115,11 +123,7 @@ async def async_migrate_device_ids(
         _LOGGER.debug("No entities need migration to MAC address ID")
         return
 
-    try:
-        bootstrap = await protect.get_bootstrap()
-    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
-        raise ConfigEntryNotReady from err
-
+    bootstrap = await async_get_bootstrap(protect)
     count = 0
     for entity in to_migrate:
         parts = entity.unique_id.split("_")
