@@ -30,6 +30,9 @@ class DeviceBaseEntityDescriptionMixin:
 
     value_fn: Callable[[SensiboDevice], bool | None]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]]
+    command_on: str
+    command_off: str
+    remote_key: str
 
 
 @dataclass
@@ -47,8 +50,23 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         icon="mdi:timer",
         value_fn=lambda data: data.timer_on,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
+        command_on="set_timer",
+        command_off="del_timer",
+        remote_key="timer_on",
     ),
 )
+
+
+def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | None:
+    """Build params for turning on switch."""
+    if command == "set_timer":
+        new_state = bool(device_data.ac_states["on"] is False)
+        params = {
+            "minutesFromNow": 60,
+            "acState": {**device_data.ac_states, "on": new_state},
+        }
+        return params
+    return None
 
 
 async def async_setup_entry(
@@ -97,24 +115,30 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        new_state = bool(self.device_data.ac_states["on"] is False)
-        params = {
-            "minutesFromNow": 60,
-            "acState": {**self.device_data.ac_states, "on": new_state},
-        }
-        result = await self.async_send_command("set_timer", params)
+        params = build_params(self.entity_description.command_on, self.device_data)
+        result = await self.async_send_command(
+            self.entity_description.command_on, params
+        )
 
         if result["status"] == "success":
+            setattr(self.device_data, self.entity_description.remote_key, True)
+            self.async_write_ha_state()
             return await self.coordinator.async_request_refresh()
-        raise HomeAssistantError(f"Could not enable timer for device {self.name}")
+        raise HomeAssistantError(
+            f"Could not execute {self.entity_description.command_on} for device {self.name}"
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        result = await self.async_send_command("del_timer")
+        result = await self.async_send_command(self.entity_description.command_off)
 
         if result["status"] == "success":
+            setattr(self.device_data, self.entity_description.remote_key, False)
+            self.async_write_ha_state()
             return await self.coordinator.async_request_refresh()
-        raise HomeAssistantError(f"Could not disable timer for device {self.name}")
+        raise HomeAssistantError(
+            f"Could not execute {self.entity_description.command_off} for device {self.name}"
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:

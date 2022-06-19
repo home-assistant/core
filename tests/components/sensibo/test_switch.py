@@ -8,6 +8,7 @@ from pysensibo.model import SensiboData
 import pytest
 from pytest import MonkeyPatch
 
+from homeassistant.components.sensibo.switch import build_params
 from homeassistant.components.switch.const import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -147,3 +148,18 @@ async def test_switch_command_failure(
                 },
                 blocking=True,
             )
+
+
+async def test_build_params(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    monkeypatch: MonkeyPatch,
+    get_data: SensiboData,
+) -> None:
+    """Test the build params method."""
+
+    assert build_params("set_timer", get_data.parsed["ABC999111"]) == {
+        "minutesFromNow": 60,
+        "acState": {**get_data.parsed["ABC999111"].ac_states, "on": False},
+    }
+    assert build_params("incorrect_command", get_data.parsed["ABC999111"]) is None
