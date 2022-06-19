@@ -60,6 +60,7 @@ from .core.const import (
     ZHA_CHANNEL_MSG,
     ZHA_CONFIG_SCHEMAS,
 )
+from .core.gateway import EntityReference
 from .core.group import GroupMember
 from .core.helpers import (
     async_cluster_exists,
@@ -316,6 +317,22 @@ async def websocket_get_devices(
     connection.send_result(msg[ID], devices)
 
 
+@callback
+def _get_entity_name(
+    zha_gateway: ZHAGateway, entity_ref: EntityReference
+) -> str | None:
+    entry = zha_gateway.ha_entity_registry.async_get(entity_ref.reference_id)
+    return entry.name if entry else None
+
+
+@callback
+def _get_entity_original_name(
+    zha_gateway: ZHAGateway, entity_ref: EntityReference
+) -> str | None:
+    entry = zha_gateway.ha_entity_registry.async_get(entity_ref.reference_id)
+    return entry.original_name if entry else None
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable"})
 @websocket_api.async_response
@@ -336,12 +353,10 @@ async def websocket_get_groupable_devices(
                     "endpoint_id": ep_id,
                     "entities": [
                         {
-                            "name": zha_gateway.ha_entity_registry.async_get(
-                                entity_ref.reference_id
-                            ).name,
-                            "original_name": zha_gateway.ha_entity_registry.async_get(
-                                entity_ref.reference_id
-                            ).original_name,
+                            "name": _get_entity_name(zha_gateway, entity_ref),
+                            "original_name": _get_entity_original_name(
+                                zha_gateway, entity_ref
+                            ),
                         }
                         for entity_ref in entity_refs
                         if list(entity_ref.cluster_channels.values())[
