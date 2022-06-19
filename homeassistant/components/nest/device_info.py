@@ -80,8 +80,6 @@ def async_nest_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of all nest devices for all config entries."""
     devices = {}
     for entry_id in hass.data[DOMAIN]:
-        if DATA_DEVICE_MANAGER not in hass.data[DOMAIN][entry_id]:
-            continue
         if not (device_manager := hass.data[DOMAIN][entry_id].get(DATA_DEVICE_MANAGER)):
             continue
         devices.update(

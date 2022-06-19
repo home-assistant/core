@@ -69,6 +69,7 @@
       "subscriber_error": "Unknown subscriber error, see logs"
     },
     "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
