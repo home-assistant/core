@@ -35,7 +35,7 @@ async def test_step_import_existing_host(hass):
     mock_data = CONNECTION_DATA.copy()
     mock_data.update({CONF_SK_NUM_TRIES: 3, CONF_DIM_MODE: "STEPS50"})
     mock_entry = MockConfigEntry(
-        version=2, title="pchk", domain=DOMAIN, data=CONNECTION_DATA
+        version=1, title="pchk", domain=DOMAIN, data=CONNECTION_DATA
     )
     mock_entry.add_to_hass(hass)
     # Inititalize a config flow with different data but same host name
@@ -73,6 +73,7 @@ async def test_step_import_non_existing_entry(hass):
     assert result["reason"] == "import_connection_error"
 
 
+@pytest.mark.parametrize("entry_exists", [True, False])
 @pytest.mark.parametrize(
     "error,reason",
     [
@@ -82,8 +83,14 @@ async def test_step_import_non_existing_entry(hass):
         (ConnectionRefusedError, "connection_refused"),
     ],
 )
-async def test_step_import_error(hass, error, reason):
+async def test_step_import_error(hass, entry_exists, error, reason):
     """Test for error in import is handled correctly."""
+    if entry_exists:
+        mock_entry = MockConfigEntry(
+            version=1, title="pchk", domain=DOMAIN, data=CONNECTION_DATA
+        )
+        mock_entry.add_to_hass(hass)
+
     with patch(
         "pypck.connection.PchkConnectionManager.async_connect", side_effect=error
     ):
