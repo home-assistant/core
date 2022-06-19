@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import datetime
+import http
 from typing import Any, Generator, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
@@ -283,12 +284,16 @@ def mock_calendar_get(
     """Fixture for returning a calendar get response."""
 
     def _result(
-        calendar_id: str, response: dict[str, Any], exc: ClientError | None = None
+        calendar_id: str,
+        response: dict[str, Any],
+        exc: ClientError | None = None,
+        status: http.HTTPStatus = http.HTTPStatus.OK,
     ) -> None:
         aioclient_mock.get(
             f"{API_BASE_URL}/calendars/{calendar_id}",
             json=response,
             exc=exc,
+            status=status,
         )
         return
 

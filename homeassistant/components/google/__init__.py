@@ -8,7 +8,7 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
-from gcal_sync.exceptions import ApiException
+from gcal_sync.exceptions import ApiException, AuthException
 from gcal_sync.model import DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
@@ -257,8 +257,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if entry.unique_id is None:
         try:
             primary_calendar = await calendar_service.async_get_calendar("primary")
+        except AuthException as err:
+            raise ConfigEntryAuthFailed from err
         except ApiException as err:
-            _LOGGER.debug("Error reading calendar primary calendar: %s", err)
+            raise ConfigEntryNotReady from err
         else:
             hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 

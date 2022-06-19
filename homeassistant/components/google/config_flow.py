@@ -143,14 +143,12 @@ class OAuth2FlowHandler(
         try:
             primary_calendar = await calendar_service.async_get_calendar("primary")
         except ApiException as err:
-            _LOGGER.debug("Error reading calendar primary calendar: %s", err)
-            primary_calendar = None
-        if primary_calendar:
-            await self.async_set_unique_id(primary_calendar.id)
-            self._abort_if_unique_id_configured()
-        title = primary_calendar.id if primary_calendar else self.flow_impl.name
+            _LOGGER.error("Error reading primary calendar: %s", err)
+            return self.async_abort(reason="cannot_connect")
+        await self.async_set_unique_id(primary_calendar.id)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=title,
+            title=primary_calendar.id,
             data=data,
             options={
                 CONF_CALENDAR_ACCESS: get_feature_access(self.hass).name,

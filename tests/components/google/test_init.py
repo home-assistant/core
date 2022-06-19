@@ -8,7 +8,6 @@ import time
 from typing import Any
 from unittest.mock import Mock, patch
 
-from aiohttp.client_exceptions import ClientError
 import pytest
 import voluptuous as vol
 
@@ -879,7 +878,17 @@ async def test_assign_unique_id(
     assert setup_config_entry.unique_id == EMAIL_ADDRESS
 
 
-@pytest.mark.parametrize("config_entry_unique_id", [None])
+@pytest.mark.parametrize(
+    "config_entry_unique_id,request_status,config_entry_status",
+    [
+        (None, http.HTTPStatus.BAD_REQUEST, ConfigEntryState.SETUP_RETRY),
+        (
+            None,
+            http.HTTPStatus.UNAUTHORIZED,
+            ConfigEntryState.SETUP_ERROR,
+        ),
+    ],
+)
 async def test_assign_unique_id_failure(
     hass: HomeAssistant,
     component_setup: ComponentSetup,
@@ -888,6 +897,8 @@ async def test_assign_unique_id_failure(
     mock_events_list: ApiResult,
     mock_calendar_get: Callable[[...], None],
     setup_config_entry: MockConfigEntry,
+    request_status: http.HTTPStatus,
+    config_entry_status: ConfigEntryState,
 ) -> None:
     """Test lookup failures during unique id assignment are handled gracefully."""
 
@@ -897,14 +908,12 @@ async def test_assign_unique_id_failure(
     mock_calendar_get(
         "primary",
         {},
-        exc=ClientError(),
+        status=request_status,
     )
 
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
 
-    # Failure to lookup primary calendar will fail gracefully but leave config
-    # entry without a unique id
-    assert setup_config_entry.state is ConfigEntryState.LOADED
+    assert setup_config_entry.state is config_entry_status
     assert setup_config_entry.unique_id is None

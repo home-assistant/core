@@ -593,7 +593,7 @@ async def test_reauth_flow(
 
 
 @pytest.mark.parametrize("primary_calendar_error", [ClientError()])
-async def test_title_lookup_failure(
+async def test_calendar_lookup_failure(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     mock_exchange: Mock,
@@ -610,9 +610,7 @@ async def test_title_lookup_failure(
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
 
-    with patch(
-        "homeassistant.components.google.async_setup_entry", return_value=True
-    ) as mock_setup:
+    with patch("homeassistant.components.google.async_setup_entry", return_value=True):
         # Run one tick to invoke the credential exchange check
         now = utcnow()
         await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
@@ -621,12 +619,8 @@ async def test_title_lookup_failure(
             flow_id=result["flow_id"]
         )
 
-    assert result.get("type") == "create_entry"
-    assert result.get("title") == "Import from configuration.yaml"
-
-    assert len(mock_setup.mock_calls) == 1
-    entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(entries) == 1
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "cannot_connect"
 
 
 async def test_options_flow_triggers_reauth(
