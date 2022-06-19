@@ -91,7 +91,6 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
         name="Filter Clean Required",
         icon="mdi:timer",
         value_fn=lambda data: data.filter_clean,
-        extra_fn=None,
     ),
 )
 
@@ -141,7 +140,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Filter Clean Required",
         icon="mdi:timer",
         value_fn=lambda data: data.filter_clean,
-        extra_fn=None,
     ),
 )
 
