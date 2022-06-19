@@ -23,9 +23,9 @@ from tests.common import mock_device_registry, mock_registry
             "34ea34befc25",
             "smsl",
             {
-                "button.entrance_smsl_pwra": {"friendly_name": "Entrance smsl pwra"},
-                "button.entrance_smsl_pwrb": {"friendly_name": "Entrance smsl pwrb"},
-                "button.entrance_smsl_pwrc": {"friendly_name": "Entrance smsl pwrc"},
+                "button.entrance_smsl_toggled": {
+                    "friendly_name": "Entrance smsl toggled"
+                },
                 "button.entrance_smsl_standby": {
                     "friendly_name": "Entrance smsl standby",
                 },
@@ -71,11 +71,24 @@ async def test_button_setup_works(
     [
         (
             "Entrance",
-            ["button.entrance_smsl_pwra"],
+            ["button.entrance_smsl_standby"],
             [
-                "JgBYAAABJpcQFRA6ERQTEhE5ExIRFBIUERQQFRE5FBEROhA6EhMSExE6ExIRFBAVEBUQFREUEBUTEhE5EToRORI4EToRORM4EgAFkQABJ0sRAAxlAAEmTBIADQU="
+                "JgBYAAABJpcTEhM4ERMSExE5EhMSFBAVExIQFRA6ExIROhA6EBUQFRE6ExIRFBAVEBURFBEUERQTEhE5EToTOBA5EzkQORE6EwAFkAABKUoTAAxiAAEoSxEADQU="
             ],
-        )
+        ),
+        (
+            "Entrance",
+            [
+                "button.entrance_smsl_toggled",
+                "button.entrance_smsl_toggled",
+                "button.entrance_smsl_toggled",
+            ],
+            [
+                "JgBYAAABJpcQFRA6ERQTEhE5ExIRFBIUERQQFRE5FBEROhA6EhMSExE6ExIRFBAVEBUQFREUEBUTEhE5EToRORI4EToRORM4EgAFkQABJ0sRAAxlAAEmTBIADQU=",
+                "JgBYAAABJ5YRFBE6EhMQFRA6EhMSExEVEjgSExE5ExITOBE5ERQTExE5ExIRFBITERQRFBEUERUQFRA6EToSOBI5EjgRORI5EwAFawABJk0QAAxlAAEoSxIADQU=",
+                "JgBYAAABJpcQFRA6ERQTEhE5ExIRFBIUERQQFRE5FBEROhA6EhMSExE6ExIRFBAVEBUQFREUEBUTEhE5EToRORI4EToRORM4EgAFkQABJ0sRAAxlAAEmTBIADQU=",
+            ],
+        ),
     ],
 )
 async def test_button_press(
