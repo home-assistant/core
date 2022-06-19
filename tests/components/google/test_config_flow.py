@@ -27,13 +27,18 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
-from .conftest import CLIENT_ID, CLIENT_SECRET, ComponentSetup, YieldFixture
+from .conftest import (
+    CLIENT_ID,
+    CLIENT_SECRET,
+    EMAIL_ADDRESS,
+    ComponentSetup,
+    YieldFixture,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 CODE_CHECK_INTERVAL = 1
 CODE_CHECK_ALARM_TIMEDELTA = datetime.timedelta(seconds=CODE_CHECK_INTERVAL * 2)
-EMAIL_ADDRESS = "user@gmail.com"
 
 
 @pytest.fixture(autouse=True)
@@ -71,6 +76,12 @@ async def mock_exchange(creds: OAuth2Credentials) -> YieldFixture[Mock]:
 
 
 @pytest.fixture
+async def primary_calendar_email() -> str:
+    """Fixture to override the google calendar primary email address."""
+    return EMAIL_ADDRESS
+
+
+@pytest.fixture
 async def primary_calendar_error() -> ClientError | None:
     """Fixture for tests to inject an error during calendar lookup."""
     return None
@@ -78,12 +89,14 @@ async def primary_calendar_error() -> ClientError | None:
 
 @pytest.fixture(autouse=True)
 async def primary_calendar(
-    mock_calendar_get: Callable[[...], None], primary_calendar_error: ClientError | None
+    mock_calendar_get: Callable[[...], None],
+    primary_calendar_error: ClientError | None,
+    primary_calendar_email: str,
 ) -> None:
     """Fixture to return the primary calendar."""
     mock_calendar_get(
         "primary",
-        {"id": EMAIL_ADDRESS, "summary": "Personal"},
+        {"id": primary_calendar_email, "summary": "Personal"},
         exc=primary_calendar_error,
     )
 
@@ -372,7 +385,9 @@ async def test_duplicate_config_entries(
     assert result.get("reason") == "already_configured"
 
 
-@pytest.mark.parametrize("google_config", [None])
+@pytest.mark.parametrize(
+    "google_config,primary_calendar_email", [(None, "another-email@example.com")]
+)
 async def test_multiple_config_entries(
     hass: HomeAssistant,
     mock_code_flow: Mock,
@@ -385,12 +400,6 @@ async def test_multiple_config_entries(
     assert await component_setup()
     await async_import_client_credential(
         hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
-    )
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(f"{CLIENT_ID}-2", f"{CLIENT_SECRET}-2"),
-        "imported-cred-2",
     )
 
     # Load a config entry
@@ -409,16 +418,6 @@ async def test_multiple_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == "form"
-    assert result.get("step_id") == "pick_implementation"
-    assert "data_schema" in result
-    data_schema = result["data_schema"].schema
-    assert set(data_schema) == {"implementation"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result.get("flow_id"),
-        user_input={"implementation": "imported-cred-2"},
-    )
     assert result.get("type") == "progress"
     assert result.get("step_id") == "auth"
     assert "description_placeholders" in result
@@ -435,7 +434,7 @@ async def test_multiple_config_entries(
             flow_id=result["flow_id"]
         )
     assert result.get("type") == "create_entry"
-    assert result.get("title") == EMAIL_ADDRESS
+    assert result.get("title") == "another-email@example.com"
     assert len(mock_setup.mock_calls) == 1
 
     entries = hass.config_entries.async_entries(DOMAIN)

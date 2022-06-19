@@ -21,7 +21,6 @@ import homeassistant.util.dt as dt_util
 
 from .conftest import (
     CALENDAR_ID,
-    CLIENT_ID,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
@@ -703,5 +702,5 @@ async def test_unique_id_migration(
         entity_registry, config_entry.entry_id
     )
     assert {entry.unique_id for entry in registry_entries} == {
-        f"{CLIENT_ID}-{CALENDAR_ID}-we_are_we_are_a_test_calendar"
+        f"{config_entry.unique_id}-{CALENDAR_ID}-we_are_we_are_a_test_calendar"
     }

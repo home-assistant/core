@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException
 from gcal_sync.model import DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
@@ -227,15 +228,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         )
     )
-    if not isinstance(
-        implementation, config_entry_oauth2_flow.LocalOAuth2Implementation
-    ):
-        raise ValueError(f"Unexpected auth implementation {implementation}")
-    if entry.unique_id is None:
-        hass.config_entries.async_update_entry(
-            entry, unique_id=implementation.client_id
-        )
-
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.
@@ -261,6 +253,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
     hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
+
+    if entry.unique_id is None:
+        try:
+            primary_calendar = await calendar_service.async_get_calendar("primary")
+        except ApiException as err:
+            _LOGGER.debug("Error reading calendar primary calendar: %s", err)
+        else:
+            hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:

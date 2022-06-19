@@ -8,6 +8,7 @@ import time
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp.client_exceptions import ClientError
 import pytest
 import voluptuous as vol
 
@@ -26,7 +27,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import (
     CALENDAR_ID,
-    CLIENT_ID,
+    EMAIL_ADDRESS,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
@@ -288,7 +289,9 @@ async def test_multiple_config_entries(
 
     assert await component_setup()
 
-    config_entry1 = MockConfigEntry(domain=DOMAIN, data=config_entry.data)
+    config_entry1 = MockConfigEntry(
+        domain=DOMAIN, data=config_entry.data, unique_id=EMAIL_ADDRESS
+    )
     calendar1 = {
         **test_api_calendar,
         "id": "calendar-id1",
@@ -306,7 +309,9 @@ async def test_multiple_config_entries(
     assert state.name == "Example Calendar 1"
     assert state.state == STATE_OFF
 
-    config_entry2 = MockConfigEntry(domain=DOMAIN, data=config_entry.data)
+    config_entry2 = MockConfigEntry(
+        domain=DOMAIN, data=config_entry.data, unique_id="other-address@example.com"
+    )
     calendar2 = {
         **test_api_calendar,
         "id": "calendar-id2",
@@ -853,6 +858,7 @@ async def test_assign_unique_id(
     mock_calendars_list: ApiResult,
     test_api_calendar: dict[str, Any],
     mock_events_list: ApiResult,
+    mock_calendar_get: Callable[[...], None],
     setup_config_entry: MockConfigEntry,
 ) -> None:
     """Test an existing config is updated to have unique id if it does not exist."""
@@ -860,24 +866,45 @@ async def test_assign_unique_id(
     assert setup_config_entry.state is ConfigEntryState.NOT_LOADED
     assert setup_config_entry.unique_id is None
 
+    mock_calendar_get(
+        "primary",
+        {"id": EMAIL_ADDRESS, "summary": "Personal"},
+    )
+
     mock_calendars_list({"items": [test_api_calendar]})
     mock_events_list({})
     assert await component_setup()
 
     assert setup_config_entry.state is ConfigEntryState.LOADED
-    assert setup_config_entry.unique_id is CLIENT_ID
+    assert setup_config_entry.unique_id == EMAIL_ADDRESS
 
 
-async def test_invalid_auth_implementation(
+@pytest.mark.parametrize("config_entry_unique_id", [None])
+async def test_assign_unique_id_failure(
     hass: HomeAssistant,
-    token_scopes: list[str],
     component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    mock_calendar_get: Callable[[...], None],
     setup_config_entry: MockConfigEntry,
 ) -> None:
-    """Test integration setup fails with unexpected auth implementation."""
-    with patch(
-        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
-    ):
-        assert await component_setup()
+    """Test lookup failures during unique id assignment are handled gracefully."""
 
-    assert setup_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert setup_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert setup_config_entry.unique_id is None
+
+    mock_calendar_get(
+        "primary",
+        {},
+        exc=ClientError(),
+    )
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    # Failure to lookup primary calendar will fail gracefully but leave config
+    # entry without a unique id
+    assert setup_config_entry.state is ConfigEntryState.LOADED
+    assert setup_config_entry.unique_id is None

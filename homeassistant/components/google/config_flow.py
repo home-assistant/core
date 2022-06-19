@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException
@@ -135,8 +135,6 @@ class OAuth2FlowHandler(
                 self._reauth_config_entry.entry_id
             )
             return self.async_abort(reason="reauth_successful")
-        await self.async_set_unique_id(cast(DeviceAuth, self.flow_impl).client_id)
-        self._abort_if_unique_id_configured()
         calendar_service = GoogleCalendarService(
             AccessTokenAuthImpl(
                 async_get_clientsession(self.hass), data["token"]["access_token"]
@@ -147,6 +145,9 @@ class OAuth2FlowHandler(
         except ApiException as err:
             _LOGGER.debug("Error reading calendar primary calendar: %s", err)
             primary_calendar = None
+        else:
+            await self.async_set_unique_id(primary_calendar.id)
+            self._abort_if_unique_id_configured()
         title = primary_calendar.id if primary_calendar else self.flow_impl.name
         return self.async_create_entry(
             title=title,

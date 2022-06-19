@@ -27,6 +27,7 @@ YieldFixture = Generator[_T, None, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
+EMAIL_ADDRESS = "user@gmail.com"
 
 # Entities can either be created based on data directly from the API, or from
 # the yaml config that overrides the entity name and other settings. A test
@@ -184,7 +185,7 @@ def config_entry_options() -> dict[str, Any] | None:
 @pytest.fixture
 def config_entry_unique_id() -> str:
     """Fixture that returns the default config entry unique id."""
-    return CLIENT_ID
+    return EMAIL_ADDRESS
 
 
 @pytest.fixture
