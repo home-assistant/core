@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import InfoTrait
@@ -13,8 +12,6 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DATA_DEVICE_MANAGER, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 DEVICE_TYPE_MAP: dict[str, str] = {
     "sdm.devices.types.CAMERA": "Camera",
@@ -85,7 +82,6 @@ def async_nest_devices(hass: HomeAssistant) -> Mapping[str, Device]:
         devices.update(
             {device.name: device for device in device_manager.devices.values()}
         )
-    _LOGGER.info(devices)
     return devices
 
 
@@ -97,5 +93,4 @@ def async_nest_devices_by_device_id(hass: HomeAssistant) -> Mapping[str, Device]
     for nest_device_id, device in async_nest_devices(hass).items():
         if device_entry := device_registry.async_get_device({(DOMAIN, nest_device_id)}):
             devices[device_entry.id] = device
-    _LOGGER.info(devices)
     return devices
