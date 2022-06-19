@@ -273,6 +273,7 @@ build.json @home-assistant/supervisor
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eight_sleep/ @mezz64 @raman325
+/tests/components/eight_sleep/ @mezz64 @raman325
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -446,6 +447,8 @@ build.json @home-assistant/supervisor
 /tests/components/home_plus_control/ @chemaaa
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
+/homeassistant/components/homeassistant_yellow/ @home-assistant/core
+/tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
@@ -475,8 +478,6 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
-/homeassistant/components/ialarm_xr/ @bigmoby
-/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -965,8 +966,6 @@ build.json @home-assistant/supervisor
 /tests/components/solax/ @squishykid
 /homeassistant/components/soma/ @ratsept @sebfortier2288
 /tests/components/soma/ @ratsept @sebfortier2288
-/homeassistant/components/somfy/ @tetienne
-/tests/components/somfy/ @tetienne
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn

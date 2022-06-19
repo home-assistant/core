@@ -43,6 +43,15 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ),
 )
 
+SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
+    ProtectButtonEntityDescription(
+        key="clear_tamper",
+        name="Clear Tamper",
+        icon="mdi:notification-clear-all",
+        ufp_press="clear_tamper",
+    ),
+)
+
 CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
     ProtectButtonEntityDescription(
         key="play",
@@ -69,7 +78,11 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data, ProtectButton, all_descs=ALL_DEVICE_BUTTONS, chime_descs=CHIME_BUTTONS
+        data,
+        ProtectButton,
+        all_descs=ALL_DEVICE_BUTTONS,
+        chime_descs=CHIME_BUTTONS,
+        sense_descs=SENSOR_BUTTONS,
     )
 
     async_add_entities(entities)

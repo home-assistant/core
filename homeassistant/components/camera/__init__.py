@@ -386,7 +386,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             stream.keepalive = True
             stream.add_provider("hls")
-            stream.start()
+            await stream.start()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, preload_stream)
 
@@ -454,7 +454,7 @@ class Camera(Entity):
     def __init__(self) -> None:
         """Initialize a camera."""
         self.stream: Stream | None = None
-        self.stream_options: dict[str, str | bool] = {}
+        self.stream_options: dict[str, str | bool | float] = {}
         self.content_type: str = DEFAULT_CONTENT_TYPE
         self.access_tokens: collections.deque = collections.deque([], 2)
         self._warned_old_signature = False
@@ -996,7 +996,7 @@ async def _async_stream_endpoint_url(
     stream.keepalive = camera_prefs.preload_stream
 
     stream.add_provider(fmt)
-    stream.start()
+    await stream.start()
     return stream.endpoint_url(fmt)
 
 
