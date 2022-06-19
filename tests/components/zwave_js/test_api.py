@@ -2847,9 +2847,10 @@ async def test_firmware_upload_view(
     ) as mock_cmd:
         resp = await client.post(
             f"/api/zwave_js/firmware/upload/{device.id}",
-            data={"file": firmware_file},
+            data={"file": firmware_file, "target": "15"},
         )
         assert mock_cmd.call_args[0][1:4] == (multisensor_6, "file", bytes(10))
+        assert mock_cmd.call_args[1] == {"target": 15}
         assert json.loads(await resp.text()) is None
 
 
