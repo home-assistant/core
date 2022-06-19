@@ -3567,10 +3567,12 @@ async def test_get_firmware_update_capabilities(
     device = get_device(hass, multisensor_6)
 
     client.async_send_command.return_value = {
-        "firmwareUpgradable": True,
-        "firmwareTargets": [0],
-        "continuesToFunction": True,
-        "supportsActivation": True,
+        "capabilities": {
+            "firmwareUpgradable": True,
+            "firmwareTargets": [0],
+            "continuesToFunction": True,
+            "supportsActivation": True,
+        }
     }
     await ws_client.send_json(
         {
