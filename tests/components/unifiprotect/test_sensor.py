@@ -47,6 +47,7 @@ from .conftest import (
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
+    reset_objects,
     time_changed,
 )
 
@@ -63,7 +64,7 @@ async def sensor_fixture(
     # disable pydantic validation so mocking can happen
     Sensor.__config__.validate_assignment = False
 
-    sensor_obj = mock_sensor.copy(deep=True)
+    sensor_obj = mock_sensor.copy()
     sensor_obj._api = mock_entry.api
     sensor_obj.name = "Test Sensor"
     sensor_obj.battery_status.percentage = 10.0
@@ -77,7 +78,7 @@ async def sensor_fixture(
     sensor_obj.up_since = now
     sensor_obj.bluetooth_connection_state.signal_strength = -50.0
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.sensors = {
         sensor_obj.id: sensor_obj,
     }
@@ -102,7 +103,7 @@ async def sensor_none_fixture(
     # disable pydantic validation so mocking can happen
     Sensor.__config__.validate_assignment = False
 
-    sensor_obj = mock_sensor.copy(deep=True)
+    sensor_obj = mock_sensor.copy()
     sensor_obj._api = mock_entry.api
     sensor_obj.name = "Test Sensor"
     sensor_obj.battery_status.percentage = 10.0
@@ -113,7 +114,7 @@ async def sensor_none_fixture(
     sensor_obj.up_since = now
     sensor_obj.bluetooth_connection_state.signal_strength = -50.0
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.sensors = {
         sensor_obj.id: sensor_obj,
     }
@@ -141,7 +142,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -162,7 +163,7 @@ async def camera_fixture(
     camera_obj.stats.storage.rate = 100.0
     camera_obj.voltage = 20.0
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
@@ -262,7 +263,7 @@ async def test_sensor_setup_nvr(
 ):
     """Test sensor entity setup for NVR device."""
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     nvr: NVR = mock_entry.api.bootstrap.nvr
     nvr.up_since = now
     nvr.system_info.cpu.average_load = 50.0
@@ -339,7 +340,7 @@ async def test_sensor_nvr_missing_values(
 ):
     """Test NVR sensor sensors if no data available."""
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     nvr: NVR = mock_entry.api.bootstrap.nvr
     nvr.system_info.memory.available = None
     nvr.system_info.memory.total = None

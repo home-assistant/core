@@ -21,7 +21,7 @@ async def chime_fixture(
 ):
     """Fixture for a single camera for testing the button platform."""
 
-    chime_obj = mock_chime.copy(deep=True)
+    chime_obj = mock_chime.copy()
     chime_obj._api = mock_entry.api
     chime_obj.name = "Test Chime"
 
