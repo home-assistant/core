@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, regenerate_device_ids
 
 
 @pytest.fixture(name="device")
@@ -165,22 +165,22 @@ async def test_set_chime_paired_doorbells(
     }
 
     camera1 = mock_camera.copy()
-    camera1.id = "cameraid1"
     camera1.name = "Test Camera 1"
     camera1._api = mock_entry.api
     camera1.channels[0]._api = mock_entry.api
     camera1.channels[1]._api = mock_entry.api
     camera1.channels[2]._api = mock_entry.api
     camera1.feature_flags.has_chime = True
+    regenerate_device_ids(camera1)
 
     camera2 = mock_camera.copy()
-    camera2.id = "cameraid2"
     camera2.name = "Test Camera 2"
     camera2._api = mock_entry.api
     camera2.channels[0]._api = mock_entry.api
     camera2.channels[1]._api = mock_entry.api
     camera2.channels[2]._api = mock_entry.api
     camera2.feature_flags.has_chime = True
+    regenerate_device_ids(camera2)
 
     mock_entry.api.bootstrap.cameras = {
         camera1.id: camera1,
@@ -210,5 +210,5 @@ async def test_set_chime_paired_doorbells(
     )
 
     mock_entry.api.update_device.assert_called_once_with(
-        ModelType.CHIME, mock_chime.id, {"cameraIds": [camera1.id, camera2.id]}
+        ModelType.CHIME, mock_chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
     )
