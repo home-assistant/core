@@ -53,7 +53,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if mac is None:
                     raise AbortFlow("invalid_id")
 
-                await self.async_set_unique_id(format_mac(mac))
+                await self.async_set_unique_id(format_mac(mac), raise_on_progress=False)
                 self._abort_if_unique_id_configured()
 
                 title = f"QNAP {system_board.get_product()} {mac}"
