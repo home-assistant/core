@@ -145,7 +145,7 @@ class OAuth2FlowHandler(
         except ApiException as err:
             _LOGGER.debug("Error reading calendar primary calendar: %s", err)
             primary_calendar = None
-        else:
+        if primary_calendar:
             await self.async_set_unique_id(primary_calendar.id)
             self._abort_if_unique_id_configured()
         title = primary_calendar.id if primary_calendar else self.flow_impl.name
