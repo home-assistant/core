@@ -79,6 +79,10 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
+
+            await self.async_set_unique_id(self.flow_impl.client_id)
+            self._abort_if_unique_id_configured()
+
             calendar_access = get_feature_access(self.hass)
             if self._reauth_config_entry and self._reauth_config_entry.options:
                 calendar_access = FeatureAccess[

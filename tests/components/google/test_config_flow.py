@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.util.dt import utcnow
 
-from .conftest import ComponentSetup, YieldFixture
+from .conftest import CLIENT_ID, CLIENT_SECRET, ComponentSetup, YieldFixture
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -165,7 +165,7 @@ async def test_full_flow_application_creds(
     assert await component_setup()
 
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -328,6 +328,41 @@ async def test_exchange_error(
 
 
 @pytest.mark.parametrize("google_config", [None])
+async def test_duplicate_config_entries(
+    hass: HomeAssistant,
+    mock_code_flow: Mock,
+    mock_exchange: Mock,
+    config: dict[str, Any],
+    config_entry: MockConfigEntry,
+    component_setup: ComponentSetup,
+) -> None:
+    """Test that the same account cannot be setup twice."""
+    assert await component_setup()
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+    )
+
+    # Load a config entry
+    config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.google.async_setup_entry", return_value=True
+    ) as mock_setup:
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert len(mock_setup.mock_calls) == 1
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    # Start a new config flow using the same credential
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "abort"
+    assert result.get("reason") == "already_configured"
+
+
+@pytest.mark.parametrize("google_config", [None])
 async def test_multiple_config_entries(
     hass: HomeAssistant,
     mock_code_flow: Mock,
@@ -336,10 +371,16 @@ async def test_multiple_config_entries(
     config_entry: MockConfigEntry,
     component_setup: ComponentSetup,
 ) -> None:
-    """Test successful creds setup."""
+    """Test that multiple config entries can be set at once."""
     assert await component_setup()
     await async_import_client_credential(
-        hass, DOMAIN, ClientCredential("client-id", "client-secret"), "imported-cred"
+        hass, DOMAIN, ClientCredential(CLIENT_ID, CLIENT_SECRET), "imported-cred"
+    )
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(f"{CLIENT_ID}-2", f"{CLIENT_SECRET}-2"),
+        "imported-cred-2",
     )
 
     # Load a config entry
@@ -357,6 +398,16 @@ async def test_multiple_config_entries(
     # Start a new config flow
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") == "form"
+    assert result.get("step_id") == "pick_implementation"
+    assert "data_schema" in result
+    data_schema = result["data_schema"].schema
+    assert set(data_schema) == {"implementation"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result.get("flow_id"),
+        user_input={"implementation": "imported-cred-2"},
     )
     assert result.get("type") == "progress"
     assert result.get("step_id") == "auth"
@@ -419,8 +470,8 @@ async def test_wrong_configuration(
         config_entry_oauth2_flow.LocalOAuth2Implementation(
             hass,
             DOMAIN,
-            "client-id",
-            "client-secret",
+            CLIENT_ID,
+            CLIENT_SECRET,
             "http://example/authorize",
             "http://example/token",
         ),

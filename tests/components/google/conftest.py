@@ -53,6 +53,9 @@ TEST_API_CALENDAR = {
     "defaultReminders": [],
 }
 
+CLIENT_ID = "client-id"
+CLIENT_SECRET = "client-secret"
+
 
 @pytest.fixture
 def test_api_calendar():
@@ -148,8 +151,8 @@ def creds(
     """Fixture that defines creds used in the test."""
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",
-        client_id="client-id",
-        client_secret="client-secret",
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
         refresh_token="REFRESH_TOKEN",
         token_expiry=token_expiry,
         token_uri="http://example.com",
@@ -187,6 +190,7 @@ def config_entry(
     """Fixture to create a config entry for the integration."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id=CLIENT_ID,
         data={
             "auth_implementation": "device_auth",
             "token": {
@@ -315,7 +319,7 @@ def google_config_track_new() -> None:
 @pytest.fixture
 def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
     """Fixture for overriding component config."""
-    google_config = {CONF_CLIENT_ID: "client-id", CONF_CLIENT_SECRET: "client-secret"}
+    google_config = {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET}
     if google_config_track_new is not None:
         google_config[CONF_TRACK_NEW] = google_config_track_new
     return google_config
