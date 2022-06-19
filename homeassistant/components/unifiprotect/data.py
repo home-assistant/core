@@ -70,7 +70,9 @@ class ProtectData:
     ) -> Generator[ProtectAdoptableDeviceModel, None, None]:
         """Get all devices matching types."""
         for device_type in device_types:
-            yield from async_get_devices_by_type(self.api, device_type).values()
+            yield from async_get_devices_by_type(
+                self.api.bootstrap, device_type
+            ).values()
 
     async def async_setup(self) -> None:
         """Subscribe and do the refresh."""
@@ -151,7 +153,7 @@ class ProtectData:
             return
 
         self.async_signal_device_id_update(self.api.bootstrap.nvr.id)
-        for device in async_get_devices(self.api, DEVICES_THAT_ADOPT):
+        for device in async_get_devices(self.api.bootstrap, DEVICES_THAT_ADOPT):
             self.async_signal_device_id_update(device.id)
 
     @callback

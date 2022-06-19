@@ -7,7 +7,6 @@ from enum import Enum
 import socket
 from typing import Any
 
-from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     Bootstrap,
     ProtectAdoptableDeviceModel,
@@ -65,22 +64,19 @@ async def _async_resolve(hass: HomeAssistant, host: str) -> str | None:
 
 @callback
 def async_get_devices_by_type(
-    api_bootstrap: ProtectApiClient | Bootstrap, device_type: ModelType
+    bootstrap: Bootstrap, device_type: ModelType
 ) -> dict[str, ProtectAdoptableDeviceModel]:
     """Get devices by type."""
 
-    if isinstance(api_bootstrap, ProtectApiClient):
-        api_bootstrap = api_bootstrap.bootstrap
-
     devices: dict[str, ProtectAdoptableDeviceModel] = getattr(
-        api_bootstrap, f"{device_type.value}s"
+        bootstrap, f"{device_type.value}s"
     )
     return devices
 
 
 @callback
 def async_device_by_id(
-    api_bootstrap: ProtectApiClient | Bootstrap,
+    bootstrap: Bootstrap,
     device_id: str,
     device_type: ModelType | None = None,
 ) -> ProtectAdoptableDeviceModel | None:
@@ -92,7 +88,7 @@ def async_device_by_id(
 
     device = None
     for model in device_types:
-        device = async_get_devices_by_type(api_bootstrap, model).get(device_id)
+        device = async_get_devices_by_type(bootstrap, model).get(device_id)
         if device is not None:
             break
     return device
@@ -100,11 +96,11 @@ def async_device_by_id(
 
 @callback
 def async_get_devices(
-    api: ProtectApiClient, model_type: Iterable[ModelType]
+    bootstrap: Bootstrap, model_type: Iterable[ModelType]
 ) -> Generator[ProtectDeviceModel, None, None]:
     """Return all device by type."""
     return (
         device
         for device_type in model_type
-        for device in async_get_devices_by_type(api, device_type).values()
+        for device in async_get_devices_by_type(bootstrap, device_type).values()
     )

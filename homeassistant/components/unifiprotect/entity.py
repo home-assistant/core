@@ -154,7 +154,7 @@ class ProtectDeviceEntity(Entity):
         if self.data.last_update_success:
             assert self.device.model
             device = async_device_by_id(
-                self.data.api, self.device.id, device_type=self.device.model
+                self.data.api.bootstrap, self.device.id, device_type=self.device.model
             )
             assert device is not None
             self.device = device
