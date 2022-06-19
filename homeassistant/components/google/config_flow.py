@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from gcal_sync.api import GoogleCalendarService
 from gcal_sync.exceptions import ApiException
@@ -79,10 +79,6 @@ class OAuth2FlowHandler(
                     self.flow_impl,
                 )
                 return self.async_abort(reason="oauth_error")
-
-            await self.async_set_unique_id(self.flow_impl.client_id)
-            self._abort_if_unique_id_configured()
-
             calendar_access = get_feature_access(self.hass)
             if self._reauth_config_entry and self._reauth_config_entry.options:
                 calendar_access = FeatureAccess[
@@ -139,7 +135,8 @@ class OAuth2FlowHandler(
                 self._reauth_config_entry.entry_id
             )
             return self.async_abort(reason="reauth_successful")
-
+        await self.async_set_unique_id(cast(DeviceAuth, self.flow_impl).client_id)
+        self._abort_if_unique_id_configured()
         calendar_service = GoogleCalendarService(
             AccessTokenAuthImpl(
                 async_get_clientsession(self.hass), data["token"]["access_token"]

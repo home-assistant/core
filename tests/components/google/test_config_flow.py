@@ -358,6 +358,16 @@ async def test_duplicate_config_entries(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    assert result.get("type") == "progress"
+    assert result.get("step_id") == "auth"
+    assert "description_placeholders" in result
+    assert "url" in result["description_placeholders"]
+
+    # Run one tick to invoke the credential exchange check
+    now = utcnow()
+    await fire_alarm(hass, now + CODE_CHECK_ALARM_TIMEDELTA)
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(flow_id=result["flow_id"])
     assert result.get("type") == "abort"
     assert result.get("reason") == "already_configured"
 

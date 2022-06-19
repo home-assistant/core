@@ -227,6 +227,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, entry
         )
     )
+    if not isinstance(
+        implementation, config_entry_oauth2_flow.LocalOAuth2Implementation
+    ):
+        raise ValueError(f"Unexpected auth implementation {implementation}")
+    if entry.unique_id is None:
+        hass.config_entries.async_update_entry(
+            entry, unique_id=implementation.client_id
+        )
+
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.

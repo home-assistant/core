@@ -26,6 +26,7 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import (
     CALENDAR_ID,
+    CLIENT_ID,
     TEST_API_ENTITY,
     TEST_API_ENTITY_NAME,
     TEST_YAML_ENTITY,
@@ -62,6 +63,7 @@ def setup_config_entry(
 ) -> MockConfigEntry:
     """Fixture to initialize the config entry."""
     config_entry.add_to_hass(hass)
+    return config_entry
 
 
 @pytest.fixture(
@@ -842,3 +844,40 @@ async def test_update_will_reload(
         )
         await hass.async_block_till_done()
         mock_reload.assert_called_once()
+
+
+@pytest.mark.parametrize("config_entry_unique_id", [None])
+async def test_assign_unique_id(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test an existing config is updated to have unique id if it does not exist."""
+
+    assert setup_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert setup_config_entry.unique_id is None
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    assert setup_config_entry.state is ConfigEntryState.LOADED
+    assert setup_config_entry.unique_id is CLIENT_ID
+
+
+async def test_invalid_auth_implementation(
+    hass: HomeAssistant,
+    token_scopes: list[str],
+    component_setup: ComponentSetup,
+    setup_config_entry: MockConfigEntry,
+) -> None:
+    """Test integration setup fails with unexpected auth implementation."""
+    with patch(
+        "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+    ):
+        assert await component_setup()
+
+    assert setup_config_entry.state is ConfigEntryState.SETUP_ERROR

@@ -182,7 +182,14 @@ def config_entry_options() -> dict[str, Any] | None:
 
 
 @pytest.fixture
+def config_entry_unique_id() -> str:
+    """Fixture that returns the default config entry unique id."""
+    return CLIENT_ID
+
+
+@pytest.fixture
 def config_entry(
+    config_entry_unique_id: str,
     token_scopes: list[str],
     config_entry_token_expiry: float,
     config_entry_options: dict[str, Any] | None,
@@ -190,7 +197,7 @@ def config_entry(
     """Fixture to create a config entry for the integration."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=CLIENT_ID,
+        unique_id=config_entry_unique_id,
         data={
             "auth_implementation": "device_auth",
             "token": {
