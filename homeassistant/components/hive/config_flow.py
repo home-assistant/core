@@ -1,4 +1,5 @@
 """Config Flow for Hive."""
+from __future__ import annotations
 
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
@@ -130,7 +131,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> HiveOptionsFlowHandler:
         """Hive options callback."""
         return HiveOptionsFlowHandler(config_entry)
 
@@ -138,7 +141,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class HiveOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options for Hive."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
         self.config_entry = config_entry

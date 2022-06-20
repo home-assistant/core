@@ -1,13 +1,22 @@
 """The tests for the MQTT device tracker platform using configuration.yaml."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
-from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.setup import async_setup_component
 
 from .test_common import help_test_setup_manual_entity_from_yaml
 
 from tests.common import async_fire_mqtt_message
+
+
+@pytest.fixture(autouse=True)
+def device_tracker_platform_only():
+    """Only setup the device_tracker platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        yield
 
 
 # Deprecated in HA Core 2022.6
@@ -244,9 +253,7 @@ async def test_legacy_matching_source_type(
     assert hass.states.get(entity_id).attributes["source_type"] == SOURCE_TYPE_BLUETOOTH
 
 
-async def test_setup_with_modern_schema(
-    hass, caplog, tmp_path, mock_device_tracker_conf
-):
+async def test_setup_with_modern_schema(hass, mock_device_tracker_conf):
     """Test setup using the modern schema."""
     dev_id = "jan"
     entity_id = f"{DOMAIN}.{dev_id}"
@@ -255,8 +262,6 @@ async def test_setup_with_modern_schema(
     hass.config.components = {"zone"}
     config = {"name": dev_id, "state_topic": topic}
 
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, DOMAIN, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, DOMAIN, config)
 
     assert hass.states.get(entity_id) is not None
