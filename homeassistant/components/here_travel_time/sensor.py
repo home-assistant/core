@@ -24,7 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -150,21 +150,25 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             name="Origin",
             icon="mdi:map-marker",
             key=ATTR_ORIGIN,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         SensorEntityDescription(
             name="Origin Name",
             icon="mdi:store-marker",
             key=ATTR_ORIGIN_NAME,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         SensorEntityDescription(
             name="Destination",
             icon="mdi:map-marker",
             key=ATTR_DESTINATION,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         SensorEntityDescription(
             name="Destination Name",
             icon="mdi:store-marker",
             key=ATTR_DESTINATION_NAME,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     )
 
