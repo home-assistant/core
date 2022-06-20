@@ -690,7 +690,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             return
 
-        # Check that all arguments are correctly annotated.
+        # Check that all positional arguments are correctly annotated.
         if match.arg_types:
             for key, expected_type in match.arg_types.items():
                 if not _is_valid_type(expected_type, annotations[key]):
