@@ -248,13 +248,13 @@ async def test_code_error(
         assert result.get("reason") == "oauth_error"
 
 
-@pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(seconds=5)])
+@pytest.mark.parametrize("code_expiration_delta", [datetime.timedelta(seconds=50)])
 async def test_expired_after_exchange(
     hass: HomeAssistant,
     mock_code_flow: Mock,
     component_setup: ComponentSetup,
 ) -> None:
-    """Test credential exchange expires immediately."""
+    """Test credential exchange expires."""
     assert await component_setup()
 
     result = await hass.config_entries.flow.async_init(
@@ -265,6 +265,7 @@ async def test_expired_after_exchange(
     assert "description_placeholders" in result
     assert "url" in result["description_placeholders"]
 
+    # Fail first attempt then advance clock past exchange timeout
     with patch(
         "oauth2client.client.OAuth2WebServerFlow.step2_exchange",
         side_effect=FlowExchangeError(),
