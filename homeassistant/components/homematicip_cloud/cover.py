@@ -245,11 +245,15 @@ class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
         """Open the slats."""
-        await self._device.set_slats_level(slatsLevel=HMIP_SLATS_OPEN, channelIndex=self._channel)
+        await self._device.set_slats_level(
+            slatsLevel=HMIP_SLATS_OPEN, channelIndex=self._channel
+        )
 
     async def async_close_cover_tilt(self, **kwargs) -> None:
         """Close the slats."""
-        await self._device.set_slats_level(slatsLevel=HMIP_SLATS_CLOSED, channelIndex=self._channel)
+        await self._device.set_slats_level(
+            slatsLevel=HMIP_SLATS_CLOSED, channelIndex=self._channel
+        )
 
     async def async_stop_cover_tilt(self, **kwargs) -> None:
         """Stop the device if in motion."""
