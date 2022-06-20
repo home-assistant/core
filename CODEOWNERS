@@ -285,6 +285,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/emoncms/ @borpin
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
+/homeassistant/components/emulated_hue/ @bdraco
+/tests/components/emulated_hue/ @bdraco
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energy/ @home-assistant/core
