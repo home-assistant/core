@@ -29,6 +29,7 @@ from .entity import ZhaEntity, ZhaGroupEntity
 
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
+    from .core.channels.general import OnOffChannel
     from .core.device import ZHADevice
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
@@ -62,10 +63,16 @@ async def async_setup_entry(
 class Switch(ZhaEntity, SwitchEntity):
     """ZHA switch."""
 
-    def __init__(self, unique_id, zha_device, channels, **kwargs):
+    def __init__(
+        self,
+        unique_id: str,
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
+        **kwargs: Any,
+    ) -> None:
         """Initialize the ZHA switch."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._on_off_channel: OnOffChannel = self.cluster_channels.get(CHANNEL_ON_OFF)
 
     @property
     def is_on(self) -> bool:
@@ -74,14 +81,14 @@ class Switch(ZhaEntity, SwitchEntity):
             return False
         return self._on_off_channel.on_off
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.turn_on()
         if not result:
             return
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         result = await self._on_off_channel.turn_off()
         if not result:
@@ -112,7 +119,12 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
     """Representation of a switch group."""
 
     def __init__(
-        self, entity_ids: list[str], unique_id: str, group_id: int, zha_device, **kwargs
+        self,
+        entity_ids: list[str],
+        unique_id: str,
+        group_id: int,
+        zha_device: ZHADevice,
+        **kwargs: Any,
     ) -> None:
         """Initialize a switch group."""
         super().__init__(entity_ids, unique_id, group_id, zha_device, **kwargs)
@@ -126,7 +138,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         """Return if the switch is on based on the statemachine."""
         return bool(self._state)
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         result = await self._on_off_channel.on()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -134,7 +146,7 @@ class SwitchGroup(ZhaGroupEntity, SwitchEntity):
         self._state = True
         self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         result = await self._on_off_channel.off()
         if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -165,7 +177,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> ZhaEntity | None:
         """Entity Factory.
 
@@ -190,7 +202,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         unique_id: str,
         zha_device: ZHADevice,
         channels: list[ZigbeeChannel],
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Init this number configuration entity."""
         self._channel: ZigbeeChannel = channels[0]
@@ -215,7 +227,7 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
         return (not val) if invert else val
 
-    async def async_turn_on_off(self, state) -> None:
+    async def async_turn_on_off(self, state: bool) -> None:
         """Turn the entity on or off."""
         try:
             invert = bool(self._channel.cluster.get(self._zcl_inverter_attribute))
@@ -230,11 +242,11 @@ class ZHASwitchConfigurationEntity(ZhaEntity, SwitchEntity):
         ):
             self.async_write_ha_state()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.async_turn_on_off(True)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_turn_on_off(False)
 
@@ -263,8 +275,8 @@ class OnOffWindowDetectionFunctionConfigurationEntity(
 ):
     """Representation of a ZHA window detection configuration entity."""
 
-    _zcl_attribute = "window_detection_function"
-    _zcl_inverter_attribute = "window_detection_function_inverter"
+    _zcl_attribute: str = "window_detection_function"
+    _zcl_inverter_attribute: str = "window_detection_function_inverter"
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac02"})
@@ -273,4 +285,4 @@ class P1MotionTriggerIndicatorSwitch(
 ):
     """Representation of a ZHA motion triggering configuration entity."""
 
-    _zcl_attribute = "trigger_indicator"
+    _zcl_attribute: str = "trigger_indicator"

@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
@@ -63,8 +63,11 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 PARALLEL_UPDATES = 5
 
@@ -121,20 +124,20 @@ class Sensor(ZhaEntity, SensorEntity):
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
 
     @classmethod
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -213,8 +216,8 @@ class Battery(Sensor):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -420,7 +423,10 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
@@ -462,6 +468,26 @@ class SmartEnergyMetering(Sensor):
         if (status := self._channel.status) is not None:
             attrs["status"] = str(status)[len(status.__class__.__name__) + 1 :]
         return attrs
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergyMetering(SmartEnergyMetering):
+    """Polled metering sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
 
 
 @MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
@@ -584,6 +610,17 @@ class PPBVOCLevel(Sensor):
     _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
+@MULTI_MATCH(channel_names="pm25")
+class PM25(Sensor):
+    """Particulate Matter 2.5 microns or less sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
 @MULTI_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
@@ -603,8 +640,8 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -728,8 +765,8 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.

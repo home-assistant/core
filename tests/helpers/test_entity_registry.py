@@ -79,6 +79,7 @@ def test_get_or_create_updates_data(registry):
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
         original_device_class="mock-device-class",
         original_icon="initial-original_icon",
         original_name="initial-original_name",
@@ -97,6 +98,7 @@ def test_get_or_create_updates_data(registry):
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
         icon=None,
         id=orig_entry.id,
         name=None,
@@ -119,6 +121,7 @@ def test_get_or_create_updates_data(registry):
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.USER,
         entity_category=None,
+        hidden_by=er.RegistryEntryHider.USER,
         original_device_class="new-mock-device-class",
         original_icon="updated-original_icon",
         original_name="updated-original_name",
@@ -137,6 +140,7 @@ def test_get_or_create_updates_data(registry):
         device_id="new-mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,  # Should not be updated
         entity_category=EntityCategory.CONFIG,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,  # Should not be updated
         icon=None,
         id=orig_entry.id,
         name=None,
@@ -191,6 +195,7 @@ async def test_loading_saving_data(hass, registry):
         device_id="mock-dev-id",
         disabled_by=er.RegistryEntryDisabler.HASS,
         entity_category=EntityCategory.CONFIG,
+        hidden_by=er.RegistryEntryHider.INTEGRATION,
         original_device_class="mock-device-class",
         original_icon="hass:original-icon",
         original_name="Original Name",
@@ -231,6 +236,7 @@ async def test_loading_saving_data(hass, registry):
     assert new_entry2.disabled_by is er.RegistryEntryDisabler.HASS
     assert new_entry2.entity_category == "config"
     assert new_entry2.icon == "hass:user-icon"
+    assert new_entry2.hidden_by == er.RegistryEntryHider.INTEGRATION
     assert new_entry2.name == "User Name"
     assert new_entry2.options == {"light": {"minimum_brightness": 20}}
     assert new_entry2.original_device_class == "mock-device-class"
@@ -261,8 +267,8 @@ def test_is_registered(registry):
 
 
 @pytest.mark.parametrize("load_registries", [False])
-async def test_loading_extra_values(hass, hass_storage):
-    """Test we load extra data from the registry."""
+async def test_filter_on_load(hass, hass_storage):
+    """Test we transform some data when loading from storage."""
     hass_storage[er.STORAGE_KEY] = {
         "version": er.STORAGE_VERSION_MAJOR,
         "minor_version": 1,
@@ -274,6 +280,7 @@ async def test_loading_extra_values(hass, hass_storage):
                     "unique_id": "with-name",
                     "name": "registry override",
                 },
+                # This entity's name should be None
                 {
                     "entity_id": "test.no_name",
                     "platform": "super_platform",
@@ -283,20 +290,22 @@ async def test_loading_extra_values(hass, hass_storage):
                     "entity_id": "test.disabled_user",
                     "platform": "super_platform",
                     "unique_id": "disabled-user",
-                    "disabled_by": er.RegistryEntryDisabler.USER,
+                    "disabled_by": "user",  # We store the string representation
                 },
                 {
                     "entity_id": "test.disabled_hass",
                     "platform": "super_platform",
                     "unique_id": "disabled-hass",
-                    "disabled_by": er.RegistryEntryDisabler.HASS,
+                    "disabled_by": "hass",  # We store the string representation
                 },
+                # This entry should not be loaded because the entity_id is invalid
                 {
                     "entity_id": "test.invalid__entity",
                     "platform": "super_platform",
                     "unique_id": "invalid-hass",
-                    "disabled_by": er.RegistryEntryDisabler.HASS,
+                    "disabled_by": "hass",  # We store the string representation
                 },
+                # This entry should have the entity_category reset to None
                 {
                     "entity_id": "test.system_entity",
                     "platform": "super_platform",
@@ -311,6 +320,13 @@ async def test_loading_extra_values(hass, hass_storage):
     registry = er.async_get(hass)
 
     assert len(registry.entities) == 5
+    assert set(registry.entities.keys()) == {
+        "test.disabled_hass",
+        "test.disabled_user",
+        "test.named",
+        "test.no_name",
+        "test.system_entity",
+    }
 
     entry_with_name = registry.async_get_or_create(
         "test", "super_platform", "with-name"
@@ -1221,7 +1237,7 @@ def test_entity_registry_items():
 
 
 async def test_disabled_by_str_not_allowed(hass):
-    """Test we need to pass entity category type."""
+    """Test we need to pass disabled by type."""
     reg = er.async_get(hass)
 
     with pytest.raises(ValueError):
@@ -1250,6 +1266,20 @@ async def test_entity_category_str_not_allowed(hass):
         reg.async_update_entity(
             entity_id, entity_category=EntityCategory.DIAGNOSTIC.value
         )
+
+
+async def test_hidden_by_str_not_allowed(hass):
+    """Test we need to pass hidden by type."""
+    reg = er.async_get(hass)
+
+    with pytest.raises(ValueError):
+        reg.async_get_or_create(
+            "light", "hue", "1234", hidden_by=er.RegistryEntryHider.USER.value
+        )
+
+    entity_id = reg.async_get_or_create("light", "hue", "1234").entity_id
+    with pytest.raises(ValueError):
+        reg.async_update_entity(entity_id, hidden_by=er.RegistryEntryHider.USER.value)
 
 
 def test_migrate_entity_to_new_platform(hass, registry):

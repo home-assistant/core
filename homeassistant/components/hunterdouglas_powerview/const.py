@@ -7,7 +7,6 @@ from aiopvapi.helpers.aiorequest import PvApiConnectionError, PvApiResponseStatu
 
 DOMAIN = "hunterdouglas_powerview"
 
-
 MANUFACTURER = "Hunter Douglas"
 
 HUB_ADDRESS = "address"
@@ -48,7 +47,6 @@ ROOM_NAME = "name"
 ROOM_NAME_UNICODE = "name_unicode"
 ROOM_ID = "id"
 
-SHADE_RESPONSE = "shade"
 SHADE_BATTERY_LEVEL = "batteryStrength"
 SHADE_BATTERY_LEVEL_MAX = 200
 
@@ -56,6 +54,7 @@ STATE_ATTRIBUTE_ROOM_NAME = "roomName"
 
 PV_API = "pv_api"
 PV_HUB = "pv_hub"
+PV_HUB_ADDRESS = "pv_hub_address"
 PV_SHADES = "pv_shades"
 PV_SCENE_DATA = "pv_scene_data"
 PV_SHADE_DATA = "pv_shade_data"
@@ -81,5 +80,16 @@ DEFAULT_LEGACY_MAINPROCESSOR = {
     FIRMWARE_NAME: LEGACY_DEVICE_MODEL,
 }
 
-
 API_PATH_FWVERSION = "api/fwversion"
+
+POS_KIND_NONE = 0
+POS_KIND_PRIMARY = 1
+POS_KIND_SECONDARY = 2
+POS_KIND_VANE = 3
+POS_KIND_ERROR = 4
+
+
+ATTR_BATTERY_KIND = "batteryKind"
+BATTERY_KIND_HARDWIRED = 1
+BATTERY_KIND_BATTERY = 2
+BATTERY_KIND_RECHARGABLE = 3
