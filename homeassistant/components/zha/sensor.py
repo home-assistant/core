@@ -44,7 +44,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .core import discovery
-from .core.channels.base import ZigbeeChannel
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_BASIC,
@@ -67,6 +66,7 @@ from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
 PARALLEL_UPDATES = 5

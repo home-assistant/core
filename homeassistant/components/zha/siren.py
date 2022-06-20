@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .core import discovery
-from .core.channels.base import ZigbeeChannel
 from .core.channels.security import IasWd
 from .core.const import (
     CHANNEL_IAS_WD,
@@ -42,6 +41,7 @@ from .core.registries import ZHA_ENTITIES
 from .entity import ZhaEntity
 
 if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
     from .core.device import ZHADevice
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SIREN)
