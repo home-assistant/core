@@ -38,7 +38,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    DEVICE_MODEL,
     DOMAIN,
     LEGACY_DEVICE_MODEL,
     POS_KIND_PRIMARY,
@@ -50,6 +49,7 @@ from .const import (
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
+from .model import PowerviewDeviceInfo
 from .shade_data import PowerviewShadeMove
 
 _LOGGER = logging.getLogger(__name__)
@@ -110,7 +110,7 @@ async def async_setup_entry(
 
 def create_powerview_shade_entity(
     coordinator: PowerviewShadeUpdateCoordinator,
-    device_info: dict[str, Any],
+    device_info: PowerviewDeviceInfo,
     room_name: str,
     shade: BaseShade,
     name_before_refresh: str,
@@ -152,7 +152,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -162,7 +162,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._shade: BaseShade = shade
         self._attr_name = self._shade_name
         self._scheduled_transition_update: CALLBACK_TYPE | None = None
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
 
@@ -378,7 +378,7 @@ class PowerViewShade(PowerViewShadeBase):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -409,7 +409,7 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -446,7 +446,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -505,7 +505,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -517,7 +517,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.SET_TILT_POSITION
         )
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
     @property

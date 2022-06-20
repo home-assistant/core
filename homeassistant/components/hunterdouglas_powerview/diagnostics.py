@@ -1,6 +1,8 @@
 """Diagnostics support for Powerview Hunter Douglas."""
 from __future__ import annotations
 
+from dataclasses import asdict
+import logging
 from typing import Any
 
 import attr
@@ -12,15 +14,17 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import DEVICE_MAC_ADDRESS, DEVICE_SERIAL_NUMBER, DOMAIN, PV_HUB_ADDRESS
+from .const import DOMAIN, REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
 
 REDACT_CONFIG = {
     CONF_HOST,
-    DEVICE_MAC_ADDRESS,
-    DEVICE_SERIAL_NUMBER,
-    PV_HUB_ADDRESS,
+    REDACT_HUB_ADDRESS,
+    REDACT_MAC_ADDRESS,
+    REDACT_SERIAL_NUMBER,
     ATTR_CONFIGURATION_URL,
 }
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_config_entry_diagnostics(
@@ -64,7 +68,7 @@ def _async_get_diagnostics(
     """Return diagnostics for a config entry."""
     pv_entry = hass.data[DOMAIN][entry.entry_id]
     shade_data = pv_entry.coordinator.data.get_all_raw_data()
-    hub_info = async_redact_data(pv_entry.device_info, REDACT_CONFIG)
+    hub_info = async_redact_data(asdict(pv_entry.device_info), REDACT_CONFIG)
     return {"hub_info": hub_info, "shade_data": shade_data}
 
 
