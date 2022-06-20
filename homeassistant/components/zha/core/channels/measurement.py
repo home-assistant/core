@@ -65,10 +65,10 @@ class RelativeHumidity(ZigbeeChannel):
     """Relative Humidity measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        ),
     )
 
 
@@ -77,10 +77,10 @@ class SoilMoisture(ZigbeeChannel):
     """Soil Moisture measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        ),
     )
 
 
@@ -89,10 +89,10 @@ class LeafWetness(ZigbeeChannel):
     """Leaf Wetness measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 100),
+        ),
     )
 
 
@@ -103,10 +103,10 @@ class TemperatureMeasurement(ZigbeeChannel):
     """Temperature measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
+        ),
     )
 
 
@@ -117,10 +117,10 @@ class CarbonMonoxideConcentration(ZigbeeChannel):
     """Carbon Monoxide measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
     )
 
 
@@ -131,10 +131,10 @@ class CarbonDioxideConcentration(ZigbeeChannel):
     """Carbon Dioxide measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
     )
 
 
@@ -143,10 +143,10 @@ class PM25(ZigbeeChannel):
     """Particulate Matter 2.5 microns or less measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.1),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.1),
+        ),
     )
 
 
@@ -157,8 +157,8 @@ class FormaldehydeConcentration(ZigbeeChannel):
     """Formaldehyde measurement channel."""
 
     REPORT_CONFIG = (
-        {
-            "attr": "measured_value",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
-        },
+        AttrReportConfig(
+            attr="measured_value",
+            config=(REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 0.000001),
+        ),
     )
