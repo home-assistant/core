@@ -325,7 +325,10 @@ class WeatherEntity(Entity):
 
     @property
     def temperature(self) -> float | None:
-        """Return the temperature for backward compatibility."""
+        """Return the temperature for backward compatibility.
+
+        Should not be set by integrations.
+        """
         return self._attr_temperature
 
     @property
@@ -340,7 +343,10 @@ class WeatherEntity(Entity):
 
     @property
     def temperature_unit(self) -> str:
-        """Return the converted unit of measurement for temperature."""
+        """Return the converted unit of measurement for temperature.
+
+        Should not be set by integrations.
+        """
         if (
             weather_option_temperature_uom := self._weather_option_temperature_uom
         ) is not None:
@@ -356,7 +362,10 @@ class WeatherEntity(Entity):
 
     @property
     def pressure(self) -> float | None:
-        """Return the pressure for backward compatibility."""
+        """Return the pressure for backward compatibility.
+
+        Should not be set by integrations.
+        """
         return self._attr_pressure
 
     @property
@@ -371,7 +380,10 @@ class WeatherEntity(Entity):
 
     @property
     def pressure_unit(self) -> str:
-        """Return the converted unit of measurement for pressure."""
+        """Return the converted unit of measurement for pressure.
+
+        Should not be set by integrations.
+        """
         if (
             weather_option_pressure_uom := self._weather_option_pressure_uom
         ) is not None:
@@ -392,7 +404,10 @@ class WeatherEntity(Entity):
 
     @property
     def wind_speed(self) -> float | None:
-        """Return the wind_speed for backward compatibility."""
+        """Return the wind_speed for backward compatibility.
+
+        Should not be set by integrations.
+        """
         return self._attr_wind_speed
 
     @property
@@ -407,7 +422,10 @@ class WeatherEntity(Entity):
 
     @property
     def wind_speed_unit(self) -> str:
-        """Return the converted unit of measurement for wind speed."""
+        """Return the converted unit of measurement for wind speed.
+
+        Should not be set by integrations.
+        """
         if (
             weather_option_wind_speed_uom := self._weather_option_wind_speed_uom
         ) is not None:
@@ -433,7 +451,10 @@ class WeatherEntity(Entity):
 
     @property
     def visibility(self) -> float | None:
-        """Return the visibility for backward compatibility."""
+        """Return the visibility for backward compatibility.
+
+        Should not be set by integrations.
+        """
         return self._attr_visibility
 
     @property
@@ -448,7 +469,10 @@ class WeatherEntity(Entity):
 
     @property
     def visibility_unit(self) -> str:
-        """Return the converted unit of measurement for visibility."""
+        """Return the converted unit of measurement for visibility.
+
+        Should not be set by integrations.
+        """
         if (
             weather_option_visibility_uom := self._weather_option_visibility_uom
         ) is not None:
@@ -474,7 +498,10 @@ class WeatherEntity(Entity):
 
     @property
     def precipitation_unit(self) -> str:
-        """Return the converted unit of measurement for precipitation."""
+        """Return the converted unit of measurement for precipitation.
+
+        Should not be set by integrations.
+        """
         if (
             weather_option_precipitation_uom := self._weather_option_precipitation_uom
         ) is not None:
