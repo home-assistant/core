@@ -97,6 +97,8 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
 
+CACHED_TEMPLATE_STATES = 256
+
 
 @bind_hass
 def attach(hass: HomeAssistant, obj: Any) -> None:
@@ -893,7 +895,7 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
     return TemplateState(hass, state, collect=False)
 
@@ -915,7 +917,7 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
-@lru_cache(maxsize=4096)
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
 def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
     return TemplateState(hass, state)
 
