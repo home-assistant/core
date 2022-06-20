@@ -16,16 +16,16 @@ PARSERS: Registry[
 ] = Registry()
 
 
-def datetime_or_zero(value: str) -> datetime:
-    """Convert strings to datetimes, if invalid, return datetime.min."""
+def local_datetime_or_none(value: str) -> datetime.datetime | None:
+    """Convert strings to datetimes, if invalid, return None."""
     # To handle cameras that return times like '0000-00-00T00:00:00Z' (e.g. hikvision)
     try:
         ret = dt_util.parse_datetime(value)
     except ValueError:
-        return datetime.datetime.min
-    if ret is None:
-        return datetime.datetime.min
-    return ret
+        return None
+    if ret is not None:
+        return dt_util.as_local(ret)
+    return None
 
 
 @PARSERS.register("tns1:VideoSource/MotionAlarm")
@@ -398,14 +398,16 @@ async def async_parse_last_reboot(uid: str, msg) -> Event | None:
     Topic: tns1:Monitoring/OperatingTime/LastReboot
     """
     try:
-        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+        date_time = local_datetime_or_none(
+            msg.Message._value_1.Data.SimpleItem[0].Value
+        )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Reboot",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(date_time),
+            date_time,
             EntityCategory.DIAGNOSTIC,
         )
     except (AttributeError, KeyError):
@@ -420,14 +422,16 @@ async def async_parse_last_reset(uid: str, msg) -> Event | None:
     Topic: tns1:Monitoring/OperatingTime/LastReset
     """
     try:
-        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+        date_time = local_datetime_or_none(
+            msg.Message._value_1.Data.SimpleItem[0].Value
+        )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Reset",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(date_time),
+            date_time,
             EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
@@ -444,14 +448,16 @@ async def async_parse_backup_last(uid: str, msg) -> Event | None:
     """
 
     try:
-        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+        date_time = local_datetime_or_none(
+            msg.Message._value_1.Data.SimpleItem[0].Value
+        )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Backup",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(date_time),
+            date_time,
             EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )
@@ -467,14 +473,16 @@ async def async_parse_last_clock_sync(uid: str, msg) -> Event | None:
     Topic: tns1:Monitoring/OperatingTime/LastClockSynchronization
     """
     try:
-        date_time = datetime_or_zero(msg.Message._value_1.Data.SimpleItem[0].Value)
+        date_time = local_datetime_or_none(
+            msg.Message._value_1.Data.SimpleItem[0].Value
+        )
         return Event(
             f"{uid}_{msg.Topic._value_1}",
             "Last Clock Synchronization",
             "sensor",
             "timestamp",
             None,
-            dt_util.as_local(date_time),
+            date_time,
             EntityCategory.DIAGNOSTIC,
             entity_enabled=False,
         )

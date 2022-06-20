@@ -22,7 +22,7 @@
             "subscriber_error": "Kesalahan pelanggan tidak diketahui, lihat log",
             "timeout": "Tenggang waktu memvalidasi kode telah habis.",
             "unknown": "Kesalahan yang tidak diharapkan",
-            "wrong_project_id": "Masukkan Cloud Project ID yang valid (Device Access Project ID yang ditemukan)"
+            "wrong_project_id": "Masukkan ID Proyek Cloud yang valid (sebelumnya sama dengan ID Proyek Akses Perangkat)"
         },
         "step": {
             "auth": {
@@ -32,8 +32,24 @@
                 "description": "Untuk menautkan akun Google Anda, [otorisasi akun Anda]({url}).\n\nSetelah otorisasi, salin dan tempel Token Auth yang disediakan di bawah ini.",
                 "title": "Tautkan Akun Google"
             },
+            "auth_upgrade": {
+                "title": "Nest: Penghentian Autentikasi Aplikasi"
+            },
             "cloud_project": {
+                "data": {
+                    "cloud_project_id": "ID Proyek Google Cloud"
+                },
+                "description": "Masukkan ID Proyek Cloud di bawah ini, misalnya *contoh-proyek-12345*. Lihat [Konsol Google Cloud]({cloud_console_url}) atau dokumentasi untuk [info selengkapnya]({more_info_url}).",
                 "title": "Nest: Masukkan ID Proyek Cloud"
+            },
+            "create_cloud_project": {
+                "title": "Nest: Buat dan konfigurasikan Proyek Cloud"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "ID Proyek Akses Perangkat"
+                },
+                "title": "Nest: Buat Proyek Akses Perangkat"
             },
             "device_project_upgrade": {
                 "title": "Nest: Perbarui Proyek Akses Perangkat"

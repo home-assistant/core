@@ -327,7 +327,6 @@ class StreamOutput:
         """Handle cleanup."""
         self._event.set()
         self.idle_timer.clear()
-        self._segments = deque(maxlen=self._segments.maxlen)
 
 
 class StreamView(HomeAssistantView):
