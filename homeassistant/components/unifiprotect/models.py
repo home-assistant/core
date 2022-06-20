@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from enum import Enum
 import logging
 from typing import Any, Generic, TypeVar
 
@@ -17,6 +18,13 @@ _LOGGER = logging.getLogger(__name__)
 T = TypeVar("T", bound=ProtectDeviceModel)
 
 
+class PermRequired(int, Enum):
+    """Type of permission level required for entity."""
+
+    NO_WRITE = 1
+    WRITE = 2
+
+
 @dataclass
 class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
@@ -25,6 +33,7 @@ class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
     ufp_enabled: str | None = None
+    ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
