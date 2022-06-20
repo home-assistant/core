@@ -1,5 +1,8 @@
 """Alarm control panels on Zigbee Home Automation networks."""
+from __future__ import annotations
+
 import functools
+from typing import TYPE_CHECKING
 
 from zigpy.zcl.clusters.security import IasAce
 
@@ -38,8 +41,10 @@ from .core.const import (
 )
 from .core.helpers import async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.device import ZHADevice
 
 STRICT_MATCH = functools.partial(
     ZHA_ENTITIES.strict_match, Platform.ALARM_CONTROL_PANEL
@@ -83,7 +88,7 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
         | AlarmControlPanelEntityFeature.TRIGGER
     )
 
-    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs):
         """Initialize the ZHA alarm control device."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         cfg_entry = zha_device.gateway.config_entry

@@ -78,6 +78,7 @@ from .helpers import LogMixin, async_get_zha_config_value
 
 if TYPE_CHECKING:
     from ..api import ClusterBinding
+    from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
@@ -100,7 +101,7 @@ class ZHADevice(LogMixin):
         self,
         hass: HomeAssistant,
         zigpy_device: zha_typing.ZigpyDeviceType,
-        zha_gateway: zha_typing.ZhaGatewayType,
+        zha_gateway: ZHAGateway,
     ) -> None:
         """Initialize the gateway."""
         self.hass = hass
@@ -155,12 +156,12 @@ class ZHADevice(LogMixin):
         return self._zigpy_device
 
     @property
-    def channels(self) -> zha_typing.ChannelsType:
+    def channels(self) -> channels.Channels:
         """Return ZHA channels."""
         return self._channels
 
     @channels.setter
-    def channels(self, value: zha_typing.ChannelsType) -> None:
+    def channels(self, value: channels.Channels) -> None:
         """Channels setter."""
         assert isinstance(value, channels.Channels)
         self._channels = value
@@ -332,7 +333,7 @@ class ZHADevice(LogMixin):
         cls,
         hass: HomeAssistant,
         zigpy_dev: zha_typing.ZigpyDeviceType,
-        gateway: zha_typing.ZhaGatewayType,
+        gateway: ZHAGateway,
         restored: bool = False,
     ):
         """Create new device."""

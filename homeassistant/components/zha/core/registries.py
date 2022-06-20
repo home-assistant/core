@@ -17,7 +17,7 @@ from homeassistant.const import Platform
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
 from .decorators import DictRegistry, SetRegistry
-from .typing import CALLABLE_T, ChannelType
+from .typing import CALLABLE_T
 
 if TYPE_CHECKING:
     from .channels.base import ClientChannel, ZigbeeChannel
@@ -161,7 +161,7 @@ class MatchRule:
         weight += 1 * len(self.aux_channels)
         return weight
 
-    def claim_channels(self, channel_pool: list[ChannelType]) -> list[ChannelType]:
+    def claim_channels(self, channel_pool: list[ZigbeeChannel]) -> list[ZigbeeChannel]:
         """Return a list of channels this rule matches + aux channels."""
         claimed = []
         if isinstance(self.channel_names, frozenset):
@@ -216,7 +216,7 @@ class EntityClassAndChannels:
     """Container for entity class and corresponding channels."""
 
     entity_class: CALLABLE_T
-    claimed_channel: list[ChannelType]
+    claimed_channel: list[ZigbeeChannel]
 
 
 class ZHAEntityRegistry:
@@ -247,9 +247,9 @@ class ZHAEntityRegistry:
         component: str,
         manufacturer: str,
         model: str,
-        channels: list[ChannelType],
+        channels: list[ZigbeeChannel],
         default: CALLABLE_T = None,
-    ) -> tuple[CALLABLE_T, list[ChannelType]]:
+    ) -> tuple[CALLABLE_T, list[ZigbeeChannel]]:
         """Match a ZHA Channels to a ZHA Entity class."""
         matches = self._strict_registry[component]
         for match in sorted(matches, key=lambda x: x.weight, reverse=True):
@@ -263,11 +263,11 @@ class ZHAEntityRegistry:
         self,
         manufacturer: str,
         model: str,
-        channels: list[ChannelType],
-    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
+        channels: list[ZigbeeChannel],
+    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ZigbeeChannel]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
-        all_claimed: set[ChannelType] = set()
+        all_claimed: set[ZigbeeChannel] = set()
         for component, stop_match_groups in self._multi_entity_registry.items():
             for stop_match_grp, matches in stop_match_groups.items():
                 sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
@@ -287,11 +287,11 @@ class ZHAEntityRegistry:
         self,
         manufacturer: str,
         model: str,
-        channels: list[ChannelType],
-    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
+        channels: list[ZigbeeChannel],
+    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ZigbeeChannel]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
-        all_claimed: set[ChannelType] = set()
+        all_claimed: set[ZigbeeChannel] = set()
         for (
             component,
             stop_match_groups,
