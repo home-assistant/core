@@ -54,7 +54,7 @@ async def async_setup_entry_from_discovery(hass, config_entry, async_add_entitie
         *(
             _async_setup_entity(hass, async_add_entities, config, config_entry)
             for config in await async_get_platform_config_from_yaml(
-                hass, device_tracker.DOMAIN, PLATFORM_SCHEMA_MODERN
+                hass, device_tracker.DOMAIN
             )
         )
     )
