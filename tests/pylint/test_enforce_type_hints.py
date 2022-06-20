@@ -498,7 +498,7 @@ def test_invalid_lock_entity(
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=prop_node,
-            args=["str", "str | None"],
+            args=["str", None],
             line=9,
             col_offset=4,
             end_line=9,

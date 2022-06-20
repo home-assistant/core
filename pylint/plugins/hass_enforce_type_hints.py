@@ -447,27 +447,27 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             matches=[
                 TypeHintMatch(
                     function_name="changed_by",
-                    return_type=["str", "str | None"],
+                    return_type=["str", None],
                 ),
                 TypeHintMatch(
                     function_name="code_format",
-                    return_type=["str", "str | None"],
+                    return_type=["str", None],
                 ),
                 TypeHintMatch(
                     function_name="is_locked",
-                    return_type=["bool", "bool | None"],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="is_locking",
-                    return_type=["bool", "bool | None"],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="is_unlocking",
-                    return_type=["bool", "bool | None"],
+                    return_type=["bool", None],
                 ),
                 TypeHintMatch(
                     function_name="is_jammed",
-                    return_type=["bool", "bool | None"],
+                    return_type=["bool", None],
                 ),
             ],
         ),
