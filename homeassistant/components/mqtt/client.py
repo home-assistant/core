@@ -467,18 +467,21 @@ class MQTT:
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
     ) -> None:
-        """Perform a paho-mqtt subscriptions."""
+        """Perform MQTT client subscriptions."""
 
-        def _log_and_subscribe() -> list[tuple[int, int]]:
-            subscribe_list = []
+        def _proces_client_subscriptions() -> list[tuple[int, int]]:
+            """Initiate all subscriptions on the MQTT client and return the results."""
+            subscribe_result_list = []
             for topic, qos in subscriptions:
                 result, mid = self._mqttc.subscribe(topic, qos)
-                subscribe_list.append((result, mid))
+                subscribe_result_list.append((result, mid))
                 _LOGGER.debug("Subscribing to %s, mid: %s", topic, mid)
-            return subscribe_list
+            return subscribe_result_list
 
         async with self._paho_lock:
-            results = await self.hass.async_add_executor_job(_log_and_subscribe)
+            results = await self.hass.async_add_executor_job(
+                _proces_client_subscriptions
+            )
 
         tasks = []
         errors = []
