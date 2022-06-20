@@ -222,6 +222,11 @@ def _false(arg: str) -> bool:
     return False
 
 
+@lru_cache(maxsize=256)
+def _cached_literal_eval(result: Any) -> Any:
+    return literal_eval(result)
+
+
 class RenderInfo:
     """Holds information about a template render."""
 
@@ -421,7 +426,7 @@ class Template:
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = literal_eval(render_result)
+            result = _cached_literal_eval(render_result)
 
             if type(result) in RESULT_WRAPPERS:
                 result = RESULT_WRAPPERS[type(result)](
