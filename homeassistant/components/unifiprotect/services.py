@@ -8,7 +8,7 @@ from typing import Any, cast
 from pydantic import ValidationError
 from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import Chime
-from pyunifiprotect.exceptions import ClientError
+from pyunifiprotect.exceptions import BadRequest
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -100,7 +100,7 @@ async def _async_service_call_nvr(
         await asyncio.gather(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
-    except (ClientError, ValidationError) as err:
+    except (BadRequest, ValidationError) as err:
         raise HomeAssistantError(str(err)) from err
 
 

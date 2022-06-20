@@ -6,9 +6,8 @@ import logging
 from typing import Any
 
 from aiohttp import CookieJar
-from pyunifiprotect import ProtectApiClient
+from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
 from pyunifiprotect.data import NVR
-from pyunifiprotect.exceptions import ClientError, NotAuthorized
 from unifi_discovery import async_console_is_alive
 import voluptuous as vol
 
@@ -254,7 +253,7 @@ class ProtectFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except NotAuthorized as ex:
             _LOGGER.debug(ex)
             errors[CONF_PASSWORD] = "invalid_auth"
-        except ClientError as ex:
+        except NvrError as ex:
             _LOGGER.debug(ex)
             errors["base"] = "cannot_connect"
         else:
