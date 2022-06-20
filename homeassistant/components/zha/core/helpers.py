@@ -21,6 +21,7 @@ import voluptuous as vol
 import zigpy.exceptions
 import zigpy.types
 import zigpy.util
+import zigpy.zcl
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +36,6 @@ from .const import (
     DATA_ZHA_GATEWAY,
 )
 from .registries import BINDABLE_CLUSTERS
-from .typing import ZigpyClusterType
 
 if TYPE_CHECKING:
     from .device import ZHADevice
@@ -48,7 +48,7 @@ _T = TypeVar("_T")
 class BindingPair:
     """Information for binding."""
 
-    source_cluster: ZigpyClusterType
+    source_cluster: zigpy.zcl.Cluster
     target_ieee: zigpy.types.EUI64
     target_ep_id: int
 

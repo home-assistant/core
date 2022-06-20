@@ -12,6 +12,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from zigpy import types
+import zigpy.device
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
@@ -27,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import channels, typing as zha_typing
+from . import channels
 from .const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -100,7 +101,7 @@ class ZHADevice(LogMixin):
     def __init__(
         self,
         hass: HomeAssistant,
-        zigpy_device: zha_typing.ZigpyDeviceType,
+        zigpy_device: zigpy.device.Device,
         zha_gateway: ZHAGateway,
     ) -> None:
         """Initialize the gateway."""
@@ -151,7 +152,7 @@ class ZHADevice(LogMixin):
         self._ha_device_id = device_id
 
     @property
-    def device(self) -> zha_typing.ZigpyDeviceType:
+    def device(self) -> zigpy.device.Device:
         """Return underlying Zigpy device."""
         return self._zigpy_device
 
@@ -332,7 +333,7 @@ class ZHADevice(LogMixin):
     def new(
         cls,
         hass: HomeAssistant,
-        zigpy_dev: zha_typing.ZigpyDeviceType,
+        zigpy_dev: zigpy.device.Device,
         gateway: ZHAGateway,
         restored: bool = False,
     ):

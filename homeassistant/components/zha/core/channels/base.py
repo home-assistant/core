@@ -8,6 +8,7 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
+import zigpy.zcl
 from zigpy.zcl.foundation import (
     CommandSchema,
     ConfigureReportingResponseRecord,
@@ -19,7 +20,6 @@ from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .. import typing as zha_typing
 from ..const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE_ID,
@@ -107,9 +107,7 @@ class ZigbeeChannel(LogMixin):
     # attribute read is acceptable.
     ZCL_INIT_ATTRS: dict[int | str, bool] = {}
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize ZigbeeChannel."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"
         self._ch_pool = ch_pool

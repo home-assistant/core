@@ -4,9 +4,11 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
+import zigpy.zcl
+
 from homeassistant.core import callback
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
@@ -60,9 +62,7 @@ class OppleRemote(ZigbeeChannel):
 
     REPORT_CONFIG = []
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Opple channel."""
         super().__init__(cluster, ch_pool)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
