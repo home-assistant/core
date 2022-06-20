@@ -31,49 +31,46 @@ from .const import DOMAIN
 
 # List of known sensors which represents a fibaro device
 MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
-    entry.key: entry
-    for entry in [
-        SensorEntityDescription(
-            key="com.fibaro.temperatureSensor",
-            name="Temperature",
-            device_class=SensorDeviceClass.TEMPERATURE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="com.fibaro.smokeSensor",
-            name="Smoke",
-            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-            icon="mdi:fire",
-        ),
-        SensorEntityDescription(
-            key="CO2",
-            name="CO2",
-            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-            device_class=SensorDeviceClass.CO2,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="com.fibaro.humiditySensor",
-            name="Humidity",
-            native_unit_of_measurement=PERCENTAGE,
-            device_class=SensorDeviceClass.HUMIDITY,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="com.fibaro.lightSensor",
-            name="Light",
-            native_unit_of_measurement=LIGHT_LUX,
-            device_class=SensorDeviceClass.ILLUMINANCE,
-            state_class=SensorStateClass.MEASUREMENT,
-        ),
-        SensorEntityDescription(
-            key="com.fibaro.energyMeter",
-            name="Energy",
-            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=SensorDeviceClass.ENERGY,
-            state_class=SensorStateClass.TOTAL_INCREASING,
-        ),
-    ]
+    "com.fibaro.temperatureSensor": SensorEntityDescription(
+        key="com.fibaro.temperatureSensor",
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "com.fibaro.smokeSensor": SensorEntityDescription(
+        key="com.fibaro.smokeSensor",
+        name="Smoke",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        icon="mdi:fire",
+    ),
+    "CO2": SensorEntityDescription(
+        key="CO2",
+        name="CO2",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "com.fibaro.humiditySensor": SensorEntityDescription(
+        key="com.fibaro.humiditySensor",
+        name="Humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "com.fibaro.lightSensor": SensorEntityDescription(
+        key="com.fibaro.lightSensor",
+        name="Light",
+        native_unit_of_measurement=LIGHT_LUX,
+        device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "com.fibaro.energyMeter": SensorEntityDescription(
+        key="com.fibaro.energyMeter",
+        name="Energy",
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 }
 
 # List of additional sensors which are created based on a property
