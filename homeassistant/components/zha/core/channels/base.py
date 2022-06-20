@@ -50,7 +50,7 @@ class ReportConfig(TypedDict, total=True):
     """Matcher for the dhcp integration for required fields."""
 
     attr: str
-    config: tuple[int, int, int]
+    config: tuple[int, int, int | float]
 
 
 def parse_and_log_command(channel, tsn, command_id, args):
