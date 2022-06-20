@@ -77,7 +77,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     ),
 )
 
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
+MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="room_occupied",
         device_class=BinarySensorDeviceClass.MOTION,
@@ -150,9 +150,9 @@ async def async_setup_entry(
             )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
-        for description in DEVICE_SENSOR_TYPES
+        for description in MOTION_DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if getattr(device_data, description.key) is not None
+        if device_data.motion_sensors is not None
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)

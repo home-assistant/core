@@ -7,7 +7,7 @@ import functools
 import itertools
 import logging
 import random
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -62,8 +62,10 @@ from .core.const import (
 )
 from .core.helpers import LogMixin, async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity, ZhaGroupEntity
+
+if TYPE_CHECKING:
+    from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -341,7 +343,7 @@ class Light(BaseLight, ZhaEntity):
     _attr_supported_color_modes: set(ColorMode)
     _REFRESH_INTERVAL = (45, 75)
 
-    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)

@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "J\u00e4rgi pilvekonsooli seadistamiseks [juhiseid]({more_info_url}):\n\n1. Ava [OAuth n\u00f5usoleku kuva]({oauth_consent_url}) ja seadista\n1. Mine aadressile [Mandaat]({oauth_creds_url}) ja kl\u00f5psa nuppu **Loo mandaat**.\n1. Vali ripploendist **OAuth kliendi ID**.\n1. Vali rakenduse t\u00fc\u00fcbi jaoks **Veebirakendus**.\n1. Lisa \"{redirect_url}\" jaotises *Volitatud \u00fcmbersuunamine URI*."
+    },
     "config": {
         "abort": {
             "authorize_url_timeout": "Tuvastamise URL-i loomise ajal\u00f5pp.",
@@ -28,6 +31,32 @@
                 },
                 "description": "Oma Google'i konto sidumiseks vali [autoriseeri oma konto]({url}).\n\nP\u00e4rast autoriseerimist kopeeri ja aseta allpool esitatud Auth Token'i kood.",
                 "title": "Google'i konto linkimine"
+            },
+            "auth_upgrade": {
+                "description": "Google on app Authi turvalisuse parandamiseks tauninud ja pead tegutsema, luues uusi rakenduse mandaate.\n\nAva [dokumentatsioon]({more_info_url}), mida j\u00e4rgida, kuna j\u00e4rgmised juhised juhendavad teid nest-seadmetele juurdep\u00e4\u00e4su taastamiseks vajalike juhiste kaudu.",
+                "title": "Nest: App Auth Deprecation"
+            },
+            "cloud_project": {
+                "data": {
+                    "cloud_project_id": "Google'i pilveprojekti ID"
+                },
+                "description": "Sisesta allpool pilveprojekti ID nt *n\u00e4idisprojekt-12345*. Vaata [Google'i pilvekonsooli]({cloud_console_url}) v\u00f5i dokumentatsiooni [lisateave]({more_info_url}).",
+                "title": "Nest: sisesta pilveprojekti ID"
+            },
+            "create_cloud_project": {
+                "description": "Nesti sidumine v\u00f5imaldab integreerida pesa termostaate, kaameraid ja uksekellasid nutiseadme haldamise API abil. SDM API **n\u00f5uab \u00fchekordset h\u00e4\u00e4lestustasu 5 USA dollarit**. Vt dokumentatsiooni teemast [more information]({more_info_url}).\n\n1. Mine [Google'i pilvekonsooli]({cloud_console_url}).\n1. Kui see on esimene projekt, kl\u00f5psa nuppu **Loo projekt** ja seej\u00e4rel **Uus projekt**.\n1. Anna oma pilveprojektile nimi ja seej\u00e4rel kl\u00f5psa nuppu **Loo**.\n1. Salvesta pilveprojekti ID nt *n\u00e4ide-projekt-12345*, kuna vajad seda hiljem\n1. Ava API teek [Smart Device Management API]({sdm_api_url}) jaoks ja kl\u00f5psa nuppu **Luba**.\n1. Mine API teeki [Cloud Pub/Sub API]({pubsub_api_url}) jaoks ja kl\u00f5psa nuppu **Luba**.\n\nJ\u00e4tka kui pilveprojekt on h\u00e4\u00e4lestatud.",
+                "title": "Nest: Pilveprojekti loomine ja konfigureerimine"
+            },
+            "device_project": {
+                "data": {
+                    "project_id": "Seadme juurdep\u00e4\u00e4su projekti ID"
+                },
+                "description": "Loo Nest Device Accessi projekt, mille seadistamiseks on vaja 5 USA dollari suurust tasu**.\n1. Ava [Seadme juurdep\u00e4\u00e4sukonsool]({device_access_console_url}) ja maksevoo kaudu.\n1. Vajuta **Loo projekt**\n1. Anna oma seadmele juurdep\u00e4\u00e4su projektile nimi ja kl\u00f5psa nuppu **Next**.\n1. Sisesta oma OAuth Kliendi ID\n1. Luba s\u00fcndmused, kl\u00f5psates nuppu **Luba** ja **Loo projekt**.\n\nSisesta allpool seadme accessi projekti ID ([lisateave]({more_info_url})).\n",
+                "title": "Nest: seadmele juurdep\u00e4\u00e4su projekti loomine"
+            },
+            "device_project_upgrade": {
+                "description": "Nest Device Access Projecti v\u00e4rskendamine uue OAuth Client ID-ga ([lisateave]({more_info_url}))\n1. Ava [Seadme juurdep\u00e4\u00e4sukonsool]({device_access_console_url}).\n1. Kl\u00f5psa pr\u00fcgikastiikooni *OAuth Client ID* k\u00f5rval.\n1. Kl\u00f5psa \u00fclet\u00e4itumise men\u00fc\u00fcd \"...\", ja *Lisa kliendi ID*.\n1. Sisesta uus OAuth-kliendi ID ja kl\u00f5psa nuppu **Lisa**.\n\nOAuth-kliendi ID on:{client_id}.",
+                "title": "Nest: seadmele juurdep\u00e4\u00e4su projekti v\u00e4rskendamine"
             },
             "init": {
                 "data": {

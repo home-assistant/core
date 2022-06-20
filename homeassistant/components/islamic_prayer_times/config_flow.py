@@ -1,4 +1,6 @@
 """Config flow for Islamic Prayer Times integration."""
+from __future__ import annotations
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -14,7 +16,9 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler(config_entry)
 
@@ -36,7 +40,7 @@ class IslamicPrayerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class IslamicPrayerOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Islamic Prayer client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 
