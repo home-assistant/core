@@ -487,43 +487,47 @@ class KodiEntity(MediaPlayerEntity):
             self._reset_state()
             return
 
-        self._players = await self._kodi.get_players()
+        try:
+            self._players = await self._kodi.get_players()
 
-        if self._kodi_is_off:
-            self._reset_state()
-            return
+            if self._kodi_is_off:
+                self._reset_state()
+                return
 
-        if self._players:
-            self._app_properties = await self._kodi.get_application_properties(
-                ["volume", "muted"]
-            )
+            if self._players:
+                self._app_properties = await self._kodi.get_application_properties(
+                    ["volume", "muted"]
+                )
 
-            self._properties = await self._kodi.get_player_properties(
-                self._players[0], ["time", "totaltime", "speed", "live"]
-            )
+                self._properties = await self._kodi.get_player_properties(
+                    self._players[0], ["time", "totaltime", "speed", "live"]
+                )
 
-            position = self._properties["time"]
-            if self._media_position != position:
-                self._media_position_updated_at = dt_util.utcnow()
-                self._media_position = position
+                position = self._properties["time"]
+                if self._media_position != position:
+                    self._media_position_updated_at = dt_util.utcnow()
+                    self._media_position = position
 
-            self._item = await self._kodi.get_playing_item_properties(
-                self._players[0],
-                [
-                    "title",
-                    "file",
-                    "uniqueid",
-                    "thumbnail",
-                    "artist",
-                    "albumartist",
-                    "showtitle",
-                    "album",
-                    "season",
-                    "episode",
-                ],
-            )
-        else:
-            self._reset_state([])
+                self._item = await self._kodi.get_playing_item_properties(
+                    self._players[0],
+                    [
+                        "title",
+                        "file",
+                        "uniqueid",
+                        "thumbnail",
+                        "artist",
+                        "albumartist",
+                        "showtitle",
+                        "album",
+                        "season",
+                        "episode",
+                    ],
+                )
+            else:
+                self._reset_state([])
+        except ProtocolError as exc:
+            error = exc.args[2]["error"]
+            _LOGGER.error("Unable to retrieve latest state of Kodi: %s", error)
 
     @property
     def should_poll(self):
