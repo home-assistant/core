@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from typing import Any, cast
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -35,7 +34,7 @@ async def async_setup_entry(
     """Load Tradfri lights based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api: Callable[[Command | list[Command]], Awaitable[Any]] = coordinator_data[KEY_API]
+    api: APIRequestProtocol = coordinator_data[KEY_API]
 
     async_add_entities(
         TradfriLight(
@@ -58,7 +57,7 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Awaitable[Any]],
+        api: APIRequestProtocol,
         gateway_id: str,
     ) -> None:
         """Initialize a Light."""

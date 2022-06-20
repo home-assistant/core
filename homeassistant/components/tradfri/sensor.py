@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.device import Device
 
 from homeassistant.components.sensor import (
@@ -133,7 +133,7 @@ async def async_setup_entry(
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
     coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api: Callable[[Command | list[Command]], Awaitable[Any]] = coordinator_data[KEY_API]
+    api: APIRequestProtocol = coordinator_data[KEY_API]
 
     entities: list[TradfriSensor] = []
 
@@ -178,7 +178,7 @@ class TradfriSensor(TradfriBaseEntity, SensorEntity):
     def __init__(
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
-        api: Callable[[Command | list[Command]], Awaitable[Any]],
+        api: APIRequestProtocol,
         gateway_id: str,
         description: TradfriSensorEntityDescription,
     ) -> None:

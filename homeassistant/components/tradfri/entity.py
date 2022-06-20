@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, cast
 
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
@@ -20,7 +21,7 @@ from .coordinator import TradfriDeviceDataUpdateCoordinator
 
 
 def handle_error(
-    func: Callable[[Command | list[Command]], Awaitable[Any]],
+    func: APIRequestProtocol,
 ) -> Callable[[Command | list[Command]], Coroutine[Any, Any, None]]:
     """Handle tradfri api call error."""
 
@@ -44,7 +45,7 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
         self,
         device_coordinator: TradfriDeviceDataUpdateCoordinator,
         gateway_id: str,
-        api: Callable[[Command | list[Command]], Awaitable[Any]],
+        api: APIRequestProtocol,
     ) -> None:
         """Initialize a device."""
         super().__init__(device_coordinator)

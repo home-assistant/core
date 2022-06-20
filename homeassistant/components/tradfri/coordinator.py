@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any, cast
+from typing import cast
 
-from pytradfri.command import Command
+from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.device import Device
 from pytradfri.error import RequestError
 from pytradfri.resource import ApiResource
@@ -30,7 +29,7 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
         hass: HomeAssistant,
         *,
         config_entry: ConfigEntry,
-        api: Callable[[Command | list[Command]], Awaitable[Any]],
+        api: APIRequestProtocol,
         device: Device,
     ) -> None:
         """Initialize device coordinator."""
