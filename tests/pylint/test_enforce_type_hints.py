@@ -469,3 +469,40 @@ def test_valid_config_flow_async_get_options_flow(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_lock_entity(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for LockEntity methods/properties."""
+    class_node, prop_node = astroid.extract_node(
+        """
+    class LockEntity():
+        pass
+
+    class DoorLock( #@
+        LockEntity
+    ):
+        @property
+        def changed_by( #@
+            self
+        ) -> int:
+            pass
+    """,
+        "homeassistant.components.pylint_test.lock",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=prop_node,
+            args=["str", "str | None"],
+            line=9,
+            col_offset=4,
+            end_line=9,
+            end_col_offset=18,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)

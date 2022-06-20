@@ -20,8 +20,8 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    arg_types: dict[int, str]
     return_type: list[str] | str | None | object
+    arg_types: dict[int, str] | None = None
     check_return_type_inheritance: bool = False
 
 
@@ -440,7 +440,38 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
-    ]
+    ],
+    "lock": [
+        ClassTypeHintMatch(
+            base_class="LockEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="changed_by",
+                    return_type=["str", "str | None"],
+                ),
+                TypeHintMatch(
+                    function_name="code_format",
+                    return_type=["str", "str | None"],
+                ),
+                TypeHintMatch(
+                    function_name="is_locked",
+                    return_type=["bool", "bool | None"],
+                ),
+                TypeHintMatch(
+                    function_name="is_locking",
+                    return_type=["bool", "bool | None"],
+                ),
+                TypeHintMatch(
+                    function_name="is_unlocking",
+                    return_type=["bool", "bool | None"],
+                ),
+                TypeHintMatch(
+                    function_name="is_jammed",
+                    return_type=["bool", "bool | None"],
+                ),
+            ],
+        ),
+    ],
 }
 
 
@@ -660,13 +691,14 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             return
 
         # Check that all arguments are correctly annotated.
-        for key, expected_type in match.arg_types.items():
-            if not _is_valid_type(expected_type, annotations[key]):
-                self.add_message(
-                    "hass-argument-type",
-                    node=node.args.args[key],
-                    args=(key + 1, expected_type),
-                )
+        if match.arg_types:
+            for key, expected_type in match.arg_types.items():
+                if not _is_valid_type(expected_type, annotations[key]):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=node.args.args[key],
+                        args=(key + 1, expected_type),
+                    )
 
         # Check the return type.
         if not _is_valid_return_type(match, node.returns):
