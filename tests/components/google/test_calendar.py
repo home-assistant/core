@@ -669,6 +669,26 @@ async def test_future_event_offset_update_behavior(
     assert state.attributes["offset_reached"]
 
 
+async def test_unique_id(
+    hass,
+    mock_events_list_items,
+    mock_token_read,
+    component_setup,
+    config_entry,
+):
+    """Test entity is created with a unique id based on the config entry."""
+    mock_events_list_items([])
+    assert await component_setup()
+
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{config_entry.unique_id}-{CALENDAR_ID}"
+    }
+
+
 @pytest.mark.parametrize(
     "old_unique_id", [CALENDAR_ID, f"{CALENDAR_ID}-we_are_we_are_a_test_calendar"]
 )
@@ -702,5 +722,68 @@ async def test_unique_id_migration(
         entity_registry, config_entry.entry_id
     )
     assert {entry.unique_id for entry in registry_entries} == {
-        f"{config_entry.unique_id}-{CALENDAR_ID}-we_are_we_are_a_test_calendar"
+        f"{config_entry.unique_id}-{CALENDAR_ID}"
     }
+
+
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                    {
+                        "device_id": "front_light",
+                        "name": "Front Light",
+                        "search": "#Front",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_invalid_unique_id_cleanup(
+    hass,
+    mock_events_list_items,
+    mock_token_read,
+    component_setup,
+    config_entry,
+    mock_calendars_yaml,
+):
+    """Test that old unique id format that is not actually unique is removed."""
+    entity_registry = er.async_get(hass)
+
+    # Create an entity using the old unique id format
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=f"{CALENDAR_ID}-backyard_light",
+        config_entry=config_entry,
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=f"{CALENDAR_ID}-front_light",
+        config_entry=config_entry,
+    )
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{CALENDAR_ID}-backyard_light",
+        f"{CALENDAR_ID}-front_light",
+    }
+
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert not registry_entries

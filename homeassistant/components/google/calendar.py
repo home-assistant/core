@@ -140,7 +140,9 @@ async def async_setup_entry(
                 hass, calendar_item.dict(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
-
+        # Yaml calendar config may map one calendar to multiple entities with extra options like
+        # offsets or search criteria.
+        num_entities = len(calendar_info[CONF_ENTITIES])
         for data in calendar_info[CONF_ENTITIES]:
             entity_enabled = data.get(CONF_TRACK, True)
             if not entity_enabled:
@@ -149,21 +151,37 @@ async def async_setup_entry(
                     "has been imported to the UI, and should now be removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
-            unique_id = f"{config_entry.unique_id}-{calendar_id}-{entity_name}"
-            # Migrate to new unique_id format which supports multiple config entries
+            # The unique id is based on the config entry and calendar id since multiple accounts
+            # can have a common calendar id (e.g. `en.usa#holiday@group.v.calendar.google.com`).
+            # When using google_calendars.yaml with multiple entities for a single calendar, we
+            # have no way to set a unique id.
+            if num_entities > 1:
+                unique_id = None
+            else:
+                unique_id = f"{config_entry.unique_id}-{calendar_id}"
+            # Migrate to new unique_id format which supports multiple config entries as of 2022.7
             for old_unique_id in (calendar_id, f"{calendar_id}-{entity_name}"):
                 if not (entity_entry := entity_entry_map.get(old_unique_id)):
                     continue
-                _LOGGER.debug(
-                    "Migrating unique_id for %s from %s to %s",
-                    entity_entry.entity_id,
-                    old_unique_id,
-                    unique_id,
-                )
-                entity_registry.async_update_entity(
-                    entity_entry.entity_id, new_unique_id=unique_id
-                )
-
+                if unique_id:
+                    _LOGGER.debug(
+                        "Migrating unique_id for %s from %s to %s",
+                        entity_entry.entity_id,
+                        old_unique_id,
+                        unique_id,
+                    )
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, new_unique_id=unique_id
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Removing entity registry entry for %s from %s",
+                        entity_entry.entity_id,
+                        old_unique_id,
+                    )
+                    entity_registry.async_remove(
+                        entity_entry.entity_id,
+                    )
             entities.append(
                 GoogleCalendarEntity(
                     calendar_service,
@@ -204,7 +222,7 @@ class GoogleCalendarEntity(CalendarEntity):
         calendar_id: str,
         data: dict[str, Any],
         entity_id: str,
-        unique_id: str,
+        unique_id: str | None,
         entity_enabled: bool,
     ) -> None:
         """Create the Calendar event device."""
