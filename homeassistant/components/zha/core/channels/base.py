@@ -49,7 +49,10 @@ _LOGGER = logging.getLogger(__name__)
 class AttrReportConfig(TypedDict, total=True):
     """Configuration to report for the attributes."""
 
+    # Could be either an attribute name or attribute id
     attr: str | int
+    # The config for the attribute reporting configuration consists of a tuple for
+    # (minimum_reported_time_interval_s, maximum_reported_time_interval_s, value_delta)
     config: tuple[int, int, int | float]
 
 
