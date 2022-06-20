@@ -19,10 +19,8 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     API_PATH_FWVERSION,
-    COORDINATOR,
     DEFAULT_LEGACY_MAINPROCESSOR,
     DEVICE_FIRMWARE,
-    DEVICE_INFO,
     DEVICE_MAC_ADDRESS,
     DEVICE_MODEL,
     DEVICE_NAME,
@@ -36,12 +34,7 @@ from .const import (
     HUB_EXCEPTIONS,
     HUB_NAME,
     MAC_ADDRESS_IN_USERDATA,
-    PV_API,
     PV_HUB_ADDRESS,
-    PV_ROOM_DATA,
-    PV_SCENE_DATA,
-    PV_SHADE_DATA,
-    PV_SHADES,
     ROOM_DATA,
     SCENE_DATA,
     SERIAL_NUMBER_IN_USERDATA,
@@ -49,6 +42,7 @@ from .const import (
     USER_DATA,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
+from .model import PowerviewEntry
 from .shade_data import PowerviewShadeData
 from .util import async_map_data_by_id
 
@@ -102,15 +96,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # populate raw shade data into the coordinator for diagnostics
     coordinator.data.store_group_data(shade_entries[SHADE_DATA])
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        PV_API: pv_request,
-        PV_ROOM_DATA: room_data,
-        PV_SCENE_DATA: scene_data,
-        PV_SHADES: shades,
-        PV_SHADE_DATA: shade_data,
-        COORDINATOR: coordinator,
-        DEVICE_INFO: device_info,
-    }
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntry(
+        api=pv_request,
+        room_data=room_data,
+        scene_data=scene_data,
+        shades=shades,
+        shade_data=shade_data,
+        coordinator=coordinator,
+        device_info=device_info,
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 

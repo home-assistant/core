@@ -38,17 +38,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    COORDINATOR,
-    DEVICE_INFO,
     DEVICE_MODEL,
     DOMAIN,
     LEGACY_DEVICE_MODEL,
     POS_KIND_PRIMARY,
     POS_KIND_SECONDARY,
     POS_KIND_VANE,
-    PV_API,
-    PV_ROOM_DATA,
-    PV_SHADE_DATA,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
     STATE_ATTRIBUTE_ROOM_NAME,
@@ -83,18 +78,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas shades."""
 
-    pv_data = hass.data[DOMAIN][entry.entry_id]
-    room_data: dict[str | int, Any] = pv_data[PV_ROOM_DATA]
-    shade_data = pv_data[PV_SHADE_DATA]
-    pv_request = pv_data[PV_API]
-    coordinator: PowerviewShadeUpdateCoordinator = pv_data[COORDINATOR]
-    device_info: dict[str, Any] = pv_data[DEVICE_INFO]
+    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
 
     entities: list[ShadeEntity] = []
-    for raw_shade in shade_data.values():
+    for raw_shade in pv_entry.shade_data.values():
         # The shade may be out of sync with the hub
         # so we force a refresh when we add it if possible
-        shade: BaseShade = PvShade(raw_shade, pv_request)
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         name_before_refresh = shade.name
         with suppress(asyncio.TimeoutError):
             async with async_timeout.timeout(1):
@@ -108,10 +99,10 @@ async def async_setup_entry(
             continue
         coordinator.data.update_shade_positions(shade.raw_data)
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.extend(
             create_powerview_shade_entity(
-                coordinator, device_info, room_name, shade, name_before_refresh
+                coordinator, pv_entry.device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
