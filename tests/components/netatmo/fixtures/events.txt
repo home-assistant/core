@@ -34,6 +34,17 @@
       "out_of_sight": False,
       "subevents": [],
       "media_url": "http:///files/high/index.m3u8"
+    },
+    1654289891: {
+      "home_id": "91763b24c43d3e344f424e8b",
+      "entity_id": "000002",
+      "event_type": "person",
+      "event_time": 1654289891,
+      "module_id": "12:34:56:78:90:ab",
+      "message": "<b>Jane</b> gesehen",
+      "person_id": "1111",
+      "out_of_sight": False,
+      "subevents": []
     }
   }
 }
