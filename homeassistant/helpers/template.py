@@ -631,7 +631,7 @@ def _domain_states(hass: HomeAssistant, name: str) -> DomainStates:
 
 def _readonly(*args: Any, **kwargs: Any) -> Any:
     """Raise an exception when a states object is modified."""
-    raise RuntimeError("Cannot modify template States object")
+    raise RuntimeError(f"Cannot modify template States object: {args} {kwargs}")
 
 
 class AllStates:
@@ -639,11 +639,7 @@ class AllStates:
 
     __setitem__ = _readonly
     __delitem__ = _readonly
-    pop = _readonly
-    popitem = _readonly
-    clear = _readonly
-    update = _readonly
-    setdefault = _readonly
+    __slots__ = ("_hass",)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize all states."""
@@ -699,13 +695,10 @@ class AllStates:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
+    __slots__ = ("_hass", "_domain")
+
     __setitem__ = _readonly
     __delitem__ = _readonly
-    pop = _readonly
-    popitem = _readonly
-    clear = _readonly
-    update = _readonly
-    setdefault = _readonly
 
     def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the domain states."""
@@ -754,11 +747,6 @@ class TemplateStateBase(State):
 
     __setitem__ = _readonly
     __delitem__ = _readonly
-    pop = _readonly
-    popitem = _readonly
-    clear = _readonly
-    update = _readonly
-    setdefault = _readonly
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
