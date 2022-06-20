@@ -2,7 +2,7 @@
   "domain": "micropel",
   "name": "Micropel",
   "documentation": "https://www.home-assistant.io/integrations/micropel",
-  "requirements": ["pymicropel==1.0.0"],
+  "requirements": ["pymicropel==1.0.1"],
   "iot_class": "local_polling",
   "codeowners": ["@vkorecky"]
 }
