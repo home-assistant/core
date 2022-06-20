@@ -160,5 +160,3 @@ class TwitchSensor(SensorEntity):
             self._attr_extra_state_attributes[ATTR_TITLE] = None
             self._attr_entity_picture = channel["profile_image_url"]
 
-
-# https://static-cdn.jtvnw.net/previews-ttv/live_user_davidjwatts-{width}x{height}.jpg
