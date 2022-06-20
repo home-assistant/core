@@ -5,9 +5,10 @@ import enum
 from functools import partialmethod
 from typing import TYPE_CHECKING
 
+import zigpy.zcl
 from zigpy.zcl.clusters import smartenergy
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_DEFAULT,
@@ -118,9 +119,7 @@ class Metering(ZigbeeChannel):
         DEMAND = 0
         SUMMATION = 1
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
         self._format_spec = None
