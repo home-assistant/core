@@ -10,12 +10,13 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from zigpy.exceptions import ZigbeeException
+import zigpy.zcl
 from zigpy.zcl.clusters import security
 from zigpy.zcl.clusters.security import IasAce as AceCluster
 
 from homeassistant.core import callback
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     SIGNAL_ATTR_UPDATED,
     WARNING_DEVICE_MODE_EMERGENCY,
@@ -51,9 +52,7 @@ SIGNAL_ALARM_TRIGGERED = "zha_armed_triggered"
 class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize IAS Ancillary Control Equipment channel."""
         super().__init__(cluster, ch_pool)
         self.command_map: dict[int, CALLABLE_T] = {
