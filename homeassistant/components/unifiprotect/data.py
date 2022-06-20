@@ -153,9 +153,9 @@ class ProtectData:
         if updates is None:
             return
 
-        self.async_signal_device_id_update(self.api.bootstrap.nvr.id)
+        self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in async_get_devices(self.api.bootstrap, DEVICES_THAT_ADOPT):
-            self.async_signal_device_id_update(device.id)
+            self._async_signal_device_update(device)
 
     @callback
     def async_subscribe_device_id(
