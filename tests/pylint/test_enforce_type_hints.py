@@ -474,7 +474,7 @@ def test_valid_config_flow_async_get_options_flow(
 def test_invalid_entity_properties(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Check missing entity properties are rejected ignore_missing_annotations=no."""
+    """Check missing entity properties when ignore_missing_annotations is False."""
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
