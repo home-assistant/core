@@ -57,7 +57,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device = zha_device
-        self._unsubs: list[Callable[..., Any]] = []
+        self._unsubs: list[Callable[[], None]] = []
         self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
@@ -130,7 +130,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self,
         channel: ZigbeeChannel,
         signal: str,
-        func: Callable[..., Any],
+        func: Callable[[], Any],
         signal_override=False,
     ):
         """Accept a signal from a channel."""
