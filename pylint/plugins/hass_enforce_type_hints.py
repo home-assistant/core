@@ -441,6 +441,8 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+}
+_PROPERTY_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "lock": [
         ClassTypeHintMatch(
             base_class="LockEntity",
@@ -652,7 +654,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self._function_matchers.extend(function_matches)
 
         if class_matches := _CLASS_MATCH.get(module_platform):
-            self._class_matchers = class_matches
+            self._class_matchers.extend(class_matches)
+
+        if not self.linter.config.ignore_missing_annotations and (
+            property_matches := _PROPERTY_MATCH.get(module_platform)
+        ):
+            self._class_matchers.extend(property_matches)
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""

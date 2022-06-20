@@ -474,7 +474,10 @@ def test_valid_config_flow_async_get_options_flow(
 def test_invalid_lock_entity(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure invalid hints are rejected for LockEntity methods/properties."""
+    """Ensure invalid hints are rejected for LockEntity properties."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
     class_node, prop_node = astroid.extract_node(
         """
     class LockEntity():
@@ -486,7 +489,7 @@ def test_invalid_lock_entity(
         @property
         def changed_by( #@
             self
-        ) -> int:
+        ):
             pass
     """,
         "homeassistant.components.pylint_test.lock",
