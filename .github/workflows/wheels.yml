@@ -245,7 +245,6 @@ jobs:
           requirement_files="requirements_all.txt requirements_diff.txt"
           for requirement_file in ${requirement_files}; do
             sed -i "s|# pybluez|pybluez|g" ${requirement_file}
-            sed -i "s|# bluepy|bluepy|g" ${requirement_file}
             sed -i "s|# beacontools|beacontools|g" ${requirement_file}
             sed -i "s|# fritzconnection|fritzconnection|g" ${requirement_file}
             sed -i "s|# pyuserinput|pyuserinput|g" ${requirement_file}
@@ -254,7 +253,6 @@ jobs:
             sed -i "s|# pycups|pycups|g" ${requirement_file}
             sed -i "s|# homekit|homekit|g" ${requirement_file}
             sed -i "s|# decora_wifi|decora_wifi|g" ${requirement_file}
-            sed -i "s|# decora|decora|g" ${requirement_file}
             sed -i "s|# avion|avion|g" ${requirement_file}
             sed -i "s|# PySwitchbot|PySwitchbot|g" ${requirement_file}
             sed -i "s|# pySwitchmate|pySwitchmate|g" ${requirement_file}
