@@ -27,8 +27,18 @@ from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity
 
 SERVICE_ASSUME_STATE = "assume_state"
-SERVICE_TIMER = "timer"
+SERVICE_ENABLE_TIMER = "enable_timer"
 ATTR_MINUTES = "minutes"
+SERVICE_ENABLE_PURE_BOOST = "enable_pure_boost"
+SERVICE_DISABLE_PURE_BOOST = "disable_pure_boost"
+
+ATTR_AC_INTEGRATION = "ac_integration"
+ATTR_GEO_INTEGRATION = "geo_integration"
+ATTR_INDOOR_INTEGRATION = "indoor_integration"
+ATTR_OUTDOOR_INTEGRATION = "outdoor_integration"
+ATTR_SENSITIVITY = "sensitivity"
+BOOST_INCLUSIVE = "boost_inclusive"
+
 PARALLEL_UPDATES = 0
 
 FIELD_TO_FLAG = {
@@ -88,12 +98,29 @@ async def async_setup_entry(
         "async_assume_state",
     )
     platform.async_register_entity_service(
-        SERVICE_TIMER,
+        SERVICE_ENABLE_TIMER,
         {
-            vol.Required(ATTR_STATE): vol.In(["on", "off"]),
-            vol.Optional(ATTR_MINUTES): cv.positive_int,
+            vol.Required(ATTR_MINUTES): cv.positive_int,
         },
-        "async_set_timer",
+        "async_enable_timer",
+    )
+    platform.async_register_entity_service(
+        SERVICE_ENABLE_PURE_BOOST,
+        {
+            vol.Inclusive(ATTR_AC_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_GEO_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_INDOOR_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_OUTDOOR_INTEGRATION, "settings"): bool,
+            vol.Inclusive(ATTR_SENSITIVITY, "settings"): vol.In(
+                ["Normal", "Sensitive"]
+            ),
+        },
+        "async_enable_pure_boost",
+    )
+    platform.async_register_entity_service(
+        SERVICE_DISABLE_PURE_BOOST,
+        {},
+        "async_disable_pure_boost",
     )
 
 
@@ -287,24 +314,48 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
         await self._async_set_ac_state_property("on", state != HVACMode.OFF, True)
         await self.coordinator.async_refresh()
 
-    async def async_set_timer(self, state: str, minutes: int | None = None) -> None:
-        """Set or delete timer."""
-        if state == "off" and self.device_data.timer_id is None:
-            raise HomeAssistantError("No timer to delete")
-
-        if state == "on" and minutes is None:
-            raise ValueError("No value provided for timer")
-
-        if state == "off":
-            result = await self.async_send_command("del_timer")
-        else:
-            new_state = bool(self.device_data.ac_states["on"] is False)
-            params = {
-                "minutesFromNow": minutes,
-                "acState": {**self.device_data.ac_states, "on": new_state},
-            }
-            result = await self.async_send_command("set_timer", params)
+    async def async_enable_timer(self, minutes: int) -> None:
+        """Enable the timer."""
+        new_state = bool(self.device_data.ac_states["on"] is False)
+        params = {
+            "minutesFromNow": minutes,
+            "acState": {**self.device_data.ac_states, "on": new_state},
+        }
+        result = await self.async_send_command("set_timer", params)
 
         if result["status"] == "success":
             return await self.coordinator.async_request_refresh()
-        raise HomeAssistantError(f"Could not set timer for device {self.name}")
+        raise HomeAssistantError(f"Could not enable timer for device {self.name}")
+
+    async def async_enable_pure_boost(
+        self,
+        ac_integration: bool | None = None,
+        geo_integration: bool | None = None,
+        indoor_integration: bool | None = None,
+        outdoor_integration: bool | None = None,
+        sensitivity: str | None = None,
+    ) -> None:
+        """Enable Pure Boost Configuration."""
+
+        params: dict[str, str | bool] = {
+            "enabled": True,
+        }
+        if sensitivity is not None:
+            params["sensitivity"] = sensitivity[0]
+        if indoor_integration is not None:
+            params["measurementsIntegration"] = indoor_integration
+        if ac_integration is not None:
+            params["acIntegration"] = ac_integration
+        if geo_integration is not None:
+            params["geoIntegration"] = geo_integration
+        if outdoor_integration is not None:
+            params["primeIntegration"] = outdoor_integration
+
+        await self.async_send_command("set_pure_boost", params)
+        await self.coordinator.async_refresh()
+
+    async def async_disable_pure_boost(self) -> None:
+        """Disable Pure Boost Configuration."""
+
+        await self.async_send_command("set_pure_boost", {"enabled": False})
+        await self.coordinator.async_refresh()

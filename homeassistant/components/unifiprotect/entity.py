@@ -118,11 +118,11 @@ class ProtectDeviceEntity(Entity):
         self.device = device
 
         if description is None:
-            self._attr_unique_id = f"{self.device.id}"
+            self._attr_unique_id = f"{self.device.mac}"
             self._attr_name = f"{self.device.name}"
         else:
             self.entity_description = description
-            self._attr_unique_id = f"{self.device.id}_{description.key}"
+            self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
 
