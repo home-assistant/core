@@ -1,6 +1,7 @@
 """Test diagnostics."""
 
 from typing import Any
+from unittest.mock import ANY
 
 from homeassistant import core, setup
 from homeassistant.components import google_assistant as ga, switch
@@ -27,6 +28,19 @@ async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
     config_entry = hass.config_entries.async_entries("google_assistant")[0]
     result = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert result == {
+        "config_entry": {
+            "data": {"project_id": "1234"},
+            "disabled_by": None,
+            "domain": "google_assistant",
+            "entry_id": ANY,
+            "options": {},
+            "pref_disable_new_entities": False,
+            "pref_disable_polling": False,
+            "source": "import",
+            "title": "1234",
+            "unique_id": "1234",
+            "version": 1,
+        },
         "sync": {
             "agentUserId": "**REDACTED**",
             "devices": [
@@ -65,5 +79,31 @@ async def test_diagnostics(hass: core.HomeAssistant, hass_client: Any):
                     },
                 },
             ],
-        }
+        },
+        "yaml_config": {
+            "expose_by_default": True,
+            "exposed_domains": [
+                "alarm_control_panel",
+                "binary_sensor",
+                "climate",
+                "cover",
+                "fan",
+                "group",
+                "humidifier",
+                "input_boolean",
+                "input_select",
+                "light",
+                "lock",
+                "media_player",
+                "scene",
+                "script",
+                "select",
+                "sensor",
+                "switch",
+                "vacuum",
+            ],
+            "project_id": "1234",
+            "report_state": False,
+            "service_account": "**REDACTED**",
+        },
     }
