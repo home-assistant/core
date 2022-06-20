@@ -19,7 +19,7 @@ class PowerviewEntry:
         coordinator: PowerviewShadeUpdateCoordinator,
         device_info: dict[str, Any],
     ) -> None:
-        """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
+        """Initialize PowerviewEntry to gather data for specific entry."""
         self.api: AioRequest = api
         self.room_data: dict[str, Any] = room_data
         self.scene_data: dict[str, Any] = scene_data

@@ -12,15 +12,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from .const import (
-    COORDINATOR,
-    DEVICE_INFO,
-    DEVICE_MAC_ADDRESS,
-    DEVICE_SERIAL_NUMBER,
-    DOMAIN,
-    PV_HUB_ADDRESS,
-)
-from .coordinator import PowerviewShadeUpdateCoordinator
+from .const import DEVICE_MAC_ADDRESS, DEVICE_SERIAL_NUMBER, DOMAIN, PV_HUB_ADDRESS
 
 REDACT_CONFIG = {
     CONF_HOST,
@@ -70,10 +62,9 @@ def _async_get_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    pv_data = hass.data[DOMAIN][entry.entry_id]
-    coordinator: PowerviewShadeUpdateCoordinator = pv_data[COORDINATOR]
-    shade_data = coordinator.data.get_all_raw_data()
-    hub_info = async_redact_data(pv_data[DEVICE_INFO], REDACT_CONFIG)
+    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    shade_data = pv_entry.coordinator.data.get_all_raw_data()
+    hub_info = async_redact_data(pv_entry.device_info, REDACT_CONFIG)
     return {"hub_info": hub_info, "shade_data": shade_data}
 
 
