@@ -396,7 +396,7 @@ class ZHAEntityRegistry:
             aux_channels,
         )
 
-        def decorator(zha_entity: Callable[..., Any]) -> Callable[..., Any]:
+        def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
             """Register a loose match rule.
 
             All non empty fields of a match rule must match.
