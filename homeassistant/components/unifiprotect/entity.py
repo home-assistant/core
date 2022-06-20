@@ -50,6 +50,8 @@ def _async_device_entities(
                 can_write = device.can_write(data.api.bootstrap.auth_user)
                 if description.ufp_perm == PermRequired.WRITE and not can_write:
                     continue
+                if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                    continue
 
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)

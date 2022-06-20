@@ -39,6 +39,7 @@ from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
+from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -151,16 +152,6 @@ def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
 
-def _get_light_motion_current(obj: Light) -> str:
-    # a bit of extra to allow On Motion Always/Dark
-    if (
-        obj.light_mode_settings.mode == LightModeType.MOTION
-        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
-    ):
-        return f"{LightModeType.MOTION.value}Dark"
-    return obj.light_mode_settings.mode.value
-
-
 def _get_doorbell_current(obj: Camera) -> str | None:
     if obj.lcd_message is None:
         return None
@@ -255,7 +246,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         icon="mdi:spotlight",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
-        ufp_value_fn=_get_light_motion_current,
+        ufp_value_fn=async_get_light_motion_current,
         ufp_set_method_fn=_set_light_mode,
         ufp_perm=PermRequired.WRITE,
     ),
