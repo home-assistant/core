@@ -52,7 +52,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     ProtectCamera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -83,7 +83,7 @@ async def camera_package_fixture(
 ):
     """Fixture for a single camera for testing the camera platform."""
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -95,7 +95,7 @@ async def camera_package_fixture(
     camera_obj.channels[0].rtsp_alias = "test_high_alias"
     camera_obj.channels[1].is_rtsp_enabled = False
     camera_obj.channels[2].is_rtsp_enabled = False
-    package_channel = camera_obj.channels[0].copy(deep=True)
+    package_channel = camera_obj.channels[0].copy()
     package_channel.is_rtsp_enabled = False
     package_channel.name = "Package Camera"
     package_channel.id = 3
@@ -246,7 +246,7 @@ async def test_basic_setup(
 ):
     """Test working setup of unifiprotect entry."""
 
-    camera_high_only = mock_camera.copy(deep=True)
+    camera_high_only = mock_camera.copy()
     camera_high_only._api = mock_entry.api
     camera_high_only.channels[0]._api = mock_entry.api
     camera_high_only.channels[1]._api = mock_entry.api
@@ -259,7 +259,7 @@ async def test_basic_setup(
     camera_high_only.channels[2].is_rtsp_enabled = False
     regenerate_device_ids(camera_high_only)
 
-    camera_medium_only = mock_camera.copy(deep=True)
+    camera_medium_only = mock_camera.copy()
     camera_medium_only._api = mock_entry.api
     camera_medium_only.channels[0]._api = mock_entry.api
     camera_medium_only.channels[1]._api = mock_entry.api
@@ -272,7 +272,7 @@ async def test_basic_setup(
     camera_medium_only.channels[2].is_rtsp_enabled = False
     regenerate_device_ids(camera_medium_only)
 
-    camera_all_channels = mock_camera.copy(deep=True)
+    camera_all_channels = mock_camera.copy()
     camera_all_channels._api = mock_entry.api
     camera_all_channels.channels[0]._api = mock_entry.api
     camera_all_channels.channels[1]._api = mock_entry.api
@@ -289,7 +289,7 @@ async def test_basic_setup(
     camera_all_channels.channels[2].rtsp_alias = "test_low_alias"
     regenerate_device_ids(camera_all_channels)
 
-    camera_no_channels = mock_camera.copy(deep=True)
+    camera_no_channels = mock_camera.copy()
     camera_no_channels._api = mock_entry.api
     camera_no_channels.channels[0]._api = mock_entry.api
     camera_no_channels.channels[1]._api = mock_entry.api
@@ -301,7 +301,7 @@ async def test_basic_setup(
     camera_no_channels.channels[2].is_rtsp_enabled = False
     regenerate_device_ids(camera_no_channels)
 
-    camera_package = mock_camera.copy(deep=True)
+    camera_package = mock_camera.copy()
     camera_package._api = mock_entry.api
     camera_package.channels[0]._api = mock_entry.api
     camera_package.channels[1]._api = mock_entry.api
@@ -313,7 +313,7 @@ async def test_basic_setup(
     camera_package.channels[1].is_rtsp_enabled = False
     camera_package.channels[2].is_rtsp_enabled = False
     regenerate_device_ids(camera_package)
-    package_channel = camera_package.channels[0].copy(deep=True)
+    package_channel = camera_package.channels[0].copy()
     package_channel.is_rtsp_enabled = False
     package_channel.name = "Package Camera"
     package_channel.id = 3
@@ -398,7 +398,7 @@ async def test_missing_channels(
 ):
     """Test setting up camera with no camera channels."""
 
-    camera = mock_camera.copy(deep=True)
+    camera = mock_camera.copy()
     camera.channels = []
 
     mock_entry.api.bootstrap.cameras = {camera.id: camera}

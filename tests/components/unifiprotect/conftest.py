@@ -13,6 +13,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from pyunifiprotect.data import (
     NVR,
+    Bootstrap,
     Camera,
     Chime,
     Doorlock,
@@ -42,69 +43,6 @@ from tests.common import (
 )
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
-
-
-@dataclass
-class MockBootstrap:
-    """Mock for Bootstrap."""
-
-    nvr: NVR
-    cameras: dict[str, Any]
-    lights: dict[str, Any]
-    sensors: dict[str, Any]
-    viewers: dict[str, Any]
-    liveviews: dict[str, Any]
-    events: dict[str, Any]
-    doorlocks: dict[str, Any]
-    chimes: dict[str, Any]
-
-    def reset_objects(self) -> None:
-        """Reset all devices on bootstrap for tests."""
-        self.cameras = {}
-        self.lights = {}
-        self.sensors = {}
-        self.viewers = {}
-        self.liveviews = {}
-        self.events = {}
-        self.doorlocks = {}
-        self.chimes = {}
-
-    def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
-        """Fake process method for tests."""
-        pass
-
-    def unifi_dict(self) -> dict[str, Any]:
-        """Return UniFi formatted dict representation of the NVR."""
-        return {
-            "nvr": self.nvr.unifi_dict(),
-            "cameras": [c.unifi_dict() for c in self.cameras.values()],
-            "lights": [c.unifi_dict() for c in self.lights.values()],
-            "sensors": [c.unifi_dict() for c in self.sensors.values()],
-            "viewers": [c.unifi_dict() for c in self.viewers.values()],
-            "liveviews": [c.unifi_dict() for c in self.liveviews.values()],
-            "doorlocks": [c.unifi_dict() for c in self.doorlocks.values()],
-            "chimes": [c.unifi_dict() for c in self.chimes.values()],
-        }
-
-    def get_device_from_mac(self, mac: str) -> ProtectAdoptableDeviceModel | None:
-        """Return device for MAC address."""
-
-        mac = mac.lower().replace(":", "").replace("-", "").replace("_", "")
-
-        all_devices = (
-            self.cameras.values(),
-            self.lights.values(),
-            self.sensors.values(),
-            self.viewers.values(),
-            self.liveviews.values(),
-            self.doorlocks.values(),
-            self.chimes.values(),
-        )
-        for devices in all_devices:
-            for device in devices:
-                if device.mac.lower() == mac:
-                    return device
-        return None
 
 
 @dataclass
@@ -160,27 +98,42 @@ def mock_old_nvr_fixture():
 @pytest.fixture(name="mock_bootstrap")
 def mock_bootstrap_fixture(mock_nvr: NVR):
     """Mock Bootstrap fixture."""
-    return MockBootstrap(
-        nvr=mock_nvr,
-        cameras={},
-        lights={},
-        sensors={},
-        viewers={},
-        liveviews={},
-        events={},
-        doorlocks={},
-        chimes={},
-    )
+    data = json.loads(load_fixture("sample_bootstrap.json", integration=DOMAIN))
+    data["nvr"] = mock_nvr
+    data["cameras"] = []
+    data["lights"] = []
+    data["sensors"] = []
+    data["viewers"] = []
+    data["liveviews"] = []
+    data["events"] = []
+    data["doorlocks"] = []
+    data["chimes"] = []
+
+    return Bootstrap.from_unifi_dict(**data)
+
+
+def reset_objects(bootstrap: Bootstrap):
+    """Reset bootstrap objects."""
+
+    bootstrap.cameras = {}
+    bootstrap.lights = {}
+    bootstrap.sensors = {}
+    bootstrap.viewers = {}
+    bootstrap.liveviews = {}
+    bootstrap.events = {}
+    bootstrap.doorlocks = {}
+    bootstrap.chimes = {}
 
 
 @pytest.fixture
-def mock_client(mock_bootstrap: MockBootstrap):
+def mock_client(mock_bootstrap: Bootstrap):
     """Mock ProtectApiClient for testing."""
     client = Mock()
     client.bootstrap = mock_bootstrap
 
-    nvr = mock_bootstrap.nvr
+    nvr = client.bootstrap.nvr
     nvr._api = client
+    client.bootstrap._api = client
 
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
