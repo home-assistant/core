@@ -5,7 +5,12 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera, CameraChannel, StateType
+from pyunifiprotect.data import (
+    Camera as UFPCamera,
+    CameraChannel,
+    ProtectModelWithId,
+    StateType,
+)
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -137,8 +142,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         )
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self.channel = self.device.channels[self.channel.id]
         motion_enabled = self.device.recording_settings.enable_motion_detection
         self._attr_motion_detection_enabled = (
