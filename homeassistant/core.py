@@ -1065,7 +1065,6 @@ class State:
     """
 
     __slots__ = [
-        "__weakref__",
         "entity_id",
         "state",
         "attributes",

@@ -21,7 +21,7 @@ from struct import error as StructError, pack, unpack_from
 import sys
 from typing import Any, cast
 from urllib.parse import urlencode as urllib_urlencode
-from weakref import WeakKeyDictionary, WeakValueDictionary
+import weakref
 
 import jinja2
 from jinja2 import pass_context, pass_environment
@@ -92,11 +92,6 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
-
-TEMPLATE_STATES_COLLECT: WeakKeyDictionary[State, TemplateState] = WeakKeyDictionary({})
-TEMPLATE_STATES_NO_COLLECT: WeakKeyDictionary[State, TemplateState] = WeakKeyDictionary(
-    {}
-)
 
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
@@ -898,13 +893,9 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
+@lru_cache(maxsize=4096)
 def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
-    if temlate_state := TEMPLATE_STATES_NO_COLLECT.get(state):
-        return temlate_state
-    template_state = TEMPLATE_STATES_NO_COLLECT[state] = TemplateState(
-        hass, state, collect=False
-    )
-    return template_state
+    return TemplateState(hass, state, collect=False)
 
 
 def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
@@ -924,11 +915,9 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
+@lru_cache(maxsize=4096)
 def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
-    if temlate_state := TEMPLATE_STATES_COLLECT.get(state):
-        return temlate_state
-    template_state = TEMPLATE_STATES_COLLECT[state] = TemplateState(hass, state)
-    return template_state
+    return TemplateState(hass, state)
 
 
 def _get_template_state_from_state(
@@ -1944,7 +1933,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
             undefined = jinja2.StrictUndefined
         super().__init__(undefined=undefined)
         self.hass = hass
-        self.template_cache = WeakValueDictionary()
+        self.template_cache = weakref.WeakValueDictionary()
         self.filters["round"] = forgiving_round
         self.filters["multiply"] = multiply
         self.filters["log"] = logarithm
