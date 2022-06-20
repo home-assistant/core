@@ -1,4 +1,4 @@
-"""Support for KNX/IP buttons."""
+"""Support for buttons."""
 from __future__ import annotations
 
 from homeassistant import config_entries
@@ -31,10 +31,10 @@ async def async_setup_entry(
 
 
 class SyncButton(ButtonEntity):
-    """Representation of a KNX button."""
+    """Representation of a synchronization button."""
 
     def __init__(self, project_id: str, google_config: GoogleConfig) -> None:
-        """Initialize a KNX button."""
+        """Initialize button."""
         super().__init__()
         self._google_config = google_config
         self._attr_entity_category = EntityCategory.DIAGNOSTIC

@@ -1,4 +1,4 @@
-"""Config flow for AWS component."""
+"""Config flow for google assistant component."""
 
 from homeassistant import config_entries
 
