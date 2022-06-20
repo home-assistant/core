@@ -225,7 +225,7 @@ def _false(arg: str) -> bool:
 
 
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
-def _cached_literal_eval(result: Any) -> Any:
+def _cached_literal_eval(result: str) -> Any:
     return literal_eval(result)
 
 
