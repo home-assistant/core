@@ -82,6 +82,7 @@ def mock_stream_settings(hass):
             part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
             hls_advance_part_limit=3,
             hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+            format_name=None,
         )
     }
 
@@ -946,6 +947,7 @@ async def test_worker_disable_ll_hls(hass):
         part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
         hls_advance_part_limit=3,
         hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+        format_name=None,
     )
     py_av = MockPyAv()
     py_av.container.format.name = "hls"

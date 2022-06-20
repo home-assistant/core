@@ -457,7 +457,12 @@ def stream_worker(
         pyav_options["timeout"] = pyav_options["stimeout"]
         del pyav_options["stimeout"]
     try:
-        container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
+        container = av.open(
+            source,
+            format=stream_settings.format_name,
+            options=pyav_options,
+            timeout=SOURCE_TIMEOUT,
+        )
     except av.AVError as err:
         raise StreamWorkerError(
             f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"

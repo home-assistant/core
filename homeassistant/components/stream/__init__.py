@@ -40,6 +40,7 @@ from .const import (
     ATTR_SETTINGS,
     ATTR_STREAMS,
     CONF_EXTRA_PART_WAIT_TIME,
+    CONF_LIVE_FLV,
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
@@ -66,6 +67,7 @@ from .hls import HlsStreamOutput, async_setup_hls
 __all__ = [
     "ATTR_SETTINGS",
     "CONF_EXTRA_PART_WAIT_TIME",
+    "CONF_LIVE_FLV",
     "CONF_RTSP_TRANSPORT",
     "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
     "DOMAIN",
@@ -127,6 +129,8 @@ def create_stream(
             pyav_options["rtsp_transport"] = rtsp_transport
         if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
             pyav_options["use_wallclock_as_timestamps"] = "1"
+        if stream_options.get(CONF_LIVE_FLV):
+            stream_settings.format_name = "live_flv"
 
         return pyav_options, stream_settings
 
@@ -222,6 +226,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=conf[CONF_PART_DURATION],
             hls_advance_part_limit=max(int(3 / conf[CONF_PART_DURATION]), 3),
             hls_part_timeout=2 * conf[CONF_PART_DURATION],
+            format_name=None,
         )
     else:
         hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
@@ -231,6 +236,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             part_target_duration=TARGET_SEGMENT_DURATION_NON_LL_HLS,
             hls_advance_part_limit=3,
             hls_part_timeout=TARGET_SEGMENT_DURATION_NON_LL_HLS,
+            format_name=None,
         )
 
     # Setup HLS
@@ -548,5 +554,6 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
         vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        vol.Optional(CONF_LIVE_FLV): bool,
     }
 )

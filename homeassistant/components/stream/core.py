@@ -35,6 +35,7 @@ class StreamSettings:
     part_target_duration: float = attr.ib()
     hls_advance_part_limit: int = attr.ib()
     hls_part_timeout: float = attr.ib()
+    format_name: str | None = attr.ib()
 
 
 @attr.s(slots=True)
