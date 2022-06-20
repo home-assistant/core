@@ -22,6 +22,8 @@ class TypeHintMatch:
     function_name: str
     arg_types: dict[int, str]
     return_type: list[str] | str | None | object
+    kwarg_types: dict[str, str] | None = None
+    kwargs_type: str | None = None
     check_return_type_inheritance: bool = False
 
 
@@ -440,7 +442,36 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
-    ]
+    ],
+    "light": [
+        ClassTypeHintMatch(
+            base_class="LightEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="turn_on",
+                    arg_types={},
+                    kwarg_types={
+                        "brightness": "int | None",
+                        "effect": "str | None",
+                        "rgb_color": "tuple[int, int, int] | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_turn_on",
+                    arg_types={},
+                    kwarg_types={
+                        "brightness": "int | None",
+                        "effect": "str | None",
+                        "rgb_color": "tuple[int, int, int] | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+            ],
+        ),
+    ],
 }
 
 
@@ -551,6 +582,40 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     return annotations
 
 
+def _get_kw_annotation(node: nodes.FunctionDef, key: str) -> nodes.NodeNG | None:
+    args = node.args
+    for index, arg_name in enumerate(args.posonlyargs):
+        if key == arg_name.name:
+            return args.posonlyargs_annotations[index]
+
+    for index, arg_name in enumerate(args.args):
+        if key == arg_name.name:
+            return args.annotations[index]
+
+    for index, arg_name in enumerate(args.kwonlyargs):
+        if key == arg_name.name:
+            return args.kwonlyargs_annotations[index]
+
+    return None
+
+
+def _get_kw_node(node: nodes.FunctionDef, key: str) -> nodes.NodeNG | None:
+    args = node.args
+    for index, arg_name in enumerate(args.posonlyargs):
+        if key == arg_name.name:
+            return arg_name
+
+    for index, arg_name in enumerate(args.args):
+        if key == arg_name.name:
+            return arg_name
+
+    for index, arg_name in enumerate(args.kwonlyargs):
+        if key == arg_name.name:
+            return arg_name
+
+    return node
+
+
 def _has_valid_annotations(
     annotations: list[nodes.NodeNG | None],
 ) -> bool:
@@ -578,7 +643,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W7431": (
-            "Argument %d should be of type %s",
+            "Argument %s should be of type %s",
             "hass-argument-type",
             "Used when method argument type is incorrect",
         ),
@@ -659,7 +724,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             return
 
-        # Check that all arguments are correctly annotated.
+        # Check that all positional arguments are correctly annotated.
         for key, expected_type in match.arg_types.items():
             if not _is_valid_type(expected_type, annotations[key]):
                 self.add_message(
@@ -667,6 +732,17 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     node=node.args.args[key],
                     args=(key + 1, expected_type),
                 )
+
+        # Check that all keyword arguments are correctly annotated.
+        if match.kwarg_types is not None:
+            for kwkey, expected_type in match.kwarg_types.items():
+                annotation = _get_kw_annotation(node, kwkey)
+                if annotation and not _is_valid_type(expected_type, annotation):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=_get_kw_node(node, kwkey),
+                        args=(kwkey, expected_type),
+                    )
 
         # Check the return type.
         if not _is_valid_return_type(match, node.returns):

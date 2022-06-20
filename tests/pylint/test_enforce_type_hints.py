@@ -469,3 +469,69 @@ def test_valid_config_flow_async_get_options_flow(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_light_entity(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for ConfigFlow async_get_options_flow."""
+    class_node, func_node, brightness_node, effect_node = astroid.extract_node(
+        """
+    class LightEntity():
+        pass
+
+    class SomeLight( #@
+        LightEntity
+    ):
+        async def async_turn_on( #@
+            self,
+            brightness: float | None = None,  #@
+            effect: int | None = None,  #@
+            **kwargs
+        ) -> bool:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("brightness", ["int | None"]),
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("effect", ["str | None"]),
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("kwargs", "Any"),
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="None",
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=27,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
