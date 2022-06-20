@@ -5,7 +5,7 @@ import asyncio
 from enum import Enum
 from functools import partialmethod, wraps
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import (
@@ -39,6 +39,9 @@ from ..const import (
     ZHA_CHANNEL_READS_PER_REQ,
 )
 from ..helpers import LogMixin, retryable_req, safe_read
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -105,7 +108,7 @@ class ZigbeeChannel(LogMixin):
     ZCL_INIT_ATTRS: dict[int | str, bool] = {}
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
     ) -> None:
         """Initialize ZigbeeChannel."""
         self._generic_id = f"channel_0x{cluster.cluster_id:04x}"

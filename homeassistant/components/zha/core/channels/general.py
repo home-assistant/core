@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Coroutine
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
 import zigpy.types as t
@@ -27,6 +27,9 @@ from ..const import (
     SIGNAL_UPDATE_DEVICE,
 )
 from .base import ClientChannel, ZigbeeChannel, parse_and_log_command
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Alarms.cluster_id)
@@ -305,7 +308,7 @@ class OnOffChannel(ZigbeeChannel):
     }
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
     ) -> None:
         """Initialize OnOffChannel."""
         super().__init__(cluster, ch_pool)
