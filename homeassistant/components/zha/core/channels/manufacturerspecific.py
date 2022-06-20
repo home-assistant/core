@@ -44,7 +44,7 @@ class SmartThingsHumidity(ZigbeeChannel):
 class OsramButton(ZigbeeChannel):
     """Osram button channel."""
 
-    REPORT_CONFIG: list[ReportConfig] = []
+    REPORT_CONFIG = ()
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
@@ -52,7 +52,7 @@ class OsramButton(ZigbeeChannel):
 class PhillipsRemote(ZigbeeChannel):
     """Phillips remote channel."""
 
-    REPORT_CONFIG: list[ReportConfig] = []
+    REPORT_CONFIG = ()
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
@@ -60,7 +60,7 @@ class PhillipsRemote(ZigbeeChannel):
 class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
-    REPORT_CONFIG: list[ReportConfig] = []
+    REPORT_CONFIG = ()
 
     def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Opple channel."""
@@ -121,4 +121,4 @@ class SmartThingsAcceleration(ZigbeeChannel):
 class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
-    REPORT_CONFIG: list[ReportConfig] = []
+    REPORT_CONFIG = ()
