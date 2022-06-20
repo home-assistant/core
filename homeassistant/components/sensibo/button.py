@@ -63,5 +63,6 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
         """Press the button."""
         result = await self.async_send_command("reset_filter")
         if result["status"] == "success":
-            return await self.coordinator.async_request_refresh()
+            await self.coordinator.async_request_refresh()
+            return
         raise HomeAssistantError(f"Could not set calibration for device {self.name}")
