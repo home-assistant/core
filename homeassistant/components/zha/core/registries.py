@@ -16,6 +16,7 @@ from homeassistant.const import Platform
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
+from ..entity import ZhaEntity, ZhaGroupEntity
 from .decorators import DictRegistry, SetRegistry
 
 if TYPE_CHECKING:
@@ -214,7 +215,7 @@ class MatchRule:
 class EntityClassAndChannels:
     """Container for entity class and corresponding channels."""
 
-    entity_class: Callable[..., Any]
+    entity_class: type[ZhaEntity]
     claimed_channel: list[ZigbeeChannel]
 
 
@@ -224,19 +225,19 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: dict[
-            str, dict[MatchRule, Callable[..., Any]]
+            str, dict[MatchRule, type[ZhaEntity]]
         ] = collections.defaultdict(dict)
         self._multi_entity_registry: dict[
-            str, dict[int | str | None, dict[MatchRule, list[Callable[..., Any]]]]
+            str, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._config_diagnostic_entity_registry: dict[
-            str, dict[int | str | None, dict[MatchRule, list[Callable[..., Any]]]]
+            str, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
-        self._group_registry: dict[str, Callable[..., Any]] = {}
+        self._group_registry: dict[str, type[ZhaGroupEntity]] = {}
         self.single_device_matches: dict[
             Platform, dict[EUI64, list[str]]
         ] = collections.defaultdict(lambda: collections.defaultdict(list))
@@ -247,8 +248,8 @@ class ZHAEntityRegistry:
         manufacturer: str,
         model: str,
         channels: list[ZigbeeChannel],
-        default: Callable[..., Any] = None,
-    ) -> tuple[Callable[..., Any], list[ZigbeeChannel]]:
+        default: type[ZhaEntity] | None = None,
+    ) -> tuple[type[ZhaEntity] | None, list[ZigbeeChannel]]:
         """Match a ZHA Channels to a ZHA Entity class."""
         matches = self._strict_registry[component]
         for match in sorted(matches, key=lambda x: x.weight, reverse=True):
@@ -309,7 +310,7 @@ class ZHAEntityRegistry:
 
         return result, list(all_claimed)
 
-    def get_group_entity(self, component: str) -> Callable[..., Any]:
+    def get_group_entity(self, component: str) -> type[ZhaGroupEntity] | None:
         """Match a ZHA group to a ZHA Entity class."""
         return self._group_registry.get(component)
 
