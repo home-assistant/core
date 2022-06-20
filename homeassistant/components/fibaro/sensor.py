@@ -30,48 +30,51 @@ from . import FIBARO_DEVICES, FibaroDevice
 from .const import DOMAIN
 
 # List of known sensors which represents a fibaro device
-MAIN_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
-        key="com.fibaro.temperatureSensor",
-        name="Temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="com.fibaro.smokeSensor",
-        name="Smoke",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        icon="mdi:fire",
-    ),
-    SensorEntityDescription(
-        key="CO2",
-        name="CO2",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
-        device_class=SensorDeviceClass.CO2,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="com.fibaro.humiditySensor",
-        name="Humidity",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.HUMIDITY,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="com.fibaro.lightSensor",
-        name="Light",
-        native_unit_of_measurement=LIGHT_LUX,
-        device_class=SensorDeviceClass.ILLUMINANCE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    SensorEntityDescription(
-        key="com.fibaro.energyMeter",
-        name="Energy",
-        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-)
+MAIN_SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    entry.key: entry
+    for entry in [
+        SensorEntityDescription(
+            key="com.fibaro.temperatureSensor",
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="com.fibaro.smokeSensor",
+            name="Smoke",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            icon="mdi:fire",
+        ),
+        SensorEntityDescription(
+            key="CO2",
+            name="CO2",
+            native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="com.fibaro.humiditySensor",
+            name="Humidity",
+            native_unit_of_measurement=PERCENTAGE,
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="com.fibaro.lightSensor",
+            name="Light",
+            native_unit_of_measurement=LIGHT_LUX,
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        SensorEntityDescription(
+            key="com.fibaro.energyMeter",
+            name="Energy",
+            native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+        ),
+    ]
+}
 
 # List of additional sensors which are created based on a property
 # The key is the property name
@@ -108,11 +111,8 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
-        entity_description = None
-        for desc in MAIN_SENSOR_TYPES:
-            if desc.key == device.type:
-                entity_description = desc
-                break
+        entity_description = MAIN_SENSOR_TYPES.get(device.type, None)
+
         # main sensors are created even if the entity type is not known
         entities.append(FibaroSensor(device, entity_description))
 
