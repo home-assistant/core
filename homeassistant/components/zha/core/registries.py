@@ -4,7 +4,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, TypeVar
 
 import attr
 from zigpy import zcl
