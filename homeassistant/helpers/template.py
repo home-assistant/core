@@ -98,6 +98,7 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
 )
 
 CACHED_TEMPLATE_STATES = 256
+EVAL_CACHE_SIZE = 256
 
 
 @bind_hass
@@ -223,7 +224,7 @@ def _false(arg: str) -> bool:
     return False
 
 
-@lru_cache(maxsize=256)
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _cached_literal_eval(result: Any) -> Any:
     return literal_eval(result)
 
