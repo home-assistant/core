@@ -111,7 +111,7 @@ async def async_setup_entry(
     entities: list[SensorEntity] = []
 
     for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][Platform.SENSOR]:
-        entity_description = MAIN_SENSOR_TYPES.get(device.type, None)
+        entity_description = MAIN_SENSOR_TYPES.get(device.type)
 
         # main sensors are created even if the entity type is not known
         entities.append(FibaroSensor(device, entity_description))
