@@ -93,5 +93,5 @@ class PowerViewShadeBatterySensor(ShadeEntity, SensorEntity):
         self.async_write_ha_state()
 
     async def async_update(self) -> None:
-        """Refresh shade position."""
+        """Refresh shade battery."""
         await self._shade.refreshBattery()

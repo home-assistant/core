@@ -53,7 +53,7 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_SET_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -62,7 +62,7 @@ async def async_setup_entry(
         "async_set_lock_user_code",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_ENABLE_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -70,7 +70,7 @@ async def async_setup_entry(
         "async_enable_lock_user_code",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_DISABLE_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
@@ -78,7 +78,7 @@ async def async_setup_entry(
         "async_disable_lock_user_code",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_CLEAR_LOCK_USER_CODE,
         {
             vol.Required("code_slot"): vol.Coerce(int),
