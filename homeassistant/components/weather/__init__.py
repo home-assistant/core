@@ -628,8 +628,9 @@ class WeatherEntity(Entity):
                     to_temp_unit = self.hass.config.units.temperature_unit
 
                 with suppress(ValueError):
+                    temperature_f = float(temperature)
                     value_temp = UNIT_CONVERSIONS[ATTR_TEMPERATURE_UOM](
-                        temperature,
+                        temperature_f,
                         from_temp_unit,
                         to_temp_unit,
                     )
@@ -642,8 +643,9 @@ class WeatherEntity(Entity):
                     forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
                 ):
                     with suppress(ValueError):
+                        forecast_temp_low_f = float(forecast_temp_low)
                         value_temp_low = UNIT_CONVERSIONS[ATTR_TEMPERATURE_UOM](
-                            forecast_temp_low,
+                            forecast_temp_low_f,
                             from_temp_unit,
                             to_temp_unit,
                         )
@@ -663,9 +665,10 @@ class WeatherEntity(Entity):
                         from_pressure_unit = self.pressure_unit
                         to_pressure_unit = self.hass.config.units.pressure_unit
                     with suppress(ValueError):
+                        forecast_pressure_f = float(forecast_pressure)
                         forecast_entry[ATTR_FORECAST_PRESSURE] = round(
                             UNIT_CONVERSIONS[ATTR_PRESSURE_UOM](
-                                forecast_pressure,
+                                forecast_pressure_f,
                                 from_pressure_unit,
                                 to_pressure_unit,
                             ),
@@ -685,15 +688,20 @@ class WeatherEntity(Entity):
                         from_wind_speed_unit = self.wind_speed_unit
                         to_wind_speed_unit = self.hass.config.units.wind_speed_unit
                     with suppress(ValueError):
+                        forecast_wind_speed_f = float(forecast_wind_speed)
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = round(
                             UNIT_CONVERSIONS[ATTR_WIND_SPEED_UOM](
-                                forecast_wind_speed,
+                                forecast_wind_speed_f,
                                 from_wind_speed_unit,
                                 to_wind_speed_unit,
                             ),
                             ROUNDING_PRECISION,
                         )
 
+                from_precipitation_unit = self.precipitation_unit
+                to_precipitation_unit = (
+                    self.hass.config.units.accumulated_precipitation_unit
+                )
                 if forecast_precipitation := forecast_entry.get(
                     ATTR_FORECAST_NATIVE_PRECIPITATION,
                     forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
@@ -703,15 +711,11 @@ class WeatherEntity(Entity):
                     ) is not None:
                         from_precipitation_unit = native_precipitation_unit
                         to_precipitation_unit = self.precipitation_unit
-                    else:
-                        from_precipitation_unit = self.precipitation_unit
-                        to_precipitation_unit = (
-                            self.hass.config.units.accumulated_precipitation_unit
-                        )
                     with suppress(ValueError):
+                        forecast_precipitation_f = float(forecast_precipitation)
                         forecast_entry[ATTR_FORECAST_PRECIPITATION] = round(
                             UNIT_CONVERSIONS[ATTR_PRECIPITATION_UOM](
-                                forecast_precipitation,
+                                forecast_precipitation_f,
                                 from_precipitation_unit,
                                 to_precipitation_unit,
                             ),
