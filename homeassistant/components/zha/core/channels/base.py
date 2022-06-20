@@ -49,7 +49,7 @@ _LOGGER = logging.getLogger(__name__)
 class AttrReportConfig(TypedDict, total=True):
     """Configuration to report for the attributes."""
 
-    attr: str
+    attr: str | int
     config: tuple[int, int, int | float]
 
 
