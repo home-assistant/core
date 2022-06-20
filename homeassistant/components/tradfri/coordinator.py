@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from pytradfri.command import Command
 from pytradfri.device import Device
 from pytradfri.error import RequestError
+from pytradfri.resource import ApiResource
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -53,8 +54,9 @@ class TradfriDeviceDataUpdateCoordinator(DataUpdateCoordinator[Device]):
             await self.async_request_refresh()
 
     @callback
-    def _observe_update(self, device: Device) -> None:
+    def _observe_update(self, device: ApiResource) -> None:
         """Update the coordinator for a device when a change is detected."""
+        device = cast(Device, device)
         self.async_set_updated_data(data=device)
 
     @callback
