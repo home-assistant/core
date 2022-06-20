@@ -169,7 +169,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.light",
     "homeassistant.components.zha.select",
     "homeassistant.components.zha.sensor",
-    "homeassistant.components.zha.siren",
     "homeassistant.components.zha.switch",
 ]
 
