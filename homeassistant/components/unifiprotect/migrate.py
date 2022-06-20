@@ -147,12 +147,12 @@ async def async_migrate_device_ids(
         try:
             registry.async_update_entity(entity.entity_id, new_unique_id=new_unique_id)
         except ValueError as err:
-            print(err)
             _LOGGER.warning(
-                "Could not migrate entity %s (old unique_id: %s, new unique_id: %s)",
+                "Could not migrate entity %s (old unique_id: %s, new unique_id: %s): %s",
                 entity.entity_id,
                 entity.unique_id,
                 new_unique_id,
+                err,
             )
         else:
             count += 1
