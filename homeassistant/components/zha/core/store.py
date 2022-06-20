@@ -5,7 +5,7 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 import datetime
 import time
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import attr
 
@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 from homeassistant.loader import bind_hass
 
-from .device import ZHADevice
+if TYPE_CHECKING:
+    from .device import ZHADevice
 
 DATA_REGISTRY = "zha_storage"
 
