@@ -2,7 +2,6 @@
   "config": {
     "step": {
       "user": {
-        "description": "TODO.",
         "data": {
           "name": "[%key:common::config_flow::data::name%]",
           "device_key": "The device key of your device",

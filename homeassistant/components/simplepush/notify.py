@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_ENCRYPTED, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT
 
-# Configuring simplepsuh under the notify platform will be deprecated in 2022.8.0
+# Configuring simplepush under the notify platform will be deprecated in 2022.8.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE_KEY): cv.string,

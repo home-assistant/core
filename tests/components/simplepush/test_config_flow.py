@@ -1,4 +1,4 @@
-"""Test NFAndroidTV config flow."""
+"""Test Simplepush config flow."""
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PASSWORD

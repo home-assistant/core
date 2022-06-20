@@ -11,8 +11,7 @@
                     "name": "Name",
                     "password": "The password of the encryption used by your device",
                     "salt": "The salt used by your device."
-                },
-                "description": "TODO."
+                }
             }
         }
     }
