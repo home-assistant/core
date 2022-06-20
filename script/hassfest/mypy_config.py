@@ -165,7 +165,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.core.registries",
     "homeassistant.components.zha.core.store",
     "homeassistant.components.zha.cover",
-    "homeassistant.components.zha.device_tracker",
     "homeassistant.components.zha.entity",
     "homeassistant.components.zha.fan",
     "homeassistant.components.zha.light",
