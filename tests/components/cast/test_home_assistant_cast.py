@@ -102,6 +102,35 @@ async def test_use_cloud_url(hass, mock_zeroconf):
     assert controller.hass_url == "https://something.nabu.casa"
 
 
+async def test_not_prefer_external(hass, mock_zeroconf):
+    """Test casting via the internal URL."""
+    await async_process_ha_core_config(
+        hass,
+        {
+            "external_url": "https://external.example.com",
+            "internal_url": "https://internal.example.org",
+        },
+    )
+    await home_assistant_cast.async_setup_ha_cast(hass, MockConfigEntry())
+    calls = async_mock_signal(hass, home_assistant_cast.SIGNAL_HASS_CAST_SHOW_VIEW)
+
+    await hass.services.async_call(
+        "cast",
+        "show_lovelace_view",
+        {
+            "entity_id": "media_player.kitchen",
+            "view_path": "mock_path",
+            "dashboard_path": "mock-dashboard",
+            "prefer_external": False,
+        },
+        blocking=True,
+    )
+
+    assert len(calls) == 1
+    controller = calls[0][0]
+    assert controller.hass_url == "https://internal.example.org"
+
+
 async def test_remove_entry(hass, mock_zeroconf):
     """Test removing config entry removes user."""
     entry = MockConfigEntry(

@@ -23,3 +23,9 @@ show_lovelace_view:
       example: downstairs
       selector:
         text:
+    prefer_external:
+      name: Prefer external
+      description: Prefer the external URL of Home Assistant.
+      default: true
+      selector:
+        boolean:

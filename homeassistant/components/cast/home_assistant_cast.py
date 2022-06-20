@@ -16,6 +16,7 @@ from .const import DOMAIN, SIGNAL_HASS_CAST_SHOW_VIEW
 SERVICE_SHOW_VIEW = "show_lovelace_view"
 ATTR_VIEW_PATH = "view_path"
 ATTR_URL_PATH = "dashboard_path"
+ATTR_PREFER_EXTERNAL = "prefer_external"
 NO_URL_AVAILABLE_ERROR = "Home Assistant Cast requires your instance to be reachable via HTTPS. Enable Home Assistant Cloud or set up an external URL with valid SSL certificates"
 
 
@@ -45,7 +46,11 @@ async def async_setup_ha_cast(
     async def handle_show_view(call: core.ServiceCall) -> None:
         """Handle a Show View service call."""
         try:
-            hass_url = get_url(hass, require_ssl=True, prefer_external=True)
+            hass_url = get_url(
+                hass,
+                require_ssl=True,
+                prefer_external=call.data.get(ATTR_PREFER_EXTERNAL, True),
+            )
         except NoURLAvailableError as err:
             raise HomeAssistantError(NO_URL_AVAILABLE_ERROR) from err
 
@@ -76,6 +81,7 @@ async def async_setup_ha_cast(
                 ATTR_ENTITY_ID: cv.entity_id,
                 ATTR_VIEW_PATH: str,
                 vol.Optional(ATTR_URL_PATH): str,
+                vol.Optional(ATTR_PREFER_EXTERNAL): bool,
             }
         ),
     )
