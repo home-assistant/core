@@ -97,7 +97,7 @@ async def test_form_validate_input(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch("wallbox.Wallbox.authenticate", return_value=None,), patch(
+    with patch("wallbox.Wallbox.authenticate", return_value=None), patch(
         "wallbox.Wallbox.getChargerStatus",
         return_value=test_response,
     ):
