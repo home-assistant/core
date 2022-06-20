@@ -442,6 +442,8 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ),
     ],
 }
+# Properties are normally checked by mypy, and will only be checked
+# by pylint when --ignore-missing-annotations is False
 _PROPERTY_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "lock": [
         ClassTypeHintMatch(
