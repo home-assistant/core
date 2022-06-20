@@ -15,7 +15,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 if TYPE_CHECKING:
     from . import ChannelPool
@@ -66,9 +66,9 @@ class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG = (
-        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_OP},
-        {"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "status", "config": REPORT_CONFIG_ASAP},
+        AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="current_summ_delivered", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {
         "demand_formatting": True,
