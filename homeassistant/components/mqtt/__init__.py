@@ -80,6 +80,7 @@ from .const import (  # noqa: F401
     MQTT_DISCONNECTED,
     MQTT_RELOADED,
     PLATFORMS,
+    RELOADABLE_PLATFORMS,
 )
 from .models import (  # noqa: F401
     MqttCommandTemplate,
@@ -380,7 +381,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Setup reload service. Once support for legacy config is removed in 2022.9, we
     # should no longer call async_setup_reload_service but instead implement a custom
     # service
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
+    await async_setup_reload_service(hass, DOMAIN, RELOADABLE_PLATFORMS)
 
     async def _async_reload_platforms(_: Event | None) -> None:
         """Discover entities for a platform."""
