@@ -109,7 +109,7 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG: tuple[AttrReportConfig] = ()
+    REPORT_CONFIG: tuple[AttrReportConfig, ...] = ()
     BIND: bool = True
 
     # Dict of attributes to read on channel initialization.
