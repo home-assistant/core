@@ -4,7 +4,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import attr
 from zigpy import zcl
@@ -16,11 +16,15 @@ from homeassistant.const import Platform
 
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
-from ..entity import ZhaEntity, ZhaGroupEntity
 from .decorators import DictRegistry, SetRegistry
 
 if TYPE_CHECKING:
+    from ..entity import ZhaEntity, ZhaGroupEntity
     from .channels.base import ClientChannel, ZigbeeChannel
+
+
+_ZhaEntityT = TypeVar("_ZhaEntityT", bound=type["ZhaEntity"])
+_ZhaGroupEntityT = TypeVar("_ZhaGroupEntityT", bound=type["ZhaGroupEntity"])
 
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
@@ -322,14 +326,14 @@ class ZHAEntityRegistry:
         manufacturers: Callable | set[str] | str = None,
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a strict match rule."""
 
         rule = MatchRule(
             channel_names, generic_ids, manufacturers, models, aux_channels
         )
 
-        def decorator(zha_ent: Callable[..., Any]) -> Callable[..., Any]:
+        def decorator(zha_ent: _ZhaEntityT) -> _ZhaEntityT:
             """Register a strict match rule.
 
             All non empty fields of a match rule must match.
@@ -348,7 +352,7 @@ class ZHAEntityRegistry:
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
         stop_on_match_group: int | str | None = None,
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
         rule = MatchRule(
@@ -359,7 +363,7 @@ class ZHAEntityRegistry:
             aux_channels,
         )
 
-        def decorator(zha_entity: Callable[..., Any]) -> Callable[..., Any]:
+        def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
             """Register a loose match rule.
 
             All non empty fields of a match rule must match.
@@ -381,7 +385,7 @@ class ZHAEntityRegistry:
         models: Callable | set[str] | str = None,
         aux_channels: Callable | set[str] | str = None,
         stop_on_match_group: int | str | None = None,
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
         rule = MatchRule(
@@ -407,10 +411,10 @@ class ZHAEntityRegistry:
 
     def group_match(
         self, component: str
-    ) -> Callable[[Callable[..., Any]], Callable[..., Any]]:
+    ) -> Callable[[_ZhaGroupEntityT], _ZhaGroupEntityT]:
         """Decorate a group match rule."""
 
-        def decorator(zha_ent: Callable[..., Any]) -> Callable[..., Any]:
+        def decorator(zha_ent: _ZhaGroupEntityT) -> _ZhaGroupEntityT:
             """Register a group match rule."""
             self._group_registry[component] = zha_ent
             return zha_ent
