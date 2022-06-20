@@ -471,10 +471,10 @@ def test_valid_config_flow_async_get_options_flow(
         type_hint_checker.visit_classdef(class_node)
 
 
-def test_invalid_lock_entity(
+def test_invalid_entity_properties(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
-    """Ensure invalid hints are rejected for LockEntity properties."""
+    """Check missing entity properties are rejected ignore_missing_annotations=no."""
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
@@ -508,4 +508,30 @@ def test_invalid_lock_entity(
             end_col_offset=18,
         ),
     ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_ignore_invalid_entity_properties(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    class_node = astroid.extract_node(
+        """
+    class LockEntity():
+        pass
+
+    class DoorLock( #@
+        LockEntity
+    ):
+        @property
+        def changed_by(
+            self
+        ):
+            pass
+    """,
+        "homeassistant.components.pylint_test.lock",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
