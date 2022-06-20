@@ -19,7 +19,7 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import ClientChannel, ReportConfig, ZigbeeChannel
+from .base import AttrReportConfig, ClientChannel, ZigbeeChannel
 
 if TYPE_CHECKING:
     from . import ChannelPool
@@ -88,10 +88,10 @@ class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
     REPORT_CONFIG = (
-        ReportConfig(attr="acceleration", config=REPORT_CONFIG_ASAP),
-        ReportConfig(attr="x_axis", config=REPORT_CONFIG_ASAP),
-        ReportConfig(attr="y_axis", config=REPORT_CONFIG_ASAP),
-        ReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="acceleration", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="x_axis", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="y_axis", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
     )
 
     @callback

@@ -22,7 +22,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import ReportConfig, ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 AttributeUpdateRecord = namedtuple("AttributeUpdateRecord", "attr_id, attr_name, value")
 REPORT_CONFIG_CLIMATE = (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 25)
@@ -41,7 +41,7 @@ class FanChannel(ZigbeeChannel):
 
     _value_attribute = 0
 
-    REPORT_CONFIG = (ReportConfig(attr="fan_mode", config=REPORT_CONFIG_OP),)
+    REPORT_CONFIG = (AttrReportConfig(attr="fan_mode", config=REPORT_CONFIG_OP),)
     ZCL_INIT_ATTRS = {"fan_mode_sequence": True}
 
     @property
@@ -90,17 +90,25 @@ class ThermostatChannel(ZigbeeChannel):
     """Thermostat channel."""
 
     REPORT_CONFIG = (
-        ReportConfig(attr="local_temperature", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="occupied_cooling_setpoint", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="occupied_heating_setpoint", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="unoccupied_cooling_setpoint", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="unoccupied_heating_setpoint", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="running_mode", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="running_state", config=REPORT_CONFIG_CLIMATE_DEMAND),
-        ReportConfig(attr="system_mode", config=REPORT_CONFIG_CLIMATE),
-        ReportConfig(attr="occupancy", config=REPORT_CONFIG_CLIMATE_DISCRETE),
-        ReportConfig(attr="pi_cooling_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
-        ReportConfig(attr="pi_heating_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
+        AttrReportConfig(attr="local_temperature", config=REPORT_CONFIG_CLIMATE),
+        AttrReportConfig(
+            attr="occupied_cooling_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(
+            attr="occupied_heating_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(
+            attr="unoccupied_cooling_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(
+            attr="unoccupied_heating_setpoint", config=REPORT_CONFIG_CLIMATE
+        ),
+        AttrReportConfig(attr="running_mode", config=REPORT_CONFIG_CLIMATE),
+        AttrReportConfig(attr="running_state", config=REPORT_CONFIG_CLIMATE_DEMAND),
+        AttrReportConfig(attr="system_mode", config=REPORT_CONFIG_CLIMATE),
+        AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_CLIMATE_DISCRETE),
+        AttrReportConfig(attr="pi_cooling_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
+        AttrReportConfig(attr="pi_heating_demand", config=REPORT_CONFIG_CLIMATE_DEMAND),
     )
     ZCL_INIT_ATTRS: dict[int | str, bool] = {
         "abs_min_heat_setpoint_limit": True,

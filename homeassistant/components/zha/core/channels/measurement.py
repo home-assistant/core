@@ -8,14 +8,16 @@ from ..const import (
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
 )
-from .base import ReportConfig, ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.FlowMeasurement.cluster_id)
 class FlowMeasurement(ZigbeeChannel):
     """Flow Measurement channel."""
 
-    REPORT_CONFIG = (ReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),)
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -24,7 +26,9 @@ class FlowMeasurement(ZigbeeChannel):
 class IlluminanceLevelSensing(ZigbeeChannel):
     """Illuminance Level Sensing channel."""
 
-    REPORT_CONFIG = (ReportConfig(attr="level_status", config=REPORT_CONFIG_DEFAULT),)
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="level_status", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -33,21 +37,27 @@ class IlluminanceLevelSensing(ZigbeeChannel):
 class IlluminanceMeasurement(ZigbeeChannel):
     """Illuminance Measurement channel."""
 
-    REPORT_CONFIG = (ReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),)
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.OccupancySensing.cluster_id)
 class OccupancySensing(ZigbeeChannel):
     """Occupancy Sensing channel."""
 
-    REPORT_CONFIG = (ReportConfig(attr="occupancy", config=REPORT_CONFIG_IMMEDIATE),)
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="occupancy", config=REPORT_CONFIG_IMMEDIATE),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.PressureMeasurement.cluster_id)
 class PressureMeasurement(ZigbeeChannel):
     """Pressure measurement channel."""
 
-    REPORT_CONFIG = (ReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),)
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="measured_value", config=REPORT_CONFIG_DEFAULT),
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(measurement.RelativeHumidity.cluster_id)

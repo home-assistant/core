@@ -46,8 +46,8 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 
-class ReportConfig(TypedDict, total=True):
-    """Matcher for the dhcp integration for required fields."""
+class AttrReportConfig(TypedDict, total=True):
+    """Configuration to report for the attributes."""
 
     attr: str
     config: tuple[int, int, int | float]
@@ -106,7 +106,7 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG: tuple[ReportConfig] = ()
+    REPORT_CONFIG: tuple[AttrReportConfig] = ()
     BIND: bool = True
 
     # Dict of attributes to read on channel initialization.
