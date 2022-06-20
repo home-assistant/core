@@ -42,7 +42,7 @@ class Alarms(ZigbeeChannel):
 class AnalogInput(ZigbeeChannel):
     """Analog Input channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.BINDABLE_CLUSTERS.register(general.AnalogOutput.cluster_id)
@@ -119,7 +119,7 @@ class AnalogOutput(ZigbeeChannel):
 class AnalogValue(ZigbeeChannel):
     """Analog Value channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.ApplianceControl.cluster_id)
@@ -151,21 +151,21 @@ class BasicChannel(ZigbeeChannel):
 class BinaryInput(ZigbeeChannel):
     """Binary Input channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryOutput.cluster_id)
 class BinaryOutput(ZigbeeChannel):
     """Binary Output channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.BinaryValue.cluster_id)
 class BinaryValue(ZigbeeChannel):
     """Binary Value channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.Commissioning.cluster_id)
@@ -177,12 +177,12 @@ class Commissioning(ZigbeeChannel):
 class DeviceTemperature(ZigbeeChannel):
     """Device Temperature channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG = (
         {
             "attr": "current_temperature",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+        },
+    )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.GreenPowerProxy.cluster_id)
@@ -275,21 +275,21 @@ class LevelControlChannel(ZigbeeChannel):
 class MultistateInput(ZigbeeChannel):
     """Multistate Input channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateOutput.cluster_id)
 class MultistateOutput(ZigbeeChannel):
     """Multistate Output channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(general.MultistateValue.cluster_id)
 class MultistateValue(ZigbeeChannel):
     """Multistate Value channel."""
 
-    REPORT_CONFIG = [ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT)]
+    REPORT_CONFIG = (ReportConfig(attr="present_value", config=REPORT_CONFIG_DEFAULT),)
 
 
 @registries.CLIENT_CHANNELS_REGISTRY.register(general.OnOff.cluster_id)

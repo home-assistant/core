@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Sequence
 from enum import Enum
 from functools import partialmethod, wraps
 import logging
@@ -107,7 +106,7 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG: Sequence[ReportConfig] = ()
+    REPORT_CONFIG: tuple[ReportConfig] = ()
     BIND: bool = True
 
     # Dict of attributes to read on channel initialization.

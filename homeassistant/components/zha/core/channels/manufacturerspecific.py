@@ -31,12 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 class SmartThingsHumidity(ZigbeeChannel):
     """Smart Things Humidity channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG = (
         {
             "attr": "measured_value",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+        },
+    )
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFD00)
@@ -87,12 +87,12 @@ class OppleRemote(ZigbeeChannel):
 class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG = (
         ReportConfig(attr="acceleration", config=REPORT_CONFIG_ASAP),
         ReportConfig(attr="x_axis", config=REPORT_CONFIG_ASAP),
         ReportConfig(attr="y_axis", config=REPORT_CONFIG_ASAP),
         ReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
-    ]
+    )
 
     @callback
     def attribute_updated(self, attrid, value):
