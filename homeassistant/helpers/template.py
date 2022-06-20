@@ -322,6 +322,7 @@ class Template:
         "_exc_info",
         "_limited",
         "_strict",
+        "_hash_cache",
     )
 
     def __init__(self, template, hass=None):
@@ -337,6 +338,7 @@ class Template:
         self._exc_info = None
         self._limited = None
         self._strict = None
+        self._hash_cache: int = hash(self.template)
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -622,7 +624,7 @@ class Template:
 
     def __hash__(self) -> int:
         """Hash code for template."""
-        return hash(self.template)
+        return self._hash_cache
 
     def __repr__(self) -> str:
         """Representation of Template."""
