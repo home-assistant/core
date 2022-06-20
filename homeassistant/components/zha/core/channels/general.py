@@ -7,13 +7,14 @@ from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
 import zigpy.types as t
+import zigpy.zcl
 from zigpy.zcl.clusters import general
 from zigpy.zcl.foundation import Status
 
 from homeassistant.core import callback
 from homeassistant.helpers.event import async_call_later
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_BATTERY_SAVE,
@@ -307,9 +308,7 @@ class OnOffChannel(ZigbeeChannel):
         "start_up_on_off": True,
     }
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize OnOffChannel."""
         super().__init__(cluster, ch_pool)
         self._off_listener = None
