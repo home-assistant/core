@@ -7,6 +7,7 @@ https://home-assistant.io/integrations/zha/
 from __future__ import annotations
 
 import asyncio
+from typing import TYPE_CHECKING
 
 from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import security
@@ -25,6 +26,9 @@ from ..const import (
 )
 from ..typing import CALLABLE_T
 from .base import ChannelStatus, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 IAS_ACE_ARM = 0x0000  # ("arm", (t.enum8, t.CharacterString, t.uint8_t), False),
 IAS_ACE_BYPASS = 0x0001  # ("bypass", (t.LVList(t.uint8_t), t.CharacterString), False),
@@ -48,7 +52,7 @@ class IasAce(ZigbeeChannel):
     """IAS Ancillary Control Equipment channel."""
 
     def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
+        self, cluster: zha_typing.ZigpyClusterType, ch_pool: ChannelPool
     ) -> None:
         """Initialize IAS Ancillary Control Equipment channel."""
         super().__init__(cluster, ch_pool)

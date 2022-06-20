@@ -69,11 +69,11 @@ from .core.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
-from .core.typing import ZhaDeviceType
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api.connection import ActiveConnection
 
+    from .core.device import ZHADevice
     from .core.gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -559,7 +559,7 @@ async def websocket_reconfigure_node(
     """Reconfigure a ZHA nodes entities by its ieee address."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: ZhaDeviceType = zha_gateway.get_device(ieee)
+    device: ZHADevice = zha_gateway.get_device(ieee)
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -1084,7 +1084,7 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: ZhaDeviceType = zha_gateway.get_device(ieee)
+        zha_device: ZHADevice = zha_gateway.get_device(ieee)
         if zha_device is not None and (
             zha_device.is_coordinator
             and zha_device.ieee == zha_gateway.application_controller.ieee
