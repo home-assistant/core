@@ -8,7 +8,7 @@ from .coordinator import PowerviewShadeUpdateCoordinator
 
 
 @dataclass
-class PowerviewEntry:
+class PowerviewEntryData:
     """Define class for main domain information."""
 
     api: AioRequest

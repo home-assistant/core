@@ -35,7 +35,7 @@ from .const import (
     USER_DATA,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
-from .model import PowerviewDeviceInfo, PowerviewEntry
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeData
 from .util import async_map_data_by_id
 
@@ -88,7 +88,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # populate raw shade data into the coordinator for diagnostics
     coordinator.data.store_group_data(shade_entries[SHADE_DATA])
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntry(
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntryData(
         api=pv_request,
         room_data=room_data,
         scene_data=scene_data,
