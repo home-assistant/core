@@ -156,7 +156,7 @@ def remove_stale_devices(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
-    all_device_ids = {device.id for device in devices}
+    all_device_ids = {str(device.id) for device in devices}
 
     for device_entry in device_entries:
         device_id: str | None = None
@@ -166,7 +166,9 @@ def remove_stale_devices(
             if identifier[0] != DOMAIN:
                 continue
 
-            _id = identifier[1]
+            # The device id in the identifier is not copied from integer to string
+            # when setting entity device info. Copy here to make sure it's a string.
+            _id = str(identifier[1])
 
             # Identify gateway device.
             if _id == config_entry.data[CONF_GATEWAY_ID]:
