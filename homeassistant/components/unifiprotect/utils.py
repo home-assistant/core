@@ -9,8 +9,13 @@ from typing import Any
 
 from pyunifiprotect.data import (
     Bootstrap,
+    Camera,
+    Light,
+    LightModeEnableType,
+    LightModeType,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
+    VideoMode,
 )
 
 from homeassistant.core import HomeAssistant, callback
@@ -104,3 +109,22 @@ def async_get_devices(
         for device_type in model_type
         for device in async_get_devices_by_type(bootstrap, device_type).values()
     )
+
+
+@callback
+def async_get_is_highfps(obj: Camera) -> bool:
+    """Return if camera has High FPS mode enabled."""
+
+    return bool(obj.video_mode == VideoMode.HIGH_FPS)
+
+
+@callback
+def async_get_light_motion_current(obj: Light) -> str:
+    """Get light motion mode for Flood Light."""
+
+    if (
+        obj.light_mode_settings.mode == LightModeType.MOTION
+        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+    ):
+        return f"{LightModeType.MOTION.value}Dark"
+    return obj.light_mode_settings.mode.value

@@ -13,18 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    COORDINATOR,
-    DEVICE_INFO,
-    DOMAIN,
-    PV_API,
-    PV_ROOM_DATA,
-    PV_SHADE_DATA,
-    ROOM_ID_IN_SHADE,
-    ROOM_NAME_UNICODE,
-)
+from .const import DOMAIN, ROOM_ID_IN_SHADE, ROOM_NAME_UNICODE
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
 @dataclass
@@ -66,25 +58,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas advanced feature buttons."""
 
-    pv_data = hass.data[DOMAIN][entry.entry_id]
-    room_data: dict[str | int, Any] = pv_data[PV_ROOM_DATA]
-    shade_data = pv_data[PV_SHADE_DATA]
-    pv_request = pv_data[PV_API]
-    coordinator: PowerviewShadeUpdateCoordinator = pv_data[COORDINATOR]
-    device_info: dict[str, Any] = pv_data[DEVICE_INFO]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ButtonEntity] = []
-    for raw_shade in shade_data.values():
-        shade: BaseShade = PvShade(raw_shade, pv_request)
+    for raw_shade in pv_entry.shade_data.values():
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         name_before_refresh = shade.name
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
 
         for description in BUTTONS:
             entities.append(
                 PowerviewButton(
-                    coordinator,
-                    device_info,
+                    pv_entry.coordinator,
+                    pv_entry.device_info,
                     room_name,
                     shade,
                     name_before_refresh,
@@ -101,7 +88,7 @@ class PowerviewButton(ShadeEntity, ButtonEntity):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,

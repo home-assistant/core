@@ -478,7 +478,7 @@ def test_invalid_entity_properties(
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    class_node, prop_node = astroid.extract_node(
+    class_node, prop_node, func_node = astroid.extract_node(
         """
     class LockEntity():
         pass
@@ -490,6 +490,12 @@ def test_invalid_entity_properties(
         def changed_by( #@
             self
         ):
+            pass
+
+        async def async_lock( #@
+            self,
+            **kwargs
+        ) -> bool:
             pass
     """,
         "homeassistant.components.pylint_test.lock",
@@ -506,6 +512,24 @@ def test_invalid_entity_properties(
             col_offset=4,
             end_line=9,
             end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("kwargs", "Any"),
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=24,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="None",
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=24,
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
@@ -527,6 +551,12 @@ def test_ignore_invalid_entity_properties(
         def changed_by(
             self
         ):
+            pass
+
+        async def async_lock(
+            self,
+            **kwargs
+        ) -> bool:
             pass
     """,
         "homeassistant.components.pylint_test.lock",

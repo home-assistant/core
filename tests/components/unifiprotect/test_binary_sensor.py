@@ -39,6 +39,9 @@ from .conftest import (
     reset_objects,
 )
 
+LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
+SENSE_SENSORS_WRITE = SENSE_SENSORS[:4]
+
 
 @pytest.fixture(name="camera")
 async def camera_fixture(
@@ -230,7 +233,7 @@ async def test_binary_sensor_setup_light(
 
     entity_registry = er.async_get(hass)
 
-    for description in LIGHT_SENSORS:
+    for description in LIGHT_SENSOR_WRITE:
         unique_id, entity_id = ids_from_device_description(
             Platform.BINARY_SENSOR, light, description
         )
@@ -328,7 +331,7 @@ async def test_binary_sensor_setup_sensor(
 
     entity_registry = er.async_get(hass)
 
-    for description in SENSE_SENSORS:
+    for description in SENSE_SENSORS_WRITE:
         unique_id, entity_id = ids_from_device_description(
             Platform.BINARY_SENSOR, sensor, description
         )
@@ -356,7 +359,7 @@ async def test_binary_sensor_setup_sensor_none(
         STATE_UNAVAILABLE,
         STATE_OFF,
     ]
-    for index, description in enumerate(SENSE_SENSORS):
+    for index, description in enumerate(SENSE_SENSORS_WRITE):
         unique_id, entity_id = ids_from_device_description(
             Platform.BINARY_SENSOR, sensor_none, description
         )
@@ -419,7 +422,7 @@ async def test_binary_sensor_update_light_motion(
     """Test binary_sensor motion entity."""
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, light, LIGHT_SENSORS[1]
+        Platform.BINARY_SENSOR, light, LIGHT_SENSOR_WRITE[1]
     )
 
     event_metadata = EventMetadata(light_id=light.id)
@@ -461,7 +464,7 @@ async def test_binary_sensor_update_mount_type_window(
     """Test binary_sensor motion entity."""
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, sensor, SENSE_SENSORS[0]
+        Platform.BINARY_SENSOR, sensor, SENSE_SENSORS_WRITE[0]
     )
 
     state = hass.states.get(entity_id)
@@ -492,7 +495,7 @@ async def test_binary_sensor_update_mount_type_garage(
     """Test binary_sensor motion entity."""
 
     _, entity_id = ids_from_device_description(
-        Platform.BINARY_SENSOR, sensor, SENSE_SENSORS[0]
+        Platform.BINARY_SENSOR, sensor, SENSE_SENSORS_WRITE[0]
     )
 
     state = hass.states.get(entity_id)
