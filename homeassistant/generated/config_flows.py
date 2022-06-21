@@ -277,6 +277,7 @@ FLOWS = {
         "pure_energie",
         "pvoutput",
         "pvpc_hourly_pricing",
+        "pynubank",
         "qnap_qsw",
         "rachio",
         "radio_browser",
