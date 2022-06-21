@@ -36,7 +36,7 @@ async def test_attributes(hass):
     assert data.get(ATTR_WEATHER_TEMPERATURE) == 21.6
     assert data.get(ATTR_WEATHER_HUMIDITY) == 92
     assert data.get(ATTR_WEATHER_PRESSURE) == 1099
-    assert data.get(ATTR_WEATHER_WIND_SPEED) == 0.5
+    assert data.get(ATTR_WEATHER_WIND_SPEED) == 1.8  # 0.5 m/s -> km/h
     assert data.get(ATTR_WEATHER_WIND_BEARING) is None
     assert data.get(ATTR_WEATHER_OZONE) is None
     assert data.get(ATTR_ATTRIBUTION) == "Powered by Home Assistant"
