@@ -4,6 +4,7 @@ import logging
 
 import async_timeout
 from pynuki import NukiBridge
+from pynuki.opener import NukiOpener
 from pynuki.bridge import InvalidCredentialsException
 from requests.exceptions import RequestException
 
@@ -38,11 +39,23 @@ def _get_bridge_devices(bridge):
     return bridge.locks, bridge.openers
 
 
-def _update_devices(devices):
+def _update_devices(hass, devices):
     for device in devices:
         for level in (False, True):
             try:
-                device.update(level)
+                if isinstance(device, NukiOpener):
+                    last_ring_action_state = device.ring_action_state
+
+                    device.update(level)
+
+                    if not last_ring_action_state and device.ring_action_state:
+                        event_data = {
+                            "entity_id": device.entity.entity_id,
+                            "type": "ring",
+                        }
+                        hass.bus.async_fire("nuki_event", event_data)
+                else:
+                    device.update(level)
             except RequestException:
                 continue
 
@@ -85,7 +98,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                await hass.async_add_executor_job(_update_devices, locks + openers)
+                await hass.async_add_executor_job(_update_devices, hass, locks + openers)
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
