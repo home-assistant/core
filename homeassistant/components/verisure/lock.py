@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 
 from verisure import Error as VerisureError
 
@@ -123,7 +122,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
         """Return the state attributes."""
         return {"method": self.changed_method}
 
-    async def async_unlock(self, **kwargs: Any) -> None:
+    async def async_unlock(self, **kwargs) -> None:
         """Send unlock command."""
         code = kwargs.get(
             ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
@@ -134,7 +133,7 @@ class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEnt
 
         await self.async_set_lock_state(code, STATE_UNLOCKED)
 
-    async def async_lock(self, **kwargs: Any) -> None:
+    async def async_lock(self, **kwargs) -> None:
         """Send lock command."""
         code = kwargs.get(
             ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
