@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pyunifiprotect.data import Camera, Doorlock, Light
+from pyunifiprotect.data import Camera, Doorlock, Light, ProtectModelWithId
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -203,8 +203,8 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         self._attr_native_step = self.entity_description.ufp_step
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
     async def async_set_native_value(self, value: float) -> None:
