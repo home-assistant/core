@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from aiohttp.hdrs import X_FORWARDED_FOR, X_FORWARDED_HOST, X_FORWARDED_PROTO
 import pytest
 
-from homeassistant.components.hassio.const import OLD_DEPRECATED_AUTH_HEADER
+from homeassistant.components.hassio.const import X_AUTH_TOKEN
 
 
 @pytest.mark.parametrize(
@@ -37,7 +37,7 @@ async def test_ingress_request_get(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -77,7 +77,7 @@ async def test_ingress_request_post(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -117,7 +117,7 @@ async def test_ingress_request_put(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -157,7 +157,7 @@ async def test_ingress_request_delete(hassio_client, build_type, aioclient_mock)
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -197,7 +197,7 @@ async def test_ingress_request_patch(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -237,7 +237,7 @@ async def test_ingress_request_options(hassio_client, build_type, aioclient_mock
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
@@ -270,7 +270,7 @@ async def test_ingress_websocket(hassio_client, build_type, aioclient_mock):
 
     # Check we forwarded command
     assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][3][OLD_DEPRECATED_AUTH_HEADER] == "123456"
+    assert aioclient_mock.mock_calls[-1][3][X_AUTH_TOKEN] == "123456"
     assert (
         aioclient_mock.mock_calls[-1][3]["X-Ingress-Path"]
         == f"/api/hassio_ingress/{build_type[0]}"
