@@ -18,7 +18,7 @@ from broadlink.exceptions import (
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
@@ -56,14 +56,11 @@ class BroadlinkStores:
 
     def extract_devices_and_commands(self) -> dict[str, list[str]]:
         """Return the set of devices and commands in storage."""
-        return {
-            device: list(subdevices)
-            for device, subdevices in self._codes.items()
-        }
+        return {device: list(subdevices) for device, subdevices in self._codes.items()}
 
     def extract_codes(
         self, commands: list[str], device: str | None = None
-    ) -> list[list[str]]:
+    ) -> list[list[bytes]]:
         """Extract a list of codes.
 
         If the command starts with `b64:`, extract the code from it.
@@ -74,6 +71,13 @@ class BroadlinkStores:
         sublist contains two codes that must be sent alternately with
         each call.
         """
+
+        def _data_packet_annotated(code):
+            try:
+                return data_packet(code)
+            except ValueError as err:
+                raise ValueError(f"Invalid code: {repr(code)}") from err
+
         code_list = []
         for cmd in commands:
             if cmd.startswith("b64:"):
@@ -84,27 +88,23 @@ class BroadlinkStores:
                     raise ValueError("You need to specify a device")
 
                 try:
-                    codes = self._codes[device][cmd]
+                    codes_raw = self._codes[device][cmd]
                 except KeyError as err:
                     raise ValueError(f"Command not found: {repr(cmd)}") from err
 
-                if isinstance(codes, list):
-                    codes = codes[:]
+                if isinstance(codes_raw, list):
+                    codes = codes_raw[:]
                 else:
-                    codes = [codes]
+                    codes = [codes_raw]
 
-            for idx, code in enumerate(codes):
-                try:
-                    codes[idx] = data_packet(code)
-                except ValueError as err:
-                    raise ValueError(f"Invalid code: {repr(code)}") from err
+            data = [_data_packet_annotated(code) for code in codes]
 
-            code_list.append(codes)
+            code_list.append(data)
         return code_list
 
     def toggled_codes(
-        self, code_list: list[list[str]], subdevice: str | None = None
-    ) -> Generator[str, None, None]:
+        self, code_list: list[list[bytes]], subdevice: str | None = None
+    ) -> Generator[bytes, None, None]:
         """Generate the list of codes we want and toggle as we go along."""
         try:
             for codes in code_list:
@@ -174,7 +174,7 @@ class BroadlinkDevice:
         self.update_manager = None
         self.fw_version = None
         self.authorized = None
-        self.reset_jobs = []
+        self.reset_jobs: list[CALLBACK_TYPE] = []
         self.store = store
 
     @property
