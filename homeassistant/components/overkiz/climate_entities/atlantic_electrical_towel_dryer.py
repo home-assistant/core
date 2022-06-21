@@ -33,6 +33,8 @@ OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
 
 PRESET_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_PRESET_MODE.items()}
 
+TEMPERATURE_SENSOR_DEVICE_INDEX = 7
+
 
 class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
     """Representation of Atlantic Electrical Towel Dryer."""
@@ -46,7 +48,9 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self.temperature_device = self.executor.linked_device(7)
+        self.temperature_device = self.executor.linked_device(
+            TEMPERATURE_SENSOR_DEVICE_INDEX
+        )
 
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
