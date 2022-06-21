@@ -16,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN, ROOM_ID_IN_SHADE, ROOM_NAME_UNICODE
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 
 
 @dataclass
@@ -57,7 +58,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas advanced feature buttons."""
 
-    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ButtonEntity] = []
     for raw_shade in pv_entry.shade_data.values():
@@ -87,7 +88,7 @@ class PowerviewButton(ShadeEntity, ButtonEntity):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,

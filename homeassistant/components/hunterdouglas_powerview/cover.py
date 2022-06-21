@@ -49,7 +49,7 @@ from .const import (
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
-from .model import PowerviewDeviceInfo
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeMove
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas shades."""
 
-    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
     coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
 
     entities: list[ShadeEntity] = []

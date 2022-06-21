@@ -1,4 +1,6 @@
 """Define Hunter Douglas data models."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -14,10 +16,9 @@ class PowerviewEntryData:
     api: AioRequest
     room_data: dict[str, Any]
     scene_data: dict[str, Any]
-    shades: Any
     shade_data: dict[str, Any]
     coordinator: PowerviewShadeUpdateCoordinator
-    device_info: dict[str, Any]
+    device_info: PowerviewDeviceInfo
 
 
 @dataclass
@@ -27,7 +28,6 @@ class PowerviewDeviceInfo:
     name: str
     mac_address: str
     serial_number: str
-    revision: Any
-    firmware: Any
+    firmware: dict[str, Any]
     model: str
     hub_address: str

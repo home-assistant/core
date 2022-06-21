@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, ROOM_NAME_UNICODE, STATE_ATTRIBUTE_ROOM_NAME
 from .entity import HDEntity
+from .model import PowerviewEntryData
 
 
 async def async_setup_entry(
@@ -19,7 +20,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up powerview scene entries."""
 
-    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
     pvscenes = []
     for raw_scene in pv_entry.scene_data.values():
