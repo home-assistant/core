@@ -5,8 +5,8 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light, ModelType
-from pyunifiprotect.data.devices import Chime
+from pyunifiprotect.data import Camera, Chime, Light, ModelType
+from pyunifiprotect.data.bootstrap import ProtectDeviceRef
 from pyunifiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockEntityFixture
+from .conftest import MockEntityFixture, regenerate_device_ids
 
 
 @pytest.fixture(name="device")
@@ -163,29 +163,40 @@ async def test_set_chime_paired_doorbells(
     mock_entry.api.bootstrap.chimes = {
         mock_chime.id: mock_chime,
     }
+    mock_entry.api.bootstrap.mac_lookup = {
+        mock_chime.mac.lower(): ProtectDeviceRef(
+            model=mock_chime.model, id=mock_chime.id
+        )
+    }
 
     camera1 = mock_camera.copy()
-    camera1.id = "cameraid1"
     camera1.name = "Test Camera 1"
     camera1._api = mock_entry.api
     camera1.channels[0]._api = mock_entry.api
     camera1.channels[1]._api = mock_entry.api
     camera1.channels[2]._api = mock_entry.api
     camera1.feature_flags.has_chime = True
+    regenerate_device_ids(camera1)
 
     camera2 = mock_camera.copy()
-    camera2.id = "cameraid2"
     camera2.name = "Test Camera 2"
     camera2._api = mock_entry.api
     camera2.channels[0]._api = mock_entry.api
     camera2.channels[1]._api = mock_entry.api
     camera2.channels[2]._api = mock_entry.api
     camera2.feature_flags.has_chime = True
+    regenerate_device_ids(camera2)
 
     mock_entry.api.bootstrap.cameras = {
         camera1.id: camera1,
         camera2.id: camera2,
     }
+    mock_entry.api.bootstrap.mac_lookup[camera1.mac.lower()] = ProtectDeviceRef(
+        model=camera1.model, id=camera1.id
+    )
+    mock_entry.api.bootstrap.mac_lookup[camera2.mac.lower()] = ProtectDeviceRef(
+        model=camera2.model, id=camera2.id
+    )
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
@@ -210,5 +221,5 @@ async def test_set_chime_paired_doorbells(
     )
 
     mock_entry.api.update_device.assert_called_once_with(
-        ModelType.CHIME, mock_chime.id, {"cameraIds": [camera1.id, camera2.id]}
+        ModelType.CHIME, mock_chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
     )
