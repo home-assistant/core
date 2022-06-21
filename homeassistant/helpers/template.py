@@ -97,8 +97,8 @@ template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
 
-CACHED_TEMPLATE_STATES = 256
-EVAL_CACHE_SIZE = 256
+CACHED_TEMPLATE_STATES = 512
+EVAL_CACHE_SIZE = 512
 
 
 @bind_hass
