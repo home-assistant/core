@@ -557,7 +557,7 @@ class WeatherEntity(Entity):
             return self._attr_precision
         return (
             PRECISION_TENTHS
-            if self.temperature_unit == TEMP_CELSIUS
+            if self._temperature_unit == TEMP_CELSIUS
             else PRECISION_WHOLE
         )
 
