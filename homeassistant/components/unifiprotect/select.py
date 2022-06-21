@@ -38,7 +38,7 @@ from homeassistant.util.dt import utcnow
 from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -208,6 +208,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=RecordingMode,
         ufp_value="recording_settings.mode",
         ufp_set_method="set_recording_mode",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription(
         key="infrared",
@@ -219,6 +220,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=IRLEDMode,
         ufp_value="isp_settings.ir_led_mode",
         ufp_set_method="set_ir_led_model",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Camera](
         key="doorbell_text",
@@ -230,6 +232,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value_fn=_get_doorbell_current,
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription(
         key="chime_type",
@@ -241,6 +244,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=ChimeType,
         ufp_value="chime_type",
         ufp_set_method="set_chime_type",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -253,6 +257,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
         ufp_value_fn=_get_light_motion_current,
         ufp_set_method_fn=_set_light_mode,
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Light](
         key="paired_camera",
@@ -262,6 +267,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -275,6 +281,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=MountType,
         ufp_value="mount_type",
         ufp_set_method="set_mount_type",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Sensor](
         key="paired_camera",
@@ -284,6 +291,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -296,6 +304,7 @@ DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -308,6 +317,7 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options_fn=_get_viewer_options,
         ufp_value_fn=_get_viewer_current,
         ufp_set_method_fn=_set_liveview,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
