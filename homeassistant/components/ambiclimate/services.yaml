@@ -5,7 +5,7 @@ set_comfort_mode:
   description: >
     Enable comfort mode on your AC.
   fields:
-    Name:
+    name:
       description: >
         String with device name.
       required: true
@@ -18,14 +18,14 @@ send_comfort_feedback:
   description: >
     Send feedback for comfort mode.
   fields:
-    Name:
+    name:
       description: >
         String with device name.
       required: true
       example: Bedroom
       selector:
         text:
-    Value:
+    value:
       description: >
         Send any of the following comfort values: too_hot, too_warm, bit_warm, comfortable, bit_cold, too_cold, freezing
       required: true
@@ -38,14 +38,14 @@ set_temperature_mode:
   description: >
     Enable temperature mode on your AC.
   fields:
-    Name:
+    name:
       description: >
         String with device name.
       required: true
       example: Bedroom
       selector:
         text:
-    Value:
+    value:
       description: >
         Target value in celsius
       required: true

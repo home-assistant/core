@@ -135,7 +135,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.03.1
+        uses: home-assistant/builder@2022.06.1
         with:
           args: |
             $BUILD_ARGS \
@@ -200,7 +200,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.03.1
+        uses: home-assistant/builder@2022.06.1
         with:
           args: |
             $BUILD_ARGS \

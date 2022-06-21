@@ -18,11 +18,15 @@ from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
+    NumberDeviceClass,
 )
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
+    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    TEMP_FAHRENHEIT,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
@@ -57,11 +61,18 @@ from .test_common import (
     help_test_update_with_json_attrs_not_dict,
 )
 
-from tests.common import async_fire_mqtt_message
+from tests.common import async_fire_mqtt_message, mock_restore_cache_with_extra_data
 
 DEFAULT_CONFIG = {
     number.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def number_platform_only():
+    """Only setup the number platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.NUMBER]):
+        yield
 
 
 async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
@@ -76,7 +87,8 @@ async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
                 "state_topic": topic,
                 "command_topic": topic,
                 "name": "Test Number",
-                "unit_of_measurement": "my unit",
+                "device_class": "temperature",
+                "unit_of_measurement": TEMP_FAHRENHEIT,
                 "payload_reset": "reset!",
             }
         },
@@ -89,16 +101,18 @@ async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
     await hass.async_block_till_done()
 
     state = hass.states.get("number.test_number")
-    assert state.state == "10"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "my unit"
+    assert state.state == "-12.0"  # 10 °F -> -12 °C
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
 
     async_fire_mqtt_message(hass, topic, "20.5")
 
     await hass.async_block_till_done()
 
     state = hass.states.get("number.test_number")
-    assert state.state == "20.5"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "my unit"
+    assert state.state == "-6.4"  # 20.5 °F -> -6.4 °C
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
 
     async_fire_mqtt_message(hass, topic, "reset!")
 
@@ -106,7 +120,8 @@ async def test_run_number_setup(hass, mqtt_mock_entry_with_yaml_config):
 
     state = hass.states.get("number.test_number")
     assert state.state == "unknown"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "my unit"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == NumberDeviceClass.TEMPERATURE
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "°C"
 
 
 async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
@@ -150,29 +165,70 @@ async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     assert state.state == "unknown"
 
 
+async def test_restore_native_value(hass, mqtt_mock_entry_with_yaml_config):
+    """Test that the stored native_value is restored."""
+    topic = "test/number"
+
+    RESTORE_DATA = {
+        "native_max_value": None,  # Ignored by MQTT number
+        "native_min_value": None,  # Ignored by MQTT number
+        "native_step": None,  # Ignored by MQTT number
+        "native_unit_of_measurement": None,  # Ignored by MQTT number
+        "native_value": 100.0,
+    }
+
+    mock_restore_cache_with_extra_data(
+        hass, ((ha.State("number.test_number", "abc"), RESTORE_DATA),)
+    )
+    assert await async_setup_component(
+        hass,
+        number.DOMAIN,
+        {
+            "number": {
+                "platform": "mqtt",
+                "command_topic": topic,
+                "device_class": "temperature",
+                "unit_of_measurement": TEMP_FAHRENHEIT,
+                "name": "Test Number",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    state = hass.states.get("number.test_number")
+    assert state.state == "37.8"
+    assert state.attributes.get(ATTR_ASSUMED_STATE)
+
+
 async def test_run_number_service_optimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test that set_value service works in optimistic mode."""
     topic = "test/number"
 
-    fake_state = ha.State("switch.test", "3")
+    RESTORE_DATA = {
+        "native_max_value": None,  # Ignored by MQTT number
+        "native_min_value": None,  # Ignored by MQTT number
+        "native_step": None,  # Ignored by MQTT number
+        "native_unit_of_measurement": None,  # Ignored by MQTT number
+        "native_value": 3,
+    }
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            number.DOMAIN,
-            {
-                "number": {
-                    "platform": "mqtt",
-                    "command_topic": topic,
-                    "name": "Test Number",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mock_restore_cache_with_extra_data(
+        hass, ((ha.State("number.test_number", "abc"), RESTORE_DATA),)
+    )
+    assert await async_setup_component(
+        hass,
+        number.DOMAIN,
+        {
+            "number": {
+                "platform": "mqtt",
+                "command_topic": topic,
+                "name": "Test Number",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("number.test_number")
     assert state.state == "3"
@@ -224,26 +280,31 @@ async def test_run_number_service_optimistic_with_command_template(
     """Test that set_value service works in optimistic mode and with a command_template."""
     topic = "test/number"
 
-    fake_state = ha.State("switch.test", "3")
+    RESTORE_DATA = {
+        "native_max_value": None,  # Ignored by MQTT number
+        "native_min_value": None,  # Ignored by MQTT number
+        "native_step": None,  # Ignored by MQTT number
+        "native_unit_of_measurement": None,  # Ignored by MQTT number
+        "native_value": 3,
+    }
 
-    with patch(
-        "homeassistant.helpers.restore_state.RestoreEntity.async_get_last_state",
-        return_value=fake_state,
-    ):
-        assert await async_setup_component(
-            hass,
-            number.DOMAIN,
-            {
-                "number": {
-                    "platform": "mqtt",
-                    "command_topic": topic,
-                    "name": "Test Number",
-                    "command_template": '{"number": {{ value }} }',
-                }
-            },
-        )
-        await hass.async_block_till_done()
-        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
+    mock_restore_cache_with_extra_data(
+        hass, ((ha.State("number.test_number", "abc"), RESTORE_DATA),)
+    )
+    assert await async_setup_component(
+        hass,
+        number.DOMAIN,
+        {
+            "number": {
+                "platform": "mqtt",
+                "command_topic": topic,
+                "name": "Test Number",
+                "command_template": '{"number": {{ value }} }',
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("number.test_number")
     assert state.state == "3"
@@ -784,13 +845,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = number.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

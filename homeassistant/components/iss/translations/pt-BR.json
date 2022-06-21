@@ -14,7 +14,7 @@
         "step": {
             "init": {
                 "data": {
-                    "show_on_map": "[%key:component::iss::config::step::user::data::show_on_map%]"
+                    "show_on_map": "Mostrar no mapa"
                 }
             }
         }

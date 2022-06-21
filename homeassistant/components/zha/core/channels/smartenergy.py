@@ -3,17 +3,22 @@ from __future__ import annotations
 
 import enum
 from functools import partialmethod
+from typing import TYPE_CHECKING
 
+import zigpy.zcl
 from zigpy.zcl.clusters import smartenergy
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     REPORT_CONFIG_ASAP,
     REPORT_CONFIG_DEFAULT,
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(smartenergy.Calendar.cluster_id)
@@ -61,9 +66,9 @@ class Metering(ZigbeeChannel):
     """Metering channel."""
 
     REPORT_CONFIG = (
-        {"attr": "instantaneous_demand", "config": REPORT_CONFIG_OP},
-        {"attr": "current_summ_delivered", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "status", "config": REPORT_CONFIG_ASAP},
+        AttrReportConfig(attr="instantaneous_demand", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="current_summ_delivered", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="status", config=REPORT_CONFIG_ASAP),
     )
     ZCL_INIT_ATTRS = {
         "demand_formatting": True,
@@ -114,9 +119,7 @@ class Metering(ZigbeeChannel):
         DEMAND = 0
         SUMMATION = 1
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Metering."""
         super().__init__(cluster, ch_pool)
         self._format_spec = None
