@@ -280,7 +280,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     await async_process_integration_platforms(hass, DOMAIN, _process_group_platform)
 
-    await _async_process_config(hass, config, component)
+    await _async_process_config(hass, config)
 
     async def reload_service_handler(service: ServiceCall) -> None:
         """Remove all user-defined groups and load new ones from config."""
@@ -292,7 +292,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if (conf := await component.async_prepare_reload()) is None:
             return
-        await _async_process_config(hass, conf, component)
+        await _async_process_config(hass, conf)
 
         await component.async_add_entities(auto)
 
@@ -412,17 +412,19 @@ async def _process_group_platform(hass, domain, platform):
     platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
 
-async def _async_process_config(hass, config, component):
+async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None:
     """Process group configuration."""
     hass.data.setdefault(GROUP_ORDER, 0)
 
     entities = []
+    domain_config: dict[str, dict[str, Any]] = config.get(DOMAIN, {})
 
-    for object_id, conf in config.get(DOMAIN, {}).items():
-        name = conf.get(CONF_NAME, object_id)
-        entity_ids = conf.get(CONF_ENTITIES) or []
-        icon = conf.get(CONF_ICON)
-        mode = conf.get(CONF_ALL)
+    for object_id, conf in domain_config.items():
+        name: str = conf.get(CONF_NAME, object_id)
+        entity_ids: Iterable[str] = conf.get(CONF_ENTITIES) or []
+        icon: str | None = conf.get(CONF_ICON)
+        mode = bool(conf.get(CONF_ALL))
+        order: int = hass.data[GROUP_ORDER]
 
         # We keep track of the order when we are creating the tasks
         # in the same way that async_create_group does to make
@@ -436,7 +438,7 @@ async def _async_process_config(hass, config, component):
                 icon=icon,
                 object_id=object_id,
                 mode=mode,
-                order=hass.data[GROUP_ORDER],
+                order=order,
             )
         )
 
@@ -485,14 +487,14 @@ class Group(Entity):
 
     def __init__(
         self,
-        hass,
-        name,
-        order=None,
-        icon=None,
-        user_defined=True,
-        entity_ids=None,
-        mode=None,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        order: int | None = None,
+        icon: str | None = None,
+        user_defined: bool = True,
+        entity_ids: Iterable[str] | None = None,
+        mode: bool | None = None,
+    ) -> None:
         """Initialize a group.
 
         This Object has factory function for creation.
@@ -515,15 +517,15 @@ class Group(Entity):
 
     @staticmethod
     def create_group(
-        hass,
-        name,
-        entity_ids=None,
-        user_defined=True,
-        icon=None,
-        object_id=None,
-        mode=None,
-        order=None,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        entity_ids: Iterable[str] | None = None,
+        user_defined: bool = True,
+        icon: str | None = None,
+        object_id: str | None = None,
+        mode: bool | None = None,
+        order: int | None = None,
+    ) -> Group:
         """Initialize a group."""
         return asyncio.run_coroutine_threadsafe(
             Group.async_create_group(
@@ -535,15 +537,15 @@ class Group(Entity):
     @staticmethod
     @callback
     def async_create_group_entity(
-        hass,
-        name,
-        entity_ids=None,
-        user_defined=True,
-        icon=None,
-        object_id=None,
-        mode=None,
-        order=None,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        entity_ids: Iterable[str] | None = None,
+        user_defined: bool = True,
+        icon: str | None = None,
+        object_id: str | None = None,
+        mode: bool | None = None,
+        order: int | None = None,
+    ) -> Group:
         """Create a group entity."""
         if order is None:
             hass.data.setdefault(GROUP_ORDER, 0)
@@ -570,16 +572,17 @@ class Group(Entity):
         return group
 
     @staticmethod
+    @callback
     async def async_create_group(
-        hass,
-        name,
-        entity_ids=None,
-        user_defined=True,
-        icon=None,
-        object_id=None,
-        mode=None,
-        order=None,
-    ):
+        hass: HomeAssistant,
+        name: str,
+        entity_ids: Iterable[str] | None = None,
+        user_defined: bool = True,
+        icon: str | None = None,
+        object_id: str | None = None,
+        mode: bool | None = None,
+        order: int | None = None,
+    ) -> Group:
         """Initialize a group.
 
         This method must be run in the event loop.
