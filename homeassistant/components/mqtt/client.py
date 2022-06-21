@@ -480,7 +480,7 @@ class MQTT:
 
         async with self._paho_lock:
             results = await self.hass.async_add_executor_job(
-                _proces_client_subscriptions
+                _process_client_subscriptions
             )
 
         tasks = []
