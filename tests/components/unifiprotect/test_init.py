@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError
-from pyunifiprotect.data import NVR, Light
+from pyunifiprotect.data import NVR, Bootstrap, Light
 
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
-from .conftest import MockBootstrap, MockEntityFixture
+from .conftest import MockEntityFixture, regenerate_device_ids
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +52,7 @@ async def test_setup_multiple(
     hass: HomeAssistant,
     mock_entry: MockEntityFixture,
     mock_client,
-    mock_bootstrap: MockBootstrap,
+    mock_bootstrap: Bootstrap,
 ):
     """Test working setup of unifiprotect entry."""
 
@@ -212,8 +212,7 @@ async def test_device_remove_devices(
     light1 = mock_light.copy()
     light1._api = mock_entry.api
     light1.name = "Test Light 1"
-    light1.id = "lightid1"
-    light1.mac = "AABBCCDDEEFF"
+    regenerate_device_ids(light1)
 
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,

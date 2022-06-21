@@ -12,6 +12,7 @@ from pyunifiprotect.data import (
     Event,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
+    ProtectModelWithId,
     Sensor,
 )
 
@@ -171,7 +172,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.storage.rate",
+        ufp_value="stats.storage.rate_per_second",
         precision=2,
     ),
     ProtectSensorEntityDescription(
@@ -540,8 +541,8 @@ class ProtectDeviceSensor(ProtectDeviceEntity, SensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
@@ -560,8 +561,8 @@ class ProtectNVRSensor(ProtectNVREntity, SensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
 
@@ -585,9 +586,9 @@ class ProtectEventSensor(ProtectDeviceSensor, EventThumbnailMixin):
         return event
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         # do not call ProtectDeviceSensor method since we want event to get value here
-        EventThumbnailMixin._async_update_device_from_protect(self)
+        EventThumbnailMixin._async_update_device_from_protect(self, device)
         if self._event is None:
             self._attr_native_value = OBJECT_TYPE_NONE
         else:

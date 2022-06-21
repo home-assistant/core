@@ -285,6 +285,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/emoncms/ @borpin
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
+/homeassistant/components/emulated_hue/ @bdraco
+/tests/components/emulated_hue/ @bdraco
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energy/ @home-assistant/core
@@ -582,8 +584,8 @@ build.json @home-assistant/supervisor
 /tests/components/local_ip/ @issacg
 /homeassistant/components/lock/ @home-assistant/core
 /tests/components/lock/ @home-assistant/core
-/homeassistant/components/logbook/ @home-assistant/core @bdraco
-/tests/components/logbook/ @home-assistant/core @bdraco
+/homeassistant/components/logbook/ @home-assistant/core
+/tests/components/logbook/ @home-assistant/core
 /homeassistant/components/logger/ @home-assistant/core
 /tests/components/logger/ @home-assistant/core
 /homeassistant/components/logi_circle/ @evanjd
@@ -1069,8 +1071,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
-/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco
+/homeassistant/components/tplink/ @rytilahti @thegardenmonkey
+/tests/components/tplink/ @rytilahti @thegardenmonkey
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core

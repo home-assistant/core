@@ -224,7 +224,7 @@ class GoogleCalendarEntity(CalendarEntity):
         """Return True if the event is visible."""
         if self._ignore_availability:
             return True
-        return event.transparency == OPAQUE  # type: ignore[no-any-return]
+        return event.transparency == OPAQUE
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
