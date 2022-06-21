@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiopvapi.helpers.aiorequest import AioRequest
+from aiopvapi.shades import Shades
 
 from .coordinator import PowerviewShadeUpdateCoordinator
 
