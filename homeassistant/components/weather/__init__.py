@@ -91,12 +91,6 @@ ATTR_WEATHER_WIND_SPEED = "wind_speed"
 ATTR_WEATHER_WIND_SPEED_UNIT = "wind_speed_unit"
 ATTR_WEATHER_PRECIPITATION_UNIT = "precipitation_unit"
 
-ATTR_PRECIPITATION_UOM = "precipitation_unit_of_measurement"
-ATTR_PRESSURE_UOM = "pressure_unit_of_measurement"
-ATTR_TEMPERATURE_UOM = "temperature_unit_of_measurement"
-ATTR_VISIBILITY_UOM = "visibility_unit_of_measurement"
-ATTR_WIND_SPEED_UOM = "wind_speed_unit_of_measurement"
-
 DOMAIN = "weather"
 
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
@@ -130,19 +124,19 @@ VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
 )
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
-    ATTR_PRESSURE_UOM: pressure_util.convert,
-    ATTR_TEMPERATURE_UOM: temperature_util.convert,
-    ATTR_VISIBILITY_UOM: distance_util.convert,
-    ATTR_PRECIPITATION_UOM: distance_util.convert,
-    ATTR_WIND_SPEED_UOM: speed_util.convert,
+    ATTR_WEATHER_PRESSURE_UNIT: pressure_util.convert,
+    ATTR_WEATHER_TEMPERATURE_UNIT: temperature_util.convert,
+    ATTR_WEATHER_VISIBILITY_UNIT: distance_util.convert,
+    ATTR_WEATHER_PRECIPITATION_UNIT: distance_util.convert,
+    ATTR_WEATHER_WIND_SPEED_UNIT: speed_util.convert,
 }
 
 VALID_UNITS: dict[str, tuple[str, ...]] = {
-    ATTR_PRESSURE_UOM: VALID_UNITS_PRESSURE,
-    ATTR_TEMPERATURE_UOM: VALID_UNITS_TEMPERATURE,
-    ATTR_VISIBILITY_UOM: VALID_UNITS_VISIBILITY,
-    ATTR_PRECIPITATION_UOM: VALID_UNITS_PRECIPITATION,
-    ATTR_WIND_SPEED_UOM: VALID_UNITS_WIND_SPEED,
+    ATTR_WEATHER_PRESSURE_UNIT: VALID_UNITS_PRESSURE,
+    ATTR_WEATHER_TEMPERATURE_UNIT: VALID_UNITS_TEMPERATURE,
+    ATTR_WEATHER_VISIBILITY_UNIT: VALID_UNITS_VISIBILITY,
+    ATTR_WEATHER_PRECIPITATION_UNIT: VALID_UNITS_PRECIPITATION,
+    ATTR_WEATHER_WIND_SPEED_UNIT: VALID_UNITS_WIND_SPEED,
 }
 
 
@@ -334,15 +328,29 @@ class WeatherEntity(Entity):
     @property
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
+        if (temperature := self.temperature) is not None:
+            return temperature
+
         return self._attr_native_temperature
 
     @property
     def native_temperature_unit(self) -> str | None:
         """Return the native unit of measurement for temperature."""
+        if (temperature_unit := self.temperature_unit) is not None:
+            return temperature_unit
+
         return self._attr_native_temperature_unit
 
     @property
-    def temperature_unit(self) -> str:
+    def temperature_unit(self) -> str | None:
+        """Return the temperature unit for backward compatibility.
+
+        Should not be set by integrations.
+        """
+        return self._attr_temperature_unit
+
+    @property
+    def _temperature_unit(self) -> str:
         """Return the converted unit of measurement for temperature.
 
         Should not be set by integrations.
@@ -351,12 +359,6 @@ class WeatherEntity(Entity):
             weather_option_temperature_uom := self._weather_option_temperature_uom
         ) is not None:
             return weather_option_temperature_uom
-
-        if (temperature_unit := self._attr_temperature_unit) is not None:
-            return temperature_unit
-
-        if (native_temperature_unit := self.native_temperature_unit) is not None:
-            return native_temperature_unit
 
         return self.hass.config.units.temperature_unit
 
@@ -371,15 +373,29 @@ class WeatherEntity(Entity):
     @property
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
+        if (pressure := self.pressure) is not None:
+            return pressure
+
         return self._attr_native_pressure
 
     @property
     def native_pressure_unit(self) -> str | None:
         """Return the native unit of measurement for pressure."""
+        if (pressure_unit := self.pressure_unit) is not None:
+            return pressure_unit
+
         return self._attr_native_pressure_unit
 
     @property
-    def pressure_unit(self) -> str:
+    def pressure_unit(self) -> str | None:
+        """Return the pressure unit for backward compatibility.
+
+        Should not be set by integrations.
+        """
+        return self._attr_pressure_unit
+
+    @property
+    def _pressure_unit(self) -> str:
         """Return the converted unit of measurement for pressure.
 
         Should not be set by integrations.
@@ -389,13 +405,7 @@ class WeatherEntity(Entity):
         ) is not None:
             return weather_option_pressure_uom
 
-        if (pressure_unit := self._attr_pressure_unit) is not None:
-            return pressure_unit
-
-        if (native_pressure_unit := self.native_pressure_unit) is not None:
-            return native_pressure_unit
-
-        return self.hass.config.units.pressure_unit
+        return PRESSURE_HPA if self.hass.config.units.is_metric else PRESSURE_INHG
 
     @property
     def humidity(self) -> float | None:
@@ -413,15 +423,29 @@ class WeatherEntity(Entity):
     @property
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
+        if (wind_speed := self.wind_speed) is not None:
+            return wind_speed
+
         return self._attr_native_wind_speed
 
     @property
     def native_wind_speed_unit(self) -> str | None:
         """Return the native unit of measurement for wind speed."""
+        if (wind_speed_unit := self.wind_speed_unit) is not None:
+            return wind_speed_unit
+
         return self._attr_native_wind_speed_unit
 
     @property
-    def wind_speed_unit(self) -> str:
+    def wind_speed_unit(self) -> str | None:
+        """Return the wind_speed unit for backward compatibility.
+
+        Should not be set by integrations.
+        """
+        return self._attr_wind_speed_unit
+
+    @property
+    def _wind_speed_unit(self) -> str:
         """Return the converted unit of measurement for wind speed.
 
         Should not be set by integrations.
@@ -431,13 +455,11 @@ class WeatherEntity(Entity):
         ) is not None:
             return weather_option_wind_speed_uom
 
-        if (wind_speed_unit := self._attr_wind_speed_unit) is not None:
-            return wind_speed_unit
-
-        if (native_wind_speed_unit := self.native_wind_speed_unit) is not None:
-            return native_wind_speed_unit
-
-        return self.hass.config.units.wind_speed_unit
+        return (
+            SPEED_KILOMETERS_PER_HOUR
+            if self.hass.config.units.is_metric
+            else SPEED_MILES_PER_HOUR
+        )
 
     @property
     def wind_bearing(self) -> float | str | None:
@@ -460,15 +482,29 @@ class WeatherEntity(Entity):
     @property
     def native_visibility(self) -> float | None:
         """Return the visibility in native units."""
+        if (visibility := self.visibility) is not None:
+            return visibility
+
         return self._attr_native_visibility
 
     @property
     def native_visibility_unit(self) -> str | None:
         """Return the native unit of measurement for visibility."""
+        if (visibility_unit := self.visibility_unit) is not None:
+            return visibility_unit
+
         return self._attr_native_visibility_unit
 
     @property
-    def visibility_unit(self) -> str:
+    def visibility_unit(self) -> str | None:
+        """Return the visibility unit for backward compatibility.
+
+        Should not be set by integrations.
+        """
+        return self._attr_visibility_unit
+
+    @property
+    def _visibility_unit(self) -> str:
         """Return the converted unit of measurement for visibility.
 
         Should not be set by integrations.
@@ -477,12 +513,6 @@ class WeatherEntity(Entity):
             weather_option_visibility_uom := self._weather_option_visibility_uom
         ) is not None:
             return weather_option_visibility_uom
-
-        if (visibility_unit := self._attr_visibility_unit) is not None:
-            return visibility_unit
-
-        if (native_visibility_unit := self.native_visibility_unit) is not None:
-            return native_visibility_unit
 
         return self.hass.config.units.length_unit
 
@@ -494,10 +524,21 @@ class WeatherEntity(Entity):
     @property
     def native_precipitation_unit(self) -> str | None:
         """Return the native unit of measurement for accumulated precipitation."""
+        if (precipitation_unit := self.precipitation_unit) is not None:
+            return precipitation_unit
+
         return self._attr_native_precipitation_unit
 
     @property
-    def precipitation_unit(self) -> str:
+    def precipitation_unit(self) -> str | None:
+        """Return the precipitation unit for backward compatibility.
+
+        Should not be set by integrations.
+        """
+        return self._attr_precipitation_unit
+
+    @property
+    def _precipitation_unit(self) -> str:
         """Return the converted unit of measurement for precipitation.
 
         Should not be set by integrations.
@@ -506,12 +547,6 @@ class WeatherEntity(Entity):
             weather_option_precipitation_uom := self._weather_option_precipitation_uom
         ) is not None:
             return weather_option_precipitation_uom
-
-        if (precipitation_unit := self._attr_precipitation_unit) is not None:
-            return precipitation_unit
-
-        if (native_precipitation_unit := self.native_precipitation_unit) is not None:
-            return native_precipitation_unit
 
         return self.hass.config.units.accumulated_precipitation_unit
 
@@ -534,22 +569,20 @@ class WeatherEntity(Entity):
 
         precision = self.precision
 
-        if (temperature := (self.native_temperature or self.temperature)) is not None:
-            if (native_temperature_unit := self.native_temperature_unit) is not None:
-                from_unit = native_temperature_unit
-                to_unit = self.temperature_unit
-            else:
-                from_unit = self.temperature_unit
-                to_unit = self.hass.config.units.temperature_unit
-            with suppress(ValueError):
+        if (temperature := self.native_temperature) is not None:
+            from_unit = self.native_temperature_unit or self._temperature_unit
+            to_unit = self._temperature_unit
+            try:
                 temperature_f = float(temperature)
-                value_temp = UNIT_CONVERSIONS[ATTR_TEMPERATURE_UOM](
+                value_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
                     temperature_f, from_unit, to_unit
                 )
                 data[ATTR_WEATHER_TEMPERATURE] = round_temperature(
                     value_temp, precision
                 )
                 data[ATTR_WEATHER_TEMPERATURE_UNIT] = to_unit
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_TEMPERATURE] = temperature
 
         if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)
@@ -557,57 +590,51 @@ class WeatherEntity(Entity):
         if (ozone := self.ozone) is not None:
             data[ATTR_WEATHER_OZONE] = ozone
 
-        if (pressure := (self.native_pressure or self.pressure)) is not None:
-            if (native_pressure_unit := self.native_pressure_unit) is not None:
-                from_unit = native_pressure_unit
-                to_unit = self.pressure_unit
-            else:
-                from_unit = self.pressure_unit
-                to_unit = self.hass.config.units.pressure_unit
-            with suppress(ValueError):
+        if (pressure := self.native_pressure) is not None:
+            from_unit = self.native_pressure_unit or self._pressure_unit
+            to_unit = self._pressure_unit
+            try:
                 pressure_f = float(pressure)
-                value_pressure = UNIT_CONVERSIONS[ATTR_PRESSURE_UOM](
+                value_pressure = UNIT_CONVERSIONS[ATTR_WEATHER_PRESSURE_UNIT](
                     pressure_f, from_unit, to_unit
                 )
                 data[ATTR_WEATHER_PRESSURE] = round(value_pressure, ROUNDING_PRECISION)
                 data[ATTR_WEATHER_PRESSURE_UNIT] = to_unit
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_PRESSURE] = pressure
 
         if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
 
-        if (wind_speed := (self.native_wind_speed or self.wind_speed)) is not None:
-            if (native_wind_speed_unit := self.native_wind_speed_unit) is not None:
-                from_unit = native_wind_speed_unit
-                to_unit = self.wind_speed_unit
-            else:
-                from_unit = self.wind_speed_unit
-                to_unit = self.hass.config.units.wind_speed_unit
-            with suppress(ValueError):
+        if (wind_speed := self.native_wind_speed) is not None:
+            from_unit = self.native_wind_speed_unit or self._wind_speed_unit
+            to_unit = self._wind_speed_unit
+            try:
                 wind_speed_f = float(wind_speed)
-                value_wind_speed = UNIT_CONVERSIONS[ATTR_WIND_SPEED_UOM](
+                value_wind_speed = UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
                     wind_speed_f, from_unit, to_unit
                 )
                 data[ATTR_WEATHER_WIND_SPEED] = round(
                     value_wind_speed, ROUNDING_PRECISION
                 )
                 data[ATTR_WEATHER_WIND_SPEED_UNIT] = to_unit
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
-        if (visibility := (self.native_visibility or self.visibility)) is not None:
-            if (native_visibility_unit := self.native_visibility_unit) is not None:
-                from_unit = native_visibility_unit
-                to_unit = self.visibility_unit
-            else:
-                from_unit = self.visibility_unit
-                to_unit = self.hass.config.units.length_unit
-            with suppress(ValueError):
+        if (visibility := self.native_visibility) is not None:
+            from_unit = self.native_visibility_unit or self._visibility_unit
+            to_unit = self._visibility_unit
+            try:
                 visibility_f = float(visibility)
-                value_visibility = UNIT_CONVERSIONS[ATTR_VISIBILITY_UOM](
+                value_visibility = UNIT_CONVERSIONS[ATTR_WEATHER_VISIBILITY_UNIT](
                     visibility_f, from_unit, to_unit
                 )
                 data[ATTR_WEATHER_VISIBILITY] = round(
                     value_visibility, ROUNDING_PRECISION
                 )
                 data[ATTR_WEATHER_VISIBILITY_UNIT] = to_unit
+            except (TypeError, ValueError):
+                data[ATTR_WEATHER_VISIBILITY] = visibility
 
         if self.forecast is not None:
             forecast = []
@@ -618,33 +645,32 @@ class WeatherEntity(Entity):
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)
                 )
 
-                if (
-                    native_temperature_unit := self.native_temperature_unit
-                ) is not None:
-                    from_temp_unit = native_temperature_unit
-                    to_temp_unit = self.temperature_unit
-                else:
-                    from_temp_unit = self.temperature_unit
-                    to_temp_unit = self.hass.config.units.temperature_unit
+                from_temp_unit = self.native_temperature_unit or self._temperature_unit
+                to_temp_unit = self._temperature_unit
 
-                with suppress(ValueError):
-                    temperature_f = float(temperature)
-                    value_temp = UNIT_CONVERSIONS[ATTR_TEMPERATURE_UOM](
-                        temperature_f,
-                        from_temp_unit,
-                        to_temp_unit,
-                    )
-                    forecast_entry[ATTR_FORECAST_TEMP] = round_temperature(
-                        value_temp, precision
-                    )
+                if temperature is None:
+                    forecast_entry[ATTR_FORECAST_TEMP] = None
+                else:
+                    with suppress(TypeError, ValueError):
+                        temperature_f = float(temperature)
+                        value_temp = UNIT_CONVERSIONS[ATTR_WEATHER_TEMPERATURE_UNIT](
+                            temperature_f,
+                            from_temp_unit,
+                            to_temp_unit,
+                        )
+                        forecast_entry[ATTR_FORECAST_TEMP] = round_temperature(
+                            value_temp, precision
+                        )
 
                 if forecast_temp_low := forecast_entry.get(
                     ATTR_FORECAST_NATIVE_TEMP_LOW,
                     forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
                 ):
-                    with suppress(ValueError):
+                    with suppress(TypeError, ValueError):
                         forecast_temp_low_f = float(forecast_temp_low)
-                        value_temp_low = UNIT_CONVERSIONS[ATTR_TEMPERATURE_UOM](
+                        value_temp_low = UNIT_CONVERSIONS[
+                            ATTR_WEATHER_TEMPERATURE_UNIT
+                        ](
                             forecast_temp_low_f,
                             from_temp_unit,
                             to_temp_unit,
@@ -658,16 +684,14 @@ class WeatherEntity(Entity):
                     ATTR_FORECAST_NATIVE_PRESSURE,
                     forecast_entry.get(ATTR_FORECAST_PRESSURE),
                 ):
-                    if (native_pressure_unit := self.native_pressure_unit) is not None:
-                        from_pressure_unit = native_pressure_unit
-                        to_pressure_unit = self.pressure_unit
-                    else:
-                        from_pressure_unit = self.pressure_unit
-                        to_pressure_unit = self.hass.config.units.pressure_unit
-                    with suppress(ValueError):
+                    from_pressure_unit = (
+                        self.native_pressure_unit or self._pressure_unit
+                    )
+                    to_pressure_unit = self._pressure_unit
+                    with suppress(TypeError, ValueError):
                         forecast_pressure_f = float(forecast_pressure)
                         forecast_entry[ATTR_FORECAST_PRESSURE] = round(
-                            UNIT_CONVERSIONS[ATTR_PRESSURE_UOM](
+                            UNIT_CONVERSIONS[ATTR_WEATHER_PRESSURE_UNIT](
                                 forecast_pressure_f,
                                 from_pressure_unit,
                                 to_pressure_unit,
@@ -679,18 +703,14 @@ class WeatherEntity(Entity):
                     ATTR_FORECAST_NATIVE_WIND_SPEED,
                     forecast_entry.get(ATTR_FORECAST_WIND_SPEED),
                 ):
-                    if (
-                        native_wind_speed_unit := self.native_wind_speed_unit
-                    ) is not None:
-                        from_wind_speed_unit = native_wind_speed_unit
-                        to_wind_speed_unit = self.wind_speed_unit
-                    else:
-                        from_wind_speed_unit = self.wind_speed_unit
-                        to_wind_speed_unit = self.hass.config.units.wind_speed_unit
-                    with suppress(ValueError):
+                    from_wind_speed_unit = (
+                        self.native_wind_speed_unit or self._wind_speed_unit
+                    )
+                    to_wind_speed_unit = self._wind_speed_unit
+                    with suppress(TypeError, ValueError):
                         forecast_wind_speed_f = float(forecast_wind_speed)
                         forecast_entry[ATTR_FORECAST_WIND_SPEED] = round(
-                            UNIT_CONVERSIONS[ATTR_WIND_SPEED_UOM](
+                            UNIT_CONVERSIONS[ATTR_WEATHER_WIND_SPEED_UNIT](
                                 forecast_wind_speed_f,
                                 from_wind_speed_unit,
                                 to_wind_speed_unit,
@@ -698,23 +718,19 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
 
-                from_precipitation_unit = self.precipitation_unit
-                to_precipitation_unit = (
-                    self.hass.config.units.accumulated_precipitation_unit
-                )
                 if forecast_precipitation := forecast_entry.get(
                     ATTR_FORECAST_NATIVE_PRECIPITATION,
                     forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
                 ):
-                    if (
-                        native_precipitation_unit := self.native_precipitation_unit
-                    ) is not None:
-                        from_precipitation_unit = native_precipitation_unit
-                        to_precipitation_unit = self.precipitation_unit
-                    with suppress(ValueError):
+                    from_precipitation_unit = (
+                        self.native_precipitation_unit or self._precipitation_unit
+                    )
+                    to_precipitation_unit = self._precipitation_unit
+                    data[ATTR_WEATHER_PRECIPITATION_UNIT] = to_precipitation_unit
+                    with suppress(TypeError, ValueError):
                         forecast_precipitation_f = float(forecast_precipitation)
                         forecast_entry[ATTR_FORECAST_PRECIPITATION] = round(
-                            UNIT_CONVERSIONS[ATTR_PRECIPITATION_UOM](
+                            UNIT_CONVERSIONS[ATTR_WEATHER_PRECIPITATION_UNIT](
                                 forecast_precipitation_f,
                                 from_precipitation_unit,
                                 to_precipitation_unit,
@@ -723,8 +739,6 @@ class WeatherEntity(Entity):
                         )
 
                 forecast.append(forecast_entry)
-                if forecast_precipitation is not None:
-                    data[ATTR_WEATHER_PRECIPITATION_UNIT] = to_precipitation_unit
 
             data[ATTR_FORECAST] = forecast
 
@@ -753,37 +767,58 @@ class WeatherEntity(Entity):
         self._weather_option_visibility_uom = None
         if weather_options := self.registry_entry.options.get(DOMAIN):
             if (
-                (custom_unit_temperature := weather_options.get(ATTR_TEMPERATURE_UOM))
-                and custom_unit_temperature in VALID_UNITS[ATTR_TEMPERATURE_UOM]
-                and self.native_temperature_unit in VALID_UNITS[ATTR_TEMPERATURE_UOM]
+                (
+                    custom_unit_temperature := weather_options.get(
+                        ATTR_WEATHER_TEMPERATURE_UNIT
+                    )
+                )
+                and custom_unit_temperature
+                in VALID_UNITS[ATTR_WEATHER_TEMPERATURE_UNIT]
+                and self.native_temperature_unit
+                in VALID_UNITS[ATTR_WEATHER_TEMPERATURE_UNIT]
             ):
                 self._weather_option_temperature_uom = custom_unit_temperature
             if (
-                (custom_unit_pressure := weather_options.get(ATTR_PRESSURE_UOM))
-                and custom_unit_pressure in VALID_UNITS[ATTR_PRESSURE_UOM]
-                and self.native_pressure_unit in VALID_UNITS[ATTR_PRESSURE_UOM]
+                (
+                    custom_unit_pressure := weather_options.get(
+                        ATTR_WEATHER_PRESSURE_UNIT
+                    )
+                )
+                and custom_unit_pressure in VALID_UNITS[ATTR_WEATHER_PRESSURE_UNIT]
+                and self.native_pressure_unit in VALID_UNITS[ATTR_WEATHER_PRESSURE_UNIT]
             ):
                 self._weather_option_pressure_uom = custom_unit_pressure
             if (
                 (
                     custom_unit_precipitation := weather_options.get(
-                        ATTR_PRECIPITATION_UOM
+                        ATTR_WEATHER_PRECIPITATION_UNIT
                     )
                 )
-                and custom_unit_precipitation in VALID_UNITS[ATTR_PRECIPITATION_UOM]
+                and custom_unit_precipitation
+                in VALID_UNITS[ATTR_WEATHER_PRECIPITATION_UNIT]
                 and self.native_precipitation_unit
-                in VALID_UNITS[ATTR_PRECIPITATION_UOM]
+                in VALID_UNITS[ATTR_WEATHER_PRECIPITATION_UNIT]
             ):
                 self._weather_option_precipitation_uom = custom_unit_precipitation
             if (
-                (custom_unit_wind_speed := weather_options.get(ATTR_WIND_SPEED_UOM))
-                and custom_unit_wind_speed in VALID_UNITS[ATTR_WIND_SPEED_UOM]
-                and self.native_wind_speed_unit in VALID_UNITS[ATTR_WIND_SPEED_UOM]
+                (
+                    custom_unit_wind_speed := weather_options.get(
+                        ATTR_WEATHER_WIND_SPEED_UNIT
+                    )
+                )
+                and custom_unit_wind_speed in VALID_UNITS[ATTR_WEATHER_WIND_SPEED_UNIT]
+                and self.native_wind_speed_unit
+                in VALID_UNITS[ATTR_WEATHER_WIND_SPEED_UNIT]
             ):
                 self._weather_option_wind_speed_uom = custom_unit_wind_speed
             if (
-                (custom_unit_visibility := weather_options.get(ATTR_VISIBILITY_UOM))
-                and custom_unit_visibility in VALID_UNITS[ATTR_VISIBILITY_UOM]
-                and self.native_visibility_unit in VALID_UNITS[ATTR_VISIBILITY_UOM]
+                (
+                    custom_unit_visibility := weather_options.get(
+                        ATTR_WEATHER_VISIBILITY_UNIT
+                    )
+                )
+                and custom_unit_visibility in VALID_UNITS[ATTR_WEATHER_VISIBILITY_UNIT]
+                and self.native_visibility_unit
+                in VALID_UNITS[ATTR_WEATHER_VISIBILITY_UNIT]
             ):
                 self._weather_option_visibility_uom = custom_unit_visibility
