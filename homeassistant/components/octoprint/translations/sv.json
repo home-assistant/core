@@ -3,7 +3,8 @@
         "step": {
             "user": {
                 "data": {
-                    "ssl": "Anv\u00e4nd SSL"
+                    "ssl": "Anv\u00e4nd SSL",
+                    "username": "Anv\u00e4ndarnamn"
                 }
             }
         }
