@@ -4,16 +4,36 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import (
-    async_entries_for_config_entry,
-    async_get as async_get_registry,
-)
 
 from .const import DOMAIN, Platform
 from .device import BroadlinkDevice
 from .entity import BroadlinkEntity
+
+
+def async_clean_registries(
+    hass: HomeAssistant, config_entry: ConfigEntry, wanted_unique_id: set
+) -> None:
+    """Remove orphaned devices and entities."""
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entry.domain != Platform.BUTTON or entry.unique_id in wanted_unique_id:
+            continue
+
+        entity_registry.async_remove(entry.entity_id)
+
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    ):
+        entries = er.async_entries_for_device(entity_registry, device_entry.id, True)
+        if len(entries) == 0:
+            device_registry.async_remove_device(device_entry.id)
 
 
 async def async_setup_entry(
@@ -24,27 +44,18 @@ async def async_setup_entry(
     """Set up the Broadlink light."""
     device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
     store = device.store
-    entity_registry = async_get_registry(hass)
 
-    entity_ids = {
-        entry.unique_id: entry.entity_id
-        for entry in async_entries_for_config_entry(
-            entity_registry, config_entry.entry_id
-        )
-        if entry.domain == Platform.BUTTON
-    }
-
+    unique_ids: set[str] = set()
     entities: list[BroadlinkButton] = []
     for subdevice, commands in store.extract_devices_and_commands().items():
         for command in commands:
             unique_id = f"{device.unique_id}-codes-{subdevice}-{command}"
+            unique_ids.add(unique_id)
             entities.append(BroadlinkButton(device, subdevice, command, unique_id))
-            entity_ids.pop(unique_id, None)
 
     async_add_entities(entities)
 
-    for entity_id in entity_ids.values():
-        entity_registry.async_remove(entity_id)
+    async_clean_registries(hass, config_entry, unique_ids)
 
 
 class BroadlinkButton(BroadlinkEntity, ButtonEntity):
