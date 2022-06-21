@@ -254,11 +254,11 @@ class WeatherEntity(Entity):
     _attr_native_wind_speed: float | None = None
     _attr_native_wind_speed_unit: str | None = None
 
-    _weather_option_temperature_uom: str | None = None
-    _weather_option_pressure_uom: str | None = None
-    _weather_option_visibility_uom: str | None = None
-    _weather_option_precipitation_uom: str | None = None
-    _weather_option_wind_speed_uom: str | None = None
+    _weather_option_temperature_unit: str | None = None
+    _weather_option_pressure_unit: str | None = None
+    _weather_option_visibility_unit: str | None = None
+    _weather_option_precipitation_unit: str | None = None
+    _weather_option_wind_speed_unit: str | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -364,9 +364,9 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         if (
-            weather_option_temperature_uom := self._weather_option_temperature_uom
+            weather_option_temperature_unit := self._weather_option_temperature_unit
         ) is not None:
-            return weather_option_temperature_uom
+            return weather_option_temperature_unit
 
         return self._default_temperature_unit
 
@@ -417,9 +417,9 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         if (
-            weather_option_pressure_uom := self._weather_option_pressure_uom
+            weather_option_pressure_unit := self._weather_option_pressure_unit
         ) is not None:
-            return weather_option_pressure_uom
+            return weather_option_pressure_unit
 
         return self._default_pressure_unit
 
@@ -479,9 +479,9 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         if (
-            weather_option_wind_speed_uom := self._weather_option_wind_speed_uom
+            weather_option_wind_speed_unit := self._weather_option_wind_speed_unit
         ) is not None:
-            return weather_option_wind_speed_uom
+            return weather_option_wind_speed_unit
 
         return self._default_wind_speed_unit
 
@@ -542,9 +542,9 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         if (
-            weather_option_visibility_uom := self._weather_option_visibility_uom
+            weather_option_visibility_unit := self._weather_option_visibility_unit
         ) is not None:
-            return weather_option_visibility_uom
+            return weather_option_visibility_unit
 
         return self._default_visibility_unit
 
@@ -584,9 +584,9 @@ class WeatherEntity(Entity):
         Should not be set by integrations.
         """
         if (
-            weather_option_precipitation_uom := self._weather_option_precipitation_uom
+            weather_option_precipitation_unit := self._weather_option_precipitation_unit
         ) is not None:
-            return weather_option_precipitation_uom
+            return weather_option_precipitation_unit
 
         return self._default_precipitation_unit
 
@@ -609,12 +609,6 @@ class WeatherEntity(Entity):
 
         precision = self.precision
 
-        data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
-        data[ATTR_WEATHER_PRESSURE_UNIT] = self._pressure_unit
-        data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
-        data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
-        data[ATTR_WEATHER_WIND_SPEED_UNIT] = self._wind_speed_unit
-
         if (temperature := self.native_temperature) is not None:
             from_unit = self.native_temperature_unit or self._default_temperature_unit
             to_unit = self._temperature_unit
@@ -628,6 +622,8 @@ class WeatherEntity(Entity):
                 )
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_TEMPERATURE] = temperature
+
+        data[ATTR_WEATHER_TEMPERATURE_UNIT] = self._temperature_unit
 
         if (humidity := self.humidity) is not None:
             data[ATTR_WEATHER_HUMIDITY] = round(humidity)
@@ -647,6 +643,8 @@ class WeatherEntity(Entity):
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_PRESSURE] = pressure
 
+        data[ATTR_WEATHER_PRESSURE_UNIT] = self._pressure_unit
+
         if (wind_bearing := self.wind_bearing) is not None:
             data[ATTR_WEATHER_WIND_BEARING] = wind_bearing
 
@@ -664,6 +662,8 @@ class WeatherEntity(Entity):
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_WIND_SPEED] = wind_speed
 
+        data[ATTR_WEATHER_WIND_SPEED_UNIT] = self._wind_speed_unit
+
         if (visibility := self.native_visibility) is not None:
             from_unit = self.native_visibility_unit or self._default_visibility_unit
             to_unit = self._visibility_unit
@@ -677,6 +677,9 @@ class WeatherEntity(Entity):
                 )
             except (TypeError, ValueError):
                 data[ATTR_WEATHER_VISIBILITY] = visibility
+
+        data[ATTR_WEATHER_VISIBILITY_UNIT] = self._visibility_unit
+        data[ATTR_WEATHER_PRECIPITATION_UNIT] = self._precipitation_unit
 
         if self.forecast is not None:
             forecast = []
@@ -804,22 +807,22 @@ class WeatherEntity(Entity):
         """Run when the entity registry entry has been updated."""
         assert self.registry_entry
         weather_options = self.registry_entry.options.get(DOMAIN)
-        self._weather_option_temperature_uom = None
-        self._weather_option_pressure_uom = None
-        self._weather_option_precipitation_uom = None
-        self._weather_option_wind_speed_uom = None
-        self._weather_option_visibility_uom = None
+        self._weather_option_temperature_unit = None
+        self._weather_option_pressure_unit = None
+        self._weather_option_precipitation_unit = None
+        self._weather_option_wind_speed_unit = None
+        self._weather_option_visibility_unit = None
         if weather_options := self.registry_entry.options.get(DOMAIN):
             if (
                 custom_unit_temperature := weather_options.get(
                     ATTR_WEATHER_TEMPERATURE_UNIT
                 )
             ) and custom_unit_temperature in VALID_UNITS[ATTR_WEATHER_TEMPERATURE_UNIT]:
-                self._weather_option_temperature_uom = custom_unit_temperature
+                self._weather_option_temperature_unit = custom_unit_temperature
             if (
                 custom_unit_pressure := weather_options.get(ATTR_WEATHER_PRESSURE_UNIT)
             ) and custom_unit_pressure in VALID_UNITS[ATTR_WEATHER_PRESSURE_UNIT]:
-                self._weather_option_pressure_uom = custom_unit_pressure
+                self._weather_option_pressure_unit = custom_unit_pressure
             if (
                 custom_unit_precipitation := weather_options.get(
                     ATTR_WEATHER_PRECIPITATION_UNIT
@@ -827,16 +830,16 @@ class WeatherEntity(Entity):
             ) and custom_unit_precipitation in VALID_UNITS[
                 ATTR_WEATHER_PRECIPITATION_UNIT
             ]:
-                self._weather_option_precipitation_uom = custom_unit_precipitation
+                self._weather_option_precipitation_unit = custom_unit_precipitation
             if (
                 custom_unit_wind_speed := weather_options.get(
                     ATTR_WEATHER_WIND_SPEED_UNIT
                 )
             ) and custom_unit_wind_speed in VALID_UNITS[ATTR_WEATHER_WIND_SPEED_UNIT]:
-                self._weather_option_wind_speed_uom = custom_unit_wind_speed
+                self._weather_option_wind_speed_unit = custom_unit_wind_speed
             if (
                 custom_unit_visibility := weather_options.get(
                     ATTR_WEATHER_VISIBILITY_UNIT
                 )
             ) and custom_unit_visibility in VALID_UNITS[ATTR_WEATHER_VISIBILITY_UNIT]:
-                self._weather_option_visibility_uom = custom_unit_visibility
+                self._weather_option_visibility_unit = custom_unit_visibility
