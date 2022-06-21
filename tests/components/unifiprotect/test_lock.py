@@ -35,7 +35,7 @@ async def doorlock_fixture(
     # disable pydantic validation so mocking can happen
     Doorlock.__config__.validate_assignment = False
 
-    lock_obj = mock_doorlock.copy(deep=True)
+    lock_obj = mock_doorlock.copy()
     lock_obj._api = mock_entry.api
     lock_obj.name = "Test Lock"
     lock_obj.lock_status = LockStatusType.OPEN
