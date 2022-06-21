@@ -130,7 +130,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self,
         channel: ZigbeeChannel,
         signal: str,
-        func: Callable[[], Any],
+        func: Callable[..., Any],
         signal_override=False,
     ):
         """Accept a signal from a channel."""
