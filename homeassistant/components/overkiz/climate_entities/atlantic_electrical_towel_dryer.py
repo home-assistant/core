@@ -7,13 +7,10 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_BOOST,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.components.overkiz.coordinator import OverkizDataUpdateCoordinator
 from homeassistant.components.overkiz.entity import OverkizEntity
@@ -22,9 +19,9 @@ from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 PRESET_DRYING = "drying"
 
 OVERKIZ_TO_HVAC_MODE: dict[str, str] = {
-    OverkizCommandParam.EXTERNAL: HVAC_MODE_HEAT,  # manu
-    OverkizCommandParam.INTERNAL: HVAC_MODE_AUTO,  # prog
-    OverkizCommandParam.STANDBY: HVAC_MODE_OFF,
+    OverkizCommandParam.EXTERNAL: HVACMode.HEAT,  # manu
+    OverkizCommandParam.INTERNAL: HVACMode.AUTO,  # prog
+    OverkizCommandParam.STANDBY: HVACMode.OFF,
 }
 HVAC_MODE_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_HVAC_MODE.items()}
 
@@ -51,11 +48,11 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         super().__init__(device_url, coordinator)
         self.temperature_device = self.executor.linked_device(7)
 
-        self._attr_supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Not all AtlanticElectricalTowelDryer models support presets, thus we need to check if the command is available
         if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
-            self._attr_supported_features += SUPPORT_PRESET_MODE
+            self._attr_supported_features += ClimateEntityFeature.PRESET_MODE
 
     @property
     def hvac_mode(self) -> str:
@@ -65,25 +62,19 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
                 cast(str, self.executor.select_state(OverkizState.CORE_OPERATING_MODE))
             ]
 
-        # TODO figure out why we have two options here...
-        if OverkizState.CORE_ON_OFF in self.device.states:
-            return OVERKIZ_TO_HVAC_MODE[
-                cast(str, self.executor.select_state(OverkizState.CORE_ON_OFF))
-            ]
-
-        return HVAC_MODE_OFF
+        return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
-            OverkizCommand.SET_TOWER_DRYER_OPERATING_MODE,  # TODO fix typo upstream
+            OverkizCommand.SET_TOWEL_DRYER_OPERATING_MODE,
             HVAC_MODE_TO_OVERKIZ[hvac_mode],
         )
 
     @property
     def target_temperature(self) -> None:
         """Return the temperature."""
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVACMode.AUTO:
             self.executor.select_state(OverkizState.IO_EFFECTIVE_TEMPERATURE_SETPOINT)
         else:
             self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
@@ -100,7 +91,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
 
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVACMode.AUTO:
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE, temperature
             )
