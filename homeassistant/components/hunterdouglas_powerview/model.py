@@ -27,7 +27,7 @@ class PowerviewDeviceInfo:
     name: str
     mac_address: str
     serial_number: str
-    revision: Any
-    firmware: Any
+    revision: str | None
+    firmware: str | None
     model: str
     hub_address: str
