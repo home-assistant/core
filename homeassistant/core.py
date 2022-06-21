@@ -1115,7 +1115,7 @@ class State:
 
         State objects are effectively immutable.
         """
-        return hash(id(self))
+        return hash((id(self), self.last_updated))
 
     @property
     def name(self) -> str:
