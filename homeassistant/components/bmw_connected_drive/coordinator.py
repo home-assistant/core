@@ -16,7 +16,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_READ_ONLY, CONF_REFRESH_TOKEN, DOMAIN
 
-SCAN_INTERVAL = timedelta(seconds=300)
+DEFAULT_SCAN_INTERVAL_SECONDS = 300
+SCAN_INTERVAL = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -55,6 +56,11 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
             await self.account.get_vehicles()
         except (HTTPError, HTTPStatusError, TimeoutException) as err:
             if isinstance(err, HTTPStatusError) and err.response.status_code == 429:
+                # Increase scan interval to not jump to not bring up the issue next time
+                self.update_interval = timedelta(
+                    seconds=DEFAULT_SCAN_INTERVAL_SECONDS * 3
+                )
+
                 _LOGGER.warning(
                     "Too many requests when communicating with BMW API, API allows retry in %s seconds",
                     err.response.headers.get("Retry-After") or "UNKNOWN",
@@ -75,6 +81,9 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
                 old_refresh_token,
                 self.account.refresh_token,
             )
+
+        # Reset scan interval after successful update
+        self.update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS)
 
     def _update_config_entry_refresh_token(self, refresh_token: str | None) -> None:
         """Update or delete the refresh_token in the Config Entry."""
