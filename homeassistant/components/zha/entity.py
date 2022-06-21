@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import functools
 import logging
 from typing import TYPE_CHECKING, Any
@@ -29,7 +30,6 @@ from .core.const import (
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
-from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
@@ -57,7 +57,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device = zha_device
-        self._unsubs: list[CALLABLE_T] = []
+        self._unsubs: list[Callable[[], None]] = []
         self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
@@ -127,7 +127,11 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @callback
     def async_accept_signal(
-        self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
+        self,
+        channel: ZigbeeChannel,
+        signal: str,
+        func: Callable[[], Any],
+        signal_override=False,
     ):
         """Accept a signal from a channel."""
         unsub = None
@@ -181,8 +185,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.

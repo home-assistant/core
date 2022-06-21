@@ -38,7 +38,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api

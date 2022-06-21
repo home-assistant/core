@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
+from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     Bootstrap,
     Event,
@@ -16,6 +16,8 @@ from pyunifiprotect.data import (
     ProtectModelWithId,
     WSSubscriptionMessage,
 )
+from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -101,23 +103,27 @@ class ProtectData:
 
         try:
             updates = await self.api.update(force=force)
-        except NvrError:
-            if self.last_update_success:
-                _LOGGER.exception("Error while updating")
-            self.last_update_success = False
-            # manually trigger update to mark entities unavailable
-            self._async_process_updates(self.api.bootstrap)
         except NotAuthorized:
             await self.async_stop()
             _LOGGER.exception("Reauthentication required")
             self._entry.async_start_reauth(self._hass)
             self.last_update_success = False
+        except ClientError:
+            if self.last_update_success:
+                _LOGGER.exception("Error while updating")
+            self.last_update_success = False
+            # manually trigger update to mark entities unavailable
+            self._async_process_updates(self.api.bootstrap)
         else:
             self.last_update_success = True
             self._async_process_updates(updates)
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
+        # removed packets are not processed yet
+        if message.new_obj is None:  # pragma: no cover
+            return
+
         if message.new_obj.model in DEVICES_WITH_ENTITIES:
             self._async_signal_device_update(message.new_obj)
             # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
