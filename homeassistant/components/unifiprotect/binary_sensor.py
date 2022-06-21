@@ -5,7 +5,15 @@ from copy import copy
 from dataclasses import dataclass
 import logging
 
-from pyunifiprotect.data import NVR, Camera, Event, Light, MountType, Sensor
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Event,
+    Light,
+    MountType,
+    ProtectModelWithId,
+    Sensor,
+)
 from pyunifiprotect.data.nvr import UOSDisk
 
 from homeassistant.components.binary_sensor import (
@@ -205,8 +213,8 @@ class ProtectDeviceBinarySensor(ProtectDeviceEntity, BinarySensorEntity):
     entity_description: ProtectBinaryEntityDescription
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
 
         self._attr_is_on = self.entity_description.get_ufp_value(self.device)
         # UP Sense can be any of the 3 contact sensor device classes
@@ -240,8 +248,8 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         super().__init__(data, device, description)
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
 
         slot = self._disk.slot
         self._attr_available = False
