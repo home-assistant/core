@@ -1,8 +1,8 @@
 """UniFi Protect media sources."""
 
 from __future__ import annotations
-import asyncio
 
+import asyncio
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
 from typing import cast
@@ -112,6 +112,11 @@ def _bad_identifier(identifier: str, err: Exception | None = None) -> BrowseMedi
 
 
 @callback
+def _bad_identifier_media(identifier: str, err: Exception | None = None) -> PlayMedia:
+    return cast(PlayMedia, _bad_identifier(identifier, err))
+
+
+@callback
 def _format_duration(duration: timedelta) -> str:
     formatted = ""
     seconds = int(duration.total_seconds())
@@ -154,18 +159,18 @@ class ProtectMediaSource(MediaSource):
 
         parts = item.identifier.split(":")
         if len(parts) != 3 or parts[1] not in ("event", "eventthumb"):
-            return _bad_identifier(item.identifier)
+            return _bad_identifier_media(item.identifier)
 
         thumbnail_only = parts[1] == "eventthumb"
         try:
             data = self.data_sources[parts[0]]
         except IndexError as err:
-            return _bad_identifier(item.identifier, err)
+            return _bad_identifier_media(item.identifier, err)
 
         try:
             event = await data.api.get_event(parts[2])
         except NvrError as err:
-            return _bad_identifier(item.identifier, err)
+            return _bad_identifier_media(item.identifier, err)
 
         if thumbnail_only:
             PlayMedia(async_generate_thumbnail_url(event), "image/jpeg")
@@ -470,7 +475,7 @@ class ProtectMediaSource(MediaSource):
             children_media_class=MEDIA_CLASS_VIDEO,
         )
 
-        if build_children:
+        if build_children and data.api.bootstrap.recording_start is not None:
             childern = [
                 self._build_day(data, camera_id, event_type, 1),
                 self._build_day(data, camera_id, event_type, 7),
@@ -579,7 +584,7 @@ class ProtectMediaSource(MediaSource):
             if not data_source.api.bootstrap.has_media:
                 continue
             console_source = await self._build_console(data_source)
-            if len(console_source.children) == 0:
+            if console_source.children is None or len(console_source.children) == 0:
                 continue
             consoles.append(console_source)
 
