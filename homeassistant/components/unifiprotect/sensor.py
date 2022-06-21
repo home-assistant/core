@@ -171,7 +171,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_RATE_BYTES_PER_SECOND,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.storage.rate",
+        ufp_value="stats.storage.rate_per_second",
         precision=2,
     ),
     ProtectSensorEntityDescription(
