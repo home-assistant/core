@@ -218,7 +218,7 @@ class IasAce(ZigbeeChannel):
             IAS_ACE_PANIC,
         )
 
-    def _set_alarm(self, status: AceCluster.PanelStatus, event: str) -> None:
+    def _set_alarm(self, status: AceCluster.AlarmStatus, event: int) -> None:
         """Set the specified alarm status."""
         self.alarm_status = status
         self.armed_state = AceCluster.PanelStatus.In_Alarm
