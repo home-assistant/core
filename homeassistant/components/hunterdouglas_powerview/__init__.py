@@ -101,7 +101,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_get_device_info(pv_request: AioRequest, hub_address: str):
+async def async_get_device_info(
+    pv_request: AioRequest, hub_address: str
+) -> PowerviewDeviceInfo:
     """Determine device info."""
     userdata = UserData(pv_request)
     resources = await userdata.get_resources()
