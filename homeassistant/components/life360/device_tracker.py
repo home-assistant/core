@@ -221,14 +221,12 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         attrs = {}
-        if self._data.address is not None:
-            attrs[ATTR_ADDRESS] = self._data.address
+        attrs[ATTR_ADDRESS] = self._data.address
         attrs[ATTR_AT_LOC_SINCE] = self._data.at_loc_since
         attrs[ATTR_BATTERY_CHARGING] = self._data.battery_charging
         attrs[ATTR_DRIVING] = self.driving
         attrs[ATTR_LAST_SEEN] = self._data.last_seen
-        if self._data.place is not None:
-            attrs[ATTR_PLACE] = self._data.place
+        attrs[ATTR_PLACE] = self._data.place
         attrs[ATTR_SPEED] = self._data.speed
         attrs[ATTR_WIFI_ON] = self._data.wifi_on
         return attrs
