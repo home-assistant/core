@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Generator
 from contextlib import suppress
 from functools import partial
 import logging
@@ -42,13 +43,13 @@ class BroadlinkStores:
 
     def __init__(self, codes_store: Store, flags_store: Store) -> None:
         """Initialize stores."""
-        self._code_storage: Store = codes_store
-        self._flag_storage: Store = flags_store
+        self._code_storage = codes_store
+        self._flag_storage = flags_store
         self._codes: dict[str, dict[str, str | list[str]]] = {}
         self._flags: dict[str, int] = defaultdict(int)
         self._storage_loaded = False
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Load all stores and data."""
         self._codes.update(await self._code_storage.async_load() or {})
         self._flags.update(await self._flag_storage.async_load() or {})
@@ -60,7 +61,9 @@ class BroadlinkStores:
             for device, subdevices in self._codes.items()
         }
 
-    def extract_codes(self, commands, device=None):
+    def extract_codes(
+        self, commands: list[str], device: str | None = None
+    ) -> list[list[str]]:
         """Extract a list of codes.
 
         If the command starts with `b64:`, extract the code from it.
@@ -99,7 +102,9 @@ class BroadlinkStores:
             code_list.append(codes)
         return code_list
 
-    def toggled_codes(self, code_list: list[list[str]], subdevice: str | None = None):
+    def toggled_codes(
+        self, code_list: list[list[str]], subdevice: str | None = None
+    ) -> Generator[str, None, None]:
         """Generate the list of codes we want and toggle as we go along."""
         try:
             for codes in code_list:
@@ -159,7 +164,9 @@ class BroadlinkStores:
 class BroadlinkDevice:
     """Manages a Broadlink device."""
 
-    def __init__(self, hass, config, store):
+    def __init__(
+        self, hass: HomeAssistant, config: ConfigEntry, store: BroadlinkStores
+    ) -> None:
         """Initialize the device."""
         self.hass = hass
         self.config = config
@@ -168,7 +175,7 @@ class BroadlinkDevice:
         self.fw_version = None
         self.authorized = None
         self.reset_jobs = []
-        self.store: BroadlinkStores = store
+        self.store = store
 
     @property
     def name(self):
