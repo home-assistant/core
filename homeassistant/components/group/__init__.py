@@ -532,7 +532,7 @@ class Group(Entity):
             hass.loop,
         ).result()
 
-    @staticmethod
+    @classmethod
     @callback
     def async_create_group_entity(
         hass,
