@@ -56,7 +56,7 @@ class BroadlinkStores:
     def extract_devices_and_commands(self) -> dict[str, list[str]]:
         """Return the set of devices and commands in storage."""
         return {
-            device: list(subdevices.keys())
+            device: list(subdevices)
             for device, subdevices in self._codes.items()
         }
 
