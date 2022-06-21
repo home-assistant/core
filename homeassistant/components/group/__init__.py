@@ -422,8 +422,8 @@ async def _async_process_config(hass: HomeAssistant, config: ConfigType) -> None
     for object_id, conf in domain_config.items():
         name: str = conf.get(CONF_NAME, object_id)
         entity_ids: Iterable[str] = conf.get(CONF_ENTITIES) or []
-        icon: str | None = conf[CONF_ICON]
-        mode: bool = conf[CONF_ALL]
+        icon: str | None = conf.get(CONF_ICON)
+        mode = bool(conf.get(CONF_ALL))
         order: int = hass.data[GROUP_ORDER]
 
         # We keep track of the order when we are creating the tasks
