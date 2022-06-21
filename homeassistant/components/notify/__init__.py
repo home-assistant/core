@@ -39,6 +39,7 @@ PLATFORM_SCHEMA = vol.Schema(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the notify services."""
+    hass.config.components.add(DOMAIN)
     await async_setup_legacy(hass, config)
 
     async def persistent_notification(service: ServiceCall) -> None:
