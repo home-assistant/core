@@ -1,4 +1,8 @@
 """Test Simplepush config flow."""
+from unittest.mock import patch
+
+import pytest
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 from homeassistant.const import CONF_NAME, CONF_PASSWORD
@@ -12,6 +16,15 @@ MOCK_CONFIG = {
     CONF_PASSWORD: "password",
     CONF_SALT: "salt",
 }
+
+
+@pytest.fixture(autouse=True)
+def simplepush_setup_fixture():
+    """Patch simplepush setup entry."""
+    with patch(
+        "homeassistant.components.simplepush.async_setup_entry", return_value=True
+    ):
+        yield
 
 
 async def test_flow_successful(hass: HomeAssistant) -> None:
