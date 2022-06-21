@@ -11,9 +11,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
+from .const import CONF_GATEWAY_ID, DOMAIN
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 from .entity import TradfriBaseEntity
+from .models import TradfriData
 
 ATTR_AUTO = "Auto"
 ATTR_MAX_FAN_STEPS = 49
@@ -36,8 +37,8 @@ async def async_setup_entry(
 ) -> None:
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api: APIRequestProtocol = coordinator_data[KEY_API]
+    tradfri_data: TradfriData = hass.data[DOMAIN][config_entry.entry_id]
+    api = tradfri_data.api
 
     async_add_entities(
         TradfriAirPurifierFan(
@@ -45,7 +46,7 @@ async def async_setup_entry(
             api,
             gateway_id,
         )
-        for device_coordinator in coordinator_data[COORDINATOR_LIST]
+        for device_coordinator in tradfri_data.coordinators
         if device_coordinator.device.has_air_purifier_control
     )
 

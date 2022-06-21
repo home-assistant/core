@@ -26,16 +26,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import (
-    CONF_GATEWAY_ID,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    KEY_API,
-    LOGGER,
-)
+from .const import CONF_GATEWAY_ID, DOMAIN, LOGGER
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 from .entity import TradfriBaseEntity
+from .models import TradfriData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -132,12 +126,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up a Tradfri config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]
-    coordinator_data = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    api: APIRequestProtocol = coordinator_data[KEY_API]
+    tradfri_data: TradfriData = hass.data[DOMAIN][config_entry.entry_id]
+    api = tradfri_data.api
 
     entities: list[TradfriSensor] = []
 
-    for device_coordinator in coordinator_data[COORDINATOR_LIST]:
+    for device_coordinator in tradfri_data.coordinators:
         if (
             not device_coordinator.device.has_light_control
             and not device_coordinator.device.has_socket_control

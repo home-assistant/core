@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 
 from pytradfri import Gateway, RequestError
 from pytradfri.api.aiocoap_api import APIFactory
@@ -20,18 +19,9 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import (
-    CONF_GATEWAY_ID,
-    CONF_IDENTITY,
-    CONF_KEY,
-    COORDINATOR,
-    COORDINATOR_LIST,
-    DOMAIN,
-    FACTORY,
-    KEY_API,
-    LOGGER,
-)
+from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN, LOGGER
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .models import TradfriData
 
 PLATFORMS = [
     Platform.COVER,
@@ -49,15 +39,11 @@ async def async_setup_entry(
     entry: ConfigEntry,
 ) -> bool:
     """Create a gateway."""
-    tradfri_data: dict[str, Any] = {}
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
-
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
         psk=entry.data[CONF_KEY],
     )
-    tradfri_data[FACTORY] = factory  # Used for async_unload_entry
 
     async def on_hass_stop(event: Event) -> None:
         """Close connection when hass stops."""
@@ -95,11 +81,7 @@ async def async_setup_entry(
     remove_stale_devices(hass, entry, devices)
 
     # Setup the device coordinators
-    coordinator_data = {
-        CONF_GATEWAY_ID: gateway,
-        KEY_API: api,
-        COORDINATOR_LIST: [],
-    }
+    coordinators: list[TradfriDeviceDataUpdateCoordinator] = []
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
@@ -110,9 +92,12 @@ async def async_setup_entry(
         entry.async_on_unload(
             async_dispatcher_connect(hass, SIGNAL_GW, coordinator.set_hub_available)
         )
-        coordinator_data[COORDINATOR_LIST].append(coordinator)
+        coordinators.append(coordinator)
 
-    tradfri_data[COORDINATOR] = coordinator_data
+    tradfri_data = TradfriData(
+        api=api, coordinators=coordinators, factory=factory, gateway=gateway
+    )
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
 
     async def async_keep_alive(now: datetime) -> None:
         if hass.is_stopping:
@@ -140,8 +125,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
-        factory = tradfri_data[FACTORY]
+        tradfri_data: TradfriData = hass.data[DOMAIN].pop(entry.entry_id)
+        factory = tradfri_data.factory
         await factory.shutdown()
 
     return unload_ok
