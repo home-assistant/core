@@ -1,7 +1,6 @@
 """Simplepush notification service."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from simplepush import send, send_encrypted
@@ -13,13 +12,14 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.notify.const import ATTR_DATA, DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.notify.const import ATTR_DATA
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_ENCRYPTED, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT
+from .const import ATTR_ENCRYPTED, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 
 # Configuring simplepush under the notify platform will be deprecated in 2022.8.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -31,8 +31,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_get_service(
     hass: HomeAssistant,
@@ -40,15 +38,15 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> SimplePushNotificationService | None:
     """Get the Simplepush notification service."""
-    if discovery_info:
-        return SimplePushNotificationService(discovery_info)
+    if discovery_info is None:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+            )
+        )
+        return None
 
-    _LOGGER.warning(
-        "Manually configured simplepush integration found under platform key '%s'. "
-        "Please remove and configure through the UI",
-        NOTIFY_DOMAIN,
-    )
-    return SimplePushNotificationService(config)
+    return SimplePushNotificationService(discovery_info)
 
 
 class SimplePushNotificationService(BaseNotificationService):
@@ -65,7 +63,7 @@ class SimplePushNotificationService(BaseNotificationService):
         """Send a message to a Simplepush user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
 
-        # event can now be passwed in the service data
+        # event can now be passed in the service data
         event = None
         if data := kwargs.get(ATTR_DATA):
             event = data.get(ATTR_EVENT)

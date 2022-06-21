@@ -29,7 +29,7 @@ async def test_flow_successful(hass: HomeAssistant) -> None:
     assert result["data"] == MOCK_CONFIG
 
 
-async def test_flow_user_device_key_already_configured(hass):
+async def test_flow_user_device_key_already_configured(hass: HomeAssistant) -> None:
     """Test user initialized flow with duplicate device key."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -51,7 +51,7 @@ async def test_flow_user_device_key_already_configured(hass):
     assert result["reason"] == "already_configured"
 
 
-async def test_flow_user_name_already_configured(hass):
+async def test_flow_user_name_already_configured(hass: HomeAssistant) -> None:
     """Test user initialized flow with duplicate name."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -74,3 +74,16 @@ async def test_flow_user_name_already_configured(hass):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_flow_import(hass: HomeAssistant) -> None:
+    """Test an import flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IMPORT},
+        data=MOCK_CONFIG,
+    )
+
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == "simplepush"
+    assert result["data"] == MOCK_CONFIG

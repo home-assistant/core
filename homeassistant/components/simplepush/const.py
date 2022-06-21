@@ -4,7 +4,7 @@ from typing import Final
 
 DOMAIN: Final = "simplepush"
 DEFAULT_NAME: Final = "simplepush"
-DATA_HASS_CONFIG: Final = "simpleush_hass_config"
+DATA_HASS_CONFIG: Final = "simplepush_hass_config"
 
 ATTR_ENCRYPTED: Final = "encrypted"
 ATTR_EVENT: Final = "event"
