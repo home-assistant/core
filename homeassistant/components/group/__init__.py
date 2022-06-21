@@ -585,7 +585,7 @@ class Group(Entity):
 
         This method must be run in the event loop.
         """
-        group = Group.async_create_group_entity(
+        group = cls.async_create_group_entity(
             hass, name, entity_ids, user_defined, icon, object_id, mode, order
         )
 
