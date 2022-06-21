@@ -1,6 +1,7 @@
 """Test the for the BMW Connected Drive config flow."""
 from unittest.mock import patch
 
+from bimmer_connected.api.authentication import MyBMWAuthentication
 from httpx import HTTPError
 
 from homeassistant import config_entries, data_entry_flow
@@ -15,8 +16,17 @@ from . import FIXTURE_CONFIG_ENTRY, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
 
-FIXTURE_COMPLETE_ENTRY = {**FIXTURE_USER_INPUT, CONF_REFRESH_TOKEN: None}
+FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
+FIXTURE_COMPLETE_ENTRY = {
+    **FIXTURE_USER_INPUT,
+    CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
+}
 FIXTURE_IMPORT_ENTRY = {**FIXTURE_USER_INPUT, CONF_REFRESH_TOKEN: None}
+
+
+def login_sideeffect(self: MyBMWAuthentication):
+    """Mock logging in and setting a refresh token."""
+    self.refresh_token = FIXTURE_REFRESH_TOKEN
 
 
 async def test_show_form(hass):
@@ -54,7 +64,8 @@ async def test_full_user_flow_implementation(hass):
     """Test registering an integration and finishing flow works."""
     with patch(
         "bimmer_connected.api.authentication.MyBMWAuthentication.login",
-        return_value=None,
+        side_effect=login_sideeffect,
+        autospec=True,
     ), patch(
         "homeassistant.components.bmw_connected_drive.async_setup_entry",
         return_value=True,
