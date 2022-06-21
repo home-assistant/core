@@ -60,19 +60,13 @@ class BMWDataUpdateCoordinator(DataUpdateCoordinator):
                 self.update_interval = timedelta(
                     seconds=DEFAULT_SCAN_INTERVAL_SECONDS * 3
                 )
-
-                _LOGGER.warning(
-                    "Too many requests when communicating with BMW API, API allows retry in %s seconds",
-                    err.response.headers.get("Retry-After") or "UNKNOWN",
-                )
-            else:
-                if isinstance(err, HTTPStatusError) and err.response.status_code in (
-                    401,
-                    403,
-                ):
-                    # Clear refresh token only on issues with authorization
-                    self._update_config_entry_refresh_token(None)
-                raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
+            if isinstance(err, HTTPStatusError) and err.response.status_code in (
+                401,
+                403,
+            ):
+                # Clear refresh token only on issues with authorization
+                self._update_config_entry_refresh_token(None)
+            raise UpdateFailed(f"Error communicating with BMW API: {err}") from err
 
         if self.account.refresh_token != old_refresh_token:
             self._update_config_entry_refresh_token(self.account.refresh_token)
