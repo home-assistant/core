@@ -20,6 +20,7 @@ from .const import (
     SHADE_BATTERY_LEVEL_MAX,
 )
 from .entity import ShadeEntity
+from .model import PowerviewEntryData
 
 
 async def async_setup_entry(
@@ -27,7 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the hunter douglas shades sensors."""
 
-    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
     for raw_shade in pv_entry.shade_data.values():

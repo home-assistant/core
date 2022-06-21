@@ -1,5 +1,6 @@
 """Define Hunter Douglas data models."""
 from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Any
 
@@ -19,7 +20,7 @@ class PowerviewEntryData:
     shades: Shades
     shade_data: dict[str, Any]
     coordinator: PowerviewShadeUpdateCoordinator
-    device_info: dict[str, Any]
+    device_info: PowerviewDeviceInfo
 
 
 @dataclass

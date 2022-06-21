@@ -15,6 +15,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from .const import DOMAIN, REDACT_HUB_ADDRESS, REDACT_MAC_ADDRESS, REDACT_SERIAL_NUMBER
+from .model import PowerviewEntryData
 
 REDACT_CONFIG = {
     CONF_HOST,
@@ -66,7 +67,7 @@ def _async_get_diagnostics(
     entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    pv_entry = hass.data[DOMAIN][entry.entry_id]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
     shade_data = pv_entry.coordinator.data.get_all_raw_data()
     hub_info = async_redact_data(asdict(pv_entry.device_info), REDACT_CONFIG)
     return {"hub_info": hub_info, "shade_data": shade_data}
