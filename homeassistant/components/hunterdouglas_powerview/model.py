@@ -16,7 +16,7 @@ class PowerviewEntryData:
     api: AioRequest
     room_data: dict[str, Any]
     scene_data: dict[str, Any]
-    shades: Any
+    shades: Shades
     shade_data: dict[str, Any]
     coordinator: PowerviewShadeUpdateCoordinator
     device_info: dict[str, Any]
