@@ -574,7 +574,7 @@ def test_named_arguments(
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    class_node, prop_node, func_node = astroid.extract_node(
+    class_node, func_node, arg1_node, arg2_node = astroid.extract_node(
         """
     class FanEntity():
         pass
@@ -584,8 +584,8 @@ def test_named_arguments(
     ):
         async def async_turn_on( #@
             self,
-            percentage,
-            preset_mode: str,
+            percentage, #@
+            preset_mode: str, #@
             **kwargs
         ) -> bool:
             pass
@@ -598,8 +598,8 @@ def test_named_arguments(
         linter,
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
-            node=prop_node,
-            args=["str", None],
+            node=func_node,
+            args=None,
             line=9,
             col_offset=4,
             end_line=9,
