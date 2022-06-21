@@ -476,7 +476,7 @@ class ProtectMediaSource(MediaSource):
         )
 
         if build_children and data.api.bootstrap.recording_start is not None:
-            childern = [
+            children = [
                 self._build_day(data, camera_id, event_type, 1),
                 self._build_day(data, camera_id, event_type, 7),
                 self._build_day(data, camera_id, event_type, 30),
@@ -484,11 +484,11 @@ class ProtectMediaSource(MediaSource):
 
             start, end = _get_start_end(self.hass, data.api.bootstrap.recording_start)
             while end > start:
-                childern.append(
+                children.append(
                     self._build_month(data, camera_id, event_type, end.date())
                 )
                 end = (end - timedelta(days=1)).replace(day=1)
-            source.children = await asyncio.gather(*childern)
+            source.children = await asyncio.gather(*children)
 
         return source
 
