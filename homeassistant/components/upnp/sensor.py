@@ -31,7 +31,6 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_BYTES,
         format="d",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
@@ -39,7 +38,6 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_BYTES,
         format="d",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
@@ -47,7 +45,6 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
@@ -55,7 +52,6 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         icon="mdi:server-network",
         native_unit_of_measurement=DATA_PACKETS,
         format="d",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=ROUTER_IP,
@@ -69,7 +65,6 @@ RAW_SENSORS: tuple[UpnpSensorEntityDescription, ...] = (
         native_unit_of_measurement=TIME_SECONDS,
         entity_registry_enabled_default=False,
         format="d",
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     UpnpSensorEntityDescription(
         key=WAN_STATUS,
