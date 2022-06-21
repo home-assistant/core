@@ -587,6 +587,22 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
         expected_precipitation, rel=1e-2
     )
 
+    assert (
+        state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT]
+        == set_options["precipitation_unit"]
+    )
+    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == set_options["pressure_unit"]
+    assert (
+        state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT]
+        == set_options["temperature_unit"]
+    )
+    assert (
+        state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == set_options["visibility_unit"]
+    )
+    assert (
+        state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == set_options["wind_speed_unit"]
+    )
+
 
 async def test_backwards_compatibility(
     hass: HomeAssistant, enable_custom_integrations
