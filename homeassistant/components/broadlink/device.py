@@ -40,7 +40,7 @@ def get_domains(device_type):
 class BroadlinkStores:
     """Manages a storage setup for a device."""
 
-    def __init__(self, codes_store, flags_store):
+    def __init__(self, codes_store: Store, flags_store: Store) -> None:
         """Initialize stores."""
         self._code_storage: Store = codes_store
         self._flag_storage: Store = flags_store
