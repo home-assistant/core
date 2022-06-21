@@ -160,7 +160,7 @@ async def camera_fixture(
     camera_obj.stats.video.recording_start = now
     camera_obj.stats.storage.used = 100.0
     camera_obj.stats.storage.used = 100.0
-    camera_obj.stats.storage.rate = 100.0
+    camera_obj.stats.storage.rate = 0.1
     camera_obj.voltage = 20.0
 
     reset_objects(mock_entry.api.bootstrap)

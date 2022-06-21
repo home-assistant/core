@@ -121,7 +121,7 @@ class ProtectData:
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         # removed packets are not processed yet
         if message.new_obj is None:  # pragma: no cover
-            return  # type: ignore[unreachable]
+            return
 
         if message.new_obj.model in DEVICES_WITH_ENTITIES:
             self._async_signal_device_update(message.new_obj)
