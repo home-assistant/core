@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from aiopvapi.helpers.aiorequest import AioRequest
-from aiopvapi.shades import Shades
 
 from .coordinator import PowerviewShadeUpdateCoordinator
 
@@ -17,7 +16,6 @@ class PowerviewEntryData:
     api: AioRequest
     room_data: dict[str, Any]
     scene_data: dict[str, Any]
-    shades: Shades
     shade_data: dict[str, Any]
     coordinator: PowerviewShadeUpdateCoordinator
     device_info: PowerviewDeviceInfo
@@ -30,7 +28,6 @@ class PowerviewDeviceInfo:
     name: str
     mac_address: str
     serial_number: str
-    revision: str | None
-    firmware: str | None
+    firmware: dict[str, Any]
     model: str
     hub_address: str

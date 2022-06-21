@@ -1,5 +1,5 @@
 """Support for hunterdouglass_powerview sensors."""
-from aiopvapi.resources.shade import factory as PvShade
+from aiopvapi.resources.shade import BaseShade, factory as PvShade
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -32,7 +32,7 @@ async def async_setup_entry(
 
     entities = []
     for raw_shade in pv_entry.shade_data.values():
-        shade = PvShade(raw_shade, pv_entry.api)
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         if SHADE_BATTERY_LEVEL not in shade.raw_data:
             continue
         name_before_refresh = shade.name
