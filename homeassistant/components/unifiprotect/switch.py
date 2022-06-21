@@ -22,6 +22,7 @@ from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
+from .utils import async_get_is_highfps
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,10 +35,6 @@ class ProtectSwitchEntityDescription(
 
 
 _KEY_PRIVACY_MODE = "privacy_mode"
-
-
-def _get_is_highfps(obj: Camera) -> bool:
-    return bool(obj.video_mode == VideoMode.HIGH_FPS)
 
 
 async def _set_highfps(obj: Camera, value: bool) -> None:
@@ -84,7 +81,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:video-high-definition",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value_fn=_get_is_highfps,
+        ufp_value_fn=async_get_is_highfps,
         ufp_set_method_fn=_set_highfps,
         ufp_perm=PermRequired.WRITE,
     ),
