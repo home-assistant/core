@@ -41,7 +41,7 @@ class BroadlinkButton(BroadlinkEntity, ButtonEntity):
         self._subdevice = subdevice
         self._command = command
 
-    async def async_press(self, **kwargs):
+    async def async_press(self, **kwargs: Any) -> None:
         """Trigger code by button press."""
         device = self._device
         code_list = device.store.extract_codes([self._command], self._subdevice)
