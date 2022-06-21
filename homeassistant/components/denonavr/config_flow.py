@@ -5,10 +5,10 @@ import logging
 from typing import Any
 from urllib.parse import urlparse
 
-import denonavr
-from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 import voluptuous as vol
 
+import denonavr
+from denonavr.exceptions import AvrNetworkError, AvrTimoutError
 from homeassistant import config_entries
 from homeassistant.components import ssdp
 from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_TYPE

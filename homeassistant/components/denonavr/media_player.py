@@ -6,6 +6,8 @@ from datetime import timedelta
 from functools import wraps
 import logging
 
+import voluptuous as vol
+
 from denonavr import DenonAVR
 from denonavr.const import POWER_ON
 from denonavr.exceptions import (
@@ -15,8 +17,6 @@ from denonavr.exceptions import (
     AvrTimoutError,
     DenonAvrError,
 )
-import voluptuous as vol
-
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
