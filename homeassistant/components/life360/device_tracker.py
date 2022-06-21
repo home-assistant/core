@@ -55,10 +55,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the device tracker platform."""
-    coordinator = hass.data[DOMAIN]["coordinators"][entry.unique_id]
-    tracked_members = hass.data[DOMAIN]["tracked_members"]
-    logged_circles = hass.data[DOMAIN]["logged_circles"]
-    logged_places = hass.data[DOMAIN]["logged_places"]
+    coordinator = hass.data[DOMAIN].coordinators[entry.unique_id]
+    tracked_members = hass.data[DOMAIN].tracked_members
+    logged_circles = hass.data[DOMAIN].logged_circles
+    logged_places = hass.data[DOMAIN].logged_places
 
     @callback
     def process_data(new_members_only: bool = True) -> None:

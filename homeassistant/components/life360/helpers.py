@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any, TypedDict
+from dataclasses import dataclass, field
+from typing import Any
 
 from life360 import Life360, Life360Error, LoginError
 
@@ -43,32 +44,30 @@ from .const import (
 )
 
 
-class IntegData(TypedDict):
+@dataclass
+class IntegData:
     """Integration data."""
 
-    cfg_options: dict[str, Any]
+    cfg_options: dict[str, Any] | None = None
     # ConfigEntry.unique_id: DataUpdateCoordinator
-    coordinators: dict[str, DataUpdateCoordinator]
+    coordinators: dict[str, DataUpdateCoordinator] = field(
+        init=False, default_factory=dict
+    )
     # member_id: ConfigEntry.unique_id
-    tracked_members: dict[str, str]
-    logged_circles: list[str]
-    logged_places: list[str]
+    tracked_members: dict[str, str] = field(init=False, default_factory=dict)
+    logged_circles: list[str] = field(init=False, default_factory=list)
+    logged_places: list[str] = field(init=False, default_factory=list)
+
+    def __post_init__(self):
+        """Finish initialization of cfg_options."""
+        self.cfg_options = self.cfg_options or {}
 
 
 def init_integ_data(
     hass: HomeAssistant, cfg_options: dict[str, Any] | None = None
 ) -> None:
     """Initialize domain's hass data if necessary."""
-    hass.data.setdefault(
-        DOMAIN,
-        IntegData(
-            cfg_options=cfg_options or {},
-            coordinators={},
-            tracked_members={},
-            logged_circles=[],
-            logged_places=[],
-        ),
-    )
+    hass.data.setdefault(DOMAIN, IntegData(cfg_options))
 
 
 def get_life360_api(authorization: str | None = None) -> Life360:

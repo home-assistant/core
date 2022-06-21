@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from contextlib import suppress
 from datetime import timedelta
 from typing import Any
 
@@ -110,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry,
             unique_id=entry.data[CONF_USERNAME].lower(),
-            options=DEFAULT_OPTIONS | hass.data[DOMAIN]["cfg_options"],
+            options=DEFAULT_OPTIONS | hass.data[DOMAIN].cfg_options,
         )
 
     api = get_life360_api(authorization=entry.data[CONF_AUTHORIZATION])
@@ -119,7 +120,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update Life360 data."""
         return await get_life360_data(hass, api)
 
-    if not (coordinator := hass.data[DOMAIN]["coordinators"].get(entry.unique_id)):
+    if not (coordinator := hass.data[DOMAIN].coordinators.get(entry.unique_id)):
         coordinator = DataUpdateCoordinator(
             hass,
             LOGGER,
@@ -127,7 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_interval=_update_interval(entry),
             update_method=async_update_data,
         )
-        hass.data[DOMAIN]["coordinators"][entry.unique_id] = coordinator
+        hass.data[DOMAIN].coordinators[entry.unique_id] = coordinator
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -148,14 +149,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Remove config entry."""
-    try:
-        del hass.data[DOMAIN]["coordinators"][entry.unique_id]
-    except KeyError:
-        pass
+    with suppress(KeyError):
+        del hass.data[DOMAIN].coordinators[entry.unique_id]
 
 
 async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
-    hass.data[DOMAIN]["coordinators"][
-        entry.unique_id
-    ].update_interval = _update_interval(entry)
+    hass.data[DOMAIN].coordinators[entry.unique_id].update_interval = _update_interval(
+        entry
+    )
