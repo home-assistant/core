@@ -469,7 +469,7 @@ class MQTT:
     ) -> None:
         """Perform MQTT client subscriptions."""
 
-        def _proces_client_subscriptions() -> list[tuple[int, int]]:
+        def _process_client_subscriptions() -> list[tuple[int, int]]:
             """Initiate all subscriptions on the MQTT client and return the results."""
             subscribe_result_list = []
             for topic, qos in subscriptions:
