@@ -52,6 +52,13 @@ class SensiboDeviceBinarySensorEntityDescription(
     """Describes Sensibo Motion sensor entity."""
 
 
+FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
+    key="filter_clean",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    name="Filter Clean Required",
+    value_fn=lambda data: data.filter_clean,
+)
+
 MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     SensiboMotionBinarySensorEntityDescription(
         key="alive",
@@ -85,13 +92,7 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
-    SensiboDeviceBinarySensorEntityDescription(
-        key="filter_clean",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        name="Filter Clean Required",
-        icon="mdi:timer",
-        value_fn=lambda data: data.filter_clean,
-    ),
+    FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
@@ -134,13 +135,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
     ),
-    SensiboDeviceBinarySensorEntityDescription(
-        key="filter_clean",
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        name="Filter Clean Required",
-        icon="mdi:timer",
-        value_fn=lambda data: data.filter_clean,
-    ),
+    FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 
