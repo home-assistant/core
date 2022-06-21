@@ -190,11 +190,6 @@ class DerivedUpnpSensor(UpnpSensor):
         return current_value < self._last_value
 
     @property
-    def device_class(self):
-        """Return the state class for the sensor."""
-        return self.entity_description.state_class
-    
-    @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
         # Can't calculate any derivative if we have only one value.
