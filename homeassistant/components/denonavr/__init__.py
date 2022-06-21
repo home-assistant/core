@@ -2,6 +2,7 @@
 import logging
 
 from denonavr.exceptions import AvrNetworkError, AvrTimoutError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
@@ -54,7 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         UNDO_UPDATE_LISTENER: undo_listener,
     }
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
