@@ -248,6 +248,7 @@ async def test_basic_setup(
 
     camera_high_only = mock_camera.copy()
     camera_high_only._api = mock_entry.api
+    camera_high_only.channels = [c.copy() for c in mock_camera.channels]
     camera_high_only.channels[0]._api = mock_entry.api
     camera_high_only.channels[1]._api = mock_entry.api
     camera_high_only.channels[2]._api = mock_entry.api
@@ -261,6 +262,7 @@ async def test_basic_setup(
 
     camera_medium_only = mock_camera.copy()
     camera_medium_only._api = mock_entry.api
+    camera_medium_only.channels = [c.copy() for c in mock_camera.channels]
     camera_medium_only.channels[0]._api = mock_entry.api
     camera_medium_only.channels[1]._api = mock_entry.api
     camera_medium_only.channels[2]._api = mock_entry.api
@@ -274,6 +276,7 @@ async def test_basic_setup(
 
     camera_all_channels = mock_camera.copy()
     camera_all_channels._api = mock_entry.api
+    camera_all_channels.channels = [c.copy() for c in mock_camera.channels]
     camera_all_channels.channels[0]._api = mock_entry.api
     camera_all_channels.channels[1]._api = mock_entry.api
     camera_all_channels.channels[2]._api = mock_entry.api
@@ -291,6 +294,7 @@ async def test_basic_setup(
 
     camera_no_channels = mock_camera.copy()
     camera_no_channels._api = mock_entry.api
+    camera_no_channels.channels = [c.copy() for c in camera_no_channels.channels]
     camera_no_channels.channels[0]._api = mock_entry.api
     camera_no_channels.channels[1]._api = mock_entry.api
     camera_no_channels.channels[2]._api = mock_entry.api
@@ -303,6 +307,7 @@ async def test_basic_setup(
 
     camera_package = mock_camera.copy()
     camera_package._api = mock_entry.api
+    camera_package.channels = [c.copy() for c in mock_camera.channels]
     camera_package.channels[0]._api = mock_entry.api
     camera_package.channels[1]._api = mock_entry.api
     camera_package.channels[2]._api = mock_entry.api
