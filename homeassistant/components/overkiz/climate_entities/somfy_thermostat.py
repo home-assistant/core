@@ -11,7 +11,6 @@ from homeassistant.components.climate.const import (
     PRESET_HOME,
     PRESET_NONE,
     ClimateEntityFeature,
-    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -82,15 +81,6 @@ class SomfyThermostat(OverkizEntity, ClimateEntity):
                 str, self.executor.select_state(OverkizState.CORE_DEROGATION_ACTIVATION)
             )
         ]
-
-    @property
-    def hvac_action(self) -> str:
-        """Return the current running hvac operation if supported."""
-        if not self.current_temperature or not self.target_temperature:
-            return HVACAction.IDLE
-        if self.current_temperature < self.target_temperature:
-            return HVACAction.HEATING
-        return HVACAction.IDLE
 
     @property
     def preset_mode(self) -> str:
