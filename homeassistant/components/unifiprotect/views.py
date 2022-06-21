@@ -21,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
-def _client_error(message: Any, code: HTTPStatus):
+def _client_error(message: Any, code: HTTPStatus) -> web.Response:
     _LOGGER.warning("Client error (%s): %s", code.value, message)
     if code == HTTPStatus.BAD_REQUEST:
         return web.Response(body=message, status=code)
@@ -44,7 +44,7 @@ def _404(message: Any) -> web.Response:
 
 
 @callback
-def _validate_event(event: Event):
+def _validate_event(event: Event) -> None:
     if event.camera is None:
         raise ValueError("Event does not have a camera")
     if not event.camera.can_read_media(event.api.bootstrap.auth_user):
