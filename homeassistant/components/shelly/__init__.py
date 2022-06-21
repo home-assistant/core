@@ -231,7 +231,7 @@ def async_block_device_setup(
         ] = ShellyDeviceRestWrapper(hass, device, entry)
         platforms = BLOCK_PLATFORMS
 
-    await hass.config_entries.async_forward_entry_setups(entry, platforms)
+    hass.config_entries.async_setup_platforms(entry, platforms)
 
 
 async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -262,7 +262,7 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         hass, entry, device
     )
 
-    await hass.config_entries.async_forward_entry_setups(entry, RPC_PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, RPC_PLATFORMS)
 
     return True
 
