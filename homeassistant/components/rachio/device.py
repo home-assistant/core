@@ -29,12 +29,13 @@ from .const import (
     KEY_STATUS,
     KEY_USERNAME,
     KEY_ZONES,
+    LISTEN_EVENT_TYPES,
     MODEL_GENERATION_1,
     SERVICE_PAUSE_WATERING,
     SERVICE_RESUME_WATERING,
     SERVICE_STOP_WATERING,
+    WEBHOOK_CONST_ID,
 )
-from .webhooks import LISTEN_EVENT_TYPES, WEBHOOK_CONST_ID
 
 _LOGGER = logging.getLogger(__name__)
 
