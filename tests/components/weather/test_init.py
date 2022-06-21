@@ -41,7 +41,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     PRESSURE_INHG,
     PRESSURE_PA,
-    PRESSURE_PSI,
+    SPEED_KILOMETERS_PER_HOUR,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -140,11 +140,22 @@ async def create_entity(hass: HomeAssistant, **kwargs):
     return entity0
 
 
-@pytest.mark.parametrize("unit", [TEMP_FAHRENHEIT, TEMP_CELSIUS])
-async def test_temperature(hass: HomeAssistant, enable_custom_integrations, unit: str):
+@pytest.mark.parametrize("native_unit", (TEMP_FAHRENHEIT, TEMP_CELSIUS))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, IMPERIAL_SYSTEM)),
+)
+async def test_temperature(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
     """Test temperature."""
+    hass.config.units = unit_system
     native_value = 38
-    native_unit = unit
+    state_value = convert_temperature(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_temperature=native_value, native_temperature_unit=native_unit
@@ -153,19 +164,64 @@ async def test_temperature(hass: HomeAssistant, enable_custom_integrations, unit
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
-    expected = native_value
+    expected = state_value
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
         expected, rel=0.1
     )
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
     assert float(forecast[ATTR_FORECAST_TEMP]) == approx(expected, rel=0.1)
     assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(expected, rel=0.1)
 
 
-@pytest.mark.parametrize("unit", [PRESSURE_INHG, PRESSURE_HPA])
-async def test_pressure(hass: HomeAssistant, enable_custom_integrations, unit: str):
+@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    ((TEMP_CELSIUS, METRIC_SYSTEM), (TEMP_FAHRENHEIT, IMPERIAL_SYSTEM)),
+)
+async def test_temperature_no_unit(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
+    """Test temperature when the entity does not declare a native unit."""
+    hass.config.units = unit_system
+    native_value = 38
+    state_value = native_value
+
+    entity0 = await create_entity(
+        hass, native_temperature=native_value, native_temperature_unit=native_unit
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    expected = state_value
+    assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
+        expected, rel=0.1
+    )
+    assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == state_unit
+    assert float(forecast[ATTR_FORECAST_TEMP]) == approx(expected, rel=0.1)
+    assert float(forecast[ATTR_FORECAST_TEMP_LOW]) == approx(expected, rel=0.1)
+
+
+@pytest.mark.parametrize("native_unit", (PRESSURE_INHG, PRESSURE_INHG))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, IMPERIAL_SYSTEM)),
+)
+async def test_pressure(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
     """Test pressure."""
+    hass.config.units = unit_system
     native_value = 30
-    native_unit = unit
+    state_value = convert_pressure(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_pressure=native_value, native_pressure_unit=native_unit
@@ -173,16 +229,61 @@ async def test_pressure(hass: HomeAssistant, enable_custom_integrations, unit: s
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
-    expected = native_value
+    expected = state_value
     assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected, rel=1e-2)
     assert float(forecast[ATTR_FORECAST_PRESSURE]) == approx(expected, rel=1e-2)
 
 
-@pytest.mark.parametrize("unit", [SPEED_MILES_PER_HOUR, SPEED_METERS_PER_SECOND])
-async def test_wind_speed(hass: HomeAssistant, enable_custom_integrations, unit: str):
+@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    ((PRESSURE_HPA, METRIC_SYSTEM), (PRESSURE_INHG, IMPERIAL_SYSTEM)),
+)
+async def test_pressure_no_unit(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
+    """Test pressure when the entity does not declare a native unit."""
+    hass.config.units = unit_system
+    native_value = 30
+    state_value = native_value
+
+    entity0 = await create_entity(
+        hass, native_pressure=native_value, native_pressure_unit=native_unit
+    )
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    expected = state_value
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(expected, rel=1e-2)
+    assert float(forecast[ATTR_FORECAST_PRESSURE]) == approx(expected, rel=1e-2)
+
+
+@pytest.mark.parametrize(
+    "native_unit",
+    (SPEED_MILES_PER_HOUR, SPEED_KILOMETERS_PER_HOUR, SPEED_METERS_PER_SECOND),
+)
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    (
+        (SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM),
+        (SPEED_MILES_PER_HOUR, IMPERIAL_SYSTEM),
+    ),
+)
+async def test_wind_speed(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
     """Test wind speed."""
+    hass.config.units = unit_system
     native_value = 10
-    native_unit = unit
+    state_value = convert_speed(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_wind_speed=native_value, native_wind_speed_unit=native_unit
@@ -191,37 +292,128 @@ async def test_wind_speed(hass: HomeAssistant, enable_custom_integrations, unit:
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
-    expected = native_value
+    expected = state_value
     assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
         expected, rel=1e-2
     )
     assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected, rel=1e-2)
 
 
-@pytest.mark.parametrize("unit", [LENGTH_KILOMETERS, LENGTH_MILES])
-async def test_visibility(hass: HomeAssistant, enable_custom_integrations, unit: str):
-    """Test visibility."""
+@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    (
+        (SPEED_KILOMETERS_PER_HOUR, METRIC_SYSTEM),
+        (SPEED_MILES_PER_HOUR, IMPERIAL_SYSTEM),
+    ),
+)
+async def test_wind_speed_no_unit(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
+    """Test wind speed when the entity does not declare a native unit."""
+    hass.config.units = unit_system
     native_value = 10
-    native_unit = unit
+    state_value = native_value
+
+    entity0 = await create_entity(
+        hass, native_wind_speed=native_value, native_wind_speed_unit=native_unit
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    expected = state_value
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+        expected, rel=1e-2
+    )
+    assert float(forecast[ATTR_FORECAST_WIND_SPEED]) == approx(expected, rel=1e-2)
+
+
+@pytest.mark.parametrize("native_unit", (LENGTH_MILES, LENGTH_KILOMETERS))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    (
+        (LENGTH_KILOMETERS, METRIC_SYSTEM),
+        (LENGTH_MILES, IMPERIAL_SYSTEM),
+    ),
+)
+async def test_visibility(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
+    """Test visibility."""
+    hass.config.units = unit_system
+    native_value = 10
+    state_value = convert_distance(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_visibility=native_value, native_visibility_unit=native_unit
     )
 
     state = hass.states.get(entity0.entity_id)
-    expected = native_value
+    expected = state_value
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
         expected, rel=1e-2
     )
 
 
-@pytest.mark.parametrize("unit", [LENGTH_INCHES, LENGTH_MILLIMETERS])
+@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    (
+        (LENGTH_KILOMETERS, METRIC_SYSTEM),
+        (LENGTH_MILES, IMPERIAL_SYSTEM),
+    ),
+)
+async def test_visibility_no_unit(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
+    """Test visibility when the entity does not declare a native unit."""
+    hass.config.units = unit_system
+    native_value = 10
+    state_value = native_value
+
+    entity0 = await create_entity(
+        hass, native_visibility=native_value, native_visibility_unit=native_unit
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    expected = state_value
+    assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(
+        expected, rel=1e-2
+    )
+
+
+@pytest.mark.parametrize("native_unit", (LENGTH_INCHES, LENGTH_MILLIMETERS))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    (
+        (LENGTH_MILLIMETERS, METRIC_SYSTEM),
+        (LENGTH_INCHES, IMPERIAL_SYSTEM),
+    ),
+)
 async def test_precipitation(
-    hass: HomeAssistant, enable_custom_integrations, unit: str
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
 ):
     """Test precipitation."""
+    hass.config.units = unit_system
     native_value = 30
-    native_unit = unit
+    state_value = convert_distance(native_value, native_unit, state_unit)
 
     entity0 = await create_entity(
         hass, native_precipitation=native_value, native_precipitation_unit=native_unit
@@ -230,7 +422,38 @@ async def test_precipitation(
     state = hass.states.get(entity0.entity_id)
     forecast = state.attributes[ATTR_FORECAST][0]
 
-    expected = native_value
+    expected = state_value
+    assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-2)
+
+
+@pytest.mark.parametrize("native_unit", (None,))
+@pytest.mark.parametrize(
+    "state_unit, unit_system",
+    (
+        (LENGTH_MILLIMETERS, METRIC_SYSTEM),
+        (LENGTH_INCHES, IMPERIAL_SYSTEM),
+    ),
+)
+async def test_precipitation_no_unit(
+    hass: HomeAssistant,
+    enable_custom_integrations,
+    native_unit: str,
+    state_unit: str,
+    unit_system,
+):
+    """Test precipitation when the entity does not declare a native unit."""
+    hass.config.units = unit_system
+    native_value = 30
+    state_value = native_value
+
+    entity0 = await create_entity(
+        hass, native_precipitation=native_value, native_precipitation_unit=native_unit
+    )
+
+    state = hass.states.get(entity0.entity_id)
+    forecast = state.attributes[ATTR_FORECAST][0]
+
+    expected = state_value
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(expected, rel=1e-2)
 
 
@@ -288,11 +511,11 @@ async def test_custom_units(hass: HomeAssistant, enable_custom_integrations) -> 
     precipitation_unit = LENGTH_MILLIMETERS
 
     set_options = {
-        "wind_speed_unit_of_measurement": SPEED_MILES_PER_HOUR,
-        "precipitation_unit_of_measurement": LENGTH_INCHES,
-        "pressure_unit_of_measurement": PRESSURE_INHG,
-        "temperature_unit_of_measurement": TEMP_FAHRENHEIT,
-        "visibility_unit_of_measurement": LENGTH_MILES,
+        "wind_speed_unit": SPEED_MILES_PER_HOUR,
+        "precipitation_unit": LENGTH_INCHES,
+        "pressure_unit": PRESSURE_INHG,
+        "temperature_unit": TEMP_FAHRENHEIT,
+        "visibility_unit": LENGTH_MILES,
     }
 
     entity_registry = er.async_get(hass)
@@ -371,7 +594,7 @@ async def test_backwards_compatibility(
     """Test backwards compatibility."""
     wind_speed_value = 5
     wind_speed_unit = SPEED_METERS_PER_SECOND
-    pressure_value = 110
+    pressure_value = 110000
     pressure_unit = PRESSURE_PA
     temperature_value = 20
     temperature_unit = TEMP_CELSIUS
@@ -430,14 +653,18 @@ async def test_backwards_compatibility(
     state1 = hass.states.get(entity1.entity_id)
     forecast1 = state1.attributes[ATTR_FORECAST][0]
 
-    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_METERS_PER_SECOND
+    assert float(state.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(
+        wind_speed_value * 3.6
+    )
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_KILOMETERS_PER_HOUR
     assert float(state.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
         temperature_value, rel=0.1
     )
     assert state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
-    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
-    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_PA
+    assert float(state.attributes[ATTR_WEATHER_PRESSURE]) == approx(
+        pressure_value / 100
+    )
+    assert state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_HPA
     assert float(state.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
     assert state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == LENGTH_KILOMETERS
     assert float(forecast[ATTR_FORECAST_PRECIPITATION]) == approx(
@@ -446,13 +673,13 @@ async def test_backwards_compatibility(
     assert state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == LENGTH_MILLIMETERS
 
     assert float(state1.attributes[ATTR_WEATHER_WIND_SPEED]) == approx(wind_speed_value)
-    assert state1.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_METERS_PER_SECOND
+    assert state1.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == SPEED_KILOMETERS_PER_HOUR
     assert float(state1.attributes[ATTR_WEATHER_TEMPERATURE]) == approx(
         temperature_value, rel=0.1
     )
     assert state1.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == TEMP_CELSIUS
     assert float(state1.attributes[ATTR_WEATHER_PRESSURE]) == approx(pressure_value)
-    assert state1.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_PA
+    assert state1.attributes[ATTR_WEATHER_PRESSURE_UNIT] == PRESSURE_HPA
     assert float(state1.attributes[ATTR_WEATHER_VISIBILITY]) == approx(visibility_value)
     assert state1.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == LENGTH_KILOMETERS
     assert float(forecast1[ATTR_FORECAST_PRECIPITATION]) == approx(
@@ -467,7 +694,7 @@ async def test_backwards_compatibility_convert_values(
     """Test backward compatibility for converting values."""
     wind_speed_value = 5
     wind_speed_unit = SPEED_METERS_PER_SECOND
-    pressure_value = 110
+    pressure_value = 110000
     pressure_unit = PRESSURE_PA
     temperature_value = 20
     temperature_unit = TEMP_CELSIUS
@@ -514,7 +741,7 @@ async def test_backwards_compatibility_convert_values(
         temperature_value, temperature_unit, TEMP_FAHRENHEIT
     )
     expected_pressure = round(
-        convert_pressure(pressure_value, pressure_unit, PRESSURE_PSI),
+        convert_pressure(pressure_value, pressure_unit, PRESSURE_INHG),
         ROUNDING_PRECISION,
     )
     expected_visibility = round(
@@ -540,7 +767,7 @@ async def test_backwards_compatibility_convert_values(
         ATTR_FRIENDLY_NAME: "Test",
         ATTR_WEATHER_PRECIPITATION_UNIT: LENGTH_INCHES,
         ATTR_WEATHER_PRESSURE: approx(expected_pressure, rel=0.1),
-        ATTR_WEATHER_PRESSURE_UNIT: PRESSURE_PSI,
+        ATTR_WEATHER_PRESSURE_UNIT: PRESSURE_INHG,
         ATTR_WEATHER_TEMPERATURE: approx(expected_temperature, rel=0.1),
         ATTR_WEATHER_TEMPERATURE_UNIT: TEMP_FAHRENHEIT,
         ATTR_WEATHER_VISIBILITY: approx(expected_visibility, rel=0.1),
@@ -567,19 +794,19 @@ async def test_attr(hass: HomeAssistant) -> None:
 
     assert weather.condition == ATTR_CONDITION_SUNNY
     assert weather.native_precipitation_unit == LENGTH_MILLIMETERS
-    assert weather.precipitation_unit == LENGTH_MILLIMETERS
+    assert weather._precipitation_unit == LENGTH_MILLIMETERS
     assert weather.native_pressure == 10
     assert weather.native_pressure_unit == PRESSURE_HPA
-    assert weather.pressure_unit == PRESSURE_HPA
+    assert weather._pressure_unit == PRESSURE_HPA
     assert weather.native_temperature == 20
     assert weather.native_temperature_unit == TEMP_CELSIUS
-    assert weather.temperature_unit == TEMP_CELSIUS
+    assert weather._temperature_unit == TEMP_CELSIUS
     assert weather.native_visibility == 30
     assert weather.native_visibility_unit == LENGTH_KILOMETERS
-    assert weather.visibility_unit == LENGTH_KILOMETERS
+    assert weather._visibility_unit == LENGTH_KILOMETERS
     assert weather.native_wind_speed == 3
     assert weather.native_wind_speed_unit == SPEED_METERS_PER_SECOND
-    assert weather.wind_speed_unit == SPEED_METERS_PER_SECOND
+    assert weather._wind_speed_unit == SPEED_KILOMETERS_PER_HOUR
 
 
 async def test_attr_compatibility(hass: HomeAssistant) -> None:
@@ -589,15 +816,15 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
     weather.hass = hass
 
     assert weather.condition == ATTR_CONDITION_SUNNY
-    assert weather.precipitation_unit == LENGTH_MILLIMETERS
+    assert weather._precipitation_unit == LENGTH_MILLIMETERS
     assert weather.pressure == 10
-    assert weather.pressure_unit == PRESSURE_HPA
+    assert weather._pressure_unit == PRESSURE_HPA
     assert weather.temperature == 20
-    assert weather.temperature_unit == TEMP_CELSIUS
+    assert weather._temperature_unit == TEMP_CELSIUS
     assert weather.visibility == 30
     assert weather.visibility_unit == LENGTH_KILOMETERS
     assert weather.wind_speed == 3
-    assert weather.wind_speed_unit == SPEED_METERS_PER_SECOND
+    assert weather._wind_speed_unit == SPEED_KILOMETERS_PER_HOUR
 
     forecast_entry = [
         Forecast(
@@ -611,14 +838,14 @@ async def test_attr_compatibility(hass: HomeAssistant) -> None:
 
     assert weather.state_attributes == {
         ATTR_FORECAST: forecast_entry,
-        ATTR_WEATHER_PRESSURE: 1000.0,
-        ATTR_WEATHER_PRESSURE_UNIT: PRESSURE_PA,
+        ATTR_WEATHER_PRESSURE: 10.0,
+        ATTR_WEATHER_PRESSURE_UNIT: PRESSURE_HPA,
         ATTR_WEATHER_TEMPERATURE: 20.0,
         ATTR_WEATHER_TEMPERATURE_UNIT: TEMP_CELSIUS,
         ATTR_WEATHER_VISIBILITY: 30.0,
         ATTR_WEATHER_VISIBILITY_UNIT: LENGTH_KILOMETERS,
-        ATTR_WEATHER_WIND_SPEED: 3.0,
-        ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_METERS_PER_SECOND,
+        ATTR_WEATHER_WIND_SPEED: 3.0 * 3.6,
+        ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_KILOMETERS_PER_HOUR,
         ATTR_WEATHER_PRECIPITATION_UNIT: LENGTH_MILLIMETERS,
     }
 
@@ -631,7 +858,7 @@ async def test_precision_for_temperature(hass: HomeAssistant) -> None:
 
     assert weather.condition == ATTR_CONDITION_SUNNY
     assert weather.native_temperature == 20.3
-    assert weather.temperature_unit == TEMP_CELSIUS
+    assert weather._temperature_unit == TEMP_CELSIUS
     assert weather.precision == PRECISION_HALVES
 
     assert weather.state_attributes[ATTR_WEATHER_TEMPERATURE] == 20.5
