@@ -77,9 +77,6 @@ from .media_source import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DATA_NEST_UNAVAILABLE = "nest_unavailable"
-
-NEST_SETUP_NOTIFICATION = "nest_setup"
 
 SENSOR_SCHEMA = vol.Schema(
     {vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list)}
@@ -179,8 +176,6 @@ class SignalUpdateCallback:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Nest from a config entry with dispatch between old/new flows."""
-    hass.data[DOMAIN][entry.entry_id] = {}
-
     config_mode = config_flow.get_config_mode(hass)
     if config_mode == config_flow.ConfigMode.LEGACY:
         return await async_setup_legacy_entry(hass, entry)
@@ -210,27 +205,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         await subscriber.start_async()
     except AuthException as err:
-        _LOGGER.debug("Subscriber authentication error: %s", err)
-        raise ConfigEntryAuthFailed from err
+        raise ConfigEntryAuthFailed(
+            f"Subscriber authentication error: {str(err)}"
+        ) from err
     except ConfigurationException as err:
         _LOGGER.error("Configuration error: %s", err)
         subscriber.stop_async()
         return False
     except SubscriberException as err:
-        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
-            _LOGGER.error("Subscriber error: %s", err)
-            hass.data[DOMAIN][entry.entry_id][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Subscriber error: {str(err)}") from err
 
     try:
         device_manager = await subscriber.async_get_device_manager()
     except ApiException as err:
-        if DATA_NEST_UNAVAILABLE not in hass.data[DOMAIN]:
-            _LOGGER.error("Device manager error: %s", err)
-            hass.data[DOMAIN][entry.entry_id][DATA_NEST_UNAVAILABLE] = True
         subscriber.stop_async()
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(f"Device manager error: {str(err)}") from err
 
     hass.data[DOMAIN][entry.entry_id] = {
         DATA_SUBSCRIBER: subscriber,

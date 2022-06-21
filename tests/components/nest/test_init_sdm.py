@@ -103,18 +103,18 @@ async def test_setup_configuration_failure(
 
 @pytest.mark.parametrize("subscriber_side_effect", [SubscriberException()])
 async def test_setup_susbcriber_failure(
-    hass, error_caplog, failing_subscriber, setup_base_platform
+    hass, warning_caplog, failing_subscriber, setup_base_platform
 ):
     """Test configuration error."""
     await setup_base_platform()
-    assert "Subscriber error:" in error_caplog.text
+    assert "Subscriber error:" in warning_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_setup_device_manager_failure(hass, error_caplog, setup_base_platform):
+async def test_setup_device_manager_failure(hass, warning_caplog, setup_base_platform):
     """Test device manager api failure."""
     with patch(
         "homeassistant.components.nest.api.GoogleNestSubscriber.start_async"
@@ -124,8 +124,7 @@ async def test_setup_device_manager_failure(hass, error_caplog, setup_base_platf
     ):
         await setup_base_platform()
 
-    assert len(error_caplog.messages) == 1
-    assert "Device manager error:" in error_caplog.text
+    assert "Device manager error:" in warning_caplog.text
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
