@@ -368,7 +368,7 @@ async def test_auth_access_signed_path_with_query_param_tamper(
     url = yarl.URL(signed_path)
     token = url.query.get(SIGN_QUERY_PARAM)
 
-    req = await client.get(test_url + f"&{SIGN_QUERY_PARAM}={token}")
+    req = await client.get(f"{test_url}&{SIGN_QUERY_PARAM}={token}")
     assert req.status == HTTPStatus.UNAUTHORIZED
 
 
