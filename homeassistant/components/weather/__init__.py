@@ -683,7 +683,7 @@ class WeatherEntity(Entity):
             for forecast_entry in self.forecast:
                 forecast_entry = dict(forecast_entry)
 
-                temperature = forecast_entry.get(
+                temperature = forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP, forecast_entry.get(ATTR_FORECAST_TEMP)
                 )
 
@@ -706,7 +706,7 @@ class WeatherEntity(Entity):
                             value_temp, precision
                         )
 
-                if forecast_temp_low := forecast_entry.get(
+                if forecast_temp_low := forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_TEMP_LOW,
                     forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
                 ):
@@ -724,7 +724,7 @@ class WeatherEntity(Entity):
                             value_temp_low, precision
                         )
 
-                if forecast_pressure := forecast_entry.get(
+                if forecast_pressure := forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_PRESSURE,
                     forecast_entry.get(ATTR_FORECAST_PRESSURE),
                 ):
@@ -743,7 +743,7 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
 
-                if forecast_wind_speed := forecast_entry.get(
+                if forecast_wind_speed := forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_WIND_SPEED,
                     forecast_entry.get(ATTR_FORECAST_WIND_SPEED),
                 ):
@@ -762,7 +762,7 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
 
-                if forecast_precipitation := forecast_entry.get(
+                if forecast_precipitation := forecast_entry.pop(
                     ATTR_FORECAST_NATIVE_PRECIPITATION,
                     forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
                 ):
