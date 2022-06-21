@@ -128,7 +128,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
     @callback
     def async_accept_signal(
         self,
-        channel: ZigbeeChannel,
+        channel: ZigbeeChannel | None,
         signal: str,
         func: Callable[..., Any],
         signal_override=False,
@@ -138,6 +138,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         if signal_override:
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
+            assert channel
             unsub = async_dispatcher_connect(
                 self.hass, f"{channel.unique_id}_{signal}", func
             )
@@ -305,7 +306,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         if self._change_listener_debouncer is None:
             self._change_listener_debouncer = Debouncer(
                 self.hass,
-                self,
+                _LOGGER,
                 cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
@@ -325,6 +326,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
+        assert self._change_listener_debouncer
         self.hass.create_task(self._change_listener_debouncer.async_call())
 
     async def async_will_remove_from_hass(self) -> None:
