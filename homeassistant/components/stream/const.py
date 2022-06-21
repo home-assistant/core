@@ -54,4 +54,6 @@ RTSP_TRANSPORTS = {
 }
 CONF_USE_WALLCLOCK_AS_TIMESTAMPS = "use_wallclock_as_timestamps"
 CONF_EXTRA_PART_WAIT_TIME = "extra_part_wait_time"
-CONF_LIVE_FLV = "live_flv"
+CONF_INPUT_FORMAT = "input_format"
+FORMAT_LIVE_FLV = "live_flv"
+INPUT_FORMATS = ("live_flv",)

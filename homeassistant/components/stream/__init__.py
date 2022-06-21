@@ -40,7 +40,7 @@ from .const import (
     ATTR_SETTINGS,
     ATTR_STREAMS,
     CONF_EXTRA_PART_WAIT_TIME,
-    CONF_LIVE_FLV,
+    CONF_INPUT_FORMAT,
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
@@ -48,7 +48,9 @@ from .const import (
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
     DOMAIN,
     FORMAT_CONTENT_TYPE,
+    FORMAT_LIVE_FLV,
     HLS_PROVIDER,
+    INPUT_FORMATS,
     MAX_SEGMENTS,
     OUTPUT_FORMATS,
     OUTPUT_IDLE_TIMEOUT,
@@ -67,11 +69,12 @@ from .hls import HlsStreamOutput, async_setup_hls
 __all__ = [
     "ATTR_SETTINGS",
     "CONF_EXTRA_PART_WAIT_TIME",
-    "CONF_LIVE_FLV",
+    "CONF_INPUT_FORMAT",
     "CONF_RTSP_TRANSPORT",
     "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
     "DOMAIN",
     "FORMAT_CONTENT_TYPE",
+    "FORMAT_LIVE_FLV",
     "HLS_PROVIDER",
     "OUTPUT_FORMATS",
     "RTSP_TRANSPORTS",
@@ -125,12 +128,12 @@ def create_stream(
         if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
             assert isinstance(rtsp_transport, str)
             # The PyAV options currently match the stream CONF constants, but this
-            # will not necessarily always be the case, so they are hard coded here
+            # may not always be the case, so the PyAV constants are hard coded here
             pyav_options["rtsp_transport"] = rtsp_transport
         if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
             pyav_options["use_wallclock_as_timestamps"] = "1"
-        if stream_options.get(CONF_LIVE_FLV):
-            stream_settings.format_name = "live_flv"
+        if (format_name := stream_options.get(CONF_INPUT_FORMAT)) in INPUT_FORMATS:
+            stream_settings.format_name = format_name
 
         return pyav_options, stream_settings
 
@@ -554,6 +557,6 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
         vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
-        vol.Optional(CONF_LIVE_FLV): bool,
+        vol.Optional(CONF_INPUT_FORMAT): vol.In(INPUT_FORMATS),
     }
 )
