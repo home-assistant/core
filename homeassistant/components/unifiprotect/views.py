@@ -94,6 +94,8 @@ def async_generate_event_video_url(event: Event) -> str:
 class ProtectProxyView(HomeAssistantView):
     """Base class to proxy request to UniFi Protect console."""
 
+    requires_auth = True
+
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a thumbnail proxy view."""
         self.hass = hass
@@ -117,7 +119,6 @@ class ProtectProxyView(HomeAssistantView):
 class ThumbnailProxyView(ProtectProxyView):
     """View to proxy event thumbnails from UniFi Protect."""
 
-    requires_auth = False  # TODO: https://github.com/home-assistant/core/pull/73240
     url = "/api/ufp/thumbnail/{event_id}"
     name = "api:ufp_thumbnail"
 
@@ -130,10 +131,6 @@ class ThumbnailProxyView(ProtectProxyView):
 
         width: int | str | None = request.query.get("w")
         height: int | str | None = request.query.get("h")
-
-        # TODO: https://github.com/home-assistant/core/pull/73240
-        if isinstance(height, str):
-            height = height.split("?")[0]
 
         if width is not None:
             try:
@@ -162,7 +159,6 @@ class ThumbnailProxyView(ProtectProxyView):
 class VideoProxyView(ProtectProxyView):
     """View to proxy video clips from UniFi Protect."""
 
-    requires_auth = False  # TODO: https://github.com/home-assistant/core/pull/73240
     url = "/api/ufp/video/{camera_id}"
     name = "api:ufp_thumbnail"
 
