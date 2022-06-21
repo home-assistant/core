@@ -74,7 +74,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         self.temperature_device = self.executor.linked_device(2)
 
     @property
-    def hvac_mode(self) -> str | None:
+    def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         if OverkizState.CORE_OPERATING_MODE in self.device.states:
             state = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
@@ -83,7 +83,7 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
             state = self.executor.select_state(OverkizState.CORE_ON_OFF)
             return OVERKIZ_TO_HVAC_MODE[OverkizCommandParam(state)]
 
-        return None
+        return HVACMode.OFF
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
