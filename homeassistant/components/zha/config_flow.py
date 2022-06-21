@@ -270,7 +270,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         except vol.Invalid:
             return self.async_abort(reason="invalid_hardware_data")
 
-        self._title = data["port"]["path"]
+        self._title = data.get("name", data["port"]["path"])
 
         self._set_confirm_only()
         return await self.async_step_confirm_hardware()
