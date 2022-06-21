@@ -159,6 +159,11 @@ class RawUpnpSensor(UpnpSensor):
     """Representation of a UPnP/IGD sensor."""
 
     @property
+    def device_class(self):
+        """Return the state class for the sensor."""
+        return self.entity_description.state_class
+    
+    @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
         value = self.coordinator.data[self.entity_description.key]
@@ -184,6 +189,11 @@ class DerivedUpnpSensor(UpnpSensor):
         """Check if value has overflowed."""
         return current_value < self._last_value
 
+    @property
+    def device_class(self):
+        """Return the state class for the sensor."""
+        return self.entity_description.state_class
+    
     @property
     def native_value(self) -> str | None:
         """Return the state of the device."""
