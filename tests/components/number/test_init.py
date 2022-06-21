@@ -21,9 +21,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM, METRIC_SYSTEM
+
+from tests.common import mock_restore_cache_with_extra_data
 
 
 class MockDefaultNumberEntity(NumberEntity):
@@ -226,8 +229,8 @@ async def test_attributes(hass: HomeAssistant) -> None:
     assert number_4.value is None
 
 
-async def test_attributes_deprecated(hass: HomeAssistant, caplog) -> None:
-    """Test overriding the deprecated attributes."""
+async def test_deprecation_warnings(hass: HomeAssistant, caplog) -> None:
+    """Test overriding the deprecated attributes is possible and warnings are logged."""
     number = MockDefaultNumberEntityDeprecated()
     number.hass = hass
     assert number.max_value == 100.0
@@ -260,6 +263,10 @@ async def test_attributes_deprecated(hass: HomeAssistant, caplog) -> None:
     assert number_4.unit_of_measurement == "rabbits"
     assert number_4.value == 0.5
 
+    assert (
+        "tests.components.number.test_init::MockNumberEntityDeprecated is overriding "
+        " deprecated methods on an instance of NumberEntity"
+    )
     assert (
         "Entity None (<class 'tests.components.number.test_init.MockNumberEntityAttrDeprecated'>) "
         "is using deprecated NumberEntity features" in caplog.text
@@ -570,3 +577,115 @@ async def test_temperature_conversion(
 
     state = hass.states.get(entity0.entity_id)
     assert float(state.state) == pytest.approx(float(state_max_value), rel=0.1)
+
+
+RESTORE_DATA = {
+    "native_max_value": 200.0,
+    "native_min_value": -10.0,
+    "native_step": 2.0,
+    "native_unit_of_measurement": "°F",
+    "native_value": 123.0,
+}
+
+
+async def test_restore_number_save_state(
+    hass,
+    hass_storage,
+    enable_custom_integrations,
+):
+    """Test RestoreNumber."""
+    platform = getattr(hass.components, "test.number")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockRestoreNumber(
+            name="Test",
+            native_max_value=200.0,
+            native_min_value=-10.0,
+            native_step=2.0,
+            native_unit_of_measurement=TEMP_FAHRENHEIT,
+            native_value=123.0,
+            device_class=NumberDeviceClass.TEMPERATURE,
+        )
+    )
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    # Trigger saving state
+    await hass.async_stop()
+
+    assert len(hass_storage[RESTORE_STATE_KEY]["data"]) == 1
+    state = hass_storage[RESTORE_STATE_KEY]["data"][0]["state"]
+    assert state["entity_id"] == entity0.entity_id
+    extra_data = hass_storage[RESTORE_STATE_KEY]["data"][0]["extra_data"]
+    assert extra_data == RESTORE_DATA
+    assert type(extra_data["native_value"]) == float
+
+
+@pytest.mark.parametrize(
+    "native_max_value, native_min_value, native_step, native_value, native_value_type, extra_data, device_class, uom",
+    [
+        (
+            200.0,
+            -10.0,
+            2.0,
+            123.0,
+            float,
+            RESTORE_DATA,
+            NumberDeviceClass.TEMPERATURE,
+            "°F",
+        ),
+        (100.0, 0.0, None, None, type(None), None, None, None),
+        (100.0, 0.0, None, None, type(None), {}, None, None),
+        (100.0, 0.0, None, None, type(None), {"beer": 123}, None, None),
+        (
+            100.0,
+            0.0,
+            None,
+            None,
+            type(None),
+            {"native_unit_of_measurement": "°F", "native_value": {}},
+            None,
+            None,
+        ),
+    ],
+)
+async def test_restore_number_restore_state(
+    hass,
+    enable_custom_integrations,
+    hass_storage,
+    native_max_value,
+    native_min_value,
+    native_step,
+    native_value,
+    native_value_type,
+    extra_data,
+    device_class,
+    uom,
+):
+    """Test RestoreNumber."""
+    mock_restore_cache_with_extra_data(hass, ((State("number.test", ""), extra_data),))
+
+    platform = getattr(hass.components, "test.number")
+    platform.init(empty=True)
+    platform.ENTITIES.append(
+        platform.MockRestoreNumber(
+            device_class=device_class,
+            name="Test",
+            native_value=None,
+        )
+    )
+
+    entity0 = platform.ENTITIES[0]
+    assert await async_setup_component(hass, "number", {"number": {"platform": "test"}})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity0.entity_id)
+
+    assert entity0.native_max_value == native_max_value
+    assert entity0.native_min_value == native_min_value
+    assert entity0.native_step == native_step
+    assert entity0.native_value == native_value
+    assert type(entity0.native_value) == native_value_type
+    assert entity0.native_unit_of_measurement == uom

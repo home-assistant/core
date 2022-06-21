@@ -5,7 +5,12 @@ from collections.abc import Generator
 import logging
 
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.data import Camera as UFPCamera, CameraChannel, StateType
+from pyunifiprotect.data import (
+    Camera as UFPCamera,
+    CameraChannel,
+    ProtectModelWithId,
+    StateType,
+)
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -110,10 +115,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         super().__init__(data, camera)
 
         if self._secure:
-            self._attr_unique_id = f"{self.device.id}_{self.channel.id}"
+            self._attr_unique_id = f"{self.device.mac}_{self.channel.id}"
             self._attr_name = f"{self.device.name} {self.channel.name}"
         else:
-            self._attr_unique_id = f"{self.device.id}_{self.channel.id}_insecure"
+            self._attr_unique_id = f"{self.device.mac}_{self.channel.id}_insecure"
             self._attr_name = f"{self.device.name} {self.channel.name} Insecure"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
@@ -137,8 +142,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         )
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self.channel = self.device.channels[self.channel.id]
         motion_enabled = self.device.recording_settings.enable_motion_detection
         self._attr_motion_detection_enabled = (

@@ -1,6 +1,8 @@
 """Support for KEBA charging station switch."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -51,15 +53,15 @@ class KebaLock(LockEntity):
         return f"{self._keba.device_name} {self._name}"
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock wallbox."""
         await self._keba.async_stop()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock wallbox."""
         await self._keba.async_start()
 

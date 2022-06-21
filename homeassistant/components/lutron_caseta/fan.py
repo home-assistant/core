@@ -13,7 +13,8 @@ from homeassistant.util.percentage import (
 )
 
 from . import LutronCasetaDeviceUpdatableEntity
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
+from .const import DOMAIN as CASETA_DOMAIN
+from .models import LutronCasetaData
 
 DEFAULT_ON_PERCENTAGE = 50
 ORDERED_NAMED_FAN_SPEEDS = [FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_HIGH]
@@ -29,9 +30,9 @@ async def async_setup_entry(
     Adds fan controllers from the Caseta bridge associated with the config_entry
     as fan entities.
     """
-    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[BRIDGE_LEAP]
-    bridge_device = data[BRIDGE_DEVICE]
+    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data.bridge
+    bridge_device = data.bridge_device
     fan_devices = bridge.get_devices_by_domain(DOMAIN)
     async_add_entities(
         LutronCasetaFan(fan_device, bridge, bridge_device) for fan_device in fan_devices

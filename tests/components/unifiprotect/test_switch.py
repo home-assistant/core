@@ -28,6 +28,7 @@ from .conftest import (
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
+    reset_objects,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -51,13 +52,13 @@ async def light_fixture(
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
 
-    light_obj = mock_light.copy(deep=True)
+    light_obj = mock_light.copy()
     light_obj._api = mock_entry.api
     light_obj.name = "Test Light"
     light_obj.is_ssh_enabled = False
     light_obj.light_device_settings.is_indicator_enabled = False
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
@@ -81,7 +82,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -110,7 +111,7 @@ async def camera_fixture(
     camera_obj.osd_settings.is_debug_enabled = False
     camera_obj.smart_detect_settings.object_types = []
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -134,7 +135,7 @@ async def camera_none_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -153,7 +154,7 @@ async def camera_none_fixture(
     camera_obj.osd_settings.is_logo_enabled = False
     camera_obj.osd_settings.is_debug_enabled = False
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -177,7 +178,8 @@ async def camera_privacy_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    # mock_camera._update_lock = None
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -197,7 +199,7 @@ async def camera_privacy_fixture(
     camera_obj.osd_settings.is_logo_enabled = False
     camera_obj.osd_settings.is_debug_enabled = False
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -238,7 +240,7 @@ async def test_switch_setup_light(
 
     description = LIGHT_SWITCHES[0]
 
-    unique_id = f"{light.id}_{description.key}"
+    unique_id = f"{light.mac}_{description.key}"
     entity_id = f"switch.test_light_{description.name.lower().replace(' ', '_')}"
 
     entity = entity_registry.async_get(entity_id)
@@ -282,7 +284,7 @@ async def test_switch_setup_camera_all(
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
     )
-    unique_id = f"{camera.id}_{description.key}"
+    unique_id = f"{camera.mac}_{description.key}"
     entity_id = f"switch.test_camera_{description_entity_name}"
 
     entity = entity_registry.async_get(entity_id)
@@ -329,7 +331,7 @@ async def test_switch_setup_camera_none(
     description_entity_name = (
         description.name.lower().replace(":", "").replace(" ", "_")
     )
-    unique_id = f"{camera_none.id}_{description.key}"
+    unique_id = f"{camera_none.mac}_{description.key}"
     entity_id = f"switch.test_camera_{description_entity_name}"
 
     entity = entity_registry.async_get(entity_id)

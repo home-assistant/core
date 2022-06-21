@@ -994,7 +994,7 @@ async def test_statistics_during_period_in_the_past(
     assert response["success"]
     assert response["result"] == {}
 
-    past = now - timedelta(days=3)
+    past = now - timedelta(days=3, hours=1)
     await client.send_json(
         {
             "id": 3,

@@ -4,7 +4,7 @@ aiodiscover==1.4.11
 aiohttp==3.8.1
 aiohttp_cors==0.7.0
 astral==2.2
-async-upnp-client==0.31.1
+async-upnp-client==0.31.2
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
@@ -34,7 +34,7 @@ typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
 yarl==1.7.2
-zeroconf==0.38.6
+zeroconf==0.38.7
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
