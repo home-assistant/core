@@ -21,7 +21,9 @@ class TypeHintMatch:
 
     function_name: str
     return_type: list[str] | str | None | object
+    # arg_types is for positional arguments
     arg_types: dict[int, str] | None = None
+    # kwarg_types is for the special case `**kwargs`
     kwargs_type: str | None = None
     check_return_type_inheritance: bool = False
 
