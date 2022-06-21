@@ -357,7 +357,9 @@ class UniFiController:
         self.wireless_clients = wireless_clients.get_data(self.config_entry)
         self.update_wireless_clients()
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         self.api.start_websocket()
 

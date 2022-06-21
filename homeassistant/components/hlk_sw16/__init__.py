@@ -114,7 +114,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN][entry.entry_id][DATA_DEVICE_REGISTER] = client
 
         # Load entities
-        hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
         _LOGGER.info("Connected to HLK-SW16 device: %s", address)
 

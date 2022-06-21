@@ -452,7 +452,7 @@ async def async_setup_device_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
 
-    hass.config_entries.async_setup_platforms(entry, platforms)
+    await hass.config_entries.async_forward_entry_setups(entry, platforms)
 
     return True
 

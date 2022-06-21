@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     )
 
     config_entry.add_update_listener(gateway.async_config_entry_updated)
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     await async_setup_events(gateway)
     await gateway.async_update_device_registry()

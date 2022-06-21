@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except AdGuardHomeConnectionError as exception:
         raise ConfigEntryNotReady from exception
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def add_url(call: ServiceCall) -> None:
         """Service call to add a new filter subscription to AdGuard Home."""
