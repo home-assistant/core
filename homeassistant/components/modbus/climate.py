@@ -281,4 +281,5 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return None
 
         self._lazy_errors = self._lazy_error_count
+        self._attr_available = True
         return result.registers[0]
