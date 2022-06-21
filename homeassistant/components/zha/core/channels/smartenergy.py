@@ -154,7 +154,7 @@ class Metering(ZigbeeChannel):
         return self.DeviceStatusDefault(status)
 
     @property
-    def unit_of_measurement(self) -> str | int:
+    def unit_of_measurement(self) -> int:
         """Return unit of measurement."""
         return self.cluster.get("unit_of_measure")
 
