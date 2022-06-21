@@ -7,11 +7,11 @@ from ipaddress import ip_address
 import logging
 import secrets
 from typing import Final
-from urllib.parse import unquote
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
+from yarl import URL
 
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
@@ -57,18 +57,24 @@ def async_sign_path(
         else:
             refresh_token_id = hass.data[STORAGE_KEY]
 
+    url = URL(path)
     now = dt_util.utcnow()
+    params = dict(sorted(url.query.items()))
     encoded = jwt.encode(
         {
             "iss": refresh_token_id,
-            "path": unquote(path),
+            "path": url.path,
+            "params": params,
             "iat": now,
             "exp": now + expiration,
         },
         secret,
         algorithm="HS256",
     )
-    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
+
+    params[SIGN_QUERY_PARAM] = encoded
+    url = url.with_query(params)
+    return f"{url.path}?{url.query_string}"
 
 
 @callback
@@ -174,6 +180,11 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             return False
 
         if claims["path"] != request.path:
+            return False
+
+        params = dict(sorted(request.query.items()))
+        del params[SIGN_QUERY_PARAM]
+        if claims["params"] != params:
             return False
 
         refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
