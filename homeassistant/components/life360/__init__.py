@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from contextlib import suppress
 from datetime import timedelta
-from typing import Any
 
 import voluptuous as vol
 
@@ -35,7 +34,7 @@ from .const import (
     SHOW_DRIVING,
     SHOW_MOVING,
 )
-from .helpers import get_life360_api, get_life360_data, init_integ_data
+from .helpers import Life360Data, get_life360_api, get_life360_data, init_integ_data
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
 
@@ -116,7 +115,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api = get_life360_api(authorization=entry.data[CONF_AUTHORIZATION])
 
-    async def async_update_data() -> dict[str, dict[str, Any]]:
+    async def async_update_data() -> Life360Data:
         """Update Life360 data."""
         return await get_life360_data(hass, api)
 
