@@ -194,6 +194,8 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
                 "still_image_url": "http://example.com",
                 "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
                 "limit_refetch_to_url_change": True,
+                "username": "barney",
+                "password": "betty",
             },
         },
     )
