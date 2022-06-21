@@ -535,6 +535,7 @@ class Group(Entity):
     @classmethod
     @callback
     def async_create_group_entity(
+        cls,
         hass,
         name,
         entity_ids=None,
