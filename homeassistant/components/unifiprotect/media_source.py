@@ -1,6 +1,7 @@
 """UniFi Protect media sources."""
 
 from __future__ import annotations
+import asyncio
 
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
@@ -470,18 +471,19 @@ class ProtectMediaSource(MediaSource):
         )
 
         if build_children:
-            source.children = [
-                await self._build_day(data, camera_id, event_type, 1),
-                await self._build_day(data, camera_id, event_type, 7),
-                await self._build_day(data, camera_id, event_type, 30),
+            childern = [
+                self._build_day(data, camera_id, event_type, 1),
+                self._build_day(data, camera_id, event_type, 7),
+                self._build_day(data, camera_id, event_type, 30),
             ]
 
             start, end = _get_start_end(self.hass, data.api.bootstrap.recording_start)
             while end > start:
-                source.children.append(
-                    await self._build_month(data, camera_id, event_type, end.date())
+                childern.append(
+                    self._build_month(data, camera_id, event_type, end.date())
                 )
                 end = (end - timedelta(days=1)).replace(day=1)
+            source.children = await asyncio.gather(*childern)
 
         return source
 
