@@ -565,3 +565,63 @@ def test_ignore_invalid_entity_properties(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_named_arguments(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check missing entity properties when ignore_missing_annotations is False."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, prop_node, func_node = astroid.extract_node(
+        """
+    class FanEntity():
+        pass
+
+    class MyFan( #@
+        FanEntity
+    ):
+        async def async_turn_on( #@
+            self,
+            percentage,
+            preset_mode: str,
+            **kwargs
+        ) -> bool:
+            pass
+    """,
+        "homeassistant.components.pylint_test.fan",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=prop_node,
+            args=["str", None],
+            line=9,
+            col_offset=4,
+            end_line=9,
+            end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("kwargs", "Any"),
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=24,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="None",
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=24,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
