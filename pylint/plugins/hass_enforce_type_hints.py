@@ -443,7 +443,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ),
     ],
 }
-# Overriden properties and functions are normally checked by mypy, and will only
+# Overridden properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "lock": [
