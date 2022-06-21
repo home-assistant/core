@@ -1,9 +1,10 @@
 """Simplepush notification service."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from simplepush import send, send_encrypted
+from simplepush import BadRequest, UnknownError, send, send_encrypted
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -30,6 +31,8 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): cv.string,
     }
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_service(
@@ -71,14 +74,20 @@ class SimplePushNotificationService(BaseNotificationService):
         # use event from config until YAML config is removed
         event = event or self._event
 
-        if self._password:
-            send_encrypted(
-                self._device_key,
-                self._password,
-                self._salt,
-                title,
-                message,
-                event=event,
-            )
-        else:
-            send(self._device_key, title, message, event=event)
+        try:
+            if self._password:
+                send_encrypted(
+                    self._device_key,
+                    self._password,
+                    self._salt,
+                    title,
+                    message,
+                    event=event,
+                )
+            else:
+                send(self._device_key, title, message, event=event)
+
+        except BadRequest:
+            _LOGGER.error("Bad request. Title or message are too long")
+        except UnknownError:
+            _LOGGER.error("Failed to send the notification.")

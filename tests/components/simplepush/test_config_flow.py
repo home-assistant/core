@@ -2,6 +2,7 @@
 from unittest.mock import patch
 
 import pytest
+from simplepush import UnknownError
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.simplepush.const import CONF_DEVICE_KEY, CONF_SALT, DOMAIN
@@ -23,6 +24,15 @@ def simplepush_setup_fixture():
     """Patch simplepush setup entry."""
     with patch(
         "homeassistant.components.simplepush.async_setup_entry", return_value=True
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_api_request():
+    """Patch simplepush api request."""
+    with patch("homeassistant.components.simplepush.config_flow.send"), patch(
+        "homeassistant.components.simplepush.config_flow.send_encrypted"
     ):
         yield
 
@@ -87,6 +97,24 @@ async def test_flow_user_name_already_configured(hass: HomeAssistant) -> None:
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_error_on_connection_failure(hass: HomeAssistant) -> None:
+    """Test when connection to api fails."""
+    with patch(
+        "homeassistant.components.simplepush.config_flow.send_encrypted",
+        side_effect=UnknownError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input=MOCK_CONFIG,
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_flow_import(hass: HomeAssistant) -> None:

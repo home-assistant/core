@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from simplepush import UnknownError, send, send_encrypted
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -15,6 +16,25 @@ from .const import ATTR_ENCRYPTED, CONF_DEVICE_KEY, CONF_SALT, DEFAULT_NAME, DOM
 _LOGGER = logging.getLogger(__name__)
 
 
+def validate_input(entry: dict[str, str]) -> dict[str, str] | None:
+    """Validate user input."""
+    try:
+        if CONF_PASSWORD in entry:
+            send_encrypted(
+                entry[CONF_DEVICE_KEY],
+                entry[CONF_PASSWORD],
+                entry[CONF_PASSWORD],
+                "HA test",
+                "Message delivered successfully",
+            )
+        else:
+            send(entry[CONF_DEVICE_KEY], "HA test", "Message delivered successfully")
+    except UnknownError:
+        return {"base": "cannot_connect"}
+
+    return None
+
+
 class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for simplepush."""
 
@@ -22,6 +42,7 @@ class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by the user."""
+        errors: dict[str, str] | None = None
         if user_input is not None:
 
             await self.async_set_unique_id(user_input[CONF_DEVICE_KEY])
@@ -32,10 +53,16 @@ class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_NAME: user_input[CONF_NAME],
                 }
             )
-            return self.async_create_entry(
-                title=user_input[CONF_NAME],
-                data=user_input,
-            )
+
+            if not (
+                errors := await self.hass.async_add_executor_job(
+                    validate_input, user_input
+                )
+            ):
+                return self.async_create_entry(
+                    title=user_input[CONF_NAME],
+                    data=user_input,
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -47,6 +74,7 @@ class SimplePushFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Inclusive(CONF_SALT, ATTR_ENCRYPTED): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_import(self, import_config: dict[str, str]) -> FlowResult:
