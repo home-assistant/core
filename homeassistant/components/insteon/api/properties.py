@@ -99,8 +99,6 @@ def get_properties(device: Device, show_advanced=False):
             continue
 
         prop_schema = get_schema(prop, name, device.groups)
-        if name == "momentary_delay":
-            print(prop_schema)
         if prop_schema is None:
             continue
         schema[name] = prop_schema
