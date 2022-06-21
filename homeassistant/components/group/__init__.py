@@ -571,6 +571,7 @@ class Group(Entity):
 
     @staticmethod
     async def async_create_group(
+        cls,
         hass,
         name,
         entity_ids=None,
