@@ -30,6 +30,7 @@ from homeassistant.components import media_source, zeroconf
 from homeassistant.components.media_player import (
     BrowseError,
     BrowseMedia,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     async_process_play_media_url,
@@ -303,9 +304,13 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
         )
 
         if cast_info.cast_info.cast_type == CAST_TYPE_AUDIO:
+            self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
             self._attr_icon = "mdi:speaker"
         elif cast_info.cast_info.cast_type == CAST_TYPE_GROUP:
+            self._attr_device_class = MediaPlayerDeviceClass.SPEAKER
             self._attr_icon = "mdi:speaker-multiple"
+        else:
+            self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""
