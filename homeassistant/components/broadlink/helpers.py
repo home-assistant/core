@@ -2,8 +2,13 @@
 from base64 import b64decode
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST
-from homeassistant.helpers import config_validation as cv
+from homeassistant.const import CONF_HOST, Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 
 from .const import DOMAIN
 
@@ -47,3 +52,29 @@ def import_device(hass, host):
             data={CONF_HOST: host},
         )
         hass.async_create_task(task)
+
+
+def async_clean_registries(
+    hass: HomeAssistant,
+    config_entry: config_entries.ConfigEntry,
+    wanted_unique_id: set,
+    platform: Platform,
+) -> None:
+    """Remove orphaned devices and entities."""
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
+        if entry.domain != platform or entry.unique_id in wanted_unique_id:
+            continue
+
+        entity_registry.async_remove(entry.entity_id)
+
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, config_entry.entry_id
+    ):
+        entries = er.async_entries_for_device(entity_registry, device_entry.id, True)
+        if len(entries) == 0:
+            device_registry.async_remove_device(device_entry.id)

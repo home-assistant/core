@@ -4,36 +4,13 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, Platform
 from .device import BroadlinkDevice, BroadlinkStores
 from .entity import BroadlinkEntity
-
-
-def async_clean_registries(
-    hass: HomeAssistant, config_entry: ConfigEntry, wanted_unique_id: set
-) -> None:
-    """Remove orphaned devices and entities."""
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    for entry in er.async_entries_for_config_entry(
-        entity_registry, config_entry.entry_id
-    ):
-        if entry.domain != Platform.BUTTON or entry.unique_id in wanted_unique_id:
-            continue
-
-        entity_registry.async_remove(entry.entity_id)
-
-    for device_entry in dr.async_entries_for_config_entry(
-        device_registry, config_entry.entry_id
-    ):
-        entries = er.async_entries_for_device(entity_registry, device_entry.id, True)
-        if len(entries) == 0:
-            device_registry.async_remove_device(device_entry.id)
+from .helpers import async_clean_registries
 
 
 async def async_setup_entry(
@@ -58,7 +35,7 @@ async def async_setup_entry(
 
     async_add_entities(entities)
 
-    async_clean_registries(hass, config_entry, unique_ids)
+    async_clean_registries(hass, config_entry, unique_ids, Platform.BUTTON)
 
 
 class BroadlinkButton(BroadlinkEntity, ButtonEntity):
