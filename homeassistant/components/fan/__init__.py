@@ -80,10 +80,11 @@ class NotValidPresetModeError(ValueError):
 
 
 @bind_hass
-def is_on(hass: HomeAssistant, entity_id: str) -> bool:
+def is_on(hass: HomeAssistant, entity_id: str) -> bool | None:
     """Return if the fans are on based on the statemachine."""
     entity = hass.states.get(entity_id)
-    assert entity
+    if entity is None:
+        return None
     return entity.state == STATE_ON
 
 
