@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, mqtt, ssdp, zeroconf
+from homeassistant.components import dhcp, mqtt, onboarding, ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -52,7 +52,7 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm setup."""
-        if user_input is None:
+        if user_input is None and onboarding.async_is_onboarded(self.hass):
             self._set_confirm_only()
             return self.async_show_form(step_id="confirm")
 
