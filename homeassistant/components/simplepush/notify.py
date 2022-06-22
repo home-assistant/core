@@ -22,7 +22,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_ENCRYPTED, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 
-# Configuring simplepush under the notify platform will be deprecated in 2022.8.0
+# Configuring simplepush under the notify platform will be removed in 2022.9.0
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_DEVICE_KEY): cv.string,
@@ -90,4 +90,4 @@ class SimplePushNotificationService(BaseNotificationService):
         except BadRequest:
             _LOGGER.error("Bad request. Title or message are too long")
         except UnknownError:
-            _LOGGER.error("Failed to send the notification.")
+            _LOGGER.error("Failed to send the notification")
