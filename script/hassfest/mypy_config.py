@@ -144,15 +144,10 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xiaomi_miio.light",
     "homeassistant.components.xiaomi_miio.sensor",
     "homeassistant.components.xiaomi_miio.switch",
-    "homeassistant.components.zha.api",
-    "homeassistant.components.zha.button",
-    "homeassistant.components.zha.climate",
     "homeassistant.components.zha.core.channels.base",
-    "homeassistant.components.zha.core.channels.general",
     "homeassistant.components.zha.core.channels.homeautomation",
     "homeassistant.components.zha.core.channels.hvac",
     "homeassistant.components.zha.core.channels.security",
-    "homeassistant.components.zha.core.channels.smartenergy",
     "homeassistant.components.zha.core.device",
     "homeassistant.components.zha.core.discovery",
     "homeassistant.components.zha.core.gateway",
@@ -160,12 +155,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.core.helpers",
     "homeassistant.components.zha.core.registries",
     "homeassistant.components.zha.core.store",
-    "homeassistant.components.zha.cover",
-    "homeassistant.components.zha.entity",
-    "homeassistant.components.zha.light",
-    "homeassistant.components.zha.select",
-    "homeassistant.components.zha.sensor",
-    "homeassistant.components.zha.switch",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

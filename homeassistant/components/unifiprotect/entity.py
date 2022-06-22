@@ -26,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
-from .models import ProtectRequiredKeysMixin
+from .models import PermRequired, ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,6 +46,13 @@ def _async_device_entities(
     for device in data.get_by_types({model_type}):
         assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         for description in descs:
+            if description.ufp_perm is not None:
+                can_write = device.can_write(data.api.bootstrap.auth_user)
+                if description.ufp_perm == PermRequired.WRITE and not can_write:
+                    continue
+                if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                    continue
+
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)
                 if not required_field:

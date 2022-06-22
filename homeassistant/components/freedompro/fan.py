@@ -60,7 +60,7 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         return self._attr_is_on
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return self._attr_percentage
 
@@ -111,7 +111,7 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_percentage(self, percentage: int):
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         rotation_speed = {"rotationSpeed": percentage}
         payload = json.dumps(rotation_speed)
