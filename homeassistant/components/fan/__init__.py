@@ -287,7 +287,7 @@ class FanEntity(ToggleEntity):
         await self.hass.async_add_executor_job(self.oscillate, oscillating)
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return (
             self.percentage is not None and self.percentage > 0
