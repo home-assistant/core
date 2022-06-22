@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 MOCK_COUNTRY = "China"
 MOCK_USERNAME = "myUsername"
 MOCK_PASSWORD = "myPassword"
-COUNTRY_CODE = "86"
+COUNTRY_CODE = "China"
 
 AQARA_INPUT_DATA = {
     CONF_COUNTRY_CODE: MOCK_COUNTRY,
@@ -78,5 +78,3 @@ async def test_error_on_invalid_credentials(hass, aqara):
     await hass.async_block_till_done()
 
     assert result["errors"]["base"] == "login_error"
-    assert result["description_placeholders"]["code"] == -1
-    assert result["description_placeholders"]["msg"] == "error"

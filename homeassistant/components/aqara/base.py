@@ -30,6 +30,7 @@ class AqaraEntity(Entity):
         """Init AqaraHaEntity."""
         self._attr_unique_id = point.id
         self.point = point
+        self._attr_name = point.name
         self.device_manager = device_manager
         device = self.device_manager.get_device(self.point.did)
         self._attr_device_info = DeviceInfo(
@@ -39,18 +40,6 @@ class AqaraEntity(Entity):
             model=device.model,
             suggested_area=device.position_name,
         )
-
-    @property
-    def name(self) -> str | None:
-        """Return Aqara device name."""
-        if isinstance(self.point.name, str) and self.point.name != "":
-            return f"{self.point.name}({self.point.did})"
-        if hasattr(self, "entity_description"):
-            if self.entity_description.name is not None and isinstance(
-                self.entity_description.name, str
-            ):
-                return f"{self.entity_description.name}({self.point.did})"
-        return f"({self.point.id})"
 
     @property
     def available(self) -> bool:
@@ -87,6 +76,7 @@ def find_aqara_device_points_and_register(
                 aqara_point = device.point_map.get(
                     hass_data.device_manager.make_point_id(device.did, description.key)
                 )
+                aqara_point.name = f"{device.device_name}({description.name})"
                 if aqara_point is not None:
                     append_entity(aqara_point, description)
                     async_dispatcher_send(
