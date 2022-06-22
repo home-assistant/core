@@ -1,0 +1,37 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful"
+        },
+        "error": {
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_email": "Invalid Email address"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "description": "The password for {username} is invalid.",
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "debug": "Enable/disable debug in the smtp",
+                    "name": "Name",
+                    "password": "Password",
+                    "port": "The outgoing smtp port.",
+                    "recipient": "Email address of recepient(s)",
+                    "sender": "Email address for sender",
+                    "sender_name": "Sender name to be mentioned",
+                    "server": "The outgoing smtp server.",
+                    "timeout": "Timeout for the smtp server.",
+                    "username": "Username",
+                    "verify_ssl": "Verify SSL certificate"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,38 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "TODO.",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "sender": "Email address for sender",
+          "sender_name": "Sender name to be mentioned",
+          "recipient": "Email address of recepient(s)",
+          "server": "The outgoing smtp server.",
+          "port": "The outgoing smtp port.",
+          "timeout": "Timeout for the smtp server.",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]",
+          "debug": "Enable/disable debug in the smtp"
+        }
+      },
+      "reauth_confirm": {
+        "description": "The password for {username} is invalid.",
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_email": "Invalid Email address",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}
