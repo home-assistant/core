@@ -15,9 +15,10 @@ from ..const import (
     ATTR_ATTRIBUTE_NAME,
     ATTR_VALUE,
     REPORT_CONFIG_ASAP,
+    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
-    REPORT_CONFIG_MIN_INT_IMMEDIATE,
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
@@ -131,44 +132,17 @@ class InovelliCluster(ClientChannel):
 class IkeaAirPurifierChannel(ZigbeeChannel):
     """IKEA Air Purifier channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "filter_run_time",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "replace_filter",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "filter_life_time",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "disable_led",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "air_quality_25pm",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "child_lock",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "fan_mode",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "fan_speed",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "device_run_time",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="filter_run_time", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="replace_filter", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="filter_life_time", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="disable_led", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="air_quality_25pm", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="child_lock", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="fan_mode", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="fan_speed", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="device_run_time", config=REPORT_CONFIG_DEFAULT),
+    )
 
     @property
     def fan_mode(self) -> int | None:

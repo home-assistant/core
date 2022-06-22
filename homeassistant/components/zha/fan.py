@@ -7,6 +7,7 @@ import math
 
 from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import hvac
+
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PRESET_MODE,
@@ -269,6 +270,8 @@ class IkeaFan(BaseFan, ZhaEntity):
 
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percenage of the fan."""
+        if percentage is None:
+            percentage = 0
         fan_mode = math.ceil(percentage_to_ranged_value(IKEA_SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)
 
