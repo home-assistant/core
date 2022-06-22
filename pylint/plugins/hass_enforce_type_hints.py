@@ -32,8 +32,10 @@ class TypeHintMatch:
 
     def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
         """Confirm if function should be checked."""
-        return self.function_name == node.name or (
-            self.has_async_counterpart and node.name == f"async_{self.function_name}"
+        return (
+            self.function_name == node.name
+            or self.has_async_counterpart
+            and node.name == f"async_{self.function_name}"
         )
 
 
