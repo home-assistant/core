@@ -4,6 +4,7 @@ import voluptuous as vol
 from homeassistant.components import device_tracker
 
 from ..mixins import warn_for_legacy_schema
+from .schema_discovery import PLATFORM_SCHEMA_MODERN  # noqa: F401
 from .schema_discovery import async_setup_entry_from_discovery
 from .schema_yaml import PLATFORM_SCHEMA_YAML, async_setup_scanner_from_yaml
 
