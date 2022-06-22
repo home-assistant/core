@@ -41,7 +41,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Broadlink light."""
+    """Set up the Broadlink button."""
     device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
     store = device.store
 
@@ -59,7 +59,7 @@ async def async_setup_entry(
 
 
 class BroadlinkButton(BroadlinkEntity, ButtonEntity):
-    """Representation of a Broadlink light."""
+    """Representation of a Broadlink button."""
 
     _device: BroadlinkDevice
 
