@@ -76,21 +76,21 @@ async def test_call_setup_entry(hass):
 
     mock_setup_entry = AsyncMock(return_value=True)
     mock_migrate_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
         MockModule(
             "comp",
             async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
             async_migrate_entry=mock_migrate_entry,
         ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
-        result = await async_setup_component(hass, "comp", {})
-        await hass.async_block_till_done()
-    assert result
+    assert await async_setup_component(hass, "comp", {})
+    await hass.async_block_till_done()
     assert len(mock_migrate_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
@@ -116,10 +116,8 @@ async def test_call_setup_entry_without_reload_support(hass):
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=False):
-        result = await async_setup_component(hass, "comp", {})
-        await hass.async_block_till_done()
-    assert result
+    assert await async_setup_component(hass, "comp", {})
+    await hass.async_block_till_done()
     assert len(mock_migrate_entry.mock_calls) == 0
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
@@ -135,21 +133,21 @@ async def test_call_async_migrate_entry(hass):
 
     mock_migrate_entry = AsyncMock(return_value=True)
     mock_setup_entry = AsyncMock(return_value=True)
+    mock_unload_entry = AsyncMock(return_value=True)
 
     mock_integration(
         hass,
         MockModule(
             "comp",
             async_setup_entry=mock_setup_entry,
+            async_unload_entry=mock_unload_entry,
             async_migrate_entry=mock_migrate_entry,
         ),
     )
     mock_entity_platform(hass, "config_flow.comp", None)
 
-    with patch("homeassistant.config_entries.support_entry_unload", return_value=True):
-        result = await async_setup_component(hass, "comp", {})
-        await hass.async_block_till_done()
-    assert result
+    assert await async_setup_component(hass, "comp", {})
+    await hass.async_block_till_done()
     assert len(mock_migrate_entry.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
@@ -1337,6 +1335,9 @@ async def test_entry_disable_succeed(hass, manager):
 
     # Enable
     assert await manager.async_set_disabled_by(entry.entry_id, None)
+    assert len(async_setup.mock_calls) == 0
+    async_fire_time_changed(hass, dt.utcnow() + config_entries.RELOAD_COOLDOWN)
+    await hass.async_block_till_done()
     assert len(async_unload_entry.mock_calls) == 1
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
@@ -1407,6 +1408,8 @@ async def test_entry_enable_without_reload_support(hass, manager):
     assert not await manager.async_set_disabled_by(
         entry.entry_id, config_entries.ConfigEntryDisabler.USER
     )
+    async_fire_time_changed(hass, dt.utcnow() + config_entries.RELOAD_COOLDOWN)
+    await hass.async_block_till_done()
     assert len(async_setup.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.FAILED_UNLOAD
@@ -1431,21 +1434,6 @@ async def test_support_entry_unload(hass):
     """Test unloading entry."""
     assert await config_entries.support_entry_unload(hass, "light")
     assert not await config_entries.support_entry_unload(hass, "auth")
-
-
-async def test_reload_entry_entity_registry_ignores_no_entry(hass):
-    """Test reloading entry in entity registry skips if no config entry linked."""
-    handler = config_entries.EntityRegistryDisabledHandler(hass)
-    registry = mock_registry(hass)
-
-    # Test we ignore entities without config entry
-    entry = registry.async_get_or_create("light", "hue", "123")
-    registry.async_update_entity(
-        entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
-    )
-    await hass.async_block_till_done()
-    assert not handler.changed
-    assert handler._remove_call_later is None
 
 
 async def test_reload_entry_entity_registry_works(hass):
@@ -1477,26 +1465,21 @@ async def test_reload_entry_entity_registry_works(hass):
     )
     registry.async_update_entity(entity_entry.entity_id, name="yo")
     await hass.async_block_till_done()
-    assert not handler.changed
-    assert handler._remove_call_later is None
 
     # Disable entity, we should not do anything, only act when enabled.
     registry.async_update_entity(
         entity_entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
-    assert not handler.changed
-    assert handler._remove_call_later is None
 
     # Enable entity, check we are reloading config entry.
     registry.async_update_entity(entity_entry.entity_id, disabled_by=None)
     await hass.async_block_till_done()
-    assert handler.changed == {config_entry.entry_id}
-    assert handler._remove_call_later is not None
 
+    await hass.async_block_till_done()
     async_fire_time_changed(
         hass,
-        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+        dt.utcnow() + config_entries.RELOAD_COOLDOWN,
     )
     await hass.async_block_till_done()
 
@@ -2851,6 +2834,8 @@ async def test_entry_reload_calls_on_unload_listeners(hass, manager):
     assert entry.state is config_entries.ConfigEntryState.LOADED
 
     assert await manager.async_reload(entry.entry_id)
+    async_fire_time_changed(hass, dt.utcnow() + config_entries.RELOAD_COOLDOWN)
+    await hass.async_block_till_done()
     assert len(async_unload_entry.mock_calls) == 2
     assert len(mock_setup_entry.mock_calls) == 2
     # Since we did not register another async_on_unload it should

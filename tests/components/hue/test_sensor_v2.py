@@ -1,5 +1,7 @@
 """Philips Hue sensor platform tests for V2 bridge/api."""
 
+from unittest.mock import patch
+
 from homeassistant.components import hue
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -79,11 +81,16 @@ async def test_enable_sensor(
     assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
     # enable the entity
-    updated_entry = ent_reg.async_update_entity(
-        entity_entry.entity_id, **{"disabled_by": None}
-    )
-    assert updated_entry != entity_entry
-    assert updated_entry.disabled is False
+    # This test manually reloads the platform
+    # so we have to disable async_reload. In
+    # the future we should remove the async_forward_entry_* calls
+    with patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        updated_entry = ent_reg.async_update_entity(
+            entity_entry.entity_id, **{"disabled_by": None}
+        )
+        assert updated_entry != entity_entry
+        assert updated_entry.disabled is False
+        await hass.async_block_till_done()
 
     # reload platform and check if entity is correctly there
     await hass.config_entries.async_forward_entry_unload(mock_config_entry_v2, "sensor")

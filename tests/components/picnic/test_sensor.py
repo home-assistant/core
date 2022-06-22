@@ -1,13 +1,11 @@
 """The tests for the Picnic sensor platform."""
 import copy
-from datetime import timedelta
 import unittest
 from unittest.mock import patch
 
 import pytest
 import requests
 
-from homeassistant import config_entries
 from homeassistant.components.picnic import const
 from homeassistant.components.picnic.const import CONF_COUNTRY_CODE, SENSOR_TYPES
 from homeassistant.components.sensor import SensorDeviceClass
@@ -18,11 +16,10 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt
 
 from tests.common import (
     MockConfigEntry,
-    async_fire_time_changed,
+    async_fire_deferred_config_entry_reloads,
     async_test_home_assistant,
 )
 
@@ -171,15 +168,7 @@ class TestPicnicSensor(unittest.IsolatedAsyncioTestCase):
                 f"sensor.picnic_{sensor_type}", disabled_by=None
             )
             assert updated_entry.disabled is False
-        await self.hass.async_block_till_done()
-
-        # Trigger a reload of the data
-        async_fire_time_changed(
-            self.hass,
-            dt.utcnow()
-            + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
-        )
-        await self.hass.async_block_till_done()
+        await async_fire_deferred_config_entry_reloads(self.hass)
 
     async def test_sensor_setup_platform_not_available(self):
         """Test the set-up of the sensor platform if API is not available."""

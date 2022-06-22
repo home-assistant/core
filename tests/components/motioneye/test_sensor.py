@@ -1,6 +1,5 @@
 """Tests for the motionEye switch platform."""
 import copy
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from motioneye_client.const import KEY_ACTIONS
@@ -11,7 +10,6 @@ from homeassistant.components.motioneye.const import (
     TYPE_MOTIONEYE_ACTION_SENSOR,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.util.dt as dt_util
@@ -25,7 +23,10 @@ from . import (
     setup_mock_motioneye_config_entry,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import (
+    async_fire_deferred_config_entry_reloads,
+    async_fire_time_changed,
+)
 
 
 async def test_sensor_actions(hass: HomeAssistant) -> None:
@@ -120,13 +121,7 @@ async def test_sensor_actions_can_be_enabled(hass: HomeAssistant) -> None:
             TEST_SENSOR_ACTION_ENTITY_ID, disabled_by=None
         )
         assert not updated_entry.disabled
-        await hass.async_block_till_done()
-
-        async_fire_time_changed(
-            hass,
-            dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
-        )
-        await hass.async_block_till_done()
+        await async_fire_deferred_config_entry_reloads(hass)
 
     entity_state = hass.states.get(TEST_SENSOR_ACTION_ENTITY_ID)
     assert entity_state
