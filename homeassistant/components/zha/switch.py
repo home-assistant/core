@@ -289,7 +289,7 @@ class P1MotionTriggerIndicatorSwitch(
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="ikea_manufacturer", models={"STARKVIND Air purifier"}
+    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
 )
 class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
     """ZHA BinarySensor."""
@@ -298,7 +298,7 @@ class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="ikea_manufacturer", models={"STARKVIND Air purifier"}
+    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
 )
 class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
     """ZHA BinarySensor."""
