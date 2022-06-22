@@ -23,9 +23,9 @@ class TypeHintMatch:
     return_type: list[str] | str | None | object
     # arg_types is for positional arguments
     arg_types: dict[int, str] | None = None
-    # kwarg_types is for named or keyword arguments
-    kwarg_types: dict[str, str] | None = None
-    # kwarg_types is for the special case `**kwargs`
+    # named_arg_types is for named or keyword arguments
+    named_arg_types: dict[str, str] | None = None
+    # kwargs_type is for the special case `**kwargs`
     kwargs_type: str | None = None
     check_return_type_inheritance: bool = False
 
@@ -526,7 +526,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="turn_on",
-                    kwarg_types={
+                    named_arg_types={
                         "percentage": "int | None",
                         "preset_mode": "str | None",
                     },
@@ -535,7 +535,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="async_turn_on",
-                    kwarg_types={
+                    named_arg_types={
                         "percentage": "int | None",
                         "preset_mode": "str | None",
                     },
@@ -726,14 +726,10 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     return annotations
 
 
-def _get_kw_annotation(
+def _get_named_annotation(
     node: nodes.FunctionDef, key: str
 ) -> tuple[nodes.NodeNG | None, nodes.NodeNG | None]:
     args = node.args
-    for index, arg_name in enumerate(args.posonlyargs):
-        if key == arg_name.name:
-            return arg_name, args.posonlyargs_annotations[index]
-
     for index, arg_name in enumerate(args.args):
         if key == arg_name.name:
             return arg_name, args.annotations[index]
@@ -869,14 +865,14 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                     )
 
         # Check that all keyword arguments are correctly annotated.
-        if match.kwarg_types is not None:
-            for kwkey, expected_type in match.kwarg_types.items():
-                kw_node, annotation = _get_kw_annotation(node, kwkey)
-                if kw_node and not _is_valid_type(expected_type, annotation):
+        if match.named_arg_types is not None:
+            for arg_name, expected_type in match.named_arg_types.items():
+                arg_node, annotation = _get_named_annotation(node, arg_name)
+                if arg_node and not _is_valid_type(expected_type, annotation):
                     self.add_message(
                         "hass-argument-type",
-                        node=kw_node,
-                        args=(kwkey, expected_type),
+                        node=arg_node,
+                        args=(arg_name, expected_type),
                     )
 
         # Check that kwargs is correctly annotated.
