@@ -1,4 +1,7 @@
 {
+    "application_credentials": {
+        "description": "Ikuti [petunjuk]({more_info_url}) untuk [Layar persetujuan OAuth]({oauth_consent_url}) untuk memberi Home Assistant akses ke Google Kalender Anda. Anda juga perlu membuat Kredensial Aplikasi yang ditautkan ke Kalender Anda:\n1. Buka [Kredensial]({oauth_creds_url}) dan klik **Buat Kredensial**.\n1. Dari daftar pilihan pilih **ID klien OAuth **.\n1. Pilih **TV dan Perangkat Input Terbatas** untuk Jenis Aplikasi.\n\n"
+    },
     "config": {
         "abort": {
             "already_configured": "Akun sudah dikonfigurasi",

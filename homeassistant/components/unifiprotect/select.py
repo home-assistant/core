@@ -19,6 +19,7 @@ from pyunifiprotect.data import (
     LightModeEnableType,
     LightModeType,
     MountType,
+    ProtectModelWithId,
     RecordingMode,
     Sensor,
     Viewer,
@@ -37,7 +38,8 @@ from homeassistant.util.dt import utcnow
 from .const import ATTR_DURATION, ATTR_MESSAGE, DOMAIN, TYPE_EMPTY_VALUE
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
+from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -150,16 +152,6 @@ def _get_viewer_current(obj: Viewer) -> str:
     return obj.liveview_id
 
 
-def _get_light_motion_current(obj: Light) -> str:
-    # a bit of extra to allow On Motion Always/Dark
-    if (
-        obj.light_mode_settings.mode == LightModeType.MOTION
-        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
-    ):
-        return f"{LightModeType.MOTION.value}Dark"
-    return obj.light_mode_settings.mode.value
-
-
 def _get_doorbell_current(obj: Camera) -> str | None:
     if obj.lcd_message is None:
         return None
@@ -207,6 +199,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=RecordingMode,
         ufp_value="recording_settings.mode",
         ufp_set_method="set_recording_mode",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription(
         key="infrared",
@@ -218,6 +211,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=IRLEDMode,
         ufp_value="isp_settings.ir_led_mode",
         ufp_set_method="set_ir_led_model",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Camera](
         key="doorbell_text",
@@ -229,6 +223,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value_fn=_get_doorbell_current,
         ufp_options_fn=_get_doorbell_options,
         ufp_set_method_fn=_set_doorbell_message,
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription(
         key="chime_type",
@@ -240,6 +235,7 @@ CAMERA_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=ChimeType,
         ufp_value="chime_type",
         ufp_set_method="set_chime_type",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -250,8 +246,9 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         icon="mdi:spotlight",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
-        ufp_value_fn=_get_light_motion_current,
+        ufp_value_fn=async_get_light_motion_current,
         ufp_set_method_fn=_set_light_mode,
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Light](
         key="paired_camera",
@@ -261,6 +258,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -274,6 +272,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_enum_type=MountType,
         ufp_value="mount_type",
         ufp_set_method="set_mount_type",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSelectEntityDescription[Sensor](
         key="paired_camera",
@@ -283,6 +282,7 @@ SENSE_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -295,6 +295,7 @@ DOORLOCK_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_value="camera_id",
         ufp_options_fn=_get_paired_camera_options,
         ufp_set_method_fn=_set_paired_camera,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -307,6 +308,7 @@ VIEWER_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         ufp_options_fn=_get_viewer_options,
         ufp_value_fn=_get_viewer_current,
         ufp_set_method_fn=_set_liveview,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -355,8 +357,8 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
         self._async_set_options()
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
 
         # entities with categories are not exposed for voice and safe to update dynamically
         if (

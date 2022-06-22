@@ -6,6 +6,7 @@ import contextlib
 from itertools import chain
 import logging
 import ssl
+from typing import Any
 
 import async_timeout
 from pylutron_caseta import BUTTON_STATUS_PRESSED
@@ -16,7 +17,7 @@ from homeassistant import config_entries
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_SUGGESTED_AREA, CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
@@ -31,11 +32,8 @@ from .const import (
     ATTR_LEAP_BUTTON_NUMBER,
     ATTR_SERIAL,
     ATTR_TYPE,
-    BRIDGE_DEVICE,
     BRIDGE_DEVICE_ID,
-    BRIDGE_LEAP,
     BRIDGE_TIMEOUT,
-    BUTTON_DEVICES,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -49,6 +47,7 @@ from .device_trigger import (
     DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
     LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
 )
+from .models import LutronCasetaData
 from .util import serial_to_unique_id
 
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +105,33 @@ async def async_setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     return True
 
 
+async def _async_migrate_unique_ids(
+    hass: HomeAssistant, entry: config_entries.ConfigEntry
+) -> None:
+    """Migrate entities since the occupancygroup were not actually unique."""
+
+    dev_reg = dr.async_get(hass)
+    bridge_unique_id = entry.unique_id
+
+    @callback
+    def _async_migrator(entity_entry: er.RegistryEntry) -> dict[str, Any] | None:
+        if not (unique_id := entity_entry.unique_id):
+            return None
+        if not unique_id.startswith("occupancygroup_") or unique_id.startswith(
+            f"occupancygroup_{bridge_unique_id}"
+        ):
+            return None
+        sensor_id = unique_id.split("_")[1]
+        new_unique_id = f"occupancygroup_{bridge_unique_id}_{sensor_id}"
+        if dev_entry := dev_reg.async_get_device({(DOMAIN, unique_id)}):
+            dev_reg.async_update_device(
+                dev_entry.id, new_identifiers={(DOMAIN, new_unique_id)}
+            )
+        return {"new_unique_id": f"occupancygroup_{bridge_unique_id}_{sensor_id}"}
+
+    await er.async_migrate_entries(hass, entry.entry_id, _async_migrator)
+
+
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: config_entries.ConfigEntry
 ) -> bool:
@@ -116,6 +142,8 @@ async def async_setup_entry(
     certfile = hass.config.path(config_entry.data[CONF_CERTFILE])
     ca_certs = hass.config.path(config_entry.data[CONF_CA_CERTS])
     bridge = None
+
+    await _async_migrate_unique_ids(hass, config_entry)
 
     try:
         bridge = Smartbridge.create_tls(
@@ -144,7 +172,7 @@ async def async_setup_entry(
     bridge_device = devices[BRIDGE_DEVICE_ID]
     if not config_entry.unique_id:
         hass.config_entries.async_update_entry(
-            config_entry, unique_id=hex(bridge_device["serial"])[2:].zfill(8)
+            config_entry, unique_id=serial_to_unique_id(bridge_device["serial"])
         )
 
     buttons = bridge.buttons
@@ -156,11 +184,9 @@ async def async_setup_entry(
 
     # Store this bridge (keyed by entry_id) so it can be retrieved by the
     # platforms we're setting up.
-    hass.data[DOMAIN][entry_id] = {
-        BRIDGE_LEAP: bridge,
-        BRIDGE_DEVICE: bridge_device,
-        BUTTON_DEVICES: button_devices,
-    }
+    hass.data[DOMAIN][entry_id] = LutronCasetaData(
+        bridge, bridge_device, button_devices
+    )
 
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
@@ -289,9 +315,8 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: config_entries.ConfigEntry
 ) -> bool:
     """Unload the bridge bridge from a config entry."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    smartbridge: Smartbridge = data[BRIDGE_LEAP]
-    await smartbridge.close()
+    data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
+    await data.bridge.close()
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unload_ok
@@ -312,6 +337,7 @@ class LutronCasetaDevice(Entity):
         self._device = device
         self._smartbridge = bridge
         self._bridge_device = bridge_device
+        self._bridge_unique_id = serial_to_unique_id(bridge_device["serial"])
         if "serial" not in self._device:
             return
         area, name = _area_and_name_from_name(device["name"])
@@ -371,7 +397,8 @@ async def async_remove_config_entry_device(
     hass: HomeAssistant, entry: config_entries.ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove lutron_caseta config entry from a device."""
-    bridge: Smartbridge = hass.data[DOMAIN][entry.entry_id][BRIDGE_LEAP]
+    data: LutronCasetaData = hass.data[DOMAIN][entry.entry_id]
+    bridge = data.bridge
     devices = bridge.get_devices()
     buttons = bridge.buttons
     occupancy_groups = bridge.occupancy_groups

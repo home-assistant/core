@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -53,6 +54,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     siren.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def siren_platform_only():
+    """Only setup the siren platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SIREN]):
+        yield
 
 
 async def async_turn_on(hass, entity_id=ENTITY_MATCH_ALL, parameters={}) -> None:

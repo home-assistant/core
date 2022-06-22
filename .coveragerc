@@ -512,6 +512,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/diagnostics.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/model.py
     homeassistant/components/hunterdouglas_powerview/scene.py
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
@@ -1122,12 +1123,6 @@ omit =
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
     homeassistant/components/soma/utils.py
-    homeassistant/components/somfy/__init__.py
-    homeassistant/components/somfy/api.py
-    homeassistant/components/somfy/climate.py
-    homeassistant/components/somfy/cover.py
-    homeassistant/components/somfy/sensor.py
-    homeassistant/components/somfy/switch.py
     homeassistant/components/somfy_mylink/__init__.py
     homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/__init__.py
@@ -1307,9 +1302,6 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
-    homeassistant/components/trafikverket_ferry/__init__.py
-    homeassistant/components/trafikverket_ferry/coordinator.py
-    homeassistant/components/trafikverket_ferry/sensor.py
     homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
@@ -1525,7 +1517,6 @@ omit =
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/registries.py
-    homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py

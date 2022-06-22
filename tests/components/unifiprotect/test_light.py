@@ -32,7 +32,7 @@ async def light_fixture(
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
 
-    light_obj = mock_light.copy(deep=True)
+    light_obj = mock_light.copy()
     light_obj._api = mock_entry.api
     light_obj.name = "Test Light"
     light_obj.is_light_on = False
@@ -57,7 +57,7 @@ async def test_light_setup(
 ):
     """Test light entity setup."""
 
-    unique_id = light[0].id
+    unique_id = light[0].mac
     entity_id = light[1]
 
     entity_registry = er.async_get(hass)

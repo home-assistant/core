@@ -9,6 +9,7 @@
         "step": {
             "user": {
                 "data": {
+                    "username": "Anv\u00e4ndarnamn",
                     "verify_ssl": "Verifiera SSL-certifikat"
                 }
             }
