@@ -28,7 +28,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-PLATFORMS = [Platform.BINARY_SENSOR]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 DOMAIN = "proxmoxve"
 PROXMOX_CLIENTS = "proxmox_clients"
 CONF_REALM = "realm"
@@ -226,7 +226,12 @@ def parse_api_container_vm(status):
     in the future.
     """
 
-    return {"status": status["status"], "name": status["name"]}
+    return {
+        "status": status["status"],
+        "name": status["name"],
+        "mem": status["mem"],
+        "maxmem": status["maxmem"],
+    }
 
 
 def call_api_container_vm(proxmox, node_name, vm_id, machine_type):
