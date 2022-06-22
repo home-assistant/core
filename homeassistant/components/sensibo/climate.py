@@ -117,11 +117,6 @@ async def async_setup_entry(
         },
         "async_enable_pure_boost",
     )
-    platform.async_register_entity_service(
-        SERVICE_DISABLE_PURE_BOOST,
-        {},
-        "async_disable_pure_boost",
-    )
 
 
 class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
@@ -352,10 +347,4 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
             params["primeIntegration"] = outdoor_integration
 
         await self.async_send_command("set_pure_boost", params)
-        await self.coordinator.async_refresh()
-
-    async def async_disable_pure_boost(self) -> None:
-        """Disable Pure Boost Configuration."""
-
-        await self.async_send_command("set_pure_boost", {"enabled": False})
         await self.coordinator.async_refresh()

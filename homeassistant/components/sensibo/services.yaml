@@ -80,10 +80,3 @@ enable_pure_boost:
           options:
             - "Normal"
             - "Sensitive"
-disable_pure_boost:
-  name: Disable Pure Boost
-  description: Disable Pure Boost.
-  target:
-    entity:
-      integration: sensibo
-      domain: climate

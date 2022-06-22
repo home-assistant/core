@@ -54,6 +54,9 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         command_off="del_timer",
         remote_key="timer_on",
     ),
+)
+
+PURE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
     SensiboDeviceSwitchEntityDescription(
         key="pure_boost_switch",
         device_class=SwitchDeviceClass.SWITCH,
@@ -79,6 +82,13 @@ def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | N
     if command == "set_pure_boost":
         new_state = bool(device_data.pure_boost_enabled is False)
         params = {"enabled": new_state}
+        if device_data.pure_measure_integration is None:
+            params["sensitivity"] = "N"
+            params["measurementsIntegration"] = True
+            params["acIntegration"] = False
+            params["geoIntegration"] = False
+            params["primeIntegration"] = False
+        return params
     return None
 
 
@@ -96,6 +106,12 @@ async def async_setup_entry(
         for description in DEVICE_SWITCH_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
         if device_data.model != "pure"
+    )
+    entities.extend(
+        SensiboDeviceSwitch(coordinator, device_id, description)
+        for description in PURE_SWITCH_TYPES
+        for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.model == "pure"
     )
 
     async_add_entities(entities)
@@ -144,12 +160,9 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         params = build_params(self.entity_description.command_on, self.device_data)
-        if params:
-            result = await self.async_send_command(
-                self.entity_description.command_off, params
-            )
-        else:
-            result = await self.async_send_command(self.entity_description.command_off)
+        result = await self.async_send_command(
+            self.entity_description.command_off, params
+        )
 
         if result["status"] == "success":
             setattr(self.device_data, self.entity_description.remote_key, False)
