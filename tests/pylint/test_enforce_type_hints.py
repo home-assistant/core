@@ -610,9 +610,9 @@ def test_named_arguments(
             msg_id="hass-argument-type",
             node=preset_mode_node,
             args=("preset_mode", "str | None"),
-            line=11,
+            line=12,
             col_offset=8,
-            end_line=11,
+            end_line=12,
             end_col_offset=24,
         ),
         pylint.testutils.MessageTest(
