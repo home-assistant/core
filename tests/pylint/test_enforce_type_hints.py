@@ -585,6 +585,7 @@ def test_named_arguments(
         async def async_turn_on( #@
             self,
             percentage, #@
+            *,
             preset_mode: str, #@
             **kwargs
         ) -> bool:
