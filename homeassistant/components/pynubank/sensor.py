@@ -80,7 +80,7 @@ class NuSensor(SensorEntity):
     def icon(self):
         """Return icon."""
 
-        return "mdi:account-balance"
+        return "mdi:bank"
 
     @property
     def extra_state_attributes(self):
