@@ -504,7 +504,6 @@ async def test_advanced_option_flow(hass, aioclient_mock):
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
     }
-    await hass.async_block_till_done()
 
 
 async def test_simple_option_flow(hass, aioclient_mock):
@@ -541,7 +540,6 @@ async def test_simple_option_flow(hass, aioclient_mock):
         CONF_TRACK_DEVICES: False,
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
-    await hass.async_block_till_done()
 
 
 async def test_option_flow_integration_not_setup(hass, aioclient_mock):

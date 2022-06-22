@@ -1,4 +1,5 @@
 """Tests for the Hyperion integration."""
+from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch
 
 from hyperion.const import (
@@ -17,10 +18,11 @@ from homeassistant.components.hyperion.const import (
     TYPE_HYPERION_COMPONENT_SWITCH_BASE,
 )
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import slugify
+from homeassistant.util import dt, slugify
 
 from . import (
     TEST_CONFIG_ENTRY_ID,
@@ -33,7 +35,7 @@ from . import (
     setup_test_config_entry,
 )
 
-from tests.common import async_fire_deferred_config_entry_reloads
+from tests.common import async_fire_time_changed
 
 TEST_COMPONENTS = [
     {"enabled": True, "name": "ALL"},
@@ -211,7 +213,11 @@ async def test_switches_can_be_enabled(hass: HomeAssistant) -> None:
             assert not updated_entry.disabled
             await hass.async_block_till_done()
 
-            await async_fire_deferred_config_entry_reloads(hass)
+            async_fire_time_changed(
+                hass,
+                dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            )
+            await hass.async_block_till_done()
 
         entity_state = hass.states.get(entity_id)
         assert entity_state

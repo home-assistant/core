@@ -1,5 +1,6 @@
 """Tests for the motionEye switch platform."""
 import copy
+from datetime import timedelta
 from unittest.mock import AsyncMock, call, patch
 
 from motioneye_client.const import (
@@ -14,6 +15,7 @@ from motioneye_client.const import (
 from homeassistant.components.motioneye import get_motioneye_device_identifier
 from homeassistant.components.motioneye.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -29,10 +31,7 @@ from . import (
     setup_mock_motioneye_config_entry,
 )
 
-from tests.common import (
-    async_fire_deferred_config_entry_reloads,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_time_changed
 
 
 async def test_switch_turn_on_off(hass: HomeAssistant) -> None:
@@ -173,7 +172,13 @@ async def test_disabled_switches_can_be_enabled(hass: HomeAssistant) -> None:
                 entity_id, disabled_by=None
             )
             assert not updated_entry.disabled
-            await async_fire_deferred_config_entry_reloads(hass)
+            await hass.async_block_till_done()
+
+            async_fire_time_changed(
+                hass,
+                dt_util.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+            )
+            await hass.async_block_till_done()
 
         entity_state = hass.states.get(entity_id)
         assert entity_state

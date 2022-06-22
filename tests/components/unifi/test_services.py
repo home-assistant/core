@@ -75,7 +75,6 @@ async def test_reconnect_client(hass, aioclient_mock):
         blocking=True,
     )
     assert aioclient_mock.call_count == 1
-    await hass.async_block_till_done()
 
 
 async def test_reconnect_non_existant_device(hass, aioclient_mock):
@@ -146,7 +145,6 @@ async def test_reconnect_client_controller_unavailable(hass, aioclient_mock):
         blocking=True,
     )
     assert aioclient_mock.call_count == 0
-    await hass.async_block_till_done()
 
 
 async def test_reconnect_client_unknown_mac(hass, aioclient_mock):
@@ -197,7 +195,6 @@ async def test_reconnect_wired_client(hass, aioclient_mock):
         blocking=True,
     )
     assert aioclient_mock.call_count == 0
-    await hass.async_block_till_done()
 
 
 async def test_remove_clients(hass, aioclient_mock):

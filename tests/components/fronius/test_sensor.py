@@ -11,10 +11,7 @@ from homeassistant.util import dt
 
 from . import enable_all_entities, mock_responses, setup_fronius_integration
 
-from tests.common import (
-    async_fire_deferred_config_entry_reloads,
-    async_fire_time_changed,
-)
+from tests.common import async_fire_time_changed
 
 
 async def test_symo_inverter(hass, aioclient_mock):
@@ -49,7 +46,6 @@ async def test_symo_inverter(hass, aioclient_mock):
     await enable_all_entities(
         hass, config_entry.entry_id, FroniusInverterUpdateCoordinator.default_interval
     )
-    await async_fire_deferred_config_entry_reloads(hass)
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
     # 4 additional AC entities
     assert_state("sensor.current_dc_fronius_inverter_1_http_fronius", 2.19)

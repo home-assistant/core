@@ -1,5 +1,6 @@
 """Tests for the Sonos Alarm switch platform."""
 from copy import copy
+from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.sonos.const import DATA_SONOS_DISCOVERY_MANAGER
@@ -11,12 +12,14 @@ from homeassistant.components.sonos.switch import (
     ATTR_RECURRENCE,
     ATTR_VOLUME,
 )
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_TIME, STATE_OFF, STATE_ON
 from homeassistant.helpers import entity_registry as ent_reg
+from homeassistant.util import dt
 
 from .conftest import SonosMockEvent
 
-from tests.common import async_fire_deferred_config_entry_reloads
+from tests.common import async_fire_time_changed
 
 
 async def test_entity_registry(hass, async_autosetup_sonos):
@@ -100,10 +103,15 @@ async def test_switch_attributes(hass, async_autosetup_sonos, soco):
     empty_event = SonosMockEvent(soco, service, {})
     subscription = service.subscribe.return_value
     subscription.callback(event=empty_event)
+    await hass.async_block_till_done()
 
     # Mock shutdown calls during config entry reload
     with patch.object(hass.data[DATA_SONOS_DISCOVERY_MANAGER], "async_shutdown") as m:
-        await async_fire_deferred_config_entry_reloads(hass)
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
         assert m.called
 
     status_light_state = hass.states.get(status_light.entity_id)

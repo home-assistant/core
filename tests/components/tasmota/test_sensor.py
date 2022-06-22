@@ -1,6 +1,7 @@
 """The tests for the Tasmota sensor platform."""
 import copy
 import datetime
+from datetime import timedelta
 import json
 from unittest.mock import Mock, patch
 
@@ -12,6 +13,7 @@ from hatasmota.utils import (
 )
 import pytest
 
+from homeassistant import config_entries
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX
 from homeassistant.const import ATTR_ASSUMED_STATE, STATE_UNKNOWN, Platform
@@ -32,10 +34,7 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
 )
 
-from tests.common import (
-    async_fire_deferred_config_entry_reloads,
-    async_fire_mqtt_message,
-)
+from tests.common import async_fire_mqtt_message, async_fire_time_changed
 
 BAD_INDEXED_SENSOR_CONFIG_3 = {
     "sn": {
@@ -841,8 +840,13 @@ async def test_enable_status_sensor(hass, mqtt_mock, setup_tasmota):
     )
     assert updated_entry != entry
     assert updated_entry.disabled is False
+    await hass.async_block_till_done()
 
-    await async_fire_deferred_config_entry_reloads(hass)
+    async_fire_time_changed(
+        hass,
+        dt.utcnow() + timedelta(seconds=config_entries.RELOAD_AFTER_UPDATE_DELAY + 1),
+    )
+    await hass.async_block_till_done()
 
     # Fake re-send of retained discovery message
     async_fire_mqtt_message(

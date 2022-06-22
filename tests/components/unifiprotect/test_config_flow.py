@@ -273,7 +273,6 @@ async def test_form_options(hass: HomeAssistant, mock_client) -> None:
         "disable_rtsp": True,
         "override_connection_host": True,
     }
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(

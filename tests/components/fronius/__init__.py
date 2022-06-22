@@ -8,12 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt
 
-from tests.common import (
-    MockConfigEntry,
-    async_fire_deferred_config_entry_reloads,
-    async_fire_time_changed,
-    load_fixture,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HOST = "http://fronius"
@@ -100,6 +95,6 @@ async def enable_all_entities(hass, config_entry_id, time_till_next_update):
         if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     ]:
         registry.async_update_entity(entry.entity_id, **{"disabled_by": None})
-    await async_fire_deferred_config_entry_reloads(hass)
+    await hass.async_block_till_done()
     async_fire_time_changed(hass, dt.utcnow() + time_till_next_update)
     await hass.async_block_till_done()

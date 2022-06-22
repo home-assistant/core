@@ -1,6 +1,7 @@
 """Tests for the Hyperion integration."""
 from __future__ import annotations
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, call, patch
 
 from hyperion import const
@@ -25,7 +26,12 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntityFeature,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import (
+    RELOAD_AFTER_UPDATE_DELAY,
+    SOURCE_REAUTH,
+    ConfigEntry,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
@@ -37,6 +43,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt
 import homeassistant.util.color as color_util
 
 from . import (
@@ -63,7 +70,7 @@ from . import (
     setup_test_config_entry,
 )
 
-from tests.common import async_fire_deferred_config_entry_reloads
+from tests.common import async_fire_time_changed
 
 COLOR_BLACK = color_util.COLORS["black"]
 
@@ -1354,7 +1361,13 @@ async def test_lights_can_be_enabled(hass: HomeAssistant) -> None:
             TEST_PRIORITY_LIGHT_ENTITY_ID_1, disabled_by=None
         )
         assert not updated_entry.disabled
-        await async_fire_deferred_config_entry_reloads(hass)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
 
     entity_state = hass.states.get(TEST_PRIORITY_LIGHT_ENTITY_ID_1)
     assert entity_state

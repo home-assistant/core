@@ -18,7 +18,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
-    DEFAULT_ENTRY_DATA,
     DEFAULT_ENTRY_TITLE,
     FLUX_DISCOVERY,
     IP_ADDRESS,
@@ -114,7 +113,7 @@ async def test_select_addressable_strip_config(hass: HomeAssistant) -> None:
     """Test selecting addressable strip configs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=DEFAULT_ENTRY_DATA,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
     config_entry.add_to_hass(hass)
@@ -124,11 +123,11 @@ async def test_select_addressable_strip_config(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    wiring_entity_id = "select.mock_title_wiring"
+    wiring_entity_id = "select.bulb_rgbcw_ddeeff_wiring"
     state = hass.states.get(wiring_entity_id)
     assert state.state == "BGRW"
 
-    ic_type_entity_id = "select.mock_title_ic_type"
+    ic_type_entity_id = "select.bulb_rgbcw_ddeeff_ic_type"
     state = hass.states.get(ic_type_entity_id)
     assert state.state == "WS2812B"
 
@@ -174,7 +173,7 @@ async def test_select_mutable_0x25_strip_config(hass: HomeAssistant) -> None:
     """Test selecting mutable 0x25 strip configs."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=DEFAULT_ENTRY_DATA,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
     config_entry.add_to_hass(hass)
@@ -186,7 +185,7 @@ async def test_select_mutable_0x25_strip_config(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    operating_mode_entity_id = "select.mock_title_operating_mode"
+    operating_mode_entity_id = "select.bulb_rgbcw_ddeeff_operating_mode"
     state = hass.states.get(operating_mode_entity_id)
     assert state.state == "RGBWW"
 
@@ -258,7 +257,7 @@ async def test_select_white_channel_type(hass: HomeAssistant) -> None:
     """Test selecting the white channel type."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=DEFAULT_ENTRY_DATA,
+        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
         unique_id=MAC_ADDRESS,
     )
     config_entry.add_to_hass(hass)
@@ -270,7 +269,7 @@ async def test_select_white_channel_type(hass: HomeAssistant) -> None:
         await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    operating_mode_entity_id = "select.mock_title_white_channel"
+    operating_mode_entity_id = "select.bulb_rgbcw_ddeeff_white_channel"
     state = hass.states.get(operating_mode_entity_id)
     assert state.state == WhiteChannelType.WARM.name.title()
 

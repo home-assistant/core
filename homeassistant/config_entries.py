@@ -6,11 +6,10 @@ from collections import ChainMap
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 import dataclasses
-from datetime import timedelta
 from enum import Enum
 import functools
 import logging
-from types import MappingProxyType, MethodType, ModuleType
+from types import MappingProxyType, MethodType
 from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast
 import weakref
 
@@ -23,10 +22,9 @@ from .exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistan
 from .helpers import device_registry, entity_registry, storage
 from .helpers.event import async_call_later
 from .helpers.frame import report
-from .helpers.ratelimit import KeyedRateLimit
 from .helpers.typing import UNDEFINED, ConfigType, DiscoveryInfoType, UndefinedType
 from .setup import async_process_deps_reqs, async_setup_component
-from .util import dt as dt_util, uuid as uuid_util
+from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
@@ -73,7 +71,6 @@ STORAGE_VERSION = 1
 PATH_CONFIG = ".config_entries.json"
 
 SAVE_DELAY = 1
-
 
 _T = TypeVar("_T", bound="ConfigEntryState")
 
@@ -145,7 +142,6 @@ class ConfigEntryDisabler(StrEnum):
 DISABLED_USER = ConfigEntryDisabler.USER.value
 
 RELOAD_AFTER_UPDATE_DELAY = 30
-RELOAD_COOLDOWN = timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY)
 
 # Deprecated: Connection classes
 # These aren't used anymore since 2021.6.0
@@ -196,6 +192,7 @@ class ConfigEntry:
         "reason",
         "_async_cancel_retry_setup",
         "_on_unload",
+        "reload_lock",
     )
 
     def __init__(
@@ -285,12 +282,8 @@ class ConfigEntry:
         # Hold list for functions to call on unload.
         self._on_unload: list[CALLBACK_TYPE] | None = None
 
-    @callback
-    def _async_set_supported(self, component: ModuleType) -> None:
-        self.supports_unload = hasattr(component, "async_unload_entry")
-        self.supports_remove_device = hasattr(
-            component, "async_remove_config_entry_device"
-        )
+        # Reload lock to prevent conflicting reloads
+        self.reload_lock = asyncio.Lock()
 
     async def async_setup(
         self,
@@ -311,6 +304,11 @@ class ConfigEntry:
         if self.domain == integration.domain:
             self.state = ConfigEntryState.SETUP_IN_PROGRESS
 
+        self.supports_unload = await support_entry_unload(hass, self.domain)
+        self.supports_remove_device = await support_remove_from_device(
+            hass, self.domain
+        )
+
         try:
             component = integration.get_component()
         except ImportError as err:
@@ -326,7 +324,6 @@ class ConfigEntry:
             return
 
         if self.domain == integration.domain:
-            self._async_set_supported(component)
             try:
                 integration.get_platform("config_flow")
             except ImportError as err:
@@ -468,12 +465,6 @@ class ConfigEntry:
 
         component = integration.get_component()
 
-        # Tests that rely on calling hass.config_entries.async_forward_entry_unload
-        # need this to be called. If we are able to refactor these away in the future,
-        # we can move self._async_set_supported(component) into the if block
-        # of integration.domain == self.domain
-        self._async_set_supported(component)
-
         if integration.domain == self.domain:
             if not self.state.recoverable:
                 return False
@@ -485,7 +476,9 @@ class ConfigEntry:
                 self.reason = None
                 return True
 
-        if not self.supports_unload:
+        supports_unload = hasattr(component, "async_unload_entry")
+
+        if not supports_unload:
             if integration.domain == self.domain:
                 self.state = ConfigEntryState.FAILED_UNLOAD
                 self.reason = "Unload not supported"
@@ -825,7 +818,6 @@ class ConfigEntries:
         self._entries: dict[str, ConfigEntry] = {}
         self._domain_index: dict[str, list[str]] = {}
         self._store = storage.Store(hass, STORAGE_VERSION, STORAGE_KEY)
-        self._reload_ratelimit = KeyedRateLimit(hass)
         EntityRegistryDisabledHandler(hass).async_setup()
 
     @callback
@@ -1023,60 +1015,17 @@ class ConfigEntries:
         """Reload an entry.
 
         If an entry was not loaded, will just load.
-
-        Returns True if the entry was reloaded, or
-        a reload was successfully scheduled.
         """
         if (entry := self.async_get_entry(entry_id)) is None:
             raise UnknownEntry
-        if not entry.state.recoverable:
-            raise OperationNotAllowed
-        if (
-            entry.state != ConfigEntryState.NOT_LOADED
-            and not await support_entry_unload(self.hass, entry.domain)
-        ):
-            # If its already loaded and it doesn't support
-            # unloads let async_unload take care of handling
-            # this situation
-            return await self.async_unload(entry_id)
 
-        ratelimit = self._reload_ratelimit
-        now = dt_util.utcnow()
+        async with entry.reload_lock:
+            unload_result = await self.async_unload(entry_id)
 
-        @callback
-        def _async_future_reload() -> None:
-            _LOGGER.debug("Trigging deferred reload of %s", entry_id)
-            self.hass.async_create_task(self._async_reload(entry_id))
+            if not unload_result or entry.disabled_by:
+                return unload_result
 
-        if rate_limit_expire_time := ratelimit.async_schedule_action(
-            entry_id, RELOAD_COOLDOWN, now, _async_future_reload
-        ):
-            _LOGGER.debug(
-                "Reload of %s deferred until %s due to cooldown ratelimit",
-                entry_id,
-                rate_limit_expire_time,
-            )
-            return True
-
-        ratelimit.async_triggered(entry_id, now)
-        return await self._async_reload(entry_id)
-
-    async def _async_reload(self, entry_id: str) -> bool:
-        """Reload the entry."""
-        _LOGGER.debug("_async_reload running for %s", entry_id)
-        if (entry := self.async_get_entry(entry_id)) is None:
-            raise UnknownEntry
-
-        unload_result = await self.async_unload(entry_id)
-
-        if not unload_result or entry.disabled_by:
-            return unload_result
-
-        result = await self.async_setup(entry_id)
-        _LOGGER.debug(
-            "_async_reload completed for %s with result: %s", entry_id, result
-        )
-        return result
+            return await self.async_setup(entry_id)
 
     async def async_set_disabled_by(
         self, entry_id: str, disabled_by: ConfigEntryDisabler | None
@@ -1615,6 +1564,8 @@ class EntityRegistryDisabledHandler:
         """Initialize the handler."""
         self.hass = hass
         self.registry: entity_registry.EntityRegistry | None = None
+        self.changed: set[str] = set()
+        self._remove_call_later: Callable[[], None] | None = None
 
     @callback
     def async_setup(self) -> None:
@@ -1648,12 +1599,36 @@ class EntityRegistryDisabledHandler:
         )
         assert config_entry is not None
 
-        if not config_entry.entry_id or not config_entry.supports_unload:
+        if config_entry.entry_id not in self.changed and config_entry.supports_unload:
+            self.changed.add(config_entry.entry_id)
+
+        if not self.changed:
             return
 
-        # Reloads now have a cooldown so if we
-        # call it multiple times this is now safe
-        await self.hass.config_entries.async_reload(config_entry.entry_id)
+        # We are going to delay reloading on *every* entity registry change so that
+        # if a user is happily clicking along, it will only reload at the end.
+
+        if self._remove_call_later:
+            self._remove_call_later()
+
+        self._remove_call_later = async_call_later(
+            self.hass, RELOAD_AFTER_UPDATE_DELAY, self._handle_reload
+        )
+
+    async def _handle_reload(self, _now: Any) -> None:
+        """Handle a reload."""
+        self._remove_call_later = None
+        to_reload = self.changed
+        self.changed = set()
+
+        _LOGGER.info(
+            "Reloading configuration entries because disabled_by changed in entity registry: %s",
+            ", ".join(self.changed),
+        )
+
+        await asyncio.gather(
+            *(self.hass.config_entries.async_reload(entry_id) for entry_id in to_reload)
+        )
 
 
 @callback

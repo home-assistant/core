@@ -10,7 +10,6 @@ from homeassistant.components.wiz.config_flow import CONF_DEVICE
 from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
-from homeassistant.setup import async_setup_component
 
 from . import (
     FAKE_DIMMABLE_BULB,
@@ -25,6 +24,7 @@ from . import (
     _mocked_wizlight,
     _patch_discovery,
     _patch_wizlight,
+    async_setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -324,19 +324,7 @@ async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_ret
     """Test dhcp or discovery kicks off setup when in retry."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     bulb.getMac = AsyncMock(side_effect=OSError)
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=FAKE_MAC,
-        data={CONF_HOST: FAKE_IP},
-    )
-    entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.wiz.discovery.find_wizlights",
-        return_value=[],
-    ), _patch_wizlight(device=bulb):
-        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
-        await hass.async_block_till_done()
-
+    _, entry = await async_setup_integration(hass, wizlight=bulb)
     assert entry.data[CONF_HOST] == FAKE_IP
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     bulb.getMac = AsyncMock(return_value=FAKE_MAC)

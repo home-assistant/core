@@ -29,7 +29,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import (
-    DEFAULT_ENTRY_DATA,
     DEFAULT_ENTRY_TITLE,
     DHCP_DISCOVERY,
     FLUX_DISCOVERY,
@@ -358,9 +357,13 @@ async def test_entry_is_reloaded_when_title_changes(hass: HomeAssistant) -> None
     """Test the entry gets reloaded when the title changes."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data=DEFAULT_ENTRY_DATA,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+        },
         title=DEFAULT_ENTRY_TITLE,
-        unique_id=MAC_ADDRESS,
     )
     config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_wifibulb():

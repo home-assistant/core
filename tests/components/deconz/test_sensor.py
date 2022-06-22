@@ -1,5 +1,6 @@
 """deCONZ sensor platform tests."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -10,13 +11,15 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_UNAVAILABLE
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.util import dt
 
 from .test_gateway import DECONZ_WEB_REQUEST, setup_deconz_integration
 
-from tests.common import async_fire_deferred_config_entry_reloads
+from tests.common import async_fire_time_changed
 
 
 async def test_no_sensors(hass, aioclient_mock):
@@ -616,7 +619,13 @@ async def test_sensors(
     # Enable in entity registry
     if expected.get("enable_entity"):
         ent_reg.async_update_entity(entity_id=expected["entity_id"], disabled_by=None)
-        await async_fire_deferred_config_entry_reloads(hass)
+        await hass.async_block_till_done()
+
+        async_fire_time_changed(
+            hass,
+            dt.utcnow() + timedelta(seconds=RELOAD_AFTER_UPDATE_DELAY + 1),
+        )
+        await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == expected["entity_count"]
 
