@@ -87,12 +87,6 @@ jobs:
         with:
           name: requirements_diff
 
-      - name: Adjust ENV
-        run: |
-          if [ "${{ matrix.arch }}" = "i386" ]; then
-            echo "NPY_DISABLE_SVML=1" >> .env_file
-          fi
-
       - name: Build wheels
         uses: home-assistant/wheels@2022.06.6
         with:
