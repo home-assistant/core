@@ -28,6 +28,13 @@ class TypeHintMatch:
     kwargs_type: str | None = None
     """kwargs_type is for the special case `**kwargs`"""
     check_return_type_inheritance: bool = False
+    has_async_counterpart: bool = False
+
+    def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
+        """Confirm if function should be checked."""
+        return self.function_name == node.name or (
+            self.has_async_counterpart and node.name == f"async_{self.function_name}"
+        )
 
 
 @dataclass
@@ -60,14 +67,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="bool",
-        ),
-        TypeHintMatch(
-            function_name="async_setup",
-            arg_types={
-                0: "HomeAssistant",
-                1: "ConfigType",
-            },
-            return_type="bool",
+            has_async_counterpart=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -121,16 +121,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "DiscoveryInfoType | None",
             },
             return_type=None,
-        ),
-        TypeHintMatch(
-            function_name="async_setup_platform",
-            arg_types={
-                0: "HomeAssistant",
-                1: "ConfigType",
-                2: "AddEntitiesCallback",
-                3: "DiscoveryInfoType | None",
-            },
-            return_type=None,
+            has_async_counterpart=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -314,14 +305,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type=["DeviceScanner", "DeviceScanner | None"],
-        ),
-        TypeHintMatch(
-            function_name="async_get_scanner",
-            arg_types={
-                0: "HomeAssistant",
-                1: "ConfigType",
-            },
-            return_type=["DeviceScanner", "DeviceScanner | None"],
+            has_async_counterpart=True,
         ),
     ],
     "device_trigger": [
@@ -498,31 +482,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="set_percentage",
                     arg_types={1: "int"},
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_set_percentage",
-                    arg_types={1: "int"},
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
                 TypeHintMatch(
                     function_name="set_preset_mode",
                     arg_types={1: "str"},
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_set_preset_mode",
-                    arg_types={1: "str"},
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
                 TypeHintMatch(
                     function_name="set_direction",
                     arg_types={1: "str"},
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_set_direction",
-                    arg_types={1: "str"},
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
                 TypeHintMatch(
                     function_name="turn_on",
@@ -532,25 +504,13 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     kwargs_type="Any",
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_turn_on",
-                    named_arg_types={
-                        "percentage": "int | None",
-                        "preset_mode": "str | None",
-                    },
-                    kwargs_type="Any",
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
                 TypeHintMatch(
                     function_name="oscillate",
                     arg_types={1: "bool"},
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_oscillate",
-                    arg_types={1: "bool"},
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
             ],
         ),
@@ -587,31 +547,19 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="lock",
                     kwargs_type="Any",
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_lock",
-                    kwargs_type="Any",
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
                 TypeHintMatch(
                     function_name="unlock",
                     kwargs_type="Any",
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_unlock",
-                    kwargs_type="Any",
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
                 TypeHintMatch(
                     function_name="open",
                     kwargs_type="Any",
                     return_type=None,
-                ),
-                TypeHintMatch(
-                    function_name="async_open",
-                    kwargs_type="Any",
-                    return_type=None,
+                    has_async_counterpart=True,
                 ),
             ],
         ),
@@ -831,14 +779,13 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     ) -> None:
         for match in matches:
             for function_node in node.mymethods():
-                function_name: str | None = function_node.name
-                if match.function_name == function_name:
+                if match.need_to_check_function(function_node):
                     self._check_function(function_node, match)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
         for match in self._function_matchers:
-            if node.name != match.function_name or node.is_method():
+            if (not match.need_to_check_function(node)) or node.is_method():
                 continue
             self._check_function(node, match)
 
