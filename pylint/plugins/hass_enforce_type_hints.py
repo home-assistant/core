@@ -730,13 +730,13 @@ def _get_named_annotation(
     node: nodes.FunctionDef, key: str
 ) -> tuple[nodes.NodeNG | None, nodes.NodeNG | None]:
     args = node.args
-    for index, arg_name in enumerate(args.args):
-        if key == arg_name.name:
-            return arg_name, args.annotations[index]
+    for index, arg_node in enumerate(args.args):
+        if key == arg_node.name:
+            return arg_node, args.annotations[index]
 
-    for index, arg_name in enumerate(args.kwonlyargs):
-        if key == arg_name.name:
-            return arg_name, args.kwonlyargs_annotations[index]
+    for index, arg_node in enumerate(args.kwonlyargs):
+        if key == arg_node.name:
+            return arg_node, args.kwonlyargs_annotations[index]
 
     return None, None
 
