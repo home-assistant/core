@@ -103,7 +103,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     ) -> None:
         """Initialize an UniFi camera."""
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
     async def async_press(self) -> None:
         """Press the button."""

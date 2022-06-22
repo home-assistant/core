@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts
+from .conftest import MockEntityFixture, assert_entity_counts, regenerate_device_ids
 
 
 @pytest.fixture(name="doorlock")
@@ -39,9 +39,17 @@ async def doorlock_fixture(
     lock_obj._api = mock_entry.api
     lock_obj.name = "Test Lock"
     lock_obj.lock_status = LockStatusType.OPEN
+    regenerate_device_ids(lock_obj)
+
+    no_lock_obj = mock_doorlock.copy()
+    no_lock_obj._api = mock_entry.api
+    no_lock_obj.name = "Unadopted Lock"
+    no_lock_obj.is_adopted = False
+    regenerate_device_ids(no_lock_obj)
 
     mock_entry.api.bootstrap.doorlocks = {
         lock_obj.id: lock_obj,
+        no_lock_obj.id: no_lock_obj,
     }
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
