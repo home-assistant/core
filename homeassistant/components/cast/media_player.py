@@ -63,6 +63,8 @@ from homeassistant.util.logging import async_create_catching_coro
 from .const import (
     ADDED_CAST_DEVICES_KEY,
     CAST_MULTIZONE_MANAGER_KEY,
+    CAST_TYPE_AUDIO,
+    CAST_TYPE_GROUP,
     CONF_IGNORE_CEC,
     CONF_UUID,
     DOMAIN as CAST_DOMAIN,
@@ -299,6 +301,11 @@ class CastMediaPlayerEntity(CastDevice, MediaPlayerEntity):
             model=cast_info.cast_info.model_name,
             name=str(cast_info.friendly_name),
         )
+
+        if cast_info.cast_info.cast_type == CAST_TYPE_AUDIO:
+            self._attr_icon = "mdi:speaker"
+        elif cast_info.cast_info.cast_type == CAST_TYPE_GROUP:
+            self._attr_icon = "mdi:speaker-multiple"
 
     async def async_added_to_hass(self):
         """Create chromecast object when added to hass."""

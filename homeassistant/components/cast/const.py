@@ -26,3 +26,10 @@ SIGNAL_HASS_CAST_SHOW_VIEW = "cast_show_view"
 CONF_IGNORE_CEC = "ignore_cec"
 CONF_KNOWN_HOSTS = "known_hosts"
 CONF_UUID = "uuid"
+
+# Regular chromecast, supports video/audio
+CAST_TYPE_CHROMECAST = "cast"
+# Cast Audio device, supports only audio
+CAST_TYPE_AUDIO = "audio"
+# Cast Audio group device, supports only audio
+CAST_TYPE_GROUP = "group"
