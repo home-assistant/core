@@ -61,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
+        ignore_unadopted=False,
     )
     _LOGGER.debug("Connect to UniFi Protect")
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
@@ -127,7 +128,9 @@ async def async_remove_config_entry_device(
     }
     api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
     assert api is not None
-    return api.bootstrap.nvr.mac not in unifi_macs and not any(
-        device.mac in unifi_macs
-        for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT)
-    )
+    if api.bootstrap.nvr.mac in unifi_macs:
+        return False
+    for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):
+        if device.is_adopted_by_us and device.mac in unifi_macs:
+            return False
+    return True

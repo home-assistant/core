@@ -143,7 +143,7 @@ def _get_doorbell_options(api: ProtectApiClient) -> list[dict[str, Any]]:
 def _get_paired_camera_options(api: ProtectApiClient) -> list[dict[str, Any]]:
     options = [{"id": TYPE_EMPTY_VALUE, "name": "Not Paired"}]
     for camera in api.bootstrap.cameras.values():
-        options.append({"id": camera.id, "name": camera.name or camera.type})
+        options.append({"id": camera.id, "name": camera.display_name or camera.type})
 
     return options
 
@@ -353,7 +353,7 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
     ) -> None:
         """Initialize the unifi protect select entity."""
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
         self._async_set_options()
 
     @callback
@@ -421,7 +421,10 @@ class ProtectSelects(ProtectDeviceEntity, SelectEntity):
             timeout_msg = f" with timeout of {duration} minute(s)"
 
         _LOGGER.debug(
-            'Setting message for %s to "%s"%s', self.device.name, message, timeout_msg
+            'Setting message for %s to "%s"%s',
+            self.device.display_name,
+            message,
+            timeout_msg,
         )
         await self.device.set_lcd_text(
             DoorbellMessageType.CUSTOM_MESSAGE, message, reset_at=reset_at

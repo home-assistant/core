@@ -27,11 +27,11 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
     entities = []
     for device in data.api.bootstrap.lights.values():
+        if not device.is_adopted_by_us:
+            continue
+
         if device.can_write(data.api.bootstrap.auth_user):
             entities.append(ProtectLight(data, device))
-
-    if not entities:
-        return
 
     async_add_entities(entities)
 
