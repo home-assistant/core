@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, Platform
-from .device import BroadlinkDevice
+from .device import BroadlinkDevice, BroadlinkStores
 from .entity import BroadlinkEntity
 
 
@@ -44,6 +44,7 @@ async def async_setup_entry(
     """Set up the Broadlink button."""
     device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
     store = device.store
+    assert store
 
     unique_ids: set[str] = set()
     entities: list[BroadlinkButton] = []
@@ -51,7 +52,9 @@ async def async_setup_entry(
         for command in commands:
             unique_id = f"{device.unique_id}-codes-{subdevice}-{command}"
             unique_ids.add(unique_id)
-            entities.append(BroadlinkButton(device, subdevice, command, unique_id))
+            entities.append(
+                BroadlinkButton(device, store, subdevice, command, unique_id)
+            )
 
     async_add_entities(entities)
 
@@ -64,7 +67,12 @@ class BroadlinkButton(BroadlinkEntity, ButtonEntity):
     _device: BroadlinkDevice
 
     def __init__(
-        self, device: BroadlinkDevice, subdevice: str, command: str, unique_id: str
+        self,
+        device: BroadlinkDevice,
+        store: BroadlinkStores,
+        subdevice: str,
+        command: str,
+        unique_id: str,
     ) -> None:
         """Initialize the light."""
         super().__init__(device)
@@ -72,14 +80,16 @@ class BroadlinkButton(BroadlinkEntity, ButtonEntity):
         self._attr_unique_id = unique_id
         self._subdevice = subdevice
         self._command = command
+        self._store = store
 
     async def async_press(self, **kwargs: Any) -> None:
         """Trigger code by button press."""
         device = self._device
+        store = self._store
         assert device.api
-        code_list = device.store.extract_codes([self._command], self._subdevice)
+        code_list = store.extract_codes([self._command], self._subdevice)
 
-        for code in device.store.toggled_codes(code_list, self._subdevice):
+        for code in store.toggled_codes(code_list, self._subdevice):
             await device.async_request(device.api.send_data, code)
 
     @property

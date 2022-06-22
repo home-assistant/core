@@ -17,7 +17,14 @@ from broadlink.exceptions import (
 )
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_TIMEOUT,
+    CONF_TYPE,
+    Platform,
+)
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
@@ -29,6 +36,9 @@ from .updater import get_update_manager
 
 CODE_SAVE_DELAY = 15
 FLAG_SAVE_DELAY = 15
+CODE_STORAGE_VERSION = 1
+FLAG_STORAGE_VERSION = 1
+
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -164,9 +174,7 @@ class BroadlinkStores:
 class BroadlinkDevice:
     """Manages a Broadlink device."""
 
-    def __init__(
-        self, hass: HomeAssistant, config: ConfigEntry, store: BroadlinkStores
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config: ConfigEntry) -> None:
         """Initialize the device."""
         self.hass = hass
         self.config = config
@@ -175,7 +183,7 @@ class BroadlinkDevice:
         self.fw_version = None
         self.authorized = None
         self.reset_jobs: list[CALLBACK_TYPE] = []
-        self.store = store
+        self.store: BroadlinkStores | None = None
 
     @property
     def name(self):
@@ -252,6 +260,22 @@ class BroadlinkDevice:
 
         self.authorized = True
 
+        domains = get_domains(api.type)
+
+        if Platform.REMOTE in domains or Platform.BUTTON in domains:
+            code_storage = Store(
+                self.hass,
+                CODE_STORAGE_VERSION,
+                f"broadlink_remote_{config.unique_id}_codes",
+            )
+            flag_storage = Store(
+                self.hass,
+                FLAG_STORAGE_VERSION,
+                f"broadlink_remote_{config.unique_id}_flags",
+            )
+            self.store = BroadlinkStores(code_storage, flag_storage)
+            await self.store.async_setup()
+
         update_manager = get_update_manager(self)
         coordinator = update_manager.coordinator
         await coordinator.async_config_entry_first_refresh()
@@ -261,9 +285,7 @@ class BroadlinkDevice:
         self.reset_jobs.append(config.add_update_listener(self.async_update))
 
         # Forward entry setup to related domains.
-        await self.hass.config_entries.async_forward_entry_setups(
-            config, get_domains(self.api.type)
-        )
+        await self.hass.config_entries.async_forward_entry_setups(config, domains)
 
         return True
 

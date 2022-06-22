@@ -1,7 +1,6 @@
 """Support for Broadlink remotes."""
 import asyncio
 from base64 import b64encode
-from collections import defaultdict
 from datetime import timedelta
 import logging
 
@@ -31,14 +30,14 @@ from homeassistant.components.remote import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.util import dt
 
 from .const import DOMAIN
-from .device import BroadlinkDevice
+from .device import BroadlinkDevice, BroadlinkStores
 from .entity import BroadlinkEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -84,10 +83,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Broadlink remote."""
-    device = hass.data[DOMAIN].devices[config_entry.entry_id]
-    remote = BroadlinkRemote(
-        device,
-    )
+    device: BroadlinkDevice = hass.data[DOMAIN].devices[config_entry.entry_id]
+    assert device.store
+    remote = BroadlinkRemote(device, device.store)
     async_add_entities([remote], False)
 
 
@@ -96,12 +94,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
     _device: BroadlinkDevice
 
-    def __init__(self, device):
+    def __init__(self, device: BroadlinkDevice, store: BroadlinkStores) -> None:
         """Initialize the remote."""
         super().__init__(device)
-        self._codes = {}
-        self._flags = defaultdict(int)
         self._lock = asyncio.Lock()
+        self._store = store
 
         self._attr_name = f"{device.name} Remote"
         self._attr_is_on = True
@@ -109,20 +106,6 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             RemoteEntityFeature.LEARN_COMMAND | RemoteEntityFeature.DELETE_COMMAND
         )
         self._attr_unique_id = device.unique_id
-
-    @callback
-    def _get_codes(self):
-        """Return a dictionary of codes."""
-        return self._codes
-
-    @callback
-    def _get_flags(self):
-        """Return a dictionary of toggle flags.
-
-        A toggle flag indicates whether the remote should send an
-        alternative code.
-        """
-        return self._flags
 
     async def async_added_to_hass(self):
         """Call when the remote is added to hass."""
@@ -158,7 +141,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             return
 
         try:
-            code_list = device.store.extract_codes(commands, subdevice)
+            code_list = self._store.extract_codes(commands, subdevice)
         except ValueError as err:
             _LOGGER.error("Failed to call %s: %s", service, err)
             raise
@@ -173,7 +156,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
 
         at_least_one_sent = False
         for _ in range(repeat):
-            for code in device.store.toggled_codes(code_list, subdevice):
+            for code in self._store.toggled_codes(code_list, subdevice):
 
                 if at_least_one_sent:
                     await asyncio.sleep(delay)
@@ -358,4 +341,4 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
             )
             return
 
-        self._device.store.delete_commands(subdevice, commands)
+        self._store.delete_commands(subdevice, commands)
