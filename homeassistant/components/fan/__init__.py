@@ -323,7 +323,7 @@ class FanEntity(ToggleEntity):
         return self._attr_oscillating
 
     @property
-    def capability_attributes(self) -> dict[str, Any]:
+    def capability_attributes(self) -> dict[str, list[str] | None]:
         """Return capability attributes."""
         attrs = {}
 
