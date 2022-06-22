@@ -118,7 +118,7 @@ class Sensor(ZhaEntity, SensorEntity):
     SENSOR_ATTR: int | str | None = None
     _decimals: int = 1
     _divisor: int = 1
-    _multiplier: int = 1
+    _multiplier: int | float = 1
     _unit: str | None = None
 
     def __init__(
@@ -455,7 +455,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.demand_formatter(value)
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Return Unit of measurement."""
         return self.unit_of_measure_map.get(self._channel.unit_of_measurement)
 
@@ -760,6 +760,7 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    unique_id_suffix: str
 
     @classmethod
     def create_entity(
