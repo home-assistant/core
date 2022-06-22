@@ -27,6 +27,7 @@ import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
+import orjson
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -566,7 +567,7 @@ class Template:
         variables["value"] = value
 
         with suppress(ValueError, TypeError):
-            variables["value_json"] = json.loads(value)
+            variables["value_json"] = orjson.loads(value)
 
         try:
             return _render_with_context(
@@ -1743,7 +1744,7 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a JSON string to an object."""
-    return json.loads(value)
+    return orjson.loads(value)
 
 
 def to_json(value, ensure_ascii=True):

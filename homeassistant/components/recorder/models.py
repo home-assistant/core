@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime
-import json
 import logging
 from typing import Any, TypedDict, overload
 
+import orjson
 from sqlalchemy.engine.row import Row
 
 from homeassistant.components.websocket_api.const import (
@@ -253,7 +253,7 @@ def decode_attributes_from_row(
     if not source or source == EMPTY_JSON_OBJECT:
         return {}
     try:
-        attr_cache[source] = attributes = json.loads(source)
+        attr_cache[source] = attributes = orjson.loads(source)
     except ValueError:
         _LOGGER.exception("Error converting row to state attributes: %s", source)
         attr_cache[source] = attributes = {}
