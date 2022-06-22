@@ -1133,6 +1133,14 @@ class ConfigEntries:
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
 
+    async def async_forward_entry_setups(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
+        """Forward the setup of an entry to platforms."""
+        await asyncio.gather(
+            *(self.async_forward_entry_setup(entry, platform) for platform in platforms)
+        )
+
     async def async_forward_entry_setup(
         self, entry: ConfigEntry, domain: Platform | str
     ) -> bool:

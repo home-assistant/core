@@ -93,12 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
-    for ha_type, hive_type in PLATFORM_LOOKUP.items():
-        device_list = devices.get(hive_type)
-        if device_list:
-            hass.async_create_task(
-                hass.config_entries.async_forward_entry_setup(entry, ha_type)
-            )
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        [
+            ha_type
+            for ha_type, hive_type in PLATFORM_LOOKUP.items()
+            if devices.get(hive_type)
+        ],
+    )
 
     return True
 

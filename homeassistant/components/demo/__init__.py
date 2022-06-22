@@ -259,10 +259,9 @@ async def _insert_statistics(hass):
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set the config entry up."""
     # Set up demo platforms with config entry
-    for platform in COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM:
-        hass.async_create_task(
-            hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        )
+    await hass.config_entries.async_forward_entry_setups(
+        config_entry, COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM
+    )
     if "recorder" in hass.config.components:
         await _insert_statistics(hass)
     return True

@@ -120,7 +120,7 @@ async def async_setup_entry(
     register_lcn_address_devices(hass, config_entry)
 
     # forward config_entry to components
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     # register for LCN bus messages
     device_registry = dr.async_get(hass)

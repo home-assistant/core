@@ -24,7 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not await hass.async_add_executor_job(acc.login):
         raise ConfigEntryAuthFailed("Incorrect Password")
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
