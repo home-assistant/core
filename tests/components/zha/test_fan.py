@@ -2,11 +2,10 @@
 from unittest.mock import AsyncMock, call, patch
 
 import pytest
+import zhaquirks.ikea.starkvind
 from zigpy.exceptions import ZigbeeException
 from zigpy.profiles import zha
-import zhaquirks.ikea.starkvind
-from zigpy.zcl.clusters import general
-from zigpy.zcl.clusters import hvac
+from zigpy.zcl.clusters import general, hvac
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.fan import (

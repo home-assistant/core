@@ -124,7 +124,7 @@ class SmartThingsAcceleration(ZigbeeChannel):
 class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG = ()
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
