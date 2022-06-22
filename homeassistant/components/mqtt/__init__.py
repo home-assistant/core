@@ -415,7 +415,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.bus.async_listen("event_mqtt_reloaded", _async_reload_platforms)
         )
 
-    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
+    await async_forward_entry_setup_and_setup_discovery(entry)
 
     if DATA_MQTT_RELOAD_NEEDED in hass.data:
         hass.data.pop(DATA_MQTT_RELOAD_NEEDED)

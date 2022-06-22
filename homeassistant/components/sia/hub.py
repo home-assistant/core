@@ -141,4 +141,4 @@ class SIAHub:
             return
         hub.update_accounts()
         await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
-        hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+        await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

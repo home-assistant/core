@@ -230,13 +230,8 @@ class AxisNetworkDevice:
         self.product_type = self.api.vapix.product_type
 
         async def start_platforms():
-            await asyncio.gather(
-                *(
-                    self.hass.config_entries.async_forward_entry_setup(
-                        self.config_entry, platform
-                    )
-                    for platform in PLATFORMS
-                )
+            await self.hass.config_entries.async_forward_entry_setups(
+                self.config_entry, PLATFORMS
             )
             if self.option_events:
                 self.api.stream.connection_status_callback.append(

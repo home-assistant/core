@@ -135,7 +135,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_KEY_COORDINATOR: coordinator,
     }
 
-    hass.config_entries.async_setup_platforms(entry, _async_platforms(entry))
+    await hass.config_entries.async_forward_entry_setups(entry, _async_platforms(entry))
 
     return True
 

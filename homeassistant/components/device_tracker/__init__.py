@@ -47,6 +47,9 @@ def is_on(hass: HomeAssistant, entity_id: str) -> bool:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the device tracker."""
+
+    hass.config.components.add(DOMAIN)
+
     await async_setup_legacy_integration(hass, config)
 
     return True

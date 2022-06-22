@@ -200,7 +200,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if not entry.options.get(CONF_TARIFFS):
         # Only a single meter sensor is required
         hass.data[DATA_UTILITY][entry.entry_id][CONF_TARIFF_ENTITY] = None
-        hass.config_entries.async_setup_platforms(entry, (Platform.SENSOR,))
+        await hass.config_entries.async_forward_entry_setups(entry, (Platform.SENSOR,))
     else:
         # Create tariff selection + one meter sensor for each tariff
         entity_entry = entity_registry.async_get_or_create(
@@ -209,7 +209,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DATA_UTILITY][entry.entry_id][
             CONF_TARIFF_ENTITY
         ] = entity_entry.entity_id
-        hass.config_entries.async_setup_platforms(
+        await hass.config_entries.async_forward_entry_setups(
             entry, (Platform.SELECT, Platform.SENSOR)
         )
 
