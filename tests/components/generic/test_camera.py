@@ -8,7 +8,10 @@ import httpx
 import pytest
 import respx
 
-from homeassistant.components.camera import async_get_mjpeg_stream
+from homeassistant.components.camera import (
+    async_get_mjpeg_stream,
+    async_get_stream_source,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.setup import async_setup_component
@@ -203,6 +206,8 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
+    stream_source = await async_get_stream_source(hass, "camera.config_test")
+    assert stream_source == "http://barney:betty@example.com/5a"
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",
