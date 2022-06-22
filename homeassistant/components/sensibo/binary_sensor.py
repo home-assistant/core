@@ -97,13 +97,6 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
 
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
-        key="pure_boost_enabled",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        name="Pure Boost Enabled",
-        icon="mdi:wind-power-outline",
-        value_fn=lambda data: data.pure_boost_enabled,
-    ),
-    SensiboDeviceBinarySensorEntityDescription(
         key="pure_ac_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
