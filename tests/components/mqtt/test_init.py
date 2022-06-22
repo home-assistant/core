@@ -1362,35 +1362,50 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
+async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
     """Test set up a manual MQTT item with a platform key."""
     config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+        await help_test_setup_manual_entity_from_yaml(
+            hass,
+            caplog,
+            tmp_path,
+            "light",
+            config,
+        )
     assert (
         "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
         in caplog.text
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
+async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
     """Test set up a manual MQTT item with an invalid config."""
     config = {"name": "test"}
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+        await help_test_setup_manual_entity_from_yaml(
+            hass,
+            caplog,
+            tmp_path,
+            "light",
+            config,
+        )
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [])
-async def test_setup_manual_mqtt_empty_platform(hass, caplog):
+async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
     """Test set up a manual MQTT platform without items."""
-    config = []
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    config = None
+    await help_test_setup_manual_entity_from_yaml(
+        hass,
+        caplog,
+        tmp_path,
+        "light",
+        config,
+    )
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
