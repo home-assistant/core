@@ -64,6 +64,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     """Representation of a ZHA select entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
+    _attr_name: str
     _enum: type[Enum]
 
     def __init__(
