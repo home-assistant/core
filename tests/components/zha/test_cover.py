@@ -39,6 +39,21 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 from tests.common import async_capture_events, mock_coro, mock_restore_cache
 
 
+@pytest.fixture(autouse=True)
+def cover_platform_only():
+    """Only setup the cover and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.COVER,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def zigpy_cover_device(zigpy_device_mock):
     """Zigpy cover device."""

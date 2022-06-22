@@ -10,7 +10,6 @@ from typing import Any, Protocol, cast, final
 
 import voluptuous as vol
 
-from homeassistant.config import async_log_exception
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_CONFIGURATION_URL,
@@ -263,7 +262,7 @@ class SetupEntity(Protocol):
 
 
 async def async_setup_platform_discovery(
-    hass: HomeAssistant, platform_domain: str, schema: vol.Schema
+    hass: HomeAssistant, platform_domain: str
 ) -> CALLBACK_TYPE:
     """Set up platform discovery for manual config."""
 
@@ -282,7 +281,7 @@ async def async_setup_platform_discovery(
             *(
                 discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
                 for config in await async_get_platform_config_from_yaml(
-                    hass, platform_domain, schema, config_yaml
+                    hass, platform_domain, config_yaml
                 )
             )
         )
@@ -295,24 +294,9 @@ async def async_setup_platform_discovery(
 async def async_get_platform_config_from_yaml(
     hass: HomeAssistant,
     platform_domain: str,
-    schema: vol.Schema,
     config_yaml: ConfigType = None,
 ) -> list[ConfigType]:
     """Return a list of validated configurations for the domain."""
-
-    def async_validate_config(
-        hass: HomeAssistant,
-        config: list[ConfigType],
-    ) -> list[ConfigType]:
-        """Validate config."""
-        validated_config = []
-        for config_item in config:
-            try:
-                validated_config.append(schema(config_item))
-            except vol.MultipleInvalid as err:
-                async_log_exception(err, platform_domain, config_item, hass)
-
-        return validated_config
 
     if config_yaml is None:
         config_yaml = hass.data.get(DATA_MQTT_CONFIG)
@@ -320,7 +304,7 @@ async def async_get_platform_config_from_yaml(
         return []
     if not (platform_configs := config_yaml.get(platform_domain)):
         return []
-    return async_validate_config(hass, platform_configs)
+    return platform_configs
 
 
 async def async_setup_entry_helper(hass, domain, async_setup, schema):

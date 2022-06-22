@@ -52,6 +52,13 @@ class SensiboDeviceBinarySensorEntityDescription(
     """Describes Sensibo Motion sensor entity."""
 
 
+FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
+    key="filter_clean",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    name="Filter Clean Required",
+    value_fn=lambda data: data.filter_clean,
+)
+
 MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     SensiboMotionBinarySensorEntityDescription(
         key="alive",
@@ -77,7 +84,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     ),
 )
 
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
+MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     SensiboDeviceBinarySensorEntityDescription(
         key="room_occupied",
         device_class=BinarySensorDeviceClass.MOTION,
@@ -85,6 +92,7 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
+    FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
@@ -127,6 +135,7 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
     ),
+    FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 
@@ -150,9 +159,9 @@ async def async_setup_entry(
             )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
-        for description in DEVICE_SENSOR_TYPES
+        for description in MOTION_DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if getattr(device_data, description.key) is not None
+        if device_data.motion_sensors is not None
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)

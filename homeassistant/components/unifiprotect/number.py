@@ -4,11 +4,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 
-from pyunifiprotect.data import Camera, Doorlock, Light
+from pyunifiprotect.data import Camera, Doorlock, Light, ProtectModelWithId
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_SECONDS
+from homeassistant.const import PERCENTAGE, TIME_SECONDS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
 
 
 @dataclass
@@ -63,30 +63,35 @@ CAMERA_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_wdr",
         ufp_value="isp_settings.wdr",
         ufp_set_method="set_wdr_level",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
         key="mic_level",
         name="Microphone Level",
         icon="mdi:microphone",
         entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
         ufp_required_field="feature_flags.has_mic",
         ufp_value="mic_volume",
         ufp_set_method="set_mic_volume",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription(
         key="zoom_position",
         name="Zoom Level",
         icon="mdi:magnify-plus-outline",
         entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
         ufp_required_field="feature_flags.can_optical_zoom",
         ufp_value="isp_settings.zoom_position",
         ufp_set_method="set_camera_zoom",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -96,25 +101,28 @@ LIGHT_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Motion Sensitivity",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
         ufp_required_field=None,
         ufp_value="light_device_settings.pir_sensitivity",
         ufp_set_method="set_sensitivity",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectNumberEntityDescription[Light](
         key="duration",
         name="Auto-shutoff Duration",
         icon="mdi:camera-timer",
         entity_category=EntityCategory.CONFIG,
-        unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_SECONDS,
         ufp_min=15,
         ufp_max=900,
         ufp_step=15,
         ufp_required_field=None,
         ufp_value_fn=_get_pir_duration,
         ufp_set_method_fn=_set_pir_duration,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -124,12 +132,14 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Motion Sensitivity",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
         ufp_required_field=None,
         ufp_value="motion_settings.sensitivity",
         ufp_set_method="set_motion_sensitivity",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -139,13 +149,14 @@ DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Auto-lock Timeout",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        unit_of_measurement=TIME_SECONDS,
+        native_unit_of_measurement=TIME_SECONDS,
         ufp_min=0,
         ufp_max=3600,
         ufp_step=15,
         ufp_required_field=None,
         ufp_value_fn=_get_auto_close,
         ufp_set_method_fn=_set_auto_close,
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -155,11 +166,13 @@ CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
         name="Volume",
         icon="mdi:speaker",
         entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=PERCENTAGE,
         ufp_min=0,
         ufp_max=100,
         ufp_step=1,
         ufp_value="volume",
         ufp_set_method="set_volume",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -198,15 +211,15 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
     ) -> None:
         """Initialize the Number Entities."""
         super().__init__(data, device, description)
-        self._attr_max_value = self.entity_description.ufp_max
-        self._attr_min_value = self.entity_description.ufp_min
-        self._attr_step = self.entity_description.ufp_step
+        self._attr_native_max_value = self.entity_description.ufp_max
+        self._attr_native_min_value = self.entity_description.ufp_min
+        self._attr_native_step = self.entity_description.ufp_step
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
-        self._attr_value = self.entity_description.get_ufp_value(self.device)
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
+        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
