@@ -667,7 +667,7 @@ class ConfigEntry:
 
         target: target to call.
         """
-        task = hass.loop.create_task(target)
+        task = hass.async_create_task(target)
 
         self._pending_tasks.append(task)
 
