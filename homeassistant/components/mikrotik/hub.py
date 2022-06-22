@@ -386,9 +386,7 @@ class MikrotikHub:
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
         await self.hass.async_add_executor_job(self._mk_data.update)
 
-        await self.hass.config_entries.async_forward_entry_setups(
-            self.config_entry, PLATFORMS
-        )
+        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
         return True
 
 
