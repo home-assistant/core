@@ -9,8 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .client import TransmissionClientCoordinator
 from .const import DOMAIN, SWITCH_TYPES
+from .coordinator import TransmissionDataUpdateCoordinator
 
 _LOGGING = logging.getLogger(__name__)
 
@@ -22,7 +22,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Transmission switch."""
 
-    tm_client: TransmissionClientCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    tm_client: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     name = config_entry.data[CONF_NAME]
 
     entities = []
@@ -33,7 +35,7 @@ async def async_setup_entry(
 
 
 class TransmissionSwitch(
-    CoordinatorEntity[TransmissionClientCoordinator], SwitchEntity
+    CoordinatorEntity[TransmissionDataUpdateCoordinator], SwitchEntity
 ):
     """Representation of a Transmission switch."""
 

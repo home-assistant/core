@@ -17,11 +17,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -104,25 +102,26 @@ async def get_api(hass: HomeAssistant, entry: dict[str, Any]) -> transmissionrpc
         raise UnknownError from error
 
 
-class TransmissionClientCoordinator(DataUpdateCoordinator):
-    """Transmission Client Object."""
+class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[transmissionrpc.Session]):
+    """Transmission coordinator object."""
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        api: transmissionrpc.Client,
+    ) -> None:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry: ConfigEntry = config_entry
-        self.tm_api: transmissionrpc.Client = None
-        self._tm_data: TransmissionData | None = None
+        self.tm_api = api
+        self._tm_data = TransmissionData(hass, config_entry, api)
         super().__init__(
             self.hass,
             _LOGGER,
             name=DOMAIN,
             update_method=self.async_update,
-            update_interval=timedelta(
-                seconds=self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                )
-            ),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
     @property
@@ -139,24 +138,15 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
                 f"Unable to connect to Transmission client {self.config_entry.data[CONF_HOST]}"
             ) from err
 
-    async def async_setup(self) -> bool:
+    async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
-        try:
-            self.tm_api = await get_api(self.hass, {**self.config_entry.data})
-        except AuthenticationError as error:
-            _LOGGER.error(error)
-            return False
-        except CannotConnect as error:
-            raise ConfigEntryNotReady from error
-
-        self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
-        await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
         self.add_options()
+        await self.hass.async_add_executor_job(self._tm_data.init_torrent_list)
 
         async def async_add_torrent(service: ServiceCall) -> None:
             """Add new torrent to download."""
-            tm_client: TransmissionClientCoordinator | None = None
+            tm_client: TransmissionDataUpdateCoordinator | None = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_NAME] == service.data[CONF_NAME]:
                     tm_client = self.hass.data[DOMAIN][entry.entry_id]
@@ -180,7 +170,7 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
 
         async def async_start_torrent(service: ServiceCall) -> None:
             """Start torrent."""
-            tm_client: TransmissionClientCoordinator | None = None
+            tm_client: TransmissionDataUpdateCoordinator | None = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_NAME] == service.data[CONF_NAME]:
                     tm_client = self.hass.data[DOMAIN][entry.entry_id]
@@ -196,7 +186,7 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
 
         async def async_stop_torrent(service: ServiceCall) -> None:
             """Stop torrent."""
-            tm_client: TransmissionClientCoordinator | None = None
+            tm_client: TransmissionDataUpdateCoordinator | None = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_NAME] == service.data[CONF_NAME]:
                     tm_client = self.hass.data[DOMAIN][entry.entry_id]
@@ -212,7 +202,7 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
 
         async def async_remove_torrent(service: ServiceCall) -> None:
             """Remove torrent."""
-            tm_client: TransmissionClientCoordinator | None = None
+            tm_client: TransmissionDataUpdateCoordinator | None = None
             for entry in self.hass.config_entries.async_entries(DOMAIN):
                 if entry.data[CONF_NAME] == service.data[CONF_NAME]:
                     tm_client = self.hass.data[DOMAIN][entry.entry_id]
@@ -259,22 +249,12 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             schema=SERVICE_STOP_TORRENT_SCHEMA,
         )
 
-        self.config_entry.async_on_unload(
-            self.config_entry.add_update_listener(self.async_options_updated)
-        )
-
-        return True
-
     def add_options(self) -> None:
         """Add options for entry."""
         if not self.config_entry.options:
-            scan_interval = self.config_entry.data.get(
-                CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-            )
             limit = self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
             order = self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
             options = {
-                CONF_SCAN_INTERVAL: scan_interval,
                 CONF_LIMIT: limit,
                 CONF_ORDER: order,
             }
@@ -282,13 +262,6 @@ class TransmissionClientCoordinator(DataUpdateCoordinator):
             self.hass.config_entries.async_update_entry(
                 self.config_entry, options=options
             )
-
-    @staticmethod
-    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
-        """Triggered by config entry options updates."""
-        tm_client: TransmissionClientCoordinator = hass.data[DOMAIN][entry.entry_id]
-        tm_client.update_interval = timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
-        await tm_client.async_request_refresh()
 
 
 class TransmissionData:

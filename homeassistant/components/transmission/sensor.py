@@ -12,7 +12,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .client import TransmissionClientCoordinator
 from .const import (
     CONF_LIMIT,
     CONF_ORDER,
@@ -20,6 +19,7 @@ from .const import (
     STATE_ATTR_TORRENT_INFO,
     SUPPORTED_ORDER_MODES,
 )
+from .coordinator import TransmissionDataUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -29,7 +29,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Transmission sensors."""
 
-    tm_client: TransmissionClientCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    tm_client: TransmissionDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
     name = config_entry.data[CONF_NAME]
 
     entities = [
@@ -47,7 +49,7 @@ async def async_setup_entry(
 
 
 class TransmissionSensor(
-    CoordinatorEntity[TransmissionClientCoordinator], SensorEntity
+    CoordinatorEntity[TransmissionDataUpdateCoordinator], SensorEntity
 ):
     """A base class for all Transmission sensors."""
 

@@ -67,12 +67,11 @@ async def test_device_already_configured(
     assert result2["reason"] == "already_configured"
 
 
-async def test_name_already_configured(hass):
+async def test_name_already_configured(hass: HomeAssistant) -> None:
     """Test name is already configured."""
     entry = MockConfigEntry(
         domain=transmission.DOMAIN,
         data=MOCK_CONFIG_DATA,
-        options={"scan_interval": 120},
     )
     entry.add_to_hass(hass)
 
@@ -86,35 +85,6 @@ async def test_name_already_configured(hass):
 
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"name": "name_exists"}
-
-
-async def test_options(hass: HomeAssistant) -> None:
-    """Test updating options."""
-    entry = MockConfigEntry(
-        domain=transmission.DOMAIN,
-        data=MOCK_CONFIG_DATA,
-        options={"scan_interval": 120},
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.transmission.async_setup_entry",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={"scan_interval": 10}
-    )
-
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"]["scan_interval"] == 10
 
 
 async def test_error_on_wrong_credentials(
