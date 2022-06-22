@@ -148,7 +148,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.button",
     "homeassistant.components.zha.climate",
     "homeassistant.components.zha.core.channels.base",
-    "homeassistant.components.zha.core.channels.general",
     "homeassistant.components.zha.core.channels.homeautomation",
     "homeassistant.components.zha.core.channels.hvac",
     "homeassistant.components.zha.core.channels.security",
