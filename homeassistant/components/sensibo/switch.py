@@ -29,7 +29,7 @@ class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]]
+    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]] | None
     command_on: str
     command_off: str
     remote_key: str
@@ -54,6 +54,16 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         command_off="del_timer",
         remote_key="timer_on",
     ),
+    SensiboDeviceSwitchEntityDescription(
+        key="pure_boost_switch",
+        device_class=SwitchDeviceClass.SWITCH,
+        name="Pure Boost",
+        value_fn=lambda data: data.pure_boost_enabled,
+        extra_fn=None,
+        command_on="set_pure_boost",
+        command_off="set_pure_boost",
+        remote_key="pure_boost_enabled",
+    ),
 )
 
 
@@ -66,6 +76,9 @@ def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | N
             "acState": {**device_data.ac_states, "on": new_state},
         }
         return params
+    if command == "set_pure_boost":
+        new_state = bool(device_data.pure_boost_enabled is False)
+        params = {"enabled": new_state}
     return None
 
 
@@ -130,7 +143,13 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        result = await self.async_send_command(self.entity_description.command_off)
+        params = build_params(self.entity_description.command_on, self.device_data)
+        if params:
+            result = await self.async_send_command(
+                self.entity_description.command_off, params
+            )
+        else:
+            result = await self.async_send_command(self.entity_description.command_off)
 
         if result["status"] == "success":
             setattr(self.device_data, self.entity_description.remote_key, False)
@@ -141,6 +160,8 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> Mapping[str, Any]:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
-        return self.entity_description.extra_fn(self.device_data)
+        if self.entity_description.extra_fn:
+            return self.entity_description.extra_fn(self.device_data)
+        return None
