@@ -773,7 +773,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.21.6
+numpy==1.22.4
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -1035,7 +1035,7 @@ pyhaversion==22.4.1
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.10
+pyhiveapi==0.5.11
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1325,7 +1325,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.5
+pyunifiprotect==4.0.6
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

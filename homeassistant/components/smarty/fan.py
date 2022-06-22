@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 import math
+from typing import Any
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
@@ -64,7 +65,7 @@ class SmartyFan(FanEntity):
         return "mdi:air-conditioner"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return state of the fan."""
         return bool(self._smarty_fan_speed)
 
@@ -96,7 +97,12 @@ class SmartyFan(FanEntity):
         self._smarty_fan_speed = fan_speed
         self.schedule_update_ha_state()
 
-    def turn_on(self, percentage=None, preset_mode=None, **kwargs):
+    def turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn on the fan."""
         _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)

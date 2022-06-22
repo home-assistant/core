@@ -190,6 +190,14 @@ class SonosDiscoveryManager:
         for speaker in self.data.discovered.values():
             speaker.activity_stats.log_report()
             speaker.event_stats.log_report()
+        if zgs := next(
+            speaker.soco.zone_group_state for speaker in self.data.discovered.values()
+        ):
+            _LOGGER.debug(
+                "ZoneGroupState stats: (%s/%s) processed",
+                zgs.processed_count,
+                zgs.total_requests,
+            )
         await asyncio.gather(
             *(speaker.async_offline() for speaker in self.data.discovered.values())
         )
