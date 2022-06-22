@@ -292,10 +292,6 @@ auroranoaa==0.0.2
 # homeassistant.components.aurora_abb_powerone
 aurorapy==0.2.7
 
-# homeassistant.components.generic
-# homeassistant.components.stream
-av==9.2.0
-
 # homeassistant.components.axis
 axis==44
 
@@ -557,6 +553,10 @@ growattServer==1.2.2
 
 # homeassistant.components.profiler
 guppy3==3.1.2
+
+# homeassistant.components.generic
+# homeassistant.components.stream
+ha-av==10.0.0b3
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
