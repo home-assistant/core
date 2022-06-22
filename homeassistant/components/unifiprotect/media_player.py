@@ -40,16 +40,14 @@ async def async_setup_entry(
     """Discover cameras with speakers on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        [
-            ProtectMediaPlayer(
-                data,
-                camera,
-            )
-            for camera in data.api.bootstrap.cameras.values()
-            if camera.feature_flags.has_speaker
-        ]
-    )
+    entities = []
+    for device in data.api.bootstrap.cameras.values():
+        if not device.is_adopted_by_us or not device.feature_flags.has_speaker:
+            continue
+
+        entities.append(ProtectMediaPlayer(data, device))
+
+    async_add_entities(entities)
 
 
 class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
@@ -79,7 +77,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             ),
         )
 
-        self._attr_name = f"{self.device.name} Speaker"
+        self._attr_name = f"{self.device.display_name} Speaker"
         self._attr_media_content_type = MEDIA_TYPE_MUSIC
 
     @callback
@@ -108,7 +106,7 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
             self.device.talkback_stream is not None
             and self.device.talkback_stream.is_running
         ):
-            _LOGGER.debug("Stopping playback for %s Speaker", self.device.name)
+            _LOGGER.debug("Stopping playback for %s Speaker", self.device.display_name)
             await self.device.stop_audio()
             self._async_updated_event(self.device)
 
@@ -126,7 +124,9 @@ class ProtectMediaPlayer(ProtectDeviceEntity, MediaPlayerEntity):
         if media_type != MEDIA_TYPE_MUSIC:
             raise HomeAssistantError("Only music media type is supported")
 
-        _LOGGER.debug("Playing Media %s for %s Speaker", media_id, self.device.name)
+        _LOGGER.debug(
+            "Playing Media %s for %s Speaker", media_id, self.device.display_name
+        )
         await self.async_media_stop()
         try:
             await self.device.play_audio(media_id, blocking=False)

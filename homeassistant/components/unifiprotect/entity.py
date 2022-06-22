@@ -44,6 +44,9 @@ def _async_device_entities(
 
     entities: list[ProtectDeviceEntity] = []
     for device in data.get_by_types({model_type}):
+        if not device.is_adopted_by_us:
+            continue
+
         assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         for description in descs:
             if description.ufp_perm is not None:
@@ -69,7 +72,7 @@ def _async_device_entities(
                 "Adding %s entity %s for %s",
                 klass.__name__,
                 description.name,
-                device.name,
+                device.display_name,
             )
 
     return entities
@@ -126,12 +129,12 @@ class ProtectDeviceEntity(Entity):
 
         if description is None:
             self._attr_unique_id = f"{self.device.mac}"
-            self._attr_name = f"{self.device.name}"
+            self._attr_name = f"{self.device.display_name}"
         else:
             self.entity_description = description
             self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
-            self._attr_name = f"{self.device.name} {name.title()}"
+            self._attr_name = f"{self.device.display_name} {name.title()}"
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
@@ -147,7 +150,7 @@ class ProtectDeviceEntity(Entity):
     @callback
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
-            name=self.device.name,
+            name=self.device.display_name,
             manufacturer=DEFAULT_BRAND,
             model=self.device.type,
             via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
@@ -214,7 +217,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, self.device.mac)},
             manufacturer=DEFAULT_BRAND,
-            name=self.device.name,
+            name=self.device.display_name,
             model=self.device.type,
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
