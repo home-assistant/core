@@ -29,6 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
+SAFE_QUERY_PARAMS: Final = ["height", "width"]
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
@@ -60,6 +61,8 @@ def async_sign_path(
     url = URL(path)
     now = dt_util.utcnow()
     params = dict(sorted(url.query.items()))
+    for param in SAFE_QUERY_PARAMS:
+        params.pop(param, None)
     encoded = jwt.encode(
         {
             "iss": refresh_token_id,
@@ -184,6 +187,8 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
 
         params = dict(sorted(request.query.items()))
         del params[SIGN_QUERY_PARAM]
+        for param in SAFE_QUERY_PARAMS:
+            params.pop(param, None)
         if claims["params"] != params:
             return False
 
