@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 import math
+from typing import Any
 
 from pysmartthings import Capability
 
@@ -72,7 +73,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn the fan on."""
         await self._async_set_percentage(percentage)

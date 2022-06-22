@@ -158,8 +158,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
