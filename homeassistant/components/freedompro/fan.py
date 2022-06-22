@@ -95,25 +95,23 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Async function to turn on the fan."""
-        payload_dict = {"on": True}
-        payload = json.dumps(payload_dict)
+        payload = {"on": True}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to turn off the fan."""
-        payload_dict = {"on": False}
-        payload = json.dumps(payload_dict)
+        payload = {"on": False}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
