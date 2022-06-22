@@ -26,13 +26,13 @@ PARALLEL_UPDATES = 0
 
 @dataclass
 class DeviceBaseEntityDescriptionMixin:
-    """Mixin for required Sensibo base description keys."""
+    """Mixin for required Sensibo Device description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
     extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None]] | None
     command_on: str
     command_off: str
-    remote_key: str
+    data_key: str
 
 
 @dataclass
@@ -52,7 +52,7 @@ DEVICE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
         command_on="set_timer",
         command_off="del_timer",
-        remote_key="timer_on",
+        data_key="timer_on",
     ),
 )
 
@@ -65,13 +65,13 @@ PURE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
         extra_fn=None,
         command_on="set_pure_boost",
         command_off="set_pure_boost",
-        remote_key="pure_boost_enabled",
+        data_key="pure_boost_enabled",
     ),
 )
 
 
 def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | None:
-    """Build params for turning on switch."""
+    """Build params for toggle switch."""
     if command == "set_timer":
         new_state = bool(device_data.ac_states["on"] is False)
         params = {
@@ -95,7 +95,7 @@ def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | N
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up Sensibo binary sensor platform."""
+    """Set up Sensibo Switch platform."""
 
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
@@ -149,7 +149,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         )
 
         if result["status"] == "success":
-            setattr(self.device_data, self.entity_description.remote_key, True)
+            setattr(self.device_data, self.entity_description.data_key, True)
             self.async_write_ha_state()
             return await self.coordinator.async_request_refresh()
         raise HomeAssistantError(
@@ -164,7 +164,7 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         )
 
         if result["status"] == "success":
-            setattr(self.device_data, self.entity_description.remote_key, False)
+            setattr(self.device_data, self.entity_description.data_key, False)
             self.async_write_ha_state()
             return await self.coordinator.async_request_refresh()
         raise HomeAssistantError(

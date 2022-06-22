@@ -1,7 +1,10 @@
 """Number platform for Sensibo integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+
+from pysensibo.model import SensiboDevice
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +25,7 @@ class SensiboEntityDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
     remote_key: str
+    value_fn: Callable[[SensiboDevice], float | None]
 
 
 @dataclass
@@ -42,6 +46,7 @@ DEVICE_NUMBER_TYPES = (
         native_min_value=-10,
         native_max_value=10,
         native_step=0.1,
+        value_fn=lambda data: data.calibration_temp,
     ),
     SensiboNumberEntityDescription(
         key="calibration_hum",
@@ -53,6 +58,7 @@ DEVICE_NUMBER_TYPES = (
         native_min_value=-10,
         native_max_value=10,
         native_step=0.1,
+        value_fn=lambda data: data.calibration_hum,
     ),
 )
 
@@ -90,8 +96,7 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the value from coordinator data."""
-        value: float | None = getattr(self.device_data, self.entity_description.key)
-        return value
+        return self.entity_description.value_fn(self.device_data)
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
