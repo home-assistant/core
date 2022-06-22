@@ -342,6 +342,31 @@ async def test_auth_access_signed_path_with_query_param_order(
     assert data["user_id"] == refresh_token.user.id
 
 
+async def test_auth_access_signed_path_with_query_param_safe_param(
+    hass, app, aiohttp_client, hass_access_token
+):
+    """Test access with signed url and changing a safe param."""
+    app.router.add_post("/", mock_handler)
+    app.router.add_get("/another_path", mock_handler)
+    await async_setup_auth(hass, app)
+    client = await aiohttp_client(app)
+
+    refresh_token = await hass.auth.async_validate_access_token(hass_access_token)
+
+    signed_path = async_sign_path(
+        hass,
+        "/?test=test&foo=bar",
+        timedelta(seconds=5),
+        refresh_token_id=refresh_token.id,
+    )
+    signed_path = f"{signed_path}&width=100"
+
+    req = await client.get(signed_path)
+    assert req.status == HTTPStatus.OK
+    data = await req.json()
+    assert data["user_id"] == refresh_token.user.id
+
+
 @pytest.mark.parametrize(
     "base_url,test_url",
     [
