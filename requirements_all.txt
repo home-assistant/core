@@ -122,7 +122,7 @@ aioasuswrt==1.4.0
 aioazuredevops==1.3.5
 
 # homeassistant.components.baf
-aiobafi6==0.5.0
+aiobafi6==0.6.0
 
 # homeassistant.components.aws
 aiobotocore==2.1.0
@@ -196,7 +196,7 @@ aiolyric==1.0.8
 aiomodernforms==0.1.8
 
 # homeassistant.components.yamaha_musiccast
-aiomusiccast==0.14.3
+aiomusiccast==0.14.4
 
 # homeassistant.components.nanoleaf
 aionanoleaf==0.2.0
@@ -256,7 +256,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==31
+aiounifi==32
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -768,7 +768,7 @@ greenwavereality==0.5.1
 gridnet==4.0.0
 
 # homeassistant.components.growatt_server
-growattServer==1.1.0
+growattServer==1.2.2
 
 # homeassistant.components.gstreamer
 gstreamer-player==1.1.2
@@ -885,7 +885,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.insteon
-insteon-frontend-home-assistant==0.1.0
+insteon-frontend-home-assistant==0.1.1
 
 # homeassistant.components.intellifire
 intellifire4py==1.0.2
@@ -1080,7 +1080,7 @@ nettigo-air-monitor==1.2.4
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==1.0.1
+nexia==1.0.2
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1556,7 +1556,7 @@ pyialarmxr-homeassistant==1.0.18
 pyicloud==1.0.0
 
 # homeassistant.components.insteon
-pyinsteon==1.1.0
+pyinsteon==1.1.1
 
 # homeassistant.components.intesishome
 pyintesishome==1.7.6
