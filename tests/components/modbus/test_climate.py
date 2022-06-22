@@ -5,7 +5,6 @@ from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_HVAC_MODES,
-    HVAC_MODE_AUTO,
     HVACMode,
 )
 from homeassistant.components.modbus.const import (

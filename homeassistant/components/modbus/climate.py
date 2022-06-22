@@ -268,7 +268,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
     async def _async_read_register_raw(
         self, register_type: str, register: int
     ) -> int | None:
-        """Read a single register using the Modbus hub slave, without post-processing"""
+        """Read a single register using the Modbus hub slave, without post-processing."""
         result = await self._hub.async_pymodbus_call(
             self._slave, register, 1, register_type
         )
