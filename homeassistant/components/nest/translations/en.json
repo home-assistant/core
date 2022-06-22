@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "Account is already configured",
             "authorize_url_timeout": "Timeout generating authorize URL.",
             "invalid_access_token": "Invalid access token",
             "missing_configuration": "The component is not configured. Please follow the documentation.",
