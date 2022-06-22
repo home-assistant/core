@@ -86,4 +86,7 @@ def json_dumps(data: Any) -> str:
     ).decode("utf-8")
 
 
+json_loads = orjson.loads
+
+
 JSON_DUMP: Final = json_dumps
