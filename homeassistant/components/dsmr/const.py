@@ -305,14 +305,5 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),
-    DSMRSensorEntityDescription(
-        key=obis_references.valve & switch,
-        name="Max current per phase",
-        dsmr_versions={"5B"},        
-        device_class=SensorDeviceClass.POWER,
-        entity_registry_enabled_default=False,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),       
+    ),    
 )
