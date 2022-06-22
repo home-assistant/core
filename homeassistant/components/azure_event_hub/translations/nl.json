@@ -1,9 +1,9 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Service is al geconfigureerd",
+            "already_configured": "Dienst is al geconfigureerd",
             "cannot_connect": "Verbinding maken met de credentials uit de configuration.yaml is mislukt, verwijder deze uit yaml en gebruik de config flow.",
-            "single_instance_allowed": "Al geconfigureerd. Slechts een enkele configuratie mogelijk.",
+            "single_instance_allowed": "Al geconfigureerd. Slechts \u00e9\u00e9n configuratie mogelijk.",
             "unknown": "Verbinding maken met de credentials uit de configuration.yaml is mislukt met een onbekende fout, verwijder deze uit yaml en gebruik de config flow."
         },
         "error": {

@@ -34,7 +34,6 @@
       ],
       "selected_schedule": "None",
       "last_used": "Badkamer Schema",
-      "schedule_temperature": 0.0,
       "mode": "heat",
       "sensors": {
         "temperature": 16.5,
@@ -104,7 +103,6 @@
       ],
       "selected_schedule": "GF7  Woonkamer",
       "last_used": "GF7  Woonkamer",
-      "schedule_temperature": 15.0,
       "mode": "auto",
       "sensors": {
         "temperature": 20.9,
@@ -301,7 +299,6 @@
       ],
       "selected_schedule": "CV Jessie",
       "last_used": "CV Jessie",
-      "schedule_temperature": 15.0,
       "mode": "auto",
       "sensors": {
         "temperature": 17.2,
@@ -352,7 +349,6 @@
       ],
       "selected_schedule": "Badkamer Schema",
       "last_used": "Badkamer Schema",
-      "schedule_temperature": 15.0,
       "mode": "auto",
       "sensors": {
         "temperature": 18.9,
@@ -402,7 +398,6 @@
       ],
       "selected_schedule": "None",
       "last_used": "Badkamer Schema",
-      "schedule_temperature": 0.0,
       "mode": "heat",
       "sensors": {
         "temperature": 15.6,

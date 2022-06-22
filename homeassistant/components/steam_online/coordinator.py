@@ -56,7 +56,7 @@ class SteamDataUpdateCoordinator(DataUpdateCoordinator):
         }
         for k in players:
             data = self.player_interface.GetSteamLevel(steamid=players[k]["steamid"])
-            players[k]["level"] = data["response"]["player_level"]
+            players[k]["level"] = data["response"].get("player_level")
         return players
 
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:

@@ -1,8 +1,6 @@
 """Device automation helpers for entity."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -91,7 +89,7 @@ async def _async_get_automations(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str, domain: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers."""
     return await _async_get_automations(hass, device_id, ENTITY_TRIGGERS, domain)
 

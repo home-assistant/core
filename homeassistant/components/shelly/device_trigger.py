@@ -9,10 +9,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -111,9 +108,9 @@ async def async_validate_trigger_config(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers for Shelly devices."""
-    triggers: GetAutomationsResult = []
+    triggers: list[dict[str, str]] = []
 
     if rpc_wrapper := get_rpc_device_wrapper(hass, device_id):
         input_triggers = get_rpc_input_triggers(rpc_wrapper.device)

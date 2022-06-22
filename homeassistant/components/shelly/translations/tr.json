@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Ba\u011flanma hatas\u0131",
+            "firmware_not_fully_provisioned": "Cihaz tam olarak sa\u011flanmad\u0131. L\u00fctfen Shelly deste\u011fiyle ileti\u015fime ge\u00e7in",
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },

@@ -25,7 +25,7 @@ from homeassistant.components.recorder import (
     get_instance,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE, KEEPALIVE_TIME
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
     Events,
@@ -33,8 +33,8 @@ from homeassistant.components.recorder.models import (
     StateAttributes,
     States,
     StatisticsRuns,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
@@ -55,6 +55,7 @@ from homeassistant.setup import async_setup_component, setup_component
 from homeassistant.util import dt as dt_util
 
 from .common import (
+    async_block_recorder,
     async_wait_recording_done,
     corrupt_db_file,
     run_information_with_session,
@@ -115,6 +116,26 @@ async def test_shutdown_before_startup_finishes(
     assert run_info.run_id == 1
     assert run_info.start is not None
     assert run_info.end is not None
+
+
+async def test_canceled_before_startup_finishes(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test recorder shuts down when its startup future is canceled out from under it."""
+    hass.state = CoreState.not_running
+    await async_setup_recorder_instance(hass)
+    instance = get_instance(hass)
+    await instance.async_db_ready
+    instance._hass_started.cancel()
+    with patch.object(instance, "engine"):
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(instance.join)
+    assert (
+        "Recorder startup was externally canceled before it could complete"
+        in caplog.text
+    )
 
 
 async def test_shutdown_closes_connections(hass, recorder_mock):
@@ -1537,3 +1558,25 @@ def test_deduplication_state_attributes_inside_commit_interval(hass_recorder, ca
         first_attributes_id = states[0].attributes_id
         last_attributes_id = states[-1].attributes_id
         assert first_attributes_id == last_attributes_id
+
+
+async def test_async_block_till_done(hass, async_setup_recorder_instance):
+    """Test we can block until recordering is done."""
+    instance = await async_setup_recorder_instance(hass)
+    await async_wait_recording_done(hass)
+
+    entity_id = "test.recorder"
+    attributes = {"test_attr": 5, "test_attr_10": "nice"}
+
+    hass.states.async_set(entity_id, "on", attributes)
+    hass.states.async_set(entity_id, "off", attributes)
+
+    def _fetch_states():
+        with session_scope(hass=hass) as session:
+            return list(session.query(States).filter(States.entity_id == entity_id))
+
+    await async_block_recorder(hass, 0.1)
+    await instance.async_block_till_done()
+    states = await instance.async_add_executor_job(_fetch_states)
+    assert len(states) == 2
+    await hass.async_block_till_done()

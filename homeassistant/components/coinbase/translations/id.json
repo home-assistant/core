@@ -16,7 +16,7 @@
                     "api_key": "Kunci API",
                     "api_token": "Kode Rahasia API"
                 },
-                "description": "Silakan masukkan detail kunci API Anda sesuai yang disediakan oleh Coinbase.",
+                "description": "Masukkan detail kunci API Anda sesuai yang disediakan oleh Coinbase.",
                 "title": "Detail Kunci API Coinbase"
             }
         }

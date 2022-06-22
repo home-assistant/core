@@ -1,5 +1,5 @@
 """The tests for the MQTT automation."""
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -18,9 +18,17 @@ def calls(hass):
 
 
 @pytest.fixture(autouse=True)
-def setup_comp(hass, mqtt_mock):
+def no_platforms():
+    """Skip platform setup to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", []):
+        yield
+
+
+@pytest.fixture(autouse=True)
+async def setup_comp(hass, mqtt_mock_entry_no_yaml_config):
     """Initialize components."""
     mock_component(hass, "group")
+    return await mqtt_mock_entry_no_yaml_config()
 
 
 async def test_if_fires_on_topic_match(hass, calls):
@@ -213,7 +221,7 @@ async def test_if_not_fires_on_topic_but_no_payload_match(hass, calls):
     assert len(calls) == 0
 
 
-async def test_encoding_default(hass, calls, mqtt_mock):
+async def test_encoding_default(hass, calls, setup_comp):
     """Test default encoding."""
     assert await async_setup_component(
         hass,
@@ -226,10 +234,10 @@ async def test_encoding_default(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, "utf-8")
+    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, "utf-8")
 
 
-async def test_encoding_custom(hass, calls, mqtt_mock):
+async def test_encoding_custom(hass, calls, setup_comp):
     """Test default encoding."""
     assert await async_setup_component(
         hass,
@@ -242,4 +250,4 @@ async def test_encoding_custom(hass, calls, mqtt_mock):
         },
     )
 
-    mqtt_mock.async_subscribe.assert_called_once_with("test-topic", ANY, 0, None)
+    setup_comp.async_subscribe.assert_called_with("test-topic", ANY, 0, None)

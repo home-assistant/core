@@ -7,16 +7,19 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from pyunifiprotect.data import Camera, Light
-from pyunifiprotect.data.devices import LCDMessage, Viewer
-from pyunifiprotect.data.nvr import DoorbellMessage, Liveview
-from pyunifiprotect.data.types import (
+from pyunifiprotect.data import (
+    Camera,
     DoorbellMessageType,
     IRLEDMode,
+    LCDMessage,
+    Light,
     LightModeEnableType,
     LightModeType,
+    Liveview,
     RecordingMode,
+    Viewer,
 )
+from pyunifiprotect.data.nvr import DoorbellMessage
 
 from homeassistant.components.select.const import ATTR_OPTIONS
 from homeassistant.components.unifiprotect.const import (
@@ -41,6 +44,7 @@ from .conftest import (
     MockEntityFixture,
     assert_entity_counts,
     ids_from_device_description,
+    reset_objects,
 )
 
 
@@ -56,12 +60,12 @@ async def viewer_fixture(
     # disable pydantic validation so mocking can happen
     Viewer.__config__.validate_assignment = False
 
-    viewer_obj = mock_viewer.copy(deep=True)
+    viewer_obj = mock_viewer.copy()
     viewer_obj._api = mock_entry.api
     viewer_obj.name = "Test Viewer"
     viewer_obj.liveview_id = mock_liveview.id
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.viewers = {
         viewer_obj.id: viewer_obj,
     }
@@ -86,7 +90,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -99,7 +103,7 @@ async def camera_fixture(
     camera_obj.lcd_message = None
     camera_obj.chime_duration = 0
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -126,14 +130,14 @@ async def light_fixture(
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
 
-    light_obj = mock_light.copy(deep=True)
+    light_obj = mock_light.copy()
     light_obj._api = mock_entry.api
     light_obj.name = "Test Light"
     light_obj.camera_id = None
     light_obj.light_mode_settings.mode = LightModeType.MOTION
     light_obj.light_mode_settings.enable_at = LightModeEnableType.DARK
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {camera.id: camera}
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
@@ -158,7 +162,7 @@ async def camera_none_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -169,7 +173,7 @@ async def camera_none_fixture(
     camera_obj.recording_settings.mode = RecordingMode.ALWAYS
     camera_obj.isp_settings.ir_led_mode = IRLEDMode.AUTO
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }

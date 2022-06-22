@@ -1,30 +1,26 @@
-"""Reads vehicle status from BMW connected drive portal."""
+"""Reads vehicle status from MyBMW portal."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
-from bimmer_connected.vehicle import ConnectedDriveVehicle
+from bimmer_connected.vehicle import MyBMWVehicle
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_ID,
-    CONF_ENTITY_ID,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_REGION,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITY_ID, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import discovery
+from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_VIN, ATTRIBUTION, CONF_READ_ONLY, DATA_HASS_CONFIG, DOMAIN
 from .coordinator import BMWDataUpdateCoordinator
+
+_LOGGER = logging.getLogger(__name__)
+
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -74,18 +70,56 @@ def _async_migrate_options_from_data_if_missing(
         hass.config_entries.async_update_entry(entry, data=data, options=options)
 
 
+async def _async_migrate_entries(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    entity_registry = er.async_get(hass)
+
+    @callback
+    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+        replacements = {
+            "charging_level_hv": "remaining_battery_percent",
+            "fuel_percent": "remaining_fuel_percent",
+        }
+        if (key := entry.unique_id.split("-")[-1]) in replacements:
+            new_unique_id = entry.unique_id.replace(key, replacements[key])
+            _LOGGER.debug(
+                "Migrating entity '%s' unique_id from '%s' to '%s'",
+                entry.entity_id,
+                entry.unique_id,
+                new_unique_id,
+            )
+            if existing_entity_id := entity_registry.async_get_entity_id(
+                entry.domain, entry.platform, new_unique_id
+            ):
+                _LOGGER.debug(
+                    "Cannot migrate to unique_id '%s', already exists for '%s'",
+                    new_unique_id,
+                    existing_entity_id,
+                )
+                return None
+            return {
+                "new_unique_id": new_unique_id,
+            }
+        return None
+
+    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BMW Connected Drive from a config entry."""
 
     _async_migrate_options_from_data_if_missing(hass, entry)
 
+    await _async_migrate_entries(hass, entry)
+
     # Set up one data coordinator per account/config entry
     coordinator = BMWDataUpdateCoordinator(
         hass,
-        username=entry.data[CONF_USERNAME],
-        password=entry.data[CONF_PASSWORD],
-        region=entry.data[CONF_REGION],
-        read_only=entry.options[CONF_READ_ONLY],
+        entry=entry,
     )
     await coordinator.async_config_entry_first_refresh()
 
@@ -109,9 +143,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    # Add event listener for option flow changes
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
     return True
 
 
@@ -127,20 +158,16 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-async def async_update_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
-
-
-class BMWConnectedDriveBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator], Entity):
+class BMWBaseEntity(CoordinatorEntity[BMWDataUpdateCoordinator]):
     """Common base for BMW entities."""
 
+    coordinator: BMWDataUpdateCoordinator
     _attr_attribution = ATTRIBUTION
 
     def __init__(
         self,
         coordinator: BMWDataUpdateCoordinator,
-        vehicle: ConnectedDriveVehicle,
+        vehicle: MyBMWVehicle,
     ) -> None:
         """Initialize entity."""
         super().__init__(coordinator)

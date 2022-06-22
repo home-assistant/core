@@ -1,18 +1,25 @@
 """Tests for the Bond cover device."""
 from datetime import timedelta
 
-from bond_api import Action, DeviceType
+from bond_async import Action, DeviceType
 
 from homeassistant import core
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, STATE_CLOSED
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+    STATE_CLOSED,
+)
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
     SERVICE_OPEN_COVER_TILT,
+    SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
     SERVICE_STOP_COVER_TILT,
+    STATE_OPEN,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
@@ -35,6 +42,15 @@ def shades(name: str):
         "name": name,
         "type": DeviceType.MOTORIZED_SHADES,
         "actions": ["Open", "Close", "Hold"],
+    }
+
+
+def shades_with_position(name: str):
+    """Create motorized shades that supports set position."""
+    return {
+        "name": name,
+        "type": DeviceType.MOTORIZED_SHADES,
+        "actions": [Action.OPEN, Action.CLOSE, Action.HOLD, Action.SET_POSITION],
     }
 
 
@@ -236,3 +252,64 @@ async def test_cover_available(hass: core.HomeAssistant):
     await help_test_entity_available(
         hass, COVER_DOMAIN, shades("name-1"), "cover.name_1"
     )
+
+
+async def test_set_position_cover(hass: core.HomeAssistant):
+    """Tests that set position cover command delegates to API."""
+    await setup_platform(
+        hass,
+        COVER_DOMAIN,
+        shades_with_position("name-1"),
+        bond_device_id="test-device-id",
+    )
+
+    with patch_bond_action() as mock_hold, patch_bond_device_state(
+        return_value={"position": 0, "open": 1}
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 100},
+            blocking=True,
+        )
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    mock_hold.assert_called_once_with("test-device-id", Action.set_position(0))
+    entity_state = hass.states.get("cover.name_1")
+    assert entity_state.state == STATE_OPEN
+    assert entity_state.attributes[ATTR_CURRENT_POSITION] == 100
+
+    with patch_bond_action() as mock_hold, patch_bond_device_state(
+        return_value={"position": 100, "open": 0}
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 0},
+            blocking=True,
+        )
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    mock_hold.assert_called_once_with("test-device-id", Action.set_position(100))
+    entity_state = hass.states.get("cover.name_1")
+    assert entity_state.state == STATE_CLOSED
+    assert entity_state.attributes[ATTR_CURRENT_POSITION] == 0
+
+    with patch_bond_action() as mock_hold, patch_bond_device_state(
+        return_value={"position": 40, "open": 1}
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_SET_COVER_POSITION,
+            {ATTR_ENTITY_ID: "cover.name_1", ATTR_POSITION: 60},
+            blocking=True,
+        )
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+
+    mock_hold.assert_called_once_with("test-device-id", Action.set_position(40))
+    entity_state = hass.states.get("cover.name_1")
+    assert entity_state.state == STATE_OPEN
+    assert entity_state.attributes[ATTR_CURRENT_POSITION] == 60

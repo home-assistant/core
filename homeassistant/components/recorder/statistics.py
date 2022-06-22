@@ -14,12 +14,12 @@ import re
 from statistics import mean
 from typing import TYPE_CHECKING, Any, Literal, overload
 
-from sqlalchemy import bindparam, func, lambda_stmt, select
+from sqlalchemy import bindparam, func, select
 from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import SQLAlchemyError, StatementError
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.expression import literal_column, true
-from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import Select, Subquery
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -33,6 +33,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.json import JSONEncoder
 from homeassistant.helpers.storage import STORAGE_DIR
+from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 import homeassistant.util.pressure as pressure_util
 import homeassistant.util.temperature as temperature_util
@@ -40,23 +41,15 @@ from homeassistant.util.unit_system import UnitSystem
 import homeassistant.util.volume as volume_util
 
 from .const import DATA_INSTANCE, DOMAIN, MAX_ROWS_TO_PURGE, SupportedDialect
+from .db_schema import Statistics, StatisticsMeta, StatisticsRuns, StatisticsShortTerm
 from .models import (
     StatisticData,
     StatisticMetaData,
     StatisticResult,
-    Statistics,
-    StatisticsMeta,
-    StatisticsRuns,
-    StatisticsShortTerm,
     process_timestamp,
     process_timestamp_to_utc_isoformat,
 )
-from .util import (
-    execute,
-    execute_stmt_lambda_element,
-    retryable_database_job,
-    session_scope,
-)
+from .util import execute, execute_stmt, retryable_database_job, session_scope
 
 if TYPE_CHECKING:
     from . import Recorder
@@ -208,18 +201,11 @@ class ValidationIssue:
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the history hooks."""
 
-    def _entity_id_changed(event: Event) -> None:
-        """Handle entity_id changed."""
-        old_entity_id = event.data["old_entity_id"]
-        entity_id = event.data["entity_id"]
-        with session_scope(hass=hass) as session:
-            session.query(StatisticsMeta).filter(
-                (StatisticsMeta.statistic_id == old_entity_id)
-                & (StatisticsMeta.source == DOMAIN)
-            ).update({StatisticsMeta.statistic_id: entity_id})
-
-    async def _async_entity_id_changed(event: Event) -> None:
-        await hass.data[DATA_INSTANCE].async_add_executor_job(_entity_id_changed, event)
+    @callback
+    def _async_entity_id_changed(event: Event) -> None:
+        hass.data[DATA_INSTANCE].async_update_statistics_metadata(
+            event.data["old_entity_id"], new_statistic_id=event.data["entity_id"]
+        )
 
     @callback
     def entity_registry_changed_filter(event: Event) -> bool:
@@ -380,7 +366,7 @@ def _delete_duplicates_from_table(
     return (total_deleted_rows, all_non_identical_duplicates)
 
 
-def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
+def delete_statistics_duplicates(hass: HomeAssistant, session: Session) -> None:
     """Identify and delete duplicated statistics.
 
     A backup will be made of duplicated statistics before it is deleted.
@@ -423,18 +409,80 @@ def delete_duplicates(hass: HomeAssistant, session: Session) -> None:
         )
 
 
+def _find_statistics_meta_duplicates(session: Session) -> list[int]:
+    """Find duplicated statistics_meta."""
+    subquery = (
+        session.query(
+            StatisticsMeta.statistic_id,
+            literal_column("1").label("is_duplicate"),
+        )
+        .group_by(StatisticsMeta.statistic_id)
+        .having(func.count() > 1)
+        .subquery()
+    )
+    query = (
+        session.query(StatisticsMeta)
+        .outerjoin(
+            subquery,
+            (subquery.c.statistic_id == StatisticsMeta.statistic_id),
+        )
+        .filter(subquery.c.is_duplicate == 1)
+        .order_by(StatisticsMeta.statistic_id, StatisticsMeta.id.desc())
+        .limit(1000 * MAX_ROWS_TO_PURGE)
+    )
+    duplicates = execute(query)
+    statistic_id = None
+    duplicate_ids: list[int] = []
+
+    if not duplicates:
+        return duplicate_ids
+
+    for duplicate in duplicates:
+        if statistic_id != duplicate.statistic_id:
+            statistic_id = duplicate.statistic_id
+            continue
+        duplicate_ids.append(duplicate.id)
+
+    return duplicate_ids
+
+
+def _delete_statistics_meta_duplicates(session: Session) -> int:
+    """Identify and delete duplicated statistics from a specified table."""
+    total_deleted_rows = 0
+    while True:
+        duplicate_ids = _find_statistics_meta_duplicates(session)
+        if not duplicate_ids:
+            break
+        for i in range(0, len(duplicate_ids), MAX_ROWS_TO_PURGE):
+            deleted_rows = (
+                session.query(StatisticsMeta)
+                .filter(StatisticsMeta.id.in_(duplicate_ids[i : i + MAX_ROWS_TO_PURGE]))
+                .delete(synchronize_session=False)
+            )
+            total_deleted_rows += deleted_rows
+    return total_deleted_rows
+
+
+def delete_statistics_meta_duplicates(session: Session) -> None:
+    """Identify and delete duplicated statistics_meta."""
+    deleted_statistics_rows = _delete_statistics_meta_duplicates(session)
+    if deleted_statistics_rows:
+        _LOGGER.info(
+            "Deleted %s duplicated statistics_meta rows", deleted_statistics_rows
+        )
+
+
 def _compile_hourly_statistics_summary_mean_stmt(
     start_time: datetime, end_time: datetime
-) -> StatementLambdaElement:
+) -> Select:
     """Generate the summary mean statement for hourly statistics."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN))
-    stmt += (
-        lambda q: q.filter(StatisticsShortTerm.start >= start_time)
+    return (
+        select(*QUERY_STATISTICS_SUMMARY_MEAN)
+        .filter(StatisticsShortTerm.start >= start_time)
         .filter(StatisticsShortTerm.start < end_time)
         .group_by(StatisticsShortTerm.metadata_id)
         .order_by(StatisticsShortTerm.metadata_id)
     )
-    return stmt
 
 
 def compile_hourly_statistics(
@@ -452,7 +500,7 @@ def compile_hourly_statistics(
     # Compute last hour's average, min, max
     summary: dict[str, StatisticData] = {}
     stmt = _compile_hourly_statistics_summary_mean_stmt(start_time, end_time)
-    stats = execute_stmt_lambda_element(session, stmt)
+    stats = execute_stmt(session, stmt)
 
     if stats:
         for stat in stats:
@@ -634,17 +682,17 @@ def _generate_get_metadata_stmt(
     statistic_ids: list[str] | tuple[str] | None = None,
     statistic_type: Literal["mean"] | Literal["sum"] | None = None,
     statistic_source: str | None = None,
-) -> StatementLambdaElement:
+) -> Select:
     """Generate a statement to fetch metadata."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
+    stmt = select(*QUERY_STATISTIC_META)
     if statistic_ids is not None:
-        stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
+        stmt = stmt.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
-        stmt += lambda q: q.where(StatisticsMeta.source == statistic_source)
+        stmt = stmt.where(StatisticsMeta.source == statistic_source)
     if statistic_type == "mean":
-        stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
+        stmt = stmt.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
-        stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
+        stmt = stmt.where(StatisticsMeta.has_sum == true())
     return stmt
 
 
@@ -666,7 +714,7 @@ def get_metadata_with_session(
 
     # Fetch metatadata from the database
     stmt = _generate_get_metadata_stmt(statistic_ids, statistic_type, statistic_source)
-    result = execute_stmt_lambda_element(session, stmt)
+    result = execute_stmt(session, stmt)
     if not result:
         return {}
 
@@ -736,13 +784,26 @@ def clear_statistics(instance: Recorder, statistic_ids: list[str]) -> None:
 
 
 def update_statistics_metadata(
-    instance: Recorder, statistic_id: str, unit_of_measurement: str | None
+    instance: Recorder,
+    statistic_id: str,
+    new_statistic_id: str | None | UndefinedType,
+    new_unit_of_measurement: str | None | UndefinedType,
 ) -> None:
     """Update statistics metadata for a statistic_id."""
-    with session_scope(session=instance.get_session()) as session:
-        session.query(StatisticsMeta).filter(
-            StatisticsMeta.statistic_id == statistic_id
-        ).update({StatisticsMeta.unit_of_measurement: unit_of_measurement})
+    if new_unit_of_measurement is not UNDEFINED:
+        with session_scope(session=instance.get_session()) as session:
+            session.query(StatisticsMeta).filter(
+                StatisticsMeta.statistic_id == statistic_id
+            ).update({StatisticsMeta.unit_of_measurement: new_unit_of_measurement})
+    if new_statistic_id is not UNDEFINED:
+        with session_scope(
+            session=instance.get_session(),
+            exception_filter=_filter_unique_constraint_integrity_error(instance),
+        ) as session:
+            session.query(StatisticsMeta).filter(
+                (StatisticsMeta.statistic_id == statistic_id)
+                & (StatisticsMeta.source == DOMAIN)
+            ).update({StatisticsMeta.statistic_id: new_statistic_id})
 
 
 def list_statistic_ids(
@@ -914,29 +975,31 @@ def _reduce_statistics_per_month(
 def _statistics_during_period_stmt(
     start_time: datetime,
     end_time: datetime | None,
-    statistic_ids: list[str] | None,
     metadata_ids: list[int] | None,
-    table: type[Statistics | StatisticsShortTerm],
-) -> StatementLambdaElement:
-    """Prepare a database query for statistics during a given period.
-
-    This prepares a lambda_stmt query, so we don't insert the parameters yet.
-    """
-    if table == StatisticsShortTerm:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    else:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS))
-
-    stmt += lambda q: q.filter(table.start >= start_time)
-
+) -> Select:
+    """Prepare a database query for statistics during a given period."""
+    stmt = select(*QUERY_STATISTICS).filter(Statistics.start >= start_time)
     if end_time is not None:
-        stmt += lambda q: q.filter(table.start < end_time)
+        stmt = stmt.filter(Statistics.start < end_time)
+    if metadata_ids:
+        stmt = stmt.filter(Statistics.metadata_id.in_(metadata_ids))
+    return stmt.order_by(Statistics.metadata_id, Statistics.start)
 
-    if statistic_ids is not None:
-        stmt += lambda q: q.filter(table.metadata_id.in_(metadata_ids))
 
-    stmt += lambda q: q.order_by(table.metadata_id, table.start)
-    return stmt
+def _statistics_during_period_stmt_short_term(
+    start_time: datetime,
+    end_time: datetime | None,
+    metadata_ids: list[int] | None,
+) -> Select:
+    """Prepare a database query for short term statistics during a given period."""
+    stmt = select(*QUERY_STATISTICS_SHORT_TERM).filter(
+        StatisticsShortTerm.start >= start_time
+    )
+    if end_time is not None:
+        stmt = stmt.filter(StatisticsShortTerm.start < end_time)
+    if metadata_ids:
+        stmt = stmt.filter(StatisticsShortTerm.metadata_id.in_(metadata_ids))
+    return stmt.order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start)
 
 
 def statistics_during_period(
@@ -965,13 +1028,13 @@ def statistics_during_period(
 
         if period == "5minute":
             table = StatisticsShortTerm
+            stmt = _statistics_during_period_stmt_short_term(
+                start_time, end_time, metadata_ids
+            )
         else:
             table = Statistics
-
-        stmt = _statistics_during_period_stmt(
-            start_time, end_time, statistic_ids, metadata_ids, table
-        )
-        stats = execute_stmt_lambda_element(session, stmt)
+            stmt = _statistics_during_period_stmt(start_time, end_time, metadata_ids)
+        stats = execute_stmt(session, stmt)
 
         if not stats:
             return {}
@@ -1002,19 +1065,27 @@ def statistics_during_period(
 def _get_last_statistics_stmt(
     metadata_id: int,
     number_of_stats: int,
-    table: type[Statistics | StatisticsShortTerm],
-) -> StatementLambdaElement:
+) -> Select:
     """Generate a statement for number_of_stats statistics for a given statistic_id."""
-    if table == StatisticsShortTerm:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    else:
-        stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS))
-    stmt += (
-        lambda q: q.filter_by(metadata_id=metadata_id)
-        .order_by(table.metadata_id, table.start.desc())
+    return (
+        select(*QUERY_STATISTICS)
+        .filter_by(metadata_id=metadata_id)
+        .order_by(Statistics.metadata_id, Statistics.start.desc())
         .limit(number_of_stats)
     )
-    return stmt
+
+
+def _get_last_statistics_short_term_stmt(
+    metadata_id: int,
+    number_of_stats: int,
+) -> Select:
+    """Generate a statement for number_of_stats short term statistics for a given statistic_id."""
+    return (
+        select(*QUERY_STATISTICS_SHORT_TERM)
+        .filter_by(metadata_id=metadata_id)
+        .order_by(StatisticsShortTerm.metadata_id, StatisticsShortTerm.start.desc())
+        .limit(number_of_stats)
+    )
 
 
 def _get_last_statistics(
@@ -1032,8 +1103,11 @@ def _get_last_statistics(
         if not metadata:
             return {}
         metadata_id = metadata[statistic_id][0]
-        stmt = _get_last_statistics_stmt(metadata_id, number_of_stats, table)
-        stats = execute_stmt_lambda_element(session, stmt)
+        if table == Statistics:
+            stmt = _get_last_statistics_stmt(metadata_id, number_of_stats)
+        else:
+            stmt = _get_last_statistics_short_term_stmt(metadata_id, number_of_stats)
+        stats = execute_stmt(session, stmt)
 
         if not stats:
             return {}
@@ -1069,12 +1143,9 @@ def get_last_short_term_statistics(
     )
 
 
-def _latest_short_term_statistics_stmt(
-    metadata_ids: list[int],
-) -> StatementLambdaElement:
-    """Create the statement for finding the latest short term stat rows."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTICS_SHORT_TERM))
-    most_recent_statistic_row = (
+def _generate_most_recent_statistic_row(metadata_ids: list[int]) -> Subquery:
+    """Generate the subquery to find the most recent statistic row."""
+    return (
         select(
             StatisticsShortTerm.metadata_id,
             func.max(StatisticsShortTerm.start).label("start_max"),
@@ -1082,7 +1153,15 @@ def _latest_short_term_statistics_stmt(
         .where(StatisticsShortTerm.metadata_id.in_(metadata_ids))
         .group_by(StatisticsShortTerm.metadata_id)
     ).subquery()
-    stmt += lambda s: s.join(
+
+
+def _latest_short_term_statistics_stmt(
+    metadata_ids: list[int],
+) -> Select:
+    """Create the statement for finding the latest short term stat rows."""
+    stmt = select(*QUERY_STATISTICS_SHORT_TERM)
+    most_recent_statistic_row = _generate_most_recent_statistic_row(metadata_ids)
+    return stmt.join(
         most_recent_statistic_row,
         (
             StatisticsShortTerm.metadata_id  # pylint: disable=comparison-with-callable
@@ -1090,7 +1169,6 @@ def _latest_short_term_statistics_stmt(
         )
         & (StatisticsShortTerm.start == most_recent_statistic_row.c.start_max),
     )
-    return stmt
 
 
 def get_latest_short_term_statistics(
@@ -1113,7 +1191,7 @@ def get_latest_short_term_statistics(
             if statistic_id in metadata
         ]
         stmt = _latest_short_term_statistics_stmt(metadata_ids)
-        stats = execute_stmt_lambda_element(session, stmt)
+        stats = execute_stmt(session, stmt)
         if not stats:
             return {}
 

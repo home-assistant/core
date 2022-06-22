@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Final
 
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import ProtectAdoptableDeviceModel
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
 
 
 @dataclass
@@ -40,6 +40,33 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         name="Reboot Device",
         ufp_press="reboot",
+        ufp_perm=PermRequired.WRITE,
+    ),
+)
+
+SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
+    ProtectButtonEntityDescription(
+        key="clear_tamper",
+        name="Clear Tamper",
+        icon="mdi:notification-clear-all",
+        ufp_press="clear_tamper",
+        ufp_perm=PermRequired.WRITE,
+    ),
+)
+
+CHIME_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
+    ProtectButtonEntityDescription(
+        key="play",
+        name="Play Chime",
+        device_class=DEVICE_CLASS_CHIME_BUTTON,
+        icon="mdi:play",
+        ufp_press="play",
+    ),
+    ProtectButtonEntityDescription(
+        key="play_buzzer",
+        name="Play Buzzer",
+        icon="mdi:play",
+        ufp_press="play_buzzer",
     ),
 )
 
@@ -53,7 +80,11 @@ async def async_setup_entry(
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
-        data, ProtectButton, all_descs=ALL_DEVICE_BUTTONS
+        data,
+        ProtectButton,
+        all_descs=ALL_DEVICE_BUTTONS,
+        chime_descs=CHIME_BUTTONS,
+        sense_descs=SENSOR_BUTTONS,
     )
 
     async_add_entities(entities)

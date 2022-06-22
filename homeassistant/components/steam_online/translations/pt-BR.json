@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "Lista restrita de amigos: consulte a documenta\u00e7\u00e3o sobre como ver todos os outros amigos"
+        },
         "step": {
             "init": {
                 "data": {
