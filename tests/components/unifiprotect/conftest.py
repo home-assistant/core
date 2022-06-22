@@ -11,25 +11,31 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     NVR,
     Bootstrap,
     Camera,
     Chime,
     Doorlock,
+    Event,
+    EventType,
     Light,
     Liveview,
+    ModelType,
     ProtectAdoptableDeviceModel,
     Sensor,
     Viewer,
     WSSubscriptionMessage,
 )
+from pyunifiprotect.data.bootstrap import ProtectDeviceRef
 from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.data import ProtectData
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
@@ -291,3 +297,70 @@ def regenerate_device_ids(device: ProtectAdoptableDeviceModel) -> None:
     """Regenerate the IDs on UFP device."""
 
     device.id, device.mac = generate_random_ids()
+
+
+def add_device_ref(bootstrap: Bootstrap, device: ProtectAdoptableDeviceModel) -> None:
+    """Manually add device ref to bootstrap for lookup."""
+
+    ref = ProtectDeviceRef(id=device.id, model=device.model)
+    bootstrap.id_lookup[device.id] = ref
+    bootstrap.mac_lookup[device.mac.lower()] = ref
+
+
+async def remove_entities(
+    hass: HomeAssistant,
+    ufp_devices: list[ProtectAdoptableDeviceModel],
+) -> None:
+    """Remove all entities for give Protect devices."""
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    import logging
+
+    logger = logging.getLogger("homeassistant.components.unifiprotect.data")
+    logger.warning("=====")
+
+    for ufp_device in ufp_devices:
+        if not ufp_device.is_adopted_by_us:
+            continue
+
+        name = ufp_device.display_name.replace(" ", "_").lower()
+        entity = entity_registry.async_get(f"{Platform.SENSOR}.{name}_uptime")
+        assert entity is not None
+
+        device_id = entity.device_id
+        for reg in list(entity_registry.entities.values()):
+            if reg.device_id == device_id:
+                logger.warning("%s %s", device_id, reg.entity_id)
+                entity_registry.async_remove(reg.entity_id)
+        device_registry.async_remove_device(device_id)
+
+    await hass.async_block_till_done()
+    logger.warning(list(entity_registry.entities.keys()))
+
+
+async def adopt_devices(
+    hass: HomeAssistant,
+    api: ProtectApiClient,
+    ufp_devices: list[ProtectAdoptableDeviceModel],
+):
+    """Emits WS to re-adopt give Protect devices."""
+
+    for ufp_device in ufp_devices:
+        mock_msg = Mock()
+        mock_msg.changed_data = {}
+        mock_msg.new_obj = Event(
+            api=ufp_device.api,
+            id=random_hex(24),
+            smart_detect_types=[],
+            smart_detect_event_ids=[],
+            type=EventType.DEVICE_ADOPTED,
+            start=dt_util.utcnow(),
+            score=100,
+            metadata={"device_id": ufp_device.id},
+            model=ModelType.EVENT,
+        )
+        api.ws_subscription(mock_msg)
+
+    await hass.async_block_till_done()

@@ -23,7 +23,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts, regenerate_device_ids
+from .conftest import (
+    MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
+    assert_entity_counts,
+    regenerate_device_ids,
+    remove_entities,
+)
 
 
 @pytest.fixture(name="doorlock")
@@ -51,10 +58,16 @@ async def doorlock_fixture(
         lock_obj.id: lock_obj,
         no_lock_obj.id: no_lock_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, lock_obj)
+    add_device_ref(mock_entry.api.bootstrap, no_lock_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+    await remove_entities(hass, [lock_obj, no_lock_obj])
+    assert_entity_counts(hass, Platform.LOCK, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [lock_obj, no_lock_obj])
     assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
     yield (lock_obj, "lock.test_lock_lock")

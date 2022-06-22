@@ -8,6 +8,7 @@ from pyunifiprotect.api import ProtectApiClient
 from pyunifiprotect.data import (
     Camera as UFPCamera,
     CameraChannel,
+    ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     StateType,
 )
@@ -15,6 +16,7 @@ from pyunifiprotect.data import (
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -23,6 +25,8 @@ from .const import (
     ATTR_FPS,
     ATTR_HEIGHT,
     ATTR_WIDTH,
+    DISPATCH_ADOPT,
+    DISPATCH_CHANNELS,
     DOMAIN,
 )
 from .data import ProtectData
@@ -32,10 +36,12 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def get_camera_channels(
-    protect: ProtectApiClient,
+    protect: ProtectApiClient, ufp_device: UFPCamera | None = None
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
     """Get all the camera channels."""
-    for camera in protect.bootstrap.cameras.values():
+
+    devices = protect.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+    for camera in devices:
         if not camera.is_adopted_by_us:
             continue
 
@@ -60,17 +66,12 @@ def get_camera_channels(
             yield camera, camera.channels[0], True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Discover cameras on a UniFi Protect NVR."""
-    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+def _async_camera_entities(
+    data: ProtectData, ufp_device: UFPCamera | None = None
+) -> list[ProtectDeviceEntity]:
     disable_stream = data.disable_stream
-
-    entities = []
-    for camera, channel, is_default in get_camera_channels(data.api):
+    entities: list[ProtectDeviceEntity] = []
+    for camera, channel, is_default in get_camera_channels(data.api, ufp_device):
         # do not enable streaming for package camera
         # 2 FPS causes a lot of buferring
         entities.append(
@@ -95,6 +96,36 @@ async def async_setup_entry(
                     disable_stream,
                 )
             )
+    return entities
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Discover cameras on a UniFi Protect NVR."""
+    data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        if not isinstance(device, UFPCamera):
+            return
+
+        if len(device.channels) == 0:
+            data.async_add_pending_camera_id(device.id)
+            return
+
+        entities = _async_camera_entities(data, ufp_device=device)
+        async_add_entities(entities)
+
+    async_dispatcher_connect(
+        hass, f"{DOMAIN}.{entry.entry_id}.{DISPATCH_ADOPT}", _add_new_device
+    )
+    async_dispatcher_connect(
+        hass, f"{DOMAIN}.{entry.entry_id}.{DISPATCH_CHANNELS}", _add_new_device
+    )
+
+    entities = _async_camera_entities(data)
     async_add_entities(entities)
 
 

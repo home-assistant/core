@@ -44,9 +44,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
+    remove_entities,
     reset_objects,
     time_changed,
 )
@@ -85,6 +88,7 @@ async def sensor_fixture(
     mock_entry.api.bootstrap.sensors = {
         sensor_obj.id: sensor_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, sensor_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
@@ -121,11 +125,15 @@ async def sensor_none_fixture(
     mock_entry.api.bootstrap.sensors = {
         sensor_obj.id: sensor_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, sensor_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    # 4 from all, 5 from sense, 12 NVR
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    await remove_entities(hass, [sensor_obj])
+    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
+    await adopt_devices(hass, mock_entry.api, [sensor_obj])
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     yield sensor_obj
@@ -171,6 +179,7 @@ async def camera_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()

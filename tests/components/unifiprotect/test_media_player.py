@@ -26,7 +26,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts, regenerate_device_ids
+from .conftest import (
+    MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
+    assert_entity_counts,
+    regenerate_device_ids,
+    remove_entities,
+)
 
 
 @pytest.fixture(name="camera")
@@ -60,10 +67,16 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
         no_camera_obj.id: no_camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
+    add_device_ref(mock_entry.api.bootstrap, no_camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
+    await remove_entities(hass, [camera_obj, no_camera_obj])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [camera_obj, no_camera_obj])
     assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
     yield (camera_obj, "media_player.test_camera_speaker")

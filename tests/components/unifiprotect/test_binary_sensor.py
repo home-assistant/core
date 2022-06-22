@@ -34,9 +34,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
     regenerate_device_ids,
+    remove_entities,
     reset_objects,
 )
 
@@ -83,10 +86,16 @@ async def camera_fixture(
         camera_obj.id: camera_obj,
         no_camera_obj.id: no_camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
+    add_device_ref(mock_entry.api.bootstrap, no_camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 9)
+    await remove_entities(hass, [camera_obj, no_camera_obj])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 6)
+    await adopt_devices(hass, mock_entry.api, [camera_obj, no_camera_obj])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 9, 9)
 
     yield camera_obj
@@ -115,10 +124,15 @@ async def light_fixture(
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, light_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
+    await remove_entities(hass, [light_obj])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 6)
+    await adopt_devices(hass, mock_entry.api, [light_obj])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
 
     yield light_obj
@@ -151,10 +165,15 @@ async def camera_none_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    await remove_entities(hass, [camera_obj])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [camera_obj])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
 
     yield camera_obj
@@ -192,10 +211,15 @@ async def sensor_fixture(
     mock_entry.api.bootstrap.sensors = {
         sensor_obj.id: sensor_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, sensor_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
+    await remove_entities(hass, [sensor_obj])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 6)
+    await adopt_devices(hass, mock_entry.api, [sensor_obj])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
 
     yield sensor_obj
@@ -228,10 +252,15 @@ async def sensor_none_fixture(
     mock_entry.api.bootstrap.sensors = {
         sensor_obj.id: sensor_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, sensor_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
+    await remove_entities(hass, [sensor_obj])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 6, 6)
+    await adopt_devices(hass, mock_entry.api, [sensor_obj])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 10, 10)
 
     yield sensor_obj

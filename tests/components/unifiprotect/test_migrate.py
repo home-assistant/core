@@ -14,7 +14,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, generate_random_ids, regenerate_device_ids
+from .conftest import (
+    MockEntityFixture,
+    add_device_ref,
+    generate_random_ids,
+    regenerate_device_ids,
+)
 
 
 async def test_migrate_reboot_button(
@@ -36,10 +41,8 @@ async def test_migrate_reboot_button(
         light1.id: light1,
         light2.id: light2,
     }
-    mock_entry.api.bootstrap.id_lookup = {
-        light1.id: ProtectDeviceRef(id=light1.id, model=light1.model),
-        light2.id: ProtectDeviceRef(id=light2.id, model=light2.model),
-    }
+    add_device_ref(mock_entry.api.bootstrap, light1)
+    add_device_ref(mock_entry.api.bootstrap, light2)
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
 
     registry = er.async_get(hass)
@@ -173,9 +176,7 @@ async def test_migrate_reboot_button_fail(
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
     }
-    mock_entry.api.bootstrap.id_lookup = {
-        light1.id: ProtectDeviceRef(id=light1.id, model=light1.model),
-    }
+    add_device_ref(mock_entry.api.bootstrap, light1)
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
 
     registry = er.async_get(hass)
@@ -219,9 +220,7 @@ async def test_migrate_device_mac_button_fail(
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
     }
-    mock_entry.api.bootstrap.id_lookup = {
-        light1.id: ProtectDeviceRef(id=light1.id, model=light1.model)
-    }
+    add_device_ref(mock_entry.api.bootstrap, light1)
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
 
     registry = er.async_get(hass)
