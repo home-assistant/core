@@ -17,7 +17,6 @@ from .const import (
     CONF_AUTHORIZATION,
     CONF_DRIVING_SPEED,
     CONF_MAX_GPS_ACCURACY,
-    CONF_SCAN_INTERVAL,
     DEFAULT_OPTIONS,
     DOMAIN,
     LOGGER,
@@ -25,6 +24,9 @@ from .const import (
     SHOW_DRIVING,
 )
 from .helpers import get_life360_api, get_life360_authorization
+
+LIMIT_GPS_ACC = "limit_gps_acc"
+SET_DRIVE_SPEED = "set_drive_speed"
 
 
 def account_schema(
@@ -157,15 +159,13 @@ def _account_options_schema(options: Mapping[str, Any]) -> dict[vol.Marker, Any]
     def_max_gps = options[CONF_MAX_GPS_ACCURACY] or vol.UNDEFINED
     def_set_drive_speed = options[CONF_DRIVING_SPEED] is not None
     def_speed = options[CONF_DRIVING_SPEED] or vol.UNDEFINED
-    def_scan_interval = options[CONF_SCAN_INTERVAL]
     def_show_driving = options[SHOW_DRIVING]
 
     return {
-        vol.Required("limit_gps_acc", default=def_limit_gps_acc): bool,
+        vol.Required(LIMIT_GPS_ACC, default=def_limit_gps_acc): bool,
         vol.Optional(CONF_MAX_GPS_ACCURACY, default=def_max_gps): vol.Coerce(float),
-        vol.Required("set_drive_speed", default=def_set_drive_speed): bool,
+        vol.Required(SET_DRIVE_SPEED, default=def_set_drive_speed): bool,
         vol.Optional(CONF_DRIVING_SPEED, default=def_speed): vol.Coerce(float),
-        vol.Optional(CONF_SCAN_INTERVAL, default=def_scan_interval): vol.Coerce(float),
         vol.Optional(SHOW_DRIVING, default=def_show_driving): bool,
     }
 
@@ -180,8 +180,8 @@ def _extract_account_options(user_input: dict) -> dict[str, Any]:
         # (meaning option should be included)?
         incl = user_input.pop(
             {
-                CONF_MAX_GPS_ACCURACY: "limmit_gps_acc",
-                CONF_DRIVING_SPEED: "set_drive_speed",
+                CONF_MAX_GPS_ACCURACY: LIMIT_GPS_ACC,
+                CONF_DRIVING_SPEED: SET_DRIVE_SPEED,
             }.get(key),
             True,
         )

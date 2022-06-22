@@ -37,7 +37,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the device tracker platform."""
-    coordinator = hass.data[DOMAIN].coordinators[entry.unique_id]
+    coordinator = hass.data[DOMAIN].coordinators[entry.entry_id]
     tracked_members = hass.data[DOMAIN].tracked_members
     logged_circles = hass.data[DOMAIN].logged_circles
     logged_places = hass.data[DOMAIN].logged_places
@@ -138,7 +138,7 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
                 if bad_accuracy:
                     LOGGER.warning(
                         "%s: Ignoring location update because "
-                        "expected GPS accuracy (%i) is not met: %i",
+                        "expected GPS accuracy (%0.1f) is not met: %i",
                         self.entity_id,
                         max_gps_acc,
                         self.location_accuracy,

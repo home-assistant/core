@@ -2,13 +2,10 @@
 
 from __future__ import annotations
 
-from contextlib import suppress
-from datetime import timedelta
-
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PREFIX, CONF_USERNAME, Platform
+from homeassistant.const import CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -16,23 +13,17 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
     CONF_AUTHORIZATION,
-    CONF_CIRCLES,
     CONF_DRIVING_SPEED,
-    CONF_ERROR_THRESHOLD,
     CONF_MAX_GPS_ACCURACY,
-    CONF_MAX_UPDATE_WAIT,
-    CONF_MEMBERS,
-    CONF_SCAN_INTERVAL,
     CONF_SHOW_AS_STATE,
-    CONF_WARNING_THRESHOLD,
     DEFAULT_OPTIONS,
-    DEFAULT_SCAN_INTERVAL_SEC,
     DEFAULT_SCAN_INTERVAL_TD,
     DOMAIN,
     LOGGER,
     OPTIONS,
     SHOW_DRIVING,
     SHOW_MOVING,
+    UNUSED_CONF,
 )
 from .helpers import Life360Data, get_life360_api, get_life360_data, init_integ_data
 
@@ -40,23 +31,10 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 
 SHOW_AS_STATE_OPTS = [SHOW_DRIVING, SHOW_MOVING]
 
-_UNUSED_CONF = (
-    CONF_CIRCLES,
-    CONF_ERROR_THRESHOLD,
-    CONF_MAX_UPDATE_WAIT,
-    CONF_MEMBERS,
-    CONF_PREFIX,
-    CONF_WARNING_THRESHOLD,
-)
-
-
 LIFE360_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_DRIVING_SPEED): vol.Coerce(float),
         vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL_SEC): vol.Coerce(
-            float
-        ),
         vol.Optional(CONF_SHOW_AS_STATE, default=[]): vol.All(
             cv.ensure_list, [vol.In(SHOW_AS_STATE_OPTS)]
         ),
@@ -66,20 +44,13 @@ LIFE360_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema({DOMAIN: LIFE360_SCHEMA}, extra=vol.ALLOW_EXTRA)
 
 
-def _update_interval(entry: ConfigEntry) -> timedelta:
-    try:
-        return timedelta(seconds=entry.options[CONF_SCAN_INTERVAL])
-    except KeyError:
-        return DEFAULT_SCAN_INTERVAL_TD
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up integration."""
     cfg_options = {}
     if conf := config.get(DOMAIN):
         LOGGER.warning("Setup via configuration no longer supported")
         # Need config options, if any, for migration.
-        if unused_conf := [k for k in conf if k in _UNUSED_CONF]:
+        if unused_conf := [k for k in conf if k in UNUSED_CONF]:
             LOGGER.warning(
                 "The following options are no longer supported: %s",
                 ", ".join(unused_conf),
@@ -119,41 +90,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Update Life360 data."""
         return await get_life360_data(hass, api)
 
-    if not (coordinator := hass.data[DOMAIN].coordinators.get(entry.unique_id)):
-        coordinator = DataUpdateCoordinator(
-            hass,
-            LOGGER,
-            name=f"{DOMAIN} ({entry.unique_id})",
-            update_interval=_update_interval(entry),
-            update_method=async_update_data,
-        )
-        hass.data[DOMAIN].coordinators[entry.unique_id] = coordinator
+    coordinator = DataUpdateCoordinator(
+        hass,
+        LOGGER,
+        name=f"{DOMAIN} ({entry.unique_id})",
+        update_interval=DEFAULT_SCAN_INTERVAL_TD,
+        update_method=async_update_data,
+    )
 
     await coordinator.async_config_entry_first_refresh()
 
+    hass.data[DOMAIN].coordinators[entry.entry_id] = coordinator
+
     # Set up components for our platforms.
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    # Add event listener for option flow changes
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload config entry."""
+    del hass.data[DOMAIN].coordinators[entry.entry_id]
+
     # Unload components for our platforms.
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Remove config entry."""
-    with suppress(KeyError):
-        del hass.data[DOMAIN].coordinators[entry.unique_id]
-
-
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Handle options update."""
-    hass.data[DOMAIN].coordinators[entry.unique_id].update_interval = _update_interval(
-        entry
-    )
