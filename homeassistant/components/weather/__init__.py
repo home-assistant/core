@@ -816,7 +816,6 @@ class WeatherEntity(Entity):
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         assert self.registry_entry
-        weather_options = self.registry_entry.options.get(DOMAIN)
         self._weather_option_temperature_unit = None
         self._weather_option_pressure_unit = None
         self._weather_option_precipitation_unit = None
