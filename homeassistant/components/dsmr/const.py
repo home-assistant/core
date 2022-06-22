@@ -257,12 +257,12 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
         name="Max current per phase",
-        dsmr_versions={"5B"},        
+        dsmr_versions={"5B"},
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),    
+    ),
     DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         name="Energy Consumption (total)",
@@ -305,5 +305,5 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         force_update=True,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
-    ),    
+    ),
 )
