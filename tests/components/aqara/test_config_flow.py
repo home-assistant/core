@@ -4,12 +4,8 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.aqara.const import (
-    CONF_COUNTRY_CODE,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.aqara.const import CONF_COUNTRY_CODE, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 MOCK_COUNTRY = "China"
