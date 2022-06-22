@@ -1,7 +1,7 @@
 """Fixtures for WLED integration tests."""
 from collections.abc import Generator
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from wled import Device as WLEDDevice
@@ -25,10 +25,22 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[None, None, None]:
+def mock_setup_entry() -> Generator[None, AsyncMock, None]:
     """Mock setting up a config entry."""
-    with patch("homeassistant.components.wled.async_setup_entry", return_value=True):
-        yield
+    with patch(
+        "homeassistant.components.wled.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
+def mock_onboarding() -> Generator[None, MagicMock, None]:
+    """Mock that Home Assistant is currently onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded",
+        return_value=False,
+    ) as mock_onboarding:
+        yield mock_onboarding
 
 
 @pytest.fixture
