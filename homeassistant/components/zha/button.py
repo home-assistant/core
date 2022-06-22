@@ -59,7 +59,7 @@ async def async_setup_entry(
 class ZHAButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button."""
 
-    _command_name: str = None
+    _command_name: str
 
     def __init__(
         self,
@@ -118,7 +118,7 @@ class ZHAIdentifyButton(ZHAButton):
 class ZHAAttributeButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button, which stes value to an attribute."""
 
-    _attribute_name: str = None
+    _attribute_name: str
     _attribute_value: Any = None
 
     def __init__(
