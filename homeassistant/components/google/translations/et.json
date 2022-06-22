@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "Kasutaja on juba seadistatud",
             "already_in_progress": "Seadistamine on juba k\u00e4imas",
+            "cannot_connect": "\u00dchendamine nurjus",
             "code_expired": "Tuvastuskood on aegunud v\u00f5i mandaadi seadistus on vale, proovi uuesti.",
             "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
             "missing_configuration": "Komponent pole seadistatud. Palun loe dokumentatsiooni.",
