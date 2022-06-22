@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import struct
-from typing import Any, List, Tuple
+from typing import Any, cast
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
@@ -28,19 +28,19 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
+    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_COOL,
+    CONF_HVAC_MODE_DRY,
+    CONF_HVAC_MODE_FAN_ONLY,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
     CONF_STEP,
     CONF_TARGET_TEMP,
-    CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER,
-    CONF_HVAC_MODE_OFF,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY,
-    CONF_HVAC_MODE_AUTO,
     DataType,
 )
 from .modbus import ModbusHub
@@ -96,10 +96,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         if CONF_HVAC_MODE_REGISTER in config:
             self._hvac_mode_register = config[CONF_HVAC_MODE_REGISTER]
-            self._attr_hvac_modes = []
+            self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
-            self._hvac_mode_mapping: List[Tuple[int, HVACMode]] = []
-            for (cm, m) in [
+            self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            for (conf_value, hvac_mode) in (
                 (CONF_HVAC_MODE_OFF, HVACMode.OFF),
                 (CONF_HVAC_MODE_HEAT, HVACMode.HEAT),
                 (CONF_HVAC_MODE_COOL, HVACMode.COOL),
@@ -107,11 +107,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 (CONF_HVAC_MODE_DRY, HVACMode.DRY),
                 (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
                 (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
-            ]:
+            ):
 
-                if cm in config:
-                    self._hvac_mode_mapping.append((config[cm], m))
-                    self._attr_hvac_modes.append(m)
+                if conf_value in config:
+                    self._hvac_mode_mapping.append((config[conf_value], hvac_mode))
+                    self._attr_hvac_modes.append(hvac_mode)
 
         else:
             # No HVAC modes defined
@@ -282,4 +282,4 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         self._lazy_errors = self._lazy_error_count
         self._attr_available = True
-        return result.registers[0]
+        return int(result.registers[0])

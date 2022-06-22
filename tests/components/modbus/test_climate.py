@@ -11,17 +11,17 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
-    CONF_LAZY_ERROR,
-    CONF_TARGET_TEMP,
-    CONF_HVAC_MODE_REGISTER,
-    CONF_HVAC_ONOFF_REGISTER,
-    CONF_HVAC_MODE_OFF,
-    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_AUTO,
     CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_HEAT_COOL,
     CONF_HVAC_MODE_DRY,
     CONF_HVAC_MODE_FAN_ONLY,
-    CONF_HVAC_MODE_AUTO,
+    CONF_HVAC_MODE_HEAT,
+    CONF_HVAC_MODE_HEAT_COOL,
+    CONF_HVAC_MODE_OFF,
+    CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_ONOFF_REGISTER,
+    CONF_LAZY_ERROR,
+    CONF_TARGET_TEMP,
     MODBUS_DOMAIN,
     DataType,
 )
@@ -125,6 +125,7 @@ async def test_config_climate(hass, mock_modbus):
     ],
 )
 async def test_config_hvac_mode_register(hass, mock_modbus):
+    """Run configuration test for mode register."""
     state = hass.states.get(ENTITY_ID)
     assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.HEAT in state.attributes[ATTR_HVAC_MODES]
@@ -149,6 +150,7 @@ async def test_config_hvac_mode_register(hass, mock_modbus):
     ],
 )
 async def test_config_hvac_onoff_register(hass, mock_modbus):
+    """Run configuration test for On/Off register."""
     state = hass.states.get(ENTITY_ID)
     assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
     assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
@@ -383,7 +385,7 @@ async def test_service_climate_set_temperature(
     ],
 )
 async def test_service_set_mode(hass, hvac_mode, result, mock_modbus, mock_ha):
-    """Test set mode"""
+    """Test set mode."""
     mock_modbus.read_holding_registers.return_value = ReadResult(result)
     await hass.services.async_call(
         CLIMATE_DOMAIN,
