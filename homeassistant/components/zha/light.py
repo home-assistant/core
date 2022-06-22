@@ -340,13 +340,13 @@ class BaseLight(LogMixin, light.LightEntity):
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
-    _attr_supported_color_modes: set(ColorMode)
+    _attr_supported_color_modes: set[ColorMode]
     _REFRESH_INTERVAL = (45, 75)
 
     def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
         self._state = bool(self._on_off_channel.on_off)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
@@ -391,6 +391,7 @@ class Light(BaseLight, ZhaEntity):
         if len(self._attr_supported_color_modes) == 1:
             self._color_mode = next(iter(self._attr_supported_color_modes))
         else:  # Light supports color_temp + hs, determine which mode the light is in
+            assert self._color_channel
             if self._color_channel.color_mode == Color.ColorMode.Color_temperature:
                 self._color_mode = ColorMode.COLOR_TEMP
             else:
@@ -440,6 +441,7 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
+        assert self._cancel_refresh_handle
         self._cancel_refresh_handle()
         await super().async_will_remove_from_hass()
 
