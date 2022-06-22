@@ -16,3 +16,74 @@ assume_state:
           options:
             - "on"
             - "off"
+enable_timer:
+  name: Enable Timer
+  description: Enable the timer with custom time.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    minutes:
+      name: Minutes
+      description: Countdown for timer (for timer state on)
+      required: false
+      example: 30
+      selector:
+        number:
+          min: 0
+          step: 1
+          mode: box
+enable_pure_boost:
+  name: Enable Pure Boost
+  description: Enable and configure Pure Boost settings.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate
+  fields:
+    ac_integration:
+      name: AC Integration
+      description: Integrate with Air Conditioner.
+      required: false
+      example: true
+      selector:
+        boolean:
+    geo_integration:
+      name: Geo Integration
+      description: Integrate with Presence.
+      required: false
+      example: true
+      selector:
+        boolean:
+    indoor_integration:
+      name: Indoor Air Quality
+      description: Integrate with checking indoor air quality.
+      required: false
+      example: true
+      selector:
+        boolean:
+    outdoor_integration:
+      name: Outdoor Air Quality
+      description: Integrate with checking outdoor air quality.
+      required: false
+      example: true
+      selector:
+        boolean:
+    sensitivity:
+      name: Sensitivity
+      description: Set the sensitivity for Pure Boost.
+      required: false
+      example: "Normal"
+      selector:
+        select:
+          options:
+            - "Normal"
+            - "Sensitive"
+disable_pure_boost:
+  name: Disable Pure Boost
+  description: Disable Pure Boost.
+  target:
+    entity:
+      integration: sensibo
+      domain: climate

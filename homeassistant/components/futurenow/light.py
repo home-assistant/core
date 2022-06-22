@@ -6,9 +6,8 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_NAME, CONF_PORT
@@ -110,8 +109,8 @@ class FutureNowLight(LightEntity):
     def color_mode(self) -> str:
         """Return the color mode of the light."""
         if self._dimmable:
-            return COLOR_MODE_BRIGHTNESS
-        return COLOR_MODE_ONOFF
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
 
     @property
     def supported_color_modes(self) -> set[str] | None:

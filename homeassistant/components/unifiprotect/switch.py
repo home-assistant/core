@@ -3,10 +3,14 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import Any, Generic
+from typing import Any
 
-from pyunifiprotect.data import Camera, RecordingMode, VideoMode
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.data import (
+    Camera,
+    ProtectAdoptableDeviceModel,
+    RecordingMode,
+    VideoMode,
+)
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -17,23 +21,20 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
+from .utils import async_get_is_highfps
 
 _LOGGER = logging.getLogger(__name__)
 
 
 @dataclass
 class ProtectSwitchEntityDescription(
-    ProtectSetableKeysMixin, SwitchEntityDescription, Generic[T]
+    ProtectSetableKeysMixin[T], SwitchEntityDescription
 ):
     """Describes UniFi Protect Switch entity."""
 
 
 _KEY_PRIVACY_MODE = "privacy_mode"
-
-
-def _get_is_highfps(obj: Camera) -> bool:
-    return bool(obj.video_mode == VideoMode.HIGH_FPS)
 
 
 async def _set_highfps(obj: Camera, value: bool) -> None:
@@ -43,7 +44,7 @@ async def _set_highfps(obj: Camera, value: bool) -> None:
         await obj.set_video_mode(VideoMode.DEFAULT)
 
 
-ALL_DEVICES_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
         key="ssh",
         name="SSH Enabled",
@@ -52,10 +53,8 @@ ALL_DEVICES_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="is_ssh_enabled",
         ufp_set_method="set_ssh",
+        ufp_perm=PermRequired.WRITE,
     ),
-)
-
-CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
         key="status_light",
         name="Status Light On",
@@ -64,6 +63,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_led_status",
         ufp_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="hdr_mode",
@@ -73,6 +73,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_hdr",
         ufp_value="hdr_mode",
         ufp_set_method="set_hdr",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription[Camera](
         key="high_fps",
@@ -80,8 +81,9 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:video-high-definition",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value_fn=_get_is_highfps,
+        ufp_value_fn=async_get_is_highfps,
         ufp_set_method_fn=_set_highfps,
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key=_KEY_PRIVACY_MODE,
@@ -90,6 +92,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_privacy_mask",
         ufp_value="is_privacy_on",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="system_sounds",
@@ -99,6 +102,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_speaker",
         ufp_value="speaker_settings.are_system_sounds_enabled",
         ufp_set_method="set_system_sounds",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_name",
@@ -107,6 +111,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_name_enabled",
         ufp_set_method="set_osd_name",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_date",
@@ -115,6 +120,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_date_enabled",
         ufp_set_method="set_osd_date",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_logo",
@@ -123,6 +129,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_logo_enabled",
         ufp_set_method="set_osd_logo",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="osd_bitrate",
@@ -131,24 +138,56 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="osd_settings.is_debug_enabled",
         ufp_set_method="set_osd_bitrate",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="motion",
+        name="Detections: Motion",
+        icon="mdi:run-fast",
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="recording_settings.enable_motion_detection",
+        ufp_set_method="set_motion_detection",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_person",
         name="Detections: Person",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="can_detect_person",
         ufp_value="is_person_detection_on",
         ufp_set_method="set_person_detection",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="smart_vehicle",
         name="Detections: Vehicle",
         icon="mdi:car",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="feature_flags.has_smart_detect",
+        ufp_required_field="can_detect_vehicle",
         ufp_value="is_vehicle_detection_on",
         ufp_set_method="set_vehicle_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_face",
+        name="Detections: Face",
+        icon="mdi:human-greeting",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_face",
+        ufp_value="is_face_detection_on",
+        ufp_set_method="set_face_detection",
+        ufp_perm=PermRequired.WRITE,
+    ),
+    ProtectSwitchEntityDescription(
+        key="smart_package",
+        name="Detections: Package",
+        icon="mdi:package-variant-closed",
+        entity_category=EntityCategory.CONFIG,
+        ufp_required_field="can_detect_package",
+        ufp_value="is_package_detection_on",
+        ufp_set_method="set_package_detection",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -160,6 +199,7 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="motion",
@@ -168,6 +208,7 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="motion_settings.is_enabled",
         ufp_set_method="set_motion_status",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="temperature",
@@ -176,6 +217,7 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="temperature_settings.is_enabled",
         ufp_set_method="set_temperature_status",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="humidity",
@@ -184,6 +226,7 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="humidity_settings.is_enabled",
         ufp_set_method="set_humidity_status",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="light",
@@ -192,6 +235,7 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="light_settings.is_enabled",
         ufp_set_method="set_light_status",
+        ufp_perm=PermRequired.WRITE,
     ),
     ProtectSwitchEntityDescription(
         key="alarm",
@@ -199,11 +243,22 @@ SENSE_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="alarm_settings.is_enabled",
         ufp_set_method="set_alarm_status",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
 
 LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="ssh",
+        name="SSH Enabled",
+        icon="mdi:lock",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="is_ssh_enabled",
+        ufp_set_method="set_ssh",
+        ufp_perm=PermRequired.WRITE,
+    ),
     ProtectSwitchEntityDescription(
         key="status_light",
         name="Status Light On",
@@ -211,6 +266,7 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="light_device_settings.is_indicator_enabled",
         ufp_set_method="set_status_light",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -222,6 +278,20 @@ DOORLOCK_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         ufp_value="led_settings.is_enabled",
         ufp_set_method="set_status_light",
+        ufp_perm=PermRequired.WRITE,
+    ),
+)
+
+VIEWER_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
+    ProtectSwitchEntityDescription(
+        key="ssh",
+        name="SSH Enabled",
+        icon="mdi:lock",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        ufp_value="is_ssh_enabled",
+        ufp_set_method="set_ssh",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -236,11 +306,11 @@ async def async_setup_entry(
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectSwitch,
-        all_descs=ALL_DEVICES_SWITCHES,
         camera_descs=CAMERA_SWITCHES,
         light_descs=LIGHT_SWITCHES,
         sense_descs=SENSE_SWITCHES,
         lock_descs=DOORLOCK_SWITCHES,
+        viewer_descs=VIEWER_SWITCHES,
     )
     async_add_entities(entities)
 

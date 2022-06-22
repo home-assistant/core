@@ -13,14 +13,12 @@
         "flow_title": "{model} ({name})",
         "step": {
             "discovery_confirm": {
-                "description": "Vuoi configurare il lettore {model} nome {name}?",
-                "title": "Kaleidescape"
+                "description": "Vuoi configurare il lettore {model} nome {name}?"
             },
             "user": {
                 "data": {
                     "host": "Host"
-                },
-                "title": "Configurazione di Kaleidescape"
+                }
             }
         }
     }

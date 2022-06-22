@@ -21,8 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Richte die Sony Bravia TV-Integration ein. Wenn du Probleme mit der Konfiguration hast, gehe zu: https://www.home-assistant.io/integrations/braviatv \n\nStelle sicher, dass dein Fernseher eingeschaltet ist.",
-                "title": "Sony Bravia TV"
+                "description": "Stelle sicher, dass dein Fernseher eingeschaltet ist, bevor du versuchst, ihn einzurichten."
             }
         }
     },

@@ -24,6 +24,7 @@ async def test_system_health_info_storage(hass, hass_storage):
         "data": {"config": {"resources": [], "views": []}},
     }
     assert await async_setup_component(hass, "lovelace", {})
+    await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
     assert info == {"dashboards": 1, "mode": "storage", "resources": 0, "views": 0}
 
@@ -32,6 +33,7 @@ async def test_system_health_info_yaml(hass):
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+    await hass.async_block_till_done()
     with patch(
         "homeassistant.components.lovelace.dashboard.load_yaml",
         return_value={"views": [{"cards": []}]},
@@ -44,6 +46,7 @@ async def test_system_health_info_yaml_not_found(hass):
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
     assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+    await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
     assert info == {
         "dashboards": 1,

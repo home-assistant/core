@@ -15,10 +15,9 @@
                     "latitude": "Enlem",
                     "longitude": "Boylam",
                     "mode": "Mod",
-                    "name": "Cihaz\u0131n ad\u0131"
+                    "name": "Ad"
                 },
-                "description": "OpenWeatherMap entegrasyonunu ayarlay\u0131n. API anahtar\u0131 olu\u015fturmak i\u00e7in https://openweathermap.org/appid adresine gidin.",
-                "title": "OpenWeatherMap"
+                "description": "API anahtar\u0131 olu\u015fturmak i\u00e7in https://openweathermap.org/appid adresine gidin."
             }
         }
     },

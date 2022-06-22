@@ -11,8 +11,7 @@
                     "device": "Yol veya URL",
                     "id": "ID",
                     "name": "Ad"
-                },
-                "title": "OpenTherm A\u011f Ge\u00e7idi"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Hassas Okuma",
                     "set_precision": "Hassasiyeti Ayarla",
                     "temporary_override_mode": "Ge\u00e7ici Ayar Noktas\u0131 Ge\u00e7ersiz K\u0131lma Modu"
-                },
-                "description": "OpenTherm A\u011f Ge\u00e7idi i\u00e7in Se\u00e7enekler"
+                }
             }
         }
     }

@@ -4,8 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Doorlock
-from pyunifiprotect.data.types import LockStatusType
+from pyunifiprotect.data import Doorlock, LockStatusType, ProtectModelWithId
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -57,8 +56,8 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
         self._attr_name = f"{self.device.name} Lock"
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
 
         self._attr_is_locked = False
         self._attr_is_locking = False

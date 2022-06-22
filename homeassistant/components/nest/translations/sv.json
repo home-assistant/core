@@ -27,7 +27,8 @@
     },
     "device_automation": {
         "trigger_type": {
-            "camera_motion": "R\u00f6relse uppt\u00e4ckt"
+            "camera_motion": "R\u00f6relse uppt\u00e4ckt",
+            "camera_person": "Person detekterad"
         }
     }
 }

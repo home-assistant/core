@@ -3,7 +3,12 @@ from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.light import (
+    ATTR_COLOR_MODE,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ColorMode,
+)
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_UNAVAILABLE
 
 from tests.components.homekit_controller.common import setup_test_component
 
@@ -98,13 +103,79 @@ async def test_switch_change_light_state_color_temp(hass, utcnow):
     )
 
 
-async def test_switch_read_light_state(hass, utcnow):
+async def test_switch_read_light_state_dimmer(hass, utcnow):
+    """Test that we can read the state of a HomeKit light accessory."""
+    helper = await setup_test_component(hass, create_lightbulb_service)
+
+    # Initial state is that the light is off
+    state = await helper.poll_and_get_state()
+    assert state.state == "off"
+    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    # Simulate that someone switched on the device in the real world not via HA
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.BRIGHTNESS: 100,
+        },
+    )
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 255
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
+    # Simulate that device switched off in the real world not via HA
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: False,
+        },
+    )
+    assert state.state == "off"
+
+
+async def test_switch_push_light_state_dimmer(hass, utcnow):
+    """Test that we can read the state of a HomeKit light accessory."""
+    helper = await setup_test_component(hass, create_lightbulb_service)
+
+    # Initial state is that the light is off
+    state = hass.states.get(LIGHT_BULB_ENTITY_ID)
+    assert state.state == "off"
+
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: True,
+            CharacteristicsTypes.BRIGHTNESS: 100,
+        },
+    )
+    assert state.state == "on"
+    assert state.attributes["brightness"] == 255
+
+    # Simulate that device switched off in the real world not via HA
+    state = await helper.async_update(
+        ServicesTypes.LIGHTBULB,
+        {
+            CharacteristicsTypes.ON: False,
+        },
+    )
+    assert state.state == "off"
+
+
+async def test_switch_read_light_state_hs(hass, utcnow):
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
+    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that someone switched on the device in the real world not via HA
     state = await helper.async_update(
@@ -119,6 +190,9 @@ async def test_switch_read_light_state(hass, utcnow):
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
     assert state.attributes["hs_color"] == (4, 5)
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that device switched off in the real world not via HA
     state = await helper.async_update(
@@ -130,7 +204,7 @@ async def test_switch_read_light_state(hass, utcnow):
     assert state.state == "off"
 
 
-async def test_switch_push_light_state(hass, utcnow):
+async def test_switch_push_light_state_hs(hass, utcnow):
     """Test that we can read the state of a HomeKit light accessory."""
     helper = await setup_test_component(hass, create_lightbulb_service_with_hs)
 
@@ -168,6 +242,9 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     # Initial state is that the light is off
     state = await helper.poll_and_get_state()
     assert state.state == "off"
+    assert ATTR_COLOR_MODE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     # Simulate that someone switched on the device in the real world not via HA
     state = await helper.async_update(
@@ -181,6 +258,9 @@ async def test_switch_read_light_state_color_temp(hass, utcnow):
     assert state.state == "on"
     assert state.attributes["brightness"] == 255
     assert state.attributes["color_temp"] == 400
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
 
 async def test_switch_push_light_state_color_temp(hass, utcnow):

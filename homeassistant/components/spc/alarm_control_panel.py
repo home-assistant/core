@@ -4,11 +4,7 @@ from __future__ import annotations
 from pyspcwebgw.const import AreaMode
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
@@ -55,6 +51,12 @@ async def async_setup_platform(
 class SpcAlarm(alarm.AlarmControlPanelEntity):
     """Representation of the SPC alarm panel."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_NIGHT
+    )
+
     def __init__(self, area, api):
         """Initialize the SPC alarm panel."""
         self._area = area
@@ -94,11 +96,6 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
     def state(self):
         """Return the state of the device."""
         return _get_alarm_state(self._area)
-
-    @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_NIGHT
 
     async def async_alarm_disarm(self, code=None):
         """Send disarm command."""

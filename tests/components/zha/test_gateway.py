@@ -1,5 +1,6 @@
 """Test ZHA Gateway."""
 import asyncio
+import math
 import time
 from unittest.mock import patch
 
@@ -32,6 +33,22 @@ def zigpy_dev_basic(zigpy_device_mock):
             }
         }
     )
+
+
+@pytest.fixture(autouse=True)
+def required_platform_only():
+    """Only setup the required and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.SENSOR,
+            Platform.LIGHT,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -207,14 +224,14 @@ async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
 
     assert zha_dev_basic.last_seen is not None
     entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert entry.last_seen == zha_dev_basic.last_seen
+    assert math.isclose(entry.last_seen, zha_dev_basic.last_seen, rel_tol=1e-06)
 
     assert zha_dev_basic.last_seen is not None
     last_seen = zha_dev_basic.last_seen
 
     # test that we can't set None as last seen any more
     zha_dev_basic.async_update_last_seen(None)
-    assert last_seen == zha_dev_basic.last_seen
+    assert math.isclose(last_seen, zha_dev_basic.last_seen, rel_tol=1e-06)
 
     # test that we won't put None in storage
     zigpy_dev_basic.last_seen = None
@@ -222,18 +239,18 @@ async def test_updating_device_store(hass, zigpy_dev_basic, zha_dev_basic):
     await zha_gateway.async_update_device_storage()
     await hass.async_block_till_done()
     entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert entry.last_seen == last_seen
+    assert math.isclose(entry.last_seen, last_seen, rel_tol=1e-06)
 
     # test that we can still set a good last_seen
     last_seen = time.time()
     zha_dev_basic.async_update_last_seen(last_seen)
-    assert last_seen == zha_dev_basic.last_seen
+    assert math.isclose(last_seen, zha_dev_basic.last_seen, rel_tol=1e-06)
 
     # test that we still put good values in storage
     await zha_gateway.async_update_device_storage()
     await hass.async_block_till_done()
     entry = zha_gateway.zha_storage.async_get_or_create_device(zha_dev_basic)
-    assert entry.last_seen == last_seen
+    assert math.isclose(entry.last_seen, last_seen, rel_tol=1e-06)
 
 
 async def test_cleaning_up_storage(hass, zigpy_dev_basic, zha_dev_basic, hass_storage):

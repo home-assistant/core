@@ -12,14 +12,11 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -64,9 +61,9 @@ async def test_init(saunabox, hass, config):
     assert state.name == "saunaBox-thermostat"
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
-    assert supported_features & SUPPORT_TARGET_TEMPERATURE
+    assert supported_features & ClimateEntityFeature.TARGET_TEMPERATURE
 
-    assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_OFF, HVAC_MODE_HEAT]
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.OFF, HVACMode.HEAT]
 
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert ATTR_HVAC_MODE not in state.attributes
@@ -103,10 +100,10 @@ async def test_update(saunabox, hass, config):
     await async_setup_entity(hass, config, entity_id)
 
     state = hass.states.get(entity_id)
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert state.attributes[ATTR_TEMPERATURE] == 64.3
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 40.9
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
 
 async def test_on_when_below_desired(saunabox, hass, config):
@@ -131,16 +128,16 @@ async def test_on_when_below_desired(saunabox, hass, config):
     await hass.services.async_call(
         "climate",
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     feature_mock.async_off.assert_not_called()
     state = hass.states.get(entity_id)
 
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
     assert state.attributes[ATTR_TEMPERATURE] == 64.8
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 25.7
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
 
 
 async def test_on_when_above_desired(saunabox, hass, config):
@@ -166,7 +163,7 @@ async def test_on_when_above_desired(saunabox, hass, config):
     await hass.services.async_call(
         "climate",
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     feature_mock.async_off.assert_not_called()
@@ -174,8 +171,8 @@ async def test_on_when_above_desired(saunabox, hass, config):
 
     assert state.attributes[ATTR_TEMPERATURE] == 23.4
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 28.7
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
-    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    assert state.state == HVACMode.HEAT
 
 
 async def test_off(saunabox, hass, config):
@@ -201,16 +198,16 @@ async def test_off(saunabox, hass, config):
     await hass.services.async_call(
         "climate",
         SERVICE_SET_HVAC_MODE,
-        {"entity_id": entity_id, ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        {"entity_id": entity_id, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
     feature_mock.async_on.assert_not_called()
     state = hass.states.get(entity_id)
 
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_OFF
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.OFF
     assert state.attributes[ATTR_TEMPERATURE] == 29.8
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.7
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
 
 async def test_set_thermo(saunabox, hass, config):
@@ -243,8 +240,8 @@ async def test_set_thermo(saunabox, hass, config):
 
     assert state.attributes[ATTR_TEMPERATURE] == 29.2
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 29.1
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_HEAT
-    assert state.state == HVAC_MODE_HEAT
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.HEATING
+    assert state.state == HVACMode.HEAT
 
 
 async def test_update_failure(saunabox, hass, config, caplog):

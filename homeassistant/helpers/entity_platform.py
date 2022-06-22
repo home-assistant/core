@@ -42,7 +42,7 @@ from . import (
     service,
 )
 from .device_registry import DeviceRegistry
-from .entity_registry import EntityRegistry, RegistryEntryDisabler
+from .entity_registry import EntityRegistry, RegistryEntryDisabler, RegistryEntryHider
 from .event import async_call_later, async_track_time_interval
 from .typing import ConfigType, DiscoveryInfoType
 
@@ -120,7 +120,7 @@ class EntityPlatform:
 
     @callback
     def _get_parallel_updates_semaphore(
-        self, entity_has_async_update: bool
+        self, entity_has_sync_update: bool
     ) -> asyncio.Semaphore | None:
         """Get or create a semaphore for parallel updates.
 
@@ -138,7 +138,7 @@ class EntityPlatform:
 
         parallel_updates = getattr(self.platform, "PARALLEL_UPDATES", None)
 
-        if parallel_updates is None and not entity_has_async_update:
+        if parallel_updates is None and entity_has_sync_update:
             parallel_updates = 1
 
         if parallel_updates == 0:
@@ -422,7 +422,7 @@ class EntityPlatform:
         entity.add_to_platform_start(
             self.hass,
             self,
-            self._get_parallel_updates_semaphore(hasattr(entity, "async_update")),
+            self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
 
         # Update properties before we generate the entity_id
@@ -507,6 +507,10 @@ class EntityPlatform:
             if not entity.entity_registry_enabled_default:
                 disabled_by = RegistryEntryDisabler.INTEGRATION
 
+            hidden_by: RegistryEntryHider | None = None
+            if not entity.entity_registry_visible_default:
+                hidden_by = RegistryEntryHider.INTEGRATION
+
             entry = entity_registry.async_get_or_create(
                 self.domain,
                 self.platform_name,
@@ -516,6 +520,7 @@ class EntityPlatform:
                 device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,
+                hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
@@ -606,7 +611,7 @@ class EntityPlatform:
             self.hass.states.async_reserve(entity.entity_id)
 
         def remove_entity_cb() -> None:
-            """Remove entity from entities list."""
+            """Remove entity from entities dict."""
             self.entities.pop(entity_id)
 
         entity.async_on_remove(remove_entity_cb)

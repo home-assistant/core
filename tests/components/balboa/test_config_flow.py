@@ -127,10 +127,15 @@ async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_SYNC_TIME: True},
-    )
+    with patch(
+        "homeassistant.components.balboa.async_setup_entry",
+        return_value=True,
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_SYNC_TIME: True},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert dict(config_entry.options) == {CONF_SYNC_TIME: True}

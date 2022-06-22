@@ -1,12 +1,6 @@
 """Support for Spider thermostats."""
 from homeassistant.components.climate import ClimateEntity
-from homeassistant.components.climate.const import (
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-)
+from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -16,9 +10,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 HA_STATE_TO_SPIDER = {
-    HVAC_MODE_COOL: "Cool",
-    HVAC_MODE_HEAT: "Heat",
-    HVAC_MODE_OFF: "Idle",
+    HVACMode.COOL: "Cool",
+    HVACMode.HEAT: "Heat",
+    HVACMode.OFF: "Idle",
 }
 
 SPIDER_STATE_TO_HA = {value: key for key, value in HA_STATE_TO_SPIDER.items()}
@@ -66,8 +60,10 @@ class SpiderThermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self.thermostat.has_fan_mode:
-            return SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE
-        return SUPPORT_TARGET_TEMPERATURE
+            return (
+                ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+            )
+        return ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
     def unique_id(self):
@@ -110,12 +106,12 @@ class SpiderThermostat(ClimateEntity):
         return self.thermostat.maximum_temperature
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         return SPIDER_STATE_TO_HA[self.thermostat.operation_mode]
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return self.support_hvac
 
@@ -126,7 +122,7 @@ class SpiderThermostat(ClimateEntity):
 
         self.thermostat.set_temperature(temperature)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         self.thermostat.set_operation_mode(HA_STATE_TO_SPIDER.get(hvac_mode))
 

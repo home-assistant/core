@@ -14,7 +14,7 @@
         "flow_title": "{host}",
         "step": {
             "confirm_discovery": {
-                "description": "\u00bfQuieres configurar Nettigo Air Monitor en {host} ?"
+                "description": "\u00bfQuieres configurar Nettigo Air Monitor en {host}?"
             },
             "credentials": {
                 "data": {

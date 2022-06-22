@@ -1,5 +1,6 @@
 """Test Flo by Moen sensor entities."""
 from homeassistant.components.flo.const import DOMAIN as FLO_DOMAIN
+from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import ATTR_ENTITY_ID, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.setup import async_setup_component
 
@@ -18,15 +19,49 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
 
     # we should have 5 entities for the valve
     assert hass.states.get("sensor.current_system_mode").state == "home"
+
     assert hass.states.get("sensor.today_s_water_usage").state == "3.7"
+    assert (
+        hass.states.get("sensor.today_s_water_usage").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.TOTAL_INCREASING
+    )
+
     assert hass.states.get("sensor.water_flow_rate").state == "0"
+    assert (
+        hass.states.get("sensor.water_flow_rate").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
+
     assert hass.states.get("sensor.water_pressure").state == "54.2"
+    assert (
+        hass.states.get("sensor.water_pressure").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
+
     assert hass.states.get("sensor.water_temperature").state == "21"
+    assert (
+        hass.states.get("sensor.water_temperature").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
 
     # and 3 entities for the detector
     assert hass.states.get("sensor.temperature").state == "16"
+    assert (
+        hass.states.get("sensor.temperature").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
+
     assert hass.states.get("sensor.humidity").state == "43"
+    assert (
+        hass.states.get("sensor.humidity").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
+
     assert hass.states.get("sensor.battery").state == "100"
+    assert (
+        hass.states.get("sensor.battery").attributes[ATTR_STATE_CLASS]
+        == SensorStateClass.MEASUREMENT
+    )
 
 
 async def test_manual_update_entity(

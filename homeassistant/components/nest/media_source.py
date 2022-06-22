@@ -50,14 +50,14 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import DATE_STR_FORMAT
 from homeassistant.util import dt as dt_util
 
-from .const import DATA_SUBSCRIBER, DOMAIN
-from .device_info import NestDeviceInfo
+from .const import DOMAIN
+from .device_info import NestDeviceInfo, async_nest_devices_by_device_id
 from .events import EVENT_NAME_MAP, MEDIA_SOURCE_EVENT_TITLE_MAP
 
 _LOGGER = logging.getLogger(__name__)
@@ -267,24 +267,16 @@ async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     return NestMediaSource(hass)
 
 
-async def get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
+@callback
+def async_get_media_source_devices(hass: HomeAssistant) -> Mapping[str, Device]:
     """Return a mapping of device id to eligible Nest event media devices."""
-    if DATA_SUBSCRIBER not in hass.data[DOMAIN]:
-        # Integration unloaded, or is legacy nest integration
-        return {}
-    subscriber = hass.data[DOMAIN][DATA_SUBSCRIBER]
-    device_manager = await subscriber.async_get_device_manager()
-    device_registry = dr.async_get(hass)
-    devices = {}
-    for device in device_manager.devices.values():
-        if not (
-            CameraEventImageTrait.NAME in device.traits
-            or CameraClipPreviewTrait.NAME in device.traits
-        ):
-            continue
-        if device_entry := device_registry.async_get_device({(DOMAIN, device.name)}):
-            devices[device_entry.id] = device
-    return devices
+    devices = async_nest_devices_by_device_id(hass)
+    return {
+        device_id: device
+        for device_id, device in devices.items()
+        if CameraEventImageTrait.NAME in device.traits
+        or CameraClipPreviewTrait.NAME in device.traits
+    }
 
 
 @dataclass
@@ -339,7 +331,7 @@ class NestMediaSource(MediaSource):
         media_id: MediaId | None = parse_media_id(item.identifier)
         if not media_id:
             raise Unresolvable("No identifier specified for MediaSourceItem")
-        devices = await self.devices()
+        devices = async_get_media_source_devices(self.hass)
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
@@ -376,7 +368,7 @@ class NestMediaSource(MediaSource):
         _LOGGER.debug(
             "Browsing media for identifier=%s, media_id=%s", item.identifier, media_id
         )
-        devices = await self.devices()
+        devices = async_get_media_source_devices(self.hass)
         if media_id is None:
             # Browse the root and return child devices
             browse_root = _browse_root()
@@ -442,10 +434,6 @@ class NestMediaSource(MediaSource):
                 "Unable to find event with identiifer: %s" % item.identifier
             )
         return _browse_image_event(media_id, device, single_image)
-
-    async def devices(self) -> Mapping[str, Device]:
-        """Return all event media related devices."""
-        return await get_media_source_devices(self.hass)
 
 
 async def _async_get_clip_preview_sessions(

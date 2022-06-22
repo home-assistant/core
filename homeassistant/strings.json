@@ -45,7 +45,8 @@
         "latitude": "Latitude",
         "location": "Location",
         "pin": "PIN Code",
-        "mode": "Mode"
+        "mode": "Mode",
+        "path": "Path"
       },
       "create_entry": {
         "authenticated": "Successfully authenticated"
@@ -70,8 +71,10 @@
         "webhook_not_internet_accessible": "Your Home Assistant instance needs to be accessible from the internet to receive webhook messages.",
         "oauth2_error": "Received invalid token data.",
         "oauth2_missing_configuration": "The component is not configured. Please follow the documentation.",
+        "oauth2_missing_credentials": "The integration requires application credentials.",
         "oauth2_authorize_url_timeout": "Timeout generating authorize URL.",
         "oauth2_no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
+        "oauth2_user_rejected_authorize": "Account linking rejected: {error}",
         "reauth_successful": "Re-authentication was successful",
         "unknown_authorize_url_generation": "Unknown error generating an authorize URL.",
         "cloud_not_connected": "Not connected to Home Assistant Cloud."

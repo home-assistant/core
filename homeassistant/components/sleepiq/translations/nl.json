@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol"
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -14,7 +14,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "De SleepIQ-integratie moet uw account {username} opnieuw verifi\u00ebren.",
-                "title": "Verifieer de integratie opnieuw"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

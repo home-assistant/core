@@ -84,7 +84,7 @@ async def async_setup_entry(
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),

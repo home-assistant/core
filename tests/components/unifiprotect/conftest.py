@@ -13,15 +13,18 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from pyunifiprotect.data import (
     NVR,
+    Bootstrap,
     Camera,
+    Chime,
     Doorlock,
     Light,
     Liveview,
+    ProtectAdoptableDeviceModel,
     Sensor,
     Viewer,
     WSSubscriptionMessage,
 )
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
+from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import Platform
@@ -35,34 +38,6 @@ from . import _patch_discovery
 from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
 
 MAC_ADDR = "aa:bb:cc:dd:ee:ff"
-
-
-@dataclass
-class MockBootstrap:
-    """Mock for Bootstrap."""
-
-    nvr: NVR
-    cameras: dict[str, Any]
-    lights: dict[str, Any]
-    sensors: dict[str, Any]
-    viewers: dict[str, Any]
-    liveviews: dict[str, Any]
-    events: dict[str, Any]
-    doorlocks: dict[str, Any]
-
-    def reset_objects(self) -> None:
-        """Reset all devices on bootstrap for tests."""
-        self.cameras = {}
-        self.lights = {}
-        self.sensors = {}
-        self.viewers = {}
-        self.liveviews = {}
-        self.events = {}
-        self.doorlocks = {}
-
-    def process_ws_packet(self, msg: WSSubscriptionMessage) -> None:
-        """Fake process method for tests."""
-        pass
 
 
 @dataclass
@@ -118,26 +93,42 @@ def mock_old_nvr_fixture():
 @pytest.fixture(name="mock_bootstrap")
 def mock_bootstrap_fixture(mock_nvr: NVR):
     """Mock Bootstrap fixture."""
-    return MockBootstrap(
-        nvr=mock_nvr,
-        cameras={},
-        lights={},
-        sensors={},
-        viewers={},
-        liveviews={},
-        events={},
-        doorlocks={},
-    )
+    data = json.loads(load_fixture("sample_bootstrap.json", integration=DOMAIN))
+    data["nvr"] = mock_nvr
+    data["cameras"] = []
+    data["lights"] = []
+    data["sensors"] = []
+    data["viewers"] = []
+    data["liveviews"] = []
+    data["events"] = []
+    data["doorlocks"] = []
+    data["chimes"] = []
+
+    return Bootstrap.from_unifi_dict(**data)
+
+
+def reset_objects(bootstrap: Bootstrap):
+    """Reset bootstrap objects."""
+
+    bootstrap.cameras = {}
+    bootstrap.lights = {}
+    bootstrap.sensors = {}
+    bootstrap.viewers = {}
+    bootstrap.liveviews = {}
+    bootstrap.events = {}
+    bootstrap.doorlocks = {}
+    bootstrap.chimes = {}
 
 
 @pytest.fixture
-def mock_client(mock_bootstrap: MockBootstrap):
+def mock_client(mock_bootstrap: Bootstrap):
     """Mock ProtectApiClient for testing."""
     client = Mock()
     client.bootstrap = mock_bootstrap
 
-    nvr = mock_bootstrap.nvr
+    nvr = client.bootstrap.nvr
     nvr._api = client
+    client.bootstrap._api = client
 
     client.base_url = "https://127.0.0.1"
     client.connection_host = IPv4Address("127.0.0.1")
@@ -221,6 +212,14 @@ def mock_doorlock():
 
 
 @pytest.fixture
+def mock_chime():
+    """Mock UniFi Protect Chime device."""
+
+    data = json.loads(load_fixture("sample_chime.json", integration=DOMAIN))
+    return Chime.from_unifi_dict(**data)
+
+
+@pytest.fixture
 def now():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()
@@ -276,7 +275,19 @@ def ids_from_device_description(
         description.name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
     )
 
-    unique_id = f"{device.id}_{description.key}"
+    unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"
 
     return unique_id, entity_id
+
+
+def generate_random_ids() -> tuple[str, str]:
+    """Generate random IDs for device."""
+
+    return random_hex(24).upper(), random_hex(12).upper()
+
+
+def regenerate_device_ids(device: ProtectAdoptableDeviceModel) -> None:
+    """Regenerate the IDs on UFP device."""
+
+    device.id, device.mac = generate_random_ids()

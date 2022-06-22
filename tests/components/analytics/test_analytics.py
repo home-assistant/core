@@ -451,15 +451,13 @@ async def test_send_with_no_energy(hass, aioclient_mock):
     assert "energy" not in postdata
 
 
-async def test_send_with_no_energy_config(hass, aioclient_mock):
+async def test_send_with_no_energy_config(hass, aioclient_mock, recorder_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
-    assert await async_setup_component(
-        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
-    )
+    assert await async_setup_component(hass, "energy", {})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION
@@ -475,15 +473,13 @@ async def test_send_with_no_energy_config(hass, aioclient_mock):
     assert not postdata["energy"]["configured"]
 
 
-async def test_send_with_energy_config(hass, aioclient_mock):
+async def test_send_with_energy_config(hass, aioclient_mock, recorder_mock):
     """Test send base preferences are defined."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     analytics = Analytics(hass)
 
     await analytics.save_preferences({ATTR_BASE: True, ATTR_USAGE: True})
-    assert await async_setup_component(
-        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
-    )
+    assert await async_setup_component(hass, "energy", {})
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hex, patch(
         "homeassistant.components.analytics.analytics.HA_VERSION", MOCK_VERSION

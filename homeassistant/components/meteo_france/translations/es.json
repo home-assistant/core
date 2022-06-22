@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured": "La ciudad ya est\u00e1 configurada",
+            "already_configured": "La ubicaci\u00f3n ya est\u00e1 configurada",
             "unknown": "Error desconocido: por favor, vuelva a intentarlo m\u00e1s tarde"
         },
         "error": {
@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Ciudad"
                 },
-                "description": "Elige tu ciudad de la lista",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Elige tu ciudad de la lista"
             },
             "user": {
                 "data": {
                     "city": "Ciudad"
                 },
-                "description": "Introduzca el c\u00f3digo postal (solo para Francia, recomendado) o el nombre de la ciudad",
-                "title": "M\u00e9t\u00e9o-France"
+                "description": "Introduzca el c\u00f3digo postal (solo para Francia, recomendado) o el nombre de la ciudad"
             }
         }
     },

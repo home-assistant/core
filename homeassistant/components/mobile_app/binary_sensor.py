@@ -3,14 +3,13 @@ from typing import Any
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID, CONF_WEBHOOK_ID, STATE_ON
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
-    ATTR_DEVICE_NAME,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_ENTITY_CATEGORY,
@@ -22,7 +21,7 @@ from .const import (
     ATTR_SENSOR_UNIQUE_ID,
     DOMAIN,
 )
-from .entity import MobileAppEntity, unique_id
+from .entity import MobileAppEntity
 
 
 async def async_setup_entry(
@@ -58,13 +57,6 @@ async def async_setup_entry(
     def handle_sensor_registration(data):
         if data[CONF_WEBHOOK_ID] != webhook_id:
             return
-
-        data[CONF_UNIQUE_ID] = unique_id(
-            data[CONF_WEBHOOK_ID], data[ATTR_SENSOR_UNIQUE_ID]
-        )
-        data[
-            CONF_NAME
-        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
 
         async_add_entities([MobileAppBinarySensor(data, config_entry)])
 

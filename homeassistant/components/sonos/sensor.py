@@ -11,8 +11,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import SONOS_CREATE_AUDIO_FORMAT_SENSOR, SONOS_CREATE_BATTERY, SOURCE_TV
+from .const import (
+    SONOS_CREATE_AUDIO_FORMAT_SENSOR,
+    SONOS_CREATE_BATTERY,
+    SONOS_CREATE_FAVORITES_SENSOR,
+    SONOS_FAVORITES_UPDATED,
+    SOURCE_TV,
+)
 from .entity import SonosEntity, SonosPollingEntity
+from .favorites import SonosFavorites
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
@@ -40,6 +47,16 @@ async def async_setup_entry(
         entity = SonosBatteryEntity(speaker)
         async_add_entities([entity])
 
+    @callback
+    def _async_create_favorites_sensor(favorites: SonosFavorites) -> None:
+        _LOGGER.debug(
+            "Creating favorites sensor (%s items) for household %s",
+            favorites.count,
+            favorites.household_id,
+        )
+        entity = SonosFavoritesEntity(favorites)
+        async_add_entities([entity])
+
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, SONOS_CREATE_AUDIO_FORMAT_SENSOR, _async_create_audio_format_entity
@@ -48,6 +65,12 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         async_dispatcher_connect(
             hass, SONOS_CREATE_BATTERY, _async_create_battery_sensor
+        )
+    )
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SONOS_CREATE_FAVORITES_SENSOR, _async_create_favorites_sensor
         )
     )
 
@@ -107,3 +130,36 @@ class SonosAudioInputFormatSensorEntity(SonosPollingEntity, SensorEntity):
 
     async def _async_fallback_poll(self) -> None:
         """Provide a stub for required ABC method."""
+
+
+class SonosFavoritesEntity(SensorEntity):
+    """Representation of a Sonos favorites info entity."""
+
+    _attr_entity_registry_enabled_default = False
+    _attr_icon = "mdi:star"
+    _attr_name = "Sonos Favorites"
+    _attr_native_unit_of_measurement = "items"
+    _attr_should_poll = False
+
+    def __init__(self, favorites: SonosFavorites) -> None:
+        """Initialize the favorites sensor."""
+        self.favorites = favorites
+        self._attr_unique_id = f"{favorites.household_id}-favorites"
+
+    async def async_added_to_hass(self) -> None:
+        """Handle common setup when added to hass."""
+        await self._async_update_state()
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_FAVORITES_UPDATED}-{self.favorites.household_id}",
+                self._async_update_state,
+            )
+        )
+
+    async def _async_update_state(self) -> None:
+        self._attr_native_value = self.favorites.count
+        self._attr_extra_state_attributes = {
+            "items": {fav.item_id: fav.title for fav in self.favorites}
+        }
+        self.async_write_ha_state()

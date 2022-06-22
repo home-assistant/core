@@ -1,23 +1,38 @@
 {
   "config": {
     "step": {
-      "user": {
-        "description": "SimpliSafe authenticates with Home Assistant via the SimpliSafe web app. Due to technical limitations, there is a manual step at the end of this process; please ensure that you read the [documentation]({docs_url}) before starting.\n\n1. Click [here]({url}) to open the SimpliSafe web app and input your credentials.\n\n2. When the login process is complete, return here and input the authorization code below.",
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please re-enter the password for {username}.",
         "data": {
-          "auth_code": "Authorization Code"
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "sms_2fa": {
+        "description": "Input the two-factor authentication code sent to you via SMS.",
+        "data": {
+          "code": "Code"
+        }
+      },
+      "user": {
+        "description": "Input your username and password.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     },
     "error": {
-      "identifier_exists": "Account already registered",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "still_awaiting_mfa": "Still awaiting MFA email click",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "This SimpliSafe account is already in use.",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "The user credentials provided do not match this SimpliSafe account."
+      "email_2fa_timed_out": "Timed out while waiting for email-based two-factor authentication.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "progress": {
+      "email_2fa": "Check your email for a verification link from Simplisafe."
     }
   },
   "options": {

@@ -15,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModuleConnection
 
@@ -34,7 +35,7 @@ async def test_setup_lcn_switch(hass, lcn_connection):
 
 async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
-    entity_registry = await hass.helpers.entity_registry.async_get_registry()
+    entity_registry = er.async_get(hass)
 
     entity_output = entity_registry.async_get("switch.switch_output1")
 

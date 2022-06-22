@@ -6,10 +6,10 @@ from datetime import timedelta
 import math
 from typing import Any
 
-from pywemo.ouimeaux_device.humidifier import DesiredHumidity, FanMode, Humidifier
+from pywemo import DesiredHumidity, FanMode, Humidifier
 import voluptuous as vol
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
@@ -40,9 +40,6 @@ ATTR_FILTER_EXPIRED = "filter_expired"
 ATTR_WATER_LEVEL = "water_level"
 
 SPEED_RANGE = (FanMode.Minimum, FanMode.Maximum)  # off is not included
-
-SUPPORTED_FEATURES = SUPPORT_SET_SPEED
-
 
 SET_HUMIDITY_SCHEMA = {
     vol.Required(ATTR_TARGET_HUMIDITY): vol.All(
@@ -87,6 +84,7 @@ async def async_setup_entry(
 class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     """Representation of a WeMo humidifier."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED
     wemo: Humidifier
 
     def __init__(self, coordinator: DeviceCoordinator) -> None:
@@ -123,11 +121,6 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
 
     @callback
     def _handle_coordinator_update(self) -> None:

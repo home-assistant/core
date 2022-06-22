@@ -1,5 +1,6 @@
 """Test zha sensor."""
 import math
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
@@ -48,6 +49,19 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 ENTITY_ID_PREFIX = "sensor.fakemanufacturer_fakemodel_e769900a_{}"
+
+
+@pytest.fixture(autouse=True)
+def sensor_platform_only():
+    """Only setup the sensor and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -604,7 +618,11 @@ async def test_electrical_measurement_init(
         (
             homeautomation.ElectricalMeasurement.cluster_id,
             {"apparent_power", "rms_voltage", "rms_current"},
-            {"electrical_measurement"},
+            {
+                "electrical_measurement",
+                "electrical_measurement_ac_frequency",
+                "electrical_measurement_power_factor",
+            },
             {
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_voltage",
@@ -613,11 +631,13 @@ async def test_electrical_measurement_init(
         ),
         (
             homeautomation.ElectricalMeasurement.cluster_id,
-            {"apparent_power", "rms_current"},
+            {"apparent_power", "rms_current", "ac_frequency", "power_factor"},
             {"electrical_measurement_rms_voltage", "electrical_measurement"},
             {
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_current",
+                "electrical_measurement_ac_frequency",
+                "electrical_measurement_power_factor",
             },
         ),
         (
@@ -628,6 +648,8 @@ async def test_electrical_measurement_init(
                 "electrical_measurement",
                 "electrical_measurement_apparent_power",
                 "electrical_measurement_rms_current",
+                "electrical_measurement_ac_frequency",
+                "electrical_measurement_power_factor",
             },
             set(),
         ),
@@ -905,6 +927,9 @@ async def test_elec_measurement_skip_unsupported_attribute(
         "rms_current_max",
         "rms_voltage",
         "rms_voltage_max",
+        "power_factor",
+        "ac_frequency",
+        "ac_frequency_max",
     }
     for attr in all_attrs - supported_attributes:
         cluster.add_unsupported_attribute(attr)

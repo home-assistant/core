@@ -1,4 +1,6 @@
 """Config flow for Plaato."""
+from __future__ import annotations
+
 from pyplaato.plaato import PlaatoDeviceType
 import voluptuous as vol
 
@@ -161,7 +163,7 @@ class PlaatoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> PlaatoOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlaatoOptionsFlowHandler(config_entry)
 

@@ -5,7 +5,7 @@ from typing import Any
 
 from zwave_me_ws import ZWaveMeData
 
-from homeassistant.components.light import ATTR_RGB_COLOR, COLOR_MODE_RGB, LightEntity
+from homeassistant.components.light import ATTR_RGB_COLOR, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +45,9 @@ async def async_setup_entry(
 class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
     """Representation of a ZWaveMe light."""
 
+    _attr_supported_color_modes = {ColorMode.RGB}
+    _attr_color_mode = ColorMode.RGB
+
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self.controller.zwave_api.send_command(self.device.id, "off")
@@ -73,13 +76,3 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
         """Return the rgb color value [int, int, int]."""
         rgb = self.device.color
         return rgb["r"], rgb["g"], rgb["b"]
-
-    @property
-    def supported_color_modes(self) -> set:
-        """Return all color modes."""
-        return {COLOR_MODE_RGB}
-
-    @property
-    def color_mode(self) -> str:
-        """Return current color mode."""
-        return COLOR_MODE_RGB

@@ -833,24 +833,3 @@ def test_human_readable_device_name():
     assert "Silicon Labs" in name
     assert "10C4" in name
     assert "8A2A" in name
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = usb.UsbServiceInfo(
-        device=slae_sh_device.device,
-        vid=12345,
-        pid=12345,
-        serial_number=slae_sh_device.serial_number,
-        manufacturer=slae_sh_device.manufacturer,
-        description=slae_sh_device.description,
-    )
-
-    # Ensure first call get logged
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["vid"] == 12345
-    assert "Detected integration that accessed discovery_info['vid']" in caplog.text

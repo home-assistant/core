@@ -18,8 +18,7 @@
                 "data": {
                     "select_ip": "IP Adresse"
                 },
-                "description": "Setup nach emol ausf\u00e9ieren fir eng zous\u00e4tzlech Gateway dob\u00e4i ze setzen",
-                "title": "Xiaomi Aqara Gateway auswielen mat der sech soll verbonne ginn"
+                "description": "Setup nach emol ausf\u00e9ieren fir eng zous\u00e4tzlech Gateway dob\u00e4i ze setzen"
             },
             "settings": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "Netzwierk Interface dee soll benotzt ginn",
                     "mac": "Mac Adress (Optionell)"
                 },
-                "description": "Mat denger Xiaomi Aqara Gateway verbannen,  falls keng IP oder MAC Adress  uginn ass g\u00ebtt auto-discovery benotzt",
-                "title": "Xiaomi Aqara Gateway"
+                "description": "Mat denger Xiaomi Aqara Gateway verbannen,  falls keng IP oder MAC Adress  uginn ass g\u00ebtt auto-discovery benotzt"
             }
         }
     }

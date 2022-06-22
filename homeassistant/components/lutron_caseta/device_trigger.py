@@ -1,8 +1,6 @@
 """Provides device triggers for lutron caseta."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -31,11 +29,11 @@ from .const import (
     ATTR_ACTION,
     ATTR_BUTTON_NUMBER,
     ATTR_SERIAL,
-    BUTTON_DEVICES,
     CONF_SUBTYPE,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
+from .models import LutronCasetaData
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
@@ -329,7 +327,9 @@ TRIGGER_SCHEMA = vol.Any(
 )
 
 
-async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     # if device is available verify parameters against device capabilities
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
@@ -347,14 +347,14 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for lutron caseta devices."""
     triggers = []
 
     if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], [])
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], {})
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
         for subtype in valid_buttons:
@@ -411,9 +411,9 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
     if DOMAIN not in hass.data:
         return None
 
-    for config_entry in hass.data[DOMAIN]:
-        button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        if device := button_devices.get(device_id):
+    for entry_id in hass.data[DOMAIN]:
+        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
+        if device := data.button_devices.get(device_id):
             return device
 
     return None

@@ -5,11 +5,9 @@ from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.components.alarm_control_panel import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_TRIGGER,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityDescription,
+    AlarmControlPanelEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -109,13 +107,13 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
             description.key, dptype=DPType.ENUM, prefer_function=True
         ):
             if Mode.HOME in supported_modes.range:
-                self._attr_supported_features |= SUPPORT_ALARM_ARM_HOME
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
 
             if Mode.ARM in supported_modes.range:
-                self._attr_supported_features |= SUPPORT_ALARM_ARM_AWAY
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_AWAY
 
             if Mode.SOS in supported_modes.range:
-                self._attr_supported_features |= SUPPORT_ALARM_TRIGGER
+                self._attr_supported_features |= AlarmControlPanelEntityFeature.TRIGGER
 
     @property
     def state(self):

@@ -4,13 +4,9 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Light
+from pyunifiprotect.data import Light, ProtectModelWithId
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,13 +25,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up lights for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        ProtectLight(
-            data,
-            device,
-        )
-        for device in data.api.bootstrap.lights.values()
-    ]
+    entities = []
+    for device in data.api.bootstrap.lights.values():
+        if device.can_write(data.api.bootstrap.auth_user):
+            entities.append(ProtectLight(data, device))
 
     if not entities:
         return
@@ -59,11 +52,12 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
     device: Light
 
     _attr_icon = "mdi:spotlight-beam"
-    _attr_supported_features = SUPPORT_BRIGHTNESS
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._attr_is_on = self.device.is_light_on
         self._attr_brightness = unifi_brightness_to_hass(
             self.device.light_device_settings.led_level

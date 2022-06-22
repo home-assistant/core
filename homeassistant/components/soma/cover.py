@@ -4,16 +4,9 @@ from __future__ import annotations
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -50,10 +43,10 @@ class SomaTilt(SomaEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.BLIND
     _attr_supported_features = (
-        SUPPORT_OPEN_TILT
-        | SUPPORT_CLOSE_TILT
-        | SUPPORT_STOP_TILT
-        | SUPPORT_SET_TILT_POSITION
+        CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
+        | CoverEntityFeature.SET_TILT_POSITION
     )
 
     @property
@@ -124,7 +117,10 @@ class SomaShade(SomaEntity, CoverEntity):
 
     _attr_device_class = CoverDeviceClass.SHADE
     _attr_supported_features = (
-        SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_STOP | SUPPORT_SET_POSITION
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
     )
 
     @property

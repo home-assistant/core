@@ -8,21 +8,17 @@ from homeassistant.components.recorder.statistics import async_add_external_stat
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import (
-    MockConfigEntry,
-    flush_store,
-    init_recorder_component,
-    mock_platform,
+from tests.common import MockConfigEntry, flush_store, mock_platform
+from tests.components.recorder.common import (
+    async_recorder_block_till_done,
+    async_wait_recording_done,
 )
-from tests.components.recorder.common import async_wait_recording_done_without_instance
 
 
 @pytest.fixture(autouse=True)
-async def setup_integration(hass):
+async def setup_integration(hass, recorder_mock):
     """Set up the integration."""
-    assert await async_setup_component(
-        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
-    )
+    assert await async_setup_component(hass, "energy", {})
 
 
 @pytest.fixture
@@ -300,14 +296,14 @@ async def test_get_solar_forecast(hass, hass_ws_client, mock_energy_platform) ->
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client):
+async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client, recorder_mock):
     """Test fossil_energy_consumption when co2 data is missing."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -391,7 +387,7 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client):
     async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -461,14 +457,14 @@ async def test_fossil_energy_consumption_no_co2(hass, hass_ws_client):
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption_hole(hass, hass_ws_client):
+async def test_fossil_energy_consumption_hole(hass, hass_ws_client, recorder_mock):
     """Test fossil_energy_consumption when some data points lack sum."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -552,7 +548,7 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client):
     async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -622,14 +618,14 @@ async def test_fossil_energy_consumption_hole(hass, hass_ws_client):
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption_no_data(hass, hass_ws_client):
+async def test_fossil_energy_consumption_no_data(hass, hass_ws_client, recorder_mock):
     """Test fossil_energy_consumption when there is no data."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -711,7 +707,7 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client):
     async_add_external_statistics(
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(
@@ -770,14 +766,14 @@ async def test_fossil_energy_consumption_no_data(hass, hass_ws_client):
 
 
 @pytest.mark.freeze_time("2021-08-01 00:00:00+00:00")
-async def test_fossil_energy_consumption(hass, hass_ws_client):
+async def test_fossil_energy_consumption(hass, hass_ws_client, recorder_mock):
     """Test fossil_energy_consumption with co2 sensor data."""
     now = dt_util.utcnow()
     later = dt_util.as_utc(dt_util.parse_datetime("2022-09-01 00:00:00"))
 
-    await hass.async_add_executor_job(init_recorder_component, hass)
     await async_setup_component(hass, "history", {})
     await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
 
     period1 = dt_util.as_utc(dt_util.parse_datetime("2021-09-01 00:00:00"))
     period2 = dt_util.as_utc(dt_util.parse_datetime("2021-09-30 23:00:00"))
@@ -892,7 +888,7 @@ async def test_fossil_energy_consumption(hass, hass_ws_client):
         hass, external_energy_metadata_2, external_energy_statistics_2
     )
     async_add_external_statistics(hass, external_co2_metadata, external_co2_statistics)
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
 
     client = await hass_ws_client()
     await client.send_json(

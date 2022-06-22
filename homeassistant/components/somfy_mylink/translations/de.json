@@ -25,17 +25,8 @@
             "cannot_connect": "Verbindung fehlgeschlagen"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "Jalousie ist invertiert"
-                },
-                "description": "Optionen f\u00fcr `{entity_id}` konfigurieren",
-                "title": "Entit\u00e4t konfigurieren"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Standardinvertierungsstatus f\u00fcr nicht konfigurierte Abdeckungen",
-                    "entity_id": "Konfiguriere eine bestimmte Entit\u00e4t.",
                     "target_id": "Konfigurieren der Optionen f\u00fcr eine Jalousie."
                 },
                 "title": "MyLink-Optionen konfigurieren"
@@ -48,6 +39,5 @@
                 "title": "MyLink-Cover konfigurieren"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

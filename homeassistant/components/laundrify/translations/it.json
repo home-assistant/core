@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_auth": "Autenticazione non valida",
+            "invalid_format": "Formato non valido. Specificare come xxx-xxx.",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "code": "Codice di autorizzazione (xxx-xxx)"
+                },
+                "description": "Inserisci il tuo codice di autorizzazione personale che viene mostrato nell'app di laundrify."
+            },
+            "reauth_confirm": {
+                "description": "L'integrazione laundrify deve eseguire nuovamente l'autenticazione.",
+                "title": "Autentica nuovamente l'integrazione"
+            }
+        }
+    }
+}

@@ -5,10 +5,7 @@ from pyprosegur.auth import Auth
 from pyprosegur.installation import Installation, Status
 
 import homeassistant.components.alarm_control_panel as alarm
-from homeassistant.components.alarm_control_panel import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-)
+from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
@@ -43,6 +40,11 @@ async def async_setup_entry(
 class ProsegurAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Prosegur alarm status."""
 
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_AWAY
+        | AlarmControlPanelEntityFeature.ARM_HOME
+    )
+
     def __init__(self, contract: str, auth: Auth) -> None:
         """Initialize the Prosegur alarm panel."""
         self._changed_by = None
@@ -51,9 +53,9 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self.contract = contract
         self._auth = auth
 
+        self._attr_code_arm_required = False
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
-        self._attr_supported_features = SUPPORT_ALARM_ARM_AWAY | SUPPORT_ALARM_ARM_HOME
 
     async def async_update(self):
         """Update alarm status."""

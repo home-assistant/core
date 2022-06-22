@@ -6,9 +6,14 @@
             "unknown": "Ov\u00e4ntat fel"
         },
         "step": {
-            "user": {
+            "discovered_connection": {
                 "data": {
-                    "protocol": "Protokoll"
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "manual_connection": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
                 }
             }
         }

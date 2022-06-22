@@ -38,7 +38,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -66,7 +66,7 @@ async def test_media_player_setup(
 ):
     """Test media_player entity setup."""
 
-    unique_id = f"{camera[0].id}_speaker"
+    unique_id = f"{camera[0].mac}_speaker"
     entity_id = camera[1]
 
     entity_registry = er.async_get(hass)

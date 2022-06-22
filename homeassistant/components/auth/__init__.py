@@ -19,13 +19,15 @@ Exchange the authorization code retrieved from the login flow for tokens.
 
 Return value will be the access and refresh tokens. The access token will have
 a limited expiration. New access tokens can be requested using the refresh
-token.
+token. The value ha_auth_provider will contain the auth provider type that was
+used to authorize the refresh token.
 
 {
     "access_token": "ABCDEFGH",
     "expires_in": 1800,
     "refresh_token": "IJKLMNOPQRST",
-    "token_type": "Bearer"
+    "token_type": "Bearer",
+    "ha_auth_provider": "homeassistant"
 }
 
 ## Grant type refresh_token
@@ -113,6 +115,12 @@ Result will be a long-lived access token:
     "result": "ABCDEFGH"
 }
 
+
+# POST /auth/external/callback
+
+This is an endpoint for OAuth2 Authorization callbacks used by integrations
+that link accounts with other cloud providers using LocalOAuth2Implementation
+as part of a config flow.
 """
 from __future__ import annotations
 
@@ -134,6 +142,7 @@ from homeassistant.components.http.ban import log_invalid_auth
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.config_entry_oauth2_flow import OAuth2AuthorizeCallbackView
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util
@@ -141,44 +150,6 @@ from homeassistant.util import dt as dt_util
 from . import indieauth, login_flow, mfa_setup_flow
 
 DOMAIN = "auth"
-WS_TYPE_CURRENT_USER = "auth/current_user"
-SCHEMA_WS_CURRENT_USER = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_CURRENT_USER}
-)
-
-WS_TYPE_LONG_LIVED_ACCESS_TOKEN = "auth/long_lived_access_token"
-SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        vol.Required("lifespan"): int,  # days
-        vol.Required("client_name"): str,
-        vol.Optional("client_icon"): str,
-    }
-)
-
-WS_TYPE_REFRESH_TOKENS = "auth/refresh_tokens"
-SCHEMA_WS_REFRESH_TOKENS = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_REFRESH_TOKENS}
-)
-
-WS_TYPE_DELETE_REFRESH_TOKEN = "auth/delete_refresh_token"
-SCHEMA_WS_DELETE_REFRESH_TOKEN = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_DELETE_REFRESH_TOKEN,
-        vol.Required("refresh_token_id"): str,
-    }
-)
-
-WS_TYPE_SIGN_PATH = "auth/sign_path"
-SCHEMA_WS_SIGN_PATH = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {
-        vol.Required("type"): WS_TYPE_SIGN_PATH,
-        vol.Required("path"): str,
-        vol.Optional("expires", default=30): int,
-    }
-)
-
-RESULT_TYPE_CREDENTIALS = "credentials"
 
 
 @bind_hass
@@ -195,28 +166,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.http.register_view(TokenView(retrieve_result))
     hass.http.register_view(LinkUserView(retrieve_result))
+    hass.http.register_view(OAuth2AuthorizeCallbackView())
 
-    websocket_api.async_register_command(
-        hass, WS_TYPE_CURRENT_USER, websocket_current_user, SCHEMA_WS_CURRENT_USER
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_LONG_LIVED_ACCESS_TOKEN,
-        websocket_create_long_lived_access_token,
-        SCHEMA_WS_LONG_LIVED_ACCESS_TOKEN,
-    )
-    websocket_api.async_register_command(
-        hass, WS_TYPE_REFRESH_TOKENS, websocket_refresh_tokens, SCHEMA_WS_REFRESH_TOKENS
-    )
-    websocket_api.async_register_command(
-        hass,
-        WS_TYPE_DELETE_REFRESH_TOKEN,
-        websocket_delete_refresh_token,
-        SCHEMA_WS_DELETE_REFRESH_TOKEN,
-    )
-    websocket_api.async_register_command(
-        hass, WS_TYPE_SIGN_PATH, websocket_sign_path, SCHEMA_WS_SIGN_PATH
-    )
+    websocket_api.async_register_command(hass, websocket_current_user)
+    websocket_api.async_register_command(hass, websocket_create_long_lived_access_token)
+    websocket_api.async_register_command(hass, websocket_refresh_tokens)
+    websocket_api.async_register_command(hass, websocket_delete_refresh_token)
+    websocket_api.async_register_command(hass, websocket_sign_path)
 
     await login_flow.async_setup(hass, store_result)
     await mfa_setup_flow.async_setup(hass)
@@ -263,7 +219,6 @@ class TokenView(HomeAssistantView):
 
     async def _async_handle_revoke_token(self, hass, data):
         """Handle revoke token request."""
-        # pylint: disable=no-self-use
 
         # OAuth 2.0 Token Revocation [RFC7009]
         # 2.2 The authorization server responds with HTTP status code 200
@@ -335,7 +290,12 @@ class TokenView(HomeAssistantView):
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
-            }
+                "ha_auth_provider": credential.auth_provider_type,
+            },
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
         )
 
     async def _async_handle_refresh_token(self, hass, data, remote_addr):
@@ -392,7 +352,11 @@ class TokenView(HomeAssistantView):
                 "expires_in": int(
                     refresh_token.access_token_expiration.total_seconds()
                 ),
-            }
+            },
+            headers={
+                "Cache-Control": "no-store",
+                "Pragma": "no-cache",
+            },
         )
 
 
@@ -469,6 +433,7 @@ def _create_auth_code_store():
     return store_result, retrieve_result
 
 
+@websocket_api.websocket_command({vol.Required("type"): "auth/current_user"})
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_current_user(
@@ -506,6 +471,14 @@ async def websocket_current_user(
     )
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/long_lived_access_token",
+        vol.Required("lifespan"): int,  # days
+        vol.Required("client_name"): str,
+        vol.Optional("client_icon"): str,
+    }
+)
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_create_long_lived_access_token(
@@ -523,13 +496,13 @@ async def websocket_create_long_lived_access_token(
     try:
         access_token = hass.auth.async_create_access_token(refresh_token)
     except InvalidAuthError as exc:
-        return websocket_api.error_message(
-            msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc)
-        )
+        connection.send_error(msg["id"], websocket_api.const.ERR_UNAUTHORIZED, str(exc))
+        return
 
-    connection.send_message(websocket_api.result_message(msg["id"], access_token))
+    connection.send_result(msg["id"], access_token)
 
 
+@websocket_api.websocket_command({vol.Required("type"): "auth/refresh_tokens"})
 @websocket_api.ws_require_user()
 @callback
 def websocket_refresh_tokens(
@@ -537,27 +510,38 @@ def websocket_refresh_tokens(
 ):
     """Return metadata of users refresh tokens."""
     current_id = connection.refresh_token_id
-    connection.send_message(
-        websocket_api.result_message(
-            msg["id"],
-            [
-                {
-                    "id": refresh.id,
-                    "client_id": refresh.client_id,
-                    "client_name": refresh.client_name,
-                    "client_icon": refresh.client_icon,
-                    "type": refresh.token_type,
-                    "created_at": refresh.created_at,
-                    "is_current": refresh.id == current_id,
-                    "last_used_at": refresh.last_used_at,
-                    "last_used_ip": refresh.last_used_ip,
-                }
-                for refresh in connection.user.refresh_tokens.values()
-            ],
+
+    tokens = []
+    for refresh in connection.user.refresh_tokens.values():
+        if refresh.credential:
+            auth_provider_type = refresh.credential.auth_provider_type
+        else:
+            auth_provider_type = None
+
+        tokens.append(
+            {
+                "id": refresh.id,
+                "client_id": refresh.client_id,
+                "client_name": refresh.client_name,
+                "client_icon": refresh.client_icon,
+                "type": refresh.token_type,
+                "created_at": refresh.created_at,
+                "is_current": refresh.id == current_id,
+                "last_used_at": refresh.last_used_at,
+                "last_used_ip": refresh.last_used_ip,
+                "auth_provider_type": auth_provider_type,
+            }
         )
-    )
+
+    connection.send_result(msg["id"], tokens)
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/delete_refresh_token",
+        vol.Required("refresh_token_id"): str,
+    }
+)
 @websocket_api.ws_require_user()
 @websocket_api.async_response
 async def websocket_delete_refresh_token(
@@ -567,15 +551,21 @@ async def websocket_delete_refresh_token(
     refresh_token = connection.user.refresh_tokens.get(msg["refresh_token_id"])
 
     if refresh_token is None:
-        return websocket_api.error_message(
-            msg["id"], "invalid_token_id", "Received invalid token"
-        )
+        connection.send_error(msg["id"], "invalid_token_id", "Received invalid token")
+        return
 
     await hass.auth.async_remove_refresh_token(refresh_token)
 
-    connection.send_message(websocket_api.result_message(msg["id"], {}))
+    connection.send_result(msg["id"], {})
 
 
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "auth/sign_path",
+        vol.Required("path"): str,
+        vol.Optional("expires", default=30): int,
+    }
+)
 @websocket_api.ws_require_user()
 @callback
 def websocket_sign_path(

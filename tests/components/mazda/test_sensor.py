@@ -75,6 +75,7 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Front Left Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "35"
@@ -90,6 +91,7 @@ async def test_sensors(hass):
         == "My Mazda3 Front Right Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "35"
@@ -104,6 +106,7 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Left Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "33"
@@ -118,6 +121,7 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Right Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
     assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "33"

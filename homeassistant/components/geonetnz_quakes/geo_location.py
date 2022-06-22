@@ -13,9 +13,9 @@ from homeassistant.const import (
     LENGTH_MILES,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import DOMAIN, FEED
@@ -100,7 +100,7 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._remove_signal_delete()
         self._remove_signal_update()
         # Remove from entity registry.
-        entity_registry = await async_get_registry(self.hass)
+        entity_registry = er.async_get(self.hass)
         if self.entity_id in entity_registry.entities:
             entity_registry.async_remove(self.entity_id)
 

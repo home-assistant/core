@@ -14,9 +14,7 @@
             "user": {
                 "data": {
                     "api_key": "API-Schl\u00fcssel",
-                    "api_token": "API-Geheimnis",
-                    "currencies": "Kontostand W\u00e4hrungen",
-                    "exchange_rates": "Wechselkurse"
+                    "api_token": "API-Geheimnis"
                 },
                 "description": "Bitte gib die Details deines API-Schl\u00fcssels ein, wie von Coinbase bereitgestellt.",
                 "title": "Coinbase API Schl\u00fcssel Details"
@@ -26,9 +24,7 @@
     "options": {
         "error": {
             "currency_unavailable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
-            "currency_unavaliable": "Eine oder mehrere der angeforderten W\u00e4hrungssalden werden von deiner Coinbase-API nicht bereitgestellt.",
             "exchange_rate_unavailable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
-            "exchange_rate_unavaliable": "Einer oder mehrere der angeforderten Wechselkurse werden nicht von Coinbase bereitgestellt.",
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
@@ -36,7 +32,8 @@
                 "data": {
                     "account_balance_currencies": "Zu meldende Wallet-Guthaben.",
                     "exchange_base": "Basisw\u00e4hrung f\u00fcr Wechselkurssensoren.",
-                    "exchange_rate_currencies": "Zu meldende Wechselkurse."
+                    "exchange_rate_currencies": "Zu meldende Wechselkurse.",
+                    "exchnage_rate_precision": "Anzahl der Dezimalstellen f\u00fcr Wechselkurse."
                 },
                 "description": "Coinbase-Optionen anpassen"
             }

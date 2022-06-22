@@ -14,6 +14,7 @@ from zwave_js_server.version import VersionInfo, get_server_version
 from homeassistant import config_entries, exceptions
 from homeassistant.components import usb
 from homeassistant.components.hassio import HassioServiceInfo, is_hassio
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import (
@@ -336,6 +337,33 @@ class ConfigFlow(BaseZwaveJSFlow, config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_on_supervisor()
 
         return await self.async_step_manual()
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> FlowResult:
+        """Handle zeroconf discovery."""
+        home_id = str(discovery_info.properties["homeId"])
+        await self.async_set_unique_id(home_id)
+        self._abort_if_unique_id_configured()
+        self.ws_address = f"ws://{discovery_info.host}:{discovery_info.port}"
+        self.context.update({"title_placeholders": {CONF_NAME: home_id}})
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict | None = None
+    ) -> FlowResult:
+        """Confirm the setup."""
+        if user_input is not None:
+            return await self.async_step_manual({CONF_URL: self.ws_address})
+
+        assert self.ws_address
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            description_placeholders={
+                "home_id": self.unique_id,
+                CONF_URL: self.ws_address[5:],
+            },
+        )
 
     async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
         """Handle USB Discovery."""

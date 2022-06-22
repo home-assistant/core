@@ -9,7 +9,8 @@ from ipaddress import IPv4Address
 import logging
 from urllib.parse import urlparse
 
-from async_upnp_client.search import SsdpHeaders, SsdpSearchListener
+from async_upnp_client.search import SsdpSearchListener
+from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
 from homeassistant.components import network, ssdp
@@ -46,8 +47,8 @@ class YeelightScanner:
         """Initialize class."""
         self._hass = hass
         self._host_discovered_events: dict[str, list[asyncio.Event]] = {}
-        self._unique_id_capabilities: dict[str, SsdpHeaders] = {}
-        self._host_capabilities: dict[str, SsdpHeaders] = {}
+        self._unique_id_capabilities: dict[str, CaseInsensitiveDict] = {}
+        self._host_capabilities: dict[str, CaseInsensitiveDict] = {}
         self._track_interval: CALLBACK_TYPE | None = None
         self._listeners: list[SsdpSearchListener] = []
         self._connected_events: list[asyncio.Event] = []
@@ -123,7 +124,7 @@ class YeelightScanner:
             if isinstance(source_ip, IPv4Address) and not source_ip.is_loopback
         }
 
-    async def async_discover(self) -> ValuesView[SsdpHeaders]:
+    async def async_discover(self) -> ValuesView[CaseInsensitiveDict]:
         """Discover bulbs."""
         _LOGGER.debug("Yeelight discover with interval %s", DISCOVERY_SEARCH_INTERVAL)
         await self.async_setup()
@@ -139,7 +140,7 @@ class YeelightScanner:
         for listener in self._listeners:
             listener.async_search()
 
-    async def async_get_capabilities(self, host: str) -> SsdpHeaders | None:
+    async def async_get_capabilities(self, host: str) -> CaseInsensitiveDict | None:
         """Get capabilities via SSDP."""
         if host in self._host_capabilities:
             return self._host_capabilities[host]
@@ -157,7 +158,7 @@ class YeelightScanner:
         self._host_discovered_events[host].remove(host_event)
         return self._host_capabilities.get(host)
 
-    def _async_discovered_by_ssdp(self, response: SsdpHeaders) -> None:
+    def _async_discovered_by_ssdp(self, response: CaseInsensitiveDict) -> None:
         @callback
         def _async_start_flow(*_) -> None:
             asyncio.create_task(
@@ -177,7 +178,7 @@ class YeelightScanner:
         # of another discovery
         async_call_later(self._hass, 1, _async_start_flow)
 
-    async def _async_process_entry(self, headers: SsdpHeaders) -> None:
+    async def _async_process_entry(self, headers: CaseInsensitiveDict) -> None:
         """Process a discovery."""
         _LOGGER.debug("Discovered via SSDP: %s", headers)
         unique_id = headers["id"]

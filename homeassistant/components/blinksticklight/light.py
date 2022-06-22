@@ -7,8 +7,8 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    COLOR_MODE_HS,
     PLATFORM_SCHEMA,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_NAME
@@ -49,8 +49,8 @@ def setup_platform(
 class BlinkStickLight(LightEntity):
     """Representation of a BlinkStick light."""
 
-    _attr_color_mode = COLOR_MODE_HS
-    _attr_supported_color_modes = {COLOR_MODE_HS}
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, stick, name):
         """Initialize the light."""

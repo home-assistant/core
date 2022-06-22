@@ -6,8 +6,8 @@
             "cannot_connect": "Impossibile connettersi"
         },
         "error": {
-            "one": "Pi\u00f9",
-            "other": "Altri"
+            "one": "Vuoto",
+            "other": "Vuoti"
         },
         "flow_title": "{host}",
         "step": {

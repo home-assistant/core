@@ -15,14 +15,13 @@
                 "data": {
                     "host": "Host",
                     "type": "Jenis printer"
-                },
-                "description": "Siapkan integrasi printer Brother. Jika Anda memiliki masalah dengan konfigurasi, buka: https://www.home-assistant.io/integrations/brother"
+                }
             },
             "zeroconf_confirm": {
                 "data": {
                     "type": "Jenis printer"
                 },
-                "description": "Ingin menambahkan Printer Brother {model} dengan nomor seri `{serial_number}` ke Home Assistant?",
+                "description": "Ingin menambahkan printer {model} dengan nomor seri `{serial_number}` ke Home Assistant?",
                 "title": "Perangkat Printer Brother yang Ditemukan"
             }
         }

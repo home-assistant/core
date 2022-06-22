@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "Die PIN sollte 4-stellig sein",
+            "bad_validation_code_format": "Der Validierungscode sollte 6-stellig sein",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "incorrect_pin": "Falsche PIN",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "incorrect_validation_code": "Falscher Validierungscode",
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "two_factor_request_failed": "Anfrage f\u00fcr 2FA-Code fehlgeschlagen, bitte versuche es erneut"
         },
         "step": {
             "pin": {
@@ -16,6 +19,20 @@
                     "pin": "PIN"
                 },
                 "description": "Bitte gib deinen MySubaru-PIN ein\nHINWEIS: Alle Fahrzeuge im Konto m\u00fcssen dieselbe PIN haben",
+                "title": "Subaru Starlink Konfiguration"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Bitte w\u00e4hle eine Kontaktmethode:"
+                },
+                "description": "Zwei-Faktor-Authentifizierung erforderlich",
+                "title": "Subaru Starlink Konfiguration"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Validierungscode"
+                },
+                "description": "Bitte gib den erhaltenen Validierungscode ein",
                 "title": "Subaru Starlink Konfiguration"
             },
             "user": {
