@@ -32,6 +32,18 @@ from .const import (
     SHOW_DRIVING,
 )
 
+_LOC_ATTRS = (
+    "address",
+    "at_loc_since",
+    "driving",
+    "gps_accuracy",
+    "last_seen",
+    "latitude",
+    "longitude",
+    "place",
+    "speed",
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
@@ -143,9 +155,9 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
                         max_gps_acc,
                         self.location_accuracy,
                     )
-                self._data.latitude = self._prev_data.latitude
-                self._data.longitude = self._prev_data.longitude
-                self._data.gps_accuracy = self._prev_data.gps_accuracy
+                # Overwrite new location related data with previous values.
+                for attr in _LOC_ATTRS:
+                    setattr(self._data, attr, getattr(self._prev_data, attr))
 
             self._prev_data = self._data
 
