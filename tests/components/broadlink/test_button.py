@@ -23,11 +23,9 @@ from tests.common import mock_device_registry, mock_registry
             "34ea34befc25",
             "smsl",
             {
-                "button.entrance_smsl_toggled": {
-                    "friendly_name": "Entrance smsl toggled"
-                },
-                "button.entrance_smsl_standby": {
-                    "friendly_name": "Entrance smsl standby",
+                "button.smsl_toggled": {"friendly_name": "smsl toggled"},
+                "button.smsl_standby": {
+                    "friendly_name": "smsl standby",
                 },
             },
         )
@@ -71,7 +69,7 @@ async def test_button_setup_works(
     [
         (
             "Entrance",
-            ["button.entrance_smsl_standby"],
+            ["button.smsl_standby"],
             [
                 "JgBYAAABJpcTEhM4ERMSExE5EhMSFBAVExIQFRA6ExIROhA6EBUQFRE6ExIRFBAVEBURFBEUERQTEhE5EToTOBA5EzkQORE6EwAFkAABKUoTAAxiAAEoSxEADQU="
             ],
@@ -79,9 +77,9 @@ async def test_button_setup_works(
         (
             "Entrance",
             [
-                "button.entrance_smsl_toggled",
-                "button.entrance_smsl_toggled",
-                "button.entrance_smsl_toggled",
+                "button.smsl_toggled",
+                "button.smsl_toggled",
+                "button.smsl_toggled",
             ],
             [
                 "JgBYAAABJpcQFRA6ERQTEhE5ExIRFBIUERQQFRE5FBEROhA6EhMSExE6ExIRFBAVEBUQFREUEBUTEhE5EToRORI4EToRORM4EgAFkQABJ0sRAAxlAAEmTBIADQU=",
