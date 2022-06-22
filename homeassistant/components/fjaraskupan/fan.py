@@ -1,6 +1,8 @@
 """Support for Fjäråskupan fans."""
 from __future__ import annotations
 
+from typing import Any
+
 from fjaraskupan import (
     COMMAND_AFTERCOOKINGTIMERAUTO,
     COMMAND_AFTERCOOKINGTIMERMANUAL,
@@ -93,9 +95,9 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
 

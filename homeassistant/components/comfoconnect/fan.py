@@ -118,7 +118,7 @@ class ComfoConnectFan(FanEntity):
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         if percentage is None:
