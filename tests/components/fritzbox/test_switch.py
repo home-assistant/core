@@ -84,7 +84,7 @@ async def test_setup(hass: HomeAssistant, fritz: Mock):
         ],
         [
             f"{SENSOR_DOMAIN}.{CONF_FAKE_NAME}_electric_current",
-            "0.0246869565217391",
+            "0.0247",
             f"{CONF_FAKE_NAME} Electric Current",
             ELECTRIC_CURRENT_AMPERE,
             SensorStateClass.MEASUREMENT,

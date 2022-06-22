@@ -107,7 +107,7 @@ SENSOR_TYPES: Final[tuple[FritzSensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.CURRENT,
         state_class=SensorStateClass.MEASUREMENT,
         suitable=lambda device: device.has_powermeter,  # type: ignore[no-any-return]
-        native_value=lambda device: device.power / device.voltage / 1000
+        native_value=lambda device: round(device.power / device.voltage / 1000, 4)
         if device.power and getattr(device, "voltage", None)
         else 0.0,
     ),
