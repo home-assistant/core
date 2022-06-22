@@ -349,6 +349,7 @@ class WeatherEntity(Entity):
         """
         return self._attr_temperature_unit
 
+    @final
     @property
     def _default_temperature_unit(self) -> str:
         """Return the default unit of measurement for temperature.
@@ -357,6 +358,7 @@ class WeatherEntity(Entity):
         """
         return self.hass.config.units.temperature_unit
 
+    @final
     @property
     def _temperature_unit(self) -> str:
         """Return the converted unit of measurement for temperature.
@@ -402,6 +404,7 @@ class WeatherEntity(Entity):
         """
         return self._attr_pressure_unit
 
+    @final
     @property
     def _default_pressure_unit(self) -> str:
         """Return the default unit of measurement for pressure.
@@ -410,6 +413,7 @@ class WeatherEntity(Entity):
         """
         return PRESSURE_HPA if self.hass.config.units.is_metric else PRESSURE_INHG
 
+    @final
     @property
     def _pressure_unit(self) -> str:
         """Return the converted unit of measurement for pressure.
@@ -460,6 +464,7 @@ class WeatherEntity(Entity):
         """
         return self._attr_wind_speed_unit
 
+    @final
     @property
     def _default_wind_speed_unit(self) -> str:
         """Return the default unit of measurement for wind speed.
@@ -472,6 +477,7 @@ class WeatherEntity(Entity):
             else SPEED_MILES_PER_HOUR
         )
 
+    @final
     @property
     def _wind_speed_unit(self) -> str:
         """Return the converted unit of measurement for wind speed.
@@ -527,6 +533,7 @@ class WeatherEntity(Entity):
         """
         return self._attr_visibility_unit
 
+    @final
     @property
     def _default_visibility_unit(self) -> str:
         """Return the default unit of measurement for visibility.
@@ -535,6 +542,7 @@ class WeatherEntity(Entity):
         """
         return self.hass.config.units.length_unit
 
+    @final
     @property
     def _visibility_unit(self) -> str:
         """Return the converted unit of measurement for visibility.
@@ -569,6 +577,7 @@ class WeatherEntity(Entity):
         """
         return self._attr_precipitation_unit
 
+    @final
     @property
     def _default_precipitation_unit(self) -> str:
         """Return the default unit of measurement for precipitation.
@@ -577,6 +586,7 @@ class WeatherEntity(Entity):
         """
         return self.hass.config.units.accumulated_precipitation_unit
 
+    @final
     @property
     def _precipitation_unit(self) -> str:
         """Return the converted unit of measurement for precipitation.
