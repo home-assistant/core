@@ -14,6 +14,7 @@ from pyunifiprotect.data import (
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
     Sensor,
     StateType,
     Viewer,
@@ -25,8 +26,8 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
-from .models import ProtectRequiredKeysMixin
-from .utils import async_get_adoptable_devices_by_type, get_nested_attr
+from .models import PermRequired, ProtectRequiredKeysMixin
+from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +46,13 @@ def _async_device_entities(
     for device in data.get_by_types({model_type}):
         assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         for description in descs:
+            if description.ufp_perm is not None:
+                can_write = device.can_write(data.api.bootstrap.auth_user)
+                if description.ufp_perm == PermRequired.WRITE and not can_write:
+                    continue
+                if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                    continue
+
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)
                 if not required_field:
@@ -117,17 +125,17 @@ class ProtectDeviceEntity(Entity):
         self.device = device
 
         if description is None:
-            self._attr_unique_id = f"{self.device.id}"
+            self._attr_unique_id = f"{self.device.mac}"
             self._attr_name = f"{self.device.name}"
         else:
             self.entity_description = description
-            self._attr_unique_id = f"{self.device.id}_{description.key}"
+            self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
             self._attr_name = f"{self.device.name} {name.title()}"
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
-        self._async_update_device_from_protect()
+        self._async_update_device_from_protect(device)
 
     async def async_update(self) -> None:
         """Update the entity.
@@ -149,14 +157,11 @@ class ProtectDeviceEntity(Entity):
         )
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
-            assert self.device.model
-            devices = async_get_adoptable_devices_by_type(
-                self.data.api, self.device.model
-            )
-            self.device = devices[self.device.id]
+            assert isinstance(device, ProtectAdoptableDeviceModel)
+            self.device = device
 
         is_connected = (
             self.data.last_update_success and self.device.state == StateType.CONNECTED
@@ -173,9 +178,9 @@ class ProtectDeviceEntity(Entity):
         self._attr_available = is_connected
 
     @callback
-    def _async_updated_event(self) -> None:
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
         """Call back for incoming data."""
-        self._async_update_device_from_protect()
+        self._async_update_device_from_protect(device)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -216,7 +221,7 @@ class ProtectNVREntity(ProtectDeviceEntity):
         )
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         if self.data.last_update_success:
             self.device = self.data.api.bootstrap.nvr
 
@@ -253,8 +258,8 @@ class EventThumbnailMixin(ProtectDeviceEntity):
         return attrs
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._event = self._async_get_event()
 
         attrs = self.extra_state_attributes or {}

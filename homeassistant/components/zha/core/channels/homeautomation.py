@@ -12,7 +12,7 @@ from ..const import (
     REPORT_CONFIG_OP,
     SIGNAL_ATTR_UPDATED,
 )
-from .base import ZigbeeChannel
+from .base import AttrReportConfig, ZigbeeChannel
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
@@ -63,15 +63,15 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
         POWER_QUALITY_MEASUREMENT = 256
 
     REPORT_CONFIG = (
-        {"attr": "active_power", "config": REPORT_CONFIG_OP},
-        {"attr": "active_power_max", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "apparent_power", "config": REPORT_CONFIG_OP},
-        {"attr": "rms_current", "config": REPORT_CONFIG_OP},
-        {"attr": "rms_current_max", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "rms_voltage", "config": REPORT_CONFIG_OP},
-        {"attr": "rms_voltage_max", "config": REPORT_CONFIG_DEFAULT},
-        {"attr": "ac_frequency", "config": REPORT_CONFIG_OP},
-        {"attr": "ac_frequency_max", "config": REPORT_CONFIG_DEFAULT},
+        AttrReportConfig(attr="active_power", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="active_power_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="apparent_power", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="rms_current", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="rms_current_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="rms_voltage", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="rms_voltage_max", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="ac_frequency", config=REPORT_CONFIG_OP),
+        AttrReportConfig(attr="ac_frequency_max", config=REPORT_CONFIG_DEFAULT),
     )
     ZCL_INIT_ATTRS = {
         "ac_current_divisor": True,

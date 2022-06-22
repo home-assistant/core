@@ -156,7 +156,7 @@
           "time": "2022-03-12T15:24:26Z",
           "secondsAgo": 4219143
         },
-        "shouldCleanFilters": false
+        "shouldCleanFilters": true
       },
       "serviceSubscriptions": [],
       "roomIsOccupied": true,

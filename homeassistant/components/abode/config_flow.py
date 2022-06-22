@@ -1,6 +1,7 @@
 """Config flow for the Abode Security System component."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from http import HTTPStatus
 from typing import Any, cast
 
@@ -149,7 +150,7 @@ class AbodeFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self._async_abode_mfa_login()
 
-    async def async_step_reauth(self, config: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle reauthorization request from Abode."""
         self._username = config[CONF_USERNAME]
 

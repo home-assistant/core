@@ -1,11 +1,13 @@
 """The tests for MQTT device triggers."""
 import json
+from unittest.mock import patch
 
 import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.mqtt import _LOGGER, DOMAIN, debug_info
+from homeassistant.const import Platform
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.trigger import async_initialize_triggers
 from homeassistant.setup import async_setup_component
@@ -37,6 +39,16 @@ def entity_reg(hass):
 def calls(hass):
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
+
+
+@pytest.fixture(autouse=True)
+def binary_sensor_and_sensor_only():
+    """Only setup the binary_sensor and sensor platform to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS",
+        [Platform.BINARY_SENSOR, Platform.SENSOR],
+    ):
+        yield
 
 
 async def test_get_triggers(

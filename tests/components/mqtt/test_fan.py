@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -72,6 +73,13 @@ DEFAULT_CONFIG = {
         "command_topic": "command-topic",
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def fan_platform_only():
+    """Only setup the fan platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
+        yield
 
 
 async def test_fail_setup_if_no_command_topic(
@@ -1894,13 +1902,11 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = fan.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

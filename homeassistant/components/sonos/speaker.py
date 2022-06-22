@@ -77,7 +77,7 @@ SUBSCRIPTION_SERVICES = [
     "renderingControl",
     "zoneGroupTopology",
 ]
-SUPPORTED_VANISH_REASONS = ("sleeping", "upgrade")
+SUPPORTED_VANISH_REASONS = ("sleeping", "switch to bluetooth", "upgrade")
 UNUSED_DEVICE_KEYS = ["SPID", "TargetRoomName"]
 
 
@@ -146,6 +146,9 @@ class SonosSpeaker:
         self.sub_enabled: bool | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
+        self.surround_mode: bool | None = None
+        self.surround_level: int | None = None
+        self.music_surround_level: int | None = None
 
         # Misc features
         self.buttons_enabled: bool | None = None
@@ -515,11 +518,19 @@ class SonosSpeaker:
             "night_mode",
             "sub_enabled",
             "surround_enabled",
+            "surround_mode",
         ):
             if bool_var in variables:
                 setattr(self, bool_var, variables[bool_var] == "1")
 
-        for int_var in ("audio_delay", "bass", "treble", "sub_gain"):
+        for int_var in (
+            "audio_delay",
+            "bass",
+            "treble",
+            "sub_gain",
+            "surround_level",
+            "music_surround_level",
+        ):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
 

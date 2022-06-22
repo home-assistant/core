@@ -97,7 +97,7 @@ class BaseFan(FanEntity):
         """Turn the entity off."""
         await self.async_set_percentage(0)
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percenage of the fan."""
         fan_mode = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)

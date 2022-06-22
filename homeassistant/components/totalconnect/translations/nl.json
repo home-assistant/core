@@ -32,6 +32,10 @@
     "options": {
         "step": {
             "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatische bypass van batterij bijna leeg"
+                },
+                "description": "Automatisch zones omzeilen op het moment dat ze een bijna lege batterij melden.",
                 "title": "TotalConnect-opties"
             }
         }

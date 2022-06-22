@@ -29,7 +29,6 @@ from .entity import ZhaEntity, ZhaGroupEntity
 
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
-    from .core.channels.general import OnOffChannel
     from .core.device import ZHADevice
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SWITCH)
@@ -72,7 +71,7 @@ class Switch(ZhaEntity, SwitchEntity):
     ) -> None:
         """Initialize the ZHA switch."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel: OnOffChannel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
 
     @property
     def is_on(self) -> bool:

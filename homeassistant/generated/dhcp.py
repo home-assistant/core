@@ -74,6 +74,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'oncue', 'hostname': 'kohlergen*', 'macaddress': '00146F*'},
     {'domain': 'overkiz', 'hostname': 'gateway*', 'macaddress': 'F8811A*'},
     {'domain': 'powerwall', 'hostname': '1118431-*'},
+    {'domain': 'qnap_qsw', 'macaddress': '245EBE*'},
     {'domain': 'rachio', 'hostname': 'rachio-*', 'macaddress': '009D6B*'},
     {'domain': 'rachio', 'hostname': 'rachio-*', 'macaddress': 'F0038C*'},
     {'domain': 'rachio', 'hostname': 'rachio-*', 'macaddress': '74C63B*'},
