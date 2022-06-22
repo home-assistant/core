@@ -16,7 +16,7 @@ from .coordinator import SensiboDataUpdateCoordinator
 
 
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
-    """Representation of a Sensibo entity."""
+    """Representation of a Sensibo Base Entity."""
 
     def __init__(
         self,
@@ -35,7 +35,7 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
 
 
 class SensiboDeviceBaseEntity(SensiboBaseEntity):
-    """Representation of a Sensibo device."""
+    """Representation of a Sensibo Device."""
 
     _attr_has_entity_name = True
 
@@ -44,7 +44,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         coordinator: SensiboDataUpdateCoordinator,
         device_id: str,
     ) -> None:
-        """Initiate Sensibo Number."""
+        """Initiate Sensibo Device."""
         super().__init__(coordinator, device_id)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.device_data.id)},
@@ -114,7 +114,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
 
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
-    """Representation of a Sensibo motion entity."""
+    """Representation of a Sensibo Motion Entity."""
 
     _attr_has_entity_name = True
 
@@ -141,7 +141,7 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
 
     @property
     def sensor_data(self) -> MotionSensor | None:
-        """Return data for device."""
+        """Return data for Motion Sensor."""
         if TYPE_CHECKING:
             assert self.device_data.motion_sensors
         return self.device_data.motion_sensors[self._sensor_id]

@@ -65,7 +65,6 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         name="Alive",
-        icon="mdi:wifi",
         value_fn=lambda data: data.alive,
     ),
     SensiboMotionBinarySensorEntityDescription(
@@ -104,7 +103,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Pure Boost linked with AC",
-        icon="mdi:connection",
         value_fn=lambda data: data.pure_ac_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
@@ -112,7 +110,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Pure Boost linked with presence",
-        icon="mdi:connection",
         value_fn=lambda data: data.pure_geo_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
@@ -120,7 +117,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Pure Boost linked with indoor air quality",
-        icon="mdi:connection",
         value_fn=lambda data: data.pure_measure_integration,
     ),
     SensiboDeviceBinarySensorEntityDescription(
@@ -128,7 +124,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         name="Pure Boost linked with outdoor air quality",
-        icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
     ),
     FILTER_CLEAN_REQUIRED_DESCRIPTION,

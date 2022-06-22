@@ -1,7 +1,11 @@
-"""Number platform for Sensibo integration."""
+"""Select platform for Sensibo integration."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
+from typing import TYPE_CHECKING
+
+from pysensibo.model import SensiboDevice
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
@@ -20,31 +24,34 @@ PARALLEL_UPDATES = 0
 class SensiboSelectDescriptionMixin:
     """Mixin values for Sensibo entities."""
 
-    remote_key: str
-    remote_options: str
+    data_key: str
+    value_fn: Callable[[SensiboDevice], str | None]
+    options_fn: Callable[[SensiboDevice], list[str] | None]
 
 
 @dataclass
 class SensiboSelectEntityDescription(
     SelectEntityDescription, SensiboSelectDescriptionMixin
 ):
-    """Class describing Sensibo Number entities."""
+    """Class describing Sensibo Select entities."""
 
 
 DEVICE_SELECT_TYPES = (
     SensiboSelectEntityDescription(
         key="horizontalSwing",
-        remote_key="horizontal_swing_mode",
-        remote_options="horizontal_swing_modes",
+        data_key="horizontal_swing_mode",
         name="Horizontal swing",
         icon="mdi:air-conditioner",
+        value_fn=lambda data: data.horizontal_swing_mode,
+        options_fn=lambda data: data.horizontal_swing_modes,
     ),
     SensiboSelectEntityDescription(
         key="light",
-        remote_key="light_mode",
-        remote_options="light_modes",
+        data_key="light_mode",
         name="Light",
         icon="mdi:flashlight",
+        value_fn=lambda data: data.light_mode,
+        options_fn=lambda data: data.light_modes,
     ),
 )
 
@@ -83,15 +90,15 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return the current selected option."""
-        option: str | None = getattr(
-            self.device_data, self.entity_description.remote_key
-        )
-        return option
+        return self.entity_description.value_fn(self.device_data)
 
     @property
     def options(self) -> list[str]:
         """Return possible options."""
-        return getattr(self.device_data, self.entity_description.remote_options) or []
+        options = self.entity_description.options_fn(self.device_data)
+        if TYPE_CHECKING:
+            assert options is not None
+        return options
 
     async def async_select_option(self, option: str) -> None:
         """Set state to the selected option."""
@@ -109,7 +116,7 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
         result = await self.async_send_command("set_ac_state", params)
 
         if result["result"]["status"] == "Success":
-            setattr(self.device_data, self.entity_description.remote_key, option)
+            setattr(self.device_data, self.entity_description.data_key, option)
             self.async_write_ha_state()
             return
 
