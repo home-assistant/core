@@ -7,11 +7,11 @@ from ipaddress import ip_address
 import logging
 import secrets
 from typing import Final
+from urllib.parse import unquote
 
 from aiohttp import hdrs
 from aiohttp.web import Application, Request, StreamResponse, middleware
 import jwt
-from yarl import URL
 
 from homeassistant.auth.const import GROUP_ID_READ_ONLY
 from homeassistant.auth.models import User
@@ -29,7 +29,6 @@ _LOGGER = logging.getLogger(__name__)
 DATA_API_PASSWORD: Final = "api_password"
 DATA_SIGN_SECRET: Final = "http.auth.sign_secret"
 SIGN_QUERY_PARAM: Final = "authSig"
-SAFE_QUERY_PARAMS: Final = ["height", "width"]
 
 STORAGE_VERSION = 1
 STORAGE_KEY = "http.auth"
@@ -58,26 +57,18 @@ def async_sign_path(
         else:
             refresh_token_id = hass.data[STORAGE_KEY]
 
-    url = URL(path)
     now = dt_util.utcnow()
-    params = dict(sorted(url.query.items()))
-    for param in SAFE_QUERY_PARAMS:
-        params.pop(param, None)
     encoded = jwt.encode(
         {
             "iss": refresh_token_id,
-            "path": url.path,
-            "params": params,
+            "path": unquote(path),
             "iat": now,
             "exp": now + expiration,
         },
         secret,
         algorithm="HS256",
     )
-
-    params[SIGN_QUERY_PARAM] = encoded
-    url = url.with_query(params)
-    return f"{url.path}?{url.query_string}"
+    return f"{path}?{SIGN_QUERY_PARAM}={encoded}"
 
 
 @callback
@@ -183,13 +174,6 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
             return False
 
         if claims["path"] != request.path:
-            return False
-
-        params = dict(sorted(request.query.items()))
-        del params[SIGN_QUERY_PARAM]
-        for param in SAFE_QUERY_PARAMS:
-            params.pop(param, None)
-        if claims["params"] != params:
             return False
 
         refresh_token = await hass.auth.async_get_refresh_token(claims["iss"])
