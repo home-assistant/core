@@ -290,6 +290,25 @@ class DeconzLight(DeconzBaseLight[Light]):
         return self._device.min_color_temp or super().min_mireds
 
 
+def setup_light_state_subscription(
+    gateway: DeconzGateway, group: Group, light: Light
+) -> None:
+    """Update group colors based on light states.
+
+    deCONZ group updates don't contain any information about the current
+    state of the lights in the group. This method updates the color
+    properties of the group to the current color of the lights in the
+    group.
+    """
+
+    def updated_light() -> None:
+        """Parse updated light state and reflect it in group."""
+        if light.reachable and light.changed_keys and "attr" not in light.changed_keys:
+            group.update_color_state(light)
+
+    light.subscribe(updated_light)
+
+
 class DeconzGroup(DeconzBaseLight[Group]):
     """Representation of a deCONZ group."""
 
@@ -297,6 +316,16 @@ class DeconzGroup(DeconzBaseLight[Group]):
 
     def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""
+        first = True
+        for light_id in device.lights:
+            if (
+                light := gateway.api.lights.lights.get(light_id)
+            ) and light.ZHATYPE == Light.ZHATYPE:
+                if light.reachable:
+                    device.update_color_state(light, update_all_attributes=first)
+                    first = False
+                setup_light_state_subscription(gateway, device, light)
+
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
 
