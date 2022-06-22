@@ -107,13 +107,11 @@ async def async_setup_entry(
     platform.async_register_entity_service(
         SERVICE_ENABLE_PURE_BOOST,
         {
-            vol.Inclusive(ATTR_AC_INTEGRATION, "settings"): bool,
-            vol.Inclusive(ATTR_GEO_INTEGRATION, "settings"): bool,
-            vol.Inclusive(ATTR_INDOOR_INTEGRATION, "settings"): bool,
-            vol.Inclusive(ATTR_OUTDOOR_INTEGRATION, "settings"): bool,
-            vol.Inclusive(ATTR_SENSITIVITY, "settings"): vol.In(
-                ["Normal", "Sensitive"]
-            ),
+            vol.Required(ATTR_AC_INTEGRATION): bool,
+            vol.Required(ATTR_GEO_INTEGRATION): bool,
+            vol.Required(ATTR_INDOOR_INTEGRATION): bool,
+            vol.Required(ATTR_OUTDOOR_INTEGRATION): bool,
+            vol.Required(ATTR_SENSITIVITY): vol.In(["Normal", "Sensitive"]),
         },
         "async_enable_pure_boost",
     )
