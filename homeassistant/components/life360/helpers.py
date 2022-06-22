@@ -81,7 +81,7 @@ class Life360Member:
     battery_level: int
     driving: bool
     entity_picture: str
-    gps_accuracy: float
+    gps_accuracy: int
     last_seen: datetime
     latitude: float
     longitude: float

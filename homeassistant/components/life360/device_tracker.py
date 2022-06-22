@@ -202,7 +202,7 @@ class Life360DeviceTracker(CoordinatorEntity, TrackerEntity):
 
         Value in meters.
         """
-        return int(self._data.gps_accuracy)
+        return self._data.gps_accuracy
 
     @property
     def driving(self) -> bool:
