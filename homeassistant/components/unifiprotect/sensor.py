@@ -10,6 +10,7 @@ from pyunifiprotect.data import (
     NVR,
     Camera,
     Event,
+    Light,
     ProtectAdoptableDeviceModel,
     ProtectDeviceModel,
     ProtectModelWithId,
@@ -46,7 +47,8 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import ProtectRequiredKeysMixin, T
+from .models import PermRequired, ProtectRequiredKeysMixin, T
+from .utils import async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -197,6 +199,51 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="last_ring",
         entity_registry_enabled_default=False,
     ),
+    ProtectSensorEntityDescription(
+        key="mic_level",
+        name="Microphone Level",
+        icon="mdi:microphone",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="feature_flags.has_mic",
+        ufp_value="mic_volume",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="recording_mode",
+        name="Recording Mode",
+        icon="mdi:video-outline",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="recording_settings.mode",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="infrared",
+        name="Infrared Mode",
+        icon="mdi:circle-opacity",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="feature_flags.has_led_ir",
+        ufp_value="isp_settings.ir_led_mode",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="doorbell_text",
+        name="Doorbell Text",
+        icon="mdi:card-text",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_required_field="feature_flags.has_lcd_screen",
+        ufp_value="lcd_message.text",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="chime_type",
+        name="Chime Type",
+        icon="mdi:bell",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        ufp_required_field="feature_flags.has_chime",
+        ufp_value="chime_type",
+    ),
 )
 
 CAMERA_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -284,6 +331,31 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="tampering_detected_at",
         entity_registry_enabled_default=False,
     ),
+    ProtectSensorEntityDescription(
+        key="sensitivity",
+        name="Motion Sensitivity",
+        icon="mdi:walk",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="motion_settings.sensitivity",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="mount_type",
+        name="Mount Type",
+        icon="mdi:screwdriver",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="mount_type",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="paired_camera",
+        name="Paired Camera",
+        icon="mdi:cctv",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="camera.name",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
 )
 
 DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -295,6 +367,14 @@ DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="battery_status.percentage",
+    ),
+    ProtectSensorEntityDescription(
+        key="paired_camera",
+        name="Paired Camera",
+        icon="mdi:cctv",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="camera.name",
+        ufp_perm=PermRequired.NO_WRITE,
     ),
 )
 
@@ -439,6 +519,31 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="last_motion",
         entity_registry_enabled_default=False,
     ),
+    ProtectSensorEntityDescription(
+        key="sensitivity",
+        name="Motion Sensitivity",
+        icon="mdi:walk",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="light_device_settings.pir_sensitivity",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription[Light](
+        key="light_motion",
+        name="Light Mode",
+        icon="mdi:spotlight",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value_fn=async_get_light_motion_current,
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+    ProtectSensorEntityDescription(
+        key="paired_camera",
+        name="Paired Camera",
+        icon="mdi:cctv",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="camera.name",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
 )
 
 MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
@@ -459,6 +564,26 @@ CHIME_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         icon="mdi:bell",
         ufp_value="last_ring",
     ),
+    ProtectSensorEntityDescription(
+        key="volume",
+        name="Volume",
+        icon="mdi:speaker",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="volume",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
+)
+
+VIEWER_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="viewer",
+        name="Liveview",
+        icon="mdi:view-dashboard",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        ufp_value="liveview.name",
+        ufp_perm=PermRequired.NO_WRITE,
+    ),
 )
 
 
@@ -478,6 +603,7 @@ async def async_setup_entry(
         light_descs=LIGHT_SENSORS,
         lock_descs=DOORLOCK_SENSORS,
         chime_descs=CHIME_SENSORS,
+        viewer_descs=VIEWER_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)

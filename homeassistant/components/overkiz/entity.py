@@ -118,3 +118,4 @@ class OverkizDeviceClass(StrEnum):
     PRIORITY_LOCK_ORIGINATOR = "overkiz__priority_lock_originator"
     SENSOR_DEFECT = "overkiz__sensor_defect"
     SENSOR_ROOM = "overkiz__sensor_room"
+    THREE_WAY_HANDLE_DIRECTION = "overkiz__three_way_handle_direction"

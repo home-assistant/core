@@ -51,6 +51,9 @@ from .conftest import (
     time_changed,
 )
 
+CAMERA_SENSORS_WRITE = CAMERA_SENSORS[:5]
+SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
+
 
 @pytest.fixture(name="sensor")
 async def sensor_fixture(
@@ -193,7 +196,7 @@ async def test_sensor_setup_sensor(
         "10.0",
         "none",
     )
-    for index, description in enumerate(SENSE_SENSORS):
+    for index, description in enumerate(SENSE_SENSORS_WRITE):
         if not description.entity_registry_enabled_default:
             continue
         unique_id, entity_id = ids_from_device_description(
@@ -241,7 +244,7 @@ async def test_sensor_setup_sensor_none(
         STATE_UNAVAILABLE,
         STATE_UNAVAILABLE,
     )
-    for index, description in enumerate(SENSE_SENSORS):
+    for index, description in enumerate(SENSE_SENSORS_WRITE):
         if not description.entity_registry_enabled_default:
             continue
         unique_id, entity_id = ids_from_device_description(
@@ -411,7 +414,7 @@ async def test_sensor_setup_camera(
 ):
     """Test sensor entity setup for camera devices."""
     # 3 from all, 7 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 24, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 13)
 
     entity_registry = er.async_get(hass)
 
@@ -421,7 +424,7 @@ async def test_sensor_setup_camera(
         "100.0",
         "20.0",
     )
-    for index, description in enumerate(CAMERA_SENSORS):
+    for index, description in enumerate(CAMERA_SENSORS_WRITE):
         if not description.entity_registry_enabled_default:
             continue
         unique_id, entity_id = ids_from_device_description(
@@ -536,7 +539,7 @@ async def test_sensor_update_motion(
 ):
     """Test sensor motion entity."""
     # 3 from all, 7 from camera, 12 NVR
-    assert_entity_counts(hass, Platform.SENSOR, 24, 13)
+    assert_entity_counts(hass, Platform.SENSOR, 25, 13)
 
     _, entity_id = ids_from_device_description(
         Platform.SENSOR, camera, MOTION_SENSORS[0]
@@ -584,7 +587,7 @@ async def test_sensor_update_alarm(
     assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
     _, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor, SENSE_SENSORS[4]
+        Platform.SENSOR, sensor, SENSE_SENSORS_WRITE[4]
     )
 
     event_metadata = EventMetadata(sensor_id=sensor.id, alarm_type="smoke")
@@ -632,7 +635,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
     # Last Trip Time
     unique_id, entity_id = ids_from_device_description(
-        Platform.SENSOR, sensor, SENSE_SENSORS[-3]
+        Platform.SENSOR, sensor, SENSE_SENSORS_WRITE[-3]
     )
     entity_registry = er.async_get(hass)
 

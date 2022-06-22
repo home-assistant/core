@@ -25,13 +25,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up lights for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
-    entities = [
-        ProtectLight(
-            data,
-            device,
-        )
-        for device in data.api.bootstrap.lights.values()
-    ]
+    entities = []
+    for device in data.api.bootstrap.lights.values():
+        if device.can_write(data.api.bootstrap.auth_user):
+            entities.append(ProtectLight(data, device))
 
     if not entities:
         return

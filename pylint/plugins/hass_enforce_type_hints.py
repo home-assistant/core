@@ -20,8 +20,11 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    arg_types: dict[int, str]
     return_type: list[str] | str | None | object
+    # arg_types is for positional arguments
+    arg_types: dict[int, str] | None = None
+    # kwarg_types is for the special case `**kwargs`
+    kwargs_type: str | None = None
     check_return_type_inheritance: bool = False
 
 
@@ -440,7 +443,72 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
-    ]
+    ],
+}
+# Overriding properties and functions are normally checked by mypy, and will only
+# be checked by pylint when --ignore-missing-annotations is False
+_INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "lock": [
+        ClassTypeHintMatch(
+            base_class="LockEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="changed_by",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_format",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_locked",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_locking",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_unlocking",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_jammed",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="lock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_lock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="unlock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_unlock",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="open",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_open",
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+            ],
+        ),
+    ],
 }
 
 
@@ -578,7 +646,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W7431": (
-            "Argument %d should be of type %s",
+            "Argument %s should be of type %s",
             "hass-argument-type",
             "Used when method argument type is incorrect",
         ),
@@ -621,7 +689,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self._function_matchers.extend(function_matches)
 
         if class_matches := _CLASS_MATCH.get(module_platform):
-            self._class_matchers = class_matches
+            self._class_matchers.extend(class_matches)
+
+        if not self.linter.config.ignore_missing_annotations and (
+            property_matches := _INHERITANCE_MATCH.get(module_platform)
+        ):
+            self._class_matchers.extend(property_matches)
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
@@ -659,14 +732,25 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             return
 
-        # Check that all arguments are correctly annotated.
-        for key, expected_type in match.arg_types.items():
-            if not _is_valid_type(expected_type, annotations[key]):
-                self.add_message(
-                    "hass-argument-type",
-                    node=node.args.args[key],
-                    args=(key + 1, expected_type),
-                )
+        # Check that all positional arguments are correctly annotated.
+        if match.arg_types:
+            for key, expected_type in match.arg_types.items():
+                if not _is_valid_type(expected_type, annotations[key]):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=node.args.args[key],
+                        args=(key + 1, expected_type),
+                    )
+
+        # Check that kwargs is correctly annotated.
+        if match.kwargs_type and not _is_valid_type(
+            match.kwargs_type, node.args.kwargannotation
+        ):
+            self.add_message(
+                "hass-argument-type",
+                node=node,
+                args=(node.args.kwarg, match.kwargs_type),
+            )
 
         # Check the return type.
         if not _is_valid_return_type(match, node.returns):
