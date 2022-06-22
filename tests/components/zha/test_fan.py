@@ -535,12 +535,13 @@ def zigpy_device_ikea(zigpy_device_mock):
             SIG_EP_TYPE: zha.DeviceType.COMBINED_INTERFACE,
             SIG_EP_PROFILE: zha.PROFILE_ID,
         },
-
-
     }
     return zigpy_device_mock(
-        endpoints, manufacturer="IKEA of Sweden", model="STARKVIND Air purifier", quirk=zhaquirks.ikea.starkvind.IkeaSTARKVIND,
-        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00"
+        endpoints,
+        manufacturer="IKEA of Sweden",
+        model="STARKVIND Air purifier",
+        quirk=zhaquirks.ikea.starkvind.IkeaSTARKVIND,
+        node_descriptor=b"\x02@\x8c\x02\x10RR\x00\x00\x00R\x00\x00",
     )
 
 
@@ -621,7 +622,6 @@ async def test_fan_ikea(hass, zha_device_joined_restored, zigpy_device_ikea):
         ({"fan_mode": 40}, STATE_ON, 80, "Speed 4"),
         ({"fan_mode": 45}, STATE_ON, 90, "Speed 4.5"),
         ({"fan_mode": 50}, STATE_ON, 100, "Speed 5"),
-
     ),
 )
 async def test_fan_ikea_init(
@@ -641,7 +641,10 @@ async def test_fan_ikea_init(
     entity_id = await find_entity_id(Platform.FAN, zha_device, hass)
     assert entity_id is not None
     assert hass.states.get(entity_id).state == ikea_expected_state
-    assert hass.states.get(entity_id).attributes[ATTR_PERCENTAGE] == ikea_expected_percentage
+    assert (
+        hass.states.get(entity_id).attributes[ATTR_PERCENTAGE]
+        == ikea_expected_percentage
+    )
     assert hass.states.get(entity_id).attributes[ATTR_PRESET_MODE] == ikea_preset_mode
 
 

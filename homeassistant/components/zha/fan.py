@@ -269,9 +269,7 @@ class IkeaFan(BaseFan, ZhaEntity):
 
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percenage of the fan."""
-        fan_mode = math.ceil(
-            percentage_to_ranged_value(IKEA_SPEED_RANGE, percentage)
-        )
+        fan_mode = math.ceil(percentage_to_ranged_value(IKEA_SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -302,7 +300,9 @@ class IkeaFan(BaseFan, ZhaEntity):
     async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
         """Turn the entity on."""
         if percentage is None:
-            percentage = (100 / self.speed_count) * IKEA_NAME_TO_PRESET_MODE[PRESET_MODE_AUTO]
+            percentage = (100 / self.speed_count) * IKEA_NAME_TO_PRESET_MODE[
+                PRESET_MODE_AUTO
+            ]
         await self.async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs) -> None:
