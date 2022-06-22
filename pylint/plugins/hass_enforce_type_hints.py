@@ -21,10 +21,12 @@ class TypeHintMatch:
 
     function_name: str
     return_type: list[str] | str | None | object
-    # arg_types is for positional arguments
     arg_types: dict[int, str] | None = None
-    # kwarg_types is for the special case `**kwargs`
+    """arg_types is for positional arguments"""
+    named_arg_types: dict[str, str] | None = None
+    """named_arg_types is for named or keyword arguments"""
     kwargs_type: str | None = None
+    """kwargs_type is for the special case `**kwargs`"""
     check_return_type_inheritance: bool = False
 
 
@@ -448,6 +450,111 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "fan": [
+        ClassTypeHintMatch(
+            base_class="FanEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="percentage",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="speed_count",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="percentage_step",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="current_direction",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="oscillating",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type="dict[str]",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="preset_mode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="preset_modes",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_percentage",
+                    arg_types={1: "int"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_set_percentage",
+                    arg_types={1: "int"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="set_preset_mode",
+                    arg_types={1: "str"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_set_preset_mode",
+                    arg_types={1: "str"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="set_direction",
+                    arg_types={1: "str"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_set_direction",
+                    arg_types={1: "str"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    named_arg_types={
+                        "percentage": "int | None",
+                        "preset_mode": "str | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_turn_on",
+                    named_arg_types={
+                        "percentage": "int | None",
+                        "preset_mode": "str | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="oscillate",
+                    arg_types={1: "bool"},
+                    return_type=None,
+                ),
+                TypeHintMatch(
+                    function_name="async_oscillate",
+                    arg_types={1: "bool"},
+                    return_type=None,
+                ),
+            ],
+        ),
+    ],
     "lock": [
         ClassTypeHintMatch(
             base_class="LockEntity",
@@ -619,6 +726,21 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     return annotations
 
 
+def _get_named_annotation(
+    node: nodes.FunctionDef, key: str
+) -> tuple[nodes.NodeNG, nodes.NodeNG] | tuple[None, None]:
+    args = node.args
+    for index, arg_node in enumerate(args.args):
+        if key == arg_node.name:
+            return arg_node, args.annotations[index]
+
+    for index, arg_node in enumerate(args.kwonlyargs):
+        if key == arg_node.name:
+            return arg_node, args.kwonlyargs_annotations[index]
+
+    return None, None
+
+
 def _has_valid_annotations(
     annotations: list[nodes.NodeNG | None],
 ) -> bool:
@@ -740,6 +862,17 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
                         "hass-argument-type",
                         node=node.args.args[key],
                         args=(key + 1, expected_type),
+                    )
+
+        # Check that all keyword arguments are correctly annotated.
+        if match.named_arg_types is not None:
+            for arg_name, expected_type in match.named_arg_types.items():
+                arg_node, annotation = _get_named_annotation(node, arg_name)
+                if arg_node and not _is_valid_type(expected_type, annotation):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=arg_node,
+                        args=(arg_name, expected_type),
                     )
 
         # Check that kwargs is correctly annotated.
