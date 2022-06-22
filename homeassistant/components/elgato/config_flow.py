@@ -6,7 +6,7 @@ from typing import Any
 from elgato import Elgato, ElgatoError
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PORT
 from homeassistant.core import callback
@@ -55,6 +55,9 @@ class ElgatoFlowHandler(ConfigFlow, domain=DOMAIN):
             await self._get_elgato_serial_number()
         except ElgatoError:
             return self.async_abort(reason="cannot_connect")
+
+        if not onboarding.async_is_onboarded(self.hass):
+            return self._async_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(
