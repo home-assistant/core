@@ -12,7 +12,7 @@ from .const import LOGGER, SENSIBO_ERRORS, TIMEOUT
 
 
 async def async_validate_api(hass: HomeAssistant, api_key: str) -> str:
-    """Get data from API."""
+    """Validate the api and return username."""
     client = SensiboClient(
         api_key,
         session=async_get_clientsession(hass),

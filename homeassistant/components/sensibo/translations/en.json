@@ -15,11 +15,17 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API Key"
+                },
+                "data_description": {
+                    "api_key": "Follow the documentation to get a new api key."
                 }
             },
             "user": {
                 "data": {
                     "api_key": "API Key"
+                },
+                "data_description": {
+                    "api_key": "Follow the documentation to get your api key."
                 }
             }
         }

@@ -123,13 +123,10 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
     def __init__(
         self, coordinator: SensiboDataUpdateCoordinator, device_id: str
     ) -> None:
-        """Initiate SensiboClimate."""
+        """Initiate Sensibo Climate."""
         super().__init__(coordinator, device_id)
         self._attr_unique_id = device_id
         self._attr_name = self.device_data.name
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
-        )
         self._attr_supported_features = self.get_features()
         self._attr_precision = PRECISION_TENTHS
 
@@ -173,6 +170,11 @@ class SensiboClimate(SensiboDeviceBaseEntity, ClimateEntity):
                 self.temperature_unit,
             )
         return None
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return temperature unit."""
+        return TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
 
     @property
     def target_temperature(self) -> float | None:
