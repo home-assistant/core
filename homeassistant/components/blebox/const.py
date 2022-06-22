@@ -1,5 +1,6 @@
 """Constants for the BleBox devices integration."""
 
+from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
@@ -28,6 +29,7 @@ BLEBOX_TO_HASS_DEVICE_CLASSES = {
     "gate": CoverDeviceClass.GATE,
     "relay": SwitchDeviceClass.SWITCH,
     "temperature": SensorDeviceClass.TEMPERATURE,
+    "button": ButtonDeviceClass.UPDATE,
 }
 
 BLEBOX_TO_HASS_COVER_STATES = {
