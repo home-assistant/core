@@ -728,7 +728,7 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
 
 def _get_named_annotation(
     node: nodes.FunctionDef, key: str
-) -> tuple[nodes.NodeNG | None, nodes.NodeNG | None]:
+) -> tuple[nodes.NodeNG, nodes.NodeNG] | tuple[None, None]:
     args = node.args
     for index, arg_node in enumerate(args.args):
         if key == arg_node.name:
