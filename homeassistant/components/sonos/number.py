@@ -20,6 +20,8 @@ LEVEL_TYPES = {
     "bass": (-10, 10),
     "treble": (-10, 10),
     "sub_gain": (-15, 15),
+    "surround_level": (-15, 15),
+    "music_surround_level": (-15, 15),
 }
 
 _LOGGER = logging.getLogger(__name__)
