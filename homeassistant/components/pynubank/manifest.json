@@ -8,6 +8,6 @@
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@leonardoPimentelns"],
+  "codeowners": [],
   "iot_class": "cloud_polling"
 }
