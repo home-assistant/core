@@ -105,13 +105,26 @@ async def async_setup_entry(
 
     @callback
     def async_add_group(_: EventType, group_id: str) -> None:
-        """Add group from deCONZ."""
+        """Add group from deCONZ.
+
+        Update group states based on its sum of related lights.
+        """
         if (
             not gateway.option_allow_deconz_groups
             or (group := gateway.api.groups[group_id])
             and not group.lights
         ):
             return
+
+        first = True
+        for light_id in group.lights:
+            if (
+                (light := gateway.api.lights.lights.get(light_id))
+                and light.ZHATYPE == Light.ZHATYPE
+                and light.reachable
+            ):
+                group.update_color_state(light, update_all_attributes=first)
+                first = False
 
         async_add_entities([DeconzGroup(group, gateway)])
 
@@ -289,24 +302,15 @@ class DeconzLight(DeconzBaseLight[Light]):
         """Return the coldest color_temp that this light supports."""
         return self._device.min_color_temp or super().min_mireds
 
+    @callback
+    def async_update_callback(self) -> None:
+        """Light state will also reflect in relevant groups."""
+        super().async_update_callback()
 
-def setup_light_state_subscription(
-    gateway: DeconzGateway, group: Group, light: Light
-) -> None:
-    """Update group colors based on light states.
-
-    deCONZ group updates don't contain any information about the current
-    state of the lights in the group. This method updates the color
-    properties of the group to the current color of the lights in the
-    group.
-    """
-
-    def updated_light() -> None:
-        """Parse updated light state and reflect it in group."""
-        if light.reachable and light.changed_keys and "attr" not in light.changed_keys:
-            group.update_color_state(light)
-
-    light.subscribe(updated_light)
+        if self._device.reachable and "attr" not in self._device.changed_keys:
+            for group in self.gateway.api.groups.values():
+                if self._device.resource_id in group.lights:
+                    group.update_color_state(self._device)
 
 
 class DeconzGroup(DeconzBaseLight[Group]):
@@ -316,16 +320,6 @@ class DeconzGroup(DeconzBaseLight[Group]):
 
     def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""
-        first = True
-        for light_id in device.lights:
-            if (
-                light := gateway.api.lights.lights.get(light_id)
-            ) and light.ZHATYPE == Light.ZHATYPE:
-                if light.reachable:
-                    device.update_color_state(light, update_all_attributes=first)
-                    first = False
-                setup_light_state_subscription(gateway, device, light)
-
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
 
