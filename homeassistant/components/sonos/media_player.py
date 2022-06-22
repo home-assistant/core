@@ -67,6 +67,7 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
+LONG_SERVICE_TIMEOUT = 30.0
 VOLUME_INCREMENT = 2
 
 REPEAT_TO_SONOS = {
@@ -580,36 +581,44 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if result.shuffle:
                 self.set_shuffle(True)
             if enqueue == MediaPlayerEnqueue.ADD:
-                plex_plugin.add_to_queue(result.media)
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
-                new_pos = plex_plugin.add_to_queue(result.media, position=pos)
+                new_pos = plex_plugin.add_to_queue(
+                    result.media, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
-                plex_plugin.add_to_queue(result.media)
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
             return
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
             if enqueue == MediaPlayerEnqueue.ADD:
-                share_link.add_share_link_to_queue(media_id)
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
-                new_pos = share_link.add_share_link_to_queue(media_id, position=pos)
+                new_pos = share_link.add_share_link_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
-                share_link.add_share_link_to_queue(media_id)
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
                 soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             # If media ID is a relative URL, we serve it from HA.
