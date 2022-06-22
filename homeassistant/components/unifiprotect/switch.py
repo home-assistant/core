@@ -22,7 +22,6 @@ from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
 from .models import PermRequired, ProtectSetableKeysMixin, T
-from .utils import async_get_is_highfps
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,7 +80,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         icon="mdi:video-high-definition",
         entity_category=EntityCategory.CONFIG,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value_fn=async_get_is_highfps,
+        ufp_value="is_high_fps_enabled",
         ufp_set_method_fn=_set_highfps,
         ufp_perm=PermRequired.WRITE,
     ),
@@ -328,7 +327,7 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
     ) -> None:
         """Initialize an UniFi Protect Switch."""
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
         self._switch_type = self.entity_description.key
 
         if not isinstance(self.device, Camera):
@@ -362,7 +361,9 @@ class ProtectSwitch(ProtectDeviceEntity, SwitchEntity):
 
         if self._switch_type == _KEY_PRIVACY_MODE:
             assert isinstance(self.device, Camera)
-            _LOGGER.debug("Setting Privacy Mode to false for %s", self.device.name)
+            _LOGGER.debug(
+                "Setting Privacy Mode to false for %s", self.device.display_name
+            )
             await self.device.set_privacy(
                 False, self._previous_mic_level, self._previous_record_mode
             )

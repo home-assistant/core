@@ -120,7 +120,9 @@ class ProtectData:
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
         # removed packets are not processed yet
-        if message.new_obj is None:  # pragma: no cover
+        if message.new_obj is None or not getattr(
+            message.new_obj, "is_adopted_by_us", True
+        ):
             return
 
         if message.new_obj.model in DEVICES_WITH_ENTITIES:

@@ -5,6 +5,8 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from pyunifiprotect.data import Light
+from pyunifiprotect.data.bootstrap import ProtectDeviceRef
+from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -33,6 +35,10 @@ async def test_migrate_reboot_button(
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
         light2.id: light2,
+    }
+    mock_entry.api.bootstrap.id_lookup = {
+        light1.id: ProtectDeviceRef(id=light1.id, model=light1.model),
+        light2.id: ProtectDeviceRef(id=light2.id, model=light2.model),
     }
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
 
@@ -75,6 +81,41 @@ async def test_migrate_reboot_button(
     )
     assert light is not None
     assert light.unique_id == f"{light2.mac}_reboot"
+
+
+async def test_migrate_nvr_mac(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
+):
+    """Test migrating unique ID of NVR to use MAC address."""
+
+    mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
+    nvr = mock_entry.api.bootstrap.nvr
+    regenerate_device_ids(nvr)
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{nvr.id}_storage_utilization",
+        config_entry=mock_entry.entry,
+    )
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.entry.state == ConfigEntryState.LOADED
+    assert mock_entry.api.update.called
+    assert mock_entry.entry.unique_id == mock_entry.api.bootstrap.nvr.mac
+
+    assert registry.async_get(f"{Platform.SENSOR}.{DOMAIN}_storage_utilization") is None
+    assert (
+        registry.async_get(f"{Platform.SENSOR}.{DOMAIN}_storage_utilization_2") is None
+    )
+    sensor = registry.async_get(
+        f"{Platform.SENSOR}.{DOMAIN}_{nvr.id}_storage_utilization"
+    )
+    assert sensor is not None
+    assert sensor.unique_id == f"{nvr.mac}_storage_utilization"
 
 
 async def test_migrate_reboot_button_no_device(
@@ -132,6 +173,9 @@ async def test_migrate_reboot_button_fail(
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
     }
+    mock_entry.api.bootstrap.id_lookup = {
+        light1.id: ProtectDeviceRef(id=light1.id, model=light1.model),
+    }
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
 
     registry = er.async_get(hass)
@@ -175,6 +219,9 @@ async def test_migrate_device_mac_button_fail(
     mock_entry.api.bootstrap.lights = {
         light1.id: light1,
     }
+    mock_entry.api.bootstrap.id_lookup = {
+        light1.id: ProtectDeviceRef(id=light1.id, model=light1.model)
+    }
     mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
 
     registry = er.async_get(hass)
@@ -203,3 +250,40 @@ async def test_migrate_device_mac_button_fail(
     light = registry.async_get(f"{Platform.BUTTON}.test_light_1")
     assert light is not None
     assert light.unique_id == f"{light1.id}_reboot"
+
+
+async def test_migrate_device_mac_bootstrap_fail(
+    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
+):
+    """Test migrating with a network error."""
+
+    light1 = mock_light.copy()
+    light1._api = mock_entry.api
+    light1.name = "Test Light 1"
+    regenerate_device_ids(light1)
+
+    mock_entry.api.bootstrap.lights = {
+        light1.id: light1,
+    }
+    mock_entry.api.get_bootstrap = AsyncMock(side_effect=NvrError)
+
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        f"{light1.id}_reboot",
+        config_entry=mock_entry.entry,
+        suggested_object_id=light1.name,
+    )
+    registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        f"{light1.mac}_reboot",
+        config_entry=mock_entry.entry,
+        suggested_object_id=light1.name,
+    )
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_entry.entry.state == ConfigEntryState.SETUP_RETRY

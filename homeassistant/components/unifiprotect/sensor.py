@@ -108,7 +108,7 @@ def _get_alarm_sound(obj: Sensor) -> str:
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription[ProtectDeviceModel](
+    ProtectSensorEntityDescription(
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -353,7 +353,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.name",
+        ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
@@ -373,13 +373,13 @@ DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.name",
+        ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
 
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription[ProtectDeviceModel](
+    ProtectSensorEntityDescription(
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -541,7 +541,7 @@ LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Paired Camera",
         icon="mdi:cctv",
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.name",
+        ufp_value="camera.display_name",
         ufp_perm=PermRequired.NO_WRITE,
     ),
 )
@@ -618,11 +618,14 @@ def _async_motion_entities(
     entities: list[ProtectDeviceEntity] = []
     for device in data.api.bootstrap.cameras.values():
         for description in MOTION_TRIP_SENSORS:
+            if not device.is_adopted_by_us:
+                continue
+
             entities.append(ProtectDeviceSensor(data, device, description))
             _LOGGER.debug(
                 "Adding trip sensor entity %s for %s",
                 description.name,
-                device.name,
+                device.display_name,
             )
 
         if not device.feature_flags.has_smart_detect:
@@ -633,7 +636,7 @@ def _async_motion_entities(
             _LOGGER.debug(
                 "Adding sensor entity %s for %s",
                 description.name,
-                device.name,
+                device.display_name,
             )
 
     return entities
