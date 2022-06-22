@@ -110,9 +110,9 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         )
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[SKU_TO_BASE_DEVICE.get(self.device.device_type)]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
 
     @property
     def preset_mode(self):
