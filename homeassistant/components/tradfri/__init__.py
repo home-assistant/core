@@ -21,6 +21,7 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import CONF_GATEWAY_ID, CONF_IDENTITY, CONF_KEY, DOMAIN, LOGGER
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .migration import migrate_device_identifier
 from .models import TradfriData
 
 PLATFORMS = [
@@ -39,6 +40,9 @@ async def async_setup_entry(
     entry: ConfigEntry,
 ) -> bool:
     """Create a gateway."""
+    # Migrate old integer device identifier to string, added in core-2022.7.0.
+    migrate_device_identifier(hass, entry)
+
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
         psk_id=entry.data[CONF_IDENTITY],
@@ -151,7 +155,7 @@ def remove_stale_devices(
             if identifier[0] != DOMAIN:
                 continue
 
-            # The device id in the identifier is not copied from integer to string
+            # The device id in the identifier was not copied from integer to string
             # when setting entity device info. Copy here to make sure it's a string.
             _id = str(identifier[1])
 
