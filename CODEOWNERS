@@ -1162,8 +1162,8 @@ build.json @home-assistant/supervisor
 /tests/components/watttime/ @bachya
 /homeassistant/components/waze_travel_time/ @eifinger
 /tests/components/waze_travel_time/ @eifinger
-/homeassistant/components/weather/ @fabaff
-/tests/components/weather/ @fabaff
+/homeassistant/components/weather/ @home-assistant/core
+/tests/components/weather/ @home-assistant/core
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
 /homeassistant/components/webostv/ @bendavid @thecode
