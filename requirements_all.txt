@@ -638,7 +638,7 @@ feedparser==6.0.2
 fiblary3==0.1.8
 
 # homeassistant.components.fints
-fints==1.0.1
+fints==3.1.0
 
 # homeassistant.components.fitbit
 fitbit==0.3.1
@@ -1441,7 +1441,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==93
+pydeconz==94
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1990,7 +1990,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.6
+pyunifiprotect==4.0.7
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

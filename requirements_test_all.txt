@@ -968,7 +968,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==93
+pydeconz==94
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1325,7 +1325,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.6
+pyunifiprotect==4.0.7
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
