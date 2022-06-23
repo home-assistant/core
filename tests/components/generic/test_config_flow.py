@@ -519,7 +519,11 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
 
 
 async def test_slug(hass, caplog):
-    """Test the slug function."""
+    """
+    Test that the slug function generates an error in case of invalid template.
+
+    Other paths in the slug function are already tested by the other tests.
+    """
     result = slug(hass, "http://127.0.0.2/testurl/{{1/0}}")
     assert result is None
     assert "Syntax error in" in caplog.text
