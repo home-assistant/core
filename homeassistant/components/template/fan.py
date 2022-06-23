@@ -354,7 +354,7 @@ class TemplateFan(TemplateEntity, FanEntity):
             )
             self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute("_state", self._template, None, self._update_state)
         if self._preset_mode_template is not None:
