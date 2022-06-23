@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import copy
 import functools
-import json
 import logging
 from typing import Any
 
@@ -32,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_dumps, json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -253,13 +253,13 @@ class MqttSiren(MqttEntity, SirenEntity):
                 json_payload = {STATE: payload}
             else:
                 try:
-                    json_payload = json.loads(payload)
+                    json_payload = json_loads(payload)
                     _LOGGER.debug(
                         "JSON payload detected after processing payload '%s' on topic %s",
                         json_payload,
                         msg.topic,
                     )
-                except json.decoder.JSONDecodeError:
+                except JSON_DECODE_EXCEPTIONS:
                     _LOGGER.warning(
                         "No valid (JSON) payload detected after processing payload '%s' on topic %s",
                         json_payload,
@@ -344,7 +344,7 @@ class MqttSiren(MqttEntity, SirenEntity):
         payload = (
             self._command_templates[template](value, template_variables)
             if self._command_templates[template]
-            else json.dumps(template_variables)
+            else json_dumps(template_variables)
         )
         if payload and payload not in PAYLOAD_NONE:
             await self.async_publish(
