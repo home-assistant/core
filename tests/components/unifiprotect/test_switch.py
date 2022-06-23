@@ -8,6 +8,7 @@ import pytest
 from pyunifiprotect.data import (
     Camera,
     Light,
+    Permission,
     RecordingMode,
     SmartDetectObjectType,
     VideoMode,
@@ -28,6 +29,7 @@ from .conftest import (
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
+    reset_objects,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -51,13 +53,13 @@ async def light_fixture(
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
 
-    light_obj = mock_light.copy(deep=True)
+    light_obj = mock_light.copy()
     light_obj._api = mock_entry.api
     light_obj.name = "Test Light"
     light_obj.is_ssh_enabled = False
     light_obj.light_device_settings.is_indicator_enabled = False
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
@@ -81,7 +83,7 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -110,7 +112,7 @@ async def camera_fixture(
     camera_obj.osd_settings.is_debug_enabled = False
     camera_obj.smart_detect_settings.object_types = []
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -134,7 +136,7 @@ async def camera_none_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -153,7 +155,7 @@ async def camera_none_fixture(
     camera_obj.osd_settings.is_logo_enabled = False
     camera_obj.osd_settings.is_debug_enabled = False
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -177,7 +179,8 @@ async def camera_privacy_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    # mock_camera._update_lock = None
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -197,7 +200,7 @@ async def camera_privacy_fixture(
     camera_obj.osd_settings.is_logo_enabled = False
     camera_obj.osd_settings.is_debug_enabled = False
 
-    mock_entry.api.bootstrap.reset_objects()
+    reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -210,6 +213,40 @@ async def camera_privacy_fixture(
     yield camera_obj
 
     Camera.__config__.validate_assignment = True
+
+
+async def test_switch_setup_no_perm(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    mock_light: Light,
+    mock_camera: Camera,
+):
+    """Test switch entity setup for light devices."""
+
+    light_obj = mock_light.copy()
+    light_obj._api = mock_entry.api
+
+    camera_obj = mock_camera.copy()
+    camera_obj._api = mock_entry.api
+    camera_obj.channels[0]._api = mock_entry.api
+    camera_obj.channels[1]._api = mock_entry.api
+    camera_obj.channels[2]._api = mock_entry.api
+
+    reset_objects(mock_entry.api.bootstrap)
+    mock_entry.api.bootstrap.lights = {
+        light_obj.id: light_obj,
+    }
+    mock_entry.api.bootstrap.cameras = {
+        camera_obj.id: camera_obj,
+    }
+    mock_entry.api.bootstrap.auth_user.all_permissions = [
+        Permission.unifi_dict_to_dict({"rawPermission": "light:read:*"})
+    ]
+
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
 
 
 async def test_switch_setup_light(

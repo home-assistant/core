@@ -8,6 +8,7 @@ from typing import Any
 
 import aiohttp
 from gcal_sync.api import GoogleCalendarService
+from gcal_sync.exceptions import ApiException, AuthException
 from gcal_sync.model import DateOrDatetime, Event
 from oauth2client.file import Storage
 import voluptuous as vol
@@ -220,6 +221,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Google from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN][entry.entry_id] = {}
+
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -249,7 +252,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     calendar_service = GoogleCalendarService(
         ApiAuthImpl(async_get_clientsession(hass), session)
     )
-    hass.data[DOMAIN][DATA_SERVICE] = calendar_service
+    hass.data[DOMAIN][entry.entry_id][DATA_SERVICE] = calendar_service
+
+    if entry.unique_id is None:
+        try:
+            primary_calendar = await calendar_service.async_get_calendar("primary")
+        except AuthException as err:
+            raise ConfigEntryAuthFailed from err
+        except ApiException as err:
+            raise ConfigEntryNotReady from err
+        else:
+            hass.config_entries.async_update_entry(entry, unique_id=primary_calendar.id)
 
     # Only expose the add event service if we have the correct permissions
     if get_feature_access(hass, entry) is FeatureAccess.read_write:
@@ -271,7 +284,9 @@ def async_entry_has_scopes(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        hass.data[DOMAIN].pop(entry.entry_id)
+    return unload_ok
 
 
 async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:

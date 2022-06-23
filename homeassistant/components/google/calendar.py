@@ -23,7 +23,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import Throttle
@@ -102,14 +106,24 @@ CREATE_EVENT_SCHEMA = vol.All(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the google calendar platform."""
-    calendar_service = hass.data[DOMAIN][DATA_SERVICE]
+    calendar_service = hass.data[DOMAIN][config_entry.entry_id][DATA_SERVICE]
     try:
         result = await calendar_service.async_list_calendars()
     except ApiException as err:
         raise PlatformNotReady(str(err)) from err
+
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    entity_entry_map = {
+        entity_entry.unique_id: entity_entry for entity_entry in registry_entries
+    }
 
     # Yaml configuration may override objects from the API
     calendars = await hass.async_add_executor_job(
@@ -126,7 +140,6 @@ async def async_setup_entry(
                 hass, calendar_item.dict(exclude_unset=True)
             )
             new_calendars.append(calendar_info)
-
         # Yaml calendar config may map one calendar to multiple entities with extra options like
         # offsets or search criteria.
         num_entities = len(calendar_info[CONF_ENTITIES])
@@ -138,15 +151,44 @@ async def async_setup_entry(
                     "has been imported to the UI, and should now be removed from google_calendars.yaml"
                 )
             entity_name = data[CONF_DEVICE_ID]
+            # The unique id is based on the config entry and calendar id since multiple accounts
+            # can have a common calendar id (e.g. `en.usa#holiday@group.v.calendar.google.com`).
+            # When using google_calendars.yaml with multiple entities for a single calendar, we
+            # have no way to set a unique id.
+            if num_entities > 1:
+                unique_id = None
+            else:
+                unique_id = f"{config_entry.unique_id}-{calendar_id}"
+            # Migrate to new unique_id format which supports multiple config entries as of 2022.7
+            for old_unique_id in (calendar_id, f"{calendar_id}-{entity_name}"):
+                if not (entity_entry := entity_entry_map.get(old_unique_id)):
+                    continue
+                if unique_id:
+                    _LOGGER.debug(
+                        "Migrating unique_id for %s from %s to %s",
+                        entity_entry.entity_id,
+                        old_unique_id,
+                        unique_id,
+                    )
+                    entity_registry.async_update_entity(
+                        entity_entry.entity_id, new_unique_id=unique_id
+                    )
+                else:
+                    _LOGGER.debug(
+                        "Removing entity registry entry for %s from %s",
+                        entity_entry.entity_id,
+                        old_unique_id,
+                    )
+                    entity_registry.async_remove(
+                        entity_entry.entity_id,
+                    )
             entities.append(
                 GoogleCalendarEntity(
                     calendar_service,
                     calendar_id,
                     data,
                     generate_entity_id(ENTITY_ID_FORMAT, entity_name, hass=hass),
-                    # The google_calendars.yaml file lets users add multiple entities for
-                    # the same calendar id and needs additional disambiguation
-                    f"{calendar_id}-{entity_name}" if num_entities > 1 else calendar_id,
+                    unique_id,
                     entity_enabled,
                 )
             )
@@ -163,7 +205,7 @@ async def async_setup_entry(
         await hass.async_add_executor_job(append_calendars_to_config)
 
     platform = entity_platform.async_get_current_platform()
-    if get_feature_access(hass, entry) is FeatureAccess.read_write:
+    if get_feature_access(hass, config_entry) is FeatureAccess.read_write:
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
             CREATE_EVENT_SCHEMA,
@@ -180,7 +222,7 @@ class GoogleCalendarEntity(CalendarEntity):
         calendar_id: str,
         data: dict[str, Any],
         entity_id: str,
-        unique_id: str,
+        unique_id: str | None,
         entity_enabled: bool,
     ) -> None:
         """Create the Calendar event device."""

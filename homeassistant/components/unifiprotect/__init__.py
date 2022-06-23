@@ -7,7 +7,8 @@ import logging
 
 from aiohttp import CookieJar
 from aiohttp.client_exceptions import ServerDisconnectedError
-from pyunifiprotect import NotAuthorized, NvrError, ProtectApiClient
+from pyunifiprotect import ProtectApiClient
+from pyunifiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -60,6 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
+        ignore_unadopted=False,
     )
     _LOGGER.debug("Connect to UniFi Protect")
     data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
@@ -68,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nvr_info = await protect.get_nvr()
     except NotAuthorized as err:
         raise ConfigEntryAuthFailed(err) from err
-    except (asyncio.TimeoutError, NvrError, ServerDisconnectedError) as err:
+    except (asyncio.TimeoutError, ClientError, ServerDisconnectedError) as err:
         raise ConfigEntryNotReady from err
 
     if nvr_info.version < MIN_REQUIRED_PROTECT_V:
@@ -126,7 +128,9 @@ async def async_remove_config_entry_device(
     }
     api = async_ufp_instance_for_config_entry_ids(hass, {config_entry.entry_id})
     assert api is not None
-    return api.bootstrap.nvr.mac not in unifi_macs and not any(
-        device.mac in unifi_macs
-        for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT)
-    )
+    if api.bootstrap.nvr.mac in unifi_macs:
+        return False
+    for device in async_get_devices(api.bootstrap, DEVICES_THAT_ADOPT):
+        if device.is_adopted_by_us and device.mac in unifi_macs:
+            return False
+    return True

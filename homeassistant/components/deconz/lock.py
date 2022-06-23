@@ -62,8 +62,26 @@ class DeconzLock(DeconzDevice, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        await self._device.lock()
+        if isinstance(self._device, DoorLock):
+            await self.gateway.api.sensors.door_lock.set_config(
+                id=self._device.resource_id,
+                lock=True,
+            )
+        else:
+            await self.gateway.api.lights.locks.set_state(
+                id=self._device.resource_id,
+                lock=True,
+            )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        await self._device.unlock()
+        if isinstance(self._device, DoorLock):
+            await self.gateway.api.sensors.door_lock.set_config(
+                id=self._device.resource_id,
+                lock=False,
+            )
+        else:
+            await self.gateway.api.lights.locks.set_state(
+                id=self._device.resource_id,
+                lock=False,
+            )

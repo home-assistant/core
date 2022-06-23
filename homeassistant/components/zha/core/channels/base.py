@@ -5,7 +5,7 @@ import asyncio
 from enum import Enum
 from functools import partialmethod, wraps
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, TypedDict
 
 import zigpy.exceptions
 import zigpy.zcl
@@ -44,6 +44,16 @@ if TYPE_CHECKING:
     from . import ChannelPool
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class AttrReportConfig(TypedDict, total=True):
+    """Configuration to report for the attributes."""
+
+    # Could be either an attribute name or attribute id
+    attr: str | int
+    # The config for the attribute reporting configuration consists of a tuple for
+    # (minimum_reported_time_interval_s, maximum_reported_time_interval_s, value_delta)
+    config: tuple[int, int, int | float]
 
 
 def parse_and_log_command(channel, tsn, command_id, args):
@@ -99,7 +109,7 @@ class ChannelStatus(Enum):
 class ZigbeeChannel(LogMixin):
     """Base channel for a Zigbee cluster."""
 
-    REPORT_CONFIG: tuple[dict[int | str, tuple[int, int, int | float]]] = ()
+    REPORT_CONFIG: tuple[AttrReportConfig, ...] = ()
     BIND: bool = True
 
     # Dict of attributes to read on channel initialization.

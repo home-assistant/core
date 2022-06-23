@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "Konto wurde bereits konfiguriert",
             "authorize_url_timeout": "Zeit\u00fcberschreitung beim Erstellen der Authorisierungs-URL.",
             "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",

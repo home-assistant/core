@@ -4,6 +4,7 @@ from __future__ import annotations
 from abc import abstractmethod
 import functools
 import math
+from typing import Any
 
 from zigpy.exceptions import ZigbeeException
 from zigpy.zcl.clusters import hvac
@@ -87,17 +88,22 @@ class BaseFan(FanEntity):
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
-    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn the entity on."""
         if percentage is None:
             percentage = DEFAULT_ON_PERCENTAGE
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_set_percentage(0)
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percenage of the fan."""
         fan_mode = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)
