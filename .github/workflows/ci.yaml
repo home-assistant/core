@@ -20,8 +20,8 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 9
-  PIP_CACHE_VERSION: 3
+  CACHE_VERSION: 10
+  PIP_CACHE_VERSION: 4
   HA_SHORT_VERSION: 2022.7
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
@@ -582,7 +582,7 @@ jobs:
             steps.generate-python-key.outputs.key }}
           # Temporary disabling the restore of environments when bumping
           # a dependency. It seems that we are experiencing issues with
-          # restoring environments in GitHub Actions, although unclear why.
+          # restoring environments in GitHub Actions, although unclear why``.
           # First attempt: https://github.com/home-assistant/core/pull/62383
           #
           # restore-keys: |
