@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "Akun sudah dikonfigurasi",
             "authorize_url_timeout": "Tenggang waktu pembuatan URL otorisasi habis.",
             "invalid_access_token": "Token akses tidak valid",
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
@@ -33,6 +34,7 @@
                 "title": "Tautkan Akun Google"
             },
             "auth_upgrade": {
+                "description": "Autentikasi Aplikasi tidak digunakan lagi oleh Google untuk meningkatkan keamanan, dan Anda perlu mengambil tindakan dengan membuat kredensial aplikasi baru. \n\nBuka [dokumentasi]({more_info_url}) untuk panduan langkah selanjutnya yang perlu diambil untuk memulihkan akses ke perangkat Nest Anda.",
                 "title": "Nest: Penghentian Autentikasi Aplikasi"
             },
             "cloud_project": {
@@ -43,15 +45,18 @@
                 "title": "Nest: Masukkan ID Proyek Cloud"
             },
             "create_cloud_project": {
+                "description": "Integrasi Nest memungkinkan Anda mengintegrasikan Nest Thermostat, Kamera, dan Bel Pintu menggunakan API Smart Device Management. API SDM **memerlukan biaya penyiapan satu kali sebesar USD5**. Lihat dokumentasi untuk [info lebih lanjut]({more_info_url}). \n\n1. Buka [Konsol Google Cloud]({cloud_console_url}).\n1. Jika ini adalah proyek pertama Anda, klik **Buat Proyek** lalu **Proyek Baru**.\n1. Beri Nama Proyek Cloud Anda, lalu klik **Buat**.\n1. Simpan ID Proyek Cloud misalnya *example-project-12345* karena Anda akan membutuhkannya nanti\n1. Buka Perpustakaan API untuk [API Smart Device Management]({sdm_api_url}) dan klik **Aktifkan**.\n1. Buka Perpustakaan API untuk [API Cloud Pub/Sub]({pubsub_api_url}) dan klik **Aktifkan**. \n\n Lanjutkan saat proyek cloud Anda sudah disiapkan.",
                 "title": "Nest: Buat dan konfigurasikan Proyek Cloud"
             },
             "device_project": {
                 "data": {
                     "project_id": "ID Proyek Akses Perangkat"
                 },
+                "description": "Buat proyek Akses Perangkat Nest yang **membutuhkan biaya USD5** untuk menyiapkannya.\n1. Buka [Konsol Akses Perangkat]({device_access_console_url}), dan ikuti alur pembayaran.\n1. Klik **Buat proyek**\n1. Beri nama proyek Akses Perangkat Anda dan klik **Berikutnya**.\n1. Masukkan ID Klien OAuth Anda\n1. Aktifkan acara dengan mengklik **Aktifkan** dan **Buat proyek**. \n\n Masukkan ID Proyek Akses Perangkat Anda di bawah ini ([more info]({more_info_url})).\n",
                 "title": "Nest: Buat Proyek Akses Perangkat"
             },
             "device_project_upgrade": {
+                "description": "Perbarui Proyek Akses Perangkat Nest dengan ID Klien OAuth baru Anda ([info lebih lanjut]({more_info_url}))\n1. Buka [Konsol Akses Perangkat]( {device_access_console_url} ).\n1. Klik ikon tempat sampah di samping *ID Klien OAuth*.\n1. Klik menu luapan `...` dan *Tambah ID Klien*.\n1. Masukkan ID Klien OAuth baru Anda dan klik **Tambah**. \n\n ID Klien OAuth Anda adalah: `{client_id}`",
                 "title": "Nest: Perbarui Proyek Akses Perangkat"
             },
             "init": {

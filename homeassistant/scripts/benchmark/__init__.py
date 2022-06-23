@@ -12,14 +12,13 @@ from timeit import default_timer as timer
 from typing import TypeVar
 
 from homeassistant import core
-from homeassistant.components.websocket_api.const import JSON_DUMP
 from homeassistant.const import EVENT_STATE_CHANGED
 from homeassistant.helpers.entityfilter import convert_include_exclude_filter
 from homeassistant.helpers.event import (
     async_track_state_change,
     async_track_state_change_event,
 )
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import JSON_DUMP, JSONEncoder
 
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 # mypy: no-warn-return-any

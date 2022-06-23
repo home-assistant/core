@@ -1,6 +1,8 @@
 """Demo fan platform that has a fake fan."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -192,9 +194,9 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
     def turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the entity."""
         if preset_mode:
@@ -206,7 +208,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
         self.set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         self.set_percentage(0)
 
@@ -262,9 +264,9 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the entity."""
         if preset_mode:
@@ -276,7 +278,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         await self.async_oscillate(False)
         await self.async_set_percentage(0)

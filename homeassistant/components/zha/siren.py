@@ -1,8 +1,9 @@
 """Support for ZHA sirens."""
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from zigpy.zcl.clusters.security import IasWd as WD
 
@@ -96,9 +97,9 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: IasWd = channels[0]
+        self._channel: IasWd = cast(IasWd, channels[0])
         self._attr_is_on: bool = False
-        self._off_listener = None
+        self._off_listener: Callable[[], None] | None = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""

@@ -1312,6 +1312,20 @@ async def test_publish_error(hass, caplog):
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
+async def test_subscribe_error(
+    hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+):
+    """Test publish error."""
+    await mqtt_mock_entry_no_yaml_config()
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
+    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        # simulate client is not connected error before subscribing
+        mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
+        await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
+        await hass.async_block_till_done()
+
+
 async def test_handle_message_callback(
     hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
 ):
@@ -1424,6 +1438,7 @@ async def test_setup_mqtt_client_protocol(hass):
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_handle_mqtt_timeout_on_callback(hass, caplog):
     """Test publish without receiving an ACK callback."""
     mid = 0
@@ -1764,9 +1779,12 @@ async def test_mqtt_subscribes_topics_on_connect(
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
-    expected = {"topic/test": 0, "home/sensor": 2, "still/pending": 1}
-    calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
-    assert calls == expected
+    assert len(hass.add_job.mock_calls) == 1
+    assert set(hass.add_job.mock_calls[0][1][1]) == {
+        ("home/sensor", 2),
+        ("still/pending", 1),
+        ("topic/test", 0),
+    }
 
 
 async def test_setup_entry_with_config_override(

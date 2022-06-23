@@ -64,7 +64,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
     """Representation of a ZHA select entity."""
 
     _attr_entity_category = EntityCategory.CONFIG
-    _enum: Enum = None
+    _enum: type[Enum]
 
     def __init__(
         self,
@@ -87,7 +87,7 @@ class ZHAEnumSelectEntity(ZhaEntity, SelectEntity):
             return None
         return option.name.replace("_", " ")
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self._channel.data_cache[self._attr_name] = self._enum[option.replace(" ", "_")]
         self.async_write_ha_state()
@@ -116,7 +116,7 @@ class ZHADefaultToneSelectEntity(
 ):
     """Representation of a ZHA default siren tone select entity."""
 
-    _enum: Enum = IasWd.Warning.WarningMode
+    _enum = IasWd.Warning.WarningMode
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -125,7 +125,7 @@ class ZHADefaultSirenLevelSelectEntity(
 ):
     """Representation of a ZHA default siren level select entity."""
 
-    _enum: Enum = IasWd.Warning.SirenLevel
+    _enum = IasWd.Warning.SirenLevel
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
@@ -134,14 +134,14 @@ class ZHADefaultStrobeLevelSelectEntity(
 ):
     """Representation of a ZHA default siren strobe level select entity."""
 
-    _enum: Enum = IasWd.StrobeLevel
+    _enum = IasWd.StrobeLevel
 
 
 @CONFIG_DIAGNOSTIC_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHADefaultStrobeSelectEntity(ZHANonZCLSelectEntity, id_suffix=Strobe.__name__):
     """Representation of a ZHA default siren strobe select entity."""
 
-    _enum: Enum = Strobe
+    _enum = Strobe
 
 
 class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
@@ -149,7 +149,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
 
     _select_attr: str
     _attr_entity_category = EntityCategory.CONFIG
-    _enum: Enum
+    _enum: type[Enum]
 
     @classmethod
     def create_entity(
@@ -198,7 +198,7 @@ class ZCLEnumSelectEntity(ZhaEntity, SelectEntity):
         option = self._enum(option)
         return option.name.replace("_", " ")
 
-    async def async_select_option(self, option: str | int) -> None:
+    async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self._channel.cluster.write_attributes(
             {self._select_attr: self._enum[option.replace(" ", "_")]}
@@ -213,7 +213,7 @@ class ZHAStartupOnOffSelectEntity(
     """Representation of a ZHA startup onoff select entity."""
 
     _select_attr = "start_up_on_off"
-    _enum: Enum = OnOff.StartUpOnOff
+    _enum = OnOff.StartUpOnOff
 
 
 class AqaraMotionSensitivities(types.enum8):
@@ -229,4 +229,4 @@ class AqaraMotionSensitivity(ZCLEnumSelectEntity, id_suffix="motion_sensitivity"
     """Representation of a ZHA on off transition time configuration entity."""
 
     _select_attr = "motion_sensitivity"
-    _enum: Enum = AqaraMotionSensitivities
+    _enum = AqaraMotionSensitivities

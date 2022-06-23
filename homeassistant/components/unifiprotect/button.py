@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
 
 
 @dataclass
@@ -40,6 +40,7 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         name="Reboot Device",
         ufp_press="reboot",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -49,6 +50,7 @@ SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         name="Clear Tamper",
         icon="mdi:notification-clear-all",
         ufp_press="clear_tamper",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -101,7 +103,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     ) -> None:
         """Initialize an UniFi camera."""
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
     async def async_press(self) -> None:
         """Press the button."""

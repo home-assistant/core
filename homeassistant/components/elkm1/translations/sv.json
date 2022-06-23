@@ -4,6 +4,19 @@
             "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
             "invalid_auth": "Ogiltig autentisering",
             "unknown": "Ov\u00e4ntat fel"
+        },
+        "step": {
+            "discovered_connection": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
+            "manual_connection": {
+                "data": {
+                    "protocol": "Protokoll",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
         }
     }
 }

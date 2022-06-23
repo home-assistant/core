@@ -23,6 +23,7 @@ DHCP: list[dict[str, str | bool]] = [
     {'domain': 'broadlink', 'macaddress': '24DFA7*'},
     {'domain': 'broadlink', 'macaddress': 'A043B0*'},
     {'domain': 'broadlink', 'macaddress': 'B4430D*'},
+    {'domain': 'broadlink', 'macaddress': 'C8F742*'},
     {'domain': 'elkm1', 'registered_devices': True},
     {'domain': 'elkm1', 'macaddress': '00409D*'},
     {'domain': 'emonitor', 'hostname': 'emonitor*', 'macaddress': '0090C2*'},

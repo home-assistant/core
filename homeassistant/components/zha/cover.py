@@ -203,8 +203,8 @@ class Shade(ZhaEntity, CoverEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
         self._level_channel = self.cluster_channels[CHANNEL_LEVEL]
-        self._position = None
-        self._is_open = None
+        self._position: int | None = None
+        self._is_open: bool | None = None
 
     @property
     def current_cover_position(self):

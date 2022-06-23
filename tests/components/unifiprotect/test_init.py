@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from pyunifiprotect import NotAuthorized, NvrError
-from pyunifiprotect.data import NVR, Light
+from pyunifiprotect.data import NVR, Bootstrap, Light
 
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -16,7 +16,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
-from .conftest import MockBootstrap, MockEntityFixture, regenerate_device_ids
+from .conftest import MockEntityFixture, regenerate_device_ids
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +52,7 @@ async def test_setup_multiple(
     hass: HomeAssistant,
     mock_entry: MockEntityFixture,
     mock_client,
-    mock_bootstrap: MockBootstrap,
+    mock_bootstrap: Bootstrap,
 ):
     """Test working setup of unifiprotect entry."""
 
@@ -241,4 +241,28 @@ async def test_device_remove_devices(
     assert (
         await remove_device(await hass_ws_client(hass), dead_device_entry.id, entry_id)
         is True
+    )
+
+
+async def test_device_remove_devices_nvr(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    hass_ws_client: Callable[
+        [HomeAssistant], Awaitable[aiohttp.ClientWebSocketResponse]
+    ],
+) -> None:
+    """Test we can only remove a NVR device that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+
+    mock_entry.api.get_bootstrap = AsyncMock(return_value=mock_entry.api.bootstrap)
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
+    await hass.async_block_till_done()
+    entry_id = mock_entry.entry.entry_id
+
+    device_registry = dr.async_get(hass)
+
+    live_device_entry = list(device_registry.devices.values())[0]
+    assert (
+        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
+        is False
     )

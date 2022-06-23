@@ -1,6 +1,8 @@
 """Support for WiLight Fan."""
 from __future__ import annotations
 
+from typing import Any
+
 from pywilight.const import (
     FAN_V1,
     ITEM_FAN,
@@ -64,7 +66,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         return "mdi:fan"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("direction", WL_DIRECTION_OFF) != WL_DIRECTION_OFF
 
@@ -98,9 +100,9 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         if percentage is None:
@@ -108,7 +110,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         else:
             await self.async_set_percentage(percentage)
 
-    async def async_set_percentage(self, percentage: int):
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
             await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)
@@ -121,13 +123,13 @@ class WiLightFan(WiLightDevice, FanEntity):
         wl_speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._client.set_fan_speed(self._index, wl_speed)
 
-    async def async_set_direction(self, direction: str):
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         wl_direction = WL_DIRECTION_REVERSE
         if direction == DIRECTION_FORWARD:
             wl_direction = WL_DIRECTION_FORWARD
         await self._client.set_fan_direction(self._index, wl_direction)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)
