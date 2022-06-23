@@ -230,7 +230,6 @@ def parse_api_container_vm(status):
         "status": status["status"],
         "name": status["name"],
         "mem": status["mem"],
-        "maxmem": status["maxmem"],
     }
 
 
