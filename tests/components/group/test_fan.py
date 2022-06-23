@@ -187,6 +187,16 @@ async def test_state(hass, setup_comp):
     assert ATTR_ASSUMED_STATE not in state.attributes
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
+    # now remove all entities
+    hass.states.async_remove(CEILING_FAN_ENTITY_ID)
+    hass.states.async_remove(LIVING_ROOM_FAN_ENTITY_ID)
+    hass.states.async_remove(PERCENTAGE_FULL_FAN_ENTITY_ID)
+    await hass.async_block_till_done()
+    state = hass.states.get(FAN_GROUP)
+    assert state.state == STATE_OFF
+    assert ATTR_ASSUMED_STATE not in state.attributes
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
+
     # Test entity registry integration
     entity_registry = er.async_get(hass)
     entry = entity_registry.async_get(FAN_GROUP)

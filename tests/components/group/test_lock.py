@@ -81,6 +81,9 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # Initial state with no group member in the state machine -> unavailable
+    assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
+
     # All group members unavailable -> unavailable
     hass.states.async_set("lock.test1", STATE_UNAVAILABLE)
     hass.states.async_set("lock.test2", STATE_UNAVAILABLE)
@@ -92,6 +95,7 @@ async def test_state_reporting(hass):
         STATE_JAMMED,
         STATE_LOCKED,
         STATE_LOCKING,
+        STATE_UNKNOWN,
         STATE_UNLOCKED,
         STATE_UNLOCKING,
     ):
@@ -104,6 +108,7 @@ async def test_state_reporting(hass):
         STATE_JAMMED,
         STATE_LOCKED,
         STATE_LOCKING,
+        STATE_UNAVAILABLE,
         STATE_UNKNOWN,
         STATE_UNLOCKED,
         STATE_UNLOCKING,
@@ -164,6 +169,12 @@ async def test_state_reporting(hass):
     hass.states.async_set("lock.test2", STATE_LOCKED)
     await hass.async_block_till_done()
     assert hass.states.get("lock.lock_group").state == STATE_LOCKED
+
+    # All group members removed from the state machine -> unavailable
+    hass.states.async_remove("lock.test1")
+    hass.states.async_remove("lock.test2")
+    await hass.async_block_till_done()
+    assert hass.states.get("lock.lock_group").state == STATE_UNAVAILABLE
 
 
 @patch.object(demo_lock, "LOCK_UNLOCK_DELAY", 0)

@@ -126,6 +126,7 @@ async def test_state_reporting(hass):
     await hass.async_start()
     await hass.async_block_till_done()
 
+    # Initial state with no group member in the state machine -> unknown
     assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
 
     # All group members buffering -> buffering
@@ -173,6 +174,12 @@ async def test_state_reporting(hass):
         hass.states.async_set("media_player.player_2", STATE_UNKNOWN)
         await hass.async_block_till_done()
         assert hass.states.get("media_player.media_group").state == STATE_OFF
+
+    # All group members removed from the state machine -> unknown
+    hass.states.async_remove("media_player.player_1")
+    hass.states.async_remove("media_player.player_2")
+    await hass.async_block_till_done()
+    assert hass.states.get("media_player.media_group").state == STATE_UNKNOWN
 
 
 async def test_supported_features(hass):

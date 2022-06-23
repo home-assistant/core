@@ -233,6 +233,15 @@ async def test_state(hass, setup_comp):
                 state = hass.states.get(COVER_GROUP)
                 assert state.state == STATE_CLOSED
 
+    # All group members removed from the state machine -> unknown
+    hass.states.async_remove(DEMO_COVER)
+    hass.states.async_remove(DEMO_COVER_POS)
+    hass.states.async_remove(DEMO_COVER_TILT)
+    hass.states.async_remove(DEMO_TILT)
+    await hass.async_block_till_done()
+    state = hass.states.get(COVER_GROUP)
+    assert state.state == STATE_UNKNOWN
+
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
 async def test_attributes(hass, setup_comp):
