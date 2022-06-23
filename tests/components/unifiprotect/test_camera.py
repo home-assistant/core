@@ -36,9 +36,12 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
     assert_entity_counts,
     enable_entity,
     regenerate_device_ids,
+    remove_entities,
     time_changed,
 )
 
@@ -66,10 +69,25 @@ async def camera_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+    await remove_entities(hass, [camera_obj])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+    old_channels = camera_obj.channels
+    camera_obj.channels = []
+    await adopt_devices(hass, mock_entry.api, [camera_obj])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    camera_obj.channels = old_channels
+    mock_msg = Mock()
+    mock_msg.changed_data = {"channels": old_channels}
+    mock_msg.new_obj = camera_obj
+    mock_entry.api.ws_subscription(mock_msg)
+    await hass.async_block_till_done()
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
     yield (camera_obj, "camera.test_camera_high")
@@ -106,10 +124,15 @@ async def camera_package_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.CAMERA, 3, 2)
+    await remove_entities(hass, [camera_obj])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [camera_obj])
     assert_entity_counts(hass, Platform.CAMERA, 3, 2)
 
     return (camera_obj, "camera.test_camera_package_camera")

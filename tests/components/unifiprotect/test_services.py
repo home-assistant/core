@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera, Chime, Light, ModelType
-from pyunifiprotect.data.bootstrap import ProtectDeviceRef
 from pyunifiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
@@ -21,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockEntityFixture, regenerate_device_ids
+from .conftest import MockEntityFixture, add_device_ref, regenerate_device_ids
 
 
 @pytest.fixture(name="device")
@@ -163,11 +162,7 @@ async def test_set_chime_paired_doorbells(
     mock_entry.api.bootstrap.chimes = {
         mock_chime.id: mock_chime,
     }
-    mock_entry.api.bootstrap.mac_lookup = {
-        mock_chime.mac.lower(): ProtectDeviceRef(
-            model=mock_chime.model, id=mock_chime.id
-        )
-    }
+    add_device_ref(mock_entry.api.bootstrap, mock_chime)
 
     camera1 = mock_camera.copy()
     camera1.name = "Test Camera 1"
@@ -191,12 +186,8 @@ async def test_set_chime_paired_doorbells(
         camera1.id: camera1,
         camera2.id: camera2,
     }
-    mock_entry.api.bootstrap.mac_lookup[camera1.mac.lower()] = ProtectDeviceRef(
-        model=camera1.model, id=camera1.id
-    )
-    mock_entry.api.bootstrap.mac_lookup[camera2.mac.lower()] = ProtectDeviceRef(
-        model=camera2.model, id=camera2.id
-    )
+    add_device_ref(mock_entry.api.bootstrap, camera1)
+    add_device_ref(mock_entry.api.bootstrap, camera2)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()

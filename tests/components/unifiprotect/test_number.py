@@ -21,8 +21,11 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import (
     MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
+    remove_entities,
     reset_objects,
 )
 
@@ -46,10 +49,15 @@ async def light_fixture(
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, light_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.NUMBER, 2, 2)
+    await remove_entities(hass, [light_obj])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [light_obj])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
 
     yield light_obj
@@ -84,10 +92,15 @@ async def camera_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
+    await remove_entities(hass, [camera_obj])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [camera_obj])
     assert_entity_counts(hass, Platform.NUMBER, 3, 3)
 
     yield camera_obj
@@ -113,10 +126,15 @@ async def doorlock_fixture(
     mock_entry.api.bootstrap.doorlocks = {
         lock_obj.id: lock_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, lock_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
+    await remove_entities(hass, [lock_obj])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [lock_obj])
     assert_entity_counts(hass, Platform.NUMBER, 1, 1)
 
     yield lock_obj

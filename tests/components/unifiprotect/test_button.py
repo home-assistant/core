@@ -12,7 +12,14 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts, enable_entity
+from .conftest import (
+    MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
+    assert_entity_counts,
+    enable_entity,
+    remove_entities,
+)
 
 
 @pytest.fixture(name="chime")
@@ -28,10 +35,15 @@ async def chime_fixture(
     mock_entry.api.bootstrap.chimes = {
         chime_obj.id: chime_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, chime_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.BUTTON, 3, 2)
+    await remove_entities(hass, [chime_obj])
+    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [chime_obj])
     assert_entity_counts(hass, Platform.BUTTON, 3, 2)
 
     return chime_obj

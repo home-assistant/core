@@ -42,8 +42,12 @@ from homeassistant.util.dt import utcnow
 
 from .conftest import (
     MockEntityFixture,
+    add_device_ref,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
+    regenerate_device_ids,
+    remove_entities,
     reset_objects,
 )
 
@@ -70,10 +74,15 @@ async def viewer_fixture(
         viewer_obj.id: viewer_obj,
     }
     mock_entry.api.bootstrap.liveviews = {mock_liveview.id: mock_liveview}
+    add_device_ref(mock_entry.api.bootstrap, viewer_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
+    await remove_entities(hass, [viewer_obj])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [viewer_obj])
     assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
     yield viewer_obj
@@ -107,10 +116,15 @@ async def camera_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    await remove_entities(hass, [camera_obj])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [camera_obj])
     assert_entity_counts(hass, Platform.SELECT, 4, 4)
 
     yield camera_obj
@@ -123,12 +137,25 @@ async def light_fixture(
     hass: HomeAssistant,
     mock_entry: MockEntityFixture,
     mock_light: Light,
-    camera: Camera,
+    mock_camera: Camera,
 ):
     """Fixture for a single light for testing the select platform."""
 
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
+
+    camera_obj = mock_camera.copy()
+    camera_obj._api = mock_entry.api
+    camera_obj.channels[0]._api = mock_entry.api
+    camera_obj.channels[1]._api = mock_entry.api
+    camera_obj.channels[2]._api = mock_entry.api
+    camera_obj.name = "Test Camera"
+    camera_obj.feature_flags.has_lcd_screen = True
+    camera_obj.feature_flags.has_chime = True
+    camera_obj.recording_settings.mode = RecordingMode.ALWAYS
+    camera_obj.isp_settings.ir_led_mode = IRLEDMode.AUTO
+    camera_obj.lcd_message = None
+    camera_obj.chime_duration = 0
 
     light_obj = mock_light.copy()
     light_obj._api = mock_entry.api
@@ -136,16 +163,23 @@ async def light_fixture(
     light_obj.camera_id = None
     light_obj.light_mode_settings.mode = LightModeType.MOTION
     light_obj.light_mode_settings.enable_at = LightModeEnableType.DARK
+    regenerate_device_ids(light_obj)
 
     reset_objects(mock_entry.api.bootstrap)
-    mock_entry.api.bootstrap.cameras = {camera.id: camera}
+    mock_entry.api.bootstrap.cameras = {camera_obj.id: camera_obj}
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
+    add_device_ref(mock_entry.api.bootstrap, light_obj)
 
-    await hass.config_entries.async_reload(mock_entry.entry.entry_id)
+    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.SELECT, 6, 6)
+    await remove_entities(hass, [light_obj])
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    await adopt_devices(hass, mock_entry.api, [light_obj])
     assert_entity_counts(hass, Platform.SELECT, 6, 6)
 
     yield light_obj
@@ -177,10 +211,15 @@ async def camera_none_fixture(
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
+    add_device_ref(mock_entry.api.bootstrap, camera_obj)
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
+    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+    await remove_entities(hass, [camera_obj])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+    await adopt_devices(hass, mock_entry.api, [camera_obj])
     assert_entity_counts(hass, Platform.SELECT, 2, 2)
 
     yield camera_obj
