@@ -4,6 +4,11 @@
             "single_instance_allowed": "Endast en enda konfiguration av Abode \u00e4r till\u00e5ten."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "username": "E-postadress"
+                }
+            },
             "user": {
                 "data": {
                     "password": "L\u00f6senord",

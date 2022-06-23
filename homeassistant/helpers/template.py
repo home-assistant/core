@@ -57,6 +57,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .json import JSON_DECODE_EXCEPTIONS, json_loads
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -565,8 +566,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(ValueError, TypeError):
-            variables["value_json"] = json.loads(value)
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            variables["value_json"] = json_loads(value)
 
         try:
             return _render_with_context(
@@ -1370,18 +1371,18 @@ def multiply(value, amount, default=_SENTINEL):
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
-        value_float = float(value)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", value)
-        return default
-    try:
         base_float = float(base)
     except (ValueError, TypeError):
         if default is _SENTINEL:
             raise_no_default("log", base)
         return default
-    return math.log(value_float, base_float)
+    try:
+        value_float = float(value)
+        return math.log(value_float, base_float)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("log", value)
+        return default
 
 
 def sine(value, default=_SENTINEL):
@@ -1743,7 +1744,7 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a JSON string to an object."""
-    return json.loads(value)
+    return json_loads(value)
 
 
 def to_json(value, ensure_ascii=True):

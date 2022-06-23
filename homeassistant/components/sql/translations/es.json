@@ -4,11 +4,14 @@
             "already_configured": "La cuenta ya est\u00e1 configurada"
         },
         "error": {
-            "db_url_invalid": "URL de la base de datos inv\u00e1lido"
+            "db_url_invalid": "URL de la base de datos inv\u00e1lido",
+            "query_invalid": "Consulta SQL no v\u00e1lida"
         },
         "step": {
             "user": {
                 "data": {
+                    "column": "Columna",
+                    "db_url": "URL de la base de datos",
                     "name": "Nombre",
                     "query": "Selecciona la consulta",
                     "unit_of_measurement": "Unidad de medida",

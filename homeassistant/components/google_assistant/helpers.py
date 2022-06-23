@@ -213,6 +213,9 @@ class AbstractConfig(ABC):
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return 204
+
         res = await gather(
             *(
                 self.async_sync_entities(agent_user_id)
@@ -353,9 +356,6 @@ class AbstractConfig(ABC):
                 pprint.pformat(payload),
             )
 
-        if not self.enabled:
-            return json_response(smart_home.turned_off_response(payload))
-
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
@@ -366,6 +366,11 @@ class AbstractConfig(ABC):
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
+
+        if not self.enabled:
+            return json_response(
+                smart_home.api_disabled_response(payload, agent_user_id)
+            )
 
         result = await smart_home.async_handle_message(
             self.hass,

@@ -9,6 +9,7 @@ from homeassistant.components.cover import (
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -34,6 +35,7 @@ from .const import (
     SERVICE_SET_ABSOLUTE_POSITION,
     UPDATE_INTERVAL_MOVING,
 )
+from .gateway import device_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +64,10 @@ TILT_DEVICE_MAP = {
     BlindType.VerticalBlind: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindLeft: CoverDeviceClass.BLIND,
     BlindType.VerticalBlindRight: CoverDeviceClass.BLIND,
+}
+
+TILT_ONLY_DEVICE_MAP = {
+    BlindType.WoodShutter: CoverDeviceClass.BLIND,
 }
 
 TDBU_DEVICE_MAP = {
@@ -104,6 +110,16 @@ async def async_setup_entry(
                     coordinator,
                     blind,
                     TILT_DEVICE_MAP[blind.type],
+                    sw_version,
+                )
+            )
+
+        elif blind.type in TILT_ONLY_DEVICE_MAP:
+            entities.append(
+                MotionTiltOnlyDevice(
+                    coordinator,
+                    blind,
+                    TILT_ONLY_DEVICE_MAP[blind.type],
                     sw_version,
                 )
             )
@@ -178,13 +194,12 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         if blind.device_type in DEVICE_TYPES_WIFI:
             via_device = ()
             connections = {(dr.CONNECTION_NETWORK_MAC, blind.mac)}
-            name = blind.blind_type
         else:
             via_device = (DOMAIN, blind._gateway.mac)
             connections = {}
-            name = f"{blind.blind_type} {blind.mac[12:]}"
             sw_version = None
 
+        name = device_name(blind)
         self._attr_device_class = device_class
         self._attr_name = name
         self._attr_unique_id = blind.mac
@@ -356,6 +371,49 @@ class MotionTiltDevice(MotionPositionDevice):
             await self.hass.async_add_executor_job(self._blind.Stop)
 
 
+class MotionTiltOnlyDevice(MotionTiltDevice):
+    """Representation of a Motion Blind Device."""
+
+    _restore_tilt = False
+
+    @property
+    def supported_features(self):
+        """Flag supported features."""
+        supported_features = (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+        )
+
+        if self.current_cover_tilt_position is not None:
+            supported_features |= CoverEntityFeature.SET_TILT_POSITION
+
+        return supported_features
+
+    @property
+    def current_cover_position(self):
+        """Return current position of cover."""
+        return None
+
+    @property
+    def is_closed(self):
+        """Return if the cover is closed or not."""
+        if self._blind.angle is None:
+            return None
+        return self._blind.angle == 0
+
+    async def async_set_absolute_position(self, **kwargs):
+        """Move the cover to a specific absolute position (see TDBU)."""
+        angle = kwargs.get(ATTR_TILT_POSITION)
+        if angle is not None:
+            angle = angle * 180 / 100
+            async with self._api_lock:
+                await self.hass.async_add_executor_job(
+                    self._blind.Set_angle,
+                    angle,
+                )
+
+
 class MotionTDBUDevice(MotionPositionDevice):
     """Representation of a Motion Top Down Bottom Up blind Device."""
 
@@ -364,7 +422,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         super().__init__(coordinator, blind, device_class, sw_version)
         self._motor = motor
         self._motor_key = motor[0]
-        self._attr_name = f"{blind.blind_type} {blind.mac[12:]} {motor}"
+        self._attr_name = f"{device_name(blind)} {motor}"
         self._attr_unique_id = f"{blind.mac}-{motor}"
 
         if self._motor not in ["Bottom", "Top", "Combined"]:

@@ -66,6 +66,51 @@ async def test_form(hass: HomeAssistant) -> None:
     )
 
 
+async def test_form_entry_already_exist(hass: HomeAssistant) -> None:
+    """Test flow aborts when entry already exist."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_API_KEY: "1234567890",
+            CONF_NAME: "Stockholm C to Uppsala C at 10:00",
+            CONF_FROM: "Stockholm C",
+            CONF_TO: "Uppsala C",
+            CONF_TIME: "10:00",
+            CONF_WEEKDAY: WEEKDAYS,
+        },
+        unique_id=f"stockholmc-uppsalac-10:00-{WEEKDAYS}",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "homeassistant.components.trafikverket_train.config_flow.TrafikverketTrain.async_get_train_station",
+    ), patch(
+        "homeassistant.components.trafikverket_train.async_setup_entry",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_API_KEY: "1234567890",
+                CONF_FROM: "Stockholm C",
+                CONF_TO: "Uppsala C",
+                CONF_TIME: "10:00",
+                CONF_WEEKDAY: WEEKDAYS,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["reason"] == "already_configured"
+
+
 @pytest.mark.parametrize(
     "error_message,base_error",
     [

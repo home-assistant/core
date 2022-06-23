@@ -1,4 +1,6 @@
 """Support for Xiaomi Aqara locks."""
+from __future__ import annotations
+
 from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
@@ -44,18 +46,19 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
-    def is_locked(self) -> bool:
+    def is_locked(self) -> bool | None:
         """Return true if lock is locked."""
         if self._state is not None:
             return self._state == STATE_LOCKED
+        return None
 
     @property
-    def changed_by(self) -> int:
+    def changed_by(self) -> str:
         """Last change triggered by."""
         return self._changed_by
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int]:
         """Return the state attributes."""
         attributes = {ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times}
         return attributes

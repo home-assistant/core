@@ -83,8 +83,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
     async def async_set_cooling(self, enabled: bool) -> None:
         """Enable or disable cooling mode."""
         await self.base.set_cooling(enabled)
-        for update_callback in self._listeners:
-            update_callback()
+        self.async_update_listeners()
 
     async def async_set_target_temperature(
         self, heat_area_id: str, target_temperature: float
@@ -117,8 +116,7 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 "Failed to set target temperature, communication error with alpha2 base"
             ) from http_err
         self.data["heat_areas"][heat_area_id].update(update_data)
-        for update_callback in self._listeners:
-            update_callback()
+        self.async_update_listeners()
 
     async def async_set_heat_area_mode(
         self, heat_area_id: str, heat_area_mode: int
@@ -161,5 +159,5 @@ class Alpha2BaseCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 self.data["heat_areas"][heat_area_id]["T_TARGET"] = self.data[
                     "heat_areas"
                 ][heat_area_id]["T_HEAT_NIGHT"]
-        for update_callback in self._listeners:
-            update_callback()
+
+        self.async_update_listeners()

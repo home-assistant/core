@@ -75,14 +75,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Hive from a config entry."""
 
-    websession = aiohttp_client.async_get_clientsession(hass)
+    web_session = aiohttp_client.async_get_clientsession(hass)
     hive_config = dict(entry.data)
-    hive = Hive(
-        websession,
-        deviceGroupKey=hive_config["device_data"][0],
-        deviceKey=hive_config["device_data"][1],
-        devicePassword=hive_config["device_data"][2],
-    )
+    hive = Hive(web_session)
 
     hive_config["options"] = {}
     hive_config["options"].update(

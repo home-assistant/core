@@ -106,6 +106,9 @@ httpcore==0.15.0
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
+# Ensure we run compatible with musllinux build env
+numpy>=1.22.0
+
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
 
@@ -126,6 +129,10 @@ authlib<1.0
 # Pin backoff for compatibility until most libraries have been updated
 # https://github.com/home-assistant/core/pull/70817
 backoff<2.0
+
+# Breaking change in version
+# https://github.com/samuelcolvin/pydantic/issues/4092
+pydantic!=1.9.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (

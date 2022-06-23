@@ -9,27 +9,8 @@ from homeassistant.components.wallbox import CHARGER_MAX_CHARGING_CURRENT_KEY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from tests.components.wallbox import entry, setup_integration
-from tests.components.wallbox.const import (
-    ERROR,
-    JWT,
-    MOCK_NUMBER_ENTITY_ID,
-    STATUS,
-    TTL,
-    USER_ID,
-)
-
-authorisation_response = json.loads(
-    json.dumps(
-        {
-            JWT: "fakekeyhere",
-            USER_ID: 12345,
-            TTL: 145656758,
-            ERROR: "false",
-            STATUS: 200,
-        }
-    )
-)
+from tests.components.wallbox import authorisation_response, entry, setup_integration
+from tests.components.wallbox.const import MOCK_NUMBER_ENTITY_ID
 
 
 async def test_wallbox_number_class(hass: HomeAssistant) -> None:
@@ -39,7 +20,7 @@ async def test_wallbox_number_class(hass: HomeAssistant) -> None:
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=200,
         )
@@ -68,7 +49,7 @@ async def test_wallbox_number_class_connection_error(hass: HomeAssistant) -> Non
 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
-            "https://api.wall-box.com/auth/token/user",
+            "https://user-api.wall-box.com/users/signin",
             json=authorisation_response,
             status_code=200,
         )

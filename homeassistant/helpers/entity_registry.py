@@ -369,6 +369,8 @@ class EntityRegistry:
 
         if disabled_by and not isinstance(disabled_by, RegistryEntryDisabler):
             raise ValueError("disabled_by must be a RegistryEntryDisabler value")
+        if hidden_by and not isinstance(hidden_by, RegistryEntryHider):
+            raise ValueError("hidden_by must be a RegistryEntryHider value")
 
         if (
             disabled_by is None
@@ -520,6 +522,12 @@ class EntityRegistry:
             and not isinstance(disabled_by, RegistryEntryDisabler)
         ):
             raise ValueError("disabled_by must be a RegistryEntryDisabler value")
+        if (
+            hidden_by
+            and hidden_by is not UNDEFINED
+            and not isinstance(hidden_by, RegistryEntryHider)
+        ):
+            raise ValueError("hidden_by must be a RegistryEntryHider value")
 
         from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
@@ -729,7 +737,9 @@ class EntityRegistry:
                     if entity["entity_category"]
                     else None,
                     entity_id=entity["entity_id"],
-                    hidden_by=entity["hidden_by"],
+                    hidden_by=RegistryEntryHider(entity["hidden_by"])
+                    if entity["hidden_by"]
+                    else None,
                     icon=entity["icon"],
                     id=entity["id"],
                     name=entity["name"],
