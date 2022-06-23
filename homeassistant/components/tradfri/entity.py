@@ -5,7 +5,7 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, cast
+from typing import Any
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.command import Command
@@ -85,4 +85,4 @@ class TradfriBaseEntity(CoordinatorEntity[TradfriDeviceDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return cast(bool, self._device.reachable) and super().available
+        return self._device.reachable and super().available
