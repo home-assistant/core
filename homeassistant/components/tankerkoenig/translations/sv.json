@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "\u00c5terautentisering lyckades"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            }
+        }
+    }
+}

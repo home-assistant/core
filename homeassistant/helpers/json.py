@@ -95,4 +95,7 @@ def json_dumps_sorted(data: Any) -> str:
     ).decode("utf-8")
 
 
+json_loads = orjson.loads
+
+
 JSON_DUMP: Final = json_dumps

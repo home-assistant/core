@@ -284,7 +284,7 @@ def ids_from_device_description(
 def generate_random_ids() -> tuple[str, str]:
     """Generate random IDs for device."""
 
-    return random_hex(24).upper(), random_hex(12).upper()
+    return random_hex(24).lower(), random_hex(12).upper()
 
 
 def regenerate_device_ids(device: ProtectAdoptableDeviceModel) -> None:

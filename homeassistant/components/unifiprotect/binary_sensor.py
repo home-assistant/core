@@ -35,7 +35,6 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectRequiredKeysMixin
-from .utils import async_get_is_highfps
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
@@ -103,7 +102,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         icon="mdi:video-high-definition",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value_fn=async_get_is_highfps,
+        ufp_value="is_high_fps_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -386,12 +385,15 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.api.bootstrap.cameras.values():
+        if not device.is_adopted_by_us:
+            continue
+
         for description in MOTION_SENSORS:
             entities.append(ProtectEventBinarySensor(data, device, description))
             _LOGGER.debug(
                 "Adding binary sensor entity %s for %s",
                 description.name,
-                device.name,
+                device.display_name,
             )
 
     return entities
@@ -468,9 +470,9 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         slot = self._disk.slot
         self._attr_available = False
 
-        if self.device.system_info.ustorage is None:
-            return
-
+        # should not be possible since it would require user to
+        # _downgrade_ to make ustorage disppear
+        assert self.device.system_info.ustorage is not None
         for disk in self.device.system_info.ustorage.disks:
             if disk.slot == slot:
                 self._disk = disk
