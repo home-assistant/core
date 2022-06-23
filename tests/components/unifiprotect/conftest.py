@@ -32,7 +32,6 @@ from pyunifiprotect.data.bootstrap import ProtectDeviceRef
 from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.components.unifiprotect.data import ProtectData
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -345,7 +344,7 @@ async def adopt_devices(
     api: ProtectApiClient,
     ufp_devices: list[ProtectAdoptableDeviceModel],
 ):
-    """Emits WS to re-adopt give Protect devices."""
+    """Emit WS to re-adopt give Protect devices."""
 
     for ufp_device in ufp_devices:
         mock_msg = Mock()

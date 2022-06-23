@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 from pyunifiprotect.data import Camera, Chime, Light, ModelType
-from pyunifiprotect.data.bootstrap import ProtectDeviceRef
 from pyunifiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN

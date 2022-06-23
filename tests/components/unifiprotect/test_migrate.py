@@ -5,7 +5,6 @@ from __future__ import annotations
 from unittest.mock import AsyncMock
 
 from pyunifiprotect.data import Light
-from pyunifiprotect.data.bootstrap import ProtectDeviceRef
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.unifiprotect.const import DOMAIN
