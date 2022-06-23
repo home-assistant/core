@@ -1,0 +1,36 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "method": "Integration method",
+                    "name": "Name",
+                    "round": "Precision",
+                    "source": "Input sensor",
+                    "unit_prefix": "Metric prefix",
+                    "unit_time": "Time unit"
+                },
+                "data_description": {
+                    "round": "Controls the number of decimal digits in the output.",
+                    "unit_prefix": "The output will be scaled according to the selected metric prefix.",
+                    "unit_time": "The output will be scaled according to the selected time unit."
+                },
+                "description": "Create a sensor that calculates a Riemann sum to estimate the integral of a sensor.",
+                "title": "Add Riemann sum integral sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "round": "Precision"
+                },
+                "data_description": {
+                    "round": "Controls the number of decimal digits in the output."
+                }
+            }
+        }
+    },
+    "title": "Integration - Riemann sum integral sensor"
+}

@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, CoreState, State
 from homeassistant.exceptions import Unauthorized
 from homeassistant.helpers import entity_registry as er
-from homeassistant.loader import bind_hass
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_restore_cache
@@ -70,16 +69,13 @@ def storage_setup(hass, hass_storage):
     return _storage
 
 
-@bind_hass
-def set_value(hass, entity_id, value):
-    """Set input_text to value.
-
-    This is a legacy helper method. Do not use it for new tests.
-    """
-    hass.async_create_task(
-        hass.services.async_call(
-            DOMAIN, SERVICE_SET_VALUE, {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value}
-        )
+async def async_set_value(hass, entity_id, value):
+    """Set input_text to value."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
+        blocking=True,
     )
 
 
@@ -98,24 +94,31 @@ async def test_config(hass):
 async def test_set_value(hass):
     """Test set_value method."""
     assert await async_setup_component(
-        hass, DOMAIN, {DOMAIN: {"test_1": {"initial": "test", "min": 3, "max": 10}}}
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "test_1": {"initial": "test", "min": 3, "max": 10},
+                "test_2": {},
+            }
+        },
     )
     entity_id = "input_text.test_1"
+    entity_id_2 = "input_text.test_2"
+    assert hass.states.get(entity_id).state == "test"
+    assert hass.states.get(entity_id_2).state == "unknown"
 
-    state = hass.states.get(entity_id)
-    assert str(state.state) == "test"
+    for entity in (entity_id, entity_id_2):
+        await async_set_value(hass, entity, "testing")
+        assert hass.states.get(entity).state == "testing"
 
-    set_value(hass, entity_id, "testing")
-    await hass.async_block_till_done()
+    # Too long for entity 1
+    await async_set_value(hass, entity, "testing too long")
+    assert hass.states.get(entity_id).state == "testing"
 
-    state = hass.states.get(entity_id)
-    assert str(state.state) == "testing"
-
-    set_value(hass, entity_id, "testing too long")
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert str(state.state) == "testing"
+    # Set to empty string
+    await async_set_value(hass, entity_id_2, "")
+    assert hass.states.get(entity_id_2).state == ""
 
 
 async def test_mode(hass):

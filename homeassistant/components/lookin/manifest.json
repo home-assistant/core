@@ -1,0 +1,11 @@
+{
+  "domain": "lookin",
+  "name": "LOOKin",
+  "documentation": "https://www.home-assistant.io/integrations/lookin/",
+  "codeowners": ["@ANMalko", "@bdraco"],
+  "requirements": ["aiolookin==0.1.1"],
+  "zeroconf": ["_lookin._tcp.local."],
+  "config_flow": true,
+  "iot_class": "local_push",
+  "loggers": ["aiolookin"]
+}

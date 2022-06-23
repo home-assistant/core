@@ -1,5 +1,4 @@
 """The tests for Google Assistant logbook."""
-from homeassistant.components import logbook
 from homeassistant.components.google_assistant.const import (
     DOMAIN,
     EVENT_COMMAND_RECEIVED,
@@ -9,7 +8,7 @@ from homeassistant.components.google_assistant.const import (
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME
 from homeassistant.setup import async_setup_component
 
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.components.logbook.common import MockRow, mock_humanify
 
 
 async def test_humanify_command_received(hass):
@@ -18,48 +17,43 @@ async def test_humanify_command_received(hass):
     hass.config.components.add("frontend")
     hass.config.components.add("google_assistant")
     assert await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
     hass.states.async_set(
         "light.kitchen", "on", {ATTR_FRIENDLY_NAME: "The Kitchen Lights"}
     )
 
-    events = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_COMMAND_RECEIVED,
-                    {
-                        "request_id": "abcd",
-                        ATTR_ENTITY_ID: ["light.kitchen"],
-                        "execution": [
-                            {
-                                "command": "action.devices.commands.OnOff",
-                                "params": {"on": True},
-                            }
-                        ],
-                        "source": SOURCE_LOCAL,
-                    },
-                ),
-                MockLazyEventPartialState(
-                    EVENT_COMMAND_RECEIVED,
-                    {
-                        "request_id": "abcd",
-                        ATTR_ENTITY_ID: ["light.non_existing"],
-                        "execution": [
-                            {
-                                "command": "action.devices.commands.OnOff",
-                                "params": {"on": False},
-                            }
-                        ],
-                        "source": SOURCE_CLOUD,
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    events = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_COMMAND_RECEIVED,
+                {
+                    "request_id": "abcd",
+                    ATTR_ENTITY_ID: ["light.kitchen"],
+                    "execution": [
+                        {
+                            "command": "action.devices.commands.OnOff",
+                            "params": {"on": True},
+                        }
+                    ],
+                    "source": SOURCE_LOCAL,
+                },
+            ),
+            MockRow(
+                EVENT_COMMAND_RECEIVED,
+                {
+                    "request_id": "abcd",
+                    ATTR_ENTITY_ID: ["light.non_existing"],
+                    "execution": [
+                        {
+                            "command": "action.devices.commands.OnOff",
+                            "params": {"on": False},
+                        }
+                    ],
+                    "source": SOURCE_CLOUD,
+                },
+            ),
+        ],
     )
 
     assert len(events) == 2

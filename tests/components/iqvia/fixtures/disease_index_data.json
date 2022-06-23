@@ -1,0 +1,76 @@
+{
+  "ForecastDate": "2019-04-07T00:00:00-04:00",
+  "Location": {
+    "City": "SCHENECTADY",
+    "DisplayLocation": "Schenectady, NY",
+    "State": "NY",
+    "ZIP": "12345",
+    "periods": [
+      {
+        "Idx": "6.8",
+        "Index": 6.8,
+        "Period": "2019-04-06T00:00:00",
+        "Triggers": [
+          {
+            "Description": "Influenza",
+            "Idx": "3.1",
+            "Index": 3.1,
+            "Name": "Flu"
+          },
+          {
+            "Description": "High Fever",
+            "Idx": "6.2",
+            "Index": 6.2,
+            "Name": "Fever"
+          },
+          {
+            "Description": "Strep & Sore throat",
+            "Idx": "5.2",
+            "Index": 5.2,
+            "Name": "Strep"
+          },
+          {
+            "Description": "Cough",
+            "Idx": "7.8",
+            "Index": 7.8,
+            "Name": "Cough"
+          }
+        ],
+        "Type": "Yesterday"
+      },
+      {
+        "Idx": "6.7",
+        "Index": 6.7,
+        "Period": "2019-04-07T03:52:58",
+        "Triggers": [
+          {
+            "Description": "Influenza",
+            "Idx": "3.1",
+            "Index": 3.1,
+            "Name": "Flu"
+          },
+          {
+            "Description": "High Fever",
+            "Idx": "5.9",
+            "Index": 5.9,
+            "Name": "Fever"
+          },
+          {
+            "Description": "Strep & Sore throat",
+            "Idx": "5.1",
+            "Index": 5.1,
+            "Name": "Strep"
+          },
+          {
+            "Description": "Cough",
+            "Idx": "7.7",
+            "Index": 7.7,
+            "Name": "Cough"
+          }
+        ],
+        "Type": "Today"
+      }
+    ]
+  },
+  "Type": "cold"
+}

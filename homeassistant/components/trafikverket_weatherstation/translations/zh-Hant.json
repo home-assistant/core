@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5e33\u865f\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_auth": "\u9a57\u8b49\u78bc\u7121\u6548",
+            "invalid_station": "\u8a72\u6307\u5b9a\u540d\u7a31\u7121\u6cd5\u627e\u5230\u5929\u6c23\u89c0\u6e2c\u7ad9",
+            "more_stations": "\u8a72\u6307\u5b9a\u540d\u7a31\u627e\u5230\u591a\u500b\u5929\u6c23\u89c0\u6e2c\u7ad9"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "api_key": "API \u91d1\u9470",
+                    "station": "\u76e3\u63a7\u7ad9"
+                }
+            }
+        }
+    }
+}

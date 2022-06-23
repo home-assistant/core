@@ -2,33 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Denne SimpliSafe-kontoen er allerede i bruk.",
+            "email_2fa_timed_out": "Tidsavbrudd mens du ventet p\u00e5 e-postbasert tofaktorautentisering.",
             "reauth_successful": "Godkjenning p\u00e5 nytt var vellykket"
         },
         "error": {
-            "identifier_exists": "Konto er allerede registrert",
             "invalid_auth": "Ugyldig godkjenning",
-            "still_awaiting_mfa": "Forventer fortsatt MFA-e-postklikk",
             "unknown": "Uventet feil"
         },
+        "progress": {
+            "email_2fa": "Sjekk e-posten din for en bekreftelseslenke fra Simplisafe."
+        },
         "step": {
-            "mfa": {
-                "description": "Sjekk e-posten din for en lenke fra SimpliSafe. Etter \u00e5 ha bekreftet lenken, g\u00e5 tilbake hit for \u00e5 fullf\u00f8re installasjonen av integrasjonen.",
-                "title": "SimpliSafe flertrinnsbekreftelse"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Passord"
                 },
-                "description": "Tilgangen din har utl\u00f8pt eller blitt tilbakekalt. Skriv inn passordet ditt for \u00e5 koble kontoen din til p\u00e5 nytt.",
+                "description": "Vennligst skriv inn passordet for {username} p\u00e5 nytt.",
                 "title": "Godkjenne integrering p\u00e5 nytt"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Kode"
+                },
+                "description": "Skriv inn tofaktorautentiseringskoden sendt til deg via SMS."
             },
             "user": {
                 "data": {
-                    "code": "Kode (brukt i Home Assistant brukergrensesnittet)",
                     "password": "Passord",
-                    "username": "E-post"
+                    "username": "Brukernavn"
                 },
-                "title": "Fyll ut informasjonen din."
+                "description": "Skriv inn brukernavn og passord."
             }
         }
     },

@@ -12,7 +12,10 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
 )
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, IncomfortEntity
 
@@ -21,7 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 HEATER_ATTRS = ["display_code", "display_text", "is_burning"]
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an InComfort/Intouch water_heater device."""
     if discovery_info is None:
         return

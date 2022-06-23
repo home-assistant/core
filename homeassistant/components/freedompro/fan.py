@@ -1,18 +1,26 @@
 """Support for Freedompro fan."""
+from __future__ import annotations
+
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
-from homeassistant.components.fan import SUPPORT_SET_SPEED, FanEntity
+from homeassistant.components.fan import FanEntity, FanEntityFeature
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Freedompro fan."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -34,33 +42,28 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
         self._characteristics = device["characteristics"]
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self.unique_id),
             },
-            "model": device["type"],
-            "manufacturer": "Freedompro",
-        }
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
         self._attr_is_on = False
         self._attr_percentage = 0
+        if "rotationSpeed" in self._characteristics:
+            self._attr_supported_features = FanEntityFeature.SET_SPEED
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._attr_is_on
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current speed percentage."""
         return self._attr_percentage
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if "rotationSpeed" in self._characteristics:
-            return SUPPORT_SET_SPEED
-        return 0
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -86,32 +89,33 @@ class FreedomproFan(CoordinatorEntity, FanEntity):
         self._handle_coordinator_update()
 
     async def async_turn_on(
-        self, speed=None, percentage=None, preset_mode=None, **kwargs
-    ):
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Async function to turn on the fan."""
         payload = {"on": True}
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Async function to turn off the fan."""
         payload = {"on": False}
-        payload = json.dumps(payload)
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
 
-    async def async_set_percentage(self, percentage: int):
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         rotation_speed = {"rotationSpeed": percentage}
         payload = json.dumps(rotation_speed)

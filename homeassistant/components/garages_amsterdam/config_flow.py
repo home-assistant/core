@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientResponseError
-import garages_amsterdam
+from garages_amsterdam import GaragesAmsterdam
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -30,9 +30,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._options is None:
             self._options = []
             try:
-                api_data = await garages_amsterdam.get_garages(
-                    aiohttp_client.async_get_clientsession(self.hass)
-                )
+                api_data = await GaragesAmsterdam(
+                    session=aiohttp_client.async_get_clientsession(self.hass)
+                ).all_garages()
             except ClientResponseError:
                 _LOGGER.error("Unexpected response from server")
                 return self.async_abort(reason="cannot_connect")

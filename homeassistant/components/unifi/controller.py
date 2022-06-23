@@ -1,4 +1,4 @@
-"""UniFi Controller abstraction."""
+"""UniFi Network abstraction."""
 from __future__ import annotations
 
 import asyncio
@@ -26,20 +26,18 @@ from aiounifi.events import (
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 import async_timeout
 
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.components.unifi.switch import BLOCK_SWITCH, POE_SWITCH
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    Platform,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers import aiohttp_client, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_registry import async_entries_for_config_entry
 from homeassistant.helpers.event import async_track_time_interval
@@ -72,10 +70,11 @@ from .const import (
     UNIFI_WIRELESS_CLIENTS,
 )
 from .errors import AuthenticationRequired, CannotConnect
+from .switch import BLOCK_SWITCH, POE_SWITCH
 
 RETRY_TIMER = 15
 CHECK_HEARTBEAT_INTERVAL = timedelta(seconds=1)
-PLATFORMS = [TRACKER_DOMAIN, SENSOR_DOMAIN, SWITCH_DOMAIN]
+PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH, Platform.UPDATE]
 
 CLIENT_CONNECTED = (
     WIRED_CLIENT_CONNECTED,
@@ -90,7 +89,7 @@ DEVICE_CONNECTED = (
 
 
 class UniFiController:
-    """Manages a single UniFi Controller."""
+    """Manages a single UniFi Network instance."""
 
     def __init__(self, hass, config_entry):
         """Initialize the system."""
@@ -198,7 +197,7 @@ class UniFiController:
         if signal == SIGNAL_CONNECTION_STATE:
 
             if data == STATE_DISCONNECTED and self.available:
-                LOGGER.warning("Lost connection to UniFi controller")
+                LOGGER.warning("Lost connection to UniFi Network")
 
             if (data == STATE_RUNNING and not self.available) or (
                 data == STATE_DISCONNECTED and self.available
@@ -209,7 +208,7 @@ class UniFiController:
                 if not self.available:
                     self.hass.loop.call_later(RETRY_TIMER, self.reconnect, True)
                 else:
-                    LOGGER.info("Connected to UniFi controller")
+                    LOGGER.info("Connected to UniFi Network")
 
         elif signal == SIGNAL_DATA and data:
 
@@ -248,11 +247,7 @@ class UniFiController:
                 )
 
             elif DATA_DPI_GROUP in data:
-                for key in data[DATA_DPI_GROUP]:
-                    if self.api.dpi_groups[key].dpiapp_ids:
-                        async_dispatcher_send(self.hass, self.signal_update)
-                    else:
-                        async_dispatcher_send(self.hass, self.signal_remove, {key})
+                async_dispatcher_send(self.hass, self.signal_update)
 
             elif DATA_DPI_GROUP_REMOVED in data:
                 async_dispatcher_send(
@@ -301,7 +296,7 @@ class UniFiController:
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
     async def async_setup(self):
-        """Set up a UniFi controller."""
+        """Set up a UniFi Network instance."""
         try:
             self.api = await get_controller(
                 self.hass,
@@ -333,13 +328,13 @@ class UniFiController:
         self._site_role = description[0]["site_role"]
 
         # Restore clients that are not a part of active clients list.
-        entity_registry = await self.hass.helpers.entity_registry.async_get_registry()
+        entity_registry = er.async_get(self.hass)
         for entry in async_entries_for_config_entry(
             entity_registry, self.config_entry.entry_id
         ):
-            if entry.domain == TRACKER_DOMAIN:
+            if entry.domain == Platform.DEVICE_TRACKER:
                 mac = entry.unique_id.split("-", 1)[0]
-            elif entry.domain == SWITCH_DOMAIN and (
+            elif entry.domain == Platform.SWITCH and (
                 entry.unique_id.startswith(BLOCK_SWITCH)
                 or entry.unique_id.startswith(POE_SWITCH)
             ):
@@ -391,14 +386,21 @@ class UniFiController:
         """Check for any devices scheduled to be marked disconnected."""
         now = dt_util.utcnow()
 
+        unique_ids_to_remove = []
         for unique_id, heartbeat_expire_time in self._heartbeat_time.items():
             if now > heartbeat_expire_time:
                 async_dispatcher_send(
                     self.hass, f"{self.signal_heartbeat_missed}_{unique_id}"
                 )
+                unique_ids_to_remove.append(unique_id)
+
+        for unique_id in unique_ids_to_remove:
+            del self._heartbeat_time[unique_id]
 
     @staticmethod
-    async def async_config_entry_updated(hass, config_entry) -> None:
+    async def async_config_entry_updated(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> None:
         """Handle signals of config entry being updated.
 
         If config entry is updated due to reauth flow
@@ -413,13 +415,13 @@ class UniFiController:
     def reconnect(self, log=False) -> None:
         """Prepare to reconnect UniFi session."""
         if log:
-            LOGGER.info("Will try to reconnect to UniFi controller")
+            LOGGER.info("Will try to reconnect to UniFi Network")
         self.hass.loop.create_task(self.async_reconnect())
 
     async def async_reconnect(self) -> None:
-        """Try to reconnect UniFi session."""
+        """Try to reconnect UniFi Network session."""
         try:
-            with async_timeout.timeout(5):
+            async with async_timeout.timeout(5):
                 await self.api.login()
                 self.api.start_websocket()
 
@@ -488,13 +490,17 @@ async def get_controller(
     )
 
     try:
-        with async_timeout.timeout(10):
+        async with async_timeout.timeout(10):
             await controller.check_unifi_os()
             await controller.login()
         return controller
 
     except aiounifi.Unauthorized as err:
-        LOGGER.warning("Connected to UniFi at %s but not registered: %s", host, err)
+        LOGGER.warning(
+            "Connected to UniFi Network at %s but not registered: %s",
+            host,
+            err,
+        )
         raise AuthenticationRequired from err
 
     except (
@@ -502,14 +508,19 @@ async def get_controller(
         aiounifi.BadGateway,
         aiounifi.ServiceUnavailable,
         aiounifi.RequestError,
+        aiounifi.ResponseError,
     ) as err:
-        LOGGER.error("Error connecting to the UniFi controller at %s: %s", host, err)
+        LOGGER.error("Error connecting to the UniFi Network at %s: %s", host, err)
         raise CannotConnect from err
 
     except aiounifi.LoginRequired as err:
-        LOGGER.warning("Connected to UniFi at %s but login required: %s", host, err)
+        LOGGER.warning(
+            "Connected to UniFi Network at %s but login required: %s",
+            host,
+            err,
+        )
         raise AuthenticationRequired from err
 
     except aiounifi.AiounifiException as err:
-        LOGGER.exception("Unknown UniFi communication error occurred: %s", err)
+        LOGGER.exception("Unknown UniFi Network communication error occurred: %s", err)
         raise AuthenticationRequired from err

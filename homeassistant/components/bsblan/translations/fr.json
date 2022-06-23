@@ -1,12 +1,13 @@
 {
     "config": {
         "abort": {
-            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9"
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "cannot_connect": "\u00c9chec de connexion"
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion"
         },
-        "flow_title": "BSB-Lan: {name}",
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {

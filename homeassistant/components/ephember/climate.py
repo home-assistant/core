@@ -1,4 +1,6 @@
 """Support for the EPH Controls Ember themostats."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -17,13 +19,9 @@ import voluptuous as vol
 
 from homeassistant.components.climate import PLATFORM_SCHEMA, ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
-    SUPPORT_AUX_HEAT,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_TEMPERATURE,
@@ -31,29 +29,37 @@ from homeassistant.const import (
     CONF_USERNAME,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
 # Return cached results if last scan was less then this time ago
 SCAN_INTERVAL = timedelta(seconds=120)
 
-OPERATION_LIST = [HVAC_MODE_HEAT_COOL, HVAC_MODE_HEAT, HVAC_MODE_OFF]
+OPERATION_LIST = [HVACMode.HEAT_COOL, HVACMode.HEAT, HVACMode.OFF]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
 )
 
 EPH_TO_HA_STATE = {
-    "AUTO": HVAC_MODE_HEAT_COOL,
-    "ON": HVAC_MODE_HEAT,
-    "OFF": HVAC_MODE_OFF,
+    "AUTO": HVACMode.HEAT_COOL,
+    "ON": HVACMode.HEAT,
+    "OFF": HVACMode.OFF,
 }
 
 HA_STATE_TO_EPH = {value: key for key, value in EPH_TO_HA_STATE.items()}
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ephember thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
@@ -84,9 +90,9 @@ class EphEmberThermostat(ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         if self._hot_water:
-            return SUPPORT_AUX_HEAT
+            return ClimateEntityFeature.AUX_HEAT
 
-        return SUPPORT_TARGET_TEMPERATURE | SUPPORT_AUX_HEAT
+        return ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.AUX_HEAT
 
     @property
     def name(self):
@@ -120,9 +126,9 @@ class EphEmberThermostat(ClimateEntity):
     def hvac_action(self):
         """Return current HVAC action."""
         if zone_is_active(self._zone):
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
 
-        return CURRENT_HVAC_IDLE
+        return HVACAction.IDLE
 
     @property
     def hvac_mode(self):
@@ -161,8 +167,7 @@ class EphEmberThermostat(ClimateEntity):
 
     def set_temperature(self, **kwargs):
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is None:
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
 
         if self._hot_water:
@@ -205,4 +210,4 @@ class EphEmberThermostat(ClimateEntity):
     @staticmethod
     def map_mode_eph_hass(operation_mode):
         """Map from eph mode to Home Assistant mode."""
-        return EPH_TO_HA_STATE.get(operation_mode.name, HVAC_MODE_HEAT_COOL)
+        return EPH_TO_HA_STATE.get(operation_mode.name, HVACMode.HEAT_COOL)

@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
+            "firmware_not_fully_provisioned": "Device not fully provisioned. Please contact Shelly support",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
@@ -41,8 +42,8 @@
             "btn_up": "{subtype} button up",
             "double": "{subtype} double clicked",
             "double_push": "{subtype} double push",
-            "long": " {subtype} long clicked",
-            "long_push": " {subtype} long push",
+            "long": "{subtype} long clicked",
+            "long_push": "{subtype} long push",
             "long_single": "{subtype} long clicked and then single clicked",
             "single": "{subtype} single clicked",
             "single_long": "{subtype} single clicked and then long clicked",

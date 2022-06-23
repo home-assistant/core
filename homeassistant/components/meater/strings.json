@@ -1,0 +1,27 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up your Meater Cloud account.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "username": "Meater Cloud username, typically an email address."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Confirm the password for Meater Cloud account {username}.",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown_auth_error": "[%key:common::config_flow::error::unknown%]",
+      "service_unavailable_error": "The API is currently unavailable, please try again later."
+    }
+  }
+}

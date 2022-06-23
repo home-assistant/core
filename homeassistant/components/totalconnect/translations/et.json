@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Konto on juba seadistatud",
+            "no_locations": "Kasutaja jaoks ei ole asukohti saadaval, kontrolli TotalConnecti seadeid.",
             "reauth_successful": "Taastuvastamine \u00f5nnestus"
         },
         "error": {
@@ -11,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Asukoht",
                     "usercode": "Kasutajakood"
                 },
                 "description": "Sisesta kasutaja kood asukohale {location_id}",
@@ -25,8 +25,18 @@
                 "data": {
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Aku t\u00fchjenemise automaatne eiramine"
                 },
-                "title": ""
+                "description": "Eira tsoone automaatselt kui nad teatavad t\u00fchjast akust.",
+                "title": "TotalConnecti valikud"
             }
         }
     }

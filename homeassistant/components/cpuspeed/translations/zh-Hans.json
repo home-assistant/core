@@ -1,0 +1,15 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5f53\u524d\u96c6\u6210\u5df2\u88ab\u914d\u7f6e\uff0c\u4ec5\u80fd\u53ea\u6709\u4e00\u4e2a\u914d\u7f6e",
+            "not_compatible": "\u65e0\u6cd5\u83b7\u53d6 CPU \u4fe1\u606f\uff0c\u8be5\u96c6\u6210\u4e0e\u60a8\u7684\u7cfb\u7edf\u4e0d\u517c\u5bb9"
+        },
+        "step": {
+            "user": {
+                "description": "\u8bf7\u95ee\u60a8\u662f\u5426\u8981\u5f00\u59cb\u914d\u7f6e\uff1f",
+                "title": "CPU \u901f\u5ea6"
+            }
+        }
+    },
+    "title": "CPU \u901f\u5ea6"
+}

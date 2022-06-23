@@ -2,20 +2,8 @@
 import copy
 from unittest.mock import patch
 
-from plexapi.exceptions import BadRequest, NotFound
 from requests.exceptions import ConnectionError, RequestException
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.components.media_player.const import (
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    MEDIA_TYPE_EPISODE,
-    MEDIA_TYPE_MOVIE,
-    MEDIA_TYPE_MUSIC,
-    MEDIA_TYPE_PLAYLIST,
-    MEDIA_TYPE_VIDEO,
-    SERVICE_PLAY_MEDIA,
-)
 from homeassistant.components.plex.const import (
     CONF_IGNORE_NEW_SHARED_USERS,
     CONF_IGNORE_PLEX_WEB_CLIENTS,
@@ -24,7 +12,7 @@ from homeassistant.components.plex.const import (
     DOMAIN,
     SERVERS,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import Platform
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -34,7 +22,7 @@ async def test_new_users_available(hass, entry, setup_plex_server):
     """Test setting up when new users available on Plex server."""
     MONITORED_USERS = {"User 1": {"enabled": True}}
     OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
-    OPTIONS_WITH_USERS[MP_DOMAIN][CONF_MONITORED_USERS] = MONITORED_USERS
+    OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = MONITORED_USERS
     entry.options = OPTIONS_WITH_USERS
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
@@ -60,8 +48,8 @@ async def test_new_ignored_users_available(
     """Test setting up when new users available on Plex server but are ignored."""
     MONITORED_USERS = {"User 1": {"enabled": True}}
     OPTIONS_WITH_USERS = copy.deepcopy(DEFAULT_OPTIONS)
-    OPTIONS_WITH_USERS[MP_DOMAIN][CONF_MONITORED_USERS] = MONITORED_USERS
-    OPTIONS_WITH_USERS[MP_DOMAIN][CONF_IGNORE_NEW_SHARED_USERS] = True
+    OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_MONITORED_USERS] = MONITORED_USERS
+    OPTIONS_WITH_USERS[Platform.MEDIA_PLAYER][CONF_IGNORE_NEW_SHARED_USERS] = True
     entry.options = OPTIONS_WITH_USERS
 
     mock_plex_server = await setup_plex_server(config_entry=entry)
@@ -163,7 +151,7 @@ async def test_mark_sessions_idle(
 async def test_ignore_plex_web_client(hass, entry, setup_plex_server):
     """Test option to ignore Plex Web clients."""
     OPTIONS = copy.deepcopy(DEFAULT_OPTIONS)
-    OPTIONS[MP_DOMAIN][CONF_IGNORE_PLEX_WEB_CLIENTS] = True
+    OPTIONS[Platform.MEDIA_PLAYER][CONF_IGNORE_PLEX_WEB_CLIENTS] = True
     entry.options = OPTIONS
 
     mock_plex_server = await setup_plex_server(
@@ -178,215 +166,3 @@ async def test_ignore_plex_web_client(hass, entry, setup_plex_server):
     media_players = hass.states.async_entity_ids("media_player")
 
     assert len(media_players) == int(sensor.state) - 1
-
-
-async def test_media_lookups(hass, mock_plex_server, requests_mock, playqueue_created):
-    """Test media lookups to Plex server."""
-    server_id = mock_plex_server.machine_identifier
-    loaded_server = hass.data[DOMAIN][SERVERS][server_id]
-
-    # Plex Key searches
-    media_player_id = hass.states.async_entity_ids("media_player")[0]
-    requests_mock.post("/playqueues", text=playqueue_created)
-    requests_mock.get("/player/playback/playMedia", status_code=200)
-    assert await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: media_player_id,
-            ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
-            ATTR_MEDIA_CONTENT_ID: 1,
-        },
-        True,
-    )
-    with patch("plexapi.server.PlexServer.fetchItem", side_effect=NotFound):
-        assert await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: media_player_id,
-                ATTR_MEDIA_CONTENT_TYPE: DOMAIN,
-                ATTR_MEDIA_CONTENT_ID: 123,
-            },
-            True,
-        )
-
-    # TV show searches
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_EPISODE, library_name="Not a Library", show_name="TV Show"
-        )
-        is None
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_EPISODE, library_name="TV Shows", show_name="Not a TV Show"
-        )
-        is None
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_EPISODE, library_name="TV Shows", episode_name="An Episode"
-        )
-        is None
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_EPISODE, library_name="TV Shows", show_name="TV Show"
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_EPISODE,
-        library_name="TV Shows",
-        show_name="TV Show",
-        season_number=1,
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_EPISODE,
-        library_name="TV Shows",
-        show_name="TV Show",
-        season_number=1,
-        episode_number=3,
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_EPISODE,
-            library_name="TV Shows",
-            show_name="TV Show",
-            season_number=2,
-        )
-        is None
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_EPISODE,
-            library_name="TV Shows",
-            show_name="TV Show",
-            season_number=2,
-            episode_number=1,
-        )
-        is None
-    )
-
-    # Music searches
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MUSIC, library_name="Music", album_name="Album"
-        )
-        is None
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_MUSIC, library_name="Music", artist_name="Artist"
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_MUSIC,
-        library_name="Music",
-        artist_name="Artist",
-        track_name="Track 3",
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_MUSIC,
-        library_name="Music",
-        artist_name="Artist",
-        album_name="Album",
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MUSIC,
-            library_name="Music",
-            artist_name="Not an Artist",
-            album_name="Album",
-        )
-        is None
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MUSIC,
-            library_name="Music",
-            artist_name="Artist",
-            album_name="Not an Album",
-        )
-        is None
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MUSIC,
-            library_name="Music",
-            artist_name="Artist",
-            album_name=" Album",
-            track_name="Not a Track",
-        )
-        is None
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MUSIC,
-            library_name="Music",
-            artist_name="Artist",
-            track_name="Not a Track",
-        )
-        is None
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_MUSIC,
-        library_name="Music",
-        artist_name="Artist",
-        album_name="Album",
-        track_number=3,
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MUSIC,
-            library_name="Music",
-            artist_name="Artist",
-            album_name="Album",
-            track_number=30,
-        )
-        is None
-    )
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_MUSIC,
-        library_name="Music",
-        artist_name="Artist",
-        album_name="Album",
-        track_name="Track 3",
-    )
-
-    # Playlist searches
-    assert loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST, playlist_name="Playlist 1")
-    assert loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST) is None
-    assert (
-        loaded_server.lookup_media(MEDIA_TYPE_PLAYLIST, playlist_name="Not a Playlist")
-        is None
-    )
-
-    # Legacy Movie searches
-    assert loaded_server.lookup_media(MEDIA_TYPE_VIDEO, video_name="Movie") is None
-    assert loaded_server.lookup_media(MEDIA_TYPE_VIDEO, library_name="Movies") is None
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_VIDEO, library_name="Movies", video_name="Movie 1"
-    )
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_VIDEO, library_name="Movies", video_name="Not a Movie"
-        )
-        is None
-    )
-
-    # Movie searches
-    assert loaded_server.lookup_media(MEDIA_TYPE_MOVIE, title="Movie") is None
-    assert loaded_server.lookup_media(MEDIA_TYPE_MOVIE, library_name="Movies") is None
-    assert loaded_server.lookup_media(
-        MEDIA_TYPE_MOVIE, library_name="Movies", title="Movie 1"
-    )
-    with patch("plexapi.library.LibrarySection.search", side_effect=BadRequest):
-        assert (
-            loaded_server.lookup_media(
-                MEDIA_TYPE_MOVIE, library_name="Movies", title="Not a Movie"
-            )
-            is None
-        )
-
-    assert (
-        loaded_server.lookup_media(
-            MEDIA_TYPE_MOVIE, library_name="Movies", title="Movie"
-        )
-    ) is None

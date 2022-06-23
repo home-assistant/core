@@ -5,7 +5,8 @@
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
-            "invalid_auth": "Autentikasi tidak valid"
+            "invalid_auth": "Autentikasi tidak valid",
+            "reauth_failed": "Gunakan pengguna mydevolo yang sama seperti sebelumnya."
         },
         "step": {
             "user": {

@@ -1,23 +1,25 @@
 """Add support for the Xiaomi TVs."""
+from __future__ import annotations
+
 import logging
 
 import pymitv
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEFAULT_NAME = "Xiaomi TV"
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_XIAOMI_TV = SUPPORT_VOLUME_STEP | SUPPORT_TURN_ON | SUPPORT_TURN_OFF
 
 # No host is needed for configuration, however it can be set.
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -28,7 +30,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Xiaomi TV platform."""
 
     # If a hostname is set. Discovery is skipped.
@@ -49,6 +56,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
 class XiaomiTV(MediaPlayerEntity):
     """Represent the Xiaomi TV for Home Assistant."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     def __init__(self, ip, name):
         """Receive IP address and name to construct class."""
@@ -73,11 +86,6 @@ class XiaomiTV(MediaPlayerEntity):
     def assumed_state(self):
         """Indicate that state is assumed."""
         return True
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_XIAOMI_TV
 
     def turn_off(self):
         """

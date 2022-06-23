@@ -1,4 +1,6 @@
 """Config flow for Lutron Caseta."""
+from __future__ import annotations
+
 import asyncio
 import logging
 import os
@@ -10,11 +12,14 @@ from pylutron_caseta.smartbridge import Smartbridge
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
     ABORT_REASON_CANNOT_CONNECT,
+    BRIDGE_DEVICE_ID,
     BRIDGE_TIMEOUT,
     CONF_CA_CERTS,
     CONF_CERTFILE,
@@ -61,16 +66,18 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="user", data_schema=DATA_SCHEMA_USER)
 
-    async def async_step_zeroconf(self, discovery_info):
+    async def async_step_zeroconf(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
-        hostname = discovery_info["hostname"]
-        if hostname is None or not hostname.startswith("lutron-"):
+        hostname = discovery_info.hostname
+        if hostname is None or not hostname.lower().startswith("lutron-"):
             return self.async_abort(reason="not_lutron_device")
 
         self.lutron_id = hostname.split("-")[1].replace(".local.", "")
 
         await self.async_set_unique_id(self.lutron_id)
-        host = discovery_info[CONF_HOST]
+        host = discovery_info.host
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.data[CONF_HOST] = host
@@ -80,7 +87,9 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         }
         return await self.async_step_link()
 
-    async def async_step_homekit(self, discovery_info):
+    async def async_step_homekit(
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
+    ) -> FlowResult:
         """Handle a flow initialized by homekit discovery."""
         return await self.async_step_zeroconf(discovery_info)
 
@@ -95,7 +104,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if (
             not self.attempted_tls_validation
             and await self.hass.async_add_executor_job(self._tls_assets_exist)
-            and await self.async_validate_connectable_bridge_config()
+            and await self.async_get_lutron_id()
         ):
             self.tls_assets_validated = True
         self.attempted_tls_validation = True
@@ -171,7 +180,7 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.data[CONF_CERTFILE] = import_info[CONF_CERTFILE]
         self.data[CONF_CA_CERTS] = import_info[CONF_CA_CERTS]
 
-        if not await self.async_validate_connectable_bridge_config():
+        if not (lutron_id := await self.async_get_lutron_id()):
             # Ultimately we won't have a dedicated step for import failure, but
             # in order to keep configuration.yaml-based configs transparently
             # working without requiring further actions from the user, we don't
@@ -183,6 +192,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # will require users to go through a confirmation flow for imports).
             return await self.async_step_import_failed()
 
+        await self.async_set_unique_id(lutron_id, raise_on_progress=False)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(title=ENTRY_DEFAULT_TITLE, data=self.data)
 
     async def async_step_import_failed(self, user_input=None):
@@ -198,10 +209,8 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_abort(reason=ABORT_REASON_CANNOT_CONNECT)
 
-    async def async_validate_connectable_bridge_config(self):
+    async def async_get_lutron_id(self) -> str | None:
         """Check if we can connect to the bridge with the current config."""
-        bridge = None
-
         try:
             bridge = Smartbridge.create_tls(
                 hostname=self.data[CONF_HOST],
@@ -214,18 +223,23 @@ class LutronCasetaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "Invalid certificate used to connect to bridge at %s",
                 self.data[CONF_HOST],
             )
-            return False
+            return None
 
-        connected_ok = False
         try:
             async with async_timeout.timeout(BRIDGE_TIMEOUT):
                 await bridge.connect()
-            connected_ok = bridge.is_connected()
         except asyncio.TimeoutError:
             _LOGGER.error(
                 "Timeout while trying to connect to bridge at %s",
                 self.data[CONF_HOST],
             )
+        else:
+            if not bridge.is_connected():
+                return None
+            devices = bridge.get_devices()
+            bridge_device = devices[BRIDGE_DEVICE_ID]
+            return hex(bridge_device["serial"])[2:].zfill(8)
+        finally:
+            await bridge.close()
 
-        await bridge.close()
-        return connected_ok
+        return None

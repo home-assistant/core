@@ -1,7 +1,7 @@
 """Utilities for the Huawei LTE integration."""
 from __future__ import annotations
 
-from huawei_lte_api.Connection import GetResponseType
+from huawei_lte_api.Session import GetResponseType
 
 from homeassistant.helpers.device_registry import format_mac
 

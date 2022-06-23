@@ -2,9 +2,10 @@
   "domain": "totalconnect",
   "name": "Total Connect",
   "documentation": "https://www.home-assistant.io/integrations/totalconnect",
-  "requirements": ["total_connect_client==0.57"],
+  "requirements": ["total_connect_client==2022.5"],
   "dependencies": [],
   "codeowners": ["@austinmroczek"],
   "config_flow": true,
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["total_connect_client"]
 }

@@ -8,7 +8,7 @@
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "unknown": "Beklenmeyen hata"
         },
-        "flow_title": "Somfy MyLink {mac} ( {ip} )",
+        "flow_title": "{mac} ( {ip} )",
         "step": {
             "user": {
                 "data": {
@@ -25,17 +25,8 @@
             "cannot_connect": "Ba\u011flanma hatas\u0131"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "Kapak ters \u00e7evrildi"
-                },
-                "description": "'{entity_id}' i\u00e7in se\u00e7enekleri yap\u0131land\u0131r\u0131n",
-                "title": "Varl\u0131\u011f\u0131 Yap\u0131land\u0131r"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Yap\u0131land\u0131r\u0131lmam\u0131\u015f kapaklar i\u00e7in varsay\u0131lan geri alma durumu",
-                    "entity_id": "Belirli bir varl\u0131\u011f\u0131 yap\u0131land\u0131r\u0131n.",
                     "target_id": "Kapak i\u00e7in se\u00e7enekleri yap\u0131land\u0131r\u0131n."
                 },
                 "title": "MyLink Se\u00e7eneklerini Yap\u0131land\u0131r\u0131n"
@@ -44,10 +35,9 @@
                 "data": {
                     "reverse": "Kapak ters \u00e7evrildi"
                 },
-                "description": "'{target_name}' i\u00e7in se\u00e7enekleri yap\u0131land\u0131r\u0131n",
+                "description": "{target_name} ` i\u00e7in se\u00e7enekleri yap\u0131land\u0131r\u0131n",
                 "title": "MyLink Kapa\u011f\u0131n\u0131 Yap\u0131land\u0131r\u0131n"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

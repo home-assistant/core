@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from http import HTTPStatus
 from unittest.mock import MagicMock
 from urllib.parse import urlparse
 
@@ -210,18 +211,20 @@ class ComponentFactory:
         # Simulate user being redirected from withings site.
         client: TestClient = await self._hass_client()
         resp = await client.get(f"{AUTH_CALLBACK_PATH}?code=abcd&state={state}")
-        assert resp.status == 200
+        assert resp.status == HTTPStatus.OK
         assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
         self._aioclient_mock.clear_requests()
         self._aioclient_mock.post(
-            "https://account.withings.com/oauth2/token",
+            "https://wbsapi.withings.net/v2/oauth2",
             json={
-                "refresh_token": "mock-refresh-token",
-                "access_token": "mock-access-token",
-                "type": "Bearer",
-                "expires_in": 60,
-                "userid": profile_config.user_id,
+                "body": {
+                    "refresh_token": "mock-refresh-token",
+                    "access_token": "mock-access-token",
+                    "type": "Bearer",
+                    "expires_in": 60,
+                    "userid": profile_config.user_id,
+                },
             },
         )
 

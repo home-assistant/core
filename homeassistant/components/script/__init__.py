@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Dict, cast
+from typing import Any, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -26,12 +26,15 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import extract_domain_configs
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import (
     ATTR_CUR,
@@ -39,9 +42,11 @@ from homeassistant.helpers.script import (
     CONF_MAX,
     CONF_MAX_EXCEEDED,
     Script,
+    script_stack_cv,
 )
 from homeassistant.helpers.service import async_set_service_schema
 from homeassistant.helpers.trace import trace_get, trace_path
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.dt import parse_datetime
 
@@ -96,9 +101,7 @@ def entities_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_entities)
@@ -127,9 +130,7 @@ def devices_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_devices)
@@ -158,17 +159,19 @@ def areas_in_script(hass: HomeAssistant, entity_id: str) -> list[str]:
 
     component = hass.data[DOMAIN]
 
-    script_entity = component.get_entity(entity_id)
-
-    if script_entity is None:
+    if (script_entity := component.get_entity(entity_id)) is None:
         return []
 
     return list(script_entity.script.referenced_areas)
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Load the scripts from the configuration."""
     hass.data[DOMAIN] = component = EntityComponent(LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
 
     # To register scripts as valid domain for Blueprint
     async_get_blueprints(hass)
@@ -176,26 +179,30 @@ async def async_setup(hass, config):
     if not await _async_process_config(hass, config, component):
         await async_get_blueprints(hass).async_populate()
 
-    async def reload_service(service):
+    async def reload_service(service: ServiceCall) -> None:
         """Call a service to reload scripts."""
-        conf = await component.async_prepare_reload()
-        if conf is None:
+        if (conf := await component.async_prepare_reload()) is None:
             return
-
+        async_get_blueprints(hass).async_reset_cache()
         await _async_process_config(hass, conf, component)
 
-    async def turn_on_service(service):
+    async def turn_on_service(service: ServiceCall) -> None:
         """Call a service to turn script on."""
         variables = service.data.get(ATTR_VARIABLES)
-        for script_entity in await component.async_extract_from_service(service):
+        script_entities: list[ScriptEntity] = cast(
+            list[ScriptEntity], await component.async_extract_from_service(service)
+        )
+        for script_entity in script_entities:
             await script_entity.async_turn_on(
                 variables=variables, context=service.context, wait=False
             )
 
-    async def turn_off_service(service):
+    async def turn_off_service(service: ServiceCall) -> None:
         """Cancel a script."""
         # Stopping a script is ok to be done in parallel
-        script_entities = await component.async_extract_from_service(service)
+        script_entities: list[ScriptEntity] = cast(
+            list[ScriptEntity], await component.async_extract_from_service(service)
+        )
 
         if not script_entities:
             return
@@ -207,9 +214,12 @@ async def async_setup(hass, config):
             ]
         )
 
-    async def toggle_service(service):
+    async def toggle_service(service: ServiceCall) -> None:
         """Toggle a script."""
-        for script_entity in await component.async_extract_from_service(service):
+        script_entities: list[ScriptEntity] = cast(
+            list[ScriptEntity], await component.async_extract_from_service(service)
+        )
+        for script_entity in script_entities:
             await script_entity.async_toggle(context=service.context, wait=False)
 
     hass.services.async_register(
@@ -251,7 +261,7 @@ async def _async_process_config(hass, config, component) -> bool:
                 try:
                     raw_config = blueprint_inputs.async_substitute()
                     config_block = cast(
-                        Dict[str, Any],
+                        dict[str, Any],
                         await async_validate_config_item(hass, raw_config),
                     )
                 except vol.Invalid as err:
@@ -273,7 +283,7 @@ async def _async_process_config(hass, config, component) -> bool:
 
     await component.async_add_entities(entities)
 
-    async def service_handler(service):
+    async def service_handler(service: ServiceCall) -> None:
         """Execute a service call to script.<script name>."""
         entity_id = ENTITY_ID_FORMAT.format(service.service)
         script_entity = component.get_entity(entity_id)
@@ -309,6 +319,10 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
         self.icon = cfg.get(CONF_ICON)
         self.description = cfg[CONF_DESCRIPTION]
         self.fields = cfg[CONF_FIELDS]
+
+        # The object ID of scripts need / are unique already
+        # they cannot be changed from the UI after creating
+        self._attr_unique_id = object_id
 
         self.entity_id = ENTITY_ID_FORMAT.format(object_id)
         self.script = Script(
@@ -385,10 +399,14 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
             return
 
         # Caller does not want to wait for called script to finish so let script run in
-        # separate Task. However, wait for first state change so we can guarantee that
-        # it is written to the State Machine before we return.
+        # separate Task. Make a new empty script stack; scripts are allowed to
+        # recursively turn themselves on when not waiting.
+        script_stack_cv.set([])
+
         self._changed.clear()
         self.hass.async_create_task(coro)
+        # Wait for first state change so we can guarantee that
+        # it is written to the State Machine before we return.
         await self._changed.wait()
 
     async def _async_run(self, variables, context):
@@ -404,8 +422,7 @@ class ScriptEntity(ToggleEntity, RestoreEntity):
             script_trace.set_trace(trace_get())
             with trace_path("sequence"):
                 this = None
-                state = self.hass.states.get(self.entity_id)
-                if state:
+                if state := self.hass.states.get(self.entity_id):
                     this = state.as_dict()
                 script_vars = {"this": this, **(variables or {})}
                 return await self.script.async_run(script_vars, context)

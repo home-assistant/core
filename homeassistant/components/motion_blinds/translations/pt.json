@@ -9,9 +9,8 @@
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API Key"
-                },
-                "title": "Cortinas Motion"
+                    "api_key": "Chave da API"
+                }
             },
             "select": {
                 "data": {
@@ -20,10 +19,8 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API Key",
                     "host": "Endere\u00e7o IP"
-                },
-                "title": "Cortinas Motion"
+                }
             }
         }
     }

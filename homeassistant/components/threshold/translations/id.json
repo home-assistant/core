@@ -1,0 +1,38 @@
+{
+    "config": {
+        "error": {
+            "need_lower_upper": "Batas bawah dan batas atas tidak boleh kosong sekaligus"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "entity_id": "Sensor input",
+                    "hysteresis": "Histeresis",
+                    "lower": "Batas bawah",
+                    "name": "Nama",
+                    "upper": "Batas atas"
+                },
+                "description": "Buat sensor biner yang nyala dan mati tergantung pada nilai sensor \n\nHanya batas bawah yang dikonfigurasi: Nyalakan saat nilai sensor input kurang dari batas bawah.\nHanya batas atas yang dikonfigurasi: Nyalakan saat nilai sensor input lebih besar dari batas atas.\nKedua batas dikonfigurasi: Nyalakan ketika nilai sensor input berada dalam rentang [batas bawah ... batas atas].",
+                "title": "Tambahkan Sensor Ambang Batas"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "need_lower_upper": "Batas bawah dan batas atas tidak boleh kosong sekaligus"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "entity_id": "Sensor input",
+                    "hysteresis": "Histeresis",
+                    "lower": "Batas bawah",
+                    "name": "Nama",
+                    "upper": "Batas atas"
+                },
+                "description": "Hanya batas bawah yang dikonfigurasi: Nyalakan saat nilai sensor input kurang dari batas bawah.\nHanya batas atas yang dikonfigurasi: Nyalakan saat nilai sensor input lebih besar dari batas atas.\nKedua batas dikonfigurasi: Nyalakan ketika nilai sensor input berada dalam rentang [batas bawah ... batas atas]."
+            }
+        }
+    },
+    "title": "Sensor Ambang Batas"
+}

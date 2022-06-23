@@ -16,7 +16,8 @@
                     "host": "Host",
                     "password": "Salas\u00f5na",
                     "username": "Kasutajanimi"
-                }
+                },
+                "description": "Uuemate mudelite puhul sisesta kasutajanimi \"envoy\" ilma salas\u00f5nata. Vanemate mudelite puhul sisesta kasutajanimi \"installer\" ilma salas\u00f5nata. K\u00f5igi teiste mudelite puhul sisesta kehtiv kasutajanimi ja salas\u00f5nal."
             }
         }
     }

@@ -9,7 +9,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import (
     DOMAIN,
@@ -65,31 +65,32 @@ class InsteonEntity(Entity):
     def name(self):
         """Return the name of the node (used for Entity_ID)."""
         # Set a base description
-        description = self._insteon_device.description
-        if description is None:
+        if (description := self._insteon_device.description) is None:
             description = "Unknown Device"
         # Get an extension label if there is one
-        extension = self._get_label()
-        if extension:
+        if extension := self._get_label():
             extension = f" {extension}"
         return f"{description} {self._insteon_device.address}{extension}"
 
     @property
     def extra_state_attributes(self):
         """Provide attributes for display on device card."""
-        return {"insteon_address": self.address, "insteon_group": self.group}
+        return {
+            "insteon_address": self.address,
+            "insteon_group": self.group,
+        }
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device information."""
-        return {
-            "identifiers": {(DOMAIN, str(self._insteon_device.address))},
-            "name": f"{self._insteon_device.description} {self._insteon_device.address}",
-            "model": f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
-            "sw_version": f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
-            "manufacturer": "Smart Home",
-            "via_device": (DOMAIN, str(devices.modem.address)),
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, str(self._insteon_device.address))},
+            manufacturer="SmartLabs, Inc",
+            model=f"{self._insteon_device.model} ({self._insteon_device.cat!r}, 0x{self._insteon_device.subcat:02x})",
+            name=f"{self._insteon_device.description} {self._insteon_device.address}",
+            sw_version=f"{self._insteon_device.firmware:02x} Engine Version: {self._insteon_device.engine_version}",
+            via_device=(DOMAIN, str(devices.modem.address)),
+        )
 
     @callback
     def async_entity_update(self, name, address, value, group):
@@ -149,6 +150,12 @@ class InsteonEntity(Entity):
     def _print_aldb(self):
         """Print the device ALDB to the log file."""
         print_aldb_to_log(self._insteon_device.aldb)
+
+    def get_device_property(self, name: str):
+        """Get a single Insteon device property value (raw)."""
+        if (prop := self._insteon_device.properties.get(name)) is not None:
+            return prop.value
+        return None
 
     def _get_label(self):
         """Get the device label for grouped devices."""

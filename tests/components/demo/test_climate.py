@@ -20,11 +20,7 @@ from homeassistant.components.climate.const import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
     DOMAIN,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_ECO,
     SERVICE_SET_AUX_HEAT,
@@ -34,6 +30,8 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -62,7 +60,7 @@ async def setup_demo_climate(hass):
 def test_setup_params(hass):
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_COOL
+    assert state.state == HVACMode.COOL
     assert state.attributes.get(ATTR_TEMPERATURE) == 21
     assert state.attributes.get(ATTR_CURRENT_TEMPERATURE) == 22
     assert state.attributes.get(ATTR_FAN_MODE) == "On High"
@@ -71,12 +69,12 @@ def test_setup_params(hass):
     assert state.attributes.get(ATTR_SWING_MODE) == "Off"
     assert state.attributes.get(ATTR_AUX_HEAT) == STATE_OFF
     assert state.attributes.get(ATTR_HVAC_MODES) == [
-        "off",
-        "heat",
-        "cool",
-        "auto",
-        "dry",
-        "fan_only",
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.AUTO,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
     ]
 
 
@@ -292,8 +290,8 @@ async def test_set_hvac_bad_attr_and_state(hass):
     Also check the state.
     """
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_COOL
-    assert state.state == HVAC_MODE_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
+    assert state.state == HVACMode.COOL
 
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -304,24 +302,24 @@ async def test_set_hvac_bad_attr_and_state(hass):
         )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.attributes.get(ATTR_HVAC_ACTION) == CURRENT_HVAC_COOL
-    assert state.state == HVAC_MODE_COOL
+    assert state.attributes.get(ATTR_HVAC_ACTION) == HVACAction.COOLING
+    assert state.state == HVACMode.COOL
 
 
 async def test_set_hvac(hass):
     """Test setting of new hvac mode."""
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_COOL
+    assert state.state == HVACMode.COOL
 
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
 
 
 async def test_set_hold_mode_away(hass):
@@ -398,18 +396,18 @@ async def test_turn_on(hass):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_CLIMATE}, blocking=True
     )
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
 
 
 async def test_turn_off(hass):
@@ -417,15 +415,15 @@ async def test_turn_off(hass):
     await hass.services.async_call(
         DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: ENTITY_CLIMATE, ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
 
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
 
     await hass.services.async_call(
         DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_CLIMATE}, blocking=True
     )
     state = hass.states.get(ENTITY_CLIMATE)
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF

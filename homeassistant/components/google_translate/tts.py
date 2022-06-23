@@ -35,6 +35,7 @@ SUPPORT_LANGUAGES = [
     "id",
     "is",
     "it",
+    "iw",
     "ja",
     "jw",
     "km",

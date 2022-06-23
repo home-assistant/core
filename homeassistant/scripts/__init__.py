@@ -64,7 +64,7 @@ def run(args: list[str]) -> int:
 
     asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 
-    return script.run(args[1:])  # type: ignore
+    return script.run(args[1:])
 
 
 def extract_config_dir(args: Sequence[str] | None = None) -> str:

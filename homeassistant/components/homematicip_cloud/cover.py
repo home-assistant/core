@@ -15,13 +15,12 @@ from homematicip.base.enums import DoorCommand, DoorState
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHUTTER,
+    CoverDeviceClass,
     CoverEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN as HMIPC_DOMAIN, HomematicipGenericEntity
 from .hap import HomematicipHAP
@@ -33,7 +32,9 @@ HMIP_SLATS_CLOSED = 1
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP cover from a config entry."""
     hap = hass.data[HMIPC_DOMAIN][config_entry.unique_id]
@@ -69,7 +70,7 @@ class HomematicipBlindModule(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_BLIND
+        return CoverDeviceClass.BLIND
 
     @property
     def current_cover_position(self) -> int | None:
@@ -162,7 +163,7 @@ class HomematicipMultiCoverShutter(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_SHUTTER
+        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int | None:
@@ -240,15 +241,19 @@ class HomematicipMultiCoverSlats(HomematicipMultiCoverShutter, CoverEntity):
         position = kwargs[ATTR_TILT_POSITION]
         # HmIP slats is closed:1 -> open:0
         level = 1 - position / 100.0
-        await self._device.set_slats_level(level, self._channel)
+        await self._device.set_slats_level(slatsLevel=level, channelIndex=self._channel)
 
     async def async_open_cover_tilt(self, **kwargs) -> None:
         """Open the slats."""
-        await self._device.set_slats_level(HMIP_SLATS_OPEN, self._channel)
+        await self._device.set_slats_level(
+            slatsLevel=HMIP_SLATS_OPEN, channelIndex=self._channel
+        )
 
     async def async_close_cover_tilt(self, **kwargs) -> None:
         """Close the slats."""
-        await self._device.set_slats_level(HMIP_SLATS_CLOSED, self._channel)
+        await self._device.set_slats_level(
+            slatsLevel=HMIP_SLATS_CLOSED, channelIndex=self._channel
+        )
 
     async def async_stop_cover_tilt(self, **kwargs) -> None:
         """Stop the device if in motion."""
@@ -280,7 +285,7 @@ class HomematicipGarageDoorModule(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_GARAGE
+        return CoverDeviceClass.GARAGE
 
     @property
     def is_closed(self) -> bool | None:
@@ -311,7 +316,7 @@ class HomematicipCoverShutterGroup(HomematicipGenericEntity, CoverEntity):
     @property
     def device_class(self) -> str:
         """Return the class of the cover."""
-        return DEVICE_CLASS_SHUTTER
+        return CoverDeviceClass.SHUTTER
 
     @property
     def current_cover_position(self) -> int | None:

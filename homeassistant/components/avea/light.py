@@ -1,20 +1,27 @@
 """Support for the Elgato Avea lights."""
+from __future__ import annotations
+
 import avea  # pylint: disable=import-error
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.color as color_util
 
-SUPPORT_AVEA = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Avea platform."""
     try:
         nearby_bulbs = avea.discover_avea_bulbs()
@@ -30,7 +37,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AveaLight(LightEntity):
     """Representation of an Avea."""
 
-    _attr_supported_features = SUPPORT_AVEA
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
 
     def __init__(self, light):
         """Initialize an AveaLight."""
@@ -59,7 +67,6 @@ class AveaLight(LightEntity):
 
         This is the only method that should fetch new data for Home Assistant.
         """
-        brightness = self._light.get_brightness()
-        if brightness is not None:
+        if (brightness := self._light.get_brightness()) is not None:
             self._attr_is_on = brightness != 0
             self._attr_brightness = round(255 * (brightness / 4095))

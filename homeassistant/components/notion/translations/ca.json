@@ -6,7 +6,6 @@
         },
         "error": {
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
-            "no_devices": "No s'han trobat dispositius al compte",
             "unknown": "Error inesperat"
         },
         "step": {

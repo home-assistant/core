@@ -8,7 +8,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entityfilter
+from homeassistant.helpers.typing import ConfigType
 
 from . import flash_briefings, intent, smart_home_http
 from .const import (
@@ -78,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Activate the Alexa component."""
     if DOMAIN not in config:
         return True

@@ -1,0 +1,18 @@
+{
+    "config": {
+        "abort": {
+            "install_app": "Pre nastavenie integr\u00e1cie s Home Assistant otvorte mobiln\u00fa aplik\u00e1ciu. Zoznam kompatibiln\u00fdch aplik\u00e1ci\u00ed n\u00e1jdete v [dokument\u00e1cii]({apps_url})."
+        },
+        "step": {
+            "confirm": {
+                "description": "Chcete nastavi\u0165 komponentu Mobilnej aplik\u00e1cie?"
+            }
+        }
+    },
+    "device_automation": {
+        "action_type": {
+            "notify": "Odosla\u0165 ozn\u00e1menie"
+        }
+    },
+    "title": "Mobiln\u00e1 aplik\u00e1cia"
+}

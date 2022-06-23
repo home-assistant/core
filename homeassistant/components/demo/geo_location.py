@@ -8,7 +8,10 @@ import random
 
 from homeassistant.components.geo_location import GeolocationEvent
 from homeassistant.const import LENGTH_KILOMETERS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import track_time_interval
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +41,12 @@ EVENT_NAMES = [
 SOURCE = "demo"
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo geolocations."""
     DemoManager(hass, add_entities)
 

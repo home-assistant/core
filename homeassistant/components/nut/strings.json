@@ -13,14 +13,7 @@
       "ups": {
         "title": "Choose the UPS to Monitor",
         "data": {
-          "alias": "Alias",
-          "resources": "Resources"
-        }
-      },
-      "resources": {
-        "title": "Choose the Resources to Monitor",
-        "data": {
-          "resources": "Resources"
+          "alias": "Alias"
         }
       }
     },

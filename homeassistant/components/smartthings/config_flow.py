@@ -1,4 +1,5 @@
 """Config flow to configure SmartThings."""
+from http import HTTPStatus
 import logging
 
 from aiohttp import ClientResponseError
@@ -7,13 +8,7 @@ from pysmartthings.installedapp import format_install_url
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import (
-    CONF_ACCESS_TOKEN,
-    CONF_CLIENT_ID,
-    CONF_CLIENT_SECRET,
-    HTTP_FORBIDDEN,
-    HTTP_UNAUTHORIZED,
-)
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -142,12 +137,12 @@ class SmartThingsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             )
             return self._show_step_pat(errors)
         except ClientResponseError as ex:
-            if ex.status == HTTP_UNAUTHORIZED:
+            if ex.status == HTTPStatus.UNAUTHORIZED:
                 errors[CONF_ACCESS_TOKEN] = "token_unauthorized"
                 _LOGGER.debug(
                     "Unauthorized error received setting up SmartApp", exc_info=True
                 )
-            elif ex.status == HTTP_FORBIDDEN:
+            elif ex.status == HTTPStatus.FORBIDDEN:
                 errors[CONF_ACCESS_TOKEN] = "token_forbidden"
                 _LOGGER.debug(
                     "Forbidden error received setting up SmartApp", exc_info=True

@@ -23,7 +23,7 @@ async def test_disabled_by_default(hass, mock_litejet):
     entry = registry.async_get(ENTITY_SCENE)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_activate(hass, mock_litejet):

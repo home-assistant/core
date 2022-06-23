@@ -6,16 +6,18 @@ from asyncio import CancelledError
 from contextlib import suppress
 from datetime import timedelta
 from functools import partial
-from typing import Any
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import (
+    create_rfxtrx_dsmr_reader,
+    create_rfxtrx_tcp_dsmr_reader,
+)
 from dsmr_parser.objects import DSMRObject
 import serial
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -23,66 +25,33 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, EventType, StateType
+from homeassistant.helpers.typing import EventType, StateType
 from homeassistant.util import Throttle
 
 from .const import (
     CONF_DSMR_VERSION,
     CONF_PRECISION,
+    CONF_PROTOCOL,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
     CONF_TIME_BETWEEN_UPDATE,
     DATA_TASK,
-    DEFAULT_DSMR_VERSION,
-    DEFAULT_PORT,
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
-    DEVICE_NAME_ENERGY,
+    DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
     DOMAIN,
-    DSMR_VERSIONS,
+    DSMR_PROTOCOL,
     LOGGER,
     SENSORS,
 )
 from .models import DSMRSensorEntityDescription
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-        vol.Optional(CONF_HOST): cv.string,
-        vol.Optional(CONF_DSMR_VERSION, default=DEFAULT_DSMR_VERSION): vol.All(
-            cv.string, vol.In(DSMR_VERSIONS)
-        ),
-        vol.Optional(CONF_RECONNECT_INTERVAL, default=DEFAULT_RECONNECT_INTERVAL): int,
-        vol.Optional(CONF_PRECISION, default=DEFAULT_PRECISION): vol.Coerce(int),
-    }
-)
-
 UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
-) -> None:
-    """Import the platform into a config entry."""
-    LOGGER.warning(
-        "Configuration of the DSMR platform in YAML is deprecated and will be "
-        "removed in Home Assistant 2021.9; Your existing configuration "
-        "has been imported into the UI automatically and can be safely removed "
-        "from your configuration.yaml file"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
-        )
-    )
 
 
 async def async_setup_entry(
@@ -114,9 +83,14 @@ async def async_setup_entry(
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
     if CONF_HOST in entry.data:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_tcp_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_tcp_dsmr_reader
         reader_factory = partial(
-            create_tcp_dsmr_reader,
+            create_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
@@ -125,8 +99,12 @@ async def async_setup_entry(
             keep_alive_interval=60,
         )
     else:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_dsmr_reader
         reader_factory = partial(
-            create_dsmr_reader,
+            create_reader,
             entry.data[CONF_PORT],
             dsmr_version,
             update_entities_telegram,
@@ -223,17 +201,17 @@ class DSMREntity(SensorEntity):
         self.telegram: dict[str, DSMRObject] = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
-        device_name = DEVICE_NAME_ENERGY
+        device_name = DEVICE_NAME_ELECTRICITY
         if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS
         if device_serial is None:
             device_serial = entry.entry_id
 
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_serial)},
-            "name": device_name,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, device_serial)},
+            name=device_name,
+        )
         self._attr_unique_id = f"{device_serial}_{entity_description.name}".replace(
             " ", "_"
         )
@@ -259,8 +237,7 @@ class DSMREntity(SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of sensor, if available, translate if needed."""
-        value = self.get_dsmr_object_attr("value")
-        if value is None:
+        if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
         if self.entity_description.key == obis_ref.ELECTRICITY_ACTIVE_TARIFF:

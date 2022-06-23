@@ -11,7 +11,6 @@ DATA_ASUSWRT = DOMAIN
 
 DEFAULT_DNSMASQ = "/var/lib/misc"
 DEFAULT_INTERFACE = "eth0"
-DEFAULT_SSH_PORT = 22
 DEFAULT_TRACK_UNKNOWN = False
 
 MODE_AP = "ap"
@@ -25,3 +24,4 @@ SENSORS_BYTES = ["sensor_rx_bytes", "sensor_tx_bytes"]
 SENSORS_CONNECTED_DEVICE = ["sensor_connected_device"]
 SENSORS_LOAD_AVG = ["sensor_load_avg1", "sensor_load_avg5", "sensor_load_avg15"]
 SENSORS_RATES = ["sensor_rx_rates", "sensor_tx_rates"]
+SENSORS_TEMPERATURES = ["2.4GHz", "5.0GHz", "CPU"]

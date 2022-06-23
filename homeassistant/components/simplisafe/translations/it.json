@@ -2,33 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "Questo account SimpliSafe \u00e8 gi\u00e0 in uso.",
+            "email_2fa_timed_out": "Timeout durante l'attesa dell'autenticazione a due fattori basata su email.",
             "reauth_successful": "La nuova autenticazione \u00e8 stata eseguita correttamente"
         },
         "error": {
-            "identifier_exists": "Account gi\u00e0 registrato",
             "invalid_auth": "Autenticazione non valida",
-            "still_awaiting_mfa": "Ancora in attesa del clic sull'email MFA",
             "unknown": "Errore imprevisto"
         },
+        "progress": {
+            "email_2fa": "Verifica la presenza nella tua email di un collegamento di verifica da Simplisafe."
+        },
         "step": {
-            "mfa": {
-                "description": "Controlla la tua e-mail per trovare un link da SimpliSafe. Dopo aver verificato il link, torna qui per completare l'installazione dell'integrazione.",
-                "title": "Autenticazione a pi\u00f9 fattori (MFA) SimpliSafe "
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Password"
                 },
-                "description": "Il tuo accesso \u00e8 scaduto o revocato. Inserisci la password per ricollegare il tuo account.",
-                "title": "Autenticare nuovamente l'integrazione"
+                "description": "Digita nuovamente la password per {username}.",
+                "title": "Autentica nuovamente l'integrazione"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Codice"
+                },
+                "description": "Digita il codice di autenticazione a due fattori che ti \u00e8 stato inviato tramite SMS."
             },
             "user": {
                 "data": {
-                    "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)",
                     "password": "Password",
-                    "username": "E-mail"
+                    "username": "Nome utente"
                 },
-                "title": "Inserisci le tue informazioni."
+                "description": "Digita il tuo nome utente e password."
             }
         }
     },
@@ -38,7 +41,7 @@
                 "data": {
                     "code": "Codice (utilizzato nell'Interfaccia Utente di Home Assistant)"
                 },
-                "title": "Configurare SimpliSafe"
+                "title": "Configura SimpliSafe"
             }
         }
     }

@@ -2,24 +2,29 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_POWER,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ENERGY_KILO_WATT_HOUR,
     POWER_KILO_WATT,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, KebaHandler
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the KEBA charging station platform."""
     if discovery_info is None:
         return
@@ -34,7 +39,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 key="Curr user",
                 name="Max Current",
                 native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-                device_class=DEVICE_CLASS_CURRENT,
+                device_class=SensorDeviceClass.CURRENT,
             ),
         ),
         KebaSensor(
@@ -44,7 +49,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 key="Setenergy",
                 name="Energy Target",
                 native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                device_class=DEVICE_CLASS_ENERGY,
+                device_class=SensorDeviceClass.ENERGY,
             ),
         ),
         KebaSensor(
@@ -54,8 +59,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 key="P",
                 name="Charging Power",
                 native_unit_of_measurement=POWER_KILO_WATT,
-                device_class=DEVICE_CLASS_POWER,
-                state_class=STATE_CLASS_MEASUREMENT,
+                device_class=SensorDeviceClass.POWER,
+                state_class=SensorStateClass.MEASUREMENT,
             ),
         ),
         KebaSensor(
@@ -65,7 +70,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 key="E pres",
                 name="Session Energy",
                 native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                device_class=DEVICE_CLASS_ENERGY,
+                device_class=SensorDeviceClass.ENERGY,
             ),
         ),
         KebaSensor(
@@ -75,8 +80,8 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
                 key="E total",
                 name="Total Energy",
                 native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-                device_class=DEVICE_CLASS_ENERGY,
-                state_class=STATE_CLASS_TOTAL_INCREASING,
+                device_class=SensorDeviceClass.ENERGY,
+                state_class=SensorStateClass.TOTAL_INCREASING,
             ),
         ),
     ]

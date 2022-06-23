@@ -4,12 +4,9 @@ from __future__ import annotations
 import asyncio
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -30,24 +27,28 @@ async def async_setup_entry(
     async_add_entities([VerisureAlarm(coordinator=hass.data[DOMAIN][entry.entry_id])])
 
 
-class VerisureAlarm(CoordinatorEntity, AlarmControlPanelEntity):
+class VerisureAlarm(
+    CoordinatorEntity[VerisureDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of a Verisure alarm status."""
 
-    coordinator: VerisureDataUpdateCoordinator
-
-    _attr_code_format = FORMAT_NUMBER
+    _attr_code_format = CodeFormat.NUMBER
     _attr_name = "Verisure Alarm"
-    _attr_supported_features = SUPPORT_ALARM_ARM_HOME | SUPPORT_ALARM_ARM_AWAY
+    _attr_supported_features = (
+        AlarmControlPanelEntityFeature.ARM_HOME
+        | AlarmControlPanelEntityFeature.ARM_AWAY
+    )
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
-        return {
-            "name": "Verisure Alarm",
-            "manufacturer": "Verisure",
-            "model": "VBox",
-            "identifiers": {(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
-        }
+        return DeviceInfo(
+            name="Verisure Alarm",
+            manufacturer="Verisure",
+            model="VBox",
+            identifiers={(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            configuration_url="https://mypages.verisure.com",
+        )
 
     @property
     def unique_id(self) -> str:

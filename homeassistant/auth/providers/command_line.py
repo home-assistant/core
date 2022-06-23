@@ -16,8 +16,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-# mypy: disallow-any-generics
-
 CONF_ARGS = "args"
 CONF_META = "meta"
 

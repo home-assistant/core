@@ -1,15 +1,15 @@
 {
     "config": {
         "error": {
-            "cannot_connect": "Gagal terhubung",
-            "unknown": "Kesalahan yang tidak diharapkan"
+            "cannot_connect": "Gagal terhubung"
         },
         "step": {
             "user": {
                 "data": {
                     "host": "Host",
                     "name": "Nama"
-                }
+                },
+                "description": "Siapkan Monitor P1 untuk diintegrasikan dengan Home Assistant."
             }
         }
     }

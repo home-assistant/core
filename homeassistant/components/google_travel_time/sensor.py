@@ -6,87 +6,40 @@ import logging
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     CONF_API_KEY,
-    CONF_ENTITY_NAMESPACE,
     CONF_MODE,
     CONF_NAME,
-    CONF_SCAN_INTERVAL,
     EVENT_HOMEASSISTANT_STARTED,
     TIME_MINUTES,
 )
 from homeassistant.core import CoreState, HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.location import find_coordinates
 import homeassistant.util.dt as dt_util
 
 from .const import (
-    ALL_LANGUAGES,
     ATTRIBUTION,
-    AVOID,
     CONF_ARRIVAL_TIME,
-    CONF_AVOID,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
-    CONF_LANGUAGE,
     CONF_OPTIONS,
     CONF_ORIGIN,
-    CONF_TRAFFIC_MODEL,
-    CONF_TRANSIT_MODE,
-    CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_TRAVEL_MODE,
     CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
-    TRACKABLE_DOMAINS,
-    TRANSIT_PREFS,
-    TRANSPORT_TYPE,
-    TRAVEL_MODE,
-    TRAVEL_MODEL,
-    UNITS,
 )
-from .helpers import get_location_from_entity, resolve_zone
 
 _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(minutes=5)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_DESTINATION): cv.string,
-        vol.Required(CONF_ORIGIN): cv.string,
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_TRAVEL_MODE): vol.In(TRAVEL_MODE),
-        vol.Optional(CONF_OPTIONS, default={CONF_MODE: "driving"}): vol.All(
-            dict,
-            vol.Schema(
-                {
-                    vol.Optional(CONF_MODE, default="driving"): vol.In(TRAVEL_MODE),
-                    vol.Optional(CONF_LANGUAGE): vol.In(ALL_LANGUAGES),
-                    vol.Optional(CONF_AVOID): vol.In(AVOID),
-                    vol.Optional(CONF_UNITS): vol.In(UNITS),
-                    vol.Exclusive(CONF_ARRIVAL_TIME, "time"): cv.string,
-                    vol.Exclusive(CONF_DEPARTURE_TIME, "time"): cv.string,
-                    vol.Optional(CONF_TRAFFIC_MODEL): vol.In(TRAVEL_MODEL),
-                    vol.Optional(CONF_TRANSIT_MODE): vol.In(TRANSPORT_TYPE),
-                    vol.Optional(CONF_TRANSIT_ROUTING_PREFERENCE): vol.In(
-                        TRANSIT_PREFS
-                    ),
-                }
-            ),
-        ),
-        # Remove options to exclude from import
-        vol.Remove(CONF_ENTITY_NAMESPACE): cv.string,
-        vol.Remove(CONF_SCAN_INTERVAL): cv.time_period,
-    },
-    extra=vol.REMOVE_EXTRA,
-)
 
 
 def convert_time_to_utc(timestr):
@@ -143,25 +96,6 @@ async def async_setup_entry(
     async_add_entities([sensor], False)
 
 
-async def async_setup_platform(
-    hass: HomeAssistant, config, add_entities_callback, discovery_info=None
-):
-    """Set up the Google travel time platform."""
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
-    _LOGGER.warning(
-        "Your Google travel time configuration has been imported into the UI; "
-        "please remove it from configuration.yaml as support for it will be "
-        "removed in a future release"
-    )
-
-
 class GoogleTravelTimeSensor(SensorEntity):
     """Representation of a Google travel time sensor."""
 
@@ -174,17 +108,10 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._api_key = api_key
         self._unique_id = config_entry.entry_id
         self._client = client
-
-        # Check if location is a trackable entity
-        if origin.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._origin_entity_id = origin
-        else:
-            self._origin = origin
-
-        if destination.split(".", 1)[0] in TRACKABLE_DOMAINS:
-            self._destination_entity_id = destination
-        else:
-            self._destination = destination
+        self._origin = origin
+        self._destination = destination
+        self._resolved_origin = None
+        self._resolved_destination = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
@@ -209,13 +136,13 @@ class GoogleTravelTimeSensor(SensorEntity):
         return None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
-        return {
-            "name": DOMAIN,
-            "identifiers": {(DOMAIN, self._api_key)},
-            "entry_type": "service",
-        }
+        return DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, self._api_key)},
+            name=DOMAIN,
+        )
 
     @property
     def unique_id(self) -> str:
@@ -244,8 +171,8 @@ class GoogleTravelTimeSensor(SensorEntity):
             res["duration"] = _data["duration"]["text"]
         if "distance" in _data:
             res["distance"] = _data["distance"]["text"]
-        res["origin"] = self._origin
-        res["destination"] = self._destination
+        res["origin"] = self._resolved_origin
+        res["destination"] = self._resolved_destination
         res[ATTR_ATTRIBUTION] = ATTRIBUTION
         return res
 
@@ -276,21 +203,18 @@ class GoogleTravelTimeSensor(SensorEntity):
         elif atime is not None:
             options_copy[CONF_ARRIVAL_TIME] = atime
 
-        # Convert device_trackers to google friendly location
-        if hasattr(self, "_origin_entity_id"):
-            self._origin = get_location_from_entity(
-                self.hass, _LOGGER, self._origin_entity_id
-            )
+        self._resolved_origin = find_coordinates(self.hass, self._origin)
+        self._resolved_destination = find_coordinates(self.hass, self._destination)
 
-        if hasattr(self, "_destination_entity_id"):
-            self._destination = get_location_from_entity(
-                self.hass, _LOGGER, self._destination_entity_id
-            )
-
-        self._destination = resolve_zone(self.hass, self._destination)
-        self._origin = resolve_zone(self.hass, self._origin)
-
-        if self._destination is not None and self._origin is not None:
+        _LOGGER.debug(
+            "Getting update for origin: %s destination: %s",
+            self._resolved_origin,
+            self._resolved_destination,
+        )
+        if self._resolved_destination is not None and self._resolved_origin is not None:
             self._matrix = distance_matrix(
-                self._client, self._origin, self._destination, **options_copy
+                self._client,
+                self._resolved_origin,
+                self._resolved_destination,
+                **options_copy,
             )

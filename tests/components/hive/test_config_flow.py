@@ -13,7 +13,7 @@ USERNAME = "username@home-assistant.com"
 UPDATED_USERNAME = "updated_username@home-assistant.com"
 PASSWORD = "test-password"
 UPDATED_PASSWORD = "updated-password"
-INCORRECT_PASSWORD = "incoreect-password"
+INCORRECT_PASSWORD = "incorrect-password"
 SCAN_INTERVAL = 120
 UPDATED_SCAN_INTERVAL = 60
 MFA_CODE = "1234"
@@ -149,6 +149,16 @@ async def test_user_flow_2fa(hass):
             },
         },
     ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.getDeviceData",
+        return_value=[
+            "mock-device-group-key",
+            "mock-device-key",
+            "mock-device-password",
+        ],
+    ), patch(
         "homeassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.hive.async_setup_entry",
@@ -171,6 +181,11 @@ async def test_user_flow_2fa(hass):
             },
             "ChallengeName": "SUCCESS",
         },
+        "device_data": [
+            "mock-device-group-key",
+            "mock-device-key",
+            "mock-device-password",
+        ],
     }
 
     assert len(mock_setup.mock_calls) == 1
@@ -220,6 +235,9 @@ async def test_reauth_flow(hass):
                 "AccessToken": "mock-access-token",
             },
         },
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -243,7 +261,15 @@ async def test_option_flow(hass):
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=USERNAME,
-        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        data={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+            "device_data": [
+                "mock-device-group-key",
+                "mock-device-key",
+                "mock-device-password",
+            ],
+        },
     )
     entry.add_to_hass(hass)
 
@@ -318,6 +344,16 @@ async def test_user_flow_2fa_send_new_code(hass):
             },
         },
     ), patch(
+        "homeassistant.components.hive.config_flow.Auth.device_registration",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.hive.config_flow.Auth.getDeviceData",
+        return_value=[
+            "mock-device-group-key",
+            "mock-device-key",
+            "mock-device-password",
+        ],
+    ), patch(
         "homeassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.hive.async_setup_entry",
@@ -340,6 +376,11 @@ async def test_user_flow_2fa_send_new_code(hass):
             },
             "ChallengeName": "SUCCESS",
         },
+        "device_data": [
+            "mock-device-group-key",
+            "mock-device-key",
+            "mock-device-password",
+        ],
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1

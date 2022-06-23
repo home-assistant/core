@@ -9,13 +9,13 @@ import pyzerproc
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 import homeassistant.util.color as color_util
@@ -23,8 +23,6 @@ import homeassistant.util.color as color_util
 from .const import DATA_ADDRESSES, DATA_DISCOVERY_SUBSCRIPTION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_ZERPROC = SUPPORT_BRIGHTNESS | SUPPORT_COLOR
 
 DISCOVERY_INTERVAL = timedelta(seconds=60)
 
@@ -80,6 +78,9 @@ async def async_setup_entry(
 class ZerprocLight(LightEntity):
     """Representation of an Zerproc Light."""
 
+    _attr_color_mode = ColorMode.HS
+    _attr_supported_color_modes = {ColorMode.HS}
+
     def __init__(self, light):
         """Initialize a Zerproc light."""
         self._light = light
@@ -117,23 +118,18 @@ class ZerprocLight(LightEntity):
         return self._light.address
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info for this light."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Zerproc",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Zerproc",
+            name=self.name,
+        )
 
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
         return "mdi:string-lights"
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_ZERPROC
 
     @property
     def brightness(self):

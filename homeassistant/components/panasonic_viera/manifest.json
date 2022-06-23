@@ -5,5 +5,6 @@
   "requirements": ["panasonic_viera==0.3.6"],
   "codeowners": [],
   "config_flow": true,
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["panasonic_viera"]
 }

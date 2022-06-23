@@ -13,6 +13,10 @@ def pretty_title(media, short_name=False):
         title = f"{media.seasonEpisode.upper()} - {media.title}"
         if not short_name:
             title = f"{media.grandparentTitle} - {title}"
+    elif media.type == "season":
+        title = media.title
+        if not short_name:
+            title = f"{media.parentTitle} - {title}"
     elif media.type == "track":
         title = f"{media.index}. {media.title}"
     else:

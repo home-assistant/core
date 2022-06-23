@@ -103,10 +103,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, user_input):
-        """Handle import."""
-        return await self.async_step_user(user_input)
-
     async def async_step_reauth(self, user_input=None):
         """Handle reauth."""
         self._reauth_unique_id = self.context["unique_id"]

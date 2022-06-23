@@ -3,7 +3,6 @@
 DOMAIN = "aurora"
 COORDINATOR = "coordinator"
 AURORA_API = "aurora_api"
-ATTR_ENTRY_TYPE = "entry_type"
 DEFAULT_POLLING_INTERVAL = 5
 CONF_THRESHOLD = "forecast_threshold"
 DEFAULT_THRESHOLD = 75

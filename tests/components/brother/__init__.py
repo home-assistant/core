@@ -22,7 +22,7 @@ async def init_integration(hass, skip_setup=False) -> MockConfigEntry:
     if not skip_setup:
         with patch(
             "brother.Brother._get_data",
-            return_value=json.loads(load_fixture("brother_printer_data.json")),
+            return_value=json.loads(load_fixture("printer_data.json", "brother")),
         ):
             await hass.config_entries.async_setup(entry.entry_id)
             await hass.async_block_till_done()

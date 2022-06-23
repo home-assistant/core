@@ -4,6 +4,15 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "cannot_connect": "Gagal terhubung",
             "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "garage_name": "Nama garasi"
+                },
+                "title": "Pilih garasi untuk dipantau"
+            }
         }
-    }
+    },
+    "title": "Garasi Amsterdam"
 }

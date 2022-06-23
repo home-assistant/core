@@ -6,8 +6,7 @@ import logging
 
 import voluptuous as vol
 
-from homeassistant.components.recorder.models import States
-from homeassistant.components.recorder.util import execute, session_scope
+from homeassistant.components.recorder import get_instance, history
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -21,12 +20,14 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -108,12 +109,7 @@ DOMAIN = "plant"
 CONFIG_SCHEMA = vol.Schema({DOMAIN: {cv.string: PLANT_SCHEMA}}, extra=vol.ALLOW_EXTRA)
 
 
-# Flag for enabling/disabling the loading of the history from the database.
-# This feature is turned off right now as its tests are not 100% stable.
-ENABLE_LOAD_HISTORY = False
-
-
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Plant component."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
 
@@ -238,8 +234,7 @@ class Plant(Entity):
         result = []
         for sensor_name in self._sensormap.values():
             params = self.READINGS[sensor_name]
-            value = getattr(self, f"_{sensor_name}")
-            if value is not None:
+            if (value := getattr(self, f"_{sensor_name}")) is not None:
                 if value == STATE_UNAVAILABLE:
                     result.append(f"{sensor_name} unavailable")
                 else:
@@ -281,9 +276,11 @@ class Plant(Entity):
 
     async def async_added_to_hass(self):
         """After being added to hass, load from history."""
-        if ENABLE_LOAD_HISTORY and "recorder" in self.hass.config.components:
+        if "recorder" in self.hass.config.components:
             # only use the database if it's configured
-            await self.hass.async_add_executor_job(self._load_history_from_db)
+            await get_instance(self.hass).async_add_executor_job(
+                self._load_history_from_db
+            )
             self.async_write_ha_state()
 
         async_track_state_change_event(
@@ -291,8 +288,7 @@ class Plant(Entity):
         )
 
         for entity_id in self._sensormap:
-            state = self.hass.states.get(entity_id)
-            if state is not None:
+            if (state := self.hass.states.get(entity_id)) is not None:
                 self.state_changed(entity_id, state)
 
     def _load_history_from_db(self):
@@ -301,7 +297,7 @@ class Plant(Entity):
         This only needs to be done once during startup.
         """
 
-        start_date = datetime.now() - timedelta(days=self._conf_check_days)
+        start_date = dt_util.utcnow() - timedelta(days=self._conf_check_days)
         entity_id = self._readingmap.get(READING_BRIGHTNESS)
         if entity_id is None:
             _LOGGER.debug(
@@ -309,26 +305,22 @@ class Plant(Entity):
                 "there is no brightness sensor configured"
             )
             return
-
         _LOGGER.debug("Initializing values for %s from the database", self._name)
-        with session_scope(hass=self.hass) as session:
-            query = (
-                session.query(States)
-                .filter(
-                    (States.entity_id == entity_id.lower())
-                    and (States.last_updated > start_date)
+        lower_entity_id = entity_id.lower()
+        history_list = history.state_changes_during_period(
+            self.hass,
+            start_date,
+            entity_id=lower_entity_id,
+            no_attributes=True,
+        )
+        for state in history_list.get(lower_entity_id, []):
+            # filter out all None, NaN and "unknown" states
+            # only keep real values
+            with suppress(ValueError):
+                self._brightness_history.add_measurement(
+                    int(state.state), state.last_updated
                 )
-                .order_by(States.last_updated.asc())
-            )
-            states = execute(query, to_native=True, validate_entity_ids=False)
 
-            for state in states:
-                # filter out all None, NaN and "unknown" states
-                # only keep real values
-                with suppress(ValueError):
-                    self._brightness_history.add_measurement(
-                        int(state.state), state.last_updated
-                    )
         _LOGGER.debug("Initializing from database completed")
 
     @property

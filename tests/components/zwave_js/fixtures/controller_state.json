@@ -1,0 +1,30 @@
+{
+  "controller": {
+    "libraryVersion": "Z-Wave 3.95",
+    "type": 1,
+    "homeId": 3245146787,
+    "ownNodeId": 1,
+    "isSecondary": false,
+    "isUsingHomeIdFromOtherNetwork": false,
+    "isSISPresent": true,
+    "wasRealPrimary": true,
+    "isStaticUpdateController": true,
+    "isSlave": false,
+    "serialApiVersion": "1.0",
+    "manufacturerId": 134,
+    "productType": 257,
+    "productId": 90,
+    "supportedFunctionTypes": [
+      2, 3, 4, 5, 6, 7, 8, 9, 16, 17, 18, 19, 20, 21, 22, 23, 24, 28, 32, 33,
+      34, 35, 36, 39, 41, 42, 43, 44, 45, 65, 66, 68, 69, 70, 71, 72, 73, 74,
+      75, 76, 77, 80, 81, 83, 84, 85, 86, 87, 94, 96, 97, 98, 99, 102, 103, 128,
+      144, 146, 147, 152, 180, 182, 183, 184, 185, 186, 189, 190, 191, 210, 211,
+      212, 238, 239
+    ],
+    "sucNodeId": 1,
+    "supportsTimers": false,
+    "isHealNetworkActive": false,
+    "inclusionState": 0
+  },
+  "nodes": []
+}

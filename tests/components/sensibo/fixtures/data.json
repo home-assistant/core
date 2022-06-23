@@ -1,0 +1,551 @@
+{
+  "status": "success",
+  "result": [
+    {
+      "isGeofenceOnEnterEnabledForThisUser": false,
+      "isClimateReactGeofenceOnEnterEnabledForThisUser": false,
+      "isMotionGeofenceOnEnterEnabled": false,
+      "isOwner": true,
+      "id": "ABC999111",
+      "qrId": "AAAAAAAAAA",
+      "temperatureUnit": "C",
+      "room": {
+        "uid": "99TT99TT",
+        "name": "Hallway",
+        "icon": "Lounge"
+      },
+      "acState": {
+        "timestamp": {
+          "time": "2022-04-30T11:23:30.019722Z",
+          "secondsAgo": -1
+        },
+        "on": true,
+        "mode": "heat",
+        "fanLevel": "high",
+        "targetTemperature": 25,
+        "swing": "stopped",
+        "horizontalSwing": "stopped",
+        "light": "on"
+      },
+      "lastStateChange": {
+        "time": "2022-04-30T11:21:30Z",
+        "secondsAgo": 119
+      },
+      "lastStateChangeToOn": {
+        "time": "2022-04-30T11:20:28Z",
+        "secondsAgo": 181
+      },
+      "lastStateChangeToOff": {
+        "time": "2022-04-30T11:21:30Z",
+        "secondsAgo": 119
+      },
+      "location": {
+        "id": "ZZZZZZZZZZZZ",
+        "name": "Home",
+        "latLon": [58.9806976, 20.5864297],
+        "address": ["Sealand 99", "Some county"],
+        "country": "United Country",
+        "createTime": {
+          "time": "2020-03-21T15:44:15Z",
+          "secondsAgo": 66543240
+        }
+      },
+      "connectionStatus": {
+        "isAlive": true,
+        "lastSeen": {
+          "time": "2022-04-30T11:22:57.894846Z",
+          "secondsAgo": 32
+        }
+      },
+      "firmwareVersion": "SKY30046",
+      "firmwareType": "esp8266ex",
+      "productModel": "skyv2",
+      "configGroup": "stable",
+      "currentlyAvailableFirmwareVersion": "SKY30048",
+      "cleanFiltersNotificationEnabled": false,
+      "shouldShowFilterCleaningNotification": false,
+      "isGeofenceOnExitEnabled": false,
+      "isClimateReactGeofenceOnExitEnabled": false,
+      "isMotionGeofenceOnExitEnabled": false,
+      "serial": "1234567890",
+      "sensorsCalibration": {
+        "temperature": 0.1,
+        "humidity": 0.0
+      },
+      "motionSensors": [
+        {
+          "configGroup": "stable",
+          "connectionStatus": {
+            "isAlive": true,
+            "lastSeen": {
+              "secondsAgo": 86,
+              "time": "2022-01-01T18:59:48.665878Z"
+            }
+          },
+          "firmwareType": "nrf52",
+          "firmwareVersion": "V17",
+          "id": "AABBCC",
+          "isMainSensor": true,
+          "macAddress": "00:04:00:B6:00:00",
+          "measurements": {
+            "batteryVoltage": 3000,
+            "humidity": 57,
+            "motion": true,
+            "rssi": -72,
+            "temperature": 23.9,
+            "time": {
+              "secondsAgo": 86,
+              "time": "2022-01-01T18:59:48.665878Z"
+            }
+          },
+          "parentDeviceUid": "ABC999111",
+          "productModel": "motion_sensor",
+          "qrId": "AAZZAAZZ",
+          "serial": "12123434"
+        }
+      ],
+      "tags": [],
+      "timer": null,
+      "schedules": [
+        {
+          "id": "11",
+          "isEnabled": false,
+          "acState": {
+            "on": false,
+            "targetTemperature": 21,
+            "temperatureUnit": "C",
+            "mode": "heat",
+            "fanLevel": "low",
+            "swing": "stopped",
+            "extra": {
+              "scheduler": {
+                "climate_react": null,
+                "motion": null,
+                "on": false,
+                "climate_react_settings": null,
+                "pure_boost": null
+              }
+            },
+            "horizontalSwing": "stopped",
+            "light": "on"
+          },
+          "createTime": "2022-04-17T15:41:05",
+          "createTimeSecondsAgo": 1107745,
+          "recurringDays": ["Wednesday", "Thursday"],
+          "targetTimeLocal": "17:40",
+          "timezone": "Europe/Stockholm",
+          "podUid": "ABC999111",
+          "nextTime": "2022-05-04T15:40:00",
+          "nextTimeSecondsFromNow": 360989
+        }
+      ],
+      "motionConfig": {
+        "enabled": true,
+        "onEnterACChange": false,
+        "onEnterACState": null,
+        "onEnterCRChange": true,
+        "onExitACChange": true,
+        "onExitACState": null,
+        "onExitCRChange": true,
+        "onExitDelayMinutes": 20
+      },
+      "filtersCleaning": {
+        "acOnSecondsSinceLastFiltersClean": 667991,
+        "filtersCleanSecondsThreshold": 1080000,
+        "lastFiltersCleanTime": {
+          "time": "2022-03-12T15:24:26Z",
+          "secondsAgo": 4219143
+        },
+        "shouldCleanFilters": true
+      },
+      "serviceSubscriptions": [],
+      "roomIsOccupied": true,
+      "mainMeasurementsSensor": {
+        "configGroup": "stable",
+        "connectionStatus": {
+          "isAlive": true,
+          "lastSeen": {
+            "secondsAgo": 86,
+            "time": "2022-01-01T18:59:48.665878Z"
+          }
+        },
+        "firmwareType": "nrf52",
+        "firmwareVersion": "V17",
+        "id": "AABBCC",
+        "isMainSensor": true,
+        "macAddress": "00:04:00:B6:00:00",
+        "measurements": {
+          "batteryVoltage": 3000,
+          "humidity": 32.9,
+          "motion": false,
+          "rssi": -72,
+          "temperature": 21.2,
+          "time": {
+            "secondsAgo": 86,
+            "time": "2022-01-01T18:59:48.665878Z"
+          }
+        },
+        "parentDeviceUid": "ABC999111",
+        "productModel": "motion_sensor",
+        "qrId": "AAZZAAZZ",
+        "serial": "12123434"
+      },
+      "pureBoostConfig": null,
+      "warrantyEligible": "no",
+      "warrantyEligibleUntil": {
+        "time": "2020-04-18T15:43:08Z",
+        "secondsAgo": 64093221
+      },
+      "features": ["softShowPlus", "optimusTrial"],
+      "runningHealthcheck": null,
+      "lastHealthcheck": null,
+      "lastACStateChange": {
+        "id": "11",
+        "time": {
+          "time": "2022-04-30T11:21:29Z",
+          "secondsAgo": 120
+        },
+        "status": "Success",
+        "acState": {
+          "timestamp": {
+            "time": "2022-04-30T11:23:30.062645Z",
+            "secondsAgo": -1
+          },
+          "on": false,
+          "mode": "fan",
+          "fanLevel": "high",
+          "swing": "stopped",
+          "horizontalSwing": "stopped",
+          "light": "on"
+        },
+        "resultingAcState": {
+          "timestamp": {
+            "time": "2022-04-30T11:23:30.062688Z",
+            "secondsAgo": -1
+          },
+          "on": false,
+          "mode": "fan",
+          "fanLevel": "high",
+          "swing": "stopped",
+          "horizontalSwing": "stopped",
+          "light": "on"
+        },
+        "changedProperties": ["on"],
+        "reason": "UserRequest",
+        "failureReason": null,
+        "resolveTime": {
+          "time": "2022-04-30T11:21:30Z",
+          "secondsAgo": 119
+        },
+        "causedByScheduleId": null,
+        "causedByScheduleType": null
+      },
+      "homekitSupported": false,
+      "remoteCapabilities": {
+        "modes": {
+          "cool": {
+            "temperatures": {
+              "F": {
+                "isNative": false,
+                "values": [64, 66, 68]
+              },
+              "C": {
+                "isNative": true,
+                "values": [10, 16, 17, 18, 19, 20]
+              }
+            },
+            "fanLevels": ["quiet", "low", "medium"],
+            "swing": ["stopped", "fixedTop", "fixedMiddleTop"],
+            "horizontalSwing": ["stopped", "fixedLeft", "fixedCenterLeft"],
+            "light": ["on", "off"]
+          },
+          "heat": {
+            "temperatures": {
+              "F": {
+                "isNative": false,
+                "values": [63, 64, 66]
+              },
+              "C": {
+                "isNative": true,
+                "values": [10, 16, 17, 18, 19, 20]
+              }
+            },
+            "fanLevels": ["quiet", "low", "medium"],
+            "swing": ["stopped", "fixedTop", "fixedMiddleTop"],
+            "horizontalSwing": ["stopped", "fixedLeft", "fixedCenterLeft"],
+            "light": ["on", "off"]
+          },
+          "dry": {
+            "temperatures": {
+              "F": {
+                "isNative": false,
+                "values": [64, 66, 68]
+              },
+              "C": {
+                "isNative": true,
+                "values": [10, 16, 17, 18, 19, 20]
+              }
+            },
+            "swing": ["stopped", "fixedTop", "fixedMiddleTop"],
+            "horizontalSwing": ["stopped", "fixedLeft", "fixedCenterLeft"],
+            "light": ["on", "off"]
+          },
+          "auto": {
+            "temperatures": {
+              "F": {
+                "isNative": false,
+                "values": [64, 66, 68]
+              },
+              "C": {
+                "isNative": true,
+                "values": [10, 16, 17, 18, 19, 20]
+              }
+            },
+            "fanLevels": ["quiet", "low", "medium"],
+            "swing": ["stopped", "fixedTop", "fixedMiddleTop"],
+            "horizontalSwing": ["stopped", "fixedLeft", "fixedCenterLeft"],
+            "light": ["on", "off"]
+          },
+          "fan": {
+            "temperatures": {},
+            "fanLevels": ["quiet", "low", "medium"],
+            "swing": ["stopped", "fixedTop", "fixedMiddleTop"],
+            "horizontalSwing": ["stopped", "fixedLeft", "fixedCenterLeft"],
+            "light": ["on", "off"]
+          }
+        }
+      },
+      "remote": {
+        "toggle": false,
+        "window": false
+      },
+      "remoteFlavor": "Curious Sea Cucumber",
+      "remoteAlternatives": ["_mitsubishi2_night_heat"],
+      "smartMode": {
+        "enabled": false,
+        "type": "temperature",
+        "deviceUid": "ABC999111",
+        "lowTemperatureThreshold": 0.0,
+        "highTemperatureThreshold": 27.5,
+        "lowTemperatureState": {
+          "on": true,
+          "targetTemperature": 21,
+          "temperatureUnit": "C",
+          "mode": "heat",
+          "fanLevel": "low",
+          "swing": "stopped",
+          "horizontalSwing": "stopped",
+          "light": "on"
+        },
+        "highTemperatureState": {
+          "on": true,
+          "targetTemperature": 21,
+          "temperatureUnit": "C",
+          "mode": "cool",
+          "fanLevel": "high",
+          "swing": "stopped",
+          "horizontalSwing": "stopped",
+          "light": "on"
+        },
+        "lowTemperatureWebhook": null,
+        "highTemperatureWebhook": null
+      },
+      "measurements": {
+        "time": {
+          "time": "2022-04-30T11:22:57.894846Z",
+          "secondsAgo": 32
+        },
+        "temperature": 21.2,
+        "humidity": 32.9,
+        "motion": true,
+        "roomIsOccupied": true,
+        "feelsLike": 21.2,
+        "rssi": -45
+      },
+      "accessPoint": {
+        "ssid": "Sensibo-1234567890",
+        "password": null
+      },
+      "macAddress": "00:02:00:B6:00:00",
+      "autoOffMinutes": null,
+      "autoOffEnabled": false,
+      "antiMoldTimer": null,
+      "antiMoldConfig": null
+    },
+    {
+      "isGeofenceOnEnterEnabledForThisUser": false,
+      "isClimateReactGeofenceOnEnterEnabledForThisUser": false,
+      "isMotionGeofenceOnEnterEnabled": false,
+      "isOwner": true,
+      "id": "AAZZAAZZ",
+      "qrId": "AAAAAAAABB",
+      "temperatureUnit": "C",
+      "room": {
+        "uid": "99TT99ZZ",
+        "name": "Kitchen",
+        "icon": "Diningroom"
+      },
+      "acState": {
+        "timestamp": {
+          "time": "2022-04-30T11:23:30.067312Z",
+          "secondsAgo": -1
+        },
+        "on": false,
+        "mode": "fan",
+        "fanLevel": "low",
+        "light": "on"
+      },
+      "lastStateChange": {
+        "time": "2022-04-30T11:21:41Z",
+        "secondsAgo": 108
+      },
+      "lastStateChangeToOn": {
+        "time": "2022-04-30T09:43:26Z",
+        "secondsAgo": 6003
+      },
+      "lastStateChangeToOff": {
+        "time": "2022-04-30T11:21:37Z",
+        "secondsAgo": 112
+      },
+      "location": {
+        "id": "ZZZZZZZZZZZZ",
+        "name": "Home",
+        "latLon": [58.9806976, 20.5864297],
+        "address": ["Sealand 99", "Some county"],
+        "country": "United Country",
+        "createTime": {
+          "time": "2020-03-21T15:44:15Z",
+          "secondsAgo": 66543240
+        }
+      },
+      "connectionStatus": {
+        "isAlive": true,
+        "lastSeen": {
+          "time": "2022-04-30T11:23:20.642798Z",
+          "secondsAgo": 9
+        }
+      },
+      "firmwareVersion": "PUR00111",
+      "firmwareType": "pure-esp32",
+      "productModel": "pure",
+      "configGroup": "stable",
+      "currentlyAvailableFirmwareVersion": "PUR00111",
+      "cleanFiltersNotificationEnabled": false,
+      "shouldShowFilterCleaningNotification": false,
+      "isGeofenceOnExitEnabled": false,
+      "isClimateReactGeofenceOnExitEnabled": false,
+      "isMotionGeofenceOnExitEnabled": false,
+      "serial": "0987654321",
+      "sensorsCalibration": {
+        "temperature": 0.0,
+        "humidity": 0.0
+      },
+      "motionSensors": [],
+      "tags": [],
+      "timer": null,
+      "schedules": [],
+      "motionConfig": null,
+      "filtersCleaning": {
+        "acOnSecondsSinceLastFiltersClean": 415560,
+        "filtersCleanSecondsThreshold": 14256000,
+        "lastFiltersCleanTime": {
+          "time": "2022-04-23T15:58:45Z",
+          "secondsAgo": 588284
+        },
+        "shouldCleanFilters": false
+      },
+      "serviceSubscriptions": [],
+      "roomIsOccupied": null,
+      "mainMeasurementsSensor": null,
+      "pureBoostConfig": {
+        "enabled": false,
+        "sensitivity": "N",
+        "measurements_integration": true,
+        "ac_integration": false,
+        "geo_integration": false,
+        "prime_integration": false
+      },
+      "warrantyEligible": "no",
+      "warrantyEligibleUntil": {
+        "time": "2022-04-10T09:58:58Z",
+        "secondsAgo": 1733071
+      },
+      "features": ["optimusTrial", "softShowPlus"],
+      "runningHealthcheck": null,
+      "lastHealthcheck": null,
+      "lastACStateChange": {
+        "id": "AA22",
+        "time": {
+          "time": "2022-04-30T11:21:37Z",
+          "secondsAgo": 112
+        },
+        "status": "Success",
+        "acState": {
+          "timestamp": {
+            "time": "2022-04-30T11:23:30.090144Z",
+            "secondsAgo": -1
+          },
+          "on": false,
+          "mode": "fan",
+          "fanLevel": "low",
+          "light": "on"
+        },
+        "resultingAcState": {
+          "timestamp": {
+            "time": "2022-04-30T11:23:30.090185Z",
+            "secondsAgo": -1
+          },
+          "on": false,
+          "mode": "fan",
+          "fanLevel": "low",
+          "light": "on"
+        },
+        "changedProperties": ["on"],
+        "reason": "UserRequest",
+        "failureReason": null,
+        "resolveTime": {
+          "time": "2022-04-30T11:21:37Z",
+          "secondsAgo": 112
+        },
+        "causedByScheduleId": null,
+        "causedByScheduleType": null
+      },
+      "homekitSupported": true,
+      "remoteCapabilities": {
+        "modes": {
+          "fan": {
+            "temperatures": {},
+            "fanLevels": ["low", "high"],
+            "light": ["on", "dim", "off"]
+          }
+        }
+      },
+      "remote": {
+        "toggle": false,
+        "window": false
+      },
+      "remoteFlavor": "Eccentric Eagle",
+      "remoteAlternatives": [],
+      "smartMode": null,
+      "measurements": {
+        "time": {
+          "time": "2022-04-30T11:23:20.642798Z",
+          "secondsAgo": 9
+        },
+        "rssi": -58,
+        "pm25": 1,
+        "motion": false,
+        "roomIsOccupied": null
+      },
+      "accessPoint": {
+        "ssid": "Sensibo-09876",
+        "password": null
+      },
+      "macAddress": "00:01:00:01:00:01",
+      "autoOffMinutes": null,
+      "autoOffEnabled": false,
+      "antiMoldTimer": null,
+      "antiMoldConfig": null
+    }
+  ]
+}

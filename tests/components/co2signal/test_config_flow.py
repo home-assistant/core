@@ -7,11 +7,8 @@ from homeassistant import config_entries
 from homeassistant.components.co2signal import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_CREATE_ENTRY, RESULT_TYPE_FORM
-from homeassistant.setup import async_setup_component
 
 from . import VALID_PAYLOAD
-
-from tests.common import MockConfigEntry
 
 
 async def test_form_home(hass: HomeAssistant) -> None:
@@ -196,104 +193,3 @@ async def test_form_error_unexpected_data(hass: HomeAssistant) -> None:
 
     assert result2["type"] == RESULT_TYPE_FORM
     assert result2["errors"] == {"base": "unknown"}
-
-
-async def test_import(hass: HomeAssistant) -> None:
-    """Test we import correctly."""
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ):
-        assert await async_setup_component(
-            hass, "sensor", {"sensor": {"platform": "co2signal", "token": "1234"}}
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries("co2signal")) == 1
-
-    state = hass.states.get("sensor.co2_intensity")
-    assert state is not None
-    assert state.state == "45.99"
-    assert state.name == "CO2 intensity"
-    assert state.attributes["unit_of_measurement"] == "gCO2eq/kWh"
-    assert state.attributes["country_code"] == "FR"
-
-    state = hass.states.get("sensor.grid_fossil_fuel_percentage")
-    assert state is not None
-    assert state.state == "5.46"
-    assert state.name == "Grid fossil fuel percentage"
-    assert state.attributes["unit_of_measurement"] == "%"
-    assert state.attributes["country_code"] == "FR"
-
-
-async def test_import_abort_existing_home(hass: HomeAssistant) -> None:
-    """Test we abort if home entry found."""
-
-    MockConfigEntry(domain="co2signal", data={"api_key": "abcd"}).add_to_hass(hass)
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ):
-        assert await async_setup_component(
-            hass, "sensor", {"sensor": {"platform": "co2signal", "token": "1234"}}
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries("co2signal")) == 1
-
-
-async def test_import_abort_existing_country(hass: HomeAssistant) -> None:
-    """Test we abort if existing country found."""
-
-    MockConfigEntry(
-        domain="co2signal", data={"api_key": "abcd", "country_code": "nl"}
-    ).add_to_hass(hass)
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ):
-        assert await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "co2signal",
-                    "token": "1234",
-                    "country_code": "nl",
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries("co2signal")) == 1
-
-
-async def test_import_abort_existing_coordinates(hass: HomeAssistant) -> None:
-    """Test we abort if existing coordinates found."""
-
-    MockConfigEntry(
-        domain="co2signal", data={"api_key": "abcd", "latitude": 1, "longitude": 2}
-    ).add_to_hass(hass)
-
-    with patch(
-        "CO2Signal.get_latest",
-        return_value=VALID_PAYLOAD,
-    ):
-        assert await async_setup_component(
-            hass,
-            "sensor",
-            {
-                "sensor": {
-                    "platform": "co2signal",
-                    "token": "1234",
-                    "latitude": 1,
-                    "longitude": 2,
-                }
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert len(hass.config_entries.async_entries("co2signal")) == 1

@@ -1,4 +1,6 @@
 """Tests for Home Assistant View."""
+from http import HTTPStatus
+import json
 from unittest.mock import AsyncMock, Mock
 
 from aiohttp.web_exceptions import (
@@ -33,9 +35,16 @@ async def test_invalid_json(caplog):
     view = HomeAssistantView()
 
     with pytest.raises(HTTPInternalServerError):
-        view.json(float("NaN"))
+        view.json(rb"\ud800")
 
-    assert str(float("NaN")) in caplog.text
+    assert "Unable to serialize to JSON" in caplog.text
+
+
+async def test_nan_serialized_to_null(caplog):
+    """Test nan serialized to null JSON."""
+    view = HomeAssistantView()
+    response = view.json(float("NaN"))
+    assert json.loads(response.body.decode("utf-8")) is None
 
 
 async def test_handling_unauthorized(mock_request):
@@ -68,4 +77,4 @@ async def test_not_running(mock_request_with_stopping):
     response = await request_handler_factory(
         Mock(requires_auth=False), AsyncMock(side_effect=Unauthorized)
     )(mock_request_with_stopping)
-    assert response.status == 503
+    assert response.status == HTTPStatus.SERVICE_UNAVAILABLE

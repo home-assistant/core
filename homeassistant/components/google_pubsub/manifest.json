@@ -2,7 +2,7 @@
   "domain": "google_pubsub",
   "name": "Google Pub/Sub",
   "documentation": "https://www.home-assistant.io/integrations/google_pubsub",
-  "requirements": ["google-cloud-pubsub==2.1.0"],
+  "requirements": ["google-cloud-pubsub==2.11.0"],
   "codeowners": [],
   "iot_class": "cloud_push"
 }

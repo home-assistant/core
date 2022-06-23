@@ -1,0 +1,28 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u30b5\u30fc\u30d3\u30b9\u306f\u3059\u3067\u306b\u8a2d\u5b9a\u3055\u308c\u3066\u3044\u307e\u3059",
+            "existing_instance_updated": "\u65e2\u5b58\u306e\u8a2d\u5b9a\u3092\u66f4\u65b0\u3057\u307e\u3057\u305f\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u306b\u5931\u6557\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "hassio_confirm": {
+                "description": "\u30a2\u30c9\u30aa\u30f3: {addon} \u306b\u3088\u3063\u3066\u63d0\u4f9b\u3055\u308c\u308b\u3001AdGuard Home\u306b\u63a5\u7d9a\u3059\u308b\u3088\u3046\u306bHome Assistant\u306e\u8a2d\u5b9a\u3092\u3057\u307e\u3059\u304b\uff1f",
+                "title": "Home Assistant\u30a2\u30c9\u30aa\u30f3\u7d4c\u7531\u306eAdGuard Home"
+            },
+            "user": {
+                "data": {
+                    "host": "\u30db\u30b9\u30c8",
+                    "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
+                    "port": "\u30dd\u30fc\u30c8",
+                    "ssl": "SSL\u8a3c\u660e\u66f8\u3092\u4f7f\u7528\u3059\u308b",
+                    "username": "\u30e6\u30fc\u30b6\u30fc\u540d",
+                    "verify_ssl": "SSL\u8a3c\u660e\u66f8\u3092\u78ba\u8a8d\u3059\u308b"
+                },
+                "description": "\u76e3\u8996\u3068\u5236\u5fa1\u304c\u3067\u304d\u308b\u3088\u3046\u306b\u3001AdGuardHome\u30a4\u30f3\u30b9\u30bf\u30f3\u30b9\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3092\u3057\u307e\u3059\u3002"
+            }
+        }
+    }
+}

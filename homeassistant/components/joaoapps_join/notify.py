@@ -72,6 +72,7 @@ class JoinNotificationService(BaseNotificationService):
             image=data.get("image"),
             sound=data.get("sound"),
             notification_id=data.get("notification_id"),
+            category=data.get("category"),
             url=data.get("url"),
             tts=data.get("tts"),
             tts_language=data.get("tts_language"),

@@ -23,7 +23,7 @@
             },
             "discovery_confirm": {
                 "description": "Szeretn\u00e9 hozz\u00e1adni a Kodi (`{name}`)-t Home Assistanthoz?",
-                "title": "Felfedezett Kodi"
+                "title": "Kodi felfedezve"
             },
             "user": {
                 "data": {

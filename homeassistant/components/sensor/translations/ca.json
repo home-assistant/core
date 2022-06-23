@@ -1,11 +1,13 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_apparent_power": "Pot\u00e8ncia aparent actual de {entity_name}",
             "is_battery_level": "Nivell de bateria actual de {entity_name}",
             "is_carbon_dioxide": "Concentraci\u00f3 actual de di\u00f2xid de carboni de {entity_name}",
             "is_carbon_monoxide": "Concentraci\u00f3 actual de mon\u00f2xid de carboni de {entity_name}",
             "is_current": "Intensitat actual de {entity_name}",
             "is_energy": "Energia actual de {entity_name}",
+            "is_frequency": "Freq\u00fc\u00e8ncia actual de {entity_name}",
             "is_gas": "Gas actual de {entity_name}",
             "is_humidity": "Humitat actual de {entity_name}",
             "is_illuminance": "Il\u00b7luminaci\u00f3 actual de {entity_name}",
@@ -19,6 +21,7 @@
             "is_power": "Pot\u00e8ncia actual de {entity_name}",
             "is_power_factor": "Factor de pot\u00e8ncia actual de {entity_name}",
             "is_pressure": "Pressi\u00f3 actual de {entity_name}",
+            "is_reactive_power": "Pot\u00e8ncia reactiva actual de {entity_name}",
             "is_signal_strength": "Pot\u00e8ncia de senyal actual de {entity_name}",
             "is_sulphur_dioxide": "Concentraci\u00f3 actual de di\u00f2xid de sofre de {entity_name}",
             "is_temperature": "Temperatura actual de {entity_name}",
@@ -27,11 +30,13 @@
             "is_voltage": "Voltatge actual de {entity_name}"
         },
         "trigger_type": {
+            "apparent_power": "Canvia la pot\u00e8ncia aparent de {entity_name}",
             "battery_level": "Canvia el nivell de bateria de {entity_name}",
             "carbon_dioxide": "Canvia la concentraci\u00f3 de di\u00f2xid de carboni de {entity_name}",
             "carbon_monoxide": "Canvia la concentraci\u00f3 de mon\u00f2xid de carboni de {entity_name}",
             "current": "Canvia la intensitat de {entity_name}",
             "energy": "Canvia l'energia de {entity_name}",
+            "frequency": "Canvia la freq\u00fc\u00e8ncia de {entity_name}",
             "gas": "Canvia el gas de {entity_name}",
             "humidity": "Canvia la humitat de {entity_name}",
             "illuminance": "Canvia la il\u00b7luminaci\u00f3 de {entity_name}",
@@ -45,6 +50,7 @@
             "power": "Canvia la pot\u00e8ncia de {entity_name}",
             "power_factor": "Canvia el factor de pot\u00e8ncia de {entity_name}",
             "pressure": "Canvia la pressi\u00f3 de {entity_name}",
+            "reactive_power": "Canvia la pot\u00e8ncia reactiva de {entity_name}",
             "signal_strength": "Canvia la pot\u00e8ncia de senyal de {entity_name}",
             "sulphur_dioxide": "Canvia la concentraci\u00f3 de di\u00f2xid de sofre de {entity_name}",
             "temperature": "Canvia la temperatura de {entity_name}",

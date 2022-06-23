@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Naprava je \u017ee konfigurirana",
+            "cannot_connect": "Povezava ni uspela",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "error": {
+            "cannot_connect": "Povezava ni uspela",
+            "unknown": "Nepri\u010dakovana napaka"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "\u0160tevilka vrat",
+                    "ssl": "Uporaba SSL",
+                    "username": "Uporabni\u0161ko ime"
+                }
+            }
+        }
+    }
+}

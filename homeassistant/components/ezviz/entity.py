@@ -10,7 +10,7 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import EzvizDataUpdateCoordinator
 
 
-class EzvizEntity(CoordinatorEntity, Entity):
+class EzvizEntity(CoordinatorEntity[EzvizDataUpdateCoordinator], Entity):
     """Generic entity encapsulating common features of Ezviz device."""
 
     def __init__(
@@ -22,13 +22,13 @@ class EzvizEntity(CoordinatorEntity, Entity):
         super().__init__(coordinator)
         self._serial = serial
         self._camera_name = self.data["name"]
-        self._attr_device_info: DeviceInfo = {
-            "identifiers": {(DOMAIN, serial)},
-            "name": self.data["name"],
-            "model": self.data["device_sub_category"],
-            "manufacturer": MANUFACTURER,
-            "sw_version": self.data["version"],
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer=MANUFACTURER,
+            model=self.data["device_sub_category"],
+            name=self.data["name"],
+            sw_version=self.data["version"],
+        )
 
     @property
     def data(self) -> dict[str, Any]:

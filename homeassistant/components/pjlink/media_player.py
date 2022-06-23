@@ -1,14 +1,14 @@
 """Support for controlling projector via the PJLink protocol."""
+from __future__ import annotations
+
 from pypjlink import MUTE_AUDIO, Projector
 from pypjlink.projector import ProjectorError
 import voluptuous as vol
 
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -18,7 +18,10 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 CONF_ENCODING = "encoding"
 
@@ -36,12 +39,13 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     }
 )
 
-SUPPORT_PJLINK = (
-    SUPPORT_VOLUME_MUTE | SUPPORT_TURN_ON | SUPPORT_TURN_OFF | SUPPORT_SELECT_SOURCE
-)
 
-
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the PJLink platform."""
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
@@ -69,6 +73,13 @@ def format_input_source(input_source_name, input_source_number):
 
 class PjLinkDevice(MediaPlayerEntity):
     """Representation of a PJLink device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, host, port, name, encoding, password):
         """Iinitialize the PJLink device."""
@@ -149,11 +160,6 @@ class PjLinkDevice(MediaPlayerEntity):
     def source_list(self):
         """Return all available input sources."""
         return self._source_list
-
-    @property
-    def supported_features(self):
-        """Return projector supported features."""
-        return SUPPORT_PJLINK
 
     def turn_off(self):
         """Turn projector off."""

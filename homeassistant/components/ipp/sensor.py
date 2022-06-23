@@ -1,12 +1,12 @@
 """Support for IPP sensors."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Any
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_LOCATION, DEVICE_CLASS_TIMESTAMP, PERCENTAGE
+from homeassistant.const import ATTR_LOCATION, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -36,12 +36,10 @@ async def async_setup_entry(
     coordinator: IPPDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
     # config flow sets this to either UUID, serial number or None
-    unique_id = entry.unique_id
-
-    if unique_id is None:
+    if (unique_id := entry.unique_id) is None:
         unique_id = entry.entry_id
 
-    sensors = []
+    sensors: list[SensorEntity] = []
 
     sensors.append(IPPPrinterSensor(entry.entry_id, unique_id, coordinator))
     sensors.append(IPPUptimeSensor(entry.entry_id, unique_id, coordinator))
@@ -172,7 +170,7 @@ class IPPPrinterSensor(IPPSensor):
 class IPPUptimeSensor(IPPSensor):
     """Defines a IPP uptime sensor."""
 
-    _attr_device_class = DEVICE_CLASS_TIMESTAMP
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
         self, entry_id: str, unique_id: str, coordinator: IPPDataUpdateCoordinator
@@ -189,7 +187,6 @@ class IPPUptimeSensor(IPPSensor):
         )
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> datetime:
         """Return the state of the sensor."""
-        uptime = utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)
-        return uptime.replace(microsecond=0).isoformat()
+        return utcnow() - timedelta(seconds=self.coordinator.data.info.uptime)

@@ -1,6 +1,7 @@
 """Support for Google Maps location sharing."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 
@@ -19,9 +20,10 @@ from homeassistant.const import (
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_time_interval
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,7 +47,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA_BASE.extend(
 )
 
 
-def setup_scanner(hass, config: ConfigType, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Callable[..., None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the Google Maps Location sharing scanner."""
     scanner = GoogleMapsScanner(hass, config, see)
     return scanner.success_init

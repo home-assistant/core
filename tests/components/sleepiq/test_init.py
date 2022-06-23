@@ -1,64 +1,136 @@
-"""The tests for the SleepIQ component."""
-from unittest.mock import MagicMock, patch
+"""Tests for the SleepIQ integration."""
+from asyncsleepiq import (
+    SleepIQAPIException,
+    SleepIQLoginException,
+    SleepIQTimeoutException,
+)
 
-from homeassistant import setup
-import homeassistant.components.sleepiq as sleepiq
+from homeassistant.components.sleepiq.const import (
+    DOMAIN,
+    IS_IN_BED,
+    PRESSURE,
+    SLEEP_NUMBER,
+)
+from homeassistant.components.sleepiq.coordinator import UPDATE_INTERVAL
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_USERNAME
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
+from homeassistant.util.dt import utcnow
 
-from tests.common import load_fixture
+from tests.common import MockConfigEntry, async_fire_time_changed, mock_registry
+from tests.components.sleepiq.conftest import (
+    BED_ID,
+    SLEEPER_L_ID,
+    SLEEPER_L_NAME,
+    SLEEPER_L_NAME_LOWER,
+    SLEEPIQ_CONFIG,
+    setup_platform,
+)
 
-CONFIG = {"sleepiq": {"username": "foo", "password": "bar"}}
+ENTITY_IS_IN_BED = f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{IS_IN_BED}"
+ENTITY_PRESSURE = f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{PRESSURE}"
+ENTITY_SLEEP_NUMBER = (
+    f"sensor.sleepnumber_{BED_ID}_{SLEEPER_L_NAME_LOWER}_{SLEEP_NUMBER}"
+)
 
 
-def mock_responses(mock, single=False):
-    """Mock responses for SleepIQ."""
-    base_url = "https://prod-api.sleepiq.sleepnumber.com/rest/"
-    if single:
-        suffix = "-single"
-    else:
-        suffix = ""
-    mock.put(base_url + "login", text=load_fixture("sleepiq-login.json"))
-    mock.get(base_url + "bed?_k=0987", text=load_fixture(f"sleepiq-bed{suffix}.json"))
-    mock.get(base_url + "sleeper?_k=0987", text=load_fixture("sleepiq-sleeper.json"))
-    mock.get(
-        base_url + "bed/familyStatus?_k=0987",
-        text=load_fixture(f"sleepiq-familystatus{suffix}.json"),
+async def test_unload_entry(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+    """Test unloading the SleepIQ entry."""
+    entry = await setup_platform(hass, "sensor")
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.NOT_LOADED
+    assert not hass.data.get(DOMAIN)
+
+
+async def test_entry_setup_login_error(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+    """Test when sleepiq client is unable to login."""
+    mock_asyncsleepiq.login.side_effect = SleepIQLoginException
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+async def test_entry_setup_timeout_error(
+    hass: HomeAssistant, mock_asyncsleepiq
+) -> None:
+    """Test when sleepiq client timeout."""
+    mock_asyncsleepiq.login.side_effect = SleepIQTimeoutException
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+async def test_update_interval(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+    """Test update interval."""
+    await setup_platform(hass, "sensor")
+    assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 1
+
+    async_fire_time_changed(hass, utcnow() + UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 2
+
+
+async def test_api_error(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+    """Test when sleepiq client is unable to login."""
+    mock_asyncsleepiq.init_beds.side_effect = SleepIQAPIException
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+    """Test when sleepiq client timeout."""
+    mock_asyncsleepiq.init_beds.side_effect = SleepIQTimeoutException
+    entry = await setup_platform(hass, None)
+    assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> None:
+    """Test migration of sensor unique IDs."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=SLEEPIQ_CONFIG,
+        unique_id=SLEEPIQ_CONFIG[CONF_USERNAME].lower(),
     )
 
+    mock_entry.add_to_hass(hass)
 
-async def test_setup(hass, requests_mock):
-    """Test the setup."""
-    mock_responses(requests_mock)
-
-    # We're mocking the load_platform discoveries or else the platforms
-    # will be setup during tear down when blocking till done, but the mocks
-    # are no longer active.
-    with patch("homeassistant.helpers.discovery.load_platform", MagicMock()):
-        assert sleepiq.setup(hass, CONFIG)
-
-
-async def test_setup_login_failed(hass, requests_mock):
-    """Test the setup if a bad username or password is given."""
-    mock_responses(requests_mock)
-    requests_mock.put(
-        "https://prod-api.sleepiq.sleepnumber.com/rest/login",
-        status_code=401,
-        json=load_fixture("sleepiq-login-failed.json"),
+    mock_registry(
+        hass,
+        {
+            ENTITY_IS_IN_BED: er.RegistryEntry(
+                entity_id=ENTITY_IS_IN_BED,
+                unique_id=f"{BED_ID}_{SLEEPER_L_NAME}_{IS_IN_BED}",
+                platform=DOMAIN,
+                config_entry_id=mock_entry.entry_id,
+            ),
+            ENTITY_PRESSURE: er.RegistryEntry(
+                entity_id=ENTITY_PRESSURE,
+                unique_id=f"{BED_ID}_{SLEEPER_L_NAME}_{PRESSURE}",
+                platform=DOMAIN,
+                config_entry_id=mock_entry.entry_id,
+            ),
+            ENTITY_SLEEP_NUMBER: er.RegistryEntry(
+                entity_id=ENTITY_SLEEP_NUMBER,
+                unique_id=f"{BED_ID}_{SLEEPER_L_NAME}_{SLEEP_NUMBER}",
+                platform=DOMAIN,
+                config_entry_id=mock_entry.entry_id,
+            ),
+        },
     )
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
-    response = sleepiq.setup(hass, CONFIG)
-    assert not response
+    ent_reg = er.async_get(hass)
 
+    sensor_is_in_bed = ent_reg.async_get(ENTITY_IS_IN_BED)
+    assert sensor_is_in_bed.unique_id == f"{SLEEPER_L_ID}_{IS_IN_BED}"
 
-async def test_setup_component_no_login(hass):
-    """Test the setup when no login is configured."""
-    conf = CONFIG.copy()
-    del conf["sleepiq"]["username"]
-    assert not await setup.async_setup_component(hass, sleepiq.DOMAIN, conf)
+    sensor_pressure = ent_reg.async_get(ENTITY_PRESSURE)
+    assert sensor_pressure.unique_id == f"{SLEEPER_L_ID}_{PRESSURE}"
 
-
-async def test_setup_component_no_password(hass):
-    """Test the setup when no password is configured."""
-    conf = CONFIG.copy()
-    del conf["sleepiq"]["password"]
-
-    assert not await setup.async_setup_component(hass, sleepiq.DOMAIN, conf)
+    sensor_sleep_number = ent_reg.async_get(ENTITY_SLEEP_NUMBER)
+    assert sensor_sleep_number.unique_id == f"{SLEEPER_L_ID}_{SLEEP_NUMBER}"

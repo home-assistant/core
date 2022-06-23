@@ -19,13 +19,13 @@ class FirmataEntity:
     @property
     def device_info(self) -> DeviceInfo:
         """Return device info."""
-        return {
-            "connections": {},
-            "identifiers": {(DOMAIN, self._api.board.name)},
-            "manufacturer": FIRMATA_MANUFACTURER,
-            "name": self._api.board.name,
-            "sw_version": self._api.board.firmware_version,
-        }
+        return DeviceInfo(
+            connections=set(),
+            identifiers={(DOMAIN, self._api.board.name)},
+            manufacturer=FIRMATA_MANUFACTURER,
+            name=self._api.board.name,
+            sw_version=self._api.board.firmware_version,
+        )
 
 
 class FirmataPinEntity(FirmataEntity):
@@ -33,7 +33,7 @@ class FirmataPinEntity(FirmataEntity):
 
     def __init__(
         self,
-        api: type[FirmataBoardPin],
+        api: FirmataBoardPin,
         config_entry: ConfigEntry,
         name: str,
         pin: FirmataPinType,

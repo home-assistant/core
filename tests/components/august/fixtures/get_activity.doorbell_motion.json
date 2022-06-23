@@ -1,0 +1,58 @@
+[
+  {
+    "otherUser": {
+      "FirstName": "Unknown",
+      "UserName": "deleteduser",
+      "LastName": "User",
+      "UserID": "deleted",
+      "PhoneNo": "deleted"
+    },
+    "dateTime": 1582663119959,
+    "deviceID": "K98GiDT45GUL",
+    "info": {
+      "videoUploadProgress": "in_progress",
+      "image": {
+        "resource_type": "image",
+        "etag": "fdsf",
+        "created_at": "2020-02-25T20:38:39Z",
+        "type": "upload",
+        "format": "jpg",
+        "version": 1582663119,
+        "secure_url": "https://res.cloudinary.com/updated_image.jpg",
+        "signature": "fdfdfd",
+        "url": "http://res.cloudinary.com/updated_image.jpg",
+        "bytes": 48545,
+        "placeholder": false,
+        "original_filename": "file",
+        "width": 720,
+        "tags": [],
+        "public_id": "xnsj5gphpzij9brifpf4",
+        "height": 576
+      },
+      "dvrID": "dvr",
+      "videoAvailable": false,
+      "hasSubscription": false
+    },
+    "callingUser": {
+      "LastName": "User",
+      "UserName": "deleteduser",
+      "FirstName": "Unknown",
+      "UserID": "deleted",
+      "PhoneNo": "deleted"
+    },
+    "house": {
+      "houseName": "K98GiDT45GUL",
+      "houseID": "na"
+    },
+    "action": "doorbell_motion_detected",
+    "deviceType": "doorbell",
+    "entities": {
+      "otherUser": "deleted",
+      "house": "na",
+      "device": "K98GiDT45GUL",
+      "activity": "de5585cfd4eae900bb5ba3dc",
+      "callingUser": "deleted"
+    },
+    "deviceName": "Front Door"
+  }
+]

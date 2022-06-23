@@ -14,6 +14,7 @@ ICON_PLAYERS_ONLINE = "mdi:account-multiple"
 ICON_PROTOCOL_VERSION = "mdi:numeric"
 ICON_STATUS = "mdi:lan"
 ICON_VERSION = "mdi:numeric"
+ICON_MOTD = "mdi:minecraft"
 
 KEY_SERVERS = "servers"
 
@@ -25,6 +26,7 @@ NAME_PLAYERS_ONLINE = "Players Online"
 NAME_PROTOCOL_VERSION = "Protocol Version"
 NAME_STATUS = "Status"
 NAME_VERSION = "Version"
+NAME_MOTD = "World Message"
 
 SCAN_INTERVAL = 60
 
@@ -36,3 +38,4 @@ UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 UNIT_PROTOCOL_VERSION = None
 UNIT_VERSION = None
+UNIT_MOTD = None

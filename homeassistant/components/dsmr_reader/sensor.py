@@ -1,7 +1,11 @@
 """Support for DSMR Reader through MQTT."""
+from __future__ import annotations
+
 from homeassistant.components import mqtt
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify
 
 from .definitions import SENSORS, DSMRReaderSensorEntityDescription
@@ -9,7 +13,12 @@ from .definitions import SENSORS, DSMRReaderSensorEntityDescription
 DOMAIN = "dsmr_reader"
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up DSMR Reader sensors."""
     async_add_entities(DSMRSensor(description) for description in SENSORS)
 

@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
+            "not_intellifire_device": "To nie jest urz\u0105dzenie IntelliFire.",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
+        },
+        "error": {
+            "api_error": "Logowanie nie powiod\u0142o si\u0119",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "iftapi_connect": "B\u0142\u0105d po\u0142\u0105czenia z iftapi.net"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Has\u0142o",
+                    "username": "Adres e-mail"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {host}\nNumer seryjny: {serial}?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Konfiguracja lokalna"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                },
+                "description": "Wykryto nast\u0119puj\u0105ce urz\u0105dzenia IntelliFire. Wybierz, kt\u00f3re chcesz skonfigurowa\u0107.",
+                "title": "Wyb\u00f3r urz\u0105dzenia"
+            }
+        }
+    }
+}

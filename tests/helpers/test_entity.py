@@ -1,11 +1,13 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
+import dataclasses
 from datetime import timedelta
 import threading
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -544,6 +546,22 @@ async def test_async_remove_runs_callbacks(hass):
     assert len(result) == 1
 
 
+async def test_async_remove_ignores_in_flight_polling(hass):
+    """Test in flight polling is ignored after removing."""
+    result = []
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "test.test"
+    ent.async_on_remove(lambda: result.append(1))
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    await ent.async_remove()
+    assert len(result) == 1
+    assert hass.states.get("test.test") is None
+    ent.async_write_ha_state()
+
+
 async def test_set_context(hass):
     """Test setting context."""
     context = Context()
@@ -580,7 +598,7 @@ async def test_warn_disabled(hass, caplog):
         entity_id="hello.world",
         unique_id="test-unique-id",
         platform="test-platform",
-        disabled_by=entity_registry.DISABLED_USER,
+        disabled_by=entity_registry.RegistryEntryDisabler.USER,
     )
     mock_registry(hass, {"hello.world": entry})
 
@@ -622,7 +640,7 @@ async def test_disabled_in_entity_registry(hass):
     assert hass.states.get("hello.world") is not None
 
     entry2 = registry.async_update_entity(
-        "hello.world", disabled_by=entity_registry.DISABLED_USER
+        "hello.world", disabled_by=entity_registry.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done()
     assert entry2 != entry
@@ -819,13 +837,52 @@ async def test_entity_category_property(hass):
         key="abc", entity_category="ignore_me"
     )
     mock_entity1.entity_id = "hello.world"
-    mock_entity1._attr_entity_category = "config"
+    mock_entity1._attr_entity_category = entity.EntityCategory.CONFIG
     assert mock_entity1.entity_category == "config"
 
     mock_entity2 = entity.Entity()
     mock_entity2.hass = hass
     mock_entity2.entity_description = entity.EntityDescription(
-        key="abc", entity_category="config"
+        key="abc", entity_category=entity.EntityCategory.CONFIG
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    (
+        ("config", entity.EntityCategory.CONFIG),
+        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+    ),
+)
+def test_entity_category_schema(value, expected):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    result = schema(value)
+    assert result == expected
+    assert isinstance(result, entity.EntityCategory)
+
+
+@pytest.mark.parametrize("value", (None, "non_existing"))
+def test_entity_category_schema_error(value):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    with pytest.raises(
+        vol.Invalid,
+        match=r"expected EntityCategory or one of 'config', 'diagnostic'",
+    ):
+        schema(value)
+
+
+async def test_entity_description_fallback():
+    """Test entity description has same defaults as entity."""
+    ent = entity.Entity()
+    ent_with_description = entity.Entity()
+    ent_with_description.entity_description = entity.EntityDescription(key="test")
+
+    for field in dataclasses.fields(entity.EntityDescription):
+        if field.name == "key":
+            continue
+
+        assert getattr(ent, field.name) == getattr(ent_with_description, field.name)

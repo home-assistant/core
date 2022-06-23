@@ -1,11 +1,11 @@
 """Tests for the Sonarr sensor platform."""
 from datetime import timedelta
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from aiopyarr import ArrException
 import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sonarr.const import DOMAIN
 from homeassistant.const import (
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -16,21 +16,20 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
-from tests.components.sonarr import mock_connection, setup_integration
-from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 UPCOMING_ENTITY_ID = f"{SENSOR_DOMAIN}.sonarr_upcoming"
 
 
 async def test_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
+    entity_registry_enabled_by_default: AsyncMock,
 ) -> None:
     """Test the creation and values of the sensors."""
-    entry = await setup_integration(hass, aioclient_mock, skip_entry_setup=True)
     registry = er.async_get(hass)
 
-    # Pre-create registry entries for disabled by default sensors
     sensors = {
         "commands": "sonarr_commands",
         "diskspace": "sonarr_disk_space",
@@ -39,22 +38,14 @@ async def test_sensors(
         "wanted": "sonarr_wanted",
     }
 
-    for (unique, oid) in sensors.items():
-        registry.async_get_or_create(
-            SENSOR_DOMAIN,
-            DOMAIN,
-            f"{entry.entry_id}_{unique}",
-            suggested_object_id=oid,
-            disabled_by=None,
-        )
-
-    await hass.config_entries.async_setup(entry.entry_id)
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     for (unique, oid) in sensors.items():
         entity = registry.async_get(f"sensor.{oid}")
         assert entity
-        assert entity.unique_id == f"{entry.entry_id}_{unique}"
+        assert entity.unique_id == f"{mock_config_entry.entry_id}_{unique}"
 
     state = hass.states.get("sensor.sonarr_commands")
     assert state
@@ -66,30 +57,39 @@ async def test_sensors(
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:harddisk"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == DATA_GIGABYTES
+    assert state.attributes.get("C:\\") == "263.10/465.42GB (56.53%)"
     assert state.state == "263.10"
 
     state = hass.states.get("sensor.sonarr_queue")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:download"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("The Andy Griffith Show S01E01") == "100.00%"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_shows")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Series"
+    assert state.attributes.get("The Andy Griffith Show") == "0/0 Episodes"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_wanted")
     assert state
     assert state.attributes.get(ATTR_ICON) == "mdi:television"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-26T17:30:00-08:00"
+    assert (
+        state.attributes.get("The Andy Griffith Show S01E01")
+        == "1960-10-02T17:00:00-08:00"
+    )
     assert state.state == "2"
 
 
@@ -104,10 +104,11 @@ async def test_sensors(
     ),
 )
 async def test_disabled_by_default_sensors(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, entity_id: str
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_id: str,
 ) -> None:
     """Test the disabled by default sensors."""
-    await setup_integration(hass, aioclient_mock)
     registry = er.async_get(hass)
 
     state = hass.states.get(entity_id)
@@ -116,60 +117,65 @@ async def test_disabled_by_default_sensors(
     entry = registry.async_get(entity_id)
     assert entry
     assert entry.disabled
-    assert entry.disabled_by == er.DISABLED_INTEGRATION
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 async def test_availability(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_sonarr: MagicMock,
 ) -> None:
     """Test entity availability."""
     now = dt_util.utcnow()
 
+    mock_config_entry.add_to_hass(hass)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        await setup_integration(hass, aioclient_mock)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock, error=True)
+    mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future = now + timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock)
+    mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"
 
     # state to unavailable
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock, invalid_auth=True)
+    mock_sonarr.async_get_calendar.side_effect = ArrException
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == STATE_UNAVAILABLE
 
     # state to available
-    aioclient_mock.clear_requests()
-    mock_connection(aioclient_mock)
+    mock_sonarr.async_get_calendar.side_effect = None
 
     future += timedelta(minutes=1)
     with patch("homeassistant.util.dt.utcnow", return_value=future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
+    assert hass.states.get(UPCOMING_ENTITY_ID)
     assert hass.states.get(UPCOMING_ENTITY_ID).state == "1"

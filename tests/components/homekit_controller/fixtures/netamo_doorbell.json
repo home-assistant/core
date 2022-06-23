@@ -1,0 +1,273 @@
+[
+  {
+    "aid": 1,
+    "services": [
+      {
+        "hidden": true,
+        "iid": 53,
+        "characteristics": [
+          {
+            "format": "bool",
+            "iid": 54,
+            "perms": ["pw"],
+            "type": "4D05AE82-5A22-5BD6-A730-B7F8B4F3218D"
+          },
+          {
+            "value": "g738658",
+            "format": "string",
+            "type": "00F44C18-042E-5C4E-9A4C-561D44DCD804",
+            "perms": ["pr"],
+            "iid": 55
+          }
+        ],
+        "primary": false,
+        "type": "EA22EA53-6227-55EA-AC24-73ACF3EEA0E8"
+      },
+      {
+        "type": "0000003E-0000-1000-8000-0026BB765291",
+        "primary": false,
+        "iid": 1,
+        "characteristics": [
+          {
+            "format": "string",
+            "value": "Netatmo-Doorbell-g738658",
+            "iid": 2,
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291"
+          },
+          {
+            "iid": 3,
+            "type": "00000020-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "value": "Netatmo",
+            "format": "string"
+          },
+          {
+            "format": "string",
+            "value": "Netatmo Doorbell",
+            "perms": ["pr"],
+            "type": "00000021-0000-1000-8000-0026BB765291",
+            "iid": 4
+          },
+          {
+            "format": "string",
+            "value": "g738658",
+            "perms": ["pr"],
+            "type": "00000030-0000-1000-8000-0026BB765291",
+            "iid": 5
+          },
+          {
+            "iid": 6,
+            "perms": ["pr"],
+            "type": "00000052-0000-1000-8000-0026BB765291",
+            "format": "string",
+            "value": "80.0.0"
+          },
+          {
+            "type": "00000014-0000-1000-8000-0026BB765291",
+            "perms": ["pw"],
+            "iid": 7,
+            "format": "bool"
+          },
+          {
+            "value": "+nvrOo7/HvM=",
+            "format": "data",
+            "iid": 56,
+            "type": "220",
+            "perms": ["pr"]
+          }
+        ],
+        "hidden": false
+      },
+      {
+        "hidden": false,
+        "iid": 29,
+        "characteristics": [
+          {
+            "format": "string",
+            "value": "1.1.0",
+            "perms": ["pr"],
+            "type": "00000037-0000-1000-8000-0026BB765291",
+            "iid": 30
+          }
+        ],
+        "type": "000000A2-0000-1000-8000-0026BB765291",
+        "primary": false
+      },
+      {
+        "type": "00000121-0000-1000-8000-0026BB765291",
+        "primary": true,
+        "characteristics": [
+          {
+            "value": null,
+            "format": "uint8",
+            "type": "00000073-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "ev"],
+            "iid": 50
+          },
+          {
+            "value": "Doorbell",
+            "format": "string",
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "iid": 57
+          }
+        ],
+        "iid": 49,
+        "hidden": false
+      },
+      {
+        "hidden": false,
+        "iid": 51,
+        "characteristics": [
+          {
+            "value": false,
+            "format": "bool",
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw", "ev"],
+            "iid": 52
+          }
+        ],
+        "type": "00000113-0000-1000-8000-0026BB765291",
+        "primary": false
+      },
+      {
+        "hidden": false,
+        "characteristics": [
+          {
+            "value": false,
+            "format": "bool",
+            "iid": 9,
+            "type": "0000011A-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw", "ev"]
+          }
+        ],
+        "iid": 8,
+        "type": "00000112-0000-1000-8000-0026BB765291",
+        "primary": false
+      },
+      {
+        "hidden": false,
+        "iid": 10,
+        "characteristics": [
+          {
+            "iid": 11,
+            "type": "00000022-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "ev"],
+            "value": false,
+            "format": "bool"
+          },
+          {
+            "perms": ["pr"],
+            "type": "00000023-0000-1000-8000-0026BB765291",
+            "iid": 12,
+            "format": "string",
+            "value": "Motion Sensor"
+          }
+        ],
+        "type": "00000085-0000-1000-8000-0026BB765291",
+        "primary": false
+      },
+      {
+        "primary": false,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "characteristics": [
+          {
+            "format": "tlv8",
+            "value": "AQEA",
+            "perms": ["pr", "ev"],
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "iid": 14
+          },
+          {
+            "iid": 15,
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "value": "AVUBAQACFgEBAQAAAQECAgEAAAACAQIDAQAEAQADCwECgAcCAjgEAwEeAAADCwECAAUCAtACAwEeAAADCwECgAICAmgBAwEeAAADCwECQAECAvAAAwEe",
+            "format": "tlv8"
+          },
+          {
+            "iid": 16,
+            "type": "00000115-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "value": "ARMBAQMCDgEBAQIBAQAAAgEAAwEBAgEA",
+            "format": "tlv8"
+          },
+          {
+            "value": "AgECAAACAQAAAAIBAQ==",
+            "format": "tlv8",
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "perms": ["pr"],
+            "iid": 17
+          },
+          {
+            "iid": 19,
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw"],
+            "value": "AQA=",
+            "format": "tlv8"
+          },
+          {
+            "iid": 18,
+            "perms": ["pr", "pw"],
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "format": "tlv8",
+            "value": "ARDpyds+onxNHb4xI0H6deS3AgEAAxgBAQACCzEwLjEwLjYwLjExAwJRwwQCUsMENQEBAQIgyWEU3zQuPNAsFAm1DM3ZSdp0Vh7kGuVQ+vqtS5Qa09YDDr5ebeow7eweCsu3FYh/BTUBAQECIFPPdRRI86ozZNB/WU/e8Em4N1lSsJhttOWoJly3XNEMAw7Zm8TgFdAof+wvoCQTYgYE/r0D9wcEC1Pwjg=="
+          }
+        ],
+        "iid": 13,
+        "hidden": false
+      },
+      {
+        "iid": 20,
+        "characteristics": [
+          {
+            "iid": 21,
+            "type": "00000120-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "ev"],
+            "value": "AQEA",
+            "format": "tlv8"
+          },
+          {
+            "format": "tlv8",
+            "value": "AVUBAQACFgEBAQAAAQECAgEAAAACAQIDAQAEAQADCwECgAcCAjgEAwEeAAADCwECAAUCAtACAwEeAAADCwECgAICAmgBAwEeAAADCwECQAECAvAAAwEe",
+            "perms": ["pr"],
+            "type": "00000114-0000-1000-8000-0026BB765291",
+            "iid": 22
+          },
+          {
+            "format": "tlv8",
+            "value": "ARMBAQMCDgEBAQIBAQAAAgEAAwEBAgEA",
+            "iid": 23,
+            "perms": ["pr"],
+            "type": "00000115-0000-1000-8000-0026BB765291"
+          },
+          {
+            "format": "tlv8",
+            "value": "AgECAAACAQAAAAIBAQ==",
+            "perms": ["pr"],
+            "type": "00000116-0000-1000-8000-0026BB765291",
+            "iid": 24
+          },
+          {
+            "format": "tlv8",
+            "value": "AQA=",
+            "perms": ["pr", "pw"],
+            "type": "00000117-0000-1000-8000-0026BB765291",
+            "iid": 26
+          },
+          {
+            "iid": 25,
+            "type": "00000118-0000-1000-8000-0026BB765291",
+            "perms": ["pr", "pw"],
+            "value": "ARDu4+F49fZMSatQjcfR8FGVAgEAAxgBAQACCzEwLjEwLjYwLjExAwJbwwQCXMMENQEBAQIg9nqVm+80ccYh/S3vKKfbcUGH7VgggHRwp1e1x63+kpkDDnAxnJxfEz8KDp6xKoPhBTUBAQECILLYad+aKdzVbhGz55ywh0RYX9DTyY7HdSRf8y8tUi1kAw4DRngrGhYBdnrjELUzGgYEf+ysuwcESU05wg==",
+            "format": "tlv8"
+          }
+        ],
+        "primary": false,
+        "type": "00000110-0000-1000-8000-0026BB765291",
+        "hidden": false
+      }
+    ]
+  }
+]

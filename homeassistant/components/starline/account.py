@@ -129,13 +129,13 @@ class StarlineAccount:
     @staticmethod
     def device_info(device: StarlineDevice) -> DeviceInfo:
         """Device information for entities."""
-        return {
-            "identifiers": {(DOMAIN, device.device_id)},
-            "manufacturer": "StarLine",
-            "name": device.name,
-            "sw_version": device.fw_version,
-            "model": device.typename,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, device.device_id)},
+            manufacturer="StarLine",
+            model=device.typename,
+            name=device.name,
+            sw_version=device.fw_version,
+        )
 
     @staticmethod
     def gps_attrs(device: StarlineDevice) -> dict[str, Any]:

@@ -1,4 +1,6 @@
 """Support for Avion dimmers."""
+from __future__ import annotations
+
 import importlib
 import time
 
@@ -7,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import (
@@ -18,9 +20,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-
-SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -39,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up an Avion switch."""
     avion = importlib.import_module("avion")
 
@@ -65,9 +73,11 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 class AvionLight(LightEntity):
     """Representation of an Avion light."""
 
-    _attr_supported_features = SUPPORT_AVION_LED
+    _attr_support_color_mode = ColorMode.BRIGHTNESS
+    _attr_support_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
     _attr_assumed_state = True
+    _attr_is_on = True
 
     def __init__(self, device):
         """Initialize the light."""
@@ -95,9 +105,7 @@ class AvionLight(LightEntity):
 
     def turn_on(self, **kwargs):
         """Turn the specified or all lights on."""
-        brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-        if brightness is not None:
+        if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
             self._attr_brightness = brightness
 
         self.set_state(self.brightness)

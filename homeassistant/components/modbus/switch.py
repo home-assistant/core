@@ -1,7 +1,6 @@
 """Support for Modbus switches."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -15,7 +14,6 @@ from .base_platform import BaseSwitch
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_platform(
@@ -27,7 +25,7 @@ async def async_setup_platform(
     """Read configuration and create Modbus switches."""
     switches = []
 
-    if discovery_info is None:  # pragma: no cover
+    if discovery_info is None:
         return
 
     for entry in discovery_info[CONF_SWITCHES]:

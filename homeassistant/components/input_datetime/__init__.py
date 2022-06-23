@@ -19,6 +19,9 @@ from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import collection
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
 from homeassistant.helpers.storage import Store
@@ -83,24 +86,20 @@ def has_date_or_time(conf):
 
 def valid_initial(conf):
     """Check the initial value is valid."""
-    initial = conf.get(CONF_INITIAL)
-    if not initial:
+    if not (initial := conf.get(CONF_INITIAL)):
         return conf
 
     if conf[CONF_HAS_DATE] and conf[CONF_HAS_TIME]:
-        parsed_value = dt_util.parse_datetime(initial)
-        if parsed_value is not None:
+        if dt_util.parse_datetime(initial) is not None:
             return conf
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a datetime")
 
     if conf[CONF_HAS_DATE]:
-        parsed_value = dt_util.parse_date(initial)
-        if parsed_value is not None:
+        if dt_util.parse_date(initial) is not None:
             return conf
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
-    parsed_value = dt_util.parse_time(initial)
-    if parsed_value is not None:
+    if dt_util.parse_time(initial) is not None:
         return conf
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
@@ -129,6 +128,11 @@ RELOAD_SERVICE_SCHEMA = vol.Schema({})
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up an input datetime."""
     component = EntityComponent(_LOGGER, DOMAIN, hass)
+
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+
     id_manager = collection.IDManager()
 
     yaml_collection = collection.YamlCollection(
@@ -226,8 +230,7 @@ class InputDatetime(RestoreEntity):
         self.editable = True
         self._current_datetime = None
 
-        initial = config.get(CONF_INITIAL)
-        if not initial:
+        if not (initial := config.get(CONF_INITIAL)):
             return
 
         if self.has_date and self.has_time:
@@ -272,8 +275,7 @@ class InputDatetime(RestoreEntity):
         default_value = py_datetime.datetime.today().strftime("%Y-%m-%d 00:00:00")
 
         # Priority 2: Old state
-        old_state = await self.async_get_last_state()
-        if old_state is None:
+        if (old_state := await self.async_get_last_state()) is None:
             self._current_datetime = dt_util.parse_datetime(default_value)
             return
 
@@ -285,15 +287,13 @@ class InputDatetime(RestoreEntity):
                 current_datetime = date_time
 
         elif self.has_date:
-            date = dt_util.parse_date(old_state.state)
-            if date is None:
+            if (date := dt_util.parse_date(old_state.state)) is None:
                 current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
         else:
-            time = dt_util.parse_time(old_state.state)
-            if time is None:
+            if (time := dt_util.parse_time(old_state.state)) is None:
                 current_datetime = dt_util.parse_datetime(default_value)
             else:
                 current_datetime = py_datetime.datetime.combine(
@@ -344,12 +344,18 @@ class InputDatetime(RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
+    def capability_attributes(self) -> dict:
+        """Return the capability attributes."""
+        return {
+            CONF_HAS_DATE: self.has_date,
+            CONF_HAS_TIME: self.has_time,
+        }
+
+    @property
     def extra_state_attributes(self):
         """Return the state attributes."""
         attrs = {
             ATTR_EDITABLE: self.editable,
-            CONF_HAS_DATE: self.has_date,
-            CONF_HAS_TIME: self.has_time,
         }
 
         if self._current_datetime is None:

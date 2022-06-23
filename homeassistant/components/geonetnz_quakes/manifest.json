@@ -6,5 +6,6 @@
   "requirements": ["aio_geojson_geonetnz_quakes==0.13"],
   "codeowners": ["@exxamalte"],
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aio_geojson_geonetnz_quakes"]
 }

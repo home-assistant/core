@@ -1,0 +1,26 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "This integration monitors your Tailscale network, it **DOES NOT** make your Home Assistant accessible via Tailscale VPN. \n\nTo authenticate with Tailscale you'll need to create an API key at {authkeys_url}.\n\nA Tailnet is the name of your Tailscale network. You can find it in the top left corner in the Tailscale Admin Panel (beside the Tailscale logo).",
+        "data": {
+          "tailnet": "Tailnet",
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Tailscale API tokens are valid for 90-days. You can create a fresh Tailscale API key at https://login.tailscale.com/admin/settings/authkeys.",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

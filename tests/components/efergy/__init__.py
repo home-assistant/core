@@ -1,12 +1,11 @@
 """Tests for Efergy integration."""
 from unittest.mock import AsyncMock, patch
 
-from pyefergy import Efergy, exceptions
+from pyefergy import exceptions
 
 from homeassistant.components.efergy import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
@@ -17,7 +16,6 @@ MULTI_SENSOR_TOKEN = "9r6QGF7dpZfO3fqPTBl1fyRmjV1cGoLT"
 
 CONF_DATA = {CONF_API_KEY: TOKEN}
 HID = "12345678901234567890123456789012"
-IMPORT_DATA = {"platform": "efergy", "app_token": TOKEN}
 
 BASE_URL = "https://engage.efergy.com/mobile_proxy/"
 
@@ -57,10 +55,6 @@ async def mock_responses(
 ):
     """Mock responses from Efergy."""
     base_url = "https://engage.efergy.com/mobile_proxy/"
-    api = Efergy(
-        token, session=async_get_clientsession(hass), utc_offset=hass.config.time_zone
-    )
-    offset = api._utc_offset  # pylint: disable=protected-access
     if error:
         aioclient_mock.get(
             f"{base_url}getInstant?token={token}",
@@ -76,19 +70,19 @@ async def mock_responses(
         text=load_fixture("efergy/instant.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getEnergy?token={token}&offset={offset}&period=day",
+        f"{base_url}getEnergy?period=day",
         text=load_fixture("efergy/daily_energy.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getEnergy?token={token}&offset={offset}&period=week",
+        f"{base_url}getEnergy?period=week",
         text=load_fixture("efergy/weekly_energy.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getEnergy?token={token}&offset={offset}&period=month",
+        f"{base_url}getEnergy?period=month",
         text=load_fixture("efergy/monthly_energy.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getEnergy?token={token}&offset={offset}&period=year",
+        f"{base_url}getEnergy?period=year",
         text=load_fixture("efergy/yearly_energy.json"),
     )
     aioclient_mock.get(
@@ -96,19 +90,19 @@ async def mock_responses(
         text=load_fixture("efergy/budget.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getCost?token={token}&offset={offset}&period=day",
+        f"{base_url}getCost?period=day",
         text=load_fixture("efergy/daily_cost.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getCost?token={token}&offset={offset}&period=week",
+        f"{base_url}getCost?period=week",
         text=load_fixture("efergy/weekly_cost.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getCost?token={token}&offset={offset}&period=month",
+        f"{base_url}getCost?period=month",
         text=load_fixture("efergy/monthly_cost.json"),
     )
     aioclient_mock.get(
-        f"{base_url}getCost?token={token}&offset={offset}&period=year",
+        f"{base_url}getCost?period=year",
         text=load_fixture("efergy/yearly_cost.json"),
     )
     if token == TOKEN:

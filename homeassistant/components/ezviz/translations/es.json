@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "already_configured_account": "La cuenta ya ha sido configurada",
+            "already_configured_account": "La cuenta ya est\u00e1 configurada",
             "ezviz_cloud_account_missing": "Falta la cuenta de Ezviz Cloud. Por favor, reconfigura la cuenta de Ezviz Cloud",
             "unknown": "Error inesperado"
         },

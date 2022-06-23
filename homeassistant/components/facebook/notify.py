@@ -1,8 +1,8 @@
 """Facebook platform for notify component."""
+from http import HTTPStatus
 import json
 import logging
 
-from aiohttp.hdrs import CONTENT_TYPE
 import requests
 import voluptuous as vol
 
@@ -12,7 +12,7 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONTENT_TYPE_JSON, HTTP_OK
+from homeassistant.const import CONTENT_TYPE_JSON
 import homeassistant.helpers.config_validation as cv
 
 _LOGGER = logging.getLogger(__name__)
@@ -73,10 +73,10 @@ class FacebookNotificationService(BaseNotificationService):
                 BASE_URL,
                 data=json.dumps(body),
                 params=payload,
-                headers={CONTENT_TYPE: CONTENT_TYPE_JSON},
+                headers={"Content-Type": CONTENT_TYPE_JSON},
                 timeout=10,
             )
-            if resp.status_code != HTTP_OK:
+            if resp.status_code != HTTPStatus.OK:
                 log_error(resp)
 
 

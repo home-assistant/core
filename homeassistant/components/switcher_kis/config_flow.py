@@ -5,7 +5,6 @@ from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_DISCOVERY, DOMAIN
 from .utils import async_discover_devices
@@ -14,7 +13,7 @@ from .utils import async_discover_devices
 class SwitcherFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle Switcher config flow."""
 
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle a flow initiated by import."""
         if self._async_current_entries(True):
             return self.async_abort(reason="single_instance_allowed")

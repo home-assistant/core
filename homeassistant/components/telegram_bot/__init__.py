@@ -1,20 +1,27 @@
 """Support to send and receive Telegram messages."""
+from __future__ import annotations
+
 from functools import partial
 import importlib
 import io
 from ipaddress import ip_network
 import logging
+from typing import Any
 
 import requests
 from requests.auth import HTTPBasicAuth, HTTPDigestAuth
 from telegram import (
     Bot,
+    CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
+    Message,
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
+    Update,
 )
 from telegram.error import TelegramError
+from telegram.ext import CallbackContext, Filters
 from telegram.parsemode import ParseMode
 from telegram.utils.request import Request
 import voluptuous as vol
@@ -29,8 +36,10 @@ from homeassistant.const import (
     HTTP_BEARER_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import TemplateError
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,6 +70,7 @@ ATTR_PASSWORD = "password"
 ATTR_REPLY_TO_MSGID = "reply_to_message_id"
 ATTR_REPLYMARKUP = "reply_markup"
 ATTR_SHOW_ALERT = "show_alert"
+ATTR_STICKER_ID = "sticker_id"
 ATTR_TARGET = "target"
 ATTR_TEXT = "text"
 ATTR_URL = "url"
@@ -163,6 +173,10 @@ SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend(
     }
 )
 
+SERVICE_SCHEMA_SEND_STICKER = SERVICE_SCHEMA_SEND_FILE.extend(
+    {vol.Optional(ATTR_STICKER_ID): cv.string}
+)
+
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
     {
         vol.Required(ATTR_LONGITUDE): cv.template,
@@ -226,7 +240,7 @@ SERVICE_SCHEMA_LEAVE_CHAT = vol.Schema({vol.Required(ATTR_CHAT_ID): vol.Coerce(i
 SERVICE_MAP = {
     SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
     SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
-    SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_STICKER: SERVICE_SCHEMA_SEND_STICKER,
     SERVICE_SEND_ANIMATION: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VIDEO: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
@@ -298,20 +312,21 @@ def load_data(
     return None
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Telegram bot component."""
     if not config[DOMAIN]:
         return False
 
     for p_config in config[DOMAIN]:
-
+        # Each platform config gets its own bot
+        bot = initialize_bot(p_config)
         p_type = p_config.get(CONF_PLATFORM)
 
         platform = importlib.import_module(f".{p_config[CONF_PLATFORM]}", __name__)
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
-            receiver_service = await platform.async_setup_platform(hass, p_config)
+            receiver_service = await platform.async_setup_platform(hass, bot, p_config)
             if receiver_service is False:
                 _LOGGER.error("Failed to initialize Telegram bot %s", p_type)
                 return False
@@ -320,17 +335,15 @@ async def async_setup(hass, config):
             _LOGGER.exception("Error setting up platform %s", p_type)
             return False
 
-        bot = initialize_bot(p_config)
         notify_service = TelegramNotificationService(
             hass, bot, p_config.get(CONF_ALLOWED_CHAT_IDS), p_config.get(ATTR_PARSER)
         )
 
-    async def async_send_telegram_message(service):
+    async def async_send_telegram_message(service: ServiceCall) -> None:
         """Handle sending Telegram Bot message service calls."""
 
         def _render_template_attr(data, attribute):
-            attribute_templ = data.get(attribute)
-            if attribute_templ:
+            if attribute_templ := data.get(attribute):
                 if any(
                     isinstance(attribute_templ, vtype) for vtype in (float, int, str)
                 ):
@@ -370,7 +383,6 @@ async def async_setup(hass, config):
             )
         elif msgtype in [
             SERVICE_SEND_PHOTO,
-            SERVICE_SEND_STICKER,
             SERVICE_SEND_ANIMATION,
             SERVICE_SEND_VIDEO,
             SERVICE_SEND_VOICE,
@@ -378,6 +390,10 @@ async def async_setup(hass, config):
         ]:
             await hass.async_add_executor_job(
                 partial(notify_service.send_file, msgtype, **kwargs)
+            )
+        elif msgtype == SERVICE_SEND_STICKER:
+            await hass.async_add_executor_job(
+                partial(notify_service.send_sticker, **kwargs)
             )
         elif msgtype == SERVICE_SEND_LOCATION:
             await hass.async_add_executor_job(
@@ -407,7 +423,6 @@ async def async_setup(hass, config):
 
 def initialize_bot(p_config):
     """Initialize telegram bot with proxy support."""
-
     api_key = p_config.get(CONF_API_KEY)
     proxy_url = p_config.get(CONF_PROXY_URL)
     proxy_params = p_config.get(CONF_PROXY_PARAMS)
@@ -426,7 +441,6 @@ class TelegramNotificationService:
 
     def __init__(self, hass, bot, allowed_chat_ids, parser):
         """Initialize the service."""
-
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
@@ -486,7 +500,6 @@ class TelegramNotificationService:
               - a string like: `/cmd1, /cmd2, /cmd3`
               - or a string like: `text_b1:/cmd1, text_b2:/cmd2`
             """
-
             buttons = []
             if isinstance(row_keyboard, str):
                 for key in row_keyboard.split(","):
@@ -557,7 +570,6 @@ class TelegramNotificationService:
 
     def _send_msg(self, func_send, msg_error, message_tag, *args_msg, **kwargs_msg):
         """Send one message."""
-
         try:
             out = func_send(*args_msg, **kwargs_msg)
             if not isinstance(out, bool) and hasattr(out, ATTR_MESSAGEID):
@@ -576,7 +588,7 @@ class TelegramNotificationService:
                 }
                 if message_tag is not None:
                     event_data[ATTR_MESSAGE_TAG] = message_tag
-                self.hass.bus.async_fire(EVENT_TELEGRAM_SENT, event_data)
+                self.hass.bus.fire(EVENT_TELEGRAM_SENT, event_data)
             elif not isinstance(out, bool):
                 _LOGGER.warning(
                     "Update last message: out_type:%s, out=%s", type(out), out
@@ -796,6 +808,25 @@ class TelegramNotificationService:
         else:
             _LOGGER.error("Can't send file with kwargs: %s", kwargs)
 
+    def send_sticker(self, target=None, **kwargs):
+        """Send a sticker from a telegram sticker pack."""
+        params = self._get_msg_kwargs(kwargs)
+        stickerid = kwargs.get(ATTR_STICKER_ID)
+        if stickerid:
+            for chat_id in self._get_target_chat_ids(target):
+                self._send_msg(
+                    self.bot.send_sticker,
+                    "Error sending sticker",
+                    params[ATTR_MESSAGE_TAG],
+                    chat_id=chat_id,
+                    sticker=stickerid,
+                    disable_notification=params[ATTR_DISABLE_NOTIF],
+                    reply_markup=params[ATTR_REPLYMARKUP],
+                    timeout=params[ATTR_TIMEOUT],
+                )
+        else:
+            self.send_file(SERVICE_SEND_STICKER, target, **kwargs)
+
     def send_location(self, latitude, longitude, target=None, **kwargs):
         """Send a location."""
         latitude = float(latitude)
@@ -829,131 +860,99 @@ class TelegramNotificationService:
 class BaseTelegramBotEntity:
     """The base class for the telegram bot."""
 
-    def __init__(self, hass, allowed_chat_ids):
+    def __init__(self, hass, config):
         """Initialize the bot base class."""
-        self.allowed_chat_ids = allowed_chat_ids
+        self.allowed_chat_ids = config[CONF_ALLOWED_CHAT_IDS]
         self.hass = hass
 
-    def _get_message_data(self, msg_data):
-        """Return boolean msg_data_is_ok and dict msg_data."""
-        if not msg_data:
-            return False, None
-        bad_fields = (
-            "text" not in msg_data and "data" not in msg_data and "chat" not in msg_data
-        )
-        if bad_fields or "from" not in msg_data:
-            # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
-            return False, None
+    def handle_update(self, update: Update, context: CallbackContext) -> bool:
+        """Handle updates from bot dispatcher set up by the respective platform."""
+        _LOGGER.debug("Handling update %s", update)
+        if not self.authorize_update(update):
+            return False
 
-        if (
-            msg_data["from"].get("id") not in self.allowed_chat_ids
-            and msg_data["message"]["chat"].get("id") not in self.allowed_chat_ids
-        ):
-            # Neither from id nor chat id was in allowed_chat_ids,
-            # origin is not allowed.
-            _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
-            return True, None
-
-        data = {
-            ATTR_USER_ID: msg_data["from"]["id"],
-            ATTR_FROM_FIRST: msg_data["from"]["first_name"],
-        }
-        if "message_id" in msg_data:
-            data[ATTR_MSGID] = msg_data["message_id"]
-        if "last_name" in msg_data["from"]:
-            data[ATTR_FROM_LAST] = msg_data["from"]["last_name"]
-        if "chat" in msg_data:
-            data[ATTR_CHAT_ID] = msg_data["chat"]["id"]
-        elif ATTR_MESSAGE in msg_data and "chat" in msg_data[ATTR_MESSAGE]:
-            data[ATTR_CHAT_ID] = msg_data[ATTR_MESSAGE]["chat"]["id"]
-
-        return True, data
-
-    def _get_channel_post_data(self, msg_data):
-        """Return boolean msg_data_is_ok and dict msg_data."""
-        if not msg_data:
-            return False, None
-
-        if "sender_chat" in msg_data and "chat" in msg_data and "text" in msg_data:
-            if (
-                msg_data["sender_chat"].get("id") not in self.allowed_chat_ids
-                and msg_data["chat"].get("id") not in self.allowed_chat_ids
-            ):
-                # Neither sender_chat id nor chat id was in allowed_chat_ids,
-                # origin is not allowed.
-                _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
-                return True, None
-
-            data = {
-                ATTR_MSGID: msg_data["message_id"],
-                ATTR_CHAT_ID: msg_data["chat"]["id"],
-                ATTR_TEXT: msg_data["text"],
-            }
-            return True, data
-
-        _LOGGER.error("Incoming message does not have required data (%s)", msg_data)
-        return False, None
-
-    def process_message(self, data):
-        """Check for basic message rules and fire an event if message is ok."""
-        if ATTR_MSG in data or ATTR_EDITED_MSG in data:
-            event = EVENT_TELEGRAM_COMMAND
-            if ATTR_MSG in data:
-                data = data.get(ATTR_MSG)
-            else:
-                data = data.get(ATTR_EDITED_MSG)
-            message_ok, event_data = self._get_message_data(data)
-            if event_data is None:
-                return message_ok
-
-            if ATTR_MSGID in data:
-                event_data[ATTR_MSGID] = data[ATTR_MSGID]
-
-            if "text" in data:
-                if data["text"][0] == "/":
-                    pieces = data["text"].split(" ")
-                    event_data[ATTR_COMMAND] = pieces[0]
-                    event_data[ATTR_ARGS] = pieces[1:]
-                else:
-                    event_data[ATTR_TEXT] = data["text"]
-                    event = EVENT_TELEGRAM_TEXT
-            else:
-                _LOGGER.warning("Message without text data received: %s", data)
-                event_data[ATTR_TEXT] = str(data)
-                event = EVENT_TELEGRAM_TEXT
-
-            self.hass.bus.async_fire(event, event_data)
-            return True
-        if ATTR_CALLBACK_QUERY in data:
-            event = EVENT_TELEGRAM_CALLBACK
-            data = data.get(ATTR_CALLBACK_QUERY)
-            message_ok, event_data = self._get_message_data(data)
-            if event_data is None:
-                return message_ok
-
-            query_data = event_data[ATTR_DATA] = data[ATTR_DATA]
-
-            if query_data[0] == "/":
-                pieces = query_data.split(" ")
-                event_data[ATTR_COMMAND] = pieces[0]
-                event_data[ATTR_ARGS] = pieces[1:]
-
-            event_data[ATTR_MSG] = data[ATTR_MSG]
-            event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
-            event_data[ATTR_MSGID] = data[ATTR_MSGID]
-
-            self.hass.bus.async_fire(event, event_data)
-            return True
-        if ATTR_CHANNEL_POST in data:
-            event = EVENT_TELEGRAM_TEXT
-            data = data.get(ATTR_CHANNEL_POST)
-            message_ok, event_data = self._get_channel_post_data(data)
-            if event_data is None:
-                return message_ok
-
-            self.hass.bus.async_fire(event, event_data)
+        # establish event type: text, command or callback_query
+        if update.callback_query:
+            # NOTE: Check for callback query first since effective message will be populated with the message
+            # in .callback_query (python-telegram-bot docs are wrong)
+            event_type, event_data = self._get_callback_query_event_data(
+                update.callback_query
+            )
+        elif update.effective_message:
+            event_type, event_data = self._get_message_event_data(
+                update.effective_message
+            )
+        else:
+            _LOGGER.warning("Unhandled update: %s", update)
             return True
 
-        _LOGGER.warning("Message with unknown data received: %s", data)
+        _LOGGER.debug("Firing event %s: %s", event_type, event_data)
+        self.hass.bus.fire(event_type, event_data)
         return True
+
+    @staticmethod
+    def _get_command_event_data(command_text: str) -> dict[str, str | list]:
+        if not command_text.startswith("/"):
+            return {}
+        command_parts = command_text.split()
+        command = command_parts[0]
+        args = command_parts[1:]
+        return {ATTR_COMMAND: command, ATTR_ARGS: args}
+
+    def _get_message_event_data(self, message: Message) -> tuple[str, dict[str, Any]]:
+        event_data: dict[str, Any] = {
+            ATTR_MSGID: message.message_id,
+            ATTR_CHAT_ID: message.chat.id,
+        }
+        if Filters.command.filter(message):
+            # This is a command message - set event type to command and split data into command and args
+            event_type = EVENT_TELEGRAM_COMMAND
+            event_data.update(self._get_command_event_data(message.text))
+        else:
+            event_type = EVENT_TELEGRAM_TEXT
+            event_data[ATTR_TEXT] = message.text
+
+        if message.from_user:
+            event_data.update(
+                {
+                    ATTR_USER_ID: message.from_user.id,
+                    ATTR_FROM_FIRST: message.from_user.first_name,
+                    ATTR_FROM_LAST: message.from_user.last_name,
+                }
+            )
+
+        return event_type, event_data
+
+    def _get_callback_query_event_data(
+        self, callback_query: CallbackQuery
+    ) -> tuple[str, dict[str, Any]]:
+        event_type = EVENT_TELEGRAM_CALLBACK
+        event_data: dict[str, Any] = {
+            ATTR_MSGID: callback_query.id,
+            ATTR_CHAT_INSTANCE: callback_query.chat_instance,
+            ATTR_DATA: callback_query.data,
+            ATTR_MSG: None,
+            ATTR_CHAT_ID: None,
+        }
+        if callback_query.message:
+            event_data[ATTR_MSG] = callback_query.message.to_dict()
+            event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
+
+        # Split data into command and args if possible
+        event_data.update(self._get_command_event_data(callback_query.data))
+
+        return event_type, event_data
+
+    def authorize_update(self, update: Update) -> bool:
+        """Make sure either user or chat is in allowed_chat_ids."""
+        from_user = update.effective_user.id if update.effective_user else None
+        from_chat = update.effective_chat.id if update.effective_chat else None
+        if from_user in self.allowed_chat_ids or from_chat in self.allowed_chat_ids:
+            return True
+        _LOGGER.error(
+            "Unauthorized update - neither user id %s nor chat id %s is in allowed chats: %s",
+            from_user,
+            from_chat,
+            self.allowed_chat_ids,
+        )
+        return False

@@ -26,13 +26,13 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "Netzwerk-Schl\u00fcssel",
                     "s0_legacy_key": "S0 Schl\u00fcssel (Legacy)",
                     "s2_access_control_key": "S2 Zugangskontrollschl\u00fcssel",
                     "s2_authenticated_key": "S2 Authentifizierter Schl\u00fcssel",
                     "s2_unauthenticated_key": "S2 Nicht authentifizierter Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
+                "description": "Das Add-on generiert Sicherheitsschl\u00fcssel, wenn diese Felder leer gelassen werden.",
                 "title": "Gib die Konfiguration des Z-Wave JS Add-ons ein"
             },
             "hassio_confirm": {
@@ -58,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "M\u00f6chtest du {name} mit dem Z-Wave JS Add-on einrichten?"
+            },
+            "zeroconf_confirm": {
+                "description": "M\u00f6chtest du den Z-Wave JS-Server mit der Home-ID {home_id} , gefunden unter {url} , zu Home Assistant hinzuf\u00fcgen?",
+                "title": "Z-Wave JS-Server entdeckt"
             }
         }
     },
@@ -112,13 +116,13 @@
                 "data": {
                     "emulate_hardware": "Hardware emulieren",
                     "log_level": "Protokollstufe",
-                    "network_key": "Netzwerkschl\u00fcssel",
                     "s0_legacy_key": "S0 Schl\u00fcssel (Legacy)",
                     "s2_access_control_key": "S2 Zugangskontrollschl\u00fcssel",
                     "s2_authenticated_key": "S2 Authentifizierter Schl\u00fcssel",
                     "s2_unauthenticated_key": "S2 Nicht authentifizierter Schl\u00fcssel",
                     "usb_path": "USB-Ger\u00e4te-Pfad"
                 },
+                "description": "Das Add-on generiert Sicherheitsschl\u00fcssel, wenn diese Felder leer gelassen werden.",
                 "title": "Gib die Konfiguration des Z-Wave JS-Add-ons ein"
             },
             "install_addon": {
@@ -140,6 +144,5 @@
                 "title": "Das Z-Wave JS Add-on wird gestartet."
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

@@ -8,5 +8,15 @@
                 "description": "Ingin memulai penyiapan?"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval pembaruan",
+                    "tracked_asset_pairs": "Pasangan Aset Terlacak"
+                }
+            }
+        }
     }
 }

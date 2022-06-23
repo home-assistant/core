@@ -79,7 +79,9 @@ async def test_create_entry_when_friendly_name_valid(hass, controller):
         assert DATA_DISCOVERED_HOSTS not in hass.data
 
 
-async def test_discovery_shows_create_form(hass, controller, discovery_data):
+async def test_discovery_shows_create_form(
+    hass, controller, discovery_data: ssdp.SsdpServiceInfo
+):
     """Test discovery shows form to confirm setup and subsequent abort."""
 
     await hass.config_entries.flow.async_init(
@@ -91,9 +93,9 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
     assert len(flows_in_progress) == 1
     assert hass.data[DATA_DISCOVERED_HOSTS] == {"Office (127.0.0.1)": "127.0.0.1"}
 
-    port = urlparse(discovery_data[ssdp.ATTR_SSDP_LOCATION]).port
-    discovery_data[ssdp.ATTR_SSDP_LOCATION] = f"http://127.0.0.2:{port}/"
-    discovery_data[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
+    port = urlparse(discovery_data.ssdp_location).port
+    discovery_data.ssdp_location = f"http://127.0.0.2:{port}/"
+    discovery_data.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
 
     await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
@@ -109,7 +111,7 @@ async def test_discovery_shows_create_form(hass, controller, discovery_data):
 
 
 async def test_discovery_flow_aborts_already_setup(
-    hass, controller, discovery_data, config_entry
+    hass, controller, discovery_data: ssdp.SsdpServiceInfo, config_entry
 ):
     """Test discovery flow aborts when entry already setup."""
     config_entry.add_to_hass(hass)
@@ -120,12 +122,14 @@ async def test_discovery_flow_aborts_already_setup(
     assert result["reason"] == "single_instance_allowed"
 
 
-async def test_discovery_sets_the_unique_id(hass, controller, discovery_data):
+async def test_discovery_sets_the_unique_id(
+    hass, controller, discovery_data: ssdp.SsdpServiceInfo
+):
     """Test discovery sets the unique id."""
 
-    port = urlparse(discovery_data[ssdp.ATTR_SSDP_LOCATION]).port
-    discovery_data[ssdp.ATTR_SSDP_LOCATION] = f"http://127.0.0.2:{port}/"
-    discovery_data[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
+    port = urlparse(discovery_data.ssdp_location).port
+    discovery_data.ssdp_location = f"http://127.0.0.2:{port}/"
+    discovery_data.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME] = "Bedroom"
 
     await hass.config_entries.flow.async_init(
         heos.DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data

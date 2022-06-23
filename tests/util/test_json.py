@@ -4,15 +4,14 @@ from functools import partial
 from json import JSONEncoder, dumps
 import math
 import os
-import sys
 from tempfile import mkdtemp
-import unittest
 from unittest.mock import Mock
 
 import pytest
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.template import TupleWrapper
 from homeassistant.util.json import (
     SerializationError,
     find_paths_unserializable_data,
@@ -28,14 +27,14 @@ TEST_BAD_SERIALIED = "THIS IS NOT JSON\n"
 TMP_DIR = None
 
 
-def setup():
-    """Set up for tests."""
+@pytest.fixture(autouse=True)
+def setup_and_teardown():
+    """Clean up after tests."""
     global TMP_DIR
     TMP_DIR = mkdtemp()
 
+    yield
 
-def teardown():
-    """Clean up after tests."""
     for fname in os.listdir(TMP_DIR):
         os.remove(os.path.join(TMP_DIR, fname))
     os.rmdir(TMP_DIR)
@@ -53,10 +52,6 @@ def test_save_and_load():
     assert data == TEST_JSON_A
 
 
-# Skipped on Windows
-@unittest.skipIf(
-    sys.platform.startswith("win"), "private permissions not supported on Windows"
-)
 def test_save_and_load_private():
     """Test we can load private files and that they are protected."""
     fname = _path_for("test2")
@@ -67,22 +62,34 @@ def test_save_and_load_private():
     assert stats.st_mode & 0o77 == 0
 
 
-def test_overwrite_and_reload():
+@pytest.mark.parametrize("atomic_writes", [True, False])
+def test_overwrite_and_reload(atomic_writes):
     """Test that we can overwrite an existing file and read back."""
     fname = _path_for("test3")
-    save_json(fname, TEST_JSON_A)
-    save_json(fname, TEST_JSON_B)
+    save_json(fname, TEST_JSON_A, atomic_writes=atomic_writes)
+    save_json(fname, TEST_JSON_B, atomic_writes=atomic_writes)
     data = load_json(fname)
     assert data == TEST_JSON_B
 
 
 def test_save_bad_data():
-    """Test error from trying to save unserialisable data."""
+    """Test error from trying to save unserializable data."""
     with pytest.raises(SerializationError) as excinfo:
         save_json("test4", {"hello": set()})
 
     assert (
         "Failed to serialize to JSON: test4. Bad data at $.hello=set()(<class 'set'>"
+        in str(excinfo.value)
+    )
+
+
+def test_save_bad_data_tuple_wrapper():
+    """Test error from trying to save unserializable data."""
+    with pytest.raises(SerializationError) as excinfo:
+        save_json("test4", {"hello": TupleWrapper(("4", "5"))})
+
+    assert (
+        "Failed to serialize to JSON: test4. Bad data at $.hello=('4', '5')(<class 'homeassistant.helpers.template.TupleWrapper'>"
         in str(excinfo.value)
     )
 
@@ -148,21 +155,15 @@ def test_find_unserializable_data():
 
     bad_data = object()
 
-    assert (
-        find_paths_unserializable_data(
-            [State("mock_domain.mock_entity", "on", {"bad": bad_data})],
-            dump=partial(dumps, cls=MockJSONEncoder),
-        )
-        == {"$[0](State: mock_domain.mock_entity).attributes.bad": bad_data}
-    )
+    assert find_paths_unserializable_data(
+        [State("mock_domain.mock_entity", "on", {"bad": bad_data})],
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == {"$[0](State: mock_domain.mock_entity).attributes.bad": bad_data}
 
-    assert (
-        find_paths_unserializable_data(
-            [Event("bad_event", {"bad_attribute": bad_data})],
-            dump=partial(dumps, cls=MockJSONEncoder),
-        )
-        == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
-    )
+    assert find_paths_unserializable_data(
+        [Event("bad_event", {"bad_attribute": bad_data})],
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == {"$[0](Event: bad_event).data.bad_attribute": bad_data}
 
     class BadData:
         def __init__(self):
@@ -171,10 +172,7 @@ def test_find_unserializable_data():
         def as_dict(self):
             return {"bla": self.bla}
 
-    assert (
-        find_paths_unserializable_data(
-            BadData(),
-            dump=partial(dumps, cls=MockJSONEncoder),
-        )
-        == {"$(BadData).bla": bad_data}
-    )
+    assert find_paths_unserializable_data(
+        BadData(),
+        dump=partial(dumps, cls=MockJSONEncoder),
+    ) == {"$(BadData).bla": bad_data}

@@ -16,7 +16,7 @@ async def test_setup(hass):
 
 
 async def test_websocket(hass, hass_ws_client, aioclient_mock):
-    """Test websocekt commands."""
+    """Test WebSocket commands."""
     aioclient_mock.post(ANALYTICS_ENDPOINT_URL, status=200)
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()

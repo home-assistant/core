@@ -7,12 +7,13 @@
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} - {model} ({host})?"
+            },
             "user": {
                 "data": {
-                    "host": "Host (atau alamat IP) perangkat twinkly Anda"
-                },
-                "description": "Siapkan string led Twinkly Anda",
-                "title": "Twinkly"
+                    "host": "Host"
+                }
             }
         }
     }

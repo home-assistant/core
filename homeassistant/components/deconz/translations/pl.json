@@ -5,10 +5,10 @@
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
             "no_bridges": "Nie odkryto mostk\u00f3w deCONZ",
             "no_hardware_available": "Nie wykryto komponentu radiowego pod\u0142\u0105czonego do deCONZ",
-            "not_deconz_bridge": "To nie jest mostek deCONZ",
             "updated_instance": "Zaktualizowano instancj\u0119 deCONZ o nowy adres hosta"
         },
         "error": {
+            "linking_not_possible": "Nie mo\u017cna po\u0142\u0105czy\u0107 si\u0119 z bramk\u0105",
             "no_key": "Nie mo\u017cna uzyska\u0107 klucza API"
         },
         "flow_title": "{host}",
@@ -97,7 +97,7 @@
         "step": {
             "deconz_devices": {
                 "data": {
-                    "allow_clip_sensor": "Zezwalaj na czujniki deCONZ CLIP",
+                    "allow_clip_sensor": "Zezwalaj na sensory deCONZ CLIP",
                     "allow_deconz_groups": "Zezwalaj na grupy \u015bwiate\u0142 deCONZ",
                     "allow_new_devices": "Zezwalaj na automatyczne dodawanie nowych urz\u0105dze\u0144"
                 },

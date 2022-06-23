@@ -17,13 +17,18 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, CoreState, callback
+from homeassistant.core import Context, CoreState, State, callback
 from homeassistant.helpers import entity_registry
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.template import Template
 from homeassistant.setup import ATTR_COMPONENT, async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import (
+    assert_setup_component,
+    async_fire_time_changed,
+    mock_restore_cache_with_extra_data,
+)
 
 TEST_NAME = "sensor.test_template_sensor"
 
@@ -115,7 +120,7 @@ async def test_entity_picture_template(hass, start_ha):
 
 @pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
 @pytest.mark.parametrize(
-    "attribute,config",
+    "attribute,config,expected",
     [
         (
             "friendly_name",
@@ -130,6 +135,22 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
+        ),
+        (
+            "friendly_name",
+            {
+                "sensor": {
+                    "platform": "template",
+                    "sensors": {
+                        "test_template_sensor": {
+                            "value_template": "{{ states.sensor.test_state.state }}",
+                            "friendly_name_template": "{{ 'It ' + states.sensor.test_state.state + '.'}}",
+                        }
+                    },
+                },
+            },
+            (None, "It Works."),
         ),
         (
             "friendly_name",
@@ -144,6 +165,7 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
         ),
         (
             "test_attribute",
@@ -160,16 +182,17 @@ async def test_entity_picture_template(hass, start_ha):
                     },
                 },
             },
+            ("It .", "It Works."),
         ),
     ],
 )
-async def test_friendly_name_template(hass, attribute, start_ha):
+async def test_friendly_name_template(hass, attribute, expected, start_ha):
     """Test friendly_name template with an unknown value_template."""
-    assert hass.states.get(TEST_NAME).attributes.get(attribute) == "It ."
+    assert hass.states.get(TEST_NAME).attributes.get(attribute) == expected[0]
 
     hass.states.async_set("sensor.test_state", "Works")
     await hass.async_block_till_done()
-    assert hass.states.get(TEST_NAME).attributes[attribute] == "It Works."
+    assert hass.states.get(TEST_NAME).attributes[attribute] == expected[1]
 
 
 @pytest.mark.parametrize("count,domain", [(0, sensor.DOMAIN)])
@@ -389,7 +412,7 @@ async def test_invalid_attribute_template(hass, caplog, start_ha, caplog_setup_t
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_template")
+    await async_update_entity(hass, "sensor.invalid_template")
     assert "TemplateError" in caplog_setup_text
     assert "test_attribute" in caplog.text
 
@@ -488,15 +511,11 @@ async def test_no_template_match_all(hass, caplog):
     assert hass.states.get("sensor.invalid_friendly_name").state == "hello"
     assert hass.states.get("sensor.invalid_attribute").state == "hello"
 
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_state")
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_icon")
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_entity_picture"
-    )
-    await hass.helpers.entity_component.async_update_entity(
-        "sensor.invalid_friendly_name"
-    )
-    await hass.helpers.entity_component.async_update_entity("sensor.invalid_attribute")
+    await async_update_entity(hass, "sensor.invalid_state")
+    await async_update_entity(hass, "sensor.invalid_icon")
+    await async_update_entity(hass, "sensor.invalid_entity_picture")
+    await async_update_entity(hass, "sensor.invalid_friendly_name")
+    await async_update_entity(hass, "sensor.invalid_attribute")
 
     assert hass.states.get("sensor.invalid_state").state == "2"
     assert hass.states.get("sensor.invalid_icon").state == "hello"
@@ -602,6 +621,149 @@ async def test_sun_renders_once_per_sensor(hass, start_ha):
     assert set(async_render_calls) == {
         "{{ state_attr('sun.sun', 'elevation') }}",
         "{{ state_attr('sun.sun', 'next_rising') }}",
+    }
+
+
+@pytest.mark.parametrize("count,domain", [(1, sensor.DOMAIN)])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "sensor": {
+                "platform": "template",
+                "sensors": {
+                    "test_template_sensor": {
+                        "value_template": "{{ this.attributes.test }}: {{ this.entity_id }}",
+                        "attribute_templates": {
+                            "test": "It {{ states.sensor.test_state.state }}"
+                        },
+                    }
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable(hass, start_ha):
+    """Test template."""
+    assert hass.states.get(TEST_NAME).state == "It: " + TEST_NAME
+
+    hass.states.async_set("sensor.test_state", "Works")
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert hass.states.get(TEST_NAME).state == "It Works: " + TEST_NAME
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
+                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "attributes": {"test": "{{ this.entity_id }}"},
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable_early_hass_not_running(hass, config, count, domain):
+    """Test referencing 'this' variable before the entity is in the state machine.
+
+    Hass is not yet started when the entity is added.
+    Icon, name and picture templates are rendered once in the constructor.
+    """
+    entity_id = "sensor.none_false"
+
+    hass.state = CoreState.not_running
+
+    # Setup template
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Sensor state not rendered, icon, name and picture
+    # templates rendered in constructor with entity_id set to None
+    state = hass.states.get(entity_id)
+    assert state.state == "unknown"
+    assert state.attributes == {
+        "entity_picture": "None:False",
+        "friendly_name": "None:False",
+        "icon": "mdi:None:False",
+    }
+
+    # Signal hass started
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+
+    # Re-render icon, name, pciture + other templates now rendered
+    state = hass.states.get(entity_id)
+    assert state.state == "sensor.none_false: sensor.none_false"
+    assert state.attributes == {
+        "entity_picture": "sensor.none_false:False",
+        "friendly_name": "sensor.none_false:False",
+        "icon": "mdi:sensor.none_false:False",
+        "test": "sensor.none_false",
+    }
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "sensor": {
+                    "state": "{{ this.attributes.get('test', 'no-test!') }}: {{ this.entity_id }}",
+                    "icon": "mdi:{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "name": "{% if this.entity_id in states and 'friendly_name' in this.attributes %} {{this.attributes['friendly_name']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "picture": "{% if this.entity_id in states and 'entity_picture' in this.attributes %} {{this.attributes['entity_picture']}} {% else %}{{this.entity_id}}:{{this.entity_id in states}}{% endif %}",
+                    "attributes": {"test": "{{ this.entity_id }}"},
+                },
+            },
+        },
+    ],
+)
+async def test_this_variable_early_hass_running(hass, config, count, domain):
+    """Test referencing 'this' variable before the entity is in the state machine.
+
+    Hass is already started when the entity is added.
+    Icon, name and picture templates are rendered in the constructor, and again
+    before the entity is added to hass.
+    """
+
+    # Start hass
+    assert hass.state == CoreState.running
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    # Setup template
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    entity_id = "sensor.none_false"
+    # All templated rendered
+    state = hass.states.get(entity_id)
+    assert state.state == "sensor.none_false: sensor.none_false"
+    assert state.attributes == {
+        "entity_picture": "sensor.none_false:False",
+        "friendly_name": "sensor.none_false:False",
+        "icon": "mdi:sensor.none_false:False",
+        "test": "sensor.none_false",
     }
 
 
@@ -1076,3 +1238,260 @@ async def test_trigger_entity_available(hass):
 
     state = hass.states.get("sensor.maybe_available")
     assert state.state == "unavailable"
+
+
+async def test_trigger_entity_device_class_parsing_works(hass):
+    """Test trigger entity device class parsing works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "{{ now().date() }}",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "{{ now() }}",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_trigger_entity_device_class_errors_works(hass):
+    """Test trigger entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "trigger": {"platform": "event", "event_type": "test_event"},
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN
+
+
+async def test_entity_device_class_parsing_works(hass):
+    """Test entity device class parsing works."""
+    # State of timestamp sensors are always in UTC
+    now = dt_util.utcnow()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        assert await async_setup_component(
+            hass,
+            "template",
+            {
+                "template": [
+                    {
+                        "sensor": [
+                            {
+                                "name": "Date entity",
+                                "state": "{{ now().date() }}",
+                                "device_class": "date",
+                            },
+                            {
+                                "name": "Timestamp entity",
+                                "state": "{{ now() }}",
+                                "device_class": "timestamp",
+                            },
+                        ],
+                    },
+                ],
+            },
+        )
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == now.date().isoformat()
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == now.isoformat(timespec="seconds")
+
+
+async def test_entity_device_class_errors_works(hass):
+    """Test entity device class errors works."""
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": [
+                {
+                    "sensor": [
+                        {
+                            "name": "Date entity",
+                            "state": "invalid",
+                            "device_class": "date",
+                        },
+                        {
+                            "name": "Timestamp entity",
+                            "state": "invalid",
+                            "device_class": "timestamp",
+                        },
+                    ],
+                },
+            ],
+        },
+    )
+
+    await hass.async_block_till_done()
+
+    now = dt_util.now()
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+
+    date_state = hass.states.get("sensor.date_entity")
+    assert date_state is not None
+    assert date_state.state == STATE_UNKNOWN
+
+    ts_state = hass.states.get("sensor.timestamp_entity")
+    assert ts_state is not None
+    assert ts_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize("count,domain", [(1, "template")])
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "template": {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "sensor": {
+                    "name": "test",
+                    "state": "{{ trigger.event.data.beer }}",
+                    "picture": "{{ '/local/dogs.png' }}",
+                    "icon": "{{ 'mdi:pirate' }}",
+                    "attributes": {
+                        "plus_one": "{{ trigger.event.data.beer + 1 }}",
+                        "another": "{{ trigger.event.data.uno_mas or 1 }}",
+                    },
+                },
+            },
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    "restored_state, restored_native_value, initial_state, initial_attributes",
+    [
+        # the native value should be used, not the state
+        ("dog", 10, "10", ["entity_picture", "icon", "plus_one"]),
+        (STATE_UNAVAILABLE, 10, STATE_UNKNOWN, []),
+        (STATE_UNKNOWN, 10, STATE_UNKNOWN, []),
+    ],
+)
+async def test_trigger_entity_restore_state(
+    hass,
+    count,
+    domain,
+    config,
+    restored_state,
+    restored_native_value,
+    initial_state,
+    initial_attributes,
+):
+    """Test restoring trigger template binary sensor."""
+
+    restored_attributes = {
+        "entity_picture": "/local/cats.png",
+        "icon": "mdi:ship",
+        "plus_one": 55,
+    }
+
+    fake_state = State(
+        "sensor.test",
+        restored_state,
+        restored_attributes,
+    )
+    fake_extra_data = {
+        "native_value": restored_native_value,
+        "native_unit_of_measurement": None,
+    }
+    mock_restore_cache_with_extra_data(hass, ((fake_state, fake_extra_data),))
+    with assert_setup_component(count, domain):
+        assert await async_setup_component(
+            hass,
+            domain,
+            config,
+        )
+
+        await hass.async_block_till_done()
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == initial_state
+    for attr in restored_attributes:
+        if attr in initial_attributes:
+            assert state.attributes[attr] == restored_attributes[attr]
+        else:
+            assert attr not in state.attributes
+    assert "another" not in state.attributes
+
+    hass.bus.async_fire("test_event", {"beer": 2})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.test")
+    assert state.state == "2"
+    assert state.attributes["icon"] == "mdi:pirate"
+    assert state.attributes["entity_picture"] == "/local/dogs.png"
+    assert state.attributes["plus_one"] == 3
+    assert state.attributes["another"] == 1

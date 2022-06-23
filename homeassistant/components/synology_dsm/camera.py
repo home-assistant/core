@@ -11,18 +11,26 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.components.camera import (
-    SUPPORT_STREAM,
     Camera,
     CameraEntityDescription,
+    CameraEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import SynoApi, SynologyDSMBaseEntity
-from .const import COORDINATOR_CAMERAS, DOMAIN, SYNO_API, SynologyDSMEntityDescription
+from . import SynoApi
+from .const import (
+    CONF_SNAPSHOT_QUALITY,
+    DEFAULT_SNAPSHOT_QUALITY,
+    DOMAIN,
+    SIGNAL_CAMERA_SOURCE_CHANGED,
+)
+from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
+from .models import SynologyDSMData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,28 +46,18 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Synology NAS cameras."""
-
-    data = hass.data[DOMAIN][entry.unique_id]
-    api: SynoApi = data[SYNO_API]
-
-    if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
-        return
-
-    # initial data fetch
-    coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]] = data[
-        COORDINATOR_CAMERAS
-    ]
-    await coordinator.async_config_entry_first_refresh()
-
-    async_add_entities(
-        SynoDSMCamera(api, coordinator, camera_id)
-        for camera_id in coordinator.data["cameras"]
-    )
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    if coordinator := data.coordinator_cameras:
+        async_add_entities(
+            SynoDSMCamera(data.api, coordinator, camera_id)
+            for camera_id in coordinator.data["cameras"]
+        )
 
 
 class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     """Representation a Synology camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
     coordinator: DataUpdateCoordinator[dict[str, dict[str, SynoCamera]]]
     entity_description: SynologyDSMCameraEntityDescription
 
@@ -78,6 +76,9 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
                 camera_id
             ].is_enabled,
         )
+        self.snapshot_quality = api._entry.options.get(
+            CONF_SNAPSHOT_QUALITY, DEFAULT_SNAPSHOT_QUALITY
+        )
         super().__init__(api, coordinator, description)
         Camera.__init__(self)
 
@@ -89,30 +90,25 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device information."""
-        return {
-            "identifiers": {
+        return DeviceInfo(
+            identifiers={
                 (
                     DOMAIN,
                     f"{self._api.information.serial}_{self.camera_data.id}",
                 )
             },
-            "name": self.camera_data.name,
-            "model": self.camera_data.model,
-            "via_device": (
+            name=self.camera_data.name,
+            model=self.camera_data.model,
+            via_device=(
                 DOMAIN,
                 f"{self._api.information.serial}_{SynoSurveillanceStation.INFO_API_KEY}",
             ),
-        }
+        )
 
     @property
     def available(self) -> bool:
         """Return the availability of the camera."""
         return self.camera_data.is_enabled and self.coordinator.last_update_success
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features of this camera."""
-        return SUPPORT_STREAM
 
     @property
     def is_recording(self) -> bool:
@@ -123,6 +119,30 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
     def motion_detection_enabled(self) -> bool:
         """Return the camera motion detection status."""
         return self.camera_data.is_motion_detection_enabled  # type: ignore[no-any-return]
+
+    def _listen_source_updates(self) -> None:
+        """Listen for camera source changed events."""
+
+        @callback
+        def _handle_signal(url: str) -> None:
+            if self.stream:
+                _LOGGER.debug("Update stream URL for camera %s", self.camera_data.name)
+                self.stream.update_source(url)
+
+        assert self.platform
+        assert self.platform.config_entry
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.platform.config_entry.entry_id}_{self.camera_data.id}",
+                _handle_signal,
+            )
+        )
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to signal."""
+        self._listen_source_updates()
+        await super().async_added_to_hass()
 
     def camera_image(
         self, width: int | None = None, height: int | None = None
@@ -135,7 +155,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         if not self.available:
             return None
         try:
-            return self._api.surveillance_station.get_camera_image(self.entity_description.key)  # type: ignore[no-any-return]
+            return self._api.surveillance_station.get_camera_image(self.entity_description.key, self.snapshot_quality)  # type: ignore[no-any-return]
         except (
             SynologyDSMAPIErrorException,
             SynologyDSMRequestException,
@@ -156,6 +176,7 @@ class SynoDSMCamera(SynologyDSMBaseEntity, Camera):
         )
         if not self.available:
             return None
+
         return self.camera_data.live_view.rtsp  # type: ignore[no-any-return]
 
     def enable_motion_detection(self) -> None:

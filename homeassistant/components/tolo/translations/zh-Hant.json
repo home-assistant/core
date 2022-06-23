@@ -1,0 +1,22 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "\u662f\u5426\u8981\u958b\u59cb\u8a2d\u5b9a\uff1f"
+            },
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u8f38\u5165 TOLO Sauna \u8a2d\u5099\u4e4b\u4e3b\u6a5f\u540d\u7a31\u6216 IP \u4f4d\u5740\u3002"
+            }
+        }
+    }
+}

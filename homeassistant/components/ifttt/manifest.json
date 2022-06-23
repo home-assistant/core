@@ -6,5 +6,6 @@
   "requirements": ["pyfttt==0.3"],
   "dependencies": ["webhook"],
   "codeowners": [],
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "loggers": ["pyfttt"]
 }

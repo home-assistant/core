@@ -3,8 +3,11 @@ import pytest
 import voluptuous_serialize
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.number import DOMAIN, device_action
 from homeassistant.helpers import config_validation as cv, device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -46,9 +49,60 @@ async def test_get_actions(hass, device_reg, entity_reg):
             "type": "set_value",
             "device_id": device_entry.id,
             "entity_id": "number.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert_lists_same(actions, expected_actions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected actions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+    )
+    expected_actions = []
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for action in ["set_value"]
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 
@@ -67,9 +121,12 @@ async def test_get_action_no_state(hass, device_reg, entity_reg):
             "type": "set_value",
             "device_id": device_entry.id,
             "entity_id": "number.test_5678",
+            "metadata": {"secondary": False},
         },
     ]
-    actions = await async_get_device_automations(hass, "action", device_entry.id)
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
     assert_lists_same(actions, expected_actions)
 
 

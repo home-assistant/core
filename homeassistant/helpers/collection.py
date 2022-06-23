@@ -3,11 +3,11 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from itertools import groupby
 import logging
-from typing import Any, Awaitable, Callable, Iterable, Optional, cast
+from typing import Any, Optional, cast
 
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
@@ -16,11 +16,12 @@ from homeassistant.components import websocket_api
 from homeassistant.const import CONF_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.storage import Store
 from homeassistant.util import slugify
+
+from . import entity_registry
+from .entity import Entity
+from .entity_component import EntityComponent
+from .storage import Store
 
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
@@ -329,11 +330,17 @@ def sync_entity_lifecycle(
     create_entity: Callable[[dict], Entity],
 ) -> None:
     """Map a collection to an entity component."""
-    entities = {}
+    entities: dict[str, Entity] = {}
     ent_reg = entity_registry.async_get(hass)
 
     async def _add_entity(change_set: CollectionChangeSet) -> Entity:
+        def entity_removed() -> None:
+            """Remove entity from entities if it's removed or not added."""
+            if change_set.item_id in entities:
+                entities.pop(change_set.item_id)
+
         entities[change_set.item_id] = create_entity(change_set.item)
+        entities[change_set.item_id].async_on_remove(entity_removed)
         return entities[change_set.item_id]
 
     async def _remove_entity(change_set: CollectionChangeSet) -> None:
@@ -342,12 +349,17 @@ def sync_entity_lifecycle(
         )
         if ent_to_remove is not None:
             ent_reg.async_remove(ent_to_remove)
-        else:
+        elif change_set.item_id in entities:
             await entities[change_set.item_id].async_remove(force_remove=True)
-        entities.pop(change_set.item_id)
+        # Unconditionally pop the entity from the entity list to avoid racing against
+        # the entity registry event handled by Entity._async_registry_updated
+        if change_set.item_id in entities:
+            entities.pop(change_set.item_id)
 
     async def _update_entity(change_set: CollectionChangeSet) -> None:
-        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore
+        if change_set.item_id not in entities:
+            return
+        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore[attr-defined]
 
     _func_map: dict[
         str, Callable[[CollectionChangeSet], Coroutine[Any, Any, Entity | None]]

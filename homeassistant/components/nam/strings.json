@@ -1,11 +1,25 @@
 {
   "config": {
-    "flow_title": "{name}",
+    "flow_title": "{host}",
     "step": {
       "user": {
         "description": "Set up Nettigo Air Monitor integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "credentials": {
+        "description": "Please enter the username and password.",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Please enter the correct username and password for host: {host}",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "confirm_discovery": {
@@ -14,11 +28,14 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "device_unsupported": "The device is unsupported."
+      "device_unsupported": "The device is unsupported.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reauth_unsuccessful": "Re-authentication was unsuccessful, please remove the integration and set it up again."
     }
   }
 }

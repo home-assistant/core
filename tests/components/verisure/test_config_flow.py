@@ -7,7 +7,7 @@ import pytest
 from verisure import Error as VerisureError, LoginError as VerisureLoginError
 
 from homeassistant import config_entries
-from homeassistant.components.dhcp import MAC_ADDRESS
+from homeassistant.components import dhcp
 from homeassistant.components.verisure.const import (
     CONF_GIID,
     CONF_LOCK_CODE_DIGITS,
@@ -176,7 +176,9 @@ async def test_dhcp(hass: HomeAssistant) -> None:
     """Test that DHCP discovery works."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data={MAC_ADDRESS: "01:23:45:67:89:ab"},
+        data=dhcp.DhcpServiceInfo(
+            ip="1.2.3.4", macaddress="01:23:45:67:89:ab", hostname="mock_hostname"
+        ),
         context={"source": config_entries.SOURCE_DHCP},
     )
 

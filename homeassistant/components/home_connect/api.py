@@ -2,17 +2,18 @@
 
 from asyncio import run_coroutine_threadsafe
 import logging
+from typing import Any
 
 import homeconnect
 from homeconnect.api import HomeConnectError
 
 from homeassistant import config_entries, core
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ICON,
     CONF_DEVICE,
     CONF_ENTITIES,
-    DEVICE_CLASS_TIMESTAMP,
     PERCENTAGE,
     TIME_SECONDS,
 )
@@ -54,7 +55,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             hass, config_entry, implementation
         )
         super().__init__(self.session.token)
-        self.devices = []
+        self.devices: list[dict[str, Any]] = []
 
     def refresh_tokens(self) -> dict:
         """Refresh and return new Home Connect tokens using Home Assistant OAuth2 session."""
@@ -80,7 +81,7 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
             elif app.type == "FridgeFreezer":
                 device = FridgeFreezer(self.hass, app)
             elif app.type == "Refrigerator":
-                device = Fridge(self.hass, app)
+                device = Refrigerator(self.hass, app)
             elif app.type == "Freezer":
                 device = Freezer(self.hass, app)
             elif app.type == "Oven":
@@ -91,6 +92,8 @@ class ConfigEntryAuth(homeconnect.HomeConnectAPI):
                 device = Hood(self.hass, app)
             elif app.type == "Hob":
                 device = Hob(self.hass, app)
+            elif app.type == "CookProcessor":
+                device = CookProcessor(self.hass, app)
             else:
                 _LOGGER.warning("Appliance type %s not implemented", app.type)
                 continue
@@ -144,7 +147,7 @@ class HomeConnectDevice:
 class DeviceWithPrograms(HomeConnectDevice):
     """Device with programs."""
 
-    PROGRAMS = []
+    PROGRAMS: list[dict[str, str]] = []
 
     def get_programs_available(self):
         """Get the available programs."""
@@ -165,7 +168,7 @@ class DeviceWithPrograms(HomeConnectDevice):
         device.
         """
         sensors = {
-            "Remaining Program Time": (None, None, DEVICE_CLASS_TIMESTAMP, 1),
+            "Remaining Program Time": (None, None, SensorDeviceClass.TIMESTAMP, 1),
             "Duration": (TIME_SECONDS, "mdi:update", None, 1),
             "Program Progress": (PERCENTAGE, "mdi:progress-clock", None, 1),
         }
@@ -281,6 +284,8 @@ class Dryer(
         {"name": "LaundryCare.Dryer.Program.Shirts15"},
         {"name": "LaundryCare.Dryer.Program.Pillow"},
         {"name": "LaundryCare.Dryer.Program.AntiShrink"},
+        {"name": "LaundryCare.Dryer.Program.TimeCold"},
+        {"name": "LaundryCare.Dryer.Program.TimeWarm"},
     ]
 
     def get_entity_info(self):
@@ -382,6 +387,7 @@ class Dishwasher(
         {"name": "Dishcare.Dishwasher.Program.Normal65"},
         {"name": "Dishcare.Dishwasher.Program.Glas40"},
         {"name": "Dishcare.Dishwasher.Program.GlassCare"},
+        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
         {"name": "Dishcare.Dishwasher.Program.NightWash"},
         {"name": "Dishcare.Dishwasher.Program.Quick65"},
         {"name": "Dishcare.Dishwasher.Program.Normal45"},
@@ -571,8 +577,8 @@ class FridgeFreezer(DeviceWithDoor):
         return {"binary_sensor": [door_entity]}
 
 
-class Fridge(DeviceWithDoor):
-    """Fridge class."""
+class Refrigerator(DeviceWithDoor):
+    """Refrigerator class."""
 
     def get_entity_info(self):
         """Get a dictionary with infos about the associated entities."""
@@ -605,3 +611,14 @@ class Hob(DeviceWithOpState, DeviceWithPrograms, DeviceWithRemoteControl):
             "switch": program_switches,
             "sensor": program_sensors + op_state_sensor,
         }
+
+
+class CookProcessor(DeviceWithOpState):
+    """CookProcessor class."""
+
+    power_off_state = BSH_POWER_STANDBY
+
+    def get_entity_info(self):
+        """Get a dictionary with infos about the associated entities."""
+        op_state_sensor = self.get_opstate_sensor()
+        return {"sensor": op_state_sensor}

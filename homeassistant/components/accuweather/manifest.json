@@ -6,5 +6,6 @@
   "codeowners": ["@bieniu"],
   "config_flow": true,
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["accuweather"]
 }

@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aionanoleaf import InvalidToken, NanoleafException, Unauthorized, Unavailable
+from aionanoleaf import InvalidToken, Unauthorized, Unavailable
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components import ssdp, zeroconf
 from homeassistant.components.nanoleaf.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -235,12 +236,15 @@ async def test_discovery_link_unavailable(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={
-                "host": TEST_HOST,
-                "name": f"{TEST_NAME}.{type_in_discovery_info}",
-                "type": type_in_discovery_info,
-                "properties": {"id": TEST_DEVICE_ID},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host=TEST_HOST,
+                addresses=[TEST_HOST],
+                hostname="mock_hostname",
+                name=f"{TEST_NAME}.{type_in_discovery_info}",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                type=type_in_discovery_info,
+            ),
         )
     assert result["type"] == "form"
     assert result["step_id"] == "link"
@@ -296,55 +300,6 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     assert entry.data[CONF_HOST] == TEST_HOST
     assert entry.data[CONF_TOKEN] == TEST_TOKEN
-
-
-async def test_import_config(hass: HomeAssistant) -> None:
-    """Test configuration import."""
-    with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf",
-        return_value=_mock_nanoleaf(TEST_HOST, TEST_TOKEN),
-    ), patch(
-        "homeassistant.components.nanoleaf.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
-        )
-    assert result["type"] == "create_entry"
-    assert result["title"] == TEST_NAME
-    assert result["data"] == {
-        CONF_HOST: TEST_HOST,
-        CONF_TOKEN: TEST_TOKEN,
-    }
-    await hass.async_block_till_done()
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.parametrize(
-    "error, reason",
-    [
-        (Unavailable, "cannot_connect"),
-        (InvalidToken, "invalid_token"),
-        (Exception, "unknown"),
-    ],
-)
-async def test_import_config_error(
-    hass: HomeAssistant, error: NanoleafException, reason: str
-) -> None:
-    """Test configuration import with errors in setup_finish."""
-    with patch(
-        "homeassistant.components.nanoleaf.config_flow.Nanoleaf.get_info",
-        side_effect=error,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data={CONF_HOST: TEST_HOST, CONF_TOKEN: TEST_TOKEN},
-        )
-    assert result["type"] == "abort"
-    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(
@@ -417,12 +372,15 @@ async def test_import_discovery_integration(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": source},
-            data={
-                "host": TEST_HOST,
-                "name": f"{TEST_NAME}.{type_in_discovery}",
-                "type": type_in_discovery,
-                "properties": {"id": TEST_DEVICE_ID},
-            },
+            data=zeroconf.ZeroconfServiceInfo(
+                host=TEST_HOST,
+                addresses=[TEST_HOST],
+                hostname="mock_hostname",
+                name=f"{TEST_NAME}.{type_in_discovery}",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: TEST_DEVICE_ID},
+                type=type_in_discovery,
+            ),
         )
     assert result["type"] == "create_entry"
     assert result["title"] == TEST_NAME
@@ -457,11 +415,16 @@ async def test_ssdp_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_SSDP},
-            data={
-                "_host": TEST_HOST,
-                "nl-devicename": TEST_NAME,
-                "nl-deviceid": TEST_DEVICE_ID,
-            },
+            data=ssdp.SsdpServiceInfo(
+                ssdp_usn="mock_usn",
+                ssdp_st="mock_st",
+                upnp={},
+                ssdp_headers={
+                    "_host": TEST_HOST,
+                    "nl-devicename": TEST_NAME,
+                    "nl-deviceid": TEST_DEVICE_ID,
+                },
+            ),
         )
 
         assert result["type"] == "form"

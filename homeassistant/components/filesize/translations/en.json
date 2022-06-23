@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is already configured"
+        },
+        "error": {
+            "not_allowed": "Path is not allowed",
+            "not_valid": "Path is not valid"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "Path to file"
+                }
+            }
+        }
+    },
+    "title": "Filesize"
+}

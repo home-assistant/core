@@ -2,7 +2,7 @@
 from unittest.mock import patch
 
 from homeassistant.components.stookalert.const import CONF_PROVINCE, DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -63,16 +63,3 @@ async def test_already_configured(hass: HomeAssistant) -> None:
 
     assert result2.get("type") == RESULT_TYPE_ABORT
     assert result2.get("reason") == "already_configured"
-
-
-async def test_import_flow(hass: HomeAssistant) -> None:
-    """Test the import configuration flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data={"province": "Overijssel"}
-    )
-
-    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
-    assert result.get("title") == "Overijssel"
-    assert result.get("data") == {
-        CONF_PROVINCE: "Overijssel",
-    }

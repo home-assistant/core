@@ -1,0 +1,16 @@
+{
+    "config": {
+        "step": {
+            "confirm": {
+                "data": {
+                    "name": "N\u00e1zov"
+                }
+            },
+            "user": {
+                "data": {
+                    "name": "N\u00e1zov"
+                }
+            }
+        }
+    }
+}

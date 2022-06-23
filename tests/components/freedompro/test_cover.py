@@ -14,10 +14,11 @@ from homeassistant.const import (
     STATE_OPEN,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from tests.common import async_fire_time_changed
-from tests.components.freedompro.const import DEVICES_STATE
+from tests.components.freedompro.conftest import get_states_response_for_uid
 
 
 @pytest.mark.parametrize(
@@ -55,13 +56,11 @@ async def test_cover_get_state(
     assert entry
     assert entry.unique_id == uid
 
-    get_states_response = list(DEVICES_STATE)
-    for state_response in get_states_response:
-        if state_response["uid"] == uid:
-            state_response["state"]["position"] = 100
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["position"] = 100
     with patch(
         "homeassistant.components.freedompro.get_states",
-        return_value=get_states_response,
+        return_value=states_response,
     ):
         async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
         await hass.async_block_till_done()
@@ -97,7 +96,7 @@ async def test_cover_set_position(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
     entry = registry.async_get(entity_id)
@@ -113,9 +112,18 @@ async def test_cover_set_position(
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 33}')
 
-    await hass.async_block_till_done()
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["position"] = 33
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state.state == STATE_OPEN
+    assert state.attributes["current_position"] == 33
 
 
 @pytest.mark.parametrize(
@@ -136,6 +144,16 @@ async def test_cover_close(
     init_integration
     registry = er.async_get(hass)
 
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["position"] = 100
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        await async_update_entity(hass, entity_id)
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OPEN
@@ -154,9 +172,16 @@ async def test_cover_close(
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 0}')
 
-    await hass.async_block_till_done()
+    states_response[0]["state"]["position"] = 0
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_CLOSED
 
 
 @pytest.mark.parametrize(
@@ -179,7 +204,7 @@ async def test_cover_open(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == STATE_CLOSED
     assert state.attributes.get("friendly_name") == name
 
     entry = registry.async_get(entity_id)
@@ -195,6 +220,14 @@ async def test_cover_open(
         )
     mock_put_state.assert_called_once_with(ANY, ANY, ANY, '{"position": 100}')
 
-    await hass.async_block_till_done()
+    states_response = get_states_response_for_uid(uid)
+    states_response[0]["state"]["position"] = 100
+    with patch(
+        "homeassistant.components.freedompro.get_states",
+        return_value=states_response,
+    ):
+        async_fire_time_changed(hass, utcnow() + timedelta(hours=2))
+        await hass.async_block_till_done()
+
     state = hass.states.get(entity_id)
     assert state.state == STATE_OPEN

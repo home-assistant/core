@@ -4,7 +4,7 @@ from asyncio import Lock
 import switchbot  # pylint: disable=import-error
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SENSOR_TYPE
+from homeassistant.const import CONF_SENSOR_TYPE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
@@ -27,8 +27,8 @@ from .const import (
 from .coordinator import SwitchbotDataUpdateCoordinator
 
 PLATFORMS_BY_TYPE = {
-    ATTR_BOT: ["switch", "sensor"],
-    ATTR_CURTAIN: ["cover", "binary_sensor", "sensor"],
+    ATTR_BOT: [Platform.SWITCH, Platform.SENSOR],
+    ATTR_CURTAIN: [Platform.COVER, Platform.BINARY_SENSOR, Platform.SENSOR],
 }
 
 

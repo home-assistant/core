@@ -1,6 +1,7 @@
 """Shared utilities for different supported platforms."""
 import asyncio
 from datetime import datetime, timedelta
+from http import HTTPStatus
 import logging
 
 import aiohttp
@@ -25,7 +26,7 @@ from buienradar.constants import (
 )
 from buienradar.urls import JSON_FEED_URL, json_precipitation_forecast_url
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, HTTP_OK
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
@@ -87,12 +88,12 @@ class BrData:
         resp = None
         try:
             websession = async_get_clientsession(self.hass)
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 resp = await websession.get(url)
 
                 result[STATUS_CODE] = resp.status
                 result[CONTENT] = await resp.text()
-                if resp.status == HTTP_OK:
+                if resp.status == HTTPStatus.OK:
                     result[SUCCESS] = True
                 else:
                     result[MESSAGE] = "Got http statuscode: %d" % (resp.status)
@@ -114,7 +115,7 @@ class BrData:
             self.load_error_count += 1
             threshold_log(
                 self.load_error_count,
-                "Unable to retrieve json data from Buienradar" "(Msg: %s, status: %s,)",
+                "Unable to retrieve json data from Buienradar (Msg: %s, status: %s)",
                 content.get(MESSAGE),
                 content.get(STATUS_CODE),
             )
@@ -134,7 +135,7 @@ class BrData:
             # unable to get the data
             threshold_log(
                 self.rain_error_count,
-                "Unable to retrieve rain data from Buienradar" "(Msg: %s, status: %s)",
+                "Unable to retrieve rain data from Buienradar (Msg: %s, status: %s)",
                 raincontent.get(MESSAGE),
                 raincontent.get(STATUS_CODE),
             )

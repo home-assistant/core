@@ -1,7 +1,7 @@
 {
     "config": {
         "error": {
-            "already_configured": "Service is al geconfigureerd",
+            "already_configured": "Dienst is al geconfigureerd",
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_sensor": "Sensor niet beschikbaar of ongeldig"
         },
@@ -9,9 +9,8 @@
             "user": {
                 "data": {
                     "show_on_map": "Toon op kaart",
-                    "station_id": "Luftdaten Sensor ID"
-                },
-                "title": "Definieer Luftdaten"
+                    "station_id": "Sensor ID"
+                }
             }
         }
     }

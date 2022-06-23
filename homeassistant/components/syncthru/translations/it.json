@@ -6,7 +6,7 @@
         "error": {
             "invalid_url": "URL non valido",
             "syncthru_not_supported": "Il dispositivo non supporta SyncThru",
-            "unknown_state": "Stato della stampante sconosciuto, verificare l'URL e la connettivit\u00e0 di rete"
+            "unknown_state": "Stato della stampante sconosciuto, verifica l'URL e la connettivit\u00e0 di rete"
         },
         "flow_title": "{name}",
         "step": {

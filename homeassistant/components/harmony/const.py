@@ -1,8 +1,10 @@
 """Constants for the Harmony component."""
+from homeassistant.const import Platform
+
 DOMAIN = "harmony"
 SERVICE_SYNC = "sync"
 SERVICE_CHANGE_CHANNEL = "change_channel"
-PLATFORMS = ["remote", "switch", "select"]
+PLATFORMS = [Platform.REMOTE, Platform.SELECT, Platform.SWITCH]
 UNIQUE_ID = "unique_id"
 ACTIVITY_POWER_OFF = "PowerOff"
 HARMONY_OPTIONS_UPDATE = "harmony_options_update"

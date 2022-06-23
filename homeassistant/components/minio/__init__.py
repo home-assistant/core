@@ -9,7 +9,9 @@ import threading
 import voluptuous as vol
 
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .minio_helper import MinioEventThread, create_minio_client
 
@@ -78,7 +80,7 @@ BUCKET_KEY_FILE_SCHEMA = BUCKET_KEY_SCHEMA.extend(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up MinioClient and event listeners."""
     conf = config[DOMAIN]
 
@@ -127,7 +129,7 @@ def setup(hass, config):
         value.hass = hass
         return value.async_render(parse_result=False)
 
-    def put_file(service):
+    def put_file(service: ServiceCall) -> None:
         """Upload file service."""
         bucket = _render_service_value(service, ATTR_BUCKET)
         key = _render_service_value(service, ATTR_KEY)
@@ -139,7 +141,7 @@ def setup(hass, config):
 
         minio_client.fput_object(bucket, key, file_path)
 
-    def get_file(service):
+    def get_file(service: ServiceCall) -> None:
         """Download file service."""
         bucket = _render_service_value(service, ATTR_BUCKET)
         key = _render_service_value(service, ATTR_KEY)
@@ -151,7 +153,7 @@ def setup(hass, config):
 
         minio_client.fget_object(bucket, key, file_path)
 
-    def remove_file(service):
+    def remove_file(service: ServiceCall) -> None:
         """Delete file service."""
         bucket = _render_service_value(service, ATTR_BUCKET)
         key = _render_service_value(service, ATTR_KEY)
@@ -183,8 +185,7 @@ class QueueListener(threading.Thread):
         """Listen to queue events, and forward them to Home Assistant event bus."""
         _LOGGER.info("Running QueueListener")
         while True:
-            event = self._queue.get()
-            if event is None:
+            if (event := self._queue.get()) is None:
                 break
 
             _, file_name = os.path.split(event[ATTR_KEY])

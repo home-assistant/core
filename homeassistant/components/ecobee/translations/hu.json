@@ -9,7 +9,7 @@
         },
         "step": {
             "authorize": {
-                "description": "K\u00e9rj\u00fck, enged\u00e9lyezze ezt az alkalmaz\u00e1st a https://www.ecobee.com/consumerportal/index.html c\u00edmen a k\u00f6vetkez\u0151 PIN-k\u00f3ddal: \n\n {pin} \n \n Ezut\u00e1n nyomja meg a K\u00fcld\u00e9s gombot.",
+                "description": "K\u00e9rj\u00fck, enged\u00e9lyezze ezt az alkalmaz\u00e1st a https://www.ecobee.com/consumerportal/index.html c\u00edmen a k\u00f6vetkez\u0151 PIN-k\u00f3ddal: \n\n {pin} \n \nEzut\u00e1n nyomja meg a Mehet gombot.",
                 "title": "Alkalmaz\u00e1s enged\u00e9lyez\u00e9se ecobee.com-on"
             },
             "user": {

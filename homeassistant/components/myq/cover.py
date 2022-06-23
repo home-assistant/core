@@ -1,26 +1,27 @@
 """Support for MyQ-Enabled Garage Doors."""
-import logging
-
 from pymyq.const import DEVICE_TYPE_GATE as MYQ_DEVICE_TYPE_GATE
 from pymyq.errors import MyQError
 
 from homeassistant.components.cover import (
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_GATE,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MyQEntity
 from .const import DOMAIN, MYQ_COORDINATOR, MYQ_GATEWAY, MYQ_TO_HASS
 
-_LOGGER = logging.getLogger(__name__)
 
-
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up mysq covers."""
     data = hass.data[DOMAIN][config_entry.entry_id]
     myq = data[MYQ_GATEWAY]
@@ -34,16 +35,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class MyQCover(MyQEntity, CoverEntity):
     """Representation of a MyQ cover."""
 
-    _attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def __init__(self, coordinator, device):
         """Initialize with API object, device id."""
         super().__init__(coordinator, device)
         self._device = device
         if device.device_type == MYQ_DEVICE_TYPE_GATE:
-            self._attr_device_class = DEVICE_CLASS_GATE
+            self._attr_device_class = CoverDeviceClass.GATE
         else:
-            self._attr_device_class = DEVICE_CLASS_GARAGE
+            self._attr_device_class = CoverDeviceClass.GARAGE
         self._attr_unique_id = device.device_id
 
     @property

@@ -10,7 +10,13 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt
 
-from .conftest import MOCK_HOST, MOCK_NAME, MOCK_PORT, MOCK_SERIAL_NUMBER
+from .conftest import (
+    MOCK_FIRMWARE_VERSION,
+    MOCK_HOST,
+    MOCK_NAME,
+    MOCK_PORT,
+    MOCK_SERIAL_NUMBER,
+)
 
 from tests.common import async_fire_time_changed
 
@@ -109,6 +115,8 @@ async def test_discovery(hass, pywemo_registry):
         device.name = f"{MOCK_NAME}_{counter}"
         device.serialnumber = f"{MOCK_SERIAL_NUMBER}_{counter}"
         device.model_name = "Motion"
+        device.udn = f"uuid:{device.model_name}-1_0-{device.serialnumber}"
+        device.firmware_version = MOCK_FIRMWARE_VERSION
         device.get_state.return_value = 0  # Default to Off
         device.supports_long_press.return_value = False
         return device

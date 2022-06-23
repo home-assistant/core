@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "invalid_thermostat": "Le num\u00e9ro de s\u00e9rie du thermostat n'est pas valide.",
             "unknown": "Erreur inattendue"
         },

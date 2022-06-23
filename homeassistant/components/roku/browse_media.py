@@ -1,5 +1,11 @@
 """Support for media browsing."""
+from __future__ import annotations
 
+from collections.abc import Callable
+from functools import partial
+from urllib.parse import quote_plus
+
+from homeassistant.components import media_source
 from homeassistant.components.media_player import BrowseMedia
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_APP,
@@ -10,6 +16,12 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_CHANNELS,
 )
+from homeassistant.components.media_player.errors import BrowseError
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.network import is_internal_request
+
+from .coordinator import RokuDataUpdateCoordinator
+from .helpers import format_channel_name
 
 CONTENT_TYPE_MEDIA_CLASS = {
     MEDIA_TYPE_APP: MEDIA_CLASS_APP,
@@ -33,8 +45,136 @@ EXPANDABLE_MEDIA_TYPES = [
     MEDIA_TYPE_CHANNELS,
 ]
 
+GetBrowseImageUrlType = Callable[[str, str, "str | None"], str]
 
-def build_item_response(coordinator, payload, get_thumbnail_url=None):
+
+def get_thumbnail_url_full(
+    coordinator: RokuDataUpdateCoordinator,
+    is_internal: bool,
+    get_browse_image_url: GetBrowseImageUrlType,
+    media_content_type: str,
+    media_content_id: str,
+    media_image_id: str | None = None,
+) -> str | None:
+    """Get thumbnail URL."""
+    if is_internal:
+        if media_content_type == MEDIA_TYPE_APP and media_content_id:
+            return coordinator.roku.app_icon_url(media_content_id)
+        return None
+
+    return get_browse_image_url(
+        media_content_type,
+        quote_plus(media_content_id),
+        media_image_id,
+    )
+
+
+async def async_browse_media(
+    hass: HomeAssistant,
+    coordinator: RokuDataUpdateCoordinator,
+    get_browse_image_url: GetBrowseImageUrlType,
+    media_content_id: str | None,
+    media_content_type: str | None,
+) -> BrowseMedia:
+    """Browse media."""
+    if media_content_id is None:
+        return await root_payload(
+            hass,
+            coordinator,
+            get_browse_image_url,
+        )
+
+    if media_source.is_media_source_id(media_content_id):
+        return await media_source.async_browse_media(hass, media_content_id)
+
+    payload = {
+        "search_type": media_content_type,
+        "search_id": media_content_id,
+    }
+
+    response = await hass.async_add_executor_job(
+        build_item_response,
+        coordinator,
+        payload,
+        partial(
+            get_thumbnail_url_full,
+            coordinator,
+            is_internal_request(hass),
+            get_browse_image_url,
+        ),
+    )
+
+    if response is None:
+        raise BrowseError(f"Media not found: {media_content_type} / {media_content_id}")
+
+    return response
+
+
+async def root_payload(
+    hass: HomeAssistant,
+    coordinator: RokuDataUpdateCoordinator,
+    get_browse_image_url: GetBrowseImageUrlType,
+) -> BrowseMedia:
+    """Return root payload for Roku."""
+    device = coordinator.data
+
+    children = [
+        item_payload(
+            {"title": "Apps", "type": MEDIA_TYPE_APPS},
+            coordinator,
+            get_browse_image_url,
+        )
+    ]
+
+    if device.info.device_type == "tv" and len(device.channels) > 0:
+        children.append(
+            item_payload(
+                {"title": "TV Channels", "type": MEDIA_TYPE_CHANNELS},
+                coordinator,
+                get_browse_image_url,
+            )
+        )
+
+    for child in children:
+        child.thumbnail = "https://brands.home-assistant.io/_/roku/logo.png"
+
+    try:
+        browse_item = await media_source.async_browse_media(hass, None)
+
+        # If domain is None, it's overview of available sources
+        if browse_item.domain is None:
+            if browse_item.children is not None:
+                children.extend(browse_item.children)
+        else:
+            children.append(browse_item)
+    except media_source.BrowseError:
+        pass
+
+    if len(children) == 1:
+        return await async_browse_media(
+            hass,
+            coordinator,
+            get_browse_image_url,
+            children[0].media_content_id,
+            children[0].media_content_type,
+        )
+
+    return BrowseMedia(
+        title="Roku",
+        media_class=MEDIA_CLASS_DIRECTORY,
+        media_content_id="",
+        media_content_type="root",
+        can_play=False,
+        can_expand=True,
+        children=children,
+    )
+
+
+def build_item_response(
+    coordinator: RokuDataUpdateCoordinator,
+    payload: dict,
+    get_browse_image_url: GetBrowseImageUrlType,
+) -> BrowseMedia | None:
     """Create response payload for the provided media query."""
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -52,18 +192,18 @@ def build_item_response(coordinator, payload, get_thumbnail_url=None):
         ]
         children_media_class = MEDIA_CLASS_APP
     elif search_type == MEDIA_TYPE_CHANNELS:
-        title = "Channels"
+        title = "TV Channels"
         media = [
             {
-                "channel_number": item.number,
-                "title": item.name,
+                "channel_number": channel.number,
+                "title": format_channel_name(channel.number, channel.name),
                 "type": MEDIA_TYPE_CHANNEL,
             }
-            for item in coordinator.data.channels
+            for channel in coordinator.data.channels
         ]
         children_media_class = MEDIA_CLASS_CHANNEL
 
-    if media is None:
+    if title is None or media is None:
         return None
 
     return BrowseMedia(
@@ -75,13 +215,19 @@ def build_item_response(coordinator, payload, get_thumbnail_url=None):
         title=title,
         can_play=search_type in PLAYABLE_MEDIA_TYPES and search_id,
         can_expand=True,
-        children=[item_payload(item, coordinator, get_thumbnail_url) for item in media],
+        children=[
+            item_payload(item, coordinator, get_browse_image_url) for item in media
+        ],
         children_media_class=children_media_class,
         thumbnail=thumbnail,
     )
 
 
-def item_payload(item, coordinator, get_thumbnail_url=None):
+def item_payload(
+    item: dict,
+    coordinator: RokuDataUpdateCoordinator,
+    get_browse_image_url: GetBrowseImageUrlType,
+) -> BrowseMedia:
     """
     Create response payload for a single media item.
 
@@ -92,8 +238,7 @@ def item_payload(item, coordinator, get_thumbnail_url=None):
     if "app_id" in item:
         media_content_type = MEDIA_TYPE_APP
         media_content_id = item["app_id"]
-        if get_thumbnail_url:
-            thumbnail = get_thumbnail_url(media_content_type, media_content_id)
+        thumbnail = get_browse_image_url(media_content_type, media_content_id, None)
     elif "channel_number" in item:
         media_content_type = MEDIA_TYPE_CHANNEL
         media_content_id = item["channel_number"]
@@ -114,52 +259,3 @@ def item_payload(item, coordinator, get_thumbnail_url=None):
         can_expand=can_expand,
         thumbnail=thumbnail,
     )
-
-
-def library_payload(coordinator, get_thumbnail_url=None):
-    """
-    Create response payload to describe contents of a specific library.
-
-    Used by async_browse_media.
-    """
-    library_info = BrowseMedia(
-        media_class=MEDIA_CLASS_DIRECTORY,
-        media_content_id="library",
-        media_content_type="library",
-        title="Media Library",
-        can_play=False,
-        can_expand=True,
-        children=[],
-    )
-
-    library = {
-        MEDIA_TYPE_APPS: "Apps",
-        MEDIA_TYPE_CHANNELS: "Channels",
-    }
-
-    for item in [{"title": name, "type": type_} for type_, name in library.items()]:
-        if (
-            item["type"] == MEDIA_TYPE_CHANNELS
-            and coordinator.data.info.device_type != "tv"
-        ):
-            continue
-
-        library_info.children.append(
-            item_payload(
-                {"title": item["title"], "type": item["type"]},
-                coordinator,
-                get_thumbnail_url,
-            )
-        )
-
-    if all(
-        child.media_content_type == MEDIA_TYPE_APPS for child in library_info.children
-    ):
-        library_info.children_media_class = MEDIA_CLASS_APP
-    elif all(
-        child.media_content_type == MEDIA_TYPE_CHANNELS
-        for child in library_info.children
-    ):
-        library_info.children_media_class = MEDIA_CLASS_CHANNEL
-
-    return library_info

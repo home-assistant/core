@@ -5,23 +5,15 @@ from typing import Literal
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_NAME,
+    CONF_HOST,
     CURRENCY_EURO,
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_GAS,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_VOLTAGE,
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
@@ -29,15 +21,15 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import P1MonitorDataUpdateCoordinator
 from .const import (
-    ATTR_ENTRY_TYPE,
     DOMAIN,
-    ENTRY_TYPE_SERVICE,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
@@ -53,50 +45,50 @@ SENSORS: dict[
             name="Gas Consumption",
             entity_registry_enabled_default=False,
             native_unit_of_measurement=VOLUME_CUBIC_METERS,
-            device_class=DEVICE_CLASS_GAS,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=SensorDeviceClass.GAS,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         SensorEntityDescription(
             key="power_consumption",
             name="Power Consumption",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="energy_consumption_high",
             name="Energy Consumption - High Tariff",
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         SensorEntityDescription(
             key="energy_consumption_low",
             name="Energy Consumption - Low Tariff",
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         SensorEntityDescription(
             key="power_production",
             name="Power Production",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="energy_production_high",
             name="Energy Production - High Tariff",
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         SensorEntityDescription(
             key="energy_production_low",
             name="Energy Production - Low Tariff",
             native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-            device_class=DEVICE_CLASS_ENERGY,
-            state_class=STATE_CLASS_TOTAL_INCREASING,
+            device_class=SensorDeviceClass.ENERGY,
+            state_class=SensorStateClass.TOTAL_INCREASING,
         ),
         SensorEntityDescription(
             key="energy_tariff_period",
@@ -109,85 +101,85 @@ SENSORS: dict[
             key="voltage_phase_l1",
             name="Voltage Phase L1",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-            device_class=DEVICE_CLASS_VOLTAGE,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="voltage_phase_l2",
             name="Voltage Phase L2",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-            device_class=DEVICE_CLASS_VOLTAGE,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="voltage_phase_l3",
             name="Voltage Phase L3",
             native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-            device_class=DEVICE_CLASS_VOLTAGE,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.VOLTAGE,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="current_phase_l1",
             name="Current Phase L1",
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-            device_class=DEVICE_CLASS_CURRENT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="current_phase_l2",
             name="Current Phase L2",
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-            device_class=DEVICE_CLASS_CURRENT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="current_phase_l3",
             name="Current Phase L3",
             native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-            device_class=DEVICE_CLASS_CURRENT,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.CURRENT,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="power_consumed_phase_l1",
             name="Power Consumed Phase L1",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="power_consumed_phase_l2",
             name="Power Consumed Phase L2",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="power_consumed_phase_l3",
             name="Power Consumed Phase L3",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="power_produced_phase_l1",
             name="Power Produced Phase L1",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="power_produced_phase_l2",
             name="Power Produced Phase L2",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
         SensorEntityDescription(
             key="power_produced_phase_l3",
             name="Power Produced Phase L3",
             native_unit_of_measurement=POWER_WATT,
-            device_class=DEVICE_CLASS_POWER,
-            state_class=STATE_CLASS_MEASUREMENT,
+            device_class=SensorDeviceClass.POWER,
+            state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
     SERVICE_SETTINGS: (
@@ -195,32 +187,32 @@ SENSORS: dict[
             key="gas_consumption_price",
             name="Gas Consumption Price",
             entity_registry_enabled_default=False,
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{VOLUME_CUBIC_METERS}",
         ),
         SensorEntityDescription(
             key="energy_consumption_price_low",
             name="Energy Consumption Price - Low",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
         SensorEntityDescription(
             key="energy_consumption_price_high",
             name="Energy Consumption Price - High",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
         SensorEntityDescription(
             key="energy_production_price_low",
             name="Energy Production Price - Low",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
         SensorEntityDescription(
             key="energy_production_price_high",
             name="Energy Production Price - High",
-            device_class=DEVICE_CLASS_MONETARY,
-            native_unit_of_measurement=CURRENCY_EURO,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=f"{CURRENCY_EURO}/{ENERGY_KILO_WATT_HOUR}",
         ),
     ),
 }
@@ -243,10 +235,10 @@ async def async_setup_entry(
     )
 
 
-class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
+class P1MonitorSensorEntity(
+    CoordinatorEntity[P1MonitorDataUpdateCoordinator], SensorEntity
+):
     """Defines an P1 Monitor sensor."""
-
-    coordinator: P1MonitorDataUpdateCoordinator
 
     def __init__(
         self,
@@ -267,14 +259,15 @@ class P1MonitorSensorEntity(CoordinatorEntity, SensorEntity):
             f"{coordinator.config_entry.entry_id}_{service_key}_{description.key}"
         )
 
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
                 (DOMAIN, f"{coordinator.config_entry.entry_id}_{service_key}")
             },
-            ATTR_NAME: service,
-            ATTR_MANUFACTURER: "P1 Monitor",
-            ATTR_ENTRY_TYPE: ENTRY_TYPE_SERVICE,
-        }
+            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+            manufacturer="P1 Monitor",
+            name=service,
+        )
 
     @property
     def native_value(self) -> StateType:

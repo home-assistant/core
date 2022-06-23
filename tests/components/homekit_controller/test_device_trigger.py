@@ -4,6 +4,7 @@ from aiohomekit.model.services import ServicesTypes
 import pytest
 
 import homeassistant.components.automation as automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.homekit_controller.const import DOMAIN
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -96,7 +97,16 @@ async def test_enumerate_remote(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-        }
+            "metadata": {"secondary": False},
+        },
+        {
+            "device_id": device.id,
+            "domain": "button",
+            "entity_id": "button.testdevice_identify",
+            "platform": "device",
+            "type": "pressed",
+            "metadata": {"secondary": True},
+        },
     ]
 
     for button in ("button1", "button2", "button3", "button4"):
@@ -108,10 +118,13 @@ async def test_enumerate_remote(hass, utcnow):
                     "platform": "device",
                     "type": button,
                     "subtype": subtype,
+                    "metadata": {},
                 }
             )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert_lists_same(triggers, expected)
 
 
@@ -132,7 +145,16 @@ async def test_enumerate_button(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-        }
+            "metadata": {"secondary": False},
+        },
+        {
+            "device_id": device.id,
+            "domain": "button",
+            "entity_id": "button.testdevice_identify",
+            "platform": "device",
+            "type": "pressed",
+            "metadata": {"secondary": True},
+        },
     ]
 
     for subtype in ("single_press", "double_press", "long_press"):
@@ -143,10 +165,13 @@ async def test_enumerate_button(hass, utcnow):
                 "platform": "device",
                 "type": "button1",
                 "subtype": subtype,
+                "metadata": {},
             }
         )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert_lists_same(triggers, expected)
 
 
@@ -167,7 +192,16 @@ async def test_enumerate_doorbell(hass, utcnow):
             "entity_id": "sensor.testdevice_battery",
             "platform": "device",
             "type": "battery_level",
-        }
+            "metadata": {"secondary": False},
+        },
+        {
+            "device_id": device.id,
+            "domain": "button",
+            "entity_id": "button.testdevice_identify",
+            "platform": "device",
+            "type": "pressed",
+            "metadata": {"secondary": True},
+        },
     ]
 
     for subtype in ("single_press", "double_press", "long_press"):
@@ -178,10 +212,13 @@ async def test_enumerate_doorbell(hass, utcnow):
                 "platform": "device",
                 "type": "doorbell",
                 "subtype": subtype,
+                "metadata": {},
             }
         )
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert_lists_same(triggers, expected)
 
 

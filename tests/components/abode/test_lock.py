@@ -10,6 +10,7 @@ from homeassistant.const import (
     SERVICE_UNLOCK,
     STATE_LOCKED,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .common import setup_platform
@@ -17,7 +18,7 @@ from .common import setup_platform
 DEVICE_ID = "lock.test_lock"
 
 
-async def test_entity_registry(hass):
+async def test_entity_registry(hass: HomeAssistant) -> None:
     """Tests that the devices are registered in the entity registry."""
     await setup_platform(hass, LOCK_DOMAIN)
     entity_registry = er.async_get(hass)
@@ -26,7 +27,7 @@ async def test_entity_registry(hass):
     assert entry.unique_id == "51cab3b545d2o34ed7fz02731bda5324"
 
 
-async def test_attributes(hass):
+async def test_attributes(hass: HomeAssistant) -> None:
     """Test the lock attributes are correct."""
     await setup_platform(hass, LOCK_DOMAIN)
 
@@ -39,7 +40,7 @@ async def test_attributes(hass):
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Test Lock"
 
 
-async def test_lock(hass):
+async def test_lock(hass: HomeAssistant) -> None:
     """Test the lock can be locked."""
     await setup_platform(hass, LOCK_DOMAIN)
 
@@ -51,7 +52,7 @@ async def test_lock(hass):
         mock_lock.assert_called_once()
 
 
-async def test_unlock(hass):
+async def test_unlock(hass: HomeAssistant) -> None:
     """Test the lock can be unlocked."""
     await setup_platform(hass, LOCK_DOMAIN)
 

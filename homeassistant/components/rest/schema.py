@@ -6,10 +6,7 @@ from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     DOMAIN as BINARY_SENSOR_DOMAIN,
 )
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES_SCHEMA as SENSOR_DEVICE_CLASSES_SCHEMA,
-    DOMAIN as SENSOR_DOMAIN,
-)
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_DEVICE_CLASS,
@@ -24,7 +21,6 @@ from homeassistant.const import (
     CONF_RESOURCE_TEMPLATE,
     CONF_SCAN_INTERVAL,
     CONF_TIMEOUT,
-    CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
     CONF_VERIFY_SSL,
@@ -32,6 +28,7 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
 
 from .const import (
     CONF_JSON_ATTRS,
@@ -39,7 +36,6 @@ from .const import (
     DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_METHOD,
-    DEFAULT_SENSOR_NAME,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     METHODS,
@@ -52,8 +48,8 @@ RESOURCE_SCHEMA = {
     vol.Optional(CONF_AUTHENTICATION): vol.In(
         [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
     ),
-    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.string}),
-    vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.string}),
+    vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
+    vol.Optional(CONF_PARAMS): vol.Schema({cv.string: cv.template}),
     vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.In(METHODS),
     vol.Optional(CONF_USERNAME): cv.string,
     vol.Optional(CONF_PASSWORD): cv.string,
@@ -63,9 +59,7 @@ RESOURCE_SCHEMA = {
 }
 
 SENSOR_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_SENSOR_NAME): cv.string,
-    vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
-    vol.Optional(CONF_DEVICE_CLASS): SENSOR_DEVICE_CLASSES_SCHEMA,
+    **TEMPLATE_SENSOR_BASE_SCHEMA.schema,
     vol.Optional(CONF_JSON_ATTRS, default=[]): cv.ensure_list_csv,
     vol.Optional(CONF_JSON_ATTRS_PATH): cv.string,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,

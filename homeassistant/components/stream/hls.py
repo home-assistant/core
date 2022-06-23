@@ -1,7 +1,7 @@
 """Provide functionality to stream HLS."""
 from __future__ import annotations
 
-import logging
+from http import HTTPStatus
 from typing import TYPE_CHECKING, cast
 
 from aiohttp import web
@@ -9,8 +9,6 @@ from aiohttp import web
 from homeassistant.core import HomeAssistant, callback
 
 from .const import (
-    ATTR_SETTINGS,
-    DOMAIN,
     EXT_X_START_LL_HLS,
     EXT_X_START_NON_LL_HLS,
     FORMAT_CONTENT_TYPE,
@@ -18,13 +16,18 @@ from .const import (
     MAX_SEGMENTS,
     NUM_PLAYLIST_SEGMENTS,
 )
-from .core import PROVIDERS, IdleTimer, StreamOutput, StreamSettings, StreamView
+from .core import (
+    PROVIDERS,
+    IdleTimer,
+    Segment,
+    StreamOutput,
+    StreamSettings,
+    StreamView,
+)
 from .fmp4utils import get_codec_string
 
 if TYPE_CHECKING:
     from . import Stream
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -42,32 +45,60 @@ def async_setup_hls(hass: HomeAssistant) -> str:
 class HlsStreamOutput(StreamOutput):
     """Represents HLS Output formats."""
 
-    def __init__(self, hass: HomeAssistant, idle_timer: IdleTimer) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
+    ) -> None:
         """Initialize HLS output."""
-        super().__init__(hass, idle_timer, deque_maxlen=MAX_SEGMENTS)
-        self.stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
-        self._target_duration = 0.0
+        super().__init__(hass, idle_timer, stream_settings, deque_maxlen=MAX_SEGMENTS)
+        self._target_duration = stream_settings.min_segment_duration
 
     @property
     def name(self) -> str:
         """Return provider name."""
         return HLS_PROVIDER
 
+    def cleanup(self) -> None:
+        """Handle cleanup."""
+        super().cleanup()
+        self._segments.clear()
+
     @property
     def target_duration(self) -> float:
-        """
-        Return the target duration.
-
-        The target duration is calculated as the max duration of any given segment,
-        and it is calculated only one time to avoid changing during playback.
-        """
-        if self._target_duration:
-            return self._target_duration
-        durations = [s.duration for s in self._segments if s.complete]
-        if len(durations) < 2:
-            return self.stream_settings.min_segment_duration
-        self._target_duration = max(durations)
+        """Return the target duration."""
         return self._target_duration
+
+    @callback
+    def _async_put(self, segment: Segment) -> None:
+        """Async put and also update the target duration.
+
+        The target duration is calculated as the max duration of any given segment.
+        Technically it should not change per the hls spec, but some cameras adjust
+        their GOPs periodically so we need to account for this change.
+        """
+        super()._async_put(segment)
+        self._target_duration = (
+            max((s.duration for s in self._segments), default=segment.duration)
+            or self.stream_settings.min_segment_duration
+        )
+
+    def discontinuity(self) -> None:
+        """Fix incomplete segment at end of deque."""
+        self._hass.loop.call_soon_threadsafe(self._async_discontinuity)
+
+    @callback
+    def _async_discontinuity(self) -> None:
+        """Fix incomplete segment at end of deque in event loop."""
+        # Fill in the segment duration or delete the segment if empty
+        if self._segments:
+            if (last_segment := self._segments[-1]).parts:
+                last_segment.duration = sum(
+                    part.duration for part in last_segment.parts
+                )
+            else:
+                self._segments.pop()
 
 
 class HlsMasterPlaylistView(StreamView):
@@ -99,7 +130,7 @@ class HlsMasterPlaylistView(StreamView):
     ) -> web.Response:
         """Return m3u8 playlist."""
         track = stream.add_provider(HLS_PROVIDER)
-        stream.start()
+        await stream.start()
         # Make sure at least two segments are ready (last one may not be complete)
         if not track.sequences and not await track.recv():
             return web.HTTPNotFound()
@@ -196,17 +227,7 @@ class HlsPlaylistView(StreamView):
         """Return a HTTP Bad Request response."""
         return web.Response(
             body=None,
-            status=400,
-            # From Appendix B.1 of the RFC:
-            # Successful responses to blocking Playlist requests should be cached
-            # for six Target Durations. Unsuccessful responses (such as 404s) should
-            # be cached for four Target Durations.  Successful responses to non-blocking
-            # Playlist requests should be cached for half the Target Duration.
-            # Unsuccessful responses to non-blocking Playlist requests should be
-            # cached for for one Target Duration.
-            headers={
-                "Cache-Control": f"max-age={(4 if blocking else 1)*target_duration:.0f}"
-            },
+            status=HTTPStatus.BAD_REQUEST,
         )
 
     @staticmethod
@@ -214,10 +235,7 @@ class HlsPlaylistView(StreamView):
         """Return a HTTP Not Found response."""
         return web.Response(
             body=None,
-            status=404,
-            headers={
-                "Cache-Control": f"max-age={(4 if blocking else 1)*target_duration:.0f}"
-            },
+            status=HTTPStatus.NOT_FOUND,
         )
 
     async def handle(
@@ -227,7 +245,7 @@ class HlsPlaylistView(StreamView):
         track: HlsStreamOutput = cast(
             HlsStreamOutput, stream.add_provider(HLS_PROVIDER)
         )
-        stream.start()
+        await stream.start()
 
         hls_msn: str | int | None = request.query.get("_HLS_msn")
         hls_part: str | int | None = request.query.get("_HLS_part")
@@ -300,7 +318,6 @@ class HlsPlaylistView(StreamView):
             body=self.render(track).encode("utf-8"),
             headers={
                 "Content-Type": FORMAT_CONTENT_TYPE[HLS_PROVIDER],
-                "Cache-Control": f"max-age={(6 if blocking_request else 0.5)*track.target_duration:.0f}",
             },
         )
         response.enable_compression(web.ContentCoding.gzip)
@@ -354,23 +371,17 @@ class HlsPartView(StreamView):
         ):
             return web.Response(
                 body=None,
-                status=404,
-                headers={"Cache-Control": f"max-age={track.target_duration:.0f}"},
+                status=HTTPStatus.NOT_FOUND,
             )
         # If the part is ready or has been hinted,
         if int(part_num) == len(segment.parts):
             await track.part_recv(timeout=track.stream_settings.hls_part_timeout)
         if int(part_num) >= len(segment.parts):
-            return web.HTTPRequestRangeNotSatisfiable(
-                headers={
-                    "Cache-Control": f"max-age={track.target_duration:.0f}",
-                }
-            )
+            return web.HTTPRequestRangeNotSatisfiable()
         return web.Response(
             body=segment.parts[int(part_num)].data,
             headers={
                 "Content-Type": "video/iso.segment",
-                "Cache-Control": f"max-age={6*track.target_duration:.0f}",
             },
         )
 
@@ -402,13 +413,11 @@ class HlsSegmentView(StreamView):
         ):
             return web.Response(
                 body=None,
-                status=404,
-                headers={"Cache-Control": f"max-age={track.target_duration:.0f}"},
+                status=HTTPStatus.NOT_FOUND,
             )
         return web.Response(
             body=segment.get_data(),
             headers={
                 "Content-Type": "video/iso.segment",
-                "Cache-Control": f"max-age={6*track.target_duration:.0f}",
             },
         )

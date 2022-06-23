@@ -1,5 +1,7 @@
 """Test mobile app device tracker."""
 
+from http import HTTPStatus
+
 
 async def test_sending_location(hass, create_registrations, webhook_client):
     """Test sending a location via a webhook."""
@@ -20,7 +22,7 @@ async def test_sending_location(hass, create_registrations, webhook_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     await hass.async_block_till_done()
     state = hass.states.get("device_tracker.test_1_2")
     assert state is not None
@@ -53,7 +55,7 @@ async def test_sending_location(hass, create_registrations, webhook_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     await hass.async_block_till_done()
     state = hass.states.get("device_tracker.test_1_2")
     assert state is not None
@@ -87,7 +89,7 @@ async def test_restoring_location(hass, create_registrations, webhook_client):
         },
     )
 
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     await hass.async_block_till_done()
     state_1 = hass.states.get("device_tracker.test_1_2")
     assert state_1 is not None

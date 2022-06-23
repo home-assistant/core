@@ -1,5 +1,6 @@
 """Test request context middleware."""
 from contextvars import ContextVar
+from http import HTTPStatus
 
 from aiohttp import web
 
@@ -24,7 +25,7 @@ async def test_request_context_middleware(aiohttp_client):
     mock_api_client = await aiohttp_client(app)
 
     resp = await mock_api_client.get("/")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
 
     text = await resp.text()
     assert text == "hi!"

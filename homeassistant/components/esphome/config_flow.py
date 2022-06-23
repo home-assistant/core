@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections import OrderedDict
+from collections.abc import Mapping
 from typing import Any
 
 from aioesphomeapi import (
@@ -20,7 +21,6 @@ from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.typing import DiscoveryInfoType
 
 from . import CONF_NOISE_PSK, DOMAIN, DomainData
 
@@ -64,7 +64,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         return await self._async_step_user_base(user_input=user_input)
 
-    async def async_step_reauth(self, data: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle a flow initialized by a reauth event."""
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert entry is not None
@@ -72,6 +72,7 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         self._port = entry.data[CONF_PORT]
         self._password = entry.data[CONF_PASSWORD]
         self._noise_psk = entry.data.get(CONF_NOISE_PSK)
+        self._name = entry.title
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -139,26 +140,24 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: DiscoveryInfoType
+        self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle zeroconf discovery."""
         # Hostname is format: livingroom.local.
-        local_name = discovery_info["hostname"][:-1]
+        local_name = discovery_info.hostname[:-1]
         node_name = local_name[: -len(".local")]
-        address = discovery_info["properties"].get("address", local_name)
+        address = discovery_info.properties.get("address", local_name)
 
         # Check if already configured
         await self.async_set_unique_id(node_name)
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]}
-        )
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
         for entry in self._async_current_entries():
             already_configured = False
 
             if CONF_HOST in entry.data and entry.data[CONF_HOST] in (
                 address,
-                discovery_info[CONF_HOST],
+                discovery_info.host,
             ):
                 # Is this address or IP address already configured?
                 already_configured = True
@@ -175,14 +174,17 @@ class EsphomeFlowHandler(ConfigFlow, domain=DOMAIN):
                 if not entry.unique_id:
                     self.hass.config_entries.async_update_entry(
                         entry,
-                        data={**entry.data, CONF_HOST: discovery_info[CONF_HOST]},
+                        data={
+                            **entry.data,
+                            CONF_HOST: discovery_info.host,
+                        },
                         unique_id=node_name,
                     )
 
                 return self.async_abort(reason="already_configured")
 
-        self._host = discovery_info[CONF_HOST]
-        self._port = discovery_info[CONF_PORT]
+        self._host = discovery_info.host
+        self._port = discovery_info.port
         self._name = node_name
 
         return await self.async_step_discovery_confirm()

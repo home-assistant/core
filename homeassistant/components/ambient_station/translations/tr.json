@@ -4,13 +4,16 @@
             "already_configured": "Hizmet zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
         },
         "error": {
-            "invalid_key": "Ge\u00e7ersiz API anahtar\u0131"
+            "invalid_key": "Ge\u00e7ersiz API anahtar\u0131",
+            "no_devices": "Hesapta cihaz bulunamad\u0131"
         },
         "step": {
             "user": {
                 "data": {
-                    "api_key": "API Anahtar\u0131"
-                }
+                    "api_key": "API Anahtar\u0131",
+                    "app_key": "Uygulama Anahtar\u0131"
+                },
+                "title": "Bilgilerinizi doldurun"
             }
         }
     }

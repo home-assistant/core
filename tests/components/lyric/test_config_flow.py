@@ -1,5 +1,6 @@
 """Test the Honeywell Lyric config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import patch
 
 import pytest
@@ -40,7 +41,7 @@ async def test_abort_if_no_configuration(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
+    assert result["reason"] == "missing_credentials"
 
 
 async def test_full_flow(
@@ -79,7 +80,7 @@ async def test_full_flow(
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
-    assert resp.status == 200
+    assert resp.status == HTTPStatus.OK
     assert resp.headers["content-type"] == "text/html; charset=utf-8"
 
     aioclient_mock.post(

@@ -1,13 +1,13 @@
 """Constants for the Efergy integration."""
 from datetime import timedelta
+import logging
+from typing import Final
 
-ATTRIBUTION = "Data provided by Efergy"
-
-CONF_APPTOKEN = "app_token"
 CONF_CURRENT_VALUES = "current_values"
 
-DATA_KEY_API = "api"
 DEFAULT_NAME = "Efergy"
-DOMAIN = "efergy"
+DOMAIN: Final = "efergy"
+
+LOGGER = logging.getLogger(__package__)
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=30)

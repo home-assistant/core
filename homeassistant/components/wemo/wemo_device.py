@@ -3,12 +3,14 @@ import asyncio
 from datetime import timedelta
 import logging
 
-from pywemo import Insight, WeMoDevice
+from pywemo import Insight, LongPressMixin, WeMoDevice
 from pywemo.exceptions import ActionException
 from pywemo.subscribe import EVENT_TYPE_LONG_PRESS
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_IDENTIFIERS,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_PARAMS,
@@ -16,7 +18,11 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import async_get as async_get_device_registry
+from homeassistant.helpers.device_registry import (
+    CONNECTION_UPNP,
+    async_get as async_get_device_registry,
+)
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, WEMO_SUBSCRIPTION_EVENT
@@ -38,7 +44,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
         self.hass = hass
         self.wemo = wemo
         self.device_id = device_id
-        self.device_info = _device_info(wemo)
+        self.device_info = _create_device_info(wemo)
         self.supports_long_press = wemo.supports_long_press()
         self.update_lock = asyncio.Lock()
 
@@ -60,7 +66,7 @@ class DeviceCoordinator(DataUpdateCoordinator):
             )
         else:
             updated = self.wemo.subscription_update(event_type, params)
-            self.hass.add_job(self._async_subscription_callback(updated))
+            self.hass.create_task(self._async_subscription_callback(updated))
 
     async def _async_subscription_callback(self, updated: bool) -> None:
         """Update the state by the Wemo device."""
@@ -120,13 +126,24 @@ class DeviceCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed("WeMo update failed") from err
 
 
-def _device_info(wemo: WeMoDevice):
-    return {
-        "name": wemo.name,
-        "identifiers": {(DOMAIN, wemo.serialnumber)},
-        "model": wemo.model_name,
-        "manufacturer": "Belkin",
-    }
+def _create_device_info(wemo: WeMoDevice) -> DeviceInfo:
+    """Create device information. Modify if special device."""
+    _dev_info = _device_info(wemo)
+    if wemo.model_name == "DLI emulated Belkin Socket":
+        _dev_info[ATTR_CONFIGURATION_URL] = f"http://{wemo.host}"
+        _dev_info[ATTR_IDENTIFIERS] = {(DOMAIN, wemo.serialnumber[:-1])}
+    return _dev_info
+
+
+def _device_info(wemo: WeMoDevice) -> DeviceInfo:
+    return DeviceInfo(
+        connections={(CONNECTION_UPNP, wemo.udn)},
+        identifiers={(DOMAIN, wemo.serialnumber)},
+        manufacturer="Belkin",
+        model=wemo.model_name,
+        name=wemo.name,
+        sw_version=wemo.firmware_version,
+    )
 
 
 async def async_register_device(
@@ -138,7 +155,7 @@ async def async_register_device(
 
     device_registry = async_get_device_registry(hass)
     entry = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, **_device_info(wemo)
+        config_entry_id=config_entry.entry_id, **_create_device_info(wemo)
     )
 
     device = DeviceCoordinator(hass, wemo, entry.id)
@@ -147,7 +164,7 @@ async def async_register_device(
     registry.on(wemo, None, device.subscription_callback)
     await hass.async_add_executor_job(registry.register, wemo)
 
-    if device.supports_long_press:
+    if isinstance(wemo, LongPressMixin):
         try:
             await hass.async_add_executor_job(wemo.ensure_long_press_virtual_device)
         # Temporarily handling all exceptions for #52996 & pywemo/pywemo/issues/276
@@ -164,4 +181,5 @@ async def async_register_device(
 @callback
 def async_get_coordinator(hass: HomeAssistant, device_id: str) -> DeviceCoordinator:
     """Return DeviceCoordinator for device_id."""
-    return hass.data[DOMAIN]["devices"][device_id]
+    coordinator: DeviceCoordinator = hass.data[DOMAIN]["devices"][device_id]
+    return coordinator

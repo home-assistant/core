@@ -5,6 +5,7 @@ Such systems include evohome, Round Thermostat, and others.
 from __future__ import annotations
 
 from datetime import datetime as dt, timedelta
+from http import HTTPStatus
 import logging
 import re
 from typing import Any
@@ -19,11 +20,11 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
-    HTTP_SERVICE_UNAVAILABLE,
-    HTTP_TOO_MANY_REQUESTS,
     TEMP_CELSIUS,
+    Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -32,7 +33,9 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -158,13 +161,13 @@ def _handle_exception(err) -> bool:
         )
 
     except aiohttp.ClientResponseError:
-        if err.status == HTTP_SERVICE_UNAVAILABLE:
+        if err.status == HTTPStatus.SERVICE_UNAVAILABLE:
             _LOGGER.warning(
                 "The vendor says their server is currently unavailable. "
                 "Check the vendor's service status page"
             )
 
-        elif err.status == HTTP_TOO_MANY_REQUESTS:
+        elif err.status == HTTPStatus.TOO_MANY_REQUESTS:
             _LOGGER.warning(
                 "The vendor's API rate limit has been exceeded. "
                 "If this message persists, consider increasing the %s",
@@ -196,7 +199,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         user_data = tokens.pop(USER_DATA, None)
         return (tokens, user_data)
 
-    store = hass.helpers.storage.Store(STORAGE_VER, STORAGE_KEY)
+    store = Store(hass, STORAGE_VER, STORAGE_KEY)
     tokens, user_data = await load_auth_tokens(store)
 
     client_v2 = evohomeasync2.EvohomeClient(
@@ -248,14 +251,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     await broker.save_auth_tokens()
     await broker.async_update()  # get initial state
 
-    hass.async_create_task(async_load_platform(hass, "climate", DOMAIN, {}, config))
+    hass.async_create_task(
+        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
+    )
     if broker.tcs.hotwater:
         hass.async_create_task(
-            async_load_platform(hass, "water_heater", DOMAIN, {}, config)
+            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
         )
 
-    hass.helpers.event.async_track_time_interval(
-        broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
+    async_track_time_interval(
+        hass, broker.async_update, config[DOMAIN][CONF_SCAN_INTERVAL]
     )
 
     setup_service_functions(hass, broker)
@@ -275,12 +280,12 @@ def setup_service_functions(hass: HomeAssistant, broker):
     """
 
     @verify_domain_control(hass, DOMAIN)
-    async def force_refresh(call) -> None:
+    async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
         await broker.async_update()
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_system_mode(call) -> None:
+    async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         payload = {
             "unique_id": broker.tcs.systemId,
@@ -290,11 +295,11 @@ def setup_service_functions(hass: HomeAssistant, broker):
         async_dispatcher_send(hass, DOMAIN, payload)
 
     @verify_domain_control(hass, DOMAIN)
-    async def set_zone_override(call) -> None:
+    async def set_zone_override(call: ServiceCall) -> None:
         """Set the zone override (setpoint)."""
         entity_id = call.data[ATTR_ENTITY_ID]
 
-        registry = await hass.helpers.entity_registry.async_get_registry()
+        registry = er.async_get(hass)
         registry_entry = registry.async_get(entity_id)
 
         if registry_entry is None or registry_entry.platform != DOMAIN:
@@ -432,7 +437,7 @@ class EvoBroker:
             return
 
         if update_state:  # wait a moment for system to quiesce before updating state
-            self.hass.helpers.event.async_call_later(1, self._update_v2_api_state)
+            async_call_later(self.hass, 1, self._update_v2_api_state)
 
         return result
 
@@ -521,7 +526,6 @@ class EvoDevice(Entity):
         self._evo_tcs = evo_broker.tcs
 
         self._unique_id = self._name = self._icon = self._precision = None
-        self._supported_features = None
         self._device_state_attrs = {}
 
     async def async_refresh(self, payload: dict | None = None) -> None:
@@ -576,11 +580,6 @@ class EvoDevice(Entity):
     def icon(self) -> str:
         """Return the icon to use in the frontend UI."""
         return self._icon
-
-    @property
-    def supported_features(self) -> int:
-        """Get the flag of supported features of the device."""
-        return self._supported_features
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""

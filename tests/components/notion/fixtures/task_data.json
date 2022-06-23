@@ -1,0 +1,86 @@
+[
+  {
+    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "task_type": "missing",
+    "sensor_data": [],
+    "status": {
+      "value": "not_missing",
+      "received_at": "2020-11-11T21:18:06.613Z"
+    },
+    "created_at": "2020-11-11T21:18:06.613Z",
+    "updated_at": "2020-11-11T21:18:06.617Z",
+    "sensor_id": 525993,
+    "model_version": "2.0",
+    "configuration": {},
+    "links": {
+      "sensor": 525993
+    }
+  },
+  {
+    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "task_type": "leak",
+    "sensor_data": [],
+    "status": {
+      "insights": {
+        "primary": {
+          "from_state": null,
+          "to_state": "no_leak",
+          "data_received_at": "2020-11-11T21:19:13.755Z",
+          "origin": {}
+        }
+      }
+    },
+    "created_at": "2020-11-11T21:19:13.755Z",
+    "updated_at": "2020-11-11T21:19:13.764Z",
+    "sensor_id": 525993,
+    "model_version": "2.1",
+    "configuration": {},
+    "links": {
+      "sensor": 525993
+    }
+  },
+  {
+    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "task_type": "temperature",
+    "sensor_data": [],
+    "status": {
+      "value": "20.991287231445312",
+      "received_at": "2021-01-27T15:18:49.996Z"
+    },
+    "created_at": "2020-11-11T21:19:13.856Z",
+    "updated_at": "2020-11-11T21:19:13.865Z",
+    "sensor_id": 525993,
+    "model_version": "2.1",
+    "configuration": {
+      "lower": 15.56,
+      "upper": 29.44,
+      "offset": 0
+    },
+    "links": {
+      "sensor": 525993
+    }
+  },
+  {
+    "id": "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
+    "task_type": "low_battery",
+    "sensor_data": [],
+    "status": {
+      "insights": {
+        "primary": {
+          "from_state": null,
+          "to_state": "high",
+          "data_received_at": "2020-11-17T18:40:27.024Z",
+          "origin": {}
+        }
+      }
+    },
+    "created_at": "2020-11-17T18:40:27.024Z",
+    "updated_at": "2020-11-17T18:40:27.033Z",
+    "sensor_id": 525993,
+    "model_version": "4.1",
+    "configuration": {},
+    "links": {
+      "sensor": 525993
+    }
+  }
+]

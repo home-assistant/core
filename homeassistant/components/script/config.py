@@ -1,5 +1,4 @@
 """Config validation helper for the script integration."""
-import asyncio
 from contextlib import suppress
 
 import voluptuous as vol
@@ -24,7 +23,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_per_platform, config_validation as cv
 from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
-    async_validate_action_config,
+    async_validate_actions_config,
     make_script_schema,
 )
 from homeassistant.helpers.selector import validate_selector
@@ -36,6 +35,7 @@ from .const import (
     CONF_REQUIRED,
     CONF_TRACE,
     DOMAIN,
+    LOGGER,
 )
 from .helpers import async_get_blueprints
 
@@ -72,11 +72,8 @@ async def async_validate_config_item(hass, config, full_config=None):
         return await blueprints.async_inputs_from_config(config)
 
     config = SCRIPT_ENTITY_SCHEMA(config)
-    config[CONF_SEQUENCE] = await asyncio.gather(
-        *(
-            async_validate_action_config(hass, action)
-            for action in config[CONF_SEQUENCE]
-        )
+    config[CONF_SEQUENCE] = await async_validate_actions_config(
+        hass, config[CONF_SEQUENCE]
     )
 
     return config
@@ -114,6 +111,9 @@ async def async_validate_config(hass, config):
     scripts = {}
     for _, p_config in config_per_platform(config, DOMAIN):
         for object_id, cfg in p_config.items():
+            if object_id in scripts:
+                LOGGER.warning("Duplicate script detected with name: '%s'", object_id)
+                continue
             cfg = await _try_async_validate_config_item(hass, object_id, cfg, config)
             if cfg is not None:
                 scripts[object_id] = cfg

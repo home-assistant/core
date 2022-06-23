@@ -11,25 +11,15 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_TEMPERATURE,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
-)
+from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ATTR_TARGET_TEMPERATURE, DATA_BSBLAN_CLIENT, DOMAIN
@@ -39,12 +29,10 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 SCAN_INTERVAL = timedelta(seconds=20)
 
-SUPPORT_FLAGS = SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
-
 HVAC_MODES = [
-    HVAC_MODE_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
+    HVACMode.AUTO,
+    HVACMode.HEAT,
+    HVACMode.OFF,
 ]
 
 PRESET_MODES = [
@@ -53,9 +41,9 @@ PRESET_MODES = [
 ]
 
 HA_STATE_TO_BSBLAN = {
-    HVAC_MODE_AUTO: "1",
-    HVAC_MODE_HEAT: "3",
-    HVAC_MODE_OFF: "0",
+    HVACMode.AUTO: "1",
+    HVACMode.HEAT: "3",
+    HVACMode.OFF: "0",
 }
 
 BSBLAN_TO_HA_STATE = {value: key for key, value in HA_STATE_TO_BSBLAN.items()}
@@ -83,7 +71,9 @@ async def async_setup_entry(
 class BSBLanClimate(ClimateEntity):
     """Defines a BSBLan climate device."""
 
-    _attr_supported_features = SUPPORT_FLAGS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+    )
     _attr_hvac_modes = HVAC_MODES
     _attr_preset_modes = PRESET_MODES
 
@@ -98,12 +88,12 @@ class BSBLanClimate(ClimateEntity):
         self._store_hvac_mode = None
         self.bsblan = bsblan
         self._attr_name = self._attr_unique_id = info.device_identification
-        self._attr_device_info = {
-            ATTR_IDENTIFIERS: {(DOMAIN, info.device_identification)},
-            ATTR_NAME: "BSBLan Device",
-            ATTR_MANUFACTURER: "BSBLan",
-            ATTR_MODEL: info.controller_variant,
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, info.device_identification)},
+            manufacturer="BSBLan",
+            model=info.controller_variant,
+            name="BSBLan Device",
+        )
 
     async def async_set_preset_mode(self, preset_mode):
         """Set preset mode."""

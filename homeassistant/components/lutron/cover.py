@@ -1,20 +1,28 @@
 """Support for Lutron shades."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import LUTRON_CONTROLLER, LUTRON_DEVICES, LutronDevice
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Lutron shades."""
     devs = []
     for (area_name, device) in hass.data[LUTRON_DEVICES]["cover"]:
@@ -22,16 +30,16 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         devs.append(dev)
 
     add_entities(devs, True)
-    return True
 
 
 class LutronCover(LutronDevice, CoverEntity):
     """Representation of a Lutron shade."""
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.SET_POSITION
+    )
 
     @property
     def is_closed(self):

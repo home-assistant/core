@@ -7,12 +7,14 @@ import logging
 from typing import Any
 
 from fints.client import FinTS3PinTanClient
-from fints.dialog import FinTSDialogError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +53,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the sensors.
 
     Login to the bank and get a list of existing accounts. Create a
@@ -72,15 +79,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     client = FinTsClient(credentials, fints_name)
     balance_accounts, holdings_accounts = client.detect_accounts()
-    accounts = []
+    accounts: list[SensorEntity] = []
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
             _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
-        account_name = account_config.get(account.iban)
-        if not account_name:
+        if not (account_name := account_config.get(account.iban)):
             account_name = f"{fints_name} - {account.iban}"
         accounts.append(FinTsAccount(client, account, account_name))
         _LOGGER.debug("Creating account %s for bank %s", account.iban, fints_name)
@@ -121,6 +127,9 @@ class FinTsClient:
         As the fints library is stateless, there is not benefit in caching
         the client objects. If that ever changes, consider caching the client
         object and also think about potential concurrency problems.
+
+        Note: As of version 2, the fints library is not stateless anymore.
+        This should be considered when reworking this integration.
         """
 
         return FinTS3PinTanClient(
@@ -133,24 +142,22 @@ class FinTsClient:
     def detect_accounts(self):
         """Identify the accounts of the bank."""
 
+        bank = self.client
+        accounts = bank.get_sepa_accounts()
+        account_types = {
+            x["iban"]: x["type"]
+            for x in bank.get_information()["accounts"]
+            if x["iban"] is not None
+        }
+
         balance_accounts = []
         holdings_accounts = []
-        for account in self.client.get_sepa_accounts():
-            try:
-                self.client.get_balance(account)
+        for account in accounts:
+            account_type = account_types[account.iban]
+            if 1 <= account_type <= 9:  # 1-9 is balance account
                 balance_accounts.append(account)
-            except IndexError:
-                # account is not a balance account.
-                pass
-            except FinTSDialogError:
-                # account is not a balance account.
-                pass
-            try:
-                self.client.get_holdings(account)
+            elif 30 <= account_type <= 39:  # 30-39 is holdings account
                 holdings_accounts.append(account)
-            except FinTSDialogError:
-                # account is not a holdings account.
-                pass
 
         return balance_accounts, holdings_accounts
 

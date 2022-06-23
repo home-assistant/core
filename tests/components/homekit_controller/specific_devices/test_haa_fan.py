@@ -1,9 +1,13 @@
 """Make sure that a H.A.A. fan can be setup."""
 
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.components.fan import SUPPORT_SET_SPEED
+from homeassistant.helpers.entity import EntityCategory
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -12,37 +16,65 @@ from tests.components.homekit_controller.common import (
 async def test_haa_fan_setup(hass):
     """Test that a H.A.A. fan can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "haa_fan.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
+    # FIXME: assert round(state.attributes["percentage_step"], 2) == 33.33
 
-    # Check that the switch entity is handled correctly
-
-    entry = entity_registry.async_get("switch.haa_c718b3")
-    assert entry.unique_id == "homekit-C718B3-2-8"
-
-    helper = Helper(hass, "switch.haa_c718b3", pairing, accessories[0], config_entry)
-    state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "HAA-C718B3"
-
-    device = device_registry.async_get(entry.device_id)
-    assert device.manufacturer == "José A. Jiménez Campos"
-    assert device.name == "HAA-C718B3"
-    assert device.sw_version == "5.0.18"
-    assert device.via_device_id is not None
-
-    # Assert the fan is detected
-    entry = entity_registry.async_get("fan.haa_c718b3")
-    assert entry.unique_id == "homekit-C718B3-1-8"
-
-    helper = Helper(
+    await assert_devices_and_entities_created(
         hass,
-        "fan.haa_c718b3",
-        pairing,
-        accessories[0],
-        config_entry,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="HAA-C718B3",
+            model="RavenSystem HAA",
+            manufacturer="José A. Jiménez Campos",
+            sw_version="5.0.18",
+            hw_version="",
+            serial_number="C718B3-1",
+            devices=[
+                DeviceTestInfo(
+                    name="HAA-C718B3",
+                    model="RavenSystem HAA",
+                    manufacturer="José A. Jiménez Campos",
+                    sw_version="5.0.18",
+                    hw_version="",
+                    serial_number="C718B3-2",
+                    unique_id="00:00:00:00:00:00:aid:2",
+                    devices=[],
+                    entities=[
+                        EntityTestInfo(
+                            entity_id="switch.haa_c718b3",
+                            friendly_name="HAA-C718B3",
+                            unique_id="homekit-C718B3-2-8",
+                            state="off",
+                        )
+                    ],
+                ),
+            ],
+            entities=[
+                EntityTestInfo(
+                    entity_id="fan.haa_c718b3",
+                    friendly_name="HAA-C718B3",
+                    unique_id="homekit-C718B3-1-8",
+                    state="off",
+                    supported_features=SUPPORT_SET_SPEED,
+                    capabilities={
+                        "preset_modes": None,
+                    },
+                ),
+                EntityTestInfo(
+                    entity_id="button.haa_c718b3_setup",
+                    friendly_name="HAA-C718B3 Setup",
+                    unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1012",
+                    entity_category=EntityCategory.CONFIG,
+                    state="unknown",
+                ),
+                EntityTestInfo(
+                    entity_id="button.haa_c718b3_update",
+                    friendly_name="HAA-C718B3 Update",
+                    unique_id="homekit-C718B3-1-aid:1-sid:1010-cid:1011",
+                    entity_category=EntityCategory.CONFIG,
+                    state="unknown",
+                ),
+            ],
+        ),
     )
-    state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "HAA-C718B3"
-    assert round(state.attributes["percentage_step"], 2) == 33.33

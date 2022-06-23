@@ -9,5 +9,5 @@ set_away_mode:
       selector:
         select:
           options:
-            - 'away'
-            - 'home'
+            - "away"
+            - "home"

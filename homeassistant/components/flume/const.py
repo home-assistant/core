@@ -2,10 +2,11 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntityDescription
+from homeassistant.const import Platform
 
 DOMAIN = "flume"
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 
 DEFAULT_NAME = "Flume Sensor"
 

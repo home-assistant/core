@@ -1,5 +1,5 @@
 """Base class for Tado entity."""
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DEFAULT_NAME, DOMAIN, TADO_HOME, TADO_ZONE
 
@@ -15,16 +15,17 @@ class TadoDeviceEntity(Entity):
         self.device_id = device_info["shortSerialNo"]
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.device_id)},
-            "name": self.device_name,
-            "manufacturer": DEFAULT_NAME,
-            "sw_version": self._device_info["currentFwVersion"],
-            "model": self._device_info["deviceType"],
-            "via_device": (DOMAIN, self._device_info["serialNo"]),
-        }
+        return DeviceInfo(
+            configuration_url=f"https://app.tado.com/en/main/settings/rooms-and-devices/device/{self.device_name}",
+            identifiers={(DOMAIN, self.device_id)},
+            name=self.device_name,
+            manufacturer=DEFAULT_NAME,
+            sw_version=self._device_info["currentFwVersion"],
+            model=self._device_info["deviceType"],
+            via_device=(DOMAIN, self._device_info["serialNo"]),
+        )
 
     @property
     def should_poll(self):
@@ -42,14 +43,15 @@ class TadoHomeEntity(Entity):
         self.home_id = tado.home_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self.home_id)},
-            "name": self.home_name,
-            "manufacturer": DEFAULT_NAME,
-            "model": TADO_HOME,
-        }
+        return DeviceInfo(
+            configuration_url="https://app.tado.com",
+            identifiers={(DOMAIN, self.home_id)},
+            manufacturer=DEFAULT_NAME,
+            model=TADO_HOME,
+            name=self.home_name,
+        )
 
 
 class TadoZoneEntity(Entity):
@@ -63,15 +65,16 @@ class TadoZoneEntity(Entity):
         self.zone_id = zone_id
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device_info of the device."""
-        return {
-            "identifiers": {(DOMAIN, self._device_zone_id)},
-            "name": self.zone_name,
-            "manufacturer": DEFAULT_NAME,
-            "model": TADO_ZONE,
-            "suggested_area": self.zone_name,
-        }
+        return DeviceInfo(
+            configuration_url=f"https://app.tado.com/en/main/home/zoneV2/{self.zone_id}",
+            identifiers={(DOMAIN, self._device_zone_id)},
+            name=self.zone_name,
+            manufacturer=DEFAULT_NAME,
+            model=TADO_ZONE,
+            suggested_area=self.zone_name,
+        )
 
     @property
     def should_poll(self):

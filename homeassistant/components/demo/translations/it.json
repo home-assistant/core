@@ -3,8 +3,8 @@
         "step": {
             "init": {
                 "data": {
-                    "one": "Pi\u00f9",
-                    "other": "Altri"
+                    "one": "Vuoto",
+                    "other": "Vuoti"
                 }
             },
             "options_1": {
@@ -17,7 +17,7 @@
             "options_2": {
                 "data": {
                     "multi": "Selezione multipla",
-                    "select": "Selezionare un'opzione",
+                    "select": "Seleziona un'opzione",
                     "string": "Valore stringa"
                 }
             }

@@ -8,19 +8,20 @@ from random import randrange
 
 import aiohttp
 
+from homeassistant.components.recorder import get_instance
+from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
+from homeassistant.components.recorder.statistics import (
+    async_add_external_statistics,
+    get_last_statistics,
+    statistics_during_period,
+)
 from homeassistant.components.sensor import (
-    DEVICE_CLASS_CURRENT,
-    DEVICE_CLASS_ENERGY,
-    DEVICE_CLASS_MONETARY,
-    DEVICE_CLASS_POWER,
-    DEVICE_CLASS_POWER_FACTOR,
-    DEVICE_CLASS_SIGNAL_STRENGTH,
-    DEVICE_CLASS_VOLTAGE,
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
@@ -30,11 +31,16 @@ from homeassistant.const import (
     POWER_WATT,
     SIGNAL_STRENGTH_DECIBELS,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import async_get as async_get_dev_reg
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.entity_registry import async_get as async_get_entity_reg
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 from homeassistant.util import Throttle, dt as dt_util
 
 from .const import DOMAIN as TIBBER_DOMAIN, MANUFACTURER
@@ -45,164 +51,200 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-SIGNAL_UPDATE_ENTITY = "tibber_rt_update_{}"
 
 
 RT_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="averagePower",
         name="average power",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
     ),
     SensorEntityDescription(
         key="power",
         name="power",
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     SensorEntityDescription(
         key="powerProduction",
         name="power production",
-        device_class=DEVICE_CLASS_POWER,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=POWER_WATT,
     ),
     SensorEntityDescription(
         key="minPower",
         name="min power",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
     ),
     SensorEntityDescription(
         key="maxPower",
         name="max power",
-        device_class=DEVICE_CLASS_POWER,
+        device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_WATT,
     ),
     SensorEntityDescription(
         key="accumulatedConsumption",
         name="accumulated consumption",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedConsumptionLastHour",
         name="accumulated consumption current hour",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="estimatedHourConsumption",
+        name="Estimated consumption current hour",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
     ),
     SensorEntityDescription(
         key="accumulatedProduction",
         name="accumulated production",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="accumulatedProductionLastHour",
         name="accumulated production current hour",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="lastMeterConsumption",
         name="last meter consumption",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="lastMeterProduction",
         name="last meter production",
-        device_class=DEVICE_CLASS_ENERGY,
+        device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
-        state_class=STATE_CLASS_TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     SensorEntityDescription(
         key="voltagePhase1",
         name="voltage phase1",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltagePhase2",
         name="voltage phase2",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="voltagePhase3",
         name="voltage phase3",
-        device_class=DEVICE_CLASS_VOLTAGE,
+        device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=ELECTRIC_POTENTIAL_VOLT,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="currentL1",
         name="current L1",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="currentL2",
         name="current L2",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="currentL3",
         name="current L3",
-        device_class=DEVICE_CLASS_CURRENT,
+        device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=ELECTRIC_CURRENT_AMPERE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="signalStrength",
         name="signal strength",
-        device_class=DEVICE_CLASS_SIGNAL_STRENGTH,
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="accumulatedReward",
         name="accumulated reward",
-        device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="accumulatedCost",
         name="accumulated cost",
-        device_class=DEVICE_CLASS_MONETARY,
-        state_class=STATE_CLASS_MEASUREMENT,
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key="powerFactor",
         name="power factor",
-        device_class=DEVICE_CLASS_POWER_FACTOR,
+        device_class=SensorDeviceClass.POWER_FACTOR,
         native_unit_of_measurement=PERCENTAGE,
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
+SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="month_cost",
+        name="Monthly cost",
+        device_class=SensorDeviceClass.MONETARY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="peak_hour",
+        name="Monthly peak hour consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+    ),
+    SensorEntityDescription(
+        key="peak_hour_time",
+        name="Time of max hour consumption",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
+    SensorEntityDescription(
+        key="month_cons",
+        name="Monthly net consumption",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
 )
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up the Tibber sensor."""
 
-    tibber_connection = hass.data.get(TIBBER_DOMAIN)
+    tibber_connection = hass.data[TIBBER_DOMAIN]
 
     entity_registry = async_get_entity_reg(hass)
     device_registry = async_get_dev_reg(hass)
 
-    entities = []
+    coordinator: TibberDataCoordinator | None = None
+    entities: list[TibberSensor] = []
     for home in tibber_connection.get_homes(only_active=False):
         try:
             await home.update_info()
@@ -215,6 +257,11 @@ async def async_setup_entry(hass, entry, async_add_entities):
 
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
+            if coordinator is None:
+                coordinator = TibberDataCoordinator(hass, tibber_connection)
+            for entity_description in SENSORS:
+                entities.append(TibberDataSensor(home, coordinator, entity_description))
+
         if home.has_real_time_consumption:
             await home.rt_subscribe(
                 TibberRtDataCoordinator(
@@ -264,11 +311,11 @@ class TibberSensor(SensorEntity):
     @property
     def device_info(self):
         """Return the device_info of the device."""
-        device_info = {
-            "identifiers": {(TIBBER_DOMAIN, self._tibber_home.home_id)},
-            "name": self._device_name,
-            "manufacturer": MANUFACTURER,
-        }
+        device_info = DeviceInfo(
+            identifiers={(TIBBER_DOMAIN, self._tibber_home.home_id)},
+            name=self._device_name,
+            manufacturer=MANUFACTURER,
+        )
         if self._model is not None:
             device_info["model"] = self._model
         return device_info
@@ -298,10 +345,10 @@ class TibberSensorElPrice(TibberSensor):
         }
         self._attr_icon = ICON
         self._attr_name = f"Electricity price {self._home_name}"
-        self._attr_unique_id = f"{self._tibber_home.home_id}"
+        self._attr_unique_id = self._tibber_home.home_id
         self._model = "Price Sensor"
 
-        self._device_name = self._attr_name
+        self._device_name = self._home_name
 
     async def async_update(self):
         """Get the latest data and updates the states."""
@@ -349,7 +396,35 @@ class TibberSensorElPrice(TibberSensor):
         ]["estimatedAnnualConsumption"]
 
 
-class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
+class TibberDataSensor(TibberSensor, CoordinatorEntity["TibberDataCoordinator"]):
+    """Representation of a Tibber sensor."""
+
+    def __init__(
+        self,
+        tibber_home,
+        coordinator: TibberDataCoordinator,
+        entity_description: SensorEntityDescription,
+    ):
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator, tibber_home=tibber_home)
+        self.entity_description = entity_description
+
+        self._attr_unique_id = (
+            f"{self._tibber_home.home_id}_{self.entity_description.key}"
+        )
+        self._attr_name = f"{entity_description.name} {self._home_name}"
+        if entity_description.key == "month_cost":
+            self._attr_native_unit_of_measurement = self._tibber_home.currency
+
+        self._device_name = self._home_name
+
+    @property
+    def native_value(self):
+        """Return the value of the sensor."""
+        return getattr(self._tibber_home, self.entity_description.key)
+
+
+class TibberSensorRT(TibberSensor, CoordinatorEntity["TibberRtDataCoordinator"]):
     """Representation of a Tibber sensor for real time consumption."""
 
     def __init__(
@@ -379,18 +454,36 @@ class TibberSensorRT(TibberSensor, update_coordinator.CoordinatorEntity):
 
     @callback
     def _handle_coordinator_update(self) -> None:
-        if not (live_measurement := self.coordinator.get_live_measurement()):  # type: ignore[attr-defined]
+        if not (live_measurement := self.coordinator.get_live_measurement()):
             return
         state = live_measurement.get(self.entity_description.key)
         if state is None:
             return
+        if self.entity_description.key in (
+            "accumulatedConsumption",
+            "accumulatedProduction",
+        ):
+            # Value is reset to 0 at midnight, but not always strictly increasing due to hourly corrections
+            # If device is offline, last_reset should be updated when it comes back online if the value has decreased
+            ts_local = dt_util.parse_datetime(live_measurement["timestamp"])
+            if ts_local is not None:
+                if self.last_reset is None or (
+                    state < 0.5 * self.native_value  # type: ignore[operator]  # native_value is float
+                    and (
+                        ts_local.hour == 0
+                        or (ts_local - self.last_reset) > timedelta(hours=24)
+                    )
+                ):
+                    self._attr_last_reset = dt_util.as_utc(
+                        ts_local.replace(hour=0, minute=0, second=0, microsecond=0)
+                    )
         if self.entity_description.key == "powerFactor":
             state *= 100.0
         self._attr_native_value = state
         self.async_write_ha_state()
 
 
-class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
+class TibberRtDataCoordinator(DataUpdateCoordinator):
     """Handle Tibber realtime data."""
 
     def __init__(self, async_add_entities, tibber_home, hass):
@@ -443,8 +536,107 @@ class TibberRtDataCoordinator(update_coordinator.DataUpdateCoordinator):
 
     def get_live_measurement(self):
         """Get live measurement data."""
-        errors = self.data.get("errors")
-        if errors:
+        if errors := self.data.get("errors"):
             _LOGGER.error(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")
+
+
+class TibberDataCoordinator(DataUpdateCoordinator):
+    """Handle Tibber data and insert statistics."""
+
+    def __init__(self, hass, tibber_connection):
+        """Initialize the data handler."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"Tibber {tibber_connection.name}",
+            update_interval=timedelta(minutes=20),
+        )
+        self._tibber_connection = tibber_connection
+
+    async def _async_update_data(self):
+        """Update data via API."""
+        await self._tibber_connection.fetch_consumption_data_active_homes()
+        await self._insert_statistics()
+
+    async def _insert_statistics(self):
+        """Insert Tibber statistics."""
+        for home in self._tibber_connection.get_homes():
+            if not home.hourly_consumption_data:
+                continue
+            for sensor_type in (
+                "consumption",
+                "totalCost",
+            ):
+                statistic_id = (
+                    f"{TIBBER_DOMAIN}:energy_"
+                    f"{sensor_type.lower()}_"
+                    f"{home.home_id.replace('-', '')}"
+                )
+
+                last_stats = await get_instance(self.hass).async_add_executor_job(
+                    get_last_statistics, self.hass, 1, statistic_id, True
+                )
+
+                if not last_stats:
+                    # First time we insert 5 years of data (if available)
+                    hourly_consumption_data = await home.get_historic_data(5 * 365 * 24)
+
+                    _sum = 0
+                    last_stats_time = None
+                else:
+                    # hourly_consumption_data contains the last 30 days
+                    # of consumption data.
+                    # We update the statistics with the last 30 days
+                    # of data to handle corrections in the data.
+                    hourly_consumption_data = home.hourly_consumption_data
+
+                    start = dt_util.parse_datetime(
+                        hourly_consumption_data[0]["from"]
+                    ) - timedelta(hours=1)
+                    stat = await get_instance(self.hass).async_add_executor_job(
+                        statistics_during_period,
+                        self.hass,
+                        start,
+                        None,
+                        [statistic_id],
+                        "hour",
+                        True,
+                    )
+                    _sum = stat[statistic_id][0]["sum"]
+                    last_stats_time = stat[statistic_id][0]["start"]
+
+                statistics = []
+
+                for data in hourly_consumption_data:
+                    if data.get(sensor_type) is None:
+                        continue
+
+                    start = dt_util.parse_datetime(data["from"])
+                    if last_stats_time is not None and start <= last_stats_time:
+                        continue
+
+                    _sum += data[sensor_type]
+
+                    statistics.append(
+                        StatisticData(
+                            start=start,
+                            state=data[sensor_type],
+                            sum=_sum,
+                        )
+                    )
+
+                if sensor_type == "consumption":
+                    unit = ENERGY_KILO_WATT_HOUR
+                else:
+                    unit = home.currency
+                metadata = StatisticMetaData(
+                    has_mean=False,
+                    has_sum=True,
+                    name=f"{home.name} {sensor_type}",
+                    source=TIBBER_DOMAIN,
+                    statistic_id=statistic_id,
+                    unit_of_measurement=unit,
+                )
+                async_add_external_statistics(self.hass, metadata, statistics)

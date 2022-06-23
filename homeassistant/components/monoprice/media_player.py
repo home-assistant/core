@@ -4,17 +4,16 @@ import logging
 from serial import SerialException
 
 from homeassistant import core
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform, service
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_SOURCES,
@@ -28,15 +27,6 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-
-SUPPORT_MONOPRICE = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-)
 
 
 @core.callback
@@ -61,7 +51,11 @@ def _get_sources(config_entry):
     return _get_sources_from_dict(data)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Monoprice 6-zone amplifier platform."""
     port = config_entry.data[CONF_PORT]
 
@@ -92,7 +86,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
                 entity.restore()
 
     @service.verify_domain_control(hass, DOMAIN)
-    async def async_service_handle(service_call):
+    async def async_service_handle(service_call: core.ServiceCall) -> None:
         """Handle for services."""
         entities = await platform.async_extract_from_service(service_call)
 
@@ -118,6 +112,15 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class MonopriceZone(MediaPlayerEntity):
     """Representation of a Monoprice amplifier zone."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
 
     def __init__(self, monoprice, sources, namespace, zone_id):
         """Initialize new zone."""
@@ -167,14 +170,14 @@ class MonopriceZone(MediaPlayerEntity):
         return self._zone_id < 20 or self._update_success
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self.unique_id)},
-            "name": self.name,
-            "manufacturer": "Monoprice",
-            "model": "6-Zone Amplifier",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.unique_id)},
+            manufacturer="Monoprice",
+            model="6-Zone Amplifier",
+            name=self.name,
+        )
 
     @property
     def unique_id(self):
@@ -202,11 +205,6 @@ class MonopriceZone(MediaPlayerEntity):
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._mute
-
-    @property
-    def supported_features(self):
-        """Return flag of media commands that are supported."""
-        return SUPPORT_MONOPRICE
 
     @property
     def media_title(self):

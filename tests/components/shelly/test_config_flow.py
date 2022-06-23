@@ -1,5 +1,6 @@
 """Test the Shelly config flow."""
 import asyncio
+from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
@@ -7,6 +8,7 @@ import aioshelly
 import pytest
 
 from homeassistant import config_entries, data_entry_flow
+from homeassistant.components import zeroconf
 from homeassistant.components.shelly.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -15,13 +17,19 @@ MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host", "type": "SHSW-1"},
 }
-DISCOVERY_INFO = {
-    "host": "1.1.1.1",
-    "name": "shelly1pm-12345",
-    "properties": {"id": "shelly1pm-12345"},
-}
+DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+    host="1.1.1.1",
+    addresses=["1.1.1.1"],
+    hostname="mock_hostname",
+    name="shelly1pm-12345",
+    port=None,
+    properties={zeroconf.ATTR_PROPERTIES_ID: "shelly1pm-12345"},
+    type="mock_type",
+)
 MOCK_CONFIG = {
-    "wifi": {"ap": {"ssid": "Test name"}},
+    "sys": {
+        "device": {"name": "Test name"},
+    },
 }
 
 
@@ -50,7 +58,7 @@ async def test_form(hass, gen):
         "aioshelly.rpc_device.RpcDevice.create",
         new=AsyncMock(
             return_value=Mock(
-                model="SHSW-1",
+                shelly={"model": "SHSW-1", "gen": gen},
                 config=MOCK_CONFIG,
                 shutdown=AsyncMock(),
             )
@@ -127,8 +135,16 @@ async def test_title_without_name(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_auth(hass):
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (1, {"username": "test user", "password": "test1 password"}, "test user"),
+        (2, {"password": "test2 password"}, "admin"),
+    ],
+)
+async def test_form_auth(hass, test_data):
     """Test manual configuration if auth is required."""
+    gen, user_input, username = test_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -137,7 +153,7 @@ async def test_form_auth(hass):
 
     with patch(
         "aioshelly.common.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -156,14 +172,22 @@ async def test_form_auth(hass):
             )
         ),
     ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"model": "SHSW-1", "gen": gen},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"username": "test username", "password": "test password"},
+            result2["flow_id"], user_input
         )
         await hass.async_block_till_done()
 
@@ -173,9 +197,9 @@ async def test_form_auth(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
-        "gen": 1,
-        "username": "test username",
-        "password": "test password",
+        "gen": gen,
+        "username": username,
+        "password": user_input["password"],
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -199,6 +223,103 @@ async def test_form_errors_get_info(hass, error):
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result2["errors"] == {"base": base_error}
+
+
+async def test_form_missing_model_key(hass):
+    """Test we handle missing Shelly model key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": False, "gen": "2"},
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"gen": 2},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
+
+
+async def test_form_missing_model_key_auth_enabled(hass):
+    """Test we handle missing Shelly model key when auth enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": True, "gen": 2},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["errors"] == {}
+
+    with patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"gen": 2},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {"password": "1234"}
+        )
+
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["errors"] == {"base": "firmware_not_fully_provisioned"}
+
+
+async def test_form_missing_model_key_zeroconf(hass, caplog):
+    """Test we handle missing Shelly model key via zeroconf."""
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": False, "gen": 2},
+    ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                shelly={"gen": 2},
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=DISCOVERY_INFO,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["errors"] == {"base": "firmware_not_fully_provisioned"}
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["errors"] == {"base": "firmware_not_fully_provisioned"}
 
 
 @pytest.mark.parametrize(
@@ -325,14 +446,20 @@ async def test_form_firmware_unsupported(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
-        (aiohttp.ClientResponseError(Mock(), (), status=401), "invalid_auth"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.UNAUTHORIZED),
+            "invalid_auth",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
         (ValueError, "unknown"),
     ],
 )
-async def test_form_auth_errors_test_connection(hass, error):
-    """Test we handle errors in authenticated devices."""
+async def test_form_auth_errors_test_connection_gen1(hass, error):
+    """Test we handle errors in Gen1 authenticated devices."""
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -354,6 +481,48 @@ async def test_form_auth_errors_test_connection(hass, error):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"username": "test username", "password": "test password"},
+        )
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["errors"] == {"base": base_error}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        (
+            aioshelly.exceptions.JSONRPCError(code=400),
+            "cannot_connect",
+        ),
+        (
+            aioshelly.exceptions.InvalidAuthError(code=401),
+            "invalid_auth",
+        ),
+        (asyncio.TimeoutError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_form_auth_errors_test_connection_gen2(hass, error):
+    """Test we handle errors in Gen2 authenticated devices."""
+    exc, base_error = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": True, "gen": 2},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    with patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(side_effect=exc),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {"password": "test password"}
         )
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result3["errors"] == {"base": base_error}
@@ -480,7 +649,10 @@ async def test_zeroconf_sleeping_device(hass):
 @pytest.mark.parametrize(
     "error",
     [
-        (aiohttp.ClientResponseError(Mock(), (), status=400), "cannot_connect"),
+        (
+            aiohttp.ClientResponseError(Mock(), (), status=HTTPStatus.BAD_REQUEST),
+            "cannot_connect",
+        ),
         (asyncio.TimeoutError, "cannot_connect"),
     ],
 )

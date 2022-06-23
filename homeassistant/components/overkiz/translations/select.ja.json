@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "\u6700\u9ad8",
+            "standard": "\u30b9\u30bf\u30f3\u30c0\u30fc\u30c9"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "\u30af\u30ed\u30fc\u30ba\u30c9",
+            "open": "\u30aa\u30fc\u30d7\u30f3",
+            "pedestrian": "\u6b69\u884c\u8005"
+        }
+    }
+}

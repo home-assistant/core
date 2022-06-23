@@ -1,11 +1,13 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_apparent_power": "Daya nyata {entity_name}",
             "is_battery_level": "Level baterai {entity_name} saat ini",
             "is_carbon_dioxide": "Level konsentasi karbondioksida {entity_name} saat ini",
             "is_carbon_monoxide": "Level konsentasi karbonmonoksida {entity_name} saat ini",
             "is_current": "Arus {entity_name} saat ini",
             "is_energy": "Energi {entity_name} saat ini",
+            "is_frequency": "Frekuensi {entity_name} saat ini",
             "is_gas": "Gas {entity_name} saat ini",
             "is_humidity": "Kelembaban {entity_name} saat ini",
             "is_illuminance": "Pencahayaan {entity_name} saat ini",
@@ -19,6 +21,7 @@
             "is_power": "Daya {entity_name} saat ini",
             "is_power_factor": "Faktor daya {entity_name} saat ini",
             "is_pressure": "Tekanan {entity_name} saat ini",
+            "is_reactive_power": "Daya reaktif {entity_name}",
             "is_signal_strength": "Kekuatan sinyal {entity_name} saat ini",
             "is_sulphur_dioxide": "Tingkat konsentrasi sulfur dioksida {entity_name} saat ini",
             "is_temperature": "Suhu {entity_name} saat ini",
@@ -27,11 +30,13 @@
             "is_voltage": "Tegangan {entity_name} saat ini"
         },
         "trigger_type": {
+            "apparent_power": "Perubahan daya nyata {entity_name}",
             "battery_level": "Perubahan level baterai {entity_name}",
             "carbon_dioxide": "Perubahan konsentrasi karbondioksida {entity_name}",
             "carbon_monoxide": "Perubahan konsentrasi karbonmonoksida {entity_name}",
             "current": "Perubahan arus {entity_name}",
             "energy": "Perubahan energi {entity_name}",
+            "frequency": "Perubahan frekuensi {entity_name}",
             "gas": "Perubahan gas {entity_name}",
             "humidity": "Perubahan kelembaban {entity_name}",
             "illuminance": "Perubahan pencahayaan {entity_name}",
@@ -45,6 +50,7 @@
             "power": "Perubahan daya {entity_name}",
             "power_factor": "Perubahan faktor daya {entity_name}",
             "pressure": "Perubahan tekanan {entity_name}",
+            "reactive_power": "Perubahan daya reaktif {entity_name}",
             "signal_strength": "Perubahan kekuatan sinyal {entity_name}",
             "sulphur_dioxide": "Perubahan konsentrasi sulfur dioksida {entity_name}",
             "temperature": "Perubahan suhu {entity_name}",

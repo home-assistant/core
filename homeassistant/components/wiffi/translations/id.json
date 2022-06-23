@@ -2,6 +2,7 @@
     "config": {
         "abort": {
             "addr_in_use": "Port server sudah digunakan.",
+            "already_configured": "Port server sudah dikonfigurasi.",
             "start_server_failed": "Gagal memulai server."
         },
         "step": {

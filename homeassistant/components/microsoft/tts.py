@@ -58,6 +58,7 @@ SUPPORTED_LANGUAGES = [
     "hr-hr",
     "hu-hu",
     "id-id",
+    "is-is",
     "it-it",
     "ja-jp",
     "ko-kr",
@@ -94,8 +95,8 @@ GENDERS = ["Female", "Male"]
 
 DEFAULT_LANG = "en-us"
 DEFAULT_GENDER = "Female"
-DEFAULT_TYPE = "ZiraRUS"
-DEFAULT_OUTPUT = "audio-16khz-128kbitrate-mono-mp3"
+DEFAULT_TYPE = "JennyNeural"
+DEFAULT_OUTPUT = "audio-24khz-96kbitrate-mono-mp3"
 DEFAULT_RATE = 0
 DEFAULT_VOLUME = 0
 DEFAULT_PITCH = "default"

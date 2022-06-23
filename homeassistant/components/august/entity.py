@@ -1,6 +1,6 @@
 """Base class for August entity."""
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from . import DOMAIN
 from .const import MANUFACTURER
@@ -18,14 +18,15 @@ class AugustEntityMixin(Entity):
         super().__init__()
         self._data = data
         self._device = device
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": device.device_name,
-            "manufacturer": MANUFACTURER,
-            "sw_version": self._detail.firmware_version,
-            "model": self._detail.model,
-            "suggested_area": _remove_device_types(device.device_name, DEVICE_TYPES),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device_id)},
+            manufacturer=MANUFACTURER,
+            model=self._detail.model,
+            name=device.device_name,
+            sw_version=self._detail.firmware_version,
+            suggested_area=_remove_device_types(device.device_name, DEVICE_TYPES),
+            configuration_url="https://account.august.com",
+        )
 
     @property
     def _device_id(self):
@@ -34,6 +35,11 @@ class AugustEntityMixin(Entity):
     @property
     def _detail(self):
         return self._data.get_device_detail(self._device.device_id)
+
+    @property
+    def _hyper_bridge(self):
+        """Check if the lock has a paired hyper bridge."""
+        return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
 
     @callback
     def _update_from_data_and_write_state(self):

@@ -1,0 +1,26 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "step": {
+      "user": {
+        "title": "Select installation type",
+        "description": "Select the source you want to track versions from",
+        "data": {
+          "version_source": "Version source"
+        }
+      },
+      "version_source": {
+        "title": "Configure",
+        "description": "Configure {version_source} version tracking",
+        "data": {
+          "beta": "Include beta versions",
+          "board": "Which board should be tracked",
+          "channel": "Which channel should be tracked",
+          "image": "Which image should be tracked"
+        }
+      }
+    }
+  }
+}

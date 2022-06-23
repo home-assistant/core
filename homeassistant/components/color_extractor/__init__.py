@@ -13,10 +13,12 @@ from homeassistant.components.light import (
     ATTR_RGB_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     LIGHT_TURN_ON_SCHEMA,
-    SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON,
 )
+from homeassistant.const import SERVICE_TURN_ON as LIGHT_SERVICE_TURN_ON
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import aiohttp_client
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_PATH, ATTR_URL, DOMAIN, SERVICE_TURN_ON
 
@@ -55,10 +57,10 @@ def _get_color(file_handler) -> tuple:
     return color
 
 
-async def async_setup(hass, hass_config):
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up services for color_extractor integration."""
 
-    async def async_handle_service(service_call):
+    async def async_handle_service(service_call: ServiceCall) -> None:
         """Decide which color_extractor method to call based on service."""
         service_data = dict(service_call.data)
 
@@ -78,7 +80,7 @@ async def async_setup(hass, hass_config):
         except UnidentifiedImageError as ex:
             _LOGGER.error(
                 "Bad image from %s '%s' provided, are you sure it's an image? %s",
-                image_type,
+                image_type,  # pylint: disable=used-before-assignment
                 image_reference,
                 ex,
             )
@@ -113,7 +115,7 @@ async def async_setup(hass, hass_config):
         try:
             session = aiohttp_client.async_get_clientsession(hass)
 
-            with async_timeout.timeout(10):
+            async with async_timeout.timeout(10):
                 response = await session.get(url)
 
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:

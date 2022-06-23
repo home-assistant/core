@@ -7,20 +7,19 @@ from pysmartthings import Attribute, Capability
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DEVICE_CLASS_DOOR,
-    DEVICE_CLASS_GARAGE,
-    DEVICE_CLASS_SHADE,
     DOMAIN as COVER_DOMAIN,
     STATE_CLOSED,
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
-    SUPPORT_CLOSE,
-    SUPPORT_OPEN,
-    SUPPORT_SET_POSITION,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
@@ -35,7 +34,11 @@ VALUE_TO_STATE = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Add covers for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     async_add_entities(
@@ -72,9 +75,11 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         self._device_class = None
         self._state = None
         self._state_attrs = None
-        self._supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        self._attr_supported_features = (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+        )
         if Capability.switch_level in device.capabilities:
-            self._supported_features |= SUPPORT_SET_POSITION
+            self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
     async def async_close_cover(self, **kwargs):
         """Close cover."""
@@ -94,7 +99,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs):
         """Move the cover to a specific position."""
-        if not self._supported_features & SUPPORT_SET_POSITION:
+        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
             return
         # Do not set_status=True as device will report progress.
         await self._device.set_level(kwargs[ATTR_POSITION], 0)
@@ -103,13 +108,13 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         """Update the attrs of the cover."""
         value = None
         if Capability.door_control in self._device.capabilities:
-            self._device_class = DEVICE_CLASS_DOOR
+            self._device_class = CoverDeviceClass.DOOR
             value = self._device.status.door
         elif Capability.window_shade in self._device.capabilities:
-            self._device_class = DEVICE_CLASS_SHADE
+            self._device_class = CoverDeviceClass.SHADE
             value = self._device.status.window_shade
         elif Capability.garage_door_control in self._device.capabilities:
-            self._device_class = DEVICE_CLASS_GARAGE
+            self._device_class = CoverDeviceClass.GARAGE
             value = self._device.status.door
 
         self._state = VALUE_TO_STATE.get(value)
@@ -139,7 +144,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     @property
     def current_cover_position(self):
         """Return current position of cover."""
-        if not self._supported_features & SUPPORT_SET_POSITION:
+        if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
             return None
         return self._device.status.level
 
@@ -152,8 +157,3 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     def extra_state_attributes(self):
         """Get additional state attributes."""
         return self._state_attrs
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_features

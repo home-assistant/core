@@ -1,0 +1,19 @@
+{
+  "config": {
+    "step": {
+      "repositories": {
+        "title": "Configure repositories",
+        "data": {
+          "repositories": "Select repositories to track."
+        }
+      }
+    },
+    "progress": {
+      "wait_for_device": "1. Open {url} \n2.Paste the following key to authorize the integration: \n```\n{code}\n```\n"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "could_not_register": "Could not register integration with GitHub"
+    }
+  }
+}

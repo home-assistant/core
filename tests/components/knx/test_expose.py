@@ -1,5 +1,8 @@
 """Test KNX expose."""
-from homeassistant.components.knx import CONF_KNX_EXPOSE, KNX_ADDRESS
+import time
+from unittest.mock import patch
+
+from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
 from homeassistant.const import CONF_ATTRIBUTE, CONF_ENTITY_ID, CONF_TYPE
 from homeassistant.core import HomeAssistant
@@ -123,3 +126,95 @@ async def test_expose_attribute_with_default(hass: HomeAssistant, knx: KNXTestKi
     # Change state to "off"; no attribute
     hass.states.async_set(entity_id, "off", {})
     await knx.assert_write("1/1/8", (0,))
+
+
+async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit):
+    """Test an expose to send string values of up to 14 bytes only."""
+
+    entity_id = "fake.entity"
+    attribute = "fake_attribute"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "string",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                CONF_ATTRIBUTE: attribute,
+                ExposeSchema.CONF_KNX_EXPOSE_DEFAULT: "Test",
+            }
+        },
+    )
+    assert not hass.states.async_all()
+
+    # Before init default value shall be sent as response
+    await knx.receive_read("1/1/8")
+    await knx.assert_response(
+        "1/1/8", (84, 101, 115, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+    )
+
+    # Change attribute; keep state
+    hass.states.async_set(
+        entity_id,
+        "on",
+        {attribute: "This is a very long string that is larger than 14 bytes"},
+    )
+    await knx.assert_write(
+        "1/1/8", (84, 104, 105, 115, 32, 105, 115, 32, 97, 32, 118, 101, 114, 121)
+    )
+
+
+async def test_expose_conversion_exception(hass: HomeAssistant, knx: KNXTestKit):
+    """Test expose throws exception."""
+
+    entity_id = "fake.entity"
+    attribute = "fake_attribute"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "percent",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                CONF_ATTRIBUTE: attribute,
+                ExposeSchema.CONF_KNX_EXPOSE_DEFAULT: 1,
+            }
+        },
+    )
+    assert not hass.states.async_all()
+
+    # Before init default value shall be sent as response
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", (3,))
+
+    # Change attribute: Expect no exception
+    hass.states.async_set(
+        entity_id,
+        "on",
+        {attribute: 101},
+    )
+
+    await knx.assert_no_telegram()
+
+
+@patch("time.localtime")
+async def test_expose_with_date(localtime, hass: HomeAssistant, knx: KNXTestKit):
+    """Test an expose with a date."""
+    localtime.return_value = time.struct_time([2022, 1, 7, 9, 13, 14, 6, 0, 0])
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "datetime",
+                KNX_ADDRESS: "1/1/8",
+            }
+        }
+    )
+    assert not hass.states.async_all()
+
+    await knx.assert_write("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
+
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", (0x7A, 0x1, 0x7, 0xE9, 0xD, 0xE, 0x20, 0x80))
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+
+    assert await hass.config_entries.async_unload(entries[0].entry_id)

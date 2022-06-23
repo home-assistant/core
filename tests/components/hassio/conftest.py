@@ -6,18 +6,19 @@ import pytest
 
 from homeassistant.components.hassio.handler import HassIO, HassioAPIError
 from homeassistant.core import CoreState
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.setup import async_setup_component
 
-from . import HASSIO_TOKEN
+from . import SUPERVISOR_TOKEN
 
 
 @pytest.fixture
 def hassio_env():
     """Fixture to inject hassio env."""
-    with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
+    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value={"result": "ok", "data": {}},
-    ), patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}), patch(
+    ), patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}), patch(
         "homeassistant.components.hassio.HassIO.get_info",
         Mock(side_effect=HassioAPIError()),
     ):
@@ -70,9 +71,9 @@ def hassio_handler(hass, aioclient_mock):
     """Create mock hassio handler."""
 
     async def get_client_session():
-        return hass.helpers.aiohttp_client.async_get_clientsession()
+        return async_get_clientsession(hass)
 
     websession = hass.loop.run_until_complete(get_client_session())
 
-    with patch.dict(os.environ, {"HASSIO_TOKEN": HASSIO_TOKEN}):
+    with patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}):
         yield HassIO(hass.loop, websession, "127.0.0.1")

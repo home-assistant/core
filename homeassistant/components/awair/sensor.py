@@ -1,21 +1,19 @@
 """Support for Awair sensors."""
 from __future__ import annotations
 
+from python_awair.air_data import AirData
 from python_awair.devices import AwairDevice
-import voluptuous as vol
 
-from homeassistant.components.awair import AwairDataUpdateCoordinator, AwairResult
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_ACCESS_TOKEN
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import ATTR_ATTRIBUTION, ATTR_CONNECTIONS, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AwairDataUpdateCoordinator, AwairResult
 from .const import (
     API_DUST,
     API_PM25,
@@ -25,38 +23,18 @@ from .const import (
     ATTRIBUTION,
     DOMAIN,
     DUST_ALIASES,
-    LOGGER,
     SENSOR_TYPE_SCORE,
     SENSOR_TYPES,
     SENSOR_TYPES_DUST,
     AwairSensorEntityDescription,
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_ACCESS_TOKEN): cv.string},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
-    """Import Awair configuration from YAML."""
-    LOGGER.warning(
-        "Loading Awair via platform setup is deprecated; Please remove it from your configuration"
-    )
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up Awair sensor entity based on a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities = []
@@ -91,7 +69,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AwairSensor(CoordinatorEntity, SensorEntity):
+class AwairSensor(CoordinatorEntity[AwairDataUpdateCoordinator], SensorEntity):
     """Defines an Awair sensor entity."""
 
     entity_description: AwairSensorEntityDescription
@@ -126,6 +104,7 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         # for users with first-gen devices that are upgrading.
         if (
             self.entity_description.key == API_PM25
+            and self._air_data
             and API_DUST in self._air_data.sensors
         ):
             unique_id_tag = "DUST"
@@ -156,8 +135,11 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         return False
 
     @property
-    def native_value(self) -> float:
+    def native_value(self) -> float | None:
         """Return the state, rounding off to reasonable values."""
+        if not self._air_data:
+            return None
+
         state: float
         sensor_type = self.entity_description.key
 
@@ -201,6 +183,8 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
         """
         sensor_type = self.entity_description.key
         attrs = {ATTR_ATTRIBUTION: ATTRIBUTION}
+        if not self._air_data:
+            return attrs
         if sensor_type in self._air_data.indices:
             attrs["awair_index"] = abs(self._air_data.indices[sensor_type])
         elif sensor_type in DUST_ALIASES and API_DUST in self._air_data.indices:
@@ -211,24 +195,24 @@ class AwairSensor(CoordinatorEntity, SensorEntity):
     @property
     def device_info(self) -> DeviceInfo:
         """Device information."""
-        info = {
-            "identifiers": {(DOMAIN, self._device.uuid)},
-            "manufacturer": "Awair",
-            "model": self._device.model,
-        }
+        info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.uuid)},
+            manufacturer="Awair",
+            model=self._device.model,
+        )
 
         if self._device.name:
-            info["name"] = self._device.name
+            info[ATTR_NAME] = self._device.name
 
         if self._device.mac_address:
-            info["connections"] = {
+            info[ATTR_CONNECTIONS] = {
                 (dr.CONNECTION_NETWORK_MAC, self._device.mac_address)
             }
 
         return info
 
     @property
-    def _air_data(self) -> AwairResult | None:
+    def _air_data(self) -> AirData | None:
         """Return the latest data for our device, or None."""
         result: AwairResult | None = self.coordinator.data.get(self._device.uuid)
         if result:

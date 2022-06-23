@@ -2,15 +2,11 @@
 import logging
 
 from homeassistant.components.alarm_control_panel import (
-    FORMAT_NUMBER,
     AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_PIN,
     STATE_ALARM_ARMED_AWAY,
@@ -21,6 +17,8 @@ from homeassistant.const import (
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     CONF_CODE_ARM_REQUIRED,
@@ -39,14 +37,18 @@ from .entity import RiscoEntity
 _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
-    STATE_ALARM_ARMED_AWAY: SUPPORT_ALARM_ARM_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS: SUPPORT_ALARM_ARM_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME: SUPPORT_ALARM_ARM_HOME,
-    STATE_ALARM_ARMED_NIGHT: SUPPORT_ALARM_ARM_NIGHT,
+    STATE_ALARM_ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
+    STATE_ALARM_ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    STATE_ALARM_ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
+    STATE_ALARM_ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Risco alarm control panel."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_COORDINATOR]
     options = {**DEFAULT_OPTIONS, **config_entry.options}
@@ -130,7 +132,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
     @property
     def code_format(self):
         """Return one or more digits/characters."""
-        return FORMAT_NUMBER
+        return CodeFormat.NUMBER
 
     def _validate_code(self, code):
         """Validate given code."""
@@ -164,8 +166,7 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
             _LOGGER.warning("Wrong code entered for %s", mode)
             return
 
-        risco_state = self._ha_to_risco[mode]
-        if not risco_state:
+        if not (risco_state := self._ha_to_risco[mode]):
             _LOGGER.warning("No mapping for mode %s", mode)
             return
 

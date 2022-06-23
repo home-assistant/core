@@ -1,0 +1,29 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "reauth_invalid": "Falha na reautentica\u00e7\u00e3o; N\u00famero de s\u00e9rie n\u00e3o corresponde ao original",
+            "unknown": "Erro inesperado"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Senha",
+                    "username": "Usu\u00e1rio"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Senha",
+                    "station": "N\u00famero de s\u00e9rie da esta\u00e7\u00e3o",
+                    "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    }
+}

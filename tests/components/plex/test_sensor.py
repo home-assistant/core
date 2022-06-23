@@ -1,5 +1,6 @@
 """Tests for Plex sensors."""
 from datetime import datetime, timedelta
+from http import HTTPStatus
 from unittest.mock import patch
 
 import requests.exceptions
@@ -32,6 +33,7 @@ class MockPlexMedia:
 class MockPlexClip(MockPlexMedia):
     """Minimal mock of plexapi clip object."""
 
+    TAG = "Video"
     type = "clip"
     title = "Clip 1"
 
@@ -39,6 +41,7 @@ class MockPlexClip(MockPlexMedia):
 class MockPlexMovie(MockPlexMedia):
     """Minimal mock of plexapi movie object."""
 
+    TAG = "Video"
     type = "movie"
     title = "Movie 1"
 
@@ -46,6 +49,7 @@ class MockPlexMovie(MockPlexMedia):
 class MockPlexMusic(MockPlexMedia):
     """Minimal mock of plexapi album object."""
 
+    TAG = "Directory"
     listType = "audio"
     type = "album"
     title = "Album"
@@ -55,6 +59,7 @@ class MockPlexMusic(MockPlexMedia):
 class MockPlexTVEpisode(MockPlexMedia):
     """Minimal mock of plexapi episode object."""
 
+    TAG = "Video"
     type = "episode"
     title = "Episode 5"
     grandparentTitle = "TV Show"
@@ -165,7 +170,8 @@ async def test_library_sensor_values(
 
     # Handle library deletion
     requests_mock.get(
-        "/library/sections/2/all?includeCollections=0&type=2", status_code=404
+        "/library/sections/2/all?includeCollections=0&type=2",
+        status_code=HTTPStatus.NOT_FOUND,
     )
     trigger_plex_update(
         mock_websocket, msgtype="status", payload=LIBRARY_UPDATE_PAYLOAD
@@ -177,7 +183,8 @@ async def test_library_sensor_values(
 
     # Test movie library sensor
     entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_tv_shows", disabled_by="user"
+        entity_id="sensor.plex_server_1_library_tv_shows",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_movies", disabled_by=None
@@ -212,7 +219,8 @@ async def test_library_sensor_values(
 
     # Test music library sensor
     entity_registry.async_update_entity(
-        entity_id="sensor.plex_server_1_library_movies", disabled_by="user"
+        entity_id="sensor.plex_server_1_library_movies",
+        disabled_by=er.RegistryEntryDisabler.USER,
     )
     entity_registry.async_update_entity(
         entity_id="sensor.plex_server_1_library_music", disabled_by=None

@@ -1,0 +1,42 @@
+light:
+  - platform: group
+    name: Master Hall Lights G
+    entities:
+      - light.master_hall_lights
+      - light.master_hall_lights_2
+  - platform: group
+    name: Outside Patio Lights G
+    entities:
+      - light.outside_patio_lights
+      - light.outside_patio_lights_2
+
+lock:
+  - platform: group
+    name: Inside Locks G
+    entities:
+      - lock.front_lock
+      - lock.back_lock
+  - platform: group
+    name: Outside Locks G
+    entities:
+      - lock.outside_lock
+      - lock.outside_lock_2
+
+switch:
+  - platform: group
+    name: Master Switches G
+    entities:
+      - switch.master_switch
+      - switch.master_switch_2
+  - platform: group
+    name: Outside Switches G
+    entities:
+      - switch.outside_switch
+      - switch.outside_switch_2
+
+notify:
+  - platform: group
+    name: new_group_notify
+    services:
+      - service: demo1
+      - service: demo2

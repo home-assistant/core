@@ -23,7 +23,7 @@
                 "description": "Configurar autorizaci\u00f3n a tu servidor Hyperion Ambilight"
             },
             "confirm": {
-                "description": "\u00bfQuieres a\u00f1adir este Hyperion Ambilight a Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**Identificaci\u00f3n**: {id}",
+                "description": "\u00bfQuieres a\u00f1adir el siguiente Hyperion Ambilight en Home Assistant?\n\n**Host:** {host}\n**Puerto:** {port}\n**Identificaci\u00f3n**: {id}",
                 "title": "Confirmar la adici\u00f3n del servicio Hyperion Ambilight"
             },
             "create_token": {

@@ -1,22 +1,20 @@
 """Support for Sure PetCare Flaps locks."""
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from surepy.entities import SurepyEntity
 from surepy.enums import EntityType, LockState
 
-from homeassistant.components.lock import STATE_LOCKED, STATE_UNLOCKED, LockEntity
+from homeassistant.components.lock import LockEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_LOCKED, STATE_UNLOCKED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import SurePetcareDataCoordinator
 from .const import DOMAIN
 from .entity import SurePetcareEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -47,8 +45,6 @@ async def async_setup_entry(
 
 class SurePetcareLock(SurePetcareEntity, LockEntity):
     """A lock implementation for Sure Petcare Entities."""
-
-    coordinator: SurePetcareDataCoordinator
 
     def __init__(
         self,

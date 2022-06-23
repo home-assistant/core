@@ -1,0 +1,70 @@
+{
+    "config": {
+        "abort": {
+            "authorize_url_timeout": "Tempo limite gerando URL de autoriza\u00e7\u00e3o.",
+            "missing_configuration": "O componente n\u00e3o est\u00e1 configurado. Por favor, siga a documenta\u00e7\u00e3o.",
+            "no_url_available": "N\u00e3o h\u00e1 URL dispon\u00edvel. Para obter informa\u00e7\u00f5es sobre esse erro, [verifique a se\u00e7\u00e3o de ajuda]({docs_url})",
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel."
+        },
+        "create_entry": {
+            "default": "Autenticado com sucesso"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "Escolha o m\u00e9todo de autentica\u00e7\u00e3o"
+            },
+            "reauth_confirm": {
+                "description": "A integra\u00e7\u00e3o Netatmo precisa autenticar novamente sua conta",
+                "title": "Reautenticar Integra\u00e7\u00e3o"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_subtype": {
+            "away": "fora",
+            "hg": "protetor de geada",
+            "schedule": "hor\u00e1rio"
+        },
+        "trigger_type": {
+            "alarm_started": "{entity_name} detectou um alarme",
+            "animal": "{entity_name} detectou um animal",
+            "cancel_set_point": "{entity_name} retomou sua programa\u00e7\u00e3o",
+            "human": "{entity_name} detectou um humano",
+            "movement": "{entity_name} detectou movimento",
+            "outdoor": "{entity_name} detectou um evento ao ar livre",
+            "person": "{entity_name} detectou uma pessoa",
+            "person_away": "{entity_name} detectou que uma pessoa saiu",
+            "set_point": "Temperatura alvo {entity_name} definida manualmente",
+            "therm_mode": "{entity_name} mudou para \" {subtype} \"",
+            "turned_off": "{entity_name} for desligado",
+            "turned_on": "{entity_name} for ligado",
+            "vehicle": "{entity_name} detectou um ve\u00edculo"
+        }
+    },
+    "options": {
+        "step": {
+            "public_weather": {
+                "data": {
+                    "area_name": "Nome da \u00e1rea",
+                    "lat_ne": "Latitude nordeste",
+                    "lat_sw": "Latitude sudoeste",
+                    "lon_ne": "Longitude nordeste",
+                    "lon_sw": "Longitude sudoeste",
+                    "mode": "C\u00e1lculo",
+                    "show_on_map": "Mostrar no mapa"
+                },
+                "description": "Configure um sensor meteorol\u00f3gico p\u00fablico para uma \u00e1rea.",
+                "title": "Sensor meteorol\u00f3gico p\u00fablico Netatmo"
+            },
+            "public_weather_areas": {
+                "data": {
+                    "new_area": "Nome da \u00e1rea",
+                    "weather_areas": "\u00c1reas meteorol\u00f3gicas"
+                },
+                "description": "Configurar sensores meteorol\u00f3gicos p\u00fablicos.",
+                "title": "Sensor meteorol\u00f3gico p\u00fablico Netatmo"
+            }
+        }
+    }
+}

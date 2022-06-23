@@ -1,0 +1,31 @@
+{
+  "Body": {
+    "Data": {
+      "0": {
+        "Details": {
+          "Manufacturer": "Fronius",
+          "Model": "S0 Meter at inverter 1",
+          "Serial": "n.a."
+        },
+        "Enable": 1,
+        "EnergyReal_WAC_Minus_Relative": 191.25,
+        "Meter_Location_Current": 1,
+        "PowerReal_P_Sum": -2216.7486858112229,
+        "TimeStamp": 1639074843,
+        "Visible": 1
+      }
+    }
+  },
+  "Head": {
+    "RequestArguments": {
+      "DeviceClass": "Meter",
+      "Scope": "System"
+    },
+    "Status": {
+      "Code": 0,
+      "Reason": "",
+      "UserMessage": ""
+    },
+    "Timestamp": "2021-12-09T15:34:04-03:00"
+  }
+}

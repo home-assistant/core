@@ -1,19 +1,13 @@
 """The generic_hygrostat component."""
-
-import logging
-
 import voluptuous as vol
 
-from homeassistant.components.humidifier.const import (
-    DEVICE_CLASS_DEHUMIDIFIER,
-    DEVICE_CLASS_HUMIDIFIER,
-)
-from homeassistant.const import CONF_NAME
+from homeassistant.components.humidifier import HumidifierDeviceClass
+from homeassistant.const import CONF_NAME, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
+from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "generic_hygrostat"
-
-_LOGGER = logging.getLogger(__name__)
 
 CONF_HUMIDIFIER = "humidifier"
 CONF_SENSOR = "target_sensor"
@@ -38,7 +32,7 @@ HYGROSTAT_SCHEMA = vol.Schema(
         vol.Required(CONF_HUMIDIFIER): cv.entity_id,
         vol.Required(CONF_SENSOR): cv.entity_id,
         vol.Optional(CONF_DEVICE_CLASS): vol.In(
-            [DEVICE_CLASS_HUMIDIFIER, DEVICE_CLASS_DEHUMIDIFIER]
+            [HumidifierDeviceClass.HUMIDIFIER, HumidifierDeviceClass.DEHUMIDIFIER]
         ),
         vol.Optional(CONF_MAX_HUMIDITY): vol.Coerce(int),
         vol.Optional(CONF_MIN_DUR): vol.All(cv.time_period, cv.positive_timedelta),
@@ -63,7 +57,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-async def async_setup(hass, config):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Generic Hygrostat component."""
     if DOMAIN not in config:
         return True
@@ -71,7 +65,7 @@ async def async_setup(hass, config):
     for hygrostat_conf in config[DOMAIN]:
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, "humidifier", DOMAIN, hygrostat_conf, config
+                hass, Platform.HUMIDIFIER, DOMAIN, hygrostat_conf, config
             )
         )
 

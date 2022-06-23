@@ -59,9 +59,7 @@ def _get_github_import_url(url: str) -> str:
     if url.startswith("https://raw.githubusercontent.com/"):
         return url
 
-    match = GITHUB_FILE_PATTERN.match(url)
-
-    if match is None:
+    if (match := GITHUB_FILE_PATTERN.match(url)) is None:
         raise UnsupportedUrl("Not a GitHub file url")
 
     repo, path = match.groups()
@@ -74,8 +72,7 @@ def _get_community_post_import_url(url: str) -> str:
 
     Async friendly.
     """
-    match = COMMUNITY_TOPIC_PATTERN.match(url)
-    if match is None:
+    if (match := COMMUNITY_TOPIC_PATTERN.match(url)) is None:
         raise UnsupportedUrl("Not a topic url")
 
     _topic, post = match.groups()

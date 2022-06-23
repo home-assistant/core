@@ -13,12 +13,11 @@
             "user": {
                 "data": {
                     "id": "Account ID",
-                    "is_tou": "E' la tariffa per periodo di utilizzo",
+                    "is_tou": "\u00c8 la tariffa per periodo di utilizzo",
                     "password": "Password",
                     "username": "Nome utente"
                 }
             }
         }
-    },
-    "title": "SRP Energy"
+    }
 }

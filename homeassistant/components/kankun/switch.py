@@ -1,4 +1,6 @@
 """Support for customised Kankun SP3 Wifi switch."""
+from __future__ import annotations
+
 import logging
 
 import requests
@@ -14,7 +16,10 @@ from homeassistant.const import (
     CONF_SWITCHES,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,7 +42,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities_callback, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities_callback: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up Kankun Wifi switches."""
     switches = config.get("switches", {})
     devices = []

@@ -1,14 +1,15 @@
 """The CO2 Signal integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
-from typing import TypedDict, cast
+from typing import Any, TypedDict, cast
 
 import CO2Signal
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,7 +17,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import CONF_COUNTRY_CODE, DOMAIN
 from .util import get_extra_name
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -106,7 +107,7 @@ class UnknownError(CO2Error):
     """Raised when an unknown error occurs."""
 
 
-def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
+def get_data(hass: HomeAssistant, config: Mapping[str, Any]) -> CO2SignalResponse:
     """Get data from the API."""
     if CONF_COUNTRY_CODE in config:
         latitude = None
@@ -132,9 +133,6 @@ def get_data(hass: HomeAssistant, config: dict) -> CO2SignalResponse:
         if "API rate limit exceeded." in err_str:
             raise APIRatelimitExceeded from err
 
-        _LOGGER.exception("Unexpected exception")
-        raise UnknownError from err
-    except Exception as err:
         _LOGGER.exception("Unexpected exception")
         raise UnknownError from err
 

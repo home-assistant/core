@@ -1,15 +1,20 @@
 """Constants for the Shelly integration."""
 from __future__ import annotations
 
+from logging import Logger, getLogger
 import re
 from typing import Final
+
+DOMAIN: Final = "shelly"
+
+LOGGER: Logger = getLogger(__package__)
 
 BLOCK: Final = "block"
 DATA_CONFIG_ENTRY: Final = "config_entry"
 DEVICE: Final = "device"
-DOMAIN: Final = "shelly"
 REST: Final = "rest"
 RPC: Final = "rpc"
+RPC_POLL: Final = "rpc_poll"
 
 CONF_COAP_PORT: Final = "coap_port"
 DEFAULT_COAP_PORT: Final = 5683
@@ -35,12 +40,16 @@ MODELS_SUPPORTING_LIGHT_TRANSITION: Final = (
     "SHVIN-1",
 )
 
-# Bulbs that support white & color modes
-DUAL_MODE_LIGHT_MODELS: Final = (
-    "SHBDUO-1",
+MODELS_SUPPORTING_LIGHT_EFFECTS: Final = (
     "SHBLB-1",
     "SHCB-1",
     "SHRGBW2",
+)
+
+# Bulbs that support white & color modes
+DUAL_MODE_LIGHT_MODELS: Final = (
+    "SHBLB-1",
+    "SHCB-1",
 )
 
 # Used in "_async_update_data" as timeout for polling data from devices.
@@ -49,11 +58,15 @@ POLLING_TIMEOUT_SEC: Final = 18
 # Refresh interval for REST sensors
 REST_SENSORS_UPDATE_INTERVAL: Final = 60
 
+# Refresh interval for RPC polling sensors
+RPC_SENSORS_POLLING_INTERVAL: Final = 60
+
 # Timeout used for aioshelly calls
 AIOSHELLY_DEVICE_TIMEOUT_SEC: Final = 10
 
 # Multiplier used to calculate the "update_interval" for sleeping devices.
 SLEEP_PERIOD_MULTIPLIER: Final = 1.2
+CONF_SLEEP_PERIOD: Final = "sleep_period"
 
 # Multiplier used to calculate the "update_interval" for non-sleeping devices.
 UPDATE_PERIOD_MULTIPLIER: Final = 2.2
@@ -85,6 +98,8 @@ ATTR_CHANNEL: Final = "channel"
 ATTR_DEVICE: Final = "device"
 ATTR_GENERATION: Final = "generation"
 CONF_SUBTYPE: Final = "subtype"
+ATTR_BETA: Final = "beta"
+CONF_OTA_BETA_CHANNEL: Final = "ota_beta_channel"
 
 BASIC_INPUTS_EVENTS_TYPES: Final = {"single", "long"}
 
@@ -136,6 +151,12 @@ SHBLB_1_RGB_EFFECTS: Final = {
     6: "Red/Green Change",
 }
 
+SHTRV_01_TEMPERATURE_SETTINGS: Final = {
+    "min": 4,
+    "max": 31,
+    "step": 1,
+}
+
 # Kelvin value for colorTemp
 KELVIN_MAX_VALUE: Final = 6500
 KELVIN_MIN_VALUE_WHITE: Final = 2700
@@ -148,3 +169,5 @@ MAX_RPC_KEY_INSTANCES = 4
 
 # Time to wait before reloading entry upon device config change
 ENTRY_RELOAD_COOLDOWN = 60
+
+SHELLY_GAS_MODELS = ["SHGS-1"]

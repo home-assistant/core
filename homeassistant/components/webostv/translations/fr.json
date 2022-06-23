@@ -1,0 +1,47 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "L'appareil est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "error_pairing": "Connect\u00e9 \u00e0 la TV LG webOS mais non appair\u00e9"
+        },
+        "error": {
+            "cannot_connect": "\u00c9chec de la connexion, veuillez allumer votre TV ou v\u00e9rifier l'adresse IP"
+        },
+        "flow_title": "TV connect\u00e9e LG webOS",
+        "step": {
+            "pairing": {
+                "description": "Cliquez sur soumettre et acceptez la demande de jumelage sur votre t\u00e9l\u00e9viseur.\n\n![Image](/static/images/config_webos.png)",
+                "title": "Appairage de la TV webOS"
+            },
+            "user": {
+                "data": {
+                    "host": "H\u00f4te",
+                    "name": "Nom"
+                },
+                "description": "Allumez la t\u00e9l\u00e9vision, remplissez les champs suivants, cliquez sur Envoyer",
+                "title": "Se connecter \u00e0 la TV webOS"
+            }
+        }
+    },
+    "device_automation": {
+        "trigger_type": {
+            "webostv.turn_on": "L'appareil est invit\u00e9 \u00e0 s'allumer"
+        }
+    },
+    "options": {
+        "error": {
+            "cannot_retrieve": "Impossible de r\u00e9cup\u00e9rer la liste des sources. Assurez-vous que l'appareil est allum\u00e9",
+            "script_not_found": "Script introuvable"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "sources": "Liste des sources"
+                },
+                "description": "S\u00e9lectionnez les sources activ\u00e9es",
+                "title": "Options pour TV connect\u00e9e webOS"
+            }
+        }
+    }
+}

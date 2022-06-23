@@ -1,15 +1,21 @@
 """Support for Minut Point."""
 import logging
 
-from homeassistant.components.alarm_control_panel import DOMAIN, AlarmControlPanelEntity
-from homeassistant.components.alarm_control_panel.const import SUPPORT_ALARM_ARM_AWAY
+from homeassistant.components.alarm_control_panel import (
+    DOMAIN,
+    AlarmControlPanelEntity,
+    AlarmControlPanelEntityFeature,
+)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_DISARMED,
     STATE_ALARM_TRIGGERED,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW, SIGNAL_WEBHOOK
 
@@ -23,7 +29,11 @@ EVENT_MAP = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up a Point's alarm_control_panel based on a config entry."""
 
     async def async_discover_home(home_id):
@@ -38,6 +48,8 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 class MinutPointAlarmControl(AlarmControlPanelEntity):
     """The platform class required by Home Assistant."""
+
+    _attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
 
     def __init__(self, point_client, home_id):
         """Initialize the entity."""
@@ -90,11 +102,6 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         return EVENT_MAP.get(self._home["alarm_status"], STATE_ALARM_ARMED_AWAY)
 
     @property
-    def supported_features(self) -> int:
-        """Return the list of supported features."""
-        return SUPPORT_ALARM_ARM_AWAY
-
-    @property
     def changed_by(self):
         """Return the user the last change was triggered by."""
         return self._changed_by
@@ -117,10 +124,10 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         return f"point.{self._home_id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
-        return {
-            "identifiers": {(POINT_DOMAIN, self._home_id)},
-            "name": self.name,
-            "manufacturer": "Minut",
-        }
+        return DeviceInfo(
+            identifiers={(POINT_DOMAIN, self._home_id)},
+            manufacturer="Minut",
+            name=self.name,
+        )

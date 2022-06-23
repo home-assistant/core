@@ -11,7 +11,7 @@ import httpx
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -38,7 +38,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def async_update_data():
         """Fetch data from API endpoint."""
-        data = {}
         async with async_timeout.timeout(30):
             try:
                 await envoy_reader.getData()
@@ -47,15 +46,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             except httpx.HTTPError as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-            for description in SENSORS:
-                if description.key != "inverters":
-                    data[description.key] = await getattr(
-                        envoy_reader, description.key
-                    )()
-                else:
-                    data[
-                        "inverters_production"
-                    ] = await envoy_reader.inverters_production()
+            data = {
+                description.key: await getattr(envoy_reader, description.key)()
+                for description in SENSORS
+            }
+            data["inverters_production"] = await envoy_reader.inverters_production()
 
             _LOGGER.debug("Retrieved data from API: %s", data)
 
@@ -74,6 +69,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except ConfigEntryAuthFailed:
         envoy_reader.get_inverters = False
         await coordinator.async_config_entry_first_refresh()
+
+    if not entry.unique_id:
+        try:
+            serial = await envoy_reader.get_full_serial_number()
+        except httpx.HTTPError as ex:
+            raise ConfigEntryNotReady(
+                f"Could not obtain serial number from envoy: {ex}"
+            ) from ex
+        else:
+            hass.config_entries.async_update_entry(entry, unique_id=serial)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         COORDINATOR: coordinator,

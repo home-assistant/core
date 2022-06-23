@@ -1,15 +1,23 @@
 """Service for obtaining information about closer bus from Transport Yandex Service."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
 
-from aioymaps import YandexMapsRequester
+from aioymaps import CaptchaError, YandexMapsRequester
 import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
-from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME, DEVICE_CLASS_TIMESTAMP
+from homeassistant.components.sensor import (
+    PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+)
+from homeassistant.const import ATTR_ATTRIBUTION, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,15 +43,28 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Yandex transport sensor."""
     stop_id = config[CONF_STOP_ID]
     name = config[CONF_NAME]
     routes = config[CONF_ROUTE]
 
     client_session = async_create_clientsession(hass, requote_redirect_url=False)
-    data = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
-    async_add_entities([DiscoverYandexTransport(data, stop_id, routes, name)], True)
+    ymaps = YandexMapsRequester(user_agent=USER_AGENT, client_session=client_session)
+    try:
+        await ymaps.set_new_session()
+    except CaptchaError as ex:
+        _LOGGER.error(
+            "%s. You may need to disable the integration for some time",
+            ex,
+        )
+        return
+    async_add_entities([DiscoverYandexTransport(ymaps, stop_id, routes, name)], True)
 
 
 class DiscoverYandexTransport(SensorEntity):
@@ -53,7 +74,6 @@ class DiscoverYandexTransport(SensorEntity):
         """Initialize sensor."""
         self.requester = requester
         self._stop_id = stop_id
-        self._routes = []
         self._routes = routes
         self._state = None
         self._name = name
@@ -63,7 +83,14 @@ class DiscoverYandexTransport(SensorEntity):
         """Get the latest data from maps.yandex.ru and update the states."""
         attrs = {}
         closer_time = None
-        yandex_reply = await self.requester.get_stop_info(self._stop_id)
+        try:
+            yandex_reply = await self.requester.get_stop_info(self._stop_id)
+        except CaptchaError as ex:
+            _LOGGER.error(
+                "%s. You may need to disable the integration for some time",
+                ex,
+            )
+            return
         try:
             data = yandex_reply["data"]
         except KeyError as key_error:
@@ -81,30 +108,41 @@ class DiscoverYandexTransport(SensorEntity):
         stop_name = data["name"]
         transport_list = data["transports"]
         for transport in transport_list:
-            route = transport["name"]
             for thread in transport["threads"]:
-                if self._routes and route not in self._routes:
-                    # skip unnecessary route info
-                    continue
                 if "Events" not in thread["BriefSchedule"]:
                     continue
+                if thread.get("noBoarding") is True:
+                    continue
                 for event in thread["BriefSchedule"]["Events"]:
-                    if "Estimated" not in event:
+                    # Railway route depends on the essential stops and
+                    # can vary over time.
+                    # City transport has the fixed name for the route
+                    if "railway" in transport["Types"]:
+                        route = " - ".join(
+                            [x["name"] for x in thread["EssentialStops"]]
+                        )
+                    else:
+                        route = transport["name"]
+
+                    if self._routes and route not in self._routes:
+                        # skip unnecessary route info
                         continue
-                    posix_time_next = int(event["Estimated"]["value"])
+                    if "Estimated" not in event and "Scheduled" not in event:
+                        continue
+
+                    departure = event.get("Estimated") or event["Scheduled"]
+                    posix_time_next = int(departure["value"])
                     if closer_time is None or closer_time > posix_time_next:
                         closer_time = posix_time_next
                     if route not in attrs:
                         attrs[route] = []
-                    attrs[route].append(event["Estimated"]["text"])
+                    attrs[route].append(departure["text"])
         attrs[STOP_NAME] = stop_name
         attrs[ATTR_ATTRIBUTION] = ATTRIBUTION
         if closer_time is None:
             self._state = None
         else:
-            self._state = dt_util.utc_from_timestamp(closer_time).isoformat(
-                timespec="seconds"
-            )
+            self._state = dt_util.utc_from_timestamp(closer_time).replace(microsecond=0)
         self._attrs = attrs
 
     @property
@@ -115,7 +153,7 @@ class DiscoverYandexTransport(SensorEntity):
     @property
     def device_class(self):
         """Return the device class."""
-        return DEVICE_CLASS_TIMESTAMP
+        return SensorDeviceClass.TIMESTAMP
 
     @property
     def name(self):

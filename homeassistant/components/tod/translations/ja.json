@@ -1,0 +1,26 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after_time": "\u30aa\u30f3\u30bf\u30a4\u30e0(On time)",
+                    "before_time": "\u30aa\u30d5\u30bf\u30a4\u30e0(Off time)",
+                    "name": "\u540d\u524d"
+                },
+                "description": "\u30bb\u30f3\u30b5\u30fc\u306e\u30aa\u30f3\u3068\u30aa\u30d5\u3092\u5207\u308a\u66ff\u3048\u308b\u30bf\u30a4\u30df\u30f3\u30b0\u3092\u69cb\u6210\u3057\u307e\u3059\u3002",
+                "title": "\u65b0\u3057\u3044\u6642\u523b\u30bb\u30f3\u30b5\u30fc"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after_time": "\u30aa\u30f3\u30bf\u30a4\u30e0(On time)",
+                    "before_time": "\u30aa\u30d5\u30bf\u30a4\u30e0(Off time)"
+                }
+            }
+        }
+    },
+    "title": "\u6642\u9593\u5e2f\u30bb\u30f3\u30b5\u30fc(Times of the Day Sensor)"
+}

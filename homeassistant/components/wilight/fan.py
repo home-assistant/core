@@ -1,6 +1,8 @@
 """Support for WiLight Fan."""
 from __future__ import annotations
 
+from typing import Any
+
 from pywilight.const import (
     FAN_V1,
     ITEM_FAN,
@@ -12,14 +14,10 @@ from pywilight.const import (
     WL_SPEED_MEDIUM,
 )
 
-from homeassistant.components.fan import (
-    DIRECTION_FORWARD,
-    SUPPORT_DIRECTION,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import DIRECTION_FORWARD, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -29,12 +27,10 @@ from . import DOMAIN, WiLightDevice
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
 
-SUPPORTED_FEATURES = SUPPORT_SET_SPEED | SUPPORT_DIRECTION
-
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities
-):
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up WiLight lights from a config entry."""
     parent = hass.data[DOMAIN][entry.entry_id]
 
@@ -56,6 +52,8 @@ async def async_setup_entry(
 class WiLightFan(WiLightDevice, FanEntity):
     """Representation of a WiLights fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+
     def __init__(self, api_device, index, item_name):
         """Initialize the device."""
         super().__init__(api_device, index, item_name)
@@ -63,17 +61,12 @@ class WiLightFan(WiLightDevice, FanEntity):
         self._direction = WL_DIRECTION_FORWARD
 
     @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
-
-    @property
     def icon(self):
         """Return the icon of device based on its type."""
         return "mdi:fan"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         return self._status.get("direction", WL_DIRECTION_OFF) != WL_DIRECTION_OFF
 
@@ -86,8 +79,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         ):
             return 0
 
-        wl_speed = self._status.get("speed")
-        if wl_speed is None:
+        if (wl_speed := self._status.get("speed")) is None:
             return None
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
 
@@ -108,10 +100,9 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
         if percentage is None:
@@ -119,7 +110,7 @@ class WiLightFan(WiLightDevice, FanEntity):
         else:
             await self.async_set_percentage(percentage)
 
-    async def async_set_percentage(self, percentage: int):
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan."""
         if percentage == 0:
             await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)
@@ -132,13 +123,13 @@ class WiLightFan(WiLightDevice, FanEntity):
         wl_speed = percentage_to_ordered_list_item(ORDERED_NAMED_FAN_SPEEDS, percentage)
         await self._client.set_fan_speed(self._index, wl_speed)
 
-    async def async_set_direction(self, direction: str):
+    async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         wl_direction = WL_DIRECTION_REVERSE
         if direction == DIRECTION_FORWARD:
             wl_direction = WL_DIRECTION_FORWARD
         await self._client.set_fan_direction(self._index, wl_direction)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)

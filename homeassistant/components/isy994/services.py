@@ -1,4 +1,5 @@
 """ISY Services and Commands."""
+from __future__ import annotations
 
 from typing import Any
 
@@ -18,17 +19,10 @@ from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import async_get_platforms
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.service import entity_service_call
 
-from .const import (
-    _LOGGER,
-    DOMAIN,
-    ISY994_ISY,
-    ISY994_NODES,
-    ISY994_PROGRAMS,
-    ISY994_VARIABLES,
-    PLATFORMS,
-    PROGRAM_PLATFORMS,
-)
+from .const import _LOGGER, DOMAIN, ISY994_ISY
+from .util import unique_ids_for_config_entry_id
 
 # Common Services for All Platforms:
 SERVICE_SYSTEM_QUERY = "system_query"
@@ -93,6 +87,7 @@ def valid_isy_commands(value: Any) -> str:
     """Validate the command is valid."""
     value = str(value).upper()
     if value in COMMAND_FRIENDLY_NAME:
+        assert isinstance(value, str)
         return value
     raise vol.Invalid("Invalid ISY Command.")
 
@@ -173,7 +168,7 @@ SERVICE_RUN_NETWORK_RESOURCE_SCHEMA = vol.All(
 
 
 @callback
-def async_setup_services(hass: HomeAssistant):  # noqa: C901
+def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     """Create and register services for the ISY integration."""
     existing_services = hass.services.async_services().get(DOMAIN)
     if existing_services and any(
@@ -182,7 +177,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         # Integration-level services have already been added. Return.
         return
 
-    async def async_system_query_service_handler(service):
+    async def async_system_query_service_handler(service: ServiceCall) -> None:
         """Handle a system query service call."""
         address = service.data.get(CONF_ADDRESS)
         isy_name = service.data.get(CONF_ISY)
@@ -206,7 +201,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
             )
             await isy.query()
 
-    async def async_run_network_resource_service_handler(service):
+    async def async_run_network_resource_service_handler(service: ServiceCall) -> None:
         """Handle a network resource service call."""
         address = service.data.get(CONF_ADDRESS)
         name = service.data.get(CONF_NAME)
@@ -230,11 +225,11 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
             "Could not run network resource command; not found or enabled on the ISY"
         )
 
-    async def async_send_program_command_service_handler(service):
+    async def async_send_program_command_service_handler(service: ServiceCall) -> None:
         """Handle a send program command service call."""
         address = service.data.get(CONF_ADDRESS)
         name = service.data.get(CONF_NAME)
-        command = service.data.get(CONF_COMMAND)
+        command = service.data[CONF_COMMAND]
         isy_name = service.data.get(CONF_ISY)
 
         for config_entry_id in hass.data[DOMAIN]:
@@ -251,7 +246,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
                 return
         _LOGGER.error("Could not send program command; not found or enabled on the ISY")
 
-    async def async_set_variable_service_handler(service):
+    async def async_set_variable_service_handler(service: ServiceCall) -> None:
         """Handle a set variable service call."""
         address = service.data.get(CONF_ADDRESS)
         vtype = service.data.get(CONF_TYPE)
@@ -274,11 +269,12 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
                 return
         _LOGGER.error("Could not set variable value; not found or enabled on the ISY")
 
-    async def async_cleanup_registry_entries(service) -> None:
+    @callback
+    def async_cleanup_registry_entries(service: ServiceCall) -> None:
         """Remove extra entities that are no longer part of the integration."""
-        entity_registry = await er.async_get_registry(hass)
+        entity_registry = er.async_get(hass)
         config_ids = []
-        current_unique_ids = []
+        current_unique_ids: set[str] = set()
 
         for config_entry_id in hass.data[DOMAIN]:
             entries_for_this_config = er.async_entries_for_config_entry(
@@ -290,23 +286,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
                     for entity in entries_for_this_config
                 ]
             )
-
-            hass_isy_data = hass.data[DOMAIN][config_entry_id]
-            uuid = hass_isy_data[ISY994_ISY].configuration["uuid"]
-
-            for platform in PLATFORMS:
-                for node in hass_isy_data[ISY994_NODES][platform]:
-                    if hasattr(node, "address"):
-                        current_unique_ids.append(f"{uuid}_{node.address}")
-
-            for platform in PROGRAM_PLATFORMS:
-                for _, node, _ in hass_isy_data[ISY994_PROGRAMS][platform]:
-                    if hasattr(node, "address"):
-                        current_unique_ids.append(f"{uuid}_{node.address}")
-
-            for node in hass_isy_data[ISY994_VARIABLES]:
-                if hasattr(node, "address"):
-                    current_unique_ids.append(f"{uuid}_{node.address}")
+            current_unique_ids |= unique_ids_for_config_entry_id(hass, config_entry_id)
 
         extra_entities = [
             entity_id
@@ -326,7 +306,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
             len(extra_entities),
         )
 
-    async def async_reload_config_entries(service) -> None:
+    async def async_reload_config_entries(service: ServiceCall) -> None:
         """Trigger a reload of all ISY994 config entries."""
         for config_entry_id in hass.data[DOMAIN]:
             hass.async_create_task(hass.config_entries.async_reload(config_entry_id))
@@ -369,9 +349,9 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         domain=DOMAIN, service=SERVICE_RELOAD, service_func=async_reload_config_entries
     )
 
-    async def _async_send_raw_node_command(call: ServiceCall):
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_send_raw_node_command", call
+    async def _async_send_raw_node_command(call: ServiceCall) -> None:
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_send_raw_node_command", call
         )
 
     hass.services.async_register(
@@ -381,9 +361,9 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         service_func=_async_send_raw_node_command,
     )
 
-    async def _async_send_node_command(call: ServiceCall):
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_send_node_command", call
+    async def _async_send_node_command(call: ServiceCall) -> None:
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_send_node_command", call
         )
 
     hass.services.async_register(
@@ -393,9 +373,9 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         service_func=_async_send_node_command,
     )
 
-    async def _async_get_zwave_parameter(call: ServiceCall):
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_get_zwave_parameter", call
+    async def _async_get_zwave_parameter(call: ServiceCall) -> None:
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_get_zwave_parameter", call
         )
 
     hass.services.async_register(
@@ -405,9 +385,9 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         service_func=_async_get_zwave_parameter,
     )
 
-    async def _async_set_zwave_parameter(call: ServiceCall):
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_set_zwave_parameter", call
+    async def _async_set_zwave_parameter(call: ServiceCall) -> None:
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_set_zwave_parameter", call
         )
 
     hass.services.async_register(
@@ -417,9 +397,9 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
         service_func=_async_set_zwave_parameter,
     )
 
-    async def _async_rename_node(call: ServiceCall):
-        await hass.helpers.service.entity_service_call(
-            async_get_platforms(hass, DOMAIN), "async_rename_node", call
+    async def _async_rename_node(call: ServiceCall) -> None:
+        await entity_service_call(
+            hass, async_get_platforms(hass, DOMAIN), "async_rename_node", call
         )
 
     hass.services.async_register(
@@ -431,7 +411,7 @@ def async_setup_services(hass: HomeAssistant):  # noqa: C901
 
 
 @callback
-def async_unload_services(hass: HomeAssistant):
+def async_unload_services(hass: HomeAssistant) -> None:
     """Unload services for the ISY integration."""
     if hass.data[DOMAIN]:
         # There is still another config entry for this domain, don't remove services.
@@ -455,7 +435,7 @@ def async_unload_services(hass: HomeAssistant):
 
 
 @callback
-def async_setup_light_services(hass: HomeAssistant):
+def async_setup_light_services(hass: HomeAssistant) -> None:
     """Create device-specific services for the ISY Integration."""
     platform = entity_platform.async_get_current_platform()
 

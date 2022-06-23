@@ -16,7 +16,7 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.decorator import Registry
 
-MULTI_FACTOR_AUTH_MODULES = Registry()
+MULTI_FACTOR_AUTH_MODULES: Registry[str, type[MultiFactorAuthModule]] = Registry()
 
 MULTI_FACTOR_AUTH_MODULE_SCHEMA = vol.Schema(
     {
@@ -55,7 +55,7 @@ class MultiFactorAuthModule:
     @property
     def type(self) -> str:
         """Return type of the module."""
-        return self.config[CONF_TYPE]  # type: ignore
+        return self.config[CONF_TYPE]  # type: ignore[no-any-return]
 
     @property
     def name(self) -> str:
@@ -129,11 +129,11 @@ async def auth_mfa_module_from_config(
     hass: HomeAssistant, config: dict[str, Any]
 ) -> MultiFactorAuthModule:
     """Initialize an auth module from a config."""
-    module_name = config[CONF_TYPE]
+    module_name: str = config[CONF_TYPE]
     module = await _load_mfa_module(hass, module_name)
 
     try:
-        config = module.CONFIG_SCHEMA(config)  # type: ignore
+        config = module.CONFIG_SCHEMA(config)
     except vol.Invalid as err:
         _LOGGER.error(
             "Invalid configuration for multi-factor module %s: %s",
@@ -142,7 +142,7 @@ async def auth_mfa_module_from_config(
         )
         raise
 
-    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)  # type: ignore
+    return MULTI_FACTOR_AUTH_MODULES[module_name](hass, config)
 
 
 async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.ModuleType:
@@ -168,7 +168,7 @@ async def _load_mfa_module(hass: HomeAssistant, module_name: str) -> types.Modul
 
     # https://github.com/python/mypy/issues/1424
     await requirements.async_process_requirements(
-        hass, module_path, module.REQUIREMENTS  # type: ignore
+        hass, module_path, module.REQUIREMENTS
     )
 
     processed.add(module_name)

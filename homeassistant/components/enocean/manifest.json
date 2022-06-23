@@ -5,5 +5,6 @@
   "requirements": ["enocean==0.50"],
   "codeowners": ["@bdurrer"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["enocean"]
 }

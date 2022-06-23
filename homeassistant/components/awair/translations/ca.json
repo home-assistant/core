@@ -6,7 +6,7 @@
             "reauth_successful": "Re-autenticaci\u00f3 realitzada correctament"
         },
         "error": {
-            "invalid_access_token": "Token d'acc\u00e9s no v\u00e0lid",
+            "invalid_access_token": "Token d'acc\u00e9s inv\u00e0lid",
             "unknown": "Error inesperat"
         },
         "step": {

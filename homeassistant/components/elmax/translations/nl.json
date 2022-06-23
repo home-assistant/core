@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Apparaat is al geconfigureerd"
+        },
+        "error": {
+            "invalid_auth": "Ongeldige authenticatie",
+            "invalid_pin": "De opgegeven pincode is ongeldig",
+            "network_error": "Er is een netwerkfout opgetreden",
+            "no_panel_online": "Er is geen online Elmax-controlepaneel gevonden.",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "panels": {
+                "data": {
+                    "panel_id": "Paneel-ID",
+                    "panel_name": "Paneelnaam:",
+                    "panel_pin": "PIN Code"
+                },
+                "description": "Selecteer welk paneel je wilt bedienen met deze integratie. Houd er rekening mee dat het paneel AAN moet staan om te kunnen worden geconfigureerd."
+            },
+            "user": {
+                "data": {
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
+                },
+                "description": "Log in op de Elmax-cloud met uw inloggegevens"
+            }
+        }
+    }
+}

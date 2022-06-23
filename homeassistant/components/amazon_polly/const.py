@@ -33,66 +33,71 @@ CONF_SAMPLE_RATE: Final = "sample_rate"
 CONF_TEXT_TYPE: Final = "text_type"
 
 SUPPORTED_VOICES: Final[list[str]] = [
-    "Olivia",  # Female, Australian, Neural
-    "Zhiyu",  # Chinese
-    "Mads",
-    "Naja",  # Danish
-    "Ruben",
-    "Lotte",  # Dutch
-    "Russell",
-    "Nicole",  # English Australian
-    "Brian",
-    "Amy",
-    "Emma",  # English
-    "Aditi",
-    "Raveena",  # English, Indian
-    "Joey",
-    "Justin",
-    "Matthew",
-    "Ivy",
-    "Joanna",
-    "Kendra",
-    "Kimberly",
-    "Salli",  # English
-    "Geraint",  # English Welsh
-    "Mathieu",
-    "Celine",
-    "Lea",  # French
-    "Chantal",  # French Canadian
-    "Hans",
-    "Marlene",
-    "Vicki",  # German
     "Aditi",  # Hindi
-    "Karl",
-    "Dora",  # Icelandic
-    "Giorgio",
-    "Carla",
+    "Amy",
+    "Aria",
+    "Astrid",  # Swedish
+    "Ayanda",
     "Bianca",  # Italian
-    "Takumi",
-    "Mizuki",  # Japanese
-    "Seoyeon",  # Korean
-    "Liv",  # Norwegian
+    "Brian",
+    "Camila",  # Portuguese, Brazilian
+    "Carla",
+    "Carmen",  # Romanian
+    "Celine",
+    "Chantal",  # French Canadian
+    "Conchita",
+    "Cristiano",
+    "Dora",  # Icelandic
+    "Emma",  # English
+    "Enrique",
+    "Ewa",
+    "Filiz",  # Turkish
+    "Gabrielle",
+    "Geraint",  # English Welsh
+    "Giorgio",
+    "Gwyneth",  # Welsh
+    "Hans",
+    "Ines",  # Portuguese, European
+    "Ivy",
     "Jacek",
     "Jan",
-    "Ewa",
-    "Maja",  # Polish
-    "Ricardo",
-    "Vitoria",  # Portuguese, Brazilian
-    "Cristiano",
-    "Ines",  # Portuguese, European
-    "Carmen",  # Romanian
-    "Maxim",
-    "Tatyana",  # Russian
-    "Enrique",
-    "Conchita",
+    "Joanna",
+    "Joey",
+    "Justin",
+    "Karl",
+    "Kendra",
+    "Kevin",
+    "Kimberly",
+    "Lea",  # French
+    "Liv",  # Norwegian
+    "Lotte",  # Dutch
     "Lucia",  # Spanish European
+    "Lupe",  # Spanish US
+    "Mads",
+    "Maja",  # Polish
+    "Marlene",
+    "Mathieu",
+    "Matthew",
+    "Maxim",
     "Mia",  # Spanish Mexican
     "Miguel",  # Spanish US
+    "Mizuki",  # Japanese
+    "Naja",  # Danish
+    "Nicole",  # English Australian
+    "Olivia",  # Female, Australian, Neural
     "Penelope",  # Spanish US
-    "Lupe",  # Spanish US
-    "Astrid",  # Swedish
-    "Filiz",  # Turkish
-    "Gwyneth",  # Welsh
+    "Raveena",  # English, Indian
+    "Ricardo",
+    "Ruben",
+    "Russell",
+    "Salli",  # English
+    "Seoyeon",  # Korean
+    "Takumi",
+    "Tatyana",  # Russian
+    "Vicki",  # German
+    "Vitoria",  # Portuguese, Brazilian
+    "Zeina",
+    "Zhiyu",  # Chinese
 ]
 
 SUPPORTED_OUTPUT_FORMATS: Final[list[str]] = ["mp3", "ogg_vorbis", "pcm"]

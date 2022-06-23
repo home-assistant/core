@@ -8,6 +8,7 @@
         "error": {
             "connection_error": "Tidak dapat terhubung ke ESP. Pastikan file YAML Anda mengandung baris 'api:'.",
             "invalid_auth": "Autentikasi tidak valid",
+            "invalid_psk": "Kunci enkripsi transport tidak valid. Pastikan kuncinya sesuai dengan yang ada pada konfigurasi Anda",
             "resolve_error": "Tidak dapat menemukan alamat ESP. Jika kesalahan ini terus terjadi, atur alamat IP statis: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
         },
         "flow_title": "{name}",
@@ -21,6 +22,18 @@
             "discovery_confirm": {
                 "description": "Ingin menambahkan node ESPHome `{name}` ke Home Assistant?",
                 "title": "Perangkat node ESPHome yang ditemukan"
+            },
+            "encryption_key": {
+                "data": {
+                    "noise_psk": "Kunci enkripsi"
+                },
+                "description": "Masukkan kunci enkripsi yang Anda atur dalam konfigurasi Anda untuk {name}."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "noise_psk": "Kunci enkripsi"
+                },
+                "description": "Perangkat ESPHome {name} mengaktifkan enkripsi transport atau telah mengubah kunci enkripsi. Masukkan kunci yang diperbarui."
             },
             "user": {
                 "data": {

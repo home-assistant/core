@@ -1,6 +1,4 @@
 """Config flow to configure the SmartTub integration."""
-import logging
-
 from smarttub import LoginFailed
 import voluptuous as vol
 
@@ -9,9 +7,6 @@ from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 
 from .const import DOMAIN
 from .controller import SmartTubController
-
-_LOGGER = logging.getLogger(__name__)
-
 
 DATA_SCHEMA = vol.Schema(
     {vol.Required(CONF_EMAIL): str, vol.Required(CONF_PASSWORD): str}

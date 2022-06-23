@@ -1,0 +1,49 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "cannot_connect": "\u4f7f\u7528 configuration.yaml \u6240\u5305\u542b\u6191\u8b49\u9023\u7dda\u5931\u6557\uff0c\u8acb\u81ea Yaml \u79fb\u9664\u8a72\u6191\u8b49\u4e26\u4f7f\u7528\u8a2d\u5b9a\u6d41\u7a0b\u65b9\u5f0f\u3002",
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002",
+            "unknown": "\u4f7f\u7528 configuration.yaml \u6240\u5305\u542b\u6191\u8b49\u9023\u7dda\u767c\u751f\u672a\u77e5\u932f\u8aa4\uff0c\u8acb\u81ea Yaml \u79fb\u9664\u8a72\u6191\u8b49\u4e26\u4f7f\u7528\u8a2d\u5b9a\u6d41\u7a0b\u65b9\u5f0f\u3002"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "conn_string": {
+                "data": {
+                    "event_hub_connection_string": "\u4e8b\u4ef6\u4e2d\u6a1e\u9023\u7dda\u5b57\u4e32"
+                },
+                "description": "\u8acb\u8f38\u5165\u9023\u7dda\u5b57\u4e32\uff1a{event_hub_instance_name}",
+                "title": "\u9023\u63a5\u5b57\u4e32\u6a21\u5f0f"
+            },
+            "sas": {
+                "data": {
+                    "event_hub_namespace": "\u4e8b\u4ef6\u4e2d\u6a1e Namespace",
+                    "event_hub_sas_key": "\u4e8b\u4ef6\u4e2d\u6a1e SAS \u91d1\u9470",
+                    "event_hub_sas_policy": "\u4e8b\u4ef6\u4e2d\u6a1e SAS \u96b1\u79c1\u653f\u7b56"
+                },
+                "description": "\u8acb\u8f38\u5165 SAS \uff08\u5171\u7528\u5b58\u53d6\u7c3d\u7ae0\uff09\u6191\u8b49\uff1a{event_hub_instance_name}",
+                "title": "SAS \u6191\u8b49\u6a21\u5f0f"
+            },
+            "user": {
+                "data": {
+                    "event_hub_instance_name": "\u4e8b\u4ef6\u4e2d\u6a1e\u5be6\u4f8b\u540d\u7a31",
+                    "use_connection_string": "\u4f7f\u7528\u9023\u63a5\u5b57\u4e32"
+                },
+                "title": "\u8a2d\u5b9a Azure \u4e8b\u4ef6\u4e2d\u6a1e\u6574\u5408"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "options": {
+                "data": {
+                    "send_interval": "\u4e2d\u6a1e\u50b3\u9001\u6279\u6b21\u9593\u9694\u6642\u9593"
+                },
+                "title": "Azure \u4e8b\u4ef6\u4e2d\u6a1e\u9078\u9805\u3002"
+            }
+        }
+    }
+}

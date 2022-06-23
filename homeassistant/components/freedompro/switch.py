@@ -4,15 +4,20 @@ import json
 from pyfreedompro import put_state
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Freedompro switch."""
     api_key = entry.data[CONF_API_KEY]
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -33,14 +38,14 @@ class Device(CoordinatorEntity, SwitchEntity):
         self._api_key = api_key
         self._attr_name = device["name"]
         self._attr_unique_id = device["uid"]
-        self._attr_device_info = {
-            "name": self.name,
-            "identifiers": {
+        self._attr_device_info = DeviceInfo(
+            identifiers={
                 (DOMAIN, self.unique_id),
             },
-            "model": device["type"],
-            "manufacturer": "Freedompro",
-        }
+            manufacturer="Freedompro",
+            model=device["type"],
+            name=self.name,
+        )
         self._attr_is_on = False
 
     @callback

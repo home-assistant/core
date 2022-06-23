@@ -1,4 +1,6 @@
 """Config flow to configure Blink."""
+from __future__ import annotations
+
 import logging
 
 from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
@@ -6,11 +8,6 @@ from blinkpy.blinkpy import Blink, BlinkSetupError
 import voluptuous as vol
 
 from homeassistant import config_entries, core, exceptions
-from homeassistant.components.blink.const import (
-    DEFAULT_SCAN_INTERVAL,
-    DEVICE_ID,
-    DOMAIN,
-)
 from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PIN,
@@ -18,6 +15,8 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+
+from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,7 +51,9 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> BlinkOptionsFlowHandler:
         """Get options flow for this handler."""
         return BlinkOptionsFlowHandler(config_entry)
 
@@ -132,7 +133,7 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class BlinkOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Blink options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Blink options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
