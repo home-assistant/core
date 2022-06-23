@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 from typing import Final
 
 from aiohttp.web import Request, StreamResponse
@@ -23,7 +24,6 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import Throttle
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -46,6 +46,8 @@ PLATFORM_SCHEMA: Final = vol.All(
         }
     ),
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -105,6 +107,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             model=device.device_type["name"],
             name=device.name,
         )
+        self._image: bytes | None = None
 
     @property
     def location(self) -> Location:
@@ -125,17 +128,36 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        await self.hass.async_add_executor_job(self.renew_live_stream_session)
-        live_stream_url = await self.hass.async_add_executor_job(
-            getattr, self._live_stream_session, "live_stream_url"
-        )
-        return await ffmpeg.async_get_image(
-            self.hass,
-            live_stream_url,
-            extra_cmd=self._ffmpeg_arguments,
-            width=width,
-            height=height,
-        )
+        if self._image is None:
+            # if we still don't have an image, grab the live view
+            _LOGGER.debug("Grabbing a live view image from %s", self.name)
+            await self.hass.async_add_executor_job(self.renew_live_stream_session)
+
+            if self._live_stream_session is None:
+                return None
+
+            live_stream_url = self._live_stream_session.live_stream_url
+            if not live_stream_url:
+                return None
+
+            if self._image is None and live_stream_url:
+                image = await ffmpeg.async_get_image(
+                    self.hass,
+                    live_stream_url,
+                    extra_cmd=self._ffmpeg_arguments,
+                    width=width,
+                    height=height,
+                )
+
+                if image:
+                    self._image = image
+                    _LOGGER.debug("Grabbed a live view image from %s", self.name)
+                await self.hass.async_add_executor_job(
+                    self._live_stream_session.stop_session
+                )
+                _LOGGER.debug("Stopped live session from %s", self.name)
+
+        return self._image
 
     async def handle_async_mjpeg_stream(
         self, request: Request
@@ -161,9 +183,14 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         finally:
             await stream.close()
 
-    @Throttle(MIN_TIME_BETWEEN_SESSION_RENEW)
     def renew_live_stream_session(self) -> None:
         """Renew live stream session."""
         self._live_stream_session = self.coordinator.canary.get_live_stream_session(
             self._device
+        )
+
+        _LOGGER.debug(
+            "Live Stream URL for %s is %s",
+            self.name,
+            self._live_stream_session.live_stream_url,
         )
