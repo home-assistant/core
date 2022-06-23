@@ -88,7 +88,7 @@ jobs:
           name: requirements_diff
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.6
+        uses: home-assistant/wheels@2022.06.7
         with:
           abi: cp310
           tag: musllinux_1_2
@@ -147,7 +147,7 @@ jobs:
           fi
 
       - name: Build wheels
-        uses: home-assistant/wheels@2022.06.6
+        uses: home-assistant/wheels@2022.06.7
         with:
           abi: cp310
           tag: musllinux_1_2
