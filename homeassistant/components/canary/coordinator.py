@@ -49,10 +49,28 @@ class CanaryDataUpdateCoordinator(DataUpdateCoordinator[CanaryData]):
                         device.device_id
                     ] = self.canary.get_latest_readings(device.device_id)
 
+            entries_by_device_id = self._group_entries_by_device(location, location_id)
+
         return {
             "locations": locations_by_id,
             "readings": readings_by_device_id,
+            "entries": entries_by_device_id,
         }
+
+    def _group_entries_by_device(
+        self, location: Location, location_id: int
+    ) -> dict[str, list[Entry]]:
+        entries_by_device_id: dict[str, list[Entry]] = {}
+
+        entries = self.canary.get_entries(location_id=location_id)
+        for device in location.devices:
+            entries_by_device_id[device.device_id] = [
+                entry
+                for entry in entries
+                for device_uuid in entry.device_uuids
+                if device.uuid == device_uuid
+            ]
+        return entries_by_device_id
 
     async def _async_update_data(self) -> CanaryData:
         """Fetch data from Canary."""
