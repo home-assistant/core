@@ -31,6 +31,7 @@ from homeassistant.components.remote import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, STATE_OFF
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
@@ -164,8 +165,11 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                 try:
                     await device.async_request(device.api.send_data, code)
                 except (BroadlinkException, OSError) as err:
-                    _LOGGER.error("Error during %s: %s", service, err)
-                    break
+                    raise HomeAssistantError(
+                        f"Error communicating with device: {repr(err)}"
+                    ) from err
+
+                at_least_one_sent = True
 
     async def async_learn_command(self, **kwargs):
         """Learn a list of commands from a remote."""
