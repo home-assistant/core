@@ -32,7 +32,11 @@ from .const import (
     DISPATCH_CHANNELS,
     DOMAIN,
 )
-from .utils import async_get_devices, async_get_devices_by_type
+from .utils import (
+    async_get_devices,
+    async_get_devices_by_type,
+    async_dispatch_id as _ufpd,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -157,9 +161,7 @@ class ProtectData:
             ):
                 self._pending_camera_ids.remove(obj.id)
                 async_dispatcher_send(
-                    self._hass,
-                    f"{DOMAIN}.{self._entry.entry_id}.{DISPATCH_CHANNELS}",
-                    obj,
+                    self._hass, _ufpd(self._entry, DISPATCH_CHANNELS), obj
                 )
 
             # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
@@ -181,9 +183,7 @@ class ProtectData:
                     if device is not None:
                         _LOGGER.warning("New device detected: %s", device.id)
                         async_dispatcher_send(
-                            self._hass,
-                            f"{DOMAIN}.{self._entry.entry_id}.{DISPATCH_ADOPT}",
-                            device,
+                            self._hass, _ufpd(self._entry, DISPATCH_ADOPT), device
                         )
             elif obj.camera is not None:
                 self._async_signal_device_update(obj.camera)

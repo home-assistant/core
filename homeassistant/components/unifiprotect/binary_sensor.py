@@ -37,6 +37,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectRequiredKeysMixin
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
@@ -382,9 +383,7 @@ async def async_setup_entry(
             entities += _async_motion_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    async_dispatcher_connect(
-        hass, f"{DOMAIN}.{entry.entry_id}.{DISPATCH_ADOPT}", _add_new_device
-    )
+    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,

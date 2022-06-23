@@ -31,6 +31,7 @@ from .const import (
 )
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -118,12 +119,8 @@ async def async_setup_entry(
         entities = _async_camera_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    async_dispatcher_connect(
-        hass, f"{DOMAIN}.{entry.entry_id}.{DISPATCH_ADOPT}", _add_new_device
-    )
-    async_dispatcher_connect(
-        hass, f"{DOMAIN}.{entry.entry_id}.{DISPATCH_CHANNELS}", _add_new_device
-    )
+    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
 
     entities = _async_camera_entities(data)
     async_add_entities(entities)

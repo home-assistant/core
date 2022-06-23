@@ -315,11 +315,6 @@ async def remove_entities(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    import logging
-
-    logger = logging.getLogger("homeassistant.components.unifiprotect.data")
-    logger.warning("=====")
-
     for ufp_device in ufp_devices:
         if not ufp_device.is_adopted_by_us:
             continue
@@ -331,12 +326,10 @@ async def remove_entities(
         device_id = entity.device_id
         for reg in list(entity_registry.entities.values()):
             if reg.device_id == device_id:
-                logger.warning("%s %s", device_id, reg.entity_id)
                 entity_registry.async_remove(reg.entity_id)
         device_registry.async_remove_device(device_id)
 
     await hass.async_block_till_done()
-    logger.warning(list(entity_registry.entities.keys()))
 
 
 async def adopt_devices(

@@ -29,6 +29,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,9 +49,7 @@ async def async_setup_entry(
         if isinstance(device, Camera) and device.feature_flags.has_speaker:
             async_add_entities([ProtectMediaPlayer(data, device)])
 
-    async_dispatcher_connect(
-        hass, f"{DOMAIN}.{entry.entry_id}.{DISPATCH_ADOPT}", _add_new_device
-    )
+    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
 
     entities = []
     for device in data.api.bootstrap.cameras.values():

@@ -449,9 +449,6 @@ async def test_select_set_option_light_motion(
     light.__fields__["set_light_settings"] = Mock()
     light.set_light_settings = AsyncMock()
 
-    import logging
-
-    logging.getLogger("homeassistant.components.unifiprotect.data").warning("+++++")
     await hass.services.async_call(
         "select",
         "select_option",
