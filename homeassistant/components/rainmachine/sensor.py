@@ -30,7 +30,6 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DOMAIN,
-    LOGGER,
     RUN_STATE_MAP,
     RunStates,
 )
