@@ -49,8 +49,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectRequiredKeysMixin, T
-from .utils import async_get_light_motion_current
-from .utils import async_dispatch_id as _ufpd
+from .utils import async_dispatch_id as _ufpd, async_get_light_motion_current
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"

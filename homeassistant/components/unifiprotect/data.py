@@ -33,9 +33,9 @@ from .const import (
     DOMAIN,
 )
 from .utils import (
+    async_dispatch_id as _ufpd,
     async_get_devices,
     async_get_devices_by_type,
-    async_dispatch_id as _ufpd,
 )
 
 _LOGGER = logging.getLogger(__name__)
