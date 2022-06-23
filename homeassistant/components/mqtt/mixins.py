@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
-import json
 import logging
 from typing import Any, Protocol, cast, final
 
@@ -47,6 +46,7 @@ from homeassistant.helpers.entity import (
     async_generate_entity_id,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import debug_info, subscription
@@ -393,7 +393,7 @@ class MqttAttributes(Entity):
         def attributes_message_received(msg: ReceiveMessage) -> None:
             try:
                 payload = attr_tpl(msg.payload)
-                json_dict = json.loads(payload) if isinstance(payload, str) else None
+                json_dict = json_loads(payload) if isinstance(payload, str) else None
                 if isinstance(json_dict, dict):
                     filtered_dict = {
                         k: v
