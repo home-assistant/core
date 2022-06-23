@@ -7,9 +7,6 @@ AEMET-OpenData==0.2.1
 # homeassistant.components.adax
 Adax-local==0.1.4
 
-# homeassistant.components.homekit
-HAP-python==4.4.0
-
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
@@ -774,6 +771,9 @@ gstreamer-player==1.1.2
 
 # homeassistant.components.profiler
 guppy3==3.1.2
+
+# homeassistant.components.homekit
+ha-HAP-python==4.5.0
 
 # homeassistant.components.generic
 # homeassistant.components.stream
