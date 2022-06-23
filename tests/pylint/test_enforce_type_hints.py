@@ -635,3 +635,105 @@ def test_named_arguments(
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
+
+
+@pytest.mark.parametrize(
+    "return_hint",
+    [
+        "",
+        "-> Mapping[int, int]",
+        "-> dict[int, Any]",
+    ],
+)
+def test_invalid_mapping_return_type(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    return_hint: str,
+) -> None:
+    """Check that Mapping[xxx, Any] accepts both Mapping and dict."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, property_node = astroid.extract_node(
+        f"""
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class FanEntity(ToggleEntity):
+        pass
+
+    class MyFanA( #@
+        FanEntity
+    ):
+        @property
+        def capability_attributes( #@
+            self
+        ){return_hint}:
+            pass
+    """,
+        "homeassistant.components.pylint_test.fan",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=property_node,
+            args=["Mapping[str, Any]", None],
+            line=15,
+            col_offset=4,
+            end_line=15,
+            end_col_offset=29,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+@pytest.mark.parametrize(
+    "return_hint",
+    [
+        "-> Mapping[str, Any]",
+        "-> Mapping[str, bool | int]",
+        "-> dict[str, Any]",
+        "-> dict[str, str]",
+    ],
+)
+def test_valid_mapping_return_type(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    return_hint: str,
+) -> None:
+    """Check that Mapping[xxx, Any] accepts both Mapping and dict."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node = astroid.extract_node(
+        f"""
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class FanEntity(ToggleEntity):
+        pass
+
+    class MyFanA( #@
+        FanEntity
+    ):
+        @property
+        def capability_attributes(
+            self
+        ){return_hint}:
+            pass
+    """,
+        "homeassistant.components.pylint_test.fan",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
