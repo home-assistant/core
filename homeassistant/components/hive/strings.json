@@ -17,6 +17,13 @@
           "2fa": "Two-factor code"
         }
       },
+      "configuration": {
+        "data": {
+          "device_name": "Device Name"
+        },
+        "description": "Enter your Hive configuration ",
+        "title": "Hive Configuration."
+      },
       "reauth": {
         "title": "Hive Login",
         "description": "Re-enter your Hive login information.",

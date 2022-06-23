@@ -14,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
+from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
 
 class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -91,12 +91,37 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if not errors:
                 try:
                     self.device_registration = True
-                    return await self.async_setup_hive_entry()
+                    return await self.async_step_configuration()
                 except UnknownHiveError:
                     errors["base"] = "unknown"
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
+
+    async def async_step_configuration(self, user_input=None):
+        """Handle hive configuration step."""
+        errors = {}
+
+        if user_input:
+            if not errors:
+                try:
+                    if self.device_registration:
+                        await self.hive_auth.device_registration(
+                            user_input["device_name"]
+                        )
+                        self.data[
+                            "device_data"
+                        ] = await self.hive_auth.get_device_data()
+                    return await self.async_setup_hive_entry()
+                except UnknownHiveError:
+                    errors["base"] = "unknown"
+
+        schema = vol.Schema(
+            {vol.Optional(CONF_DEVICE_NAME, default="Home Assistant"): str}
+        )
+        return self.async_show_form(
+            step_id="configuration", data_schema=schema, errors=errors
+        )
 
     async def async_setup_hive_entry(self):
         """Finish setup and create the config entry."""
@@ -105,9 +130,6 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             raise UnknownHiveError
 
         # Setup the config entry
-        if self.device_registration:
-            await self.hive_auth.device_registration("Home Assistant")
-            self.data["device_data"] = await self.hive_auth.getDeviceData()
         self.data["tokens"] = self.tokens
         if self.context["source"] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
