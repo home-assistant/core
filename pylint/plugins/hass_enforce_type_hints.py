@@ -435,6 +435,96 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
+_ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="should_poll",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="unique_id",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="name",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="state",
+        return_type=["StateType", None, "str", "int", "float"],
+    ),
+    TypeHintMatch(
+        function_name="capability_attributes",
+        return_type=["Mapping[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="state_attributes",
+        return_type=["dict[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="device_state_attributes",
+        return_type=["Mapping[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="extra_state_attributes",
+        return_type=["Mapping[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="device_info",
+        return_type=["DeviceInfo", None],
+    ),
+    TypeHintMatch(
+        function_name="device_class",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="unit_of_measurement",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="icon",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="entity_picture",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="available",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="assumed_state",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="force_update",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="supported_features",
+        return_type=["int", None],
+    ),
+    TypeHintMatch(
+        function_name="context_recent_time",
+        return_type="timedelta",
+    ),
+    TypeHintMatch(
+        function_name="entity_registry_enabled_default",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="entity_registry_visible_default",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="attribution",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="entity_category",
+        return_type=["EntityCategory", None],
+    ),
+]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="is_on",
@@ -462,6 +552,10 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "fan": [
         ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="ToggleEntity",
             matches=_TOGGLE_ENTITY_MATCH,
         ),
@@ -487,14 +581,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="oscillating",
                     return_type=["bool", None],
-                ),
-                TypeHintMatch(
-                    function_name="capability_attributes",
-                    return_type="dict[str]",
-                ),
-                TypeHintMatch(
-                    function_name="supported_features",
-                    return_type="int",
                 ),
                 TypeHintMatch(
                     function_name="preset_mode",
@@ -542,6 +628,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ),
     ],
     "lock": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
         ClassTypeHintMatch(
             base_class="LockEntity",
             matches=[
