@@ -10,6 +10,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
 
+BYTE_TO_GIBIBYTE = 1.074e9
+
 
 async def async_setup_platform(
     hass: HomeAssistant,
@@ -18,6 +20,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None,
 ) -> None:
     """Set up sensors."""
+
     if discovery_info is None:
         return
 
@@ -41,28 +44,24 @@ async def async_setup_platform(
                     continue
 
                 name = coordinator_data["name"]
-                # sensor = create_binary_sensor(
-                #     coordinator, host_name, node_name, dev_id, name
-                # )
-                # sensors.append(sensor)
+
                 sensors += [
                     ProxmoxSensor(
                         coordinator=coordinator,
-                        unique_id=f"proxmox_{node_name}_{dev_id}_mem_percent",
+                        unique_id=f"proxmox_{node_name}_{dev_id}_mem_gib",
                         name=f"{node_name}_{name}_memory",
                         icon="",
                         host_name=host_name,
                         node_name=node_name,
                         vm_id=dev_id,
-                        native_lambda=lambda data: round(int(data["mem"]) / 1.074e9, 2),
+                        native_lambda=lambda data: round(
+                            int(data["mem"]) / BYTE_TO_GIBIBYTE, 2
+                        ),
                         unit_of_measurement="GiB",
                     )
                 ]
 
         add_entities(sensors)
-
-
-# maxmem/mem
 
 
 class ProxmoxSensor(ProxmoxEntity, SensorEntity):
@@ -81,6 +80,7 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
         unit_of_measurement,
     ):
         """Create the sensor for vms or containers."""
+
         self.native_lambda = native_lambda
         self._attr_native_unit_of_measurement = unit_of_measurement
         super().__init__(
@@ -95,4 +95,3 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
             return None
 
         return self.native_lambda(data)
-        # return data["mem"]  # / data["maxmem"] TODO
