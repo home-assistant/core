@@ -66,7 +66,7 @@ class WiLightDevice(Entity):
         self._status: dict[str, Any] = {}
 
         self._attr_name = item_name
-        self._attr_unique_id = f"{self._device_id}_{self._index}"
+        self._attr_unique_id = f"{self._device_id}_{index}"
         self._attr_device_info = DeviceInfo(
             name=item_name,
             identifiers={(DOMAIN, self._attr_unique_id)},
