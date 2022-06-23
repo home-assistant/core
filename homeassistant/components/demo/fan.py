@@ -208,7 +208,7 @@ class DemoPercentageFan(BaseDemoFan, FanEntity):
 
         self.set_percentage(percentage)
 
-    def turn_off(self, **kwargs) -> None:
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         self.set_percentage(0)
 
@@ -278,7 +278,7 @@ class AsyncDemoPercentageFan(BaseDemoFan, FanEntity):
 
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity."""
         await self.async_oscillate(False)
         await self.async_set_percentage(0)

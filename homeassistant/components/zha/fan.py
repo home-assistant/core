@@ -99,7 +99,7 @@ class BaseFan(FanEntity):
             percentage = DEFAULT_ON_PERCENTAGE
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.async_set_percentage(0)
 
