@@ -99,13 +99,13 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         ATTR_FORECAST_TEMP: 45.9,
         ATTR_FORECAST_TEMP_LOW: 26.1,
         ATTR_FORECAST_WIND_BEARING: 239.6,
-        ATTR_FORECAST_WIND_SPEED: 9.49,
+        ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 3035.0
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 9.33
+    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
