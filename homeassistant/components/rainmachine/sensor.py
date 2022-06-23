@@ -273,13 +273,13 @@ class ProgramTimeRemainingSensor(TimeRemainingSensor):
         program_data = self.coordinator.data[self.entity_description.uid]
         duration = 0
 
-        for zone in program_data["wateringTimes"]:
-            if not zone["active"]:
-                continue
-
-            # If the user has configured a manual delay between zones, add it to the
-            # total duration:
-            if program_data["delay_on"]:
+        for idx, zone in enumerate(
+            [z for z in program_data["wateringTimes"] if z["active"]]
+        ):
+            if program_data["delay_on"] and idx > 0:
+                # If the user has configured a manual delay between zones, add it to the
+                # total duration for every zone except the first (since running a
+                # one-zone program won't incur a delay):
                 duration += program_data["delay"]
 
             duration += self._zone_coordinator.data[zone["id"]]["remaining"]
