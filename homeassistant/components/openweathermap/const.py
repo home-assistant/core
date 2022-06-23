@@ -22,11 +22,11 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRESSURE,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
 )
 from homeassistant.const import (
@@ -266,7 +266,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Condition",
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_PRECIPITATION,
+        key=ATTR_FORECAST_NATIVE_PRECIPITATION,
         name="Precipitation",
         native_unit_of_measurement=LENGTH_MILLIMETERS,
     ),
@@ -276,19 +276,19 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_PRESSURE,
+        key=ATTR_FORECAST_NATIVE_PRESSURE,
         name="Pressure",
         native_unit_of_measurement=PRESSURE_HPA,
         device_class=SensorDeviceClass.PRESSURE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_TEMP,
+        key=ATTR_FORECAST_NATIVE_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_TEMP_LOW,
+        key=ATTR_FORECAST_NATIVE_TEMP_LOW,
         name="Temperature Low",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
