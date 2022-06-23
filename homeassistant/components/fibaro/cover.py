@@ -93,6 +93,11 @@ class FibaroCover(FibaroDevice, CoverEntity):
     def is_closed(self):
         """Return if the cover is closed."""
         if self._is_open_close_only():
+            if (
+                "state" not in self.fibaro_device.properties
+                or self.fibaro_device.properties.state.lower() == "unknown"
+            ):
+                return None
             return self.fibaro_device.properties.state.lower() == "closed"
 
         if self.current_cover_position is None:
