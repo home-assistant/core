@@ -11,6 +11,7 @@ import pytest
 
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.template import TupleWrapper
 from homeassistant.util.json import (
     SerializationError,
     find_paths_unserializable_data,
@@ -72,12 +73,23 @@ def test_overwrite_and_reload(atomic_writes):
 
 
 def test_save_bad_data():
-    """Test error from trying to save unserialisable data."""
+    """Test error from trying to save unserializable data."""
     with pytest.raises(SerializationError) as excinfo:
         save_json("test4", {"hello": set()})
 
     assert (
         "Failed to serialize to JSON: test4. Bad data at $.hello=set()(<class 'set'>"
+        in str(excinfo.value)
+    )
+
+
+def test_save_bad_data_tuple_wrapper():
+    """Test error from trying to save unserializable data."""
+    with pytest.raises(SerializationError) as excinfo:
+        save_json("test4", {"hello": TupleWrapper(("4", "5"))})
+
+    assert (
+        "Failed to serialize to JSON: test4. Bad data at $.hello=('4', '5')(<class 'homeassistant.helpers.template.TupleWrapper'>"
         in str(excinfo.value)
     )
 
