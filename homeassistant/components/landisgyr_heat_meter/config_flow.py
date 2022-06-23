@@ -16,8 +16,9 @@ from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
-CONF_MANUAL_PATH = "Enter Manually"
 _LOGGER = logging.getLogger(__name__)
+
+CONF_MANUAL_PATH = "Enter Manually"
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -33,9 +34,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Step when setting up serial configuration."""
-        await self.async_set_unique_id(DOMAIN)
-        self._abort_if_unique_id_configured()
-
         errors = {}
 
         if user_input is not None:
@@ -48,13 +46,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
             try:
-                model = await self.validate_ultraheat(dev_path)
+                model, device_number = await self.validate_ultraheat(dev_path)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
             if not errors:
+                await self.async_set_unique_id(device_number)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=model, data=user_input | {"model": model}
+                    title=model,
+                    data=user_input | {"model": model, "device_number": device_number},
                 )
 
         ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
@@ -71,18 +72,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_setup_serial_manual_path(self, user_input=None):
-        """Select path manually."""
+        """Set path manually."""
         errors = {}
 
         if user_input is not None:
             try:
-                model = await self.validate_ultraheat(user_input[CONF_DEVICE])
+                model, device_number = await self.validate_ultraheat(
+                    user_input[CONF_DEVICE]
+                )
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
             if not errors:
+                await self.async_set_unique_id(device_number)
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=model, data=user_input | {"model": model}
+                    title=model,
+                    data=user_input | {"model": model, "device_number": device_number},
                 )
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): str})
@@ -92,19 +98,23 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_ultraheat(self, port: str) -> str:
+    async def validate_ultraheat(self, port: str):
         """Validate the user input allows us to connect."""
 
         reader = UltraheatReader(port)
         heat_meter = HeatMeterService(reader)
         try:
             async with async_timeout.timeout(10):
-                # getting model name to make sure everything is working
-                model = await self.hass.async_add_executor_job(heat_meter.validate)
+                # validate and retrieve the model and device number for a unique id
+                data = await self.hass.async_add_executor_job(heat_meter.read)
+                _LOGGER.debug("Got data from Ultraheat API: %s", data)
+
         except Exception as err:
+            _LOGGER.warning("Failed read data from: %s. %s", port, err)
             raise CannotConnect(f"Error communicating with device: {err}") from err
 
-        return model
+        _LOGGER.info("Successfully connected to %s", port)
+        return data.model, data.device_number
 
 
 def get_serial_by_id(dev_path: str) -> str:

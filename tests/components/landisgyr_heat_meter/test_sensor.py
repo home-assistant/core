@@ -39,10 +39,10 @@ async def test_create_sensors(mock_heat_meter, hass):
     mock_entry.add_to_hass(hass)
 
     mock_heat_meter_response = MockHeatMeterResponse(
-        heat_usage_gj={"value": 123, "unit": "GJ"},
-        volume_usage_m3={"value": 456, "unit": "m3"},
-        device_number={"value": "devicenr_789"},
-        meter_date_time={"value": datetime.datetime(2022, 5, 19, 19, 41, 17)},
+        heat_usage_gj=123,
+        volume_usage_m3=456,
+        device_number="devicenr_789",
+        meter_date_time=datetime.datetime(2022, 5, 19, 19, 41, 17),
     )
 
     mock_heat_meter().read.return_value = mock_heat_meter_response
@@ -59,7 +59,7 @@ async def test_create_sensors(mock_heat_meter, hass):
     await hass.async_block_till_done()
 
     # check if 25 attributes have been created
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 25
     entity_reg = entity_registry.async_get(hass)
 
     state = hass.states.get("sensor.heat_meter_heat_usage_gj")
