@@ -54,6 +54,8 @@ _SRV_EN_REC = "enable_recording"
 _SRV_DS_REC = "disable_recording"
 _SRV_EN_AUD = "enable_audio"
 _SRV_DS_AUD = "disable_audio"
+_SRV_EN_MOT_DET = "enable_motion_detection"
+_SRV_DS_MOT_DET = "disable_motion_detection"
 _SRV_EN_MOT_REC = "enable_motion_recording"
 _SRV_DS_MOT_REC = "disable_motion_recording"
 _SRV_GOTO = "goto_preset"
@@ -108,6 +110,8 @@ CAMERA_SERVICES = {
     _SRV_DS_REC: (_SRV_SCHEMA, "async_disable_recording", ()),
     _SRV_EN_AUD: (_SRV_SCHEMA, "async_enable_audio", ()),
     _SRV_DS_AUD: (_SRV_SCHEMA, "async_disable_audio", ()),
+    _SRV_EN_MOT_DET: (_SRV_SCHEMA, "async_enable_motion_detection", ()),
+    _SRV_DS_MOT_DET: (_SRV_SCHEMA, "async_disable_motion_detection", ()),
     _SRV_EN_MOT_REC: (_SRV_SCHEMA, "async_enable_motion_recording", ()),
     _SRV_DS_MOT_REC: (_SRV_SCHEMA, "async_disable_motion_recording", ()),
     _SRV_GOTO: (_SRV_GOTO_SCHEMA, "async_goto_preset", (_ATTR_PRESET,)),
@@ -221,7 +225,7 @@ class AmcrestCam(Camera):
             # Amcrest cameras only support one snapshot command at a time.
             # Hence need to wait if a previous snapshot has not yet finished.
             # Also need to check that camera is online and turned on before each wait
-            # and before initiating shapshot.
+            # and before initiating snapshot.
             while self._snapshot_task:
                 self._check_snapshot_ok()
                 _LOGGER.debug("Waiting for previous snapshot from %s", self._name)
