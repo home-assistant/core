@@ -684,7 +684,9 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 
 
 def _is_valid_type(
-    expected_type: list[str] | str | None | object, node: nodes.NodeNG
+    expected_type: list[str] | str | None | object,
+    node: nodes.NodeNG,
+    in_return: bool = False,
 ) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
@@ -692,7 +694,7 @@ def _is_valid_type(
 
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
-            if _is_valid_type(expected_type_item, node):
+            if _is_valid_type(expected_type_item, node, in_return):
                 return True
         return False
 
@@ -728,6 +730,18 @@ def _is_valid_type(
 
     # Special case for xxx[yyy, zzz]`
     if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
+        # Handle special case of Mapping[xxx, Any]
+        if in_return and match.group(1) == "Mapping" and match.group(3) == "Any":
+            return (
+                isinstance(node, nodes.Subscript)
+                and isinstance(node.value, nodes.Name)
+                # We accept dict when Mapping is needed
+                and node.value.name in ("Mapping", "dict")
+                and isinstance(node.slice, nodes.Tuple)
+                and _is_valid_type(match.group(2), node.slice.elts[0])
+                # Ignore second item
+                # and _is_valid_type(match.group(3), node.slice.elts[1])
+            )
         return (
             isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
@@ -753,7 +767,7 @@ def _is_valid_type(
 
 
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
-    if _is_valid_type(match.return_type, node):
+    if _is_valid_type(match.return_type, node, True):
         return True
 
     if isinstance(node, nodes.BinOp):
