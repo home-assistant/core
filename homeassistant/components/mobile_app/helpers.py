@@ -85,8 +85,9 @@ def _decrypt_payload_helper(
     key_bytes = get_key_bytes(key, keylen)
 
     msg_bytes = decrypt(ciphertext, key_bytes)
+    _LOGGER.debug("Bytes from decrypt: %s", msg_bytes)
     message = json_loads(msg_bytes)
-    _LOGGER.debug("Successfully decrypted mobile_app payload")
+    _LOGGER.debug("Successfully decrypted mobile_app payload: %s", message)
     return message
 
 
