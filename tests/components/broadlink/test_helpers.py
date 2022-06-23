@@ -2,7 +2,16 @@
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.broadlink.helpers import data_packet, mac_address
+from homeassistant.components.broadlink.helpers import (
+    async_clean_registries,
+    data_packet,
+    mac_address,
+)
+from homeassistant.const import Platform
+from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.entity_registry import RegistryEntry
+
+from tests.common import MockConfigEntry, mock_device_registry, mock_registry
 
 
 async def test_padding(hass):
@@ -52,3 +61,55 @@ async def test_invalid_mac_address(hass):
     for mac in invalid:
         with pytest.raises((ValueError, vol.Invalid)):
             mac_address(mac)
+
+
+async def test_registry_cleaner(hass):
+    """Test that we clean up config entries properly."""
+    config_entry = MockConfigEntry(domain="broadlink")
+    config_entry.add_to_hass(hass)
+
+    entity_registry = mock_registry(
+        hass,
+        {
+            "button.kitchen1234": RegistryEntry(
+                entity_id="button.kitchen1234",
+                unique_id="1234",
+                platform="broadlink",
+                device_id="mock-dev-id",
+                config_entry_id=config_entry.entry_id,
+            ),
+            "button.kitchen4321": RegistryEntry(
+                entity_id="button.kitchen4321",
+                unique_id="4321",
+                platform="broadlink",
+                device_id="mock-dev-id",
+                config_entry_id=config_entry.entry_id,
+            ),
+        },
+    )
+
+    device_registry = mock_device_registry(
+        hass,
+        {
+            "mock-dev-id": DeviceEntry(
+                id="mock-dev-id",
+                area_id="mock-area-id",
+                config_entries={config_entry.entry_id},
+            )
+        },
+    )
+
+    async_clean_registries(hass, config_entry, {"1234", "4321"}, Platform.BUTTON)
+    assert set(entity_registry.entities.keys()) == {
+        "button.kitchen1234",
+        "button.kitchen4321",
+    }
+    assert set(device_registry.devices.keys()) == {"mock-dev-id"}
+
+    async_clean_registries(hass, config_entry, {"4321"}, Platform.BUTTON)
+    assert set(entity_registry.entities.keys()) == {"button.kitchen4321"}
+    assert set(device_registry.devices.keys()) == {"mock-dev-id"}
+
+    async_clean_registries(hass, config_entry, {}, Platform.BUTTON)
+    assert set(entity_registry.entities.keys()) == set()
+    assert set(device_registry.devices.keys()) == set()
