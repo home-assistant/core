@@ -1,7 +1,6 @@
 """Support for RESTful API sensors."""
 from __future__ import annotations
 
-import json
 import logging
 from xml.parsers.expat import ExpatError
 
@@ -26,6 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.template_entity import TemplateSensor
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -141,7 +141,7 @@ class RestSensor(BaseRestEntity, TemplateSensor):
                 or content_type.startswith("application/rss+xml")
             ):
                 try:
-                    value = json.dumps(xmltodict.parse(value))
+                    value = json_dumps(xmltodict.parse(value))
                     _LOGGER.debug("JSON converted from XML: %s", value)
                 except ExpatError:
                     _LOGGER.warning(
@@ -153,7 +153,7 @@ class RestSensor(BaseRestEntity, TemplateSensor):
             self._attributes = {}
             if value:
                 try:
-                    json_dict = json.loads(value)
+                    json_dict = json_loads(value)
                     if self._json_attrs_path is not None:
                         json_dict = jsonpath(json_dict, self._json_attrs_path)
                     # jsonpath will always store the result in json_dict[0]
