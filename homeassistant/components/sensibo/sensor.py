@@ -1,8 +1,10 @@
 """Sensor platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import datetime
+from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -29,6 +31,8 @@ from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
 from .entity import SensiboDeviceBaseEntity, SensiboMotionBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass
 class MotionBaseEntityDescriptionMixin:
@@ -41,7 +45,8 @@ class MotionBaseEntityDescriptionMixin:
 class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
-    value_fn: Callable[[SensiboDevice], StateType]
+    value_fn: Callable[[SensiboDevice], StateType | datetime]
+    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
 @dataclass
@@ -57,6 +62,15 @@ class SensiboDeviceSensorEntityDescription(
 ):
     """Describes Sensibo Motion sensor entity."""
 
+
+FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
+    key="filter_last_reset",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    name="Filter Last Reset",
+    icon="mdi:timer",
+    value_fn=lambda data: data.filter_last_reset,
+    extra_fn=None,
+)
 
 MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
     SensiboMotionSensorEntityDescription(
@@ -99,7 +113,7 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
         value_fn=lambda data: data.temperature,
     ),
 )
-DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+PURE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
     SensiboDeviceSensorEntityDescription(
         key="pm25",
         device_class=SensorDeviceClass.PM25,
@@ -108,13 +122,28 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         name="PM2.5",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pm25,
+        extra_fn=None,
     ),
     SensiboDeviceSensorEntityDescription(
         key="pure_sensitivity",
         name="Pure Sensitivity",
         icon="mdi:air-filter",
         value_fn=lambda data: data.pure_sensitivity,
+        extra_fn=None,
     ),
+    FILTER_LAST_RESET_DESCRIPTION,
+)
+
+DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+    SensiboDeviceSensorEntityDescription(
+        key="timer_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        name="Timer End Time",
+        icon="mdi:timer",
+        value_fn=lambda data: data.timer_time,
+        extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
+    ),
+    FILTER_LAST_RESET_DESCRIPTION,
 )
 
 
@@ -127,18 +156,26 @@ async def async_setup_entry(
 
     entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
 
+    for device_id, device_data in coordinator.data.parsed.items():
+        if device_data.motion_sensors:
+            entities.extend(
+                SensiboMotionSensor(
+                    coordinator, device_id, sensor_id, sensor_data, description
+                )
+                for sensor_id, sensor_data in device_data.motion_sensors.items()
+                for description in MOTION_SENSOR_TYPES
+            )
     entities.extend(
-        SensiboMotionSensor(coordinator, device_id, sensor_id, sensor_data, description)
+        SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
-        for sensor_id, sensor_data in device_data.motion_sensors.items()
-        for description in MOTION_SENSOR_TYPES
-        if device_data.motion_sensors
+        for description in PURE_SENSOR_TYPES
+        if device_data.model == "pure"
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for device_id, device_data in coordinator.data.parsed.items()
         for description in DEVICE_SENSOR_TYPES
-        if getattr(device_data, description.key) is not None
+        if device_data.model != "pure"
     )
     async_add_entities(entities)
 
@@ -173,6 +210,8 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
+        if TYPE_CHECKING:
+            assert self.sensor_data
         return self.entity_description.value_fn(self.sensor_data)
 
 
@@ -197,6 +236,13 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
 
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.device_data)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return additional attributes."""
+        if self.entity_description.extra_fn is not None:
+            return self.entity_description.extra_fn(self.device_data)
+        return None

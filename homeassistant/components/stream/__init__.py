@@ -16,7 +16,9 @@ to always keep workers active.
 """
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable, Mapping
+import copy
 import logging
 import re
 import secrets
@@ -37,6 +39,7 @@ from .const import (
     ATTR_ENDPOINTS,
     ATTR_SETTINGS,
     ATTR_STREAMS,
+    CONF_EXTRA_PART_WAIT_TIME,
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
@@ -61,8 +64,11 @@ from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 __all__ = [
+    "ATTR_SETTINGS",
+    "CONF_EXTRA_PART_WAIT_TIME",
     "CONF_RTSP_TRANSPORT",
     "CONF_USE_WALLCLOCK_AS_TIMESTAMPS",
+    "DOMAIN",
     "FORMAT_CONTENT_TYPE",
     "HLS_PROVIDER",
     "OUTPUT_FORMATS",
@@ -90,7 +96,7 @@ def redact_credentials(data: str) -> str:
 def create_stream(
     hass: HomeAssistant,
     stream_source: str,
-    options: dict[str, str | bool],
+    options: Mapping[str, str | bool | float],
     stream_label: str | None = None,
 ) -> Stream:
     """Create a stream with the specified identfier based on the source url.
@@ -100,11 +106,35 @@ def create_stream(
 
     The stream_label is a string used as an additional message in logging.
     """
+
+    def convert_stream_options(
+        hass: HomeAssistant, stream_options: Mapping[str, str | bool | float]
+    ) -> tuple[dict[str, str], StreamSettings]:
+        """Convert options from stream options into PyAV options and stream settings."""
+        stream_settings = copy.copy(hass.data[DOMAIN][ATTR_SETTINGS])
+        pyav_options: dict[str, str] = {}
+        try:
+            STREAM_OPTIONS_SCHEMA(stream_options)
+        except vol.Invalid as exc:
+            raise HomeAssistantError("Invalid stream options") from exc
+
+        if extra_wait_time := stream_options.get(CONF_EXTRA_PART_WAIT_TIME):
+            stream_settings.hls_part_timeout += extra_wait_time
+        if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
+            assert isinstance(rtsp_transport, str)
+            # The PyAV options currently match the stream CONF constants, but this
+            # will not necessarily always be the case, so they are hard coded here
+            pyav_options["rtsp_transport"] = rtsp_transport
+        if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+            pyav_options["use_wallclock_as_timestamps"] = "1"
+
+        return pyav_options, stream_settings
+
     if DOMAIN not in hass.config.components:
         raise HomeAssistantError("Stream integration is not set up.")
 
-    # Convert extra stream options into PyAV options
-    pyav_options = convert_stream_options(options)
+    # Convert extra stream options into PyAV options and stream settings
+    pyav_options, stream_settings = convert_stream_options(hass, options)
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
         pyav_options = {
@@ -114,7 +144,11 @@ def create_stream(
         }
 
     stream = Stream(
-        hass, stream_source, options=pyav_options, stream_label=stream_label
+        hass,
+        stream_source,
+        pyav_options=pyav_options,
+        stream_settings=stream_settings,
+        stream_label=stream_label,
     )
     hass.data[DOMAIN][ATTR_STREAMS].append(stream)
     return stream
@@ -206,13 +240,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # Setup Recorder
     async_setup_recorder(hass)
 
-    @callback
-    def shutdown(event: Event) -> None:
+    async def shutdown(event: Event) -> None:
         """Stop all stream workers."""
         for stream in hass.data[DOMAIN][ATTR_STREAMS]:
             stream.keepalive = False
-            stream.stop()
-        _LOGGER.info("Stopped stream workers")
+        if awaitables := [
+            asyncio.create_task(stream.stop())
+            for stream in hass.data[DOMAIN][ATTR_STREAMS]
+        ]:
+            await asyncio.wait(awaitables)
+        _LOGGER.debug("Stopped stream workers")
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, shutdown)
 
@@ -226,16 +263,19 @@ class Stream:
         self,
         hass: HomeAssistant,
         source: str,
-        options: dict[str, str],
+        pyav_options: dict[str, str],
+        stream_settings: StreamSettings,
         stream_label: str | None = None,
     ) -> None:
         """Initialize a stream."""
         self.hass = hass
         self.source = source
-        self.options = options
+        self.pyav_options = pyav_options
+        self._stream_settings = stream_settings
         self._stream_label = stream_label
         self.keepalive = False
         self.access_token: str | None = None
+        self._start_stop_lock = asyncio.Lock()
         self._thread: threading.Thread | None = None
         self._thread_quit = threading.Event()
         self._outputs: dict[str, StreamOutput] = {}
@@ -271,29 +311,30 @@ class Stream:
         """Add provider output stream."""
         if not (provider := self._outputs.get(fmt)):
 
-            @callback
-            def idle_callback() -> None:
+            async def idle_callback() -> None:
                 if (
                     not self.keepalive or fmt == RECORDER_PROVIDER
                 ) and fmt in self._outputs:
-                    self.remove_provider(self._outputs[fmt])
+                    await self.remove_provider(self._outputs[fmt])
                 self.check_idle()
 
             provider = PROVIDERS[fmt](
-                self.hass, IdleTimer(self.hass, timeout, idle_callback)
+                self.hass,
+                IdleTimer(self.hass, timeout, idle_callback),
+                self._stream_settings,
             )
             self._outputs[fmt] = provider
 
         return provider
 
-    def remove_provider(self, provider: StreamOutput) -> None:
+    async def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""
         if provider.name in self._outputs:
             self._outputs[provider.name].cleanup()
             del self._outputs[provider.name]
 
         if not self._outputs:
-            self.stop()
+            await self.stop()
 
     def check_idle(self) -> None:
         """Reset access token if all providers are idle."""
@@ -316,9 +357,14 @@ class Stream:
         if self._update_callback:
             self._update_callback()
 
-    def start(self) -> None:
-        """Start a stream."""
-        if self._thread is None or not self._thread.is_alive():
+    async def start(self) -> None:
+        """Start a stream.
+
+        Uses an asyncio.Lock to avoid conflicts with _stop().
+        """
+        async with self._start_stop_lock:
+            if self._thread and self._thread.is_alive():
+                return
             if self._thread is not None:
                 # The thread must have crashed/exited. Join to clean up the
                 # previous thread.
@@ -329,7 +375,7 @@ class Stream:
                 target=self._run_worker,
             )
             self._thread.start()
-            self._logger.info(
+            self._logger.debug(
                 "Started stream: %s", redact_credentials(str(self.source))
             )
 
@@ -359,7 +405,8 @@ class Stream:
             try:
                 stream_worker(
                     self.source,
-                    self.options,
+                    self.pyav_options,
+                    self._stream_settings,
                     stream_state,
                     self._keyframe_converter,
                     self._thread_quit,
@@ -394,33 +441,39 @@ class Stream:
                 redact_credentials(str(self.source)),
             )
 
-        @callback
-        def worker_finished() -> None:
+        async def worker_finished() -> None:
             # The worker is no checking availability of the stream and can no longer track
             # availability so mark it as available, otherwise the frontend may not be able to
             # interact with the stream.
             if not self.available:
                 self._async_update_state(True)
+            # We can call remove_provider() sequentially as the wrapped _stop() function
+            # which blocks internally is only called when the last provider is removed.
             for provider in self.outputs().values():
-                self.remove_provider(provider)
+                await self.remove_provider(provider)
 
-        self.hass.loop.call_soon_threadsafe(worker_finished)
+        self.hass.create_task(worker_finished())
 
-    def stop(self) -> None:
+    async def stop(self) -> None:
         """Remove outputs and access token."""
         self._outputs = {}
         self.access_token = None
 
         if not self.keepalive:
-            self._stop()
+            await self._stop()
 
-    def _stop(self) -> None:
-        """Stop worker thread."""
-        if self._thread is not None:
+    async def _stop(self) -> None:
+        """Stop worker thread.
+
+        Uses an asyncio.Lock to avoid conflicts with start().
+        """
+        async with self._start_stop_lock:
+            if self._thread is None:
+                return
             self._thread_quit.set()
-            self._thread.join()
+            await self.hass.async_add_executor_job(self._thread.join)
             self._thread = None
-            self._logger.info(
+            self._logger.debug(
                 "Stopped stream: %s", redact_credentials(str(self.source))
             )
 
@@ -448,8 +501,7 @@ class Stream:
         )
         recorder.video_path = video_path
 
-        self.start()
-        self._logger.debug("Started a stream recording of %s seconds", duration)
+        await self.start()
 
         # Take advantage of lookback
         hls: HlsStreamOutput = cast(HlsStreamOutput, self.outputs().get(HLS_PROVIDER))
@@ -457,7 +509,10 @@ class Stream:
             num_segments = min(int(lookback // hls.target_duration), MAX_SEGMENTS)
             # Wait for latest segment, then add the lookback
             await hls.recv()
-            recorder.prepend(list(hls.get_segments())[-num_segments:])
+            recorder.prepend(list(hls.get_segments())[-num_segments - 1 : -1])
+
+        self._logger.debug("Started a stream recording of %s seconds", duration)
+        await recorder.async_record()
 
     async def async_get_image(
         self,
@@ -473,7 +528,7 @@ class Stream:
         """
 
         self.add_provider(HLS_PROVIDER)
-        self.start()
+        await self.start()
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
@@ -492,22 +547,6 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
     {
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
+        vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
     }
 )
-
-
-def convert_stream_options(stream_options: dict[str, str | bool]) -> dict[str, str]:
-    """Convert options from stream options into PyAV options."""
-    pyav_options: dict[str, str] = {}
-    try:
-        STREAM_OPTIONS_SCHEMA(stream_options)
-    except vol.Invalid as exc:
-        raise HomeAssistantError("Invalid stream options") from exc
-
-    if rtsp_transport := stream_options.get(CONF_RTSP_TRANSPORT):
-        assert isinstance(rtsp_transport, str)
-        pyav_options["rtsp_transport"] = rtsp_transport
-    if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-        pyav_options["use_wallclock_as_timestamps"] = "1"
-
-    return pyav_options

@@ -6,8 +6,7 @@ from copy import copy
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Doorlock
-from pyunifiprotect.data.types import LockStatusType
+from pyunifiprotect.data import Doorlock, LockStatusType
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import (
@@ -36,7 +35,7 @@ async def doorlock_fixture(
     # disable pydantic validation so mocking can happen
     Doorlock.__config__.validate_assignment = False
 
-    lock_obj = mock_doorlock.copy(deep=True)
+    lock_obj = mock_doorlock.copy()
     lock_obj._api = mock_entry.api
     lock_obj.name = "Test Lock"
     lock_obj.lock_status = LockStatusType.OPEN
@@ -61,7 +60,7 @@ async def test_lock_setup(
 ):
     """Test lock entity setup."""
 
-    unique_id = f"{doorlock[0].id}_lock"
+    unique_id = f"{doorlock[0].mac}_lock"
     entity_id = doorlock[1]
 
     entity_registry = er.async_get(hass)

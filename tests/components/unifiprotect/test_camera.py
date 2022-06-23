@@ -6,9 +6,7 @@ from copy import copy
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera as ProtectCamera
-from pyunifiprotect.data.devices import CameraChannel
-from pyunifiprotect.data.types import StateType
+from pyunifiprotect.data import Camera as ProtectCamera, CameraChannel, StateType
 from pyunifiprotect.exceptions import NvrError
 
 from homeassistant.components.camera import (
@@ -40,6 +38,7 @@ from .conftest import (
     MockEntityFixture,
     assert_entity_counts,
     enable_entity,
+    regenerate_device_ids,
     time_changed,
 )
 
@@ -50,7 +49,10 @@ async def camera_fixture(
 ):
     """Fixture for a single camera for testing the camera platform."""
 
-    camera_obj = mock_camera.copy(deep=True)
+    # disable pydantic validation so mocking can happen
+    ProtectCamera.__config__.validate_assignment = False
+
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -70,7 +72,9 @@ async def camera_fixture(
 
     assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
-    return (camera_obj, "camera.test_camera_high")
+    yield (camera_obj, "camera.test_camera_high")
+
+    ProtectCamera.__config__.validate_assignment = True
 
 
 @pytest.fixture(name="camera_package")
@@ -79,7 +83,7 @@ async def camera_package_fixture(
 ):
     """Fixture for a single camera for testing the camera platform."""
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
@@ -91,7 +95,7 @@ async def camera_package_fixture(
     camera_obj.channels[0].rtsp_alias = "test_high_alias"
     camera_obj.channels[1].is_rtsp_enabled = False
     camera_obj.channels[2].is_rtsp_enabled = False
-    package_channel = camera_obj.channels[0].copy(deep=True)
+    package_channel = camera_obj.channels[0].copy()
     package_channel.is_rtsp_enabled = False
     package_channel.name = "Package Camera"
     package_channel.id = 3
@@ -121,7 +125,7 @@ def validate_default_camera_entity(
     channel = camera_obj.channels[channel_id]
 
     entity_name = f"{camera_obj.name} {channel.name}"
-    unique_id = f"{camera_obj.id}_{channel.id}"
+    unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
     entity_registry = er.async_get(hass)
@@ -143,7 +147,7 @@ def validate_rtsps_camera_entity(
     channel = camera_obj.channels[channel_id]
 
     entity_name = f"{camera_obj.name} {channel.name}"
-    unique_id = f"{camera_obj.id}_{channel.id}"
+    unique_id = f"{camera_obj.mac}_{channel.id}"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
     entity_registry = er.async_get(hass)
@@ -165,7 +169,7 @@ def validate_rtsp_camera_entity(
     channel = camera_obj.channels[channel_id]
 
     entity_name = f"{camera_obj.name} {channel.name} Insecure"
-    unique_id = f"{camera_obj.id}_{channel.id}_insecure"
+    unique_id = f"{camera_obj.mac}_{channel.id}_insecure"
     entity_id = f"camera.{entity_name.replace(' ', '_').lower()}"
 
     entity_registry = er.async_get(hass)
@@ -242,39 +246,41 @@ async def test_basic_setup(
 ):
     """Test working setup of unifiprotect entry."""
 
-    camera_high_only = mock_camera.copy(deep=True)
+    camera_high_only = mock_camera.copy()
     camera_high_only._api = mock_entry.api
+    camera_high_only.channels = [c.copy() for c in mock_camera.channels]
     camera_high_only.channels[0]._api = mock_entry.api
     camera_high_only.channels[1]._api = mock_entry.api
     camera_high_only.channels[2]._api = mock_entry.api
     camera_high_only.name = "Test Camera 1"
-    camera_high_only.id = "test_high"
     camera_high_only.channels[0].is_rtsp_enabled = True
     camera_high_only.channels[0].name = "High"
     camera_high_only.channels[0].rtsp_alias = "test_high_alias"
     camera_high_only.channels[1].is_rtsp_enabled = False
     camera_high_only.channels[2].is_rtsp_enabled = False
+    regenerate_device_ids(camera_high_only)
 
-    camera_medium_only = mock_camera.copy(deep=True)
+    camera_medium_only = mock_camera.copy()
     camera_medium_only._api = mock_entry.api
+    camera_medium_only.channels = [c.copy() for c in mock_camera.channels]
     camera_medium_only.channels[0]._api = mock_entry.api
     camera_medium_only.channels[1]._api = mock_entry.api
     camera_medium_only.channels[2]._api = mock_entry.api
     camera_medium_only.name = "Test Camera 2"
-    camera_medium_only.id = "test_medium"
     camera_medium_only.channels[0].is_rtsp_enabled = False
     camera_medium_only.channels[1].is_rtsp_enabled = True
     camera_medium_only.channels[1].name = "Medium"
     camera_medium_only.channels[1].rtsp_alias = "test_medium_alias"
     camera_medium_only.channels[2].is_rtsp_enabled = False
+    regenerate_device_ids(camera_medium_only)
 
-    camera_all_channels = mock_camera.copy(deep=True)
+    camera_all_channels = mock_camera.copy()
     camera_all_channels._api = mock_entry.api
+    camera_all_channels.channels = [c.copy() for c in mock_camera.channels]
     camera_all_channels.channels[0]._api = mock_entry.api
     camera_all_channels.channels[1]._api = mock_entry.api
     camera_all_channels.channels[2]._api = mock_entry.api
     camera_all_channels.name = "Test Camera 3"
-    camera_all_channels.id = "test_all"
     camera_all_channels.channels[0].is_rtsp_enabled = True
     camera_all_channels.channels[0].name = "High"
     camera_all_channels.channels[0].rtsp_alias = "test_high_alias"
@@ -284,32 +290,35 @@ async def test_basic_setup(
     camera_all_channels.channels[2].is_rtsp_enabled = True
     camera_all_channels.channels[2].name = "Low"
     camera_all_channels.channels[2].rtsp_alias = "test_low_alias"
+    regenerate_device_ids(camera_all_channels)
 
-    camera_no_channels = mock_camera.copy(deep=True)
+    camera_no_channels = mock_camera.copy()
     camera_no_channels._api = mock_entry.api
+    camera_no_channels.channels = [c.copy() for c in camera_no_channels.channels]
     camera_no_channels.channels[0]._api = mock_entry.api
     camera_no_channels.channels[1]._api = mock_entry.api
     camera_no_channels.channels[2]._api = mock_entry.api
     camera_no_channels.name = "Test Camera 4"
-    camera_no_channels.id = "test_none"
     camera_no_channels.channels[0].is_rtsp_enabled = False
     camera_no_channels.channels[0].name = "High"
     camera_no_channels.channels[1].is_rtsp_enabled = False
     camera_no_channels.channels[2].is_rtsp_enabled = False
+    regenerate_device_ids(camera_no_channels)
 
-    camera_package = mock_camera.copy(deep=True)
+    camera_package = mock_camera.copy()
     camera_package._api = mock_entry.api
+    camera_package.channels = [c.copy() for c in mock_camera.channels]
     camera_package.channels[0]._api = mock_entry.api
     camera_package.channels[1]._api = mock_entry.api
     camera_package.channels[2]._api = mock_entry.api
     camera_package.name = "Test Camera 5"
-    camera_package.id = "test_package"
     camera_package.channels[0].is_rtsp_enabled = True
     camera_package.channels[0].name = "High"
     camera_package.channels[0].rtsp_alias = "test_high_alias"
     camera_package.channels[1].is_rtsp_enabled = False
     camera_package.channels[2].is_rtsp_enabled = False
-    package_channel = camera_package.channels[0].copy(deep=True)
+    regenerate_device_ids(camera_package)
+    package_channel = camera_package.channels[0].copy()
     package_channel.is_rtsp_enabled = False
     package_channel.name = "Package Camera"
     package_channel.id = 3
@@ -394,7 +403,7 @@ async def test_missing_channels(
 ):
     """Test setting up camera with no camera channels."""
 
-    camera = mock_camera.copy(deep=True)
+    camera = mock_camera.copy()
     camera.channels = []
 
     mock_entry.api.bootstrap.cameras = {camera.id: camera}
@@ -574,3 +583,43 @@ async def test_camera_ws_update_offline(
 
     state = hass.states.get(camera[1])
     assert state and state.state == "idle"
+
+
+async def test_camera_enable_motion(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    camera: tuple[ProtectCamera, str],
+):
+    """Tests generic entity update service."""
+
+    camera[0].__fields__["set_motion_detection"] = Mock()
+    camera[0].set_motion_detection = AsyncMock()
+
+    await hass.services.async_call(
+        "camera",
+        "enable_motion_detection",
+        {ATTR_ENTITY_ID: camera[1]},
+        blocking=True,
+    )
+
+    camera[0].set_motion_detection.assert_called_once_with(True)
+
+
+async def test_camera_disable_motion(
+    hass: HomeAssistant,
+    mock_entry: MockEntityFixture,
+    camera: tuple[ProtectCamera, str],
+):
+    """Tests generic entity update service."""
+
+    camera[0].__fields__["set_motion_detection"] = Mock()
+    camera[0].set_motion_detection = AsyncMock()
+
+    await hass.services.async_call(
+        "camera",
+        "disable_motion_detection",
+        {ATTR_ENTITY_ID: camera[1]},
+        blocking=True,
+    )
+
+    camera[0].set_motion_detection.assert_called_once_with(False)

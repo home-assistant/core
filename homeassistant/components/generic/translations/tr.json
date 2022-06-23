@@ -15,6 +15,7 @@
             "stream_no_video": "Ak\u0131\u015fta video yok",
             "stream_not_permitted": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken i\u015fleme izin verilmiyor. Yanl\u0131\u015f RTSP aktar\u0131m protokol\u00fc?",
             "stream_unauthorised": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken yetkilendirme ba\u015far\u0131s\u0131z oldu",
+            "template_error": "\u015eablon olu\u015fturma hatas\u0131. Daha fazla bilgi i\u00e7in g\u00fcnl\u00fc\u011f\u00fc inceleyin.",
             "timeout": "URL y\u00fcklenirken zaman a\u015f\u0131m\u0131",
             "unable_still_load": "Hareketsiz resim URL'sinden ge\u00e7erli resim y\u00fcklenemiyor (\u00f6r. ge\u00e7ersiz ana bilgisayar, URL veya kimlik do\u011frulama hatas\u0131). Daha fazla bilgi i\u00e7in g\u00fcnl\u00fc\u011f\u00fc inceleyin.",
             "unknown": "Beklenmeyen hata"
@@ -57,6 +58,7 @@
             "stream_no_video": "Ak\u0131\u015fta video yok",
             "stream_not_permitted": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken i\u015fleme izin verilmiyor. Yanl\u0131\u015f RTSP aktar\u0131m protokol\u00fc?",
             "stream_unauthorised": "Ak\u0131\u015fa ba\u011flanmaya \u00e7al\u0131\u015f\u0131rken yetkilendirme ba\u015far\u0131s\u0131z oldu",
+            "template_error": "\u015eablon olu\u015fturma hatas\u0131. Daha fazla bilgi i\u00e7in g\u00fcnl\u00fc\u011f\u00fc inceleyin.",
             "timeout": "URL y\u00fcklenirken zaman a\u015f\u0131m\u0131",
             "unable_still_load": "Hareketsiz resim URL'sinden ge\u00e7erli resim y\u00fcklenemiyor (\u00f6r. ge\u00e7ersiz ana bilgisayar, URL veya kimlik do\u011frulama hatas\u0131). Daha fazla bilgi i\u00e7in g\u00fcnl\u00fc\u011f\u00fc inceleyin.",
             "unknown": "Beklenmeyen hata"

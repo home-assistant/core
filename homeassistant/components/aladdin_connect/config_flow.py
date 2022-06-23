@@ -1,6 +1,7 @@
 """Config flow for Aladdin Connect cover integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -33,13 +34,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
     acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
-    try:
-        login = await hass.async_add_executor_job(acc.login)
-    except (TypeError, KeyError, NameError, ValueError) as ex:
-        raise ConnectionError from ex
-    else:
-        if not login:
-            raise InvalidAuth
+    login = await hass.async_add_executor_job(acc.login)
+    if not login:
+        raise InvalidAuth
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -48,9 +45,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
     entry: config_entries.ConfigEntry | None
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Aladdin Connect."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -72,8 +67,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
             else:
@@ -107,8 +100,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         try:
             await validate_input(self.hass, user_input)
-        except ConnectionError:
-            errors["base"] = "cannot_connect"
         except InvalidAuth:
             errors["base"] = "invalid_auth"
 

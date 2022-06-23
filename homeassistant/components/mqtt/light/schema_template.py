@@ -31,8 +31,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.util.color as color_util
 
-from .. import MqttValueTemplate, subscription
-from ... import mqtt
+from .. import subscription
+from ..config import MQTT_RW_SCHEMA
 from ..const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -43,6 +43,7 @@ from ..const import (
 )
 from ..debug_info import log_messages
 from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity
+from ..models import MqttValueTemplate
 from .schema import MQTT_LIGHT_SCHEMA_SCHEMA
 from .schema_basic import MQTT_LIGHT_ATTRIBUTES_BLOCKED
 
@@ -67,7 +68,7 @@ CONF_RED_TEMPLATE = "red_template"
 CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 _PLATFORM_SCHEMA_BASE = (
-    mqtt.MQTT_RW_SCHEMA.extend(
+    MQTT_RW_SCHEMA.extend(
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,

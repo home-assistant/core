@@ -205,6 +205,19 @@ MAP_SERVICE_API = {
     ),
 }
 
+HARDWARE_INTEGRATIONS = {
+    "odroid-c2": "hardkernel",
+    "odroid-c4": "hardkernel",
+    "odroid-n2": "hardkernel",
+    "odroid-xu4": "hardkernel",
+    "rpi2": "raspberry_pi",
+    "rpi3": "raspberry_pi",
+    "rpi3-64": "raspberry_pi",
+    "rpi4": "raspberry_pi",
+    "rpi4-64": "raspberry_pi",
+    "yellow": "homeassistant_yellow",
+}
+
 
 @bind_hass
 async def async_get_addon_info(hass: HomeAssistant, slug: str) -> dict:
@@ -501,7 +514,7 @@ def get_supervisor_ip() -> str:
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up the Hass.io component."""
     # Check local setup
-    for env in ("HASSIO", "HASSIO_TOKEN"):
+    for env in ("SUPERVISOR", "SUPERVISOR_TOKEN"):
         if os.environ.get(env):
             continue
         _LOGGER.error("Missing %s environment variable", env)
@@ -513,7 +526,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async_load_websocket_api(hass)
 
-    host = os.environ["HASSIO"]
+    host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
     hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
 
@@ -704,6 +717,29 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     # Init add-on ingress panels
     await async_setup_addon_panel(hass, hassio)
+
+    # Setup hardware integration for the detected board type
+    async def _async_setup_hardware_integration(hass):
+        """Set up hardaware integration for the detected board type."""
+        if (os_info := get_os_info(hass)) is None:
+            # os info not yet fetched from supervisor, retry later
+            async_track_point_in_utc_time(
+                hass,
+                _async_setup_hardware_integration,
+                utcnow() + HASSIO_UPDATE_INTERVAL,
+            )
+            return
+        if (board := os_info.get("board")) is None:
+            return
+        if (hw_integration := HARDWARE_INTEGRATIONS.get(board)) is None:
+            return
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                hw_integration, context={"source": "system"}
+            )
+        )
+
+    await _async_setup_hardware_integration(hass)
 
     hass.async_create_task(
         hass.config_entries.flow.async_init(DOMAIN, context={"source": "system"})

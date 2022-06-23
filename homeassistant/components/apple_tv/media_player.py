@@ -284,7 +284,9 @@ class AppleTvMediaPlayer(AppleTVEntity, MediaPlayerEntity):
             await self.atv.apps.launch_app(media_id)
 
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = play_item.url
             media_type = MEDIA_TYPE_MUSIC
 

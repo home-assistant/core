@@ -27,13 +27,13 @@
         "step": {
             "init": {
                 "data": {
-                    "target_id": "Configureer opties voor een rolluik."
+                    "target_id": "Configureer opties voor een afdekking."
                 },
                 "title": "Configureer MyLink-opties"
             },
             "target_config": {
                 "data": {
-                    "reverse": "Rolluik is omgekeerd"
+                    "reverse": "Afdekking is omgekeerd"
                 },
                 "description": "Configureer opties voor ' {target_name} '",
                 "title": "Configureer MyLink Cover"

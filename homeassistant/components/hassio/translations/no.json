@@ -1,6 +1,7 @@
 {
     "system_health": {
         "info": {
+            "agent_version": "Agentversjon",
             "board": "Styret",
             "disk_total": "Disk totalt",
             "disk_used": "Disk brukt",

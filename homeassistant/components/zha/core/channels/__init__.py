@@ -163,7 +163,7 @@ class Channels:
     def zha_send_event(self, event_data: dict[str, str | int]) -> None:
         """Relay events to hass."""
         self.zha_device.hass.bus.async_fire(
-            "zha_event",
+            const.ZHA_EVENT,
             {
                 const.ATTR_DEVICE_IEEE: str(self.zha_device.ieee),
                 const.ATTR_UNIQUE_ID: self.unique_id,
@@ -277,7 +277,8 @@ class ChannelPool:
         pool = cls(channels, ep_id)
         pool.add_all_channels()
         pool.add_client_channels()
-        zha_disc.PROBE.discover_entities(pool)
+        if not channels.zha_device.is_coordinator:
+            zha_disc.PROBE.discover_entities(pool)
         return pool
 
     @callback

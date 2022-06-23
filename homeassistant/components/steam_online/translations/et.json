@@ -25,6 +25,9 @@
         }
     },
     "options": {
+        "error": {
+            "unauthorized": "S\u00f5prade nimekiri on piiratud: vaata dokumentatsiooni kuidas n\u00e4ha k\u00f5iki teisi s\u00f5pru"
+        },
         "step": {
             "init": {
                 "data": {

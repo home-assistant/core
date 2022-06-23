@@ -1,4 +1,6 @@
 """Binary sensors on Zigbee Home Automation networks."""
+from __future__ import annotations
+
 import functools
 
 from homeassistant.components.binary_sensor import (
@@ -60,7 +62,7 @@ async def async_setup_entry(
 class BinarySensor(ZhaEntity, BinarySensorEntity):
     """ZHA BinarySensor."""
 
-    SENSOR_ATTR = None
+    SENSOR_ATTR: str | None = None
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Initialize the ZHA binary sensor."""
@@ -161,7 +163,7 @@ class IASZone(BinarySensor):
     SENSOR_ATTR = "zone_status"
 
     @property
-    def device_class(self) -> str:
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return device class from component DEVICE_CLASSES."""
         return CLASS_MAPPING.get(self._channel.cluster.get("zone_type"))
 
@@ -171,3 +173,16 @@ class IASZone(BinarySensor):
         value = await self._channel.get_attribute_value("zone_status")
         if value is not None:
             self._state = value & 3
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class FrostLock(BinarySensor, id_suffix="frost_lock"):
+    """ZHA BinarySensor."""
+
+    SENSOR_ATTR = "frost_lock"
+    _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK

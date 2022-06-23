@@ -37,14 +37,10 @@ async def async_setup_entry(
             return
         async_add_entities([DeconzPowerPlug(switch, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.lights.subscribe(
-            gateway.evaluate_add_device(async_add_switch),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_switch,
+        gateway.api.lights.lights,
     )
-    for switch_id in gateway.api.lights.lights:
-        async_add_switch(EventType.ADDED, switch_id)
 
 
 class DeconzPowerPlug(DeconzDevice, SwitchEntity):
@@ -60,8 +56,14 @@ class DeconzPowerPlug(DeconzDevice, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
-        await self._device.set_state(on=True)
+        await self.gateway.api.lights.lights.set_state(
+            id=self._device.resource_id,
+            on=True,
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
-        await self._device.set_state(on=False)
+        await self.gateway.api.lights.lights.set_state(
+            id=self._device.resource_id,
+            on=False,
+        )

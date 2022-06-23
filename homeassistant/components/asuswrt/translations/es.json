@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "invalid_unique_id": "No se pudo determinar ning\u00fan identificador \u00fanico v\u00e1lido del dispositivo"
+            "invalid_unique_id": "No se pudo determinar ning\u00fan identificador \u00fanico v\u00e1lido del dispositivo",
+            "no_unique_id": "Un dispositivo sin una identificaci\u00f3n \u00fanica v\u00e1lida ya est\u00e1 configurado. La configuraci\u00f3n de una instancia m\u00faltiple no es posible"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",

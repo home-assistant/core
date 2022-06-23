@@ -65,15 +65,10 @@ async def async_setup_entry(
             for description in ENTITY_DESCRIPTIONS.get(PydeconzScene, [])
         )
 
-    config_entry.async_on_unload(
-        gateway.api.scenes.subscribe(
-            async_add_scene,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_scene,
+        gateway.api.scenes,
     )
-
-    for scene_id in gateway.api.scenes:
-        async_add_scene(EventType.ADDED, scene_id)
 
 
 class DeconzButton(DeconzSceneMixin, ButtonEntity):

@@ -1,9 +1,9 @@
 """Config flow for Samsung TV."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from functools import partial
 import socket
-from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
@@ -525,7 +525,7 @@ class SamsungTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, data: MappingProxyType[str, Any]
+        self, data: Mapping[str, Any]
     ) -> data_entry_flow.FlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(

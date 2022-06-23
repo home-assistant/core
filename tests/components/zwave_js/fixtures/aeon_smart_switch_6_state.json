@@ -51,7 +51,14 @@
       "index": 0,
       "installerIcon": 1792,
       "userIcon": 1792,
-      "commandClasses": []
+      "commandClasses": [
+        {
+          "id": 50,
+          "name": "Meter",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
     }
   ],
   "values": [
