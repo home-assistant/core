@@ -166,7 +166,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     await device.async_request(device.api.send_data, code)
                 except (BroadlinkException, OSError) as err:
                     raise HomeAssistantError(
-                        f"Error communicating with device: {repr(err)}"
+                        f"Error communicating with device: {repr(err)} when sending on '{self.entity_id}'"
                     ) from err
 
                 at_least_one_sent = True

@@ -1,9 +1,12 @@
 """Support for Broadlink buttons."""
 from typing import Any
 
+from broadlink.exceptions import BroadlinkException
+
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -67,7 +70,12 @@ class BroadlinkButton(BroadlinkEntity, ButtonEntity):
         code_list = store.extract_codes([self._command], self._subdevice)
 
         for code in store.toggled_codes(code_list, self._subdevice):
-            await device.async_request(device.api.send_data, code)
+            try:
+                await device.async_request(device.api.send_data, code)
+            except (BroadlinkException, OSError) as err:
+                raise HomeAssistantError(
+                    f"Error communicating with device: {repr(err)} when pressing '{self.entity_id}'"
+                ) from err
 
     @property
     def device_info(self) -> DeviceInfo:
