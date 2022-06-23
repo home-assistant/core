@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Final
 
-from canary.api import Device, Location, SensorType
+from canary.api import Location
+from canary.model import Device, SensorType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry

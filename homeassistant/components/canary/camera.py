@@ -5,8 +5,9 @@ from datetime import timedelta
 from typing import Final
 
 from aiohttp.web import Request, StreamResponse
-from canary.api import Device, Location
+from canary.api import Location
 from canary.live_stream_api import LiveStreamSession
+from canary.model import Device
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
