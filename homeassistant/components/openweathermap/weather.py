@@ -3,12 +3,16 @@ from __future__ import annotations
 
 from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRESSURE_HPA, PRESSURE_INHG, TEMP_CELSIUS
+from homeassistant.const import (
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    SPEED_METERS_PER_SECOND,
+    TEMP_CELSIUS,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.pressure import convert as pressure_convert
 
 from .const import (
     ATTR_API_CONDITION,
@@ -49,7 +53,11 @@ class OpenWeatherMapWeather(WeatherEntity):
 
     _attr_attribution = ATTRIBUTION
     _attr_should_poll = False
-    _attr_temperature_unit = TEMP_CELSIUS
+
+    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
 
     def __init__(
         self,
@@ -74,19 +82,14 @@ class OpenWeatherMapWeather(WeatherEntity):
         return self._weather_coordinator.data[ATTR_API_CONDITION]
 
     @property
-    def temperature(self) -> float | None:
+    def native_temperature(self) -> float | None:
         """Return the temperature."""
         return self._weather_coordinator.data[ATTR_API_TEMPERATURE]
 
     @property
-    def pressure(self) -> float | None:
+    def native_pressure(self) -> float | None:
         """Return the pressure."""
-        pressure = self._weather_coordinator.data[ATTR_API_PRESSURE]
-        # OpenWeatherMap returns pressure in hPA, so convert to
-        # inHg if we aren't using metric.
-        if not self.hass.config.units.is_metric and pressure:
-            return pressure_convert(pressure, PRESSURE_HPA, PRESSURE_INHG)
-        return pressure
+        return self._weather_coordinator.data[ATTR_API_PRESSURE]
 
     @property
     def humidity(self) -> float | None:
@@ -94,12 +97,9 @@ class OpenWeatherMapWeather(WeatherEntity):
         return self._weather_coordinator.data[ATTR_API_HUMIDITY]
 
     @property
-    def wind_speed(self) -> float | None:
+    def native_wind_speed(self) -> float | None:
         """Return the wind speed."""
-        wind_speed = self._weather_coordinator.data[ATTR_API_WIND_SPEED]
-        if self.hass.config.units.name == "imperial":
-            return round(wind_speed * 2.24, 2)
-        return round(wind_speed * 3.6, 2)
+        return self._weather_coordinator.data[ATTR_API_WIND_SPEED]
 
     @property
     def wind_bearing(self) -> float | str | None:
