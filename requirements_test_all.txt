@@ -308,7 +308,7 @@ beautifulsoup4==4.11.1
 bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.4
+bimmer_connected==0.9.5
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -1325,7 +1325,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.6
+pyunifiprotect==4.0.7
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1671,7 +1671,7 @@ zigpy-znp==0.7.0
 zigpy==0.46.0
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.38.0
+zwave-js-server-python==0.39.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

@@ -1,6 +1,5 @@
 """Offer MQTT listening automation rules."""
 from contextlib import suppress
-import json
 import logging
 
 import voluptuous as vol
@@ -12,6 +11,7 @@ from homeassistant.components.automation import (
 from homeassistant.const import CONF_PAYLOAD, CONF_PLATFORM, CONF_VALUE_TEMPLATE
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.json import json_loads
 from homeassistant.helpers.typing import ConfigType
 
 from .. import mqtt
@@ -89,7 +89,7 @@ async def async_attach_trigger(
             }
 
             with suppress(ValueError):
-                data["payload_json"] = json.loads(mqttmsg.payload)
+                data["payload_json"] = json_loads(mqttmsg.payload)
 
             hass.async_run_hass_job(job, {"trigger": data})
 

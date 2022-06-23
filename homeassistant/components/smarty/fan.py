@@ -107,7 +107,7 @@ class SmartyFan(FanEntity):
         _LOGGER.debug("Turning on fan. percentage is %s", percentage)
         self.set_percentage(percentage or DEFAULT_ON_PERCENTAGE)
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         _LOGGER.debug("Turning off fan")
         if not self._smarty.turn_off():
