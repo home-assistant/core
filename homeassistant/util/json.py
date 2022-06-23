@@ -57,13 +57,15 @@ def save_json(
 
     Returns True on success.
     """
+    dump: Callable[[Any], Any] = json.dumps
     try:
         if encoder:
             json_data = json.dumps(data, indent=2, cls=encoder)
         else:
+            dump = orjson.dumps
             json_data = orjson.dumps(data, option=orjson.OPT_INDENT_2).decode("utf-8")
     except TypeError as error:
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data, dump=dump))}"
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 
