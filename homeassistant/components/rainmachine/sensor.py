@@ -30,6 +30,7 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DATA_ZONES,
     DOMAIN,
+    LOGGER,
     RUN_STATE_MAP,
     RunStates,
 )
@@ -200,7 +201,7 @@ class TimeRemainingSensor(RainMachineEntity, SensorEntity):
         """Initialize."""
         super().__init__(entry, coordinator, controller, description)
 
-        self._running_or_queued: bool = False
+        self._running: bool = False
 
     @property
     def status_key(self) -> str:
@@ -216,23 +217,24 @@ class TimeRemainingSensor(RainMachineEntity, SensorEntity):
         """Update the state."""
         data = self.coordinator.data[self.entity_description.uid]
         now = utcnow()
+        run_state = RUN_STATE_MAP.get(data[self.status_key])
 
-        if RUN_STATE_MAP.get(data[self.status_key]) == RunStates.NOT_RUNNING:
-            if self._running_or_queued:
-                # If we go from running to not running, update the state to be right
+        if run_state == RunStates.NOT_RUNNING:
+            if self._running:
+                # If we go from anything to not running, update the state to be right
                 # now (i.e., the time the zone stopped running):
                 self._attr_native_value = now
-                self._running_or_queued = False
+                self._running = False
             return
 
-        self._running_or_queued = True
-        if (seconds_remaining := self.calculate_seconds_remaining()) == 0:
-            # The RainMachine API can take a moment to calculate zone runtimes when
-            # starting a program (resulting in a 0-second duration). This is a
-            # nonsensical value, so if it occurs, return immediately and pick things up
-            # the next time the API polls:
+        if run_state == RunStates.QUEUED:
+            # If the zone is queued, hold off on calcuating its completion time until
+            # it actually starts:
             return
 
+        self._running = True
+
+        seconds_remaining = self.calculate_seconds_remaining()
         new_timestamp = utcnow() + timedelta(seconds=seconds_remaining)
 
         if self._attr_native_value:
