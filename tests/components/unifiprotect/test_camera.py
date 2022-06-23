@@ -529,13 +529,22 @@ async def test_camera_ws_update(
     new_camera = camera[0].copy()
     new_camera.is_recording = True
 
-    mock_msg = Mock()
-    mock_msg.changed_data = {}
-    mock_msg.new_obj = new_camera
+    no_camera = camera[0].copy()
+    no_camera.is_adopted = False
 
     new_bootstrap.cameras = {new_camera.id: new_camera}
     mock_entry.api.bootstrap = new_bootstrap
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = new_camera
     mock_entry.api.ws_subscription(mock_msg)
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {}
+    mock_msg.new_obj = no_camera
+    mock_entry.api.ws_subscription(mock_msg)
+
     await hass.async_block_till_done()
 
     state = hass.states.get(camera[1])

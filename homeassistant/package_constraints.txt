@@ -20,6 +20,7 @@ httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
 lru-dict==1.1.7
+orjson==3.7.2
 paho-mqtt==1.6.1
 pillow==9.1.1
 pip>=21.0,<22.2
@@ -85,6 +86,9 @@ httpcore==0.15.0
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
+
+# Ensure we run compatible with musllinux build env
+numpy>=1.22.0
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0

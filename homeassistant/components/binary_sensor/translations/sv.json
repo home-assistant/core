@@ -121,7 +121,7 @@
             "on": "\u00d6ppen"
         },
         "gas": {
-            "off": "Klart",
+            "off": "Rensa",
             "on": "Detekterad"
         },
         "heat": {
@@ -169,7 +169,7 @@
             "on": "Detekterad"
         },
         "vibration": {
-            "off": "Klart",
+            "off": "Rensa",
             "on": "Detekterad"
         },
         "window": {

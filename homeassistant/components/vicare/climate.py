@@ -71,19 +71,13 @@ VICARE_TEMP_HEATING_MIN = 3
 VICARE_TEMP_HEATING_MAX = 37
 
 VICARE_TO_HA_HVAC_HEATING = {
-    VICARE_MODE_DHW: HVACMode.OFF,
-    VICARE_MODE_HEATING: HVACMode.HEAT,
-    VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
-    VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
     VICARE_MODE_FORCEDREDUCED: HVACMode.OFF,
-    VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
     VICARE_MODE_OFF: HVACMode.OFF,
-}
-
-HA_TO_VICARE_HVAC_HEATING = {
-    HVACMode.HEAT: VICARE_MODE_FORCEDNORMAL,
-    HVACMode.OFF: VICARE_MODE_FORCEDREDUCED,
-    HVACMode.AUTO: VICARE_MODE_DHWANDHEATING,
+    VICARE_MODE_DHW: HVACMode.OFF,
+    VICARE_MODE_DHWANDHEATINGCOOLING: HVACMode.AUTO,
+    VICARE_MODE_DHWANDHEATING: HVACMode.AUTO,
+    VICARE_MODE_HEATING: HVACMode.AUTO,
+    VICARE_MODE_FORCEDNORMAL: HVACMode.HEAT,
 }
 
 VICARE_TO_HA_PRESET_HEATING = {
@@ -276,19 +270,41 @@ class ViCareClimate(ClimateEntity):
 
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set a new hvac mode on the ViCare API."""
-        vicare_mode = HA_TO_VICARE_HVAC_HEATING.get(hvac_mode)
+        if "vicare_modes" not in self._attributes:
+            raise ValueError("Cannot set hvac mode when vicare_modes are not known")
+
+        vicare_mode = self.vicare_mode_from_hvac_mode(hvac_mode)
         if vicare_mode is None:
-            raise ValueError(
-                f"Cannot set invalid vicare mode: {hvac_mode} / {vicare_mode}"
-            )
+            raise ValueError(f"Cannot set invalid hvac mode: {hvac_mode}")
 
         _LOGGER.debug("Setting hvac mode to %s / %s", hvac_mode, vicare_mode)
         self._circuit.setMode(vicare_mode)
 
+    def vicare_mode_from_hvac_mode(self, hvac_mode):
+        """Return the corresponding vicare mode for an hvac_mode."""
+        if "vicare_modes" not in self._attributes:
+            return None
+
+        supported_modes = self._attributes["vicare_modes"]
+        for key, value in VICARE_TO_HA_HVAC_HEATING.items():
+            if key in supported_modes and value == hvac_mode:
+                return key
+        return None
+
     @property
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac modes."""
-        return list(HA_TO_VICARE_HVAC_HEATING)
+        if "vicare_modes" not in self._attributes:
+            return []
+
+        supported_modes = self._attributes["vicare_modes"]
+        hvac_modes = []
+        for key, value in VICARE_TO_HA_HVAC_HEATING.items():
+            if value in hvac_modes:
+                continue
+            if key in supported_modes:
+                hvac_modes.append(value)
+        return hvac_modes
 
     @property
     def hvac_action(self) -> HVACAction:

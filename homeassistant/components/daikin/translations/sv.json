@@ -6,6 +6,7 @@
         "step": {
             "user": {
                 "data": {
+                    "api_key": "API-nyckel",
                     "host": "V\u00e4rddatorn",
                     "password": "Enhetsl\u00f6senord (anv\u00e4nds endast av SKYFi-enheter)"
                 },
