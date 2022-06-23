@@ -524,6 +524,22 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         function_name="entity_category",
         return_type=["EntityCategory", None],
     ),
+    TypeHintMatch(
+        function_name="async_removed_from_registry",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="async_added_to_hass",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="async_will_remove_from_hass",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="async_registry_entry_updated",
+        return_type=None,
+    ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
