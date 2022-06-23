@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import functools
-from json import JSONDecodeError, loads as json_loads
 import logging
 
 import voluptuous as vol
@@ -29,6 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
@@ -418,7 +418,7 @@ class MqttCover(MqttEntity, CoverEntity):
 
             try:
                 payload = json_loads(payload)
-            except JSONDecodeError:
+            except JSON_DECODE_EXCEPTIONS:
                 pass
 
             if isinstance(payload, dict):

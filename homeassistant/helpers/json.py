@@ -7,6 +7,7 @@ from typing import Any, Final
 import orjson
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
+JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
 
 
 class JSONEncoder(json.JSONEncoder):
@@ -84,6 +85,9 @@ def json_dumps(data: Any) -> str:
     return orjson.dumps(
         data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
     ).decode("utf-8")
+
+
+json_loads = orjson.loads
 
 
 JSON_DUMP: Final = json_dumps
