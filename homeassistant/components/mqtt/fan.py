@@ -568,7 +568,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
         This method is a coroutine.

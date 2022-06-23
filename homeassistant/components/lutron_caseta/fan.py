@@ -70,7 +70,7 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
 
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.async_set_percentage(0)
 
