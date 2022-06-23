@@ -27,7 +27,6 @@ import jinja2
 from jinja2 import pass_context, pass_environment
 from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
-import orjson
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -58,6 +57,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .json import JSON_DECODE_EXCEPTIONS, json_loads
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -574,8 +574,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(ValueError, TypeError):
-            variables["value_json"] = orjson.loads(value)
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            variables["value_json"] = json_loads(value)
 
         try:
             return _render_with_context(
@@ -1784,7 +1784,7 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a JSON string to an object."""
-    return orjson.loads(value)
+    return json_loads(value)
 
 
 def to_json(value, ensure_ascii=True):

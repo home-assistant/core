@@ -29,7 +29,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
-from .helpers.json import json_loads
+from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
@@ -367,7 +367,7 @@ class Integration:
 
             try:
                 manifest = json_loads(manifest_path.read_text())
-            except ValueError as err:
+            except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
                 )
