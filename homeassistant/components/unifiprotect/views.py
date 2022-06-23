@@ -21,6 +21,46 @@ _LOGGER = logging.getLogger(__name__)
 
 
 @callback
+def async_generate_thumbnail_url(
+    event_id: str,
+    nvr_id: str,
+    width: int | None = None,
+    height: int | None = None,
+) -> str:
+    """Generate URL for event thumbnail."""
+
+    url_format = ThumbnailProxyView.url or "{nvr_id}/{event_id}"
+    url = url_format.format(nvr_id=nvr_id, event_id=event_id)
+
+    params = {}
+    if width is not None:
+        params["width"] = str(width)
+    if height is not None:
+        params["height"] = str(height)
+
+    return f"{url}?{urlencode(params)}"
+
+
+@callback
+def async_generate_event_video_url(event: Event) -> str:
+    """Generate URL for event video."""
+
+    _validate_event(event)
+    if event.start is None or event.end is None:
+        raise ValueError("Event is ongoing")
+
+    url_format = VideoProxyView.url or "{nvr_id}/{camera_id}/{start}/{end}"
+    url = url_format.format(
+        nvr_id=event.api.bootstrap.nvr.id,
+        camera_id=event.camera_id,
+        start=event.start.isoformat(),
+        end=event.end.isoformat(),
+    )
+
+    return url
+
+
+@callback
 def _client_error(message: Any, code: HTTPStatus) -> web.Response:
     _LOGGER.warning("Client error (%s): %s", code.value, message)
     if code == HTTPStatus.BAD_REQUEST:
@@ -51,46 +91,6 @@ def _validate_event(event: Event) -> None:
         raise PermissionError(f"User cannot read media from camera: {event.camera.id}")
 
 
-@callback
-def async_generate_thumbnail_url(
-    event: Event,
-    width: int | None = None,
-    height: int | None = None,
-) -> str:
-    """Generate URL for event thumbnail."""
-
-    _validate_event(event)
-    url_format = ThumbnailProxyView.url or "{event_id}"
-    url = url_format.format(event_id=event.id)
-    params = {"nvr_id": event.api.bootstrap.nvr.id}
-
-    if width is not None:
-        params["w"] = str(width)
-    if height is not None:
-        params["h"] = str(height)
-
-    return f"{url}?{urlencode(params)}"
-
-
-@callback
-def async_generate_event_video_url(event: Event) -> str:
-    """Generate URL for event video."""
-
-    _validate_event(event)
-    if event.start is None or event.end is None:
-        raise ValueError("Event is ongoing")
-
-    url_format = VideoProxyView.url or "{camera_id}"
-    url = url_format.format(camera_id=event.camera_id)
-    params = {
-        "nvr_id": event.api.bootstrap.nvr.id,
-        "start": event.start.isoformat(),
-        "end": event.end.isoformat(),
-    }
-
-    return f"{url}?{urlencode(params)}"
-
-
 class ProtectProxyView(HomeAssistantView):
     """Base class to proxy request to UniFi Protect console."""
 
@@ -101,36 +101,34 @@ class ProtectProxyView(HomeAssistantView):
         self.hass = hass
         self.data = hass.data[DOMAIN]
 
-    def _get_data_or_404(self, request: web.Request) -> ProtectData | web.Response:
+    def _get_data_or_404(self, nvr_id: str) -> ProtectData | web.Response:
         all_data: list[ProtectData] = []
 
-        nvr_id: str | None = request.query.get("nvr_id")
         for data in self.data.values():
             if isinstance(data, ProtectData):
                 if data.api.bootstrap.nvr.id == nvr_id:
                     return data
                 all_data.append(data)
-
-        if len(all_data) == 1:
-            return all_data[0]
         return _404("Invalid NVR ID")
 
 
 class ThumbnailProxyView(ProtectProxyView):
     """View to proxy event thumbnails from UniFi Protect."""
 
-    url = "/api/ufp/thumbnail/{event_id}"
+    url = "/api/ufp/thumbnail/{nvr_id}/{event_id}"
     name = "api:ufp_thumbnail"
 
-    async def get(self, request: web.Request, event_id: str) -> web.Response:
+    async def get(
+        self, request: web.Request, nvr_id: str, event_id: str
+    ) -> web.Response:
         """Get Event Thumbnail."""
 
-        data = self._get_data_or_404(request)
+        data = self._get_data_or_404(nvr_id)
         if isinstance(data, web.Response):
             return data
 
-        width: int | str | None = request.query.get("w")
-        height: int | str | None = request.query.get("h")
+        width: int | str | None = request.query.get("width")
+        height: int | str | None = request.query.get("height")
 
         if width is not None:
             try:
@@ -159,13 +157,15 @@ class ThumbnailProxyView(ProtectProxyView):
 class VideoProxyView(ProtectProxyView):
     """View to proxy video clips from UniFi Protect."""
 
-    url = "/api/ufp/video/{camera_id}"
+    url = "/api/ufp/video/{nvr_id}/{camera_id}/{start}/{end}"
     name = "api:ufp_thumbnail"
 
-    async def get(self, request: web.Request, camera_id: str) -> web.StreamResponse:
+    async def get(
+        self, request: web.Request, nvr_id: str, camera_id: str, start: str, end: str
+    ) -> web.StreamResponse:
         """Get Camera Video clip."""
 
-        data = self._get_data_or_404(request)
+        data = self._get_data_or_404(nvr_id)
         if isinstance(data, web.Response):
             return data
 
@@ -174,14 +174,6 @@ class VideoProxyView(ProtectProxyView):
             return _404(f"Invalid camera ID: {camera_id}")
         if not camera.can_read_media(data.api.bootstrap.auth_user):
             return _403(f"User cannot read media from camera: {camera.id}")
-
-        start: str | None = request.query.get("start")
-        end: str | None = request.query.get("end")
-
-        if start is None:
-            return _400("Missing start")
-        if end is None:
-            return _400("Missing end")
 
         try:
             start_dt = datetime.fromisoformat(start)
