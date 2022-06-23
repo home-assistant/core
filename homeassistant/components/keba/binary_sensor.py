@@ -78,7 +78,6 @@ class KebaBinarySensor(BinarySensorEntity):
         self._attributes: dict[str, Any] = {}
 
         self._attr_device_class = device_class
-        self._attr_is_on = None
         self._attr_name = f"{keba.device_name} {name}"
         self._attr_unique_id = f"{keba.device_id}_{entity_type}"
 
