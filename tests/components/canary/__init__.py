@@ -68,7 +68,7 @@ async def init_integration(
     return entry
 
 
-def mock_device(device_id, name, is_online=True, device_type_name=None):
+def mock_device(device_id, name, is_online=True, device_type_name=None, uuid=None):
     """Mock Canary Device class."""
     device = MagicMock()
     type(device).device_id = PropertyMock(return_value=device_id)
@@ -77,6 +77,7 @@ def mock_device(device_id, name, is_online=True, device_type_name=None):
     type(device).device_type = PropertyMock(
         return_value={"id": 1, "name": device_type_name}
     )
+    type(device).uuid = PropertyMock(return_value=uuid)
 
     return device
 
@@ -113,3 +114,16 @@ def mock_reading(sensor_type, sensor_value):
     type(reading).value = PropertyMock(return_value=sensor_value)
 
     return reading
+
+
+def mock_entry(thumbnails=None, uuids=None, start_time=None):
+    """Mock Canary Reading class."""
+    entry = MagicMock()
+    type(entry).entry_id = "ffff-ffff-ffff-ffff"
+    type(entry).start_time = PropertyMock(return_value=start_time)
+    type(entry).device_uuids = PropertyMock(return_value=uuids or [])
+    type(entry).starred = False
+    type(entry).selected = False
+    type(entry).thumbnails = PropertyMock(return_value=thumbnails or [])
+
+    return entry
