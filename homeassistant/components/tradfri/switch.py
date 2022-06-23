@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import Any
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 
@@ -56,28 +56,24 @@ class TradfriSwitch(TradfriBaseEntity, SwitchEntity):
             gateway_id=gateway_id,
         )
 
-        self._device_control = self._device.socket_control
-        self._device_data = self._device_control.sockets[0]
+        device_control = self._device.socket_control
+        assert device_control  # socket_control is ensured when creating the entity
+        self._device_control = device_control
+        self._device_data = device_control.sockets[0]
 
     def _refresh(self) -> None:
         """Refresh the device."""
-        self._device_data = self.coordinator.data.socket_control.sockets[0]
+        self._device_data = self._device_control.sockets[0]
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        if not self._device_data:
-            return False
-        return cast(bool, self._device_data.state)
+        return self._device_data.state
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the switch to turn off."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(False))
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the switch to turn on."""
-        if not self._device_control:
-            return
         await self._api(self._device_control.set_state(True))
