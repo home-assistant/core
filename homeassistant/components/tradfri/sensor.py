@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from pytradfri.api.aiocoap_api import APIRequestProtocol
 from pytradfri.device import Device
@@ -43,22 +43,20 @@ def _get_air_quality(device: Device) -> int | None:
     """Fetch the air quality value."""
     assert device.air_purifier_control is not None
     if (
-        device.air_purifier_control.air_purifiers[0].air_quality == 65535
-    ):  # The sensor returns 65535 if the fan is turned off
+        device_control := device.air_purifier_control
+    ) is None or device_control.air_purifiers[
+        0
+    ].air_quality == 65535:  # The sensor returns 65535 if the fan is turned off
         return None
 
-    return cast(int, device.air_purifier_control.air_purifiers[0].air_quality)
+    return device_control.air_purifiers[0].air_quality
 
 
 def _get_filter_time_left(device: Device) -> int:
     """Fetch the filter's remaining lifetime (in hours)."""
-    assert device.air_purifier_control is not None
-    return round(
-        cast(
-            int, device.air_purifier_control.air_purifiers[0].filter_lifetime_remaining
-        )
-        / 60
-    )
+    device_control = device.air_purifier_control
+    assert device_control  # air_purifier_control is ensured when creating the entity
+    return round(device_control.air_purifiers[0].filter_lifetime_remaining / 60)
 
 
 SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
@@ -67,7 +65,7 @@ SENSOR_DESCRIPTIONS_BATTERY: tuple[TradfriSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        value=lambda device: cast(int, device.device_info.battery_level),
+        value=lambda device: device.device_info.battery_level,
     ),
 )
 
