@@ -105,13 +105,26 @@ async def async_setup_entry(
 
     @callback
     def async_add_group(_: EventType, group_id: str) -> None:
-        """Add group from deCONZ."""
+        """Add group from deCONZ.
+
+        Update group states based on its sum of related lights.
+        """
         if (
             not gateway.option_allow_deconz_groups
             or (group := gateway.api.groups[group_id])
             and not group.lights
         ):
             return
+
+        first = True
+        for light_id in group.lights:
+            if (
+                (light := gateway.api.lights.lights.get(light_id))
+                and light.ZHATYPE == Light.ZHATYPE
+                and light.reachable
+            ):
+                group.update_color_state(light, update_all_attributes=first)
+                first = False
 
         async_add_entities([DeconzGroup(group, gateway)])
 
@@ -288,6 +301,16 @@ class DeconzLight(DeconzBaseLight[Light]):
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         return self._device.min_color_temp or super().min_mireds
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Light state will also reflect in relevant groups."""
+        super().async_update_callback()
+
+        if self._device.reachable and "attr" not in self._device.changed_keys:
+            for group in self.gateway.api.groups.values():
+                if self._device.resource_id in group.lights:
+                    group.update_color_state(self._device)
 
 
 class DeconzGroup(DeconzBaseLight[Group]):
