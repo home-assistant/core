@@ -217,7 +217,7 @@ class BroadlinkRemote(BroadlinkEntity, RemoteEntity, RestoreEntity):
                     _LOGGER.error("Failed to learn '%s': %s", command, err)
                     continue
 
-            self._device.add_commands(added, subdevice)
+            self._store.add_commands(added, subdevice)
 
     async def _async_learn_ir_command(self, command):
         """Learn an infrared command."""
