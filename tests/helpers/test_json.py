@@ -1,10 +1,15 @@
 """Test Home Assistant remote methods and classes."""
 import datetime
+import json
 
 import pytest
 
 from homeassistant import core
-from homeassistant.helpers.json import ExtendedJSONEncoder, JSONEncoder
+from homeassistant.helpers.json import (
+    ExtendedJSONEncoder,
+    JSONEncoder,
+    json_dumps_sorted,
+)
 from homeassistant.util import dt as dt_util
 
 
@@ -64,3 +69,11 @@ def test_extended_json_encoder(hass):
     # Default method falls back to repr(o)
     o = object()
     assert ha_json_enc.default(o) == {"__type": str(type(o)), "repr": repr(o)}
+
+
+def test_json_dumps_sorted():
+    """Test the json dumps sorted function."""
+    data = {"c": 3, "a": 1, "b": 2}
+    assert json_dumps_sorted(data) == json.dumps(
+        data, sort_keys=True, separators=(",", ":")
+    )
