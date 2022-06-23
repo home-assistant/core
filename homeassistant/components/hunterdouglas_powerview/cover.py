@@ -465,6 +465,15 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         }
 
     @property
+    def should_poll(self) -> bool:
+        """Certain shades create multiple entities.
+
+        Do not poll shade multiple times. One shade will return data
+        for both and multiple polling will cause timeouts.
+        """
+        return False
+
+    @property
     def is_closed(self):
         """Return if the cover is closed."""
         # top shade needs to check other motor

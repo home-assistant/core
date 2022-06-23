@@ -130,6 +130,6 @@ class WiLightFan(WiLightDevice, FanEntity):
             wl_direction = WL_DIRECTION_FORWARD
         await self._client.set_fan_direction(self._index, wl_direction)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)

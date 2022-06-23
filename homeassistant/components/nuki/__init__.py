@@ -3,8 +3,9 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from pynuki import NukiBridge
+from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
+from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
@@ -34,11 +35,11 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-def _get_bridge_devices(bridge):
+def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
 
 
-def _update_devices(devices):
+def _update_devices(devices: list[NukiDevice]) -> None:
     for device in devices:
         for level in (False, True):
             try:
@@ -136,7 +137,9 @@ class NukiEntity(CoordinatorEntity):
 
     """
 
-    def __init__(self, coordinator, nuki_device):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[None], nuki_device: NukiDevice
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device
