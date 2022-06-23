@@ -11,6 +11,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import StateType
 
 from .core import discovery
 from .core.const import (
@@ -96,7 +97,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
         super().__init__(unique_id, zha_device, channels, **kwargs)
         self._doorlock_channel = self.cluster_channels.get(CHANNEL_DOORLOCK)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         await super().async_added_to_hass()
         self.async_accept_signal(
@@ -116,7 +117,7 @@ class ZhaDoorLock(ZhaEntity, LockEntity):
         return self._state == STATE_LOCKED
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, StateType]:
         """Return state attributes."""
         return self.state_attributes
 
