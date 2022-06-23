@@ -571,6 +571,101 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "cover": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="CoverEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="current_cover_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_cover_tilt_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["CoverDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_opening",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_closing",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_closed",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="open_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="close_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_cover_position",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="stop_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="open_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="close_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_cover_tilt_position",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="stop_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
