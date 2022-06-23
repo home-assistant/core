@@ -100,10 +100,7 @@ async def test_islamic_prayer_times_timestamp_format(hass: HomeAssistant) -> Non
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert (
-            hass.data[islamic_prayer_times.DOMAIN].prayer_times_info
-            == PRAYER_TIMES_TIMESTAMPS
-        )
+        assert hass.data[islamic_prayer_times.DOMAIN].data == PRAYER_TIMES_TIMESTAMPS
 
 
 async def test_update(hass: HomeAssistant) -> None:
@@ -116,7 +113,6 @@ async def test_update(hass: HomeAssistant) -> None:
     ) as FetchPrayerTimes, freeze_time(NOW):
         FetchPrayerTimes.side_effect = [
             PRAYER_TIMES,
-            PRAYER_TIMES,
             NEW_PRAYER_TIMES,
         ]
 
@@ -124,13 +120,10 @@ async def test_update(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         pt_data = hass.data[islamic_prayer_times.DOMAIN]
-        assert pt_data.prayer_times_info == PRAYER_TIMES_TIMESTAMPS
+        assert pt_data.data == PRAYER_TIMES_TIMESTAMPS
 
-        future = pt_data.prayer_times_info["Midnight"] + timedelta(days=1, minutes=1)
+        future = pt_data.data["Midnight"] + timedelta(days=1, minutes=1)
 
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
-        assert (
-            hass.data[islamic_prayer_times.DOMAIN].prayer_times_info
-            == NEW_PRAYER_TIMES_TIMESTAMPS
-        )
+        assert pt_data.data == NEW_PRAYER_TIMES_TIMESTAMPS

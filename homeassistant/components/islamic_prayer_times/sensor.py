@@ -2,11 +2,11 @@
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_UPDATED, DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
+from . import IslamicPrayerDataUpdateCoordinator
+from .const import DOMAIN, PRAYER_TIMES_ICON, SENSOR_TYPES
 
 
 async def async_setup_entry(
@@ -16,26 +16,30 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Islamic prayer times sensor platform."""
 
-    client = hass.data[DOMAIN]
+    coordinator = hass.data[DOMAIN]
 
     entities = []
     for sensor_type in SENSOR_TYPES:
-        entities.append(IslamicPrayerTimeSensor(sensor_type, client))
+        entities.append(IslamicPrayerTimeSensor(sensor_type, coordinator))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-class IslamicPrayerTimeSensor(SensorEntity):
+class IslamicPrayerTimeSensor(
+    CoordinatorEntity[IslamicPrayerDataUpdateCoordinator], SensorEntity
+):
     """Representation of an Islamic prayer time sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_icon = PRAYER_TIMES_ICON
     _attr_should_poll = False
 
-    def __init__(self, sensor_type, client):
+    def __init__(
+        self, sensor_type: str, coordinator: IslamicPrayerDataUpdateCoordinator
+    ) -> None:
         """Initialize the Islamic prayer time sensor."""
         self.sensor_type = sensor_type
-        self.client = client
+        super().__init__(coordinator)
 
     @property
     def name(self):
@@ -50,12 +54,4 @@ class IslamicPrayerTimeSensor(SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
-        return self.client.prayer_times_info.get(self.sensor_type).astimezone(
-            dt_util.UTC
-        )
-
-    async def async_added_to_hass(self) -> None:
-        """Handle entity which will be added."""
-        self.async_on_remove(
-            async_dispatcher_connect(self.hass, DATA_UPDATED, self.async_write_ha_state)
-        )
+        return self.coordinator.data[self.sensor_type]
