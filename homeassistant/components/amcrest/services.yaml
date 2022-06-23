@@ -42,6 +42,28 @@ disable_audio:
       selector:
         text:
 
+enable_motion_detection:
+  name: Enable motion detection
+  description: Enable notification when motion is detected (must be on to enable motion recording.)
+  fields:
+    entity_id:
+      name: Entity
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+      selector:
+        text:
+
+disable_motion_detection:
+  name: Disable motion detection
+  description: Disable notification when motion is detected (must be on to enable motion recording.)
+  fields:
+    entity_id:
+      name: Entity
+      description: "Name(s) of the cameras, or 'all' for all cameras."
+      example: "camera.house_front"
+      selector:
+        text:
+
 enable_motion_recording:
   name: Enable motion recording
   description: Enable recording a clip to camera storage when motion is detected.
