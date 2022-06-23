@@ -1,15 +1,18 @@
-FROM mcr.microsoft.com/vscode/devcontainers/python:0-3.9
+ARG BUILD_PYTHON_CONTAINER='python:'
+
+FROM "${BUILD_PYTHON_CONTAINER}3.9"
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Uninstall pre-installed formatting and linting tools
 # They would conflict with our pinned versions
-RUN \
+RUN command -v pipx && ( \
     pipx uninstall black && \
     pipx uninstall flake8 && \
     pipx uninstall pydocstyle && \
     pipx uninstall mypy && \
-    pipx uninstall pylint
+    pipx uninstall pylint ) || \
+    echo "Running in native python container, nothing to remove"
 
 RUN \
     curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \

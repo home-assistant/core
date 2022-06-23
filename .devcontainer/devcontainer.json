@@ -1,5 +1,10 @@
 {
   "name": "Home Assistant Dev",
+  "build": {
+    "args": {
+      "BUILD_PYTHON_CONTAINER": "mcr.microsoft.com/vscode/devcontainers/python:0-"
+    }
+  },
   "context": "..",
   "dockerFile": "../Dockerfile.dev",
   "postCreateCommand": "script/setup",
