@@ -719,10 +719,12 @@ class WeatherEntity(Entity):
                             value_temp, precision
                         )
 
-                if forecast_temp_low := forecast_entry.pop(
-                    ATTR_FORECAST_NATIVE_TEMP_LOW,
-                    forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
-                ):
+                if (
+                    forecast_temp_low := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_TEMP_LOW,
+                        forecast_entry.get(ATTR_FORECAST_TEMP_LOW),
+                    )
+                ) is not None:
                     with suppress(TypeError, ValueError):
                         forecast_temp_low_f = float(forecast_temp_low)
                         value_temp_low = UNIT_CONVERSIONS[
@@ -737,10 +739,12 @@ class WeatherEntity(Entity):
                             value_temp_low, precision
                         )
 
-                if forecast_pressure := forecast_entry.pop(
-                    ATTR_FORECAST_NATIVE_PRESSURE,
-                    forecast_entry.get(ATTR_FORECAST_PRESSURE),
-                ):
+                if (
+                    forecast_pressure := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_PRESSURE,
+                        forecast_entry.get(ATTR_FORECAST_PRESSURE),
+                    )
+                ) is not None:
                     from_pressure_unit = (
                         self.native_pressure_unit or self._default_pressure_unit
                     )
@@ -756,10 +760,12 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
 
-                if forecast_wind_speed := forecast_entry.pop(
-                    ATTR_FORECAST_NATIVE_WIND_SPEED,
-                    forecast_entry.get(ATTR_FORECAST_WIND_SPEED),
-                ):
+                if (
+                    forecast_wind_speed := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_WIND_SPEED,
+                        forecast_entry.get(ATTR_FORECAST_WIND_SPEED),
+                    )
+                ) is not None:
                     from_wind_speed_unit = (
                         self.native_wind_speed_unit or self._default_wind_speed_unit
                     )
@@ -775,10 +781,12 @@ class WeatherEntity(Entity):
                             ROUNDING_PRECISION,
                         )
 
-                if forecast_precipitation := forecast_entry.pop(
-                    ATTR_FORECAST_NATIVE_PRECIPITATION,
-                    forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
-                ):
+                if (
+                    forecast_precipitation := forecast_entry.pop(
+                        ATTR_FORECAST_NATIVE_PRECIPITATION,
+                        forecast_entry.get(ATTR_FORECAST_PRECIPITATION),
+                    )
+                ) is not None:
                     from_precipitation_unit = (
                         self.native_precipitation_unit
                         or self._default_precipitation_unit
