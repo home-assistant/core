@@ -1,4 +1,5 @@
 """The tests for the Canary sensor platform."""
+import datetime
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -20,9 +21,11 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from . import mock_device, mock_location, mock_reading
+from . import mock_device, mock_entry, mock_location, mock_reading
 
 from tests.common import async_fire_time_changed, mock_device_registry, mock_registry
+
+DATETIME_FORMAT = "%Y-%m-%dT%H:%M:%S+00:00"
 
 
 async def test_sensors_pro(hass, canary) -> None:
@@ -42,6 +45,7 @@ async def test_sensors_pro(hass, canary) -> None:
         mock_reading("temperature", "21.12"),
         mock_reading("humidity", "50.46"),
         mock_reading("air_quality", "0.59"),
+        mock_reading("wifi", "-61.2"),
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
@@ -70,6 +74,13 @@ async def test_sensors_pro(hass, canary) -> None:
             None,
             None,
             "mdi:weather-windy",
+        ),
+        "home_dining_room_wifi": (
+            "20_wifi",
+            "-61.2",
+            SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            SensorDeviceClass.SIGNAL_STRENGTH,
+            None,
         ),
     }
 
@@ -106,6 +117,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("temperature", "21.12"),
         mock_reading("humidity", "50.46"),
         mock_reading("air_quality", "0.59"),
+        mock_reading("wifi", "-81.2"),
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
@@ -123,6 +135,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("temperature", "21.12"),
         mock_reading("humidity", "50.46"),
         mock_reading("air_quality", "0.4"),
+        mock_reading("wifi", "-81.2"),
     ]
 
     future = utcnow() + timedelta(seconds=30)
@@ -139,6 +152,7 @@ async def test_sensors_attributes_pro(hass, canary) -> None:
         mock_reading("temperature", "21.12"),
         mock_reading("humidity", "50.46"),
         mock_reading("air_quality", "1.0"),
+        mock_reading("wifi", "-69.2"),
     ]
 
     future += timedelta(seconds=30)
@@ -167,7 +181,7 @@ async def test_sensors_flex(hass, canary) -> None:
 
     instance.get_latest_readings.return_value = [
         mock_reading("battery", "70.4567"),
-        mock_reading("wifi", "-57"),
+        mock_reading("wifi", "-47"),
     ]
 
     config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
@@ -185,7 +199,7 @@ async def test_sensors_flex(hass, canary) -> None:
         ),
         "home_dining_room_wifi": (
             "20_wifi",
-            "-57.0",
+            "-47.0",
             SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
             SensorDeviceClass.SIGNAL_STRENGTH,
             None,
@@ -208,4 +222,164 @@ async def test_sensors_flex(hass, canary) -> None:
     assert device
     assert device.manufacturer == MANUFACTURER
     assert device.name == "Dining Room"
+    assert device.model == "Canary Flex"
+
+
+async def test_sensors_entries(hass, canary) -> None:
+    """Test the creation and values of the sensors for Canary Entry data."""
+
+    registry = mock_registry(hass)
+
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro", "12345")
+
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
+
+    now = datetime.datetime.utcnow().replace(tzinfo=datetime.timezone.utc)
+    instance.get_entries.return_value = [
+        mock_entry(None, uuids=["12345"], start_time=now),
+        mock_entry(None, uuids=["12345"], start_time=now),
+        mock_entry(None, uuids=["12345"], start_time=now),
+        mock_entry(None, uuids=["65432"], start_time=now),
+    ]
+
+    instance.get_latest_entries.return_value = [
+        mock_entry(None, uuids=["12345"], start_time=now),
+    ]
+
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    sensors = {
+        "home_dining_room_entries_captured_today": (
+            "20_entries_captured_today",
+            "3",
+            None,
+            None,
+            "mdi:file-video",
+        ),
+        "home_dining_room_last_entry_date": (
+            "20_last_entry_date",
+            now.strftime(DATETIME_FORMAT),
+            None,
+            SensorDeviceClass.TIMESTAMP,
+            "mdi:run-fast",
+        ),
+    }
+
+    for (sensor_id, data) in sensors.items():
+        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+        assert entity_entry
+        assert entity_entry.original_device_class == data[3]
+        assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
+
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]
+
+
+async def test_sensors_entries_with_no_data(hass, canary) -> None:
+    """Test the creation and values of the sensors for Canary Entry data."""
+
+    registry = mock_registry(hass)
+
+    online_device_at_home = mock_device(21, "Living Room", True, "Canary Flex", "22345")
+
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
+
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    sensors = {
+        "home_living_room_entries_captured_today": (
+            "21_entries_captured_today",
+            "0",
+            None,
+            None,
+            "mdi:file-video",
+        ),
+        "home_living_room_last_entry_date": (
+            "21_last_entry_date",
+            "unknown",
+            None,
+            SensorDeviceClass.TIMESTAMP,
+            "mdi:run-fast",
+        ),
+    }
+
+    for (sensor_id, data) in sensors.items():
+        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+        assert entity_entry
+        assert entity_entry.original_device_class == data[3]
+        assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
+
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]
+
+
+async def test_sensors_flex_with_no_readings(hass, canary) -> None:
+    """Test the creation and values of the sensors for Canary Flex."""
+
+    registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
+    online_device_at_home = mock_device(21, "Living Room", True, "Canary Flex")
+
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
+
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    sensors = {
+        "home_living_room_battery": (
+            "21_battery",
+            "unknown",
+            PERCENTAGE,
+            SensorDeviceClass.BATTERY,
+            None,
+        ),
+        "home_living_room_wifi": (
+            "21_wifi",
+            "unknown",
+            SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            SensorDeviceClass.SIGNAL_STRENGTH,
+            None,
+        ),
+    }
+
+    for (sensor_id, data) in sensors.items():
+        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+        assert entity_entry
+        assert entity_entry.original_device_class == data[3]
+        assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
+
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]
+
+    device = device_registry.async_get_device({(DOMAIN, "21")})
+    assert device
+    assert device.manufacturer == MANUFACTURER
+    assert device.name == "Living Room"
     assert device.model == "Canary Flex"

@@ -30,6 +30,7 @@ def canary(hass):
         instance.get_modes = MagicMock(return_value=[])
         instance.get_readings = MagicMock(return_value=[])
         instance.get_latest_readings = MagicMock(return_value=[])
+        instance.get_latest_entries = MagicMock(return_value=[])
         instance.set_location_mode = MagicMock(return_value=None)
 
         yield mock_canary
@@ -54,6 +55,7 @@ def canary_config_flow(hass):
         instance.get_modes = MagicMock(return_value=[])
         instance.get_readings = MagicMock(return_value=[])
         instance.get_latest_readings = MagicMock(return_value=[])
+        instance.get_latest_entries = MagicMock(return_value=[])
         instance.set_location_mode = MagicMock(return_value=None)
 
         yield mock_canary
