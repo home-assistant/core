@@ -26,14 +26,12 @@
   // python linting
   "python.linting.enabled": true,
   "python.linting.banditEnabled": true,
-    "python.linting.banditArgs": [
-      "--format=custom",
-      "--configfile=tests/bandit.yaml"
-    ],
-  "python.linting.flake8Enabled": true,
-  "python.linting.flake8Args": [
-    "--config=./setup.cfg"
+  "python.linting.banditArgs": [
+    "--format=custom",
+    "--configfile=tests/bandit.yaml"
   ],
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Args": ["--config=./setup.cfg"],
   "python.linting.mypyEnabled": true,
   "python.linting.mypyArgs": [
     "--follow-imports=silent",
@@ -49,19 +47,15 @@
     "--config=./pyproject.toml",
     "--line-length=88"
   ],
-  "isort.args": [
-    "--settings-path=./pyproject.toml"
-  ],
-  "pylint.args": [
-    "--rcfile=./pyproject.toml"
-  ],
+  "isort.args": ["--settings-path=./pyproject.toml"],
+  "pylint.args": ["--rcfile=./pyproject.toml"],
   // python tests
   "python.testing.promptToConfigure": false,
   // disabled by default due to extra needed requirements
   "python.testing.pytestEnabled": false,
   "python.testing.unittestEnabled": false,
   "python.testing.pytestArgs": [
-    "--color=no",
+    "--color=no"
     // limit pytest to just a single component
     // "--override-ini=testpaths=tests/components/yourcomponent"
   ]

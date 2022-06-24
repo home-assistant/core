@@ -29,6 +29,7 @@
     "editor.formatOnSave": true,
     "editor.formatOnSaveTimeout": 3000,
     "editor.formatOnType": true,
+
     "editor.insertSpaces": true,
     "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
@@ -48,10 +49,10 @@
     ],
     // python common
     "[python]": {
-        "editor.defaultFormatter": "ms-python.python",
-        "editor.codeActionsOnSave": {
-            "source.organizeImports": true
-        }
+      "editor.defaultFormatter": "ms-python.python",
+      "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+      }
     },
     "python.linting.enabled": true,
     "python.pythonPath": "/usr/local/bin/python",
@@ -62,9 +63,7 @@
       "--configfile=tests/bandit.yaml"
     ],
     "python.linting.flake8Enabled": true,
-    "python.linting.flake8Args": [
-      "--config=./setup.cfg"
-    ],
+    "python.linting.flake8Args": ["--config=./setup.cfg"],
     "python.linting.mypyEnabled": true,
     "python.linting.mypyArgs": [
       "--follow-imports=silent",
@@ -77,22 +76,18 @@
     "python.linting.pylamaEnabled": false,
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
-        "--config=./pyproject.toml",
-        "--line-length=88"
+      "--config=./pyproject.toml",
+      "--line-length=88"
     ],
-    "isort.args": [
-        "--settings-path=./pyproject.toml"
-    ],
-    "pylint.args": [
-        "--rcfile=./pyproject.toml"
-    ],
+    "isort.args": ["--settings-path=./pyproject.toml"],
+    "pylint.args": ["--rcfile=./pyproject.toml"],
     // python tests
     "python.testing.promptToConfigure": false,
     // disabled by default due to extra needed requirements
     "python.testing.pytestEnabled": false,
     "python.testing.unittestEnabled": false,
     "python.testing.pytestArgs": [
-      "--color=no",
+      "--color=no"
       // limit pytest to just a single component
       // "--override-ini=testpaths=tests/components/yourcomponent"
     ]
