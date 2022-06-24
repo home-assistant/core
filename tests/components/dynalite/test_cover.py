@@ -2,7 +2,9 @@
 from dynalite_devices_lib.cover import DynaliteTimeCoverWithTiltDevice
 import pytest
 
+from homeassistant.components.cover import ATTR_CURRENT_POSITION
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
+from homeassistant.core import State
 from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
@@ -14,12 +16,16 @@ from .common import (
     run_service_tests,
 )
 
+from tests.common import mock_restore_cache
+
 
 @pytest.fixture
 def mock_device():
     """Mock a Dynalite device."""
     mock_dev = create_mock_device("cover", DynaliteTimeCoverWithTiltDevice)
     mock_dev.device_class = "blind"
+    mock_dev.current_cover_position = 0
+    mock_dev.current_cover_tilt_position = 0
     return mock_dev
 
 
@@ -102,3 +108,23 @@ async def test_cover_positions(hass, mock_device):
     await check_cover_position(
         hass, update_func, mock_device, False, False, False, "open"
     )
+
+
+async def test_cover_restore_state(hass, mock_device):
+    """Test restore from cache."""
+    mock_restore_cache(
+        hass,
+        [State("cover.name", "open", attributes={ATTR_CURRENT_POSITION: 77})],
+    )
+    await create_entity_from_device(hass, mock_device)
+    mock_device.init_level.assert_called_once_with(77)
+
+
+async def test_cover_restore_state_bad_cache(hass, mock_device):
+    """Test restore from a cache without the attribute."""
+    mock_restore_cache(
+        hass,
+        [State("cover.name", "open", attributes={"bla bla": 77})],
+    )
+    await create_entity_from_device(hass, mock_device)
+    mock_device.init_level.assert_not_called()
