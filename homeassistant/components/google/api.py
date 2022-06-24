@@ -138,7 +138,7 @@ class DeviceFlow:
 
     @callback
     def _async_timeout(self, now: datetime.datetime) -> None:
-        _LOGGER.debug("OAuth token exchange timeout.")
+        _LOGGER.debug("OAuth token exchange timeout")
         self._finish()
 
     @callback
