@@ -827,6 +827,7 @@ jobs:
             --timeout=9 \
             --durations=10 \
             -n auto \
+            -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \
             -p no:sugar \
