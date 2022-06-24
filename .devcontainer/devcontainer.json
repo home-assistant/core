@@ -7,6 +7,7 @@
   "containerEnv": { "DEVCONTAINER": "1" },
   "appPort": 8123,
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
+  // Please keep this file in sync with settings in home-assistant/.vscode/extensions.json
   "extensions": [
     // common extensions
     "visualstudioexptteam.vscodeintellicode",

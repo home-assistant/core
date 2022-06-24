@@ -1,4 +1,5 @@
 {
+  // Please keep this file in sync with settings in home-assistant/.devcontainer/devcontainer.json
   "recommendations": [
     // common extensions
     "visualstudioexptteam.vscodeintellicode",
