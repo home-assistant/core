@@ -110,42 +110,42 @@ class DemoCover(CoverEntity):
         )
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for cover."""
         return self._unique_id
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed for a demo cover."""
         return False
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
         return self._position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         return self._tilt_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._closed
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing."""
         return self._is_closing
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening."""
         return self._is_opening
 
@@ -155,7 +155,7 @@ class DemoCover(CoverEntity):
         return self._device_class
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._supported_features is not None:
             return self._supported_features

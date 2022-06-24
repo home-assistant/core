@@ -40,7 +40,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = (
             CoverEntityFeature.OPEN
@@ -58,19 +58,19 @@ class VeluxCover(VeluxEntity, CoverEntity):
         return supported_features
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current position of the cover."""
         return 100 - self.node.position.position_percent
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current position of the cover."""
         if isinstance(self.node, Blind):
             return 100 - self.node.orientation.position_percent
         return None
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass:
         """Define this cover as either awning, blind, garage, gate, shutter or window."""
         if isinstance(self.node, Awning):
             return CoverDeviceClass.AWNING
@@ -87,7 +87,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
         return CoverDeviceClass.WINDOW
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.node.position.closed
 

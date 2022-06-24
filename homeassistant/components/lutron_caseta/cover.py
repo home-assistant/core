@@ -50,12 +50,12 @@ class LutronCasetaCover(LutronCasetaDeviceUpdatableEntity, CoverEntity):
     _attr_device_class = CoverDeviceClass.SHADE
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self._device["current_state"] < 1
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current position of cover."""
         return self._device["current_state"]
 

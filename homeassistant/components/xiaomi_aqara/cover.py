@@ -46,12 +46,12 @@ class XiaomiGenericCover(XiaomiDevice, CoverEntity):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current position of the cover."""
         return self._pos
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_cover_position <= 0
 
