@@ -828,7 +828,6 @@ jobs:
             --durations=10 \
             -n auto \
             --cov homeassistant.components.${{ matrix.group }} \
-            --cov-report=term-missing \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \
