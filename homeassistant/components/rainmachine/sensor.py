@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, cast
 
 from regenmaschine.controller import Controller
@@ -203,8 +203,6 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
 
         self._current_run_state: RunStates | None = None
         self._previous_run_state: RunStates | None = None
-        self._restored_state: datetime | None = None
-        # self._running: bool = False
 
     @property
     def activity_data(self) -> dict[str, Any]:
@@ -219,7 +217,7 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if restored_data := await self.async_get_last_sensor_data():
-            self._restored_state = restored_data.native_value
+            self._attr_native_value = restored_data.native_value
         await super().async_added_to_hass()
 
     def calculate_seconds_remaining(self) -> int:
@@ -234,16 +232,13 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
 
         now = utcnow()
 
-        if self._current_run_state == RunStates.NOT_RUNNING:
-            if not self._previous_run_state:
-                # If HASS has just started and the activity isn't running, use the
-                # the restored state (if it exists):
-                if self._restored_state:
-                    self._attr_native_value = self._restored_state
-            elif self._previous_run_state in (RunStates.QUEUED, RunStates.RUNNING):
-                # If the activity goes from queued/running to not running, update the
-                # state to be right now (i.e., the time the zone stopped running):
-                self._attr_native_value = now
+        if (
+            self._current_run_state == RunStates.NOT_RUNNING
+            and self._previous_run_state in (RunStates.QUEUED, RunStates.RUNNING)
+        ):
+            # If the activity goes from queued/running to not running, update the
+            # state to be right now (i.e., the time the zone stopped running):
+            self._attr_native_value = now
         elif self._current_run_state == RunStates.RUNNING:
             seconds_remaining = self.calculate_seconds_remaining()
             new_timestamp = now + timedelta(seconds=seconds_remaining)
