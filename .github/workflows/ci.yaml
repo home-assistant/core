@@ -800,6 +800,7 @@ jobs:
             -qq \
             --timeout=9 \
             --durations=10 \
+            -n auto \
             --dist=loadfile \
             --test-group-count ${{ needs.changes.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
@@ -825,6 +826,7 @@ jobs:
             -qq \
             --timeout=9 \
             --durations=10 \
+            -n auto \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
