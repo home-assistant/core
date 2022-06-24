@@ -1,4 +1,6 @@
 """Platform for cover integration."""
+from typing import Any
+
 from boschshcpy import SHCSession, SHCShutterControl
 
 from homeassistant.components.cover import (
@@ -54,7 +56,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
         """Return the current cover position."""
         return round(self._device.level * 100.0)
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._device.stop()
 
@@ -79,15 +81,15 @@ class ShutterControlCover(SHCEntity, CoverEntity):
             == SHCShutterControl.ShutterControlService.State.CLOSING
         )
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._device.level = 1.0
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         self._device.level = 0.0
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION]
         self._device.level = position / 100.0

@@ -1,6 +1,8 @@
 """Demo platform for the cover component."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -159,7 +161,7 @@ class DemoCover(CoverEntity):
             return self._supported_features
         return super().supported_features
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._position == 0:
             return
@@ -173,7 +175,7 @@ class DemoCover(CoverEntity):
         self._requested_closing = True
         self.async_write_ha_state()
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if self._tilt_position in (0, None):
             return
@@ -181,7 +183,7 @@ class DemoCover(CoverEntity):
         self._listen_cover_tilt()
         self._requested_closing_tilt = True
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._position == 100:
             return
@@ -195,7 +197,7 @@ class DemoCover(CoverEntity):
         self._requested_closing = False
         self.async_write_ha_state()
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if self._tilt_position in (100, None):
             return
@@ -223,7 +225,7 @@ class DemoCover(CoverEntity):
         self._listen_cover_tilt()
         self._requested_closing_tilt = tilt_position < self._tilt_position
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._is_closing = False
         self._is_opening = False
@@ -234,7 +236,7 @@ class DemoCover(CoverEntity):
             self._unsub_listener_cover = None
             self._set_position = None
 
-    async def async_stop_cover_tilt(self, **kwargs):
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         if self._tilt_position is None:
             return

@@ -1,6 +1,8 @@
 """Support for  HomeMatic covers."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
@@ -49,7 +51,7 @@ class HMCover(HMDevice, CoverEntity):
         """
         return int(self._hm_get_state() * 100)
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if ATTR_POSITION in kwargs:
             position = float(kwargs[ATTR_POSITION])
@@ -64,15 +66,15 @@ class HMCover(HMDevice, CoverEntity):
             return self.current_cover_position == 0
         return None
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._hmdevice.move_up(self._channel)
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._hmdevice.move_down(self._channel)
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the device if in motion."""
         self._hmdevice.stop(self._channel)
 
@@ -93,7 +95,7 @@ class HMCover(HMDevice, CoverEntity):
             return None
         return int(position * 100)
 
-    def set_cover_tilt_position(self, **kwargs):
+    def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         if "LEVEL_2" in self._data and ATTR_TILT_POSITION in kwargs:
             position = float(kwargs[ATTR_TILT_POSITION])
@@ -101,17 +103,17 @@ class HMCover(HMDevice, CoverEntity):
             level = position / 100.0
             self._hmdevice.set_cover_tilt_position(level, self._channel)
 
-    def open_cover_tilt(self, **kwargs):
+    def open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if "LEVEL_2" in self._data:
             self._hmdevice.open_slats()
 
-    def close_cover_tilt(self, **kwargs):
+    def close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if "LEVEL_2" in self._data:
             self._hmdevice.close_slats()
 
-    def stop_cover_tilt(self, **kwargs):
+    def stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop cover tilt."""
         if "LEVEL_2" in self._data:
             self.stop_cover(**kwargs)
