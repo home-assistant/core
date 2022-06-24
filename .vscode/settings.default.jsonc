@@ -1,0 +1,64 @@
+{
+  // Please keep this file in sync with settings in home-assistant/.devcontainer/devcontainer.json
+  // common
+  "editor.formatOnPaste": false,
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveTimeout": 3000,
+  "editor.formatOnType": true,
+  "editor.insertSpaces": true,
+  "files.insertFinalNewline": true,
+  "files.trimTrailingWhitespace": true,
+  "yaml.customTags": [
+    "!input scalar",
+    "!secret scalar",
+    "!include_dir_named scalar",
+    "!include_dir_list scalar",
+    "!include_dir_merge_list scalar",
+    "!include_dir_merge_named scalar"
+  ],
+  // python common
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.python",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": true
+    }
+  },
+  // python linting
+  "python.linting.banditEnabled": false,
+  "python.linting.enabled": true,
+  "python.linting.flake8Enabled": true,
+  "python.linting.flake8Args": [
+    "--config=./setup.cfg"
+  ],
+  "python.linting.mypyEnabled": true,
+  "python.linting.mypyArgs": [
+    "--follow-imports=silent",
+    "--ignore-missing-imports",
+    "--show-column-numbers",
+    "--no-pretty",
+    "--config-file=./mypy.ini"
+  ],
+  "python.linting.pylintEnabled": false,
+  "python.linting.pylamaEnabled": false,
+  "python.formatting.provider": "black",
+  "python.formatting.blackArgs": [
+    "--config=./pyproject.toml",
+    "--line-length=88"
+  ],
+  "isort.args": [
+    "--settings-path=./pyproject.toml"
+  ],
+  "pylint.args": [
+    "--rcfile=./pyproject.toml"
+  ],
+  // python tests
+  "python.testing.promptToConfigure": false,
+  // disabled by default due to extra needed requirements
+  "python.testing.pytestEnabled": false,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": [
+    "--color=no",
+    // limit pytest to just a single component
+    // "--override-ini=testpaths=tests/components/yourcomponent"
+  ]
+}
