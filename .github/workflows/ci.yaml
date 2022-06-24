@@ -827,8 +827,9 @@ jobs:
             --timeout=9 \
             --durations=10 \
             -n auto \
-            --cov homeassistant.components.${{ matrix.group }} \
-            --cov-report=xml \
+            --durations=0 \
+            --durations-min=1 \
+            -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
