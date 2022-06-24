@@ -1,4 +1,6 @@
 """BleBox cover entity."""
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
@@ -62,21 +64,21 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         """Return whether cover is closed."""
         return self._is_state(STATE_CLOSED)
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover position."""
         await self._feature.async_open()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover position."""
         await self._feature.async_close()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Set the cover position."""
 
         position = kwargs[ATTR_POSITION]
         await self._feature.async_set_position(100 - position)
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._feature.async_stop()
 
