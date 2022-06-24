@@ -67,6 +67,7 @@ _STATE_CLASSES: EsphomeEnumMapper[
         EsphomeSensorStateClass.NONE: None,
         EsphomeSensorStateClass.MEASUREMENT: SensorStateClass.MEASUREMENT,
         EsphomeSensorStateClass.TOTAL_INCREASING: SensorStateClass.TOTAL_INCREASING,
+        EsphomeSensorStateClass.TOTAL: SensorStateClass.TOTAL,
     }
 )
 
