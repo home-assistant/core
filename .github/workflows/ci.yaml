@@ -829,10 +829,7 @@ jobs:
             -n auto \
             --cov homeassistant.components.${{ matrix.group }} \
             --cov-report=xml \
-            --cov-report=term-missing \
             -o console_output_style=count \
-            --durations=0 \
-            --durations-min=1 \
             -p no:sugar \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
