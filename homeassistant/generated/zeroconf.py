@@ -406,6 +406,7 @@ ZEROCONF = {
 
 HOMEKIT = {
     "3810X": "roku",
+    "3820X": "roku",
     "4660X": "roku",
     "7820X": "roku",
     "819LMB": "myq",

@@ -45,6 +45,13 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     return {} if default is None else default
 
 
+def _orjson_encoder(data: Any) -> str:
+    """JSON encoder that uses orjson."""
+    return orjson.dumps(
+        data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+    ).decode("utf-8")
+
+
 def save_json(
     filename: str,
     data: list | dict,
@@ -62,8 +69,8 @@ def save_json(
         if encoder:
             json_data = json.dumps(data, indent=2, cls=encoder)
         else:
-            dump = orjson.dumps
-            json_data = orjson.dumps(data, option=orjson.OPT_INDENT_2).decode("utf-8")
+            dump = _orjson_encoder
+            json_data = _orjson_encoder(data)
     except TypeError as error:
         msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data, dump=dump))}"
         _LOGGER.error(msg)

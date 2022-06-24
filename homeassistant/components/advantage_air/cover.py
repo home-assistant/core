@@ -1,4 +1,6 @@
 """Cover platform for Advantage Air integration."""
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverDeviceClass,
@@ -67,7 +69,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             return self._zone["value"]
         return 0
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Fully open zone vent."""
         await self.async_change(
             {
@@ -79,7 +81,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             }
         )
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Fully close zone vent."""
         await self.async_change(
             {
@@ -89,7 +91,7 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
             }
         )
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Change vent position."""
         position = round(kwargs[ATTR_POSITION] / 5) * 5
         if position == 0:

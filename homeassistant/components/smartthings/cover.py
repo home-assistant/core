@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from typing import Any
 
 from pysmartthings import Attribute, Capability
 
@@ -81,7 +82,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         if Capability.switch_level in device.capabilities:
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         # Same command for all 3 supported capabilities
         await self._device.close(set_status=True)
@@ -89,7 +90,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         # Same for all capability types
         await self._device.open(set_status=True)
