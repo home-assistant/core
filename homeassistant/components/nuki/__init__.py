@@ -12,6 +12,7 @@ from homeassistant import exceptions
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -39,7 +40,7 @@ def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOp
     return bridge.locks, bridge.openers
 
 
-def _update_devices(hass: HomeAssistant, devices: list[NukiDevice]) -> None:
+def _update_devices(hass: HomeAssistant, ent_reg: er.EntityRegistry, devices: list[NukiDevice]) -> None:
     for device in devices:
         for level in (False, True):
             try:
@@ -49,11 +50,12 @@ def _update_devices(hass: HomeAssistant, devices: list[NukiDevice]) -> None:
                     device.update(level)
 
                     if not last_ring_action_state and device.ring_action_state:
+                        entity_id = ent_reg.async_get_entity_id(Platform.LOCK, DOMAIN, device.nuki_id) 
                         event_data = {
-                            "entity_id": device.entity.entity_id,
+                            "entity_id": entity_id,
                             "type": "ring",
                         }
-                        hass.bus.async_fire("nuki_event", event_data)
+                        hass.bus.fire("nuki_event", event_data)
                 else:
                     device.update(level)
             except RequestException:
@@ -95,10 +97,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Fetch data from Nuki bridge."""
         try:
+            ent_reg = er.async_get(hass)
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                await hass.async_add_executor_job(_update_devices, hass, locks + openers)
+                await hass.async_add_executor_job(_update_devices, hass, ent_reg, locks + openers)
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:

@@ -38,12 +38,9 @@ async def async_setup_entry(
     entities: list[NukiDeviceEntity] = [
         NukiLockEntity(coordinator, lock) for lock in data[DATA_LOCKS]
     ]
-
-    for opener in data[DATA_OPENERS]:
-        entity = NukiOpenerEntity(coordinator, opener)
-        opener.entity = entity
-        entities.append(entity)
-
+    entities.extend(
+        [NukiOpenerEntity(coordinator, opener) for opener in data[DATA_OPENERS]]
+    )
     async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
