@@ -1,6 +1,7 @@
 """Config flow for Fibaro integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -58,6 +59,10 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    def __init__(self) -> None:
+        """Initialize."""
+        self._reauth_entry: config_entries.ConfigEntry | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -83,3 +88,49 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_config: ConfigType | None) -> FlowResult:
         """Import a config entry."""
         return await self.async_step_user(import_config)
+
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+        """Handle reauthentication."""
+        self._reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle a flow initiated by reauthentication."""
+        errors = {}
+
+        if user_input is not None and self._reauth_entry is not None:
+            new_data = self._reauth_entry.data | user_input
+            try:
+                info = await _validate_input(self.hass, new_data)
+            except FibaroConnectFailed:
+                errors["base"] = "cannot_connect"
+            except FibaroAuthFailed:
+                errors["base"] = "invalid_auth"
+            else:
+                self.hass.config_entries.async_update_entry(
+                    self._reauth_entry, data=new_data, unique_id=info["serial_number"]
+                )
+                self.hass.async_create_task(
+                    self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
+                )
+                return self.async_abort(reason="reauth_successful")
+
+        username = (
+            self._reauth_entry.data[CONF_USERNAME]
+            if self._reauth_entry is not None
+            else None
+        )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_USERNAME, default=username): str,
+                    vol.Required(CONF_PASSWORD): str,
+                }
+            ),
+            errors=errors,
+        )
