@@ -79,13 +79,6 @@ class DeviceFlow:
         self._device_flow_info: DeviceFlowInfo = device_flow_info
         self._exchange_task_unsub: CALLBACK_TYPE | None = None
         self._timeout_unsub: CALLBACK_TYPE | None = None
-        max_timeout = dt.utcnow() + datetime.timedelta(seconds=EXCHANGE_TIMEOUT_SECONDS)
-        # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
-        # object without tzinfo. For the comparison below to work, it needs one.
-        user_code_expiry = device_flow_info.user_code_expiry.replace(
-            tzinfo=datetime.timezone.utc
-        )
-        self._expiration_time = min(user_code_expiry, max_timeout)
         self._listener: CALLBACK_TYPE | None = None
         self._creds: Credentials | None = None
 
@@ -115,13 +108,21 @@ class DeviceFlow:
     def async_start_exchange(self) -> None:
         """Start the device auth exchange flow polling."""
         _LOGGER.debug("Starting exchange flow")
+        max_timeout = dt.utcnow() + datetime.timedelta(seconds=EXCHANGE_TIMEOUT_SECONDS)
+        # For some reason, oauth.step1_get_device_and_user_codes() returns a datetime
+        # object without tzinfo. For the comparison below to work, it needs one.
+        user_code_expiry = self._device_flow_info.user_code_expiry.replace(
+            tzinfo=datetime.timezone.utc
+        )
+        expiration_time = min(user_code_expiry, max_timeout)
+
         self._exchange_task_unsub = async_track_time_interval(
             self._hass,
             self._async_poll_attempt,
             datetime.timedelta(seconds=self._device_flow_info.interval),
         )
         self._timeout_unsub = async_track_point_in_utc_time(
-            self._hass, self._async_timeout, self._expiration_time
+            self._hass, self._async_timeout, expiration_time
         )
 
     async def _async_poll_attempt(self, now: datetime.datetime) -> None:
