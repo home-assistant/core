@@ -435,6 +435,10 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
+_BASE_DEVICE_CLASS = TypeHintMatch(
+    function_name="device_class",
+    return_type=["str", None],
+)
 _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="should_poll",
@@ -471,10 +475,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_info",
         return_type=["DeviceInfo", None],
-    ),
-    TypeHintMatch(
-        function_name="device_class",
-        return_type=["str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -669,7 +669,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
-            matches=_ENTITY_MATCH,
+            matches=_ENTITY_MATCH + [_BASE_DEVICE_CLASS],
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -746,7 +746,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "lock": [
         ClassTypeHintMatch(
             base_class="Entity",
-            matches=_ENTITY_MATCH,
+            matches=_ENTITY_MATCH + [_BASE_DEVICE_CLASS],
         ),
         ClassTypeHintMatch(
             base_class="LockEntity",
