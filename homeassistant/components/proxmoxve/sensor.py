@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import DATA_GIBIBYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -57,7 +58,7 @@ async def async_setup_platform(
                         native_lambda=lambda data: round(
                             int(data["mem"]) / BYTE_TO_GIBIBYTE, 2
                         ),
-                        unit_of_measurement="GiB",
+                        unit_of_measurement=DATA_GIBIBYTES,
                     )
                 ]
 
