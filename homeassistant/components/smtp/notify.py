@@ -21,7 +21,6 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.components.smtp.config_flow import RECEPIENTS_SCHEMA
 from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -38,6 +37,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 from . import get_smtp_client
+from .config_flow import RECEPIENTS_SCHEMA
 from .const import (
     ATTR_HTML,
     ATTR_IMAGES,
@@ -97,7 +97,7 @@ async def async_get_service(
 class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-mail messages."""
 
-    def __init__(self, entry: dict[str, Any]):
+    def __init__(self, entry: dict[str, Any]) -> None:
         """Initialize the SMTP service."""
         self.entry = entry
 
