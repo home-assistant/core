@@ -1,6 +1,8 @@
 """Support for Gogogate2 garage Doors."""
 from __future__ import annotations
 
+from typing import Any
+
 from ismartgate.common import (
     AbstractDoor,
     DoorStatus,
@@ -84,12 +86,12 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         """Return if the cover is opening or not."""
         return self.door_status == TransitionDoorStatus.OPENING
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door."""
         await self._api.async_open_door(self._door_id)
         await self.coordinator.async_refresh()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door."""
         await self._api.async_close_door(self._door_id)
         await self.coordinator.async_refresh()

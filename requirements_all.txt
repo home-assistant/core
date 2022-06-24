@@ -825,7 +825,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220601.0
+home-assistant-frontend==20220624.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1296,7 +1296,7 @@ pushover_complete==1.1.1
 pvo==0.2.2
 
 # homeassistant.components.canary
-py-canary==0.5.2
+py-canary==0.5.3
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
@@ -1990,7 +1990,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.7
+pyunifiprotect==4.0.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0

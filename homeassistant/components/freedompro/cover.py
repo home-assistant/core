@@ -1,5 +1,6 @@
 """Support for Freedompro cover."""
 import json
+from typing import Any
 
 from pyfreedompro import put_state
 
@@ -96,11 +97,11 @@ class Device(CoordinatorEntity, CoverEntity):
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.async_set_cover_position(position=100)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.async_set_cover_position(position=0)
 
