@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from scsgate.tasks import (
     HaltRollerShutterTask,
@@ -85,15 +86,15 @@ class SCSGateCover(CoverEntity):
         """Return if the cover is closed."""
         return None
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Move the cover."""
         self._scsgate.append_task(RaiseRollerShutterTask(target=self._scs_id))
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Move the cover down."""
         self._scsgate.append_task(LowerRollerShutterTask(target=self._scs_id))
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self._scsgate.append_task(HaltRollerShutterTask(target=self._scs_id))
 

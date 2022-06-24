@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import logging
 from pprint import pformat
+from typing import Any
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.core import HomeAssistant
@@ -65,7 +66,7 @@ class SuplaCover(SuplaChannel, CoverEntity):
             return 100 - state["shut"]
         return None
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.async_action("REVEAL", percentage=kwargs.get(ATTR_POSITION))
 
@@ -76,15 +77,15 @@ class SuplaCover(SuplaChannel, CoverEntity):
             return None
         return self.current_cover_position == 0
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.async_action("REVEAL")
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.async_action("SHUT")
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.async_action("STOP")
 
@@ -100,21 +101,21 @@ class SuplaGateDoor(SuplaChannel, CoverEntity):
             return state.get("hi")
         return None
 
-    async def async_open_cover(self, **kwargs) -> None:
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the gate."""
         if self.is_closed:
             await self.async_action("OPEN_CLOSE")
 
-    async def async_close_cover(self, **kwargs) -> None:
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the gate."""
         if not self.is_closed:
             await self.async_action("OPEN_CLOSE")
 
-    async def async_stop_cover(self, **kwargs) -> None:
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the gate."""
         await self.async_action("OPEN_CLOSE")
 
-    async def async_toggle(self, **kwargs) -> None:
+    async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the gate."""
         await self.async_action("OPEN_CLOSE")
 

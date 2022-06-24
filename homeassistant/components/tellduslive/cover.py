@@ -1,4 +1,6 @@
 """Support for Tellstick covers using Tellstick Net."""
+from typing import Any
+
 from homeassistant.components import cover, tellduslive
 from homeassistant.components.cover import CoverEntity
 from homeassistant.config_entries import ConfigEntry
@@ -36,17 +38,17 @@ class TelldusLiveCover(TelldusLiveEntity, CoverEntity):
         """Return the current position of the cover."""
         return self.device.is_down
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self.device.down()
         self._update_callback()
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self.device.up()
         self._update_callback()
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         self.device.stop()
         self._update_callback()
