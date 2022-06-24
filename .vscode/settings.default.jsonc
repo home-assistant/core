@@ -24,8 +24,12 @@
     }
   },
   // python linting
-  "python.linting.banditEnabled": false,
   "python.linting.enabled": true,
+  "python.linting.banditEnabled": true,
+    "python.linting.banditArgs": [
+      "--format=custom",
+      "--configfile=tests/bandit.yaml"
+    ],
   "python.linting.flake8Enabled": true,
   "python.linting.flake8Args": [
     "--config=./setup.cfg"

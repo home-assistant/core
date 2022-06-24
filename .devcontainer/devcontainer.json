@@ -53,6 +53,7 @@
             "source.organizeImports": true
         }
     },
+    "python.linting.enabled": true,
     "python.pythonPath": "/usr/local/bin/python",
     // python linting
     "python.linting.banditEnabled": true,
@@ -60,7 +61,6 @@
       "--format=custom",
       "--configfile=tests/bandit.yaml"
     ],
-    "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
     "python.linting.flake8Args": [
       "--config=./setup.cfg"
