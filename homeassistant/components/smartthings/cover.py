@@ -70,6 +70,8 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 class SmartThingsCover(SmartThingsEntity, CoverEntity):
     """Define a SmartThings cover."""
 
+    _attr_supported_features: int
+
     def __init__(self, device):
         """Initialize the cover class."""
         super().__init__(device)
@@ -98,7 +100,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         # the entity state ahead of receiving the confirming push updates
         self.async_schedule_update_ha_state(True)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
             return
@@ -143,7 +145,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         return None if self._state is None else False
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover."""
         if not self._attr_supported_features & CoverEntityFeature.SET_POSITION:
             return None
