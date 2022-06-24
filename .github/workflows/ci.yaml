@@ -822,12 +822,16 @@ jobs:
             exit 1
           fi
 
+          pip install coverage==6.4 --upgrade
+
           python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
             -n auto \
             --cov homeassistant.components.${{ matrix.group }} \
+            --cov-report=xml \
+            --cov-report=term-missing \
             -o console_output_style=count \
             --durations=0 \
             --durations-min=1 \
