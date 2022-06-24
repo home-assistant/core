@@ -57,7 +57,7 @@
     }
   },
   "videoReconfigurationInProgress": false,
-  "voltage": 20.0 ,
+  "voltage": 20.0,
   "wiredConnectionState": {
     "phyRate": 1000
   },
