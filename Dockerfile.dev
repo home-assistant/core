@@ -37,9 +37,14 @@ WORKDIR /workspaces
 COPY requirements.txt ./
 COPY homeassistant/package_constraints.txt homeassistant/package_constraints.txt
 RUN pip3 install -r requirements.txt --use-deprecated=legacy-resolver
-COPY requirements_test.txt requirements_test_pre_commit.txt ./
+COPY requirements_test.txt requirements_test_pre_commit.txt requirements_test_all.txt ./
 RUN pip3 install -r requirements_test.txt --use-deprecated=legacy-resolver
-RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt homeassistant/
+
+# my addition
+RUN pip3 install --use-deprecated=legacy-resolver -r requirements_test_all.txt -c homeassistant/package_constraints.txt
+
+RUN rm -rf requirements.txt requirements_test.txt requirements_test_pre_commit.txt requirements_test_all.txt homeassistant/
+
 
 # Set the default shell to bash instead of sh
 ENV SHELL /bin/bash

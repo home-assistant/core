@@ -36,6 +36,7 @@ def mock_device():
     """Mock a Dynalite device."""
     mock_dev = create_mock_device("light", DynaliteChannelLightDevice)
     mock_dev.brightness = 0
+<<<<<<< HEAD
 
     def mock_is_on():
         return mock_dev.brightness != 0
@@ -46,6 +47,8 @@ def mock_device():
         mock_dev.brightness = target
 
     type(mock_dev).init_level = Mock(side_effect=mock_init_level)
+=======
+>>>>>>> c456737520 (Implemented RestoreEntity)
     return mock_dev
 
 
