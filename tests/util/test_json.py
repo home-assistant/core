@@ -52,6 +52,14 @@ def test_save_and_load():
     assert data == TEST_JSON_A
 
 
+def test_save_and_load_int_keys():
+    """Test saving and loading back stringifies the keys."""
+    fname = _path_for("test1")
+    save_json(fname, {1: "a", 2: "b"})
+    data = load_json(fname)
+    assert data == {"1": "a", "2": "b"}
+
+
 def test_save_and_load_private():
     """Test we can load private files and that they are protected."""
     fname = _path_for("test2")
