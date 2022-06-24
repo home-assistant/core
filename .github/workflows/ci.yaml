@@ -823,7 +823,7 @@ jobs:
           fi
 
           python3 -X dev -m pytest \
-            -qq \
+            -vv \
             --timeout=9 \
             --durations=10 \
             -n auto \
