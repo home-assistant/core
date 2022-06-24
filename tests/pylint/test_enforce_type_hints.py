@@ -650,7 +650,7 @@ def test_invalid_mapping_return_type(
     type_hint_checker: BaseChecker,
     return_hint: str,
 ) -> None:
-    """Check that Mapping[xxx, Any] accepts both Mapping and dict."""
+    """Check that Mapping[xxx, Any] doesn't accept invalid Mapping or dict."""
     # Set bypass option
     type_hint_checker.config.ignore_missing_annotations = False
 
