@@ -4,14 +4,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config as hass_config
-import homeassistant.components.notify as notify
-from homeassistant.components.smtp import DOMAIN
 from homeassistant.components.smtp.notify import MailNotificationService
-from homeassistant.const import SERVICE_RELOAD
-from homeassistant.setup import async_setup_component
 
-from tests.common import get_fixture_path
+from tests.components.smtp import MOCK_CONFIG
 
 
 class MockSMTP(MailNotificationService):
@@ -22,62 +17,10 @@ class MockSMTP(MailNotificationService):
         return msg.as_string(), recipients
 
 
-async def test_reload_notify(hass):
-    """Verify we can reload the notify service."""
-
-    with patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
-    ):
-        assert await async_setup_component(
-            hass,
-            notify.DOMAIN,
-            {
-                notify.DOMAIN: [
-                    {
-                        "name": DOMAIN,
-                        "platform": DOMAIN,
-                        "recipient": "test@example.com",
-                        "sender": "test@example.com",
-                    },
-                ]
-            },
-        )
-        await hass.async_block_till_done()
-
-    assert hass.services.has_service(notify.DOMAIN, DOMAIN)
-
-    yaml_path = get_fixture_path("configuration.yaml", "smtp")
-    with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path), patch(
-        "homeassistant.components.smtp.notify.MailNotificationService.connection_is_valid"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_RELOAD,
-            {},
-            blocking=True,
-        )
-        await hass.async_block_till_done()
-
-    assert not hass.services.has_service(notify.DOMAIN, DOMAIN)
-    assert hass.services.has_service(notify.DOMAIN, "smtp_reloaded")
-
-
 @pytest.fixture
 def message():
     """Return MockSMTP object with test data."""
-    mailer = MockSMTP(
-        "localhost",
-        25,
-        5,
-        "test@test.com",
-        1,
-        "testuser",
-        "testpass",
-        ["recip1@example.com", "testrecip@test.com"],
-        "Home Assistant",
-        0,
-        True,
-    )
+    mailer = MockSMTP(MOCK_CONFIG)
     yield mailer
 
 
@@ -164,7 +107,7 @@ def test_send_text_message(hass, message):
     "target",
     [
         None,
-        "target@example.com",
+        ["target@example.com"],
     ],
     ids=[
         "Verify we can send email to default recipient.",

@@ -80,7 +80,6 @@ def validate_input(user_input: dict[str, Any]) -> dict[str, str]:
 
     if not errors:
         try:
-            print(get_smtp_client)
             smtp_client = get_smtp_client(user_input)
             smtp_client.quit()
 
@@ -118,7 +117,6 @@ class SMTPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     validate_input, user_input
                 )
             ):
-                print(errors)
                 return self.async_create_entry(
                     title=user_input[CONF_NAME],
                     data=user_input,
@@ -157,7 +155,7 @@ class SMTPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             user_input = {**self._reauth_entry.data, **user_input}
             if not (
                 errors := await self.hass.async_add_executor_job(
-                    validate_input, self.hass, user_input
+                    validate_input, user_input
                 )
             ):
                 self.hass.config_entries.async_update_entry(
