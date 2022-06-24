@@ -133,7 +133,7 @@ class MailNotificationService(BaseNotificationService):
 
         msg["To"] = ",".join(recipients)
 
-        if self.entry[CONF_SENDER_NAME]:
+        if CONF_SENDER_NAME in self.entry:
             msg["From"] = f"{self.entry[CONF_SENDER_NAME]} <{self.entry[CONF_SENDER]}>"
         else:
             msg["From"] = self.entry[CONF_SENDER]
