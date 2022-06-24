@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any, cast
 
 from regenmaschine.controller import Controller
 
@@ -203,6 +203,11 @@ class TimeRemainingSensor(RainMachineEntity, SensorEntity):
         self._running: bool = False
 
     @property
+    def data(self) -> dict[str, Any]:
+        """Return the core data for this entity."""
+        return self.coordinator.data[self.entity_description.uid]
+
+    @property
     def status_key(self) -> str:
         """Return the data key that contains the activity status."""
         return "state"
@@ -214,9 +219,8 @@ class TimeRemainingSensor(RainMachineEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        data = self.coordinator.data[self.entity_description.uid]
         now = utcnow()
-        run_state = RUN_STATE_MAP.get(data[self.status_key])
+        run_state = RUN_STATE_MAP.get(self.data[self.status_key])
 
         if run_state == RunStates.NOT_RUNNING:
             if self._running:
@@ -271,17 +275,16 @@ class ProgramTimeRemainingSensor(TimeRemainingSensor):
 
     def calculate_seconds_remaining(self) -> int:
         """Calculate the number of seconds remaining."""
-        program_data = self.coordinator.data[self.entity_description.uid]
         duration = 0
 
         for idx, zone in enumerate(
-            [z for z in program_data["wateringTimes"] if z["active"]]
+            [z for z in self.data["wateringTimes"] if z["active"]]
         ):
-            if program_data["delay_on"] and idx > 0:
+            if self.data["delay_on"] and idx > 0:
                 # If the user has configured a manual delay between zones, add it to the
                 # total duration for every zone except the first (since running a
                 # one-zone program won't incur a delay):
-                duration += program_data["delay"]
+                duration += self.data["delay"]
 
             duration += self._zone_coordinator.data[zone["id"]]["remaining"]
 
