@@ -31,6 +31,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_backup_start)
     websocket_api.async_register_command(hass, ws_backup_end)
     websocket_api.async_register_command(hass, ws_adjust_sum_statistics)
+    websocket_api.async_register_command(hass, ws_add_external_statistics)
 
 
 @websocket_api.websocket_command(
@@ -133,6 +134,50 @@ def ws_adjust_sum_statistics(
     hass.data[DATA_INSTANCE].async_adjust_statistics(
         msg["statistic_id"], start_time, msg["adjustment"]
     )
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "recorder/add_external_statistics",
+        vol.Required("metadata"): dict,
+        vol.Required("stats"): list,
+    }
+)
+@callback
+def ws_add_external_statistics(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
+) -> None:
+    """Adjust sum statistics."""
+    stats = []
+    for raw_stat in msg["stats"]:
+        # Validate data
+        stat = raw_stat.copy()
+        start_time_str = raw_stat["start"]
+        if start_time := dt_util.parse_datetime(start_time_str):
+            start_time = dt_util.as_utc(start_time)
+        else:
+            connection.send_error(msg["id"], "invalid_start_time", "Invalid start time")
+            return
+        stat["start"] = start_time
+
+        last_reset_time_str = stat.get("last_reset")
+        if last_reset_time_str is not None:
+            if last_reset_time := dt_util.parse_datetime(last_reset_time_str):
+                last_reset_time = dt_util.as_utc(last_reset_time)
+            else:
+                connection.send_error(
+                    msg["id"], "invalid_last_reset_time", "Invalid last_reset time"
+                )
+                return
+        else:
+            last_reset_time = None
+        stat["last_reset"] = last_reset_time
+
+        stats.append(stat)
+
+    hass.data[DATA_INSTANCE].async_external_statistics(msg["metadata"], stats)
     connection.send_result(msg["id"])
 
 
