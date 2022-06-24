@@ -1,3 +1,17 @@
 {
-  "recommendations": ["esbenp.prettier-vscode", "ms-python.python"]
+  "recommendations": [
+    // common extensions
+    "visualstudioexptteam.vscodeintellicode",
+    "redhat.vscode-yaml",
+    "esbenp.prettier-vscode",
+    "GitHub.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "bungcip.better-toml",
+    "streetsidesoftware.code-spell-checker",
+    // python extensions
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.pylint",
+    "ms-python.isort"
+  ]
 }

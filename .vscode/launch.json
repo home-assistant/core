@@ -41,6 +41,22 @@
           "remoteRoot": "/usr/src/homeassistant"
         }
       ]
+    },
+    {
+      // settings that VS Code uses when debugging tests
+      // See https://code.visualstudio.com/docs/python/testing#_debug-tests
+      "name": "Python: Debug Tests",
+      "type": "python",
+      "request": "launch",
+      "program": "${file}",
+      "purpose": [
+        "debug-test"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTEST_ADDOPTS": "-n=0 --no-cov -vv"
+      }
     }
   ]
 }

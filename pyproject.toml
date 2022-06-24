@@ -211,7 +211,7 @@ overgeneral-exceptions = [
 runtime-typing = false
 
 [tool.pylint.CODE_STYLE]
-max-line-length-suggestions = 72
+max-line-length-suggestions = 88
 
 [tool.pytest.ini_options]
 testpaths = [

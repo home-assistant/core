@@ -8,22 +8,29 @@
   "appPort": 8123,
   "runArgs": ["-e", "GIT_EDITOR=code --wait"],
   "extensions": [
-    "ms-python.vscode-pylance",
+    // common extensions
     "visualstudioexptteam.vscodeintellicode",
     "redhat.vscode-yaml",
     "esbenp.prettier-vscode",
-    "GitHub.vscode-pull-request-github"
+    "GitHub.vscode-pull-request-github",
+    "eamodio.gitlens",
+    "bungcip.better-toml",
+    "streetsidesoftware.code-spell-checker",
+    // python extensions
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.pylint",
+    "ms-python.isort"
   ],
   // Please keep this file in sync with settings in home-assistant/.vscode/settings.default.json
   "settings": {
-    "python.pythonPath": "/usr/local/bin/python",
-    "python.linting.pylintEnabled": true,
-    "python.linting.enabled": true,
-    "python.formatting.provider": "black",
-    "python.testing.pytestArgs": ["--no-cov"],
+    // common
     "editor.formatOnPaste": false,
     "editor.formatOnSave": true,
+    "editor.formatOnSaveTimeout": 3000,
     "editor.formatOnType": true,
+    "editor.insertSpaces": true,
+    "files.insertFinalNewline": true,
     "files.trimTrailingWhitespace": true,
     "terminal.integrated.profiles.linux": {
       "zsh": {
@@ -38,6 +45,56 @@
       "!include_dir_list scalar",
       "!include_dir_merge_list scalar",
       "!include_dir_merge_named scalar"
+    ],
+    // python common
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.python",
+        "editor.codeActionsOnSave": {
+            "source.organizeImports": true
+        }
+    },
+    "python.pythonPath": "/usr/local/bin/python",
+    // python linting
+    "python.linting.banditEnabled": true,
+    "python.linting.banditArgs": [
+      "--format=custom",
+      "--configfile=tests/bandit.yaml"
+    ],
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.linting.flake8Args": [
+      "--config=./setup.cfg"
+    ],
+    "python.linting.mypyEnabled": true,
+    "python.linting.mypyArgs": [
+      "--follow-imports=silent",
+      "--ignore-missing-imports",
+      "--show-column-numbers",
+      "--no-pretty",
+      "--config-file=./mypy.ini"
+    ],
+    "python.linting.pylintEnabled": false,
+    "python.linting.pylamaEnabled": false,
+    "python.formatting.provider": "black",
+    "python.formatting.blackArgs": [
+        "--config=./pyproject.toml",
+        "--line-length=88"
+    ],
+    "isort.args": [
+        "--settings-path=./pyproject.toml"
+    ],
+    "pylint.args": [
+        "--rcfile=./pyproject.toml"
+    ],
+    // python tests
+    "python.testing.promptToConfigure": false,
+    // disabled by default due to extra needed requirements
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestEnabled": false,
+    "python.testing.pytestArgs": [
+      "--color=no",
+      // limit pytest to just a single component
+      // "--override-ini=testpaths=tests/components/yourcomponent"
     ]
   }
 }
