@@ -5,11 +5,13 @@ import logging
 import aiohttp
 from nexia.const import BRAND_NEXIA
 from nexia.home import NexiaHome
+from nexia.thermostat import NexiaThermostat
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -66,8 +68,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
-
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove a nexia config entry from a device."""
+    coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    nexia_home: NexiaHome = coordinator.nexia_home
+    all_identifiers: set[tuple[str, str]] = {
+        (DOMAIN, automation_id) for automation_id in nexia_home.get_automation_ids()
+    }
+    for thermostat_id in nexia_home.get_thermostat_ids():
+        all_identifiers.add((DOMAIN, thermostat_id))
+        thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        for zone_id in thermostat.get_zone_ids():
+            all_identifiers.add((DOMAIN, zone_id))
+    return not device_entry.identifiers.intersection(all_identifiers)
