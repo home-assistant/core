@@ -827,6 +827,7 @@ jobs:
             --timeout=9 \
             --durations=10 \
             -n auto \
+            --cov homeassistant.components.${{ matrix.group }} \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
