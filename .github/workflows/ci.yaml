@@ -829,6 +829,7 @@ jobs:
             -n auto \
             --cov homeassistant.components.${{ matrix.group }} \
             --cov-report=xml \
+            -o console_output_style=count \
             tests/components/${{ matrix.group }}
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
