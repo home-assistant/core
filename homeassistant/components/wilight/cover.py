@@ -1,4 +1,6 @@
 """Support for WiLight Cover."""
+from typing import Any
+
 from pywilight.const import (
     COVER_V1,
     ITEM_COVER,
@@ -86,19 +88,19 @@ class WiLightCover(WiLightDevice, CoverEntity):
             and wilight_to_hass_position(self._status["position_current"]) == 0
         )
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._client.cover_command(self._index, WL_OPEN)
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         await self._client.cover_command(self._index, WL_CLOSE)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = hass_to_wilight_position(kwargs[ATTR_POSITION])
         await self._client.set_cover_position(self._index, position)
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._client.cover_command(self._index, WL_STOP)
