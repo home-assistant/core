@@ -1,6 +1,4 @@
 """Support for WiLight Cover."""
-from __future__ import annotations
-
 from typing import Any
 
 from pywilight.const import (
@@ -57,7 +55,7 @@ class WiLightCover(WiLightDevice, CoverEntity):
     """Representation of a WiLights cover."""
 
     @property
-    def current_cover_position(self) -> int | None:
+    def current_cover_position(self):
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -67,21 +65,21 @@ class WiLightCover(WiLightDevice, CoverEntity):
         return None
 
     @property
-    def is_opening(self) -> bool | None:
+    def is_opening(self):
         """Return if the cover is opening or not."""
         if "motor_state" not in self._status:
             return None
         return self._status["motor_state"] == WL_OPENING
 
     @property
-    def is_closing(self) -> bool | None:
+    def is_closing(self):
         """Return if the cover is closing or not."""
         if "motor_state" not in self._status:
             return None
         return self._status["motor_state"] == WL_CLOSING
 
     @property
-    def is_closed(self) -> bool | None:
+    def is_closed(self):
         """Return if the cover is closed or not."""
         if "motor_state" not in self._status or "position_current" not in self._status:
             return None
