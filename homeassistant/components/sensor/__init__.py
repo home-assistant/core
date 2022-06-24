@@ -264,7 +264,7 @@ class SensorEntity(Entity):
     _attr_device_class: SensorDeviceClass | str | None
     _attr_last_reset: datetime | None
     _attr_native_unit_of_measurement: str | None
-    _attr_native_value: StateType | date | datetime = None
+    _attr_native_value: StateType | date | datetime | Decimal = None
     _attr_state_class: SensorStateClass | str | None
     _attr_state: None = None  # Subclasses of SensorEntity should not set this
     _attr_unit_of_measurement: None = (
