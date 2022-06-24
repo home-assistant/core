@@ -47,7 +47,7 @@ COLOR_MODE_MAP = {
     BleboxColorMode.RGB: ColorMode.RGB,
     BleboxColorMode.MONO: ColorMode.BRIGHTNESS,
     BleboxColorMode.RGBorW: ColorMode.RGBW,
-    # RGB and Brightness 2 and 3 implementation difference, if W hex is not null only this or RGB + Brightness separated with mask
+    # RGB and White, where white hex is prioritised over RGB channel
     BleboxColorMode.CT: ColorMode.COLOR_TEMP,
     BleboxColorMode.CTx2: ColorMode.COLOR_TEMP,  # two instances
     BleboxColorMode.RGBWW: ColorMode.RGBWW,
@@ -80,7 +80,10 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
 
     @property
     def color_mode(self):
-        """Return the color mode. Set values to _attr_ibutes if needed."""
+        """Return the color mode.
+
+        Set values to _attr_ibutes if needed.
+        """
         color_mode_tmp = COLOR_MODE_MAP.get(self._feature.color_mode, ColorMode.ONOFF)
         if color_mode_tmp == ColorMode.COLOR_TEMP:
             self._attr_min_mireds = 1
