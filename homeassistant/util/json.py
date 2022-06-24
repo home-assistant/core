@@ -45,7 +45,7 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     return {} if default is None else default
 
 
-def _orjson_encoder(data: Any) -> Any:
+def _orjson_encoder(data: Any) -> str:
     """JSON encoder that uses orjson."""
     return orjson.dumps(
         data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
