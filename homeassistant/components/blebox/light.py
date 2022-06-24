@@ -27,7 +27,7 @@ from . import BleBoxEntity, create_blebox_entities
 
 _LOGGER = logging.getLogger(__name__)
 
-SCAN_INTERVAL = timedelta(seconds=4)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(

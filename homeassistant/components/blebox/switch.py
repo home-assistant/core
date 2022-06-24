@@ -9,7 +9,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
 
-SCAN_INTERVAL = timedelta(seconds=4)
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(
