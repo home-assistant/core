@@ -4,6 +4,7 @@ from __future__ import annotations
 import functools
 import logging
 import math
+from typing import Any
 
 import voluptuous as vol
 
@@ -501,7 +502,7 @@ class MqttFan(MqttEntity, FanEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
@@ -511,17 +512,17 @@ class MqttFan(MqttEntity, FanEntity):
         return self._state
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current percentage."""
         return self._percentage
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Return the current preset _mode."""
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> list:
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return self._preset_modes
 
@@ -536,16 +537,16 @@ class MqttFan(MqttEntity, FanEntity):
         return self._speed_count
 
     @property
-    def oscillating(self):
+    def oscillating(self) -> bool | None:
         """Return the oscillation state."""
         return self._oscillation
 
     # The speed attribute deprecated in the schema, support will be removed after a quarter (2021.7)
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn on the entity.
 
@@ -567,7 +568,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
         This method is a coroutine.

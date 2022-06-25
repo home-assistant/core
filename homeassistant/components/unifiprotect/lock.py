@@ -26,13 +26,14 @@ async def async_setup_entry(
     """Set up locks on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
-    async_add_entities(
-        ProtectLock(
-            data,
-            lock,
-        )
-        for lock in data.api.bootstrap.doorlocks.values()
-    )
+    entities = []
+    for device in data.api.bootstrap.doorlocks.values():
+        if not device.is_adopted_by_us:
+            continue
+
+        entities.append(ProtectLock(data, device))
+
+    async_add_entities(entities)
 
 
 class ProtectLock(ProtectDeviceEntity, LockEntity):
@@ -53,7 +54,7 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
             LockEntityDescription(key="lock"),
         )
 
-        self._attr_name = f"{self.device.name} Lock"
+        self._attr_name = f"{self.device.display_name} Lock"
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
@@ -82,10 +83,10 @@ class ProtectLock(ProtectDeviceEntity, LockEntity):
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
-        _LOGGER.debug("Unlocking %s", self.device.name)
+        _LOGGER.debug("Unlocking %s", self.device.display_name)
         return await self.device.open_lock()
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
-        _LOGGER.debug("Locking %s", self.device.name)
+        _LOGGER.debug("Locking %s", self.device.display_name)
         return await self.device.close_lock()

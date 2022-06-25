@@ -18,6 +18,7 @@ from homeassistant.const import (
     MASS_GRAMS,
     PRESSURE_PA,
     SPEED_KILOMETERS_PER_HOUR,
+    STATE_ON,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
@@ -3831,3 +3832,12 @@ async def test_undefined_variable(hass, caplog):
         "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
         in caplog.text
     )
+
+
+async def test_template_states_blocks_setitem(hass):
+    """Test we cannot setitem on TemplateStates."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    with pytest.raises(RuntimeError):
+        template_state["any"] = "any"

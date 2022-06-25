@@ -168,6 +168,15 @@ async def test_device_info(hass, wemo_entity):
     assert device_entries[0].sw_version == MOCK_FIRMWARE_VERSION
 
 
+async def test_dli_device_info(hass, wemo_dli_entity):
+    """Verify the DeviceInfo data for Digital Loggers emulated wemo device."""
+    dr = device_registry.async_get(hass)
+    device_entries = list(dr.devices.values())
+
+    assert device_entries[0].configuration_url == "http://127.0.0.1"
+    assert device_entries[0].identifiers == {(DOMAIN, "123456789")}
+
+
 class TestInsight:
     """Tests specific to the WeMo Insight device."""
 

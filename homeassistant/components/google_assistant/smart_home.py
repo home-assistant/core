@@ -99,7 +99,7 @@ async def async_devices_sync(hass, data, payload):
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception("Error serializing %s", entity.entity_id)
 
-    response = {"agentUserId": agent_user_id, "devices": devices}
+    response = create_sync_response(agent_user_id, devices)
 
     _LOGGER.debug("Syncing entities response: %s", response)
 
@@ -300,9 +300,24 @@ async def async_devices_proxy_selected(hass, data: RequestData, payload):
     return {}
 
 
-def turned_off_response(message):
+def create_sync_response(agent_user_id: str, devices: list):
+    """Return an empty sync response."""
+    return {
+        "agentUserId": agent_user_id,
+        "devices": devices,
+    }
+
+
+def api_disabled_response(message, agent_user_id):
     """Return a device turned off response."""
+    inputs: list = message.get("inputs")
+
+    if inputs and inputs[0].get("intent") == "action.devices.SYNC":
+        payload = create_sync_response(agent_user_id, [])
+    else:
+        payload = {"errorCode": "deviceTurnedOff"}
+
     return {
         "requestId": message.get("requestId"),
-        "payload": {"errorCode": "deviceTurnedOff"},
+        "payload": payload,
     }

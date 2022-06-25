@@ -1069,6 +1069,7 @@ omit =
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/sigfox/sensor.py
+    homeassistant/components/simplepush/__init__.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py

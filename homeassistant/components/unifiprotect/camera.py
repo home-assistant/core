@@ -36,9 +36,14 @@ def get_camera_channels(
 ) -> Generator[tuple[UFPCamera, CameraChannel, bool], None, None]:
     """Get all the camera channels."""
     for camera in protect.bootstrap.cameras.values():
+        if not camera.is_adopted_by_us:
+            continue
+
         if not camera.channels:
             _LOGGER.warning(
-                "Camera does not have any channels: %s (id: %s)", camera.name, camera.id
+                "Camera does not have any channels: %s (id: %s)",
+                camera.display_name,
+                camera.id,
             )
             continue
 
@@ -116,10 +121,10 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
 
         if self._secure:
             self._attr_unique_id = f"{self.device.mac}_{self.channel.id}"
-            self._attr_name = f"{self.device.name} {self.channel.name}"
+            self._attr_name = f"{self.device.display_name} {self.channel.name}"
         else:
             self._attr_unique_id = f"{self.device.mac}_{self.channel.id}_insecure"
-            self._attr_name = f"{self.device.name} {self.channel.name} Insecure"
+            self._attr_name = f"{self.device.display_name} {self.channel.name} Insecure"
         # only the default (first) channel is enabled by default
         self._attr_entity_registry_enabled_default = is_default and secure
 

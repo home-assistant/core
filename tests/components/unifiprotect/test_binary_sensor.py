@@ -36,6 +36,7 @@ from .conftest import (
     MockEntityFixture,
     assert_entity_counts,
     ids_from_device_description,
+    regenerate_device_ids,
     reset_objects,
 )
 
@@ -65,11 +66,22 @@ async def camera_fixture(
     camera_obj.last_ring = now - timedelta(hours=1)
     camera_obj.is_dark = False
     camera_obj.is_motion_detected = False
+    regenerate_device_ids(camera_obj)
+
+    no_camera_obj = mock_camera.copy()
+    no_camera_obj._api = mock_entry.api
+    no_camera_obj.channels[0]._api = mock_entry.api
+    no_camera_obj.channels[1]._api = mock_entry.api
+    no_camera_obj.channels[2]._api = mock_entry.api
+    no_camera_obj.name = "Unadopted Camera"
+    no_camera_obj.is_adopted = False
+    regenerate_device_ids(no_camera_obj)
 
     reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
+        no_camera_obj.id: no_camera_obj,
     }
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
@@ -135,6 +147,7 @@ async def camera_none_fixture(
 
     reset_objects(mock_entry.api.bootstrap)
     mock_entry.api.bootstrap.nvr.system_info.storage.devices = []
+    mock_entry.api.bootstrap.nvr.system_info.ustorage = None
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
     }
@@ -142,7 +155,7 @@ async def camera_none_fixture(
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
     await hass.async_block_till_done()
 
-    assert_entity_counts(hass, Platform.BINARY_SENSOR, 8, 8)
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
 
     yield camera_obj
 

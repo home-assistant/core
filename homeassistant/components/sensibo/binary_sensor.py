@@ -92,17 +92,13 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
     ),
+)
+
+DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
     FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
-    SensiboDeviceBinarySensorEntityDescription(
-        key="pure_boost_enabled",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        name="Pure Boost Enabled",
-        icon="mdi:wind-power-outline",
-        value_fn=lambda data: data.pure_boost_enabled,
-    ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_ac_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -161,13 +157,19 @@ async def async_setup_entry(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in MOTION_DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.motion_sensors is not None
+        if device_data.motion_sensors
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in PURE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
         if device_data.model == "pure"
+    )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
+        for description in DEVICE_SENSOR_TYPES
+        for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.model != "pure"
     )
 
     async_add_entities(entities)

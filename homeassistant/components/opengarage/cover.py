@@ -1,5 +1,6 @@
 """Platform for the opengarage.io cover component."""
 import logging
+from typing import Any
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -62,7 +63,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return None
         return self._state == STATE_OPENING
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         if self._state in [STATE_CLOSED, STATE_CLOSING]:
             return
@@ -70,7 +71,7 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         self._state = STATE_CLOSING
         await self._push_button()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         if self._state in [STATE_OPEN, STATE_OPENING]:
             return

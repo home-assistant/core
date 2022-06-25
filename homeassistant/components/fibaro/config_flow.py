@@ -69,7 +69,7 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 await self.async_set_unique_id(info["serial_number"])
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(title=info["name"], data=user_input)
 
         return self.async_show_form(
