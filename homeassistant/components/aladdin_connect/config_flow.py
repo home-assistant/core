@@ -16,6 +16,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
@@ -36,7 +37,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    acc = AladdinConnectClient(data[CONF_USERNAME], data[CONF_PASSWORD])
+    acc = AladdinConnectClient(
+        data[CONF_USERNAME], data[CONF_PASSWORD], async_get_clientsession(hass)
+    )
     login = await acc.login()
     await acc.close()
     if not login:
