@@ -1,4 +1,6 @@
 """Support for Motion Blinds using their WLAN API."""
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -216,7 +218,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         if self.coordinator.data is None:
             return False
@@ -227,7 +229,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         return self.coordinator.data[self._blind.mac][ATTR_AVAILABLE]
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """
         Return current position of cover.
 
@@ -238,7 +240,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         return 100 - self._blind.position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.position is None:
             return None
@@ -249,7 +251,7 @@ class MotionPositionDevice(CoordinatorEntity, CoverEntity):
         self._blind.Register_callback(self.unique_id, self.schedule_update_ha_state)
         await super().async_added_to_hass()
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
         self._blind.Remove_callback(self.unique_id)
         await super().async_will_remove_from_hass()
@@ -340,7 +342,7 @@ class MotionTiltDevice(MotionPositionDevice):
     _restore_tilt = True
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """
         Return current angle of cover.
 
@@ -378,7 +380,7 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
     _restore_tilt = False
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = (
             CoverEntityFeature.OPEN_TILT
@@ -392,12 +394,12 @@ class MotionTiltOnlyDevice(MotionTiltDevice):
         return supported_features
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> None:
         """Return current position of cover."""
         return None
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.angle is None:
             return None
@@ -430,7 +432,7 @@ class MotionTDBUDevice(MotionPositionDevice):
             _LOGGER.error("Unknown motor '%s'", self._motor)
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """
         Return current position of cover.
 
@@ -442,7 +444,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         return 100 - self._blind.scaled_position[self._motor_key]
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._blind.position is None:
             return None
@@ -453,7 +455,7 @@ class MotionTDBUDevice(MotionPositionDevice):
         return self._blind.position[self._motor_key] == 100
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         attributes = {}
         if self._blind.position is not None:

@@ -12,6 +12,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DEVICE_CLASSES_SCHEMA,
+    CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
 )
@@ -486,12 +487,12 @@ class MqttCover(MqttEntity, CoverEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
-        return self._optimistic
+        return bool(self._optimistic)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return true if the cover is closed or None if the status is unknown."""
         if self._state is None:
             return None
@@ -499,17 +500,17 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._state == STATE_CLOSED
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return true if the cover is actively opening."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return true if the cover is actively closing."""
         return self._state == STATE_CLOSING
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -517,17 +518,17 @@ class MqttCover(MqttEntity, CoverEntity):
         return self._position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return current position of cover tilt."""
         return self._tilt_value
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self._config.get(CONF_COMMAND_TOPIC) is not None:
