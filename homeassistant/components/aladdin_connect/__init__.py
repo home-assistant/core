@@ -1,6 +1,5 @@
 """The aladdin_connect component."""
 import asyncio
-from datetime import timedelta
 import logging
 from typing import Final
 
@@ -17,7 +16,6 @@ from .const import DOMAIN
 _LOGGER: Final = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.COVER]
-SCAN_INTERVAL = timedelta(seconds=120)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -29,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if not await acc.login():
             raise ConfigEntryAuthFailed("Incorrect Password")
     except (ClientConnectionError, asyncio.TimeoutError) as ex:
-        raise ConfigEntryNotReady("Can not Connect to host") from ex
+        raise ConfigEntryNotReady("Can not connect to host") from ex
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = acc
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
