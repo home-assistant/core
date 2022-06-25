@@ -45,7 +45,7 @@ from .error import SmartHomeError
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
 LOCAL_SDK_VERSION_HEADER = "HA-Cloud-Version"
-LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
+LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.6")
 
 
 @callback
