@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @dataclass
-class MockEntityFixture:
+class MockUFPFixture:
     """Mock for NVR."""
 
     entry: MockConfigEntry
