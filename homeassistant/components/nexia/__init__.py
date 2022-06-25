@@ -61,7 +61,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
@@ -79,12 +79,12 @@ async def async_remove_config_entry_device(
     """Remove a nexia config entry from a device."""
     coordinator: NexiaDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
     nexia_home: NexiaHome = coordinator.nexia_home
-    all_identifiers: set[tuple[str, str]] = {
-        (DOMAIN, automation_id) for automation_id in nexia_home.get_automation_ids()
-    }
+    dev_ids = {dev_id[1] for dev_id in device_entry.identifiers if dev_id[0] == DOMAIN}
     for thermostat_id in nexia_home.get_thermostat_ids():
-        all_identifiers.add((DOMAIN, thermostat_id))
+        if thermostat_id in dev_ids:
+            return False
         thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         for zone_id in thermostat.get_zone_ids():
-            all_identifiers.add((DOMAIN, zone_id))
-    return not device_entry.identifiers.intersection(all_identifiers)
+            if zone_id in dev_ids:
+                return False
+    return True

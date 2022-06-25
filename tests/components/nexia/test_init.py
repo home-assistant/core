@@ -28,15 +28,25 @@ async def test_device_remove_devices(hass, hass_ws_client):
     await async_setup_component(hass, "config", {})
     config_entry = await async_init_integration(hass)
     entry_id = config_entry.entry_id
-
-    registry: EntityRegistry = er.async_get(hass)
-    entity_id = "sensor.nick_office_temperature"
-    entity = registry.entities[entity_id]
     device_registry = dr.async_get(hass)
 
-    live_device_entry = device_registry.async_get(entity.device_id)
+    registry: EntityRegistry = er.async_get(hass)
+    entity = registry.entities["sensor.nick_office_temperature"]
+
+    live_zone_device_entry = device_registry.async_get(entity.device_id)
     assert (
-        await remove_device(await hass_ws_client(hass), live_device_entry.id, entry_id)
+        await remove_device(
+            await hass_ws_client(hass), live_zone_device_entry.id, entry_id
+        )
+        is False
+    )
+
+    entity = registry.entities["sensor.master_suite_relative_humidity"]
+    live_thermostat_device_entry = device_registry.async_get(entity.device_id)
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), live_thermostat_device_entry.id, entry_id
+        )
         is False
     )
 
