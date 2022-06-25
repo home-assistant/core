@@ -84,9 +84,7 @@ def assert_entity_counts(
         e for e in entity_registry.entities if split_entity_id(e)[0] == platform.value
     ]
 
-    print(len(entities), entities)
     assert len(entities) == total
-    print(len(hass.states.async_all(platform.value)))
     assert len(hass.states.async_all(platform.value)) == enabled
 
 

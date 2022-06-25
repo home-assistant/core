@@ -94,7 +94,6 @@ async def test_select_setup_viewer(
     assert entity
     assert entity.unique_id == unique_id
 
-    print(viewer.liveview_id, ufp.api.bootstrap.liveviews)
     state = hass.states.get(entity_id)
     assert state
     assert state.state == viewer.liveview.name
