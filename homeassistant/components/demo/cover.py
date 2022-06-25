@@ -205,9 +205,9 @@ class DemoCover(CoverEntity):
         self._listen_cover_tilt()
         self._requested_closing_tilt = False
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        position = kwargs.get(ATTR_POSITION)
+        position: int = kwargs[ATTR_POSITION]
         self._set_position = round(position, -1)
         if self._position == position:
             return
@@ -215,9 +215,9 @@ class DemoCover(CoverEntity):
         self._listen_cover()
         self._requested_closing = position < self._position
 
-    async def async_set_cover_tilt_position(self, **kwargs):
+    async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover til to a specific position."""
-        tilt_position = kwargs.get(ATTR_TILT_POSITION)
+        tilt_position: int = kwargs[ATTR_TILT_POSITION]
         self._set_tilt_position = round(tilt_position, -1)
         if self._tilt_position == tilt_position:
             return
