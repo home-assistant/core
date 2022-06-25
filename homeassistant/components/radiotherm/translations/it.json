@@ -23,7 +23,7 @@
         "step": {
             "init": {
                 "data": {
-                    "hold_temp": "Impostare una sospensione permanente durante la regolazione della temperatura."
+                    "hold_temp": "Imposta un blocco permanente quando si regola la temperatura."
                 }
             }
         }

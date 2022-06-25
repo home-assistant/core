@@ -72,12 +72,12 @@ class FibaroCover(FibaroDevice, CoverEntity):
         return False
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return current position of cover. 0 is closed, 100 is open."""
         return self.bound(self.level)
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position for venetian blinds."""
         return self.bound(self.level2)
 
@@ -90,9 +90,14 @@ class FibaroCover(FibaroDevice, CoverEntity):
         self.set_level2(kwargs.get(ATTR_TILT_POSITION))
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._is_open_close_only():
+            if (
+                "state" not in self.fibaro_device.properties
+                or self.fibaro_device.properties.state.lower() == "unknown"
+            ):
+                return None
             return self.fibaro_device.properties.state.lower() == "closed"
 
         if self.current_cover_position is None:

@@ -72,17 +72,17 @@ class SCSGateCover(CoverEntity):
         return self._scs_id
 
     @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """No polling needed."""
         return False
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the cover."""
         return self._name
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> None:
         """Return if the cover is closed."""
         return None
 

@@ -135,7 +135,7 @@ class AdsCover(AdsEntity, CoverEntity):
             )
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._ads_var is not None:
             return self._state_dict[STATE_KEY_STATE]
@@ -144,7 +144,7 @@ class AdsCover(AdsEntity, CoverEntity):
         return None
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return current position of cover."""
         return self._state_dict[STATE_KEY_POSITION]
 

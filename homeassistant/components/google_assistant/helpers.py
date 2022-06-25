@@ -90,6 +90,7 @@ class AbstractConfig(ABC):
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
+        self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -541,7 +542,17 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return bool(self.traits())
+        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        result = self.config.is_supported_cache.get(self.entity_id)
+
+        if result is None or result[0] != features:
+            result = self.config.is_supported_cache[self.entity_id] = (
+                features,
+                bool(self.traits()),
+            )
+
+        return result[1]
 
     @callback
     def might_2fa(self) -> bool:

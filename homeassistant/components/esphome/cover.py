@@ -111,7 +111,7 @@ class EsphomeCover(EsphomeEntity[CoverInfo, CoverState], CoverEntity):
         """Stop the cover."""
         await self._client.cover_command(key=self._static_info.key, stop=True)
 
-    async def async_set_cover_position(self, **kwargs: int) -> None:
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self._client.cover_command(
             key=self._static_info.key, position=kwargs[ATTR_POSITION] / 100

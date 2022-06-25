@@ -1,4 +1,6 @@
 """Platform for the opengarage.io cover component."""
+from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -43,21 +45,21 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         super().__init__(open_garage_data_coordinator, device_id)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self._state is None:
             return None
         return self._state == STATE_CLOSED
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool | None:
         """Return if the cover is closing."""
         if self._state is None:
             return None
         return self._state == STATE_CLOSING
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool | None:
         """Return if the cover is opening."""
         if self._state is None:
             return None
