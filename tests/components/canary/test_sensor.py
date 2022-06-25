@@ -225,12 +225,63 @@ async def test_sensors_flex(hass, canary) -> None:
     assert device.model == "Canary Flex"
 
 
+async def test_sensors_view(hass, canary) -> None:
+    """Test the creation and values of the sensors for Canary View."""
+
+    registry = mock_registry(hass)
+    device_registry = mock_device_registry(hass)
+
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary View")
+
+    instance = canary.return_value
+    instance.get_locations.return_value = [
+        mock_location(100, "Home", True, devices=[online_device_at_home]),
+    ]
+
+    instance.get_latest_readings.return_value = [
+        mock_reading("wifi", "-77"),
+    ]
+
+    config = {DOMAIN: {"username": "test-username", "password": "test-password"}}
+    with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
+        assert await async_setup_component(hass, DOMAIN, config)
+        await hass.async_block_till_done()
+
+    sensors = {
+        "home_dining_room_wifi": (
+            "20_wifi",
+            "-77.0",
+            SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            SensorDeviceClass.SIGNAL_STRENGTH,
+            None,
+        ),
+    }
+
+    for (sensor_id, data) in sensors.items():
+        entity_entry = registry.async_get(f"sensor.{sensor_id}")
+        assert entity_entry
+        assert entity_entry.original_device_class == data[3]
+        assert entity_entry.unique_id == data[0]
+        assert entity_entry.original_icon == data[4]
+
+        state = hass.states.get(f"sensor.{sensor_id}")
+        assert state
+        assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
+        assert state.state == data[1]
+
+    device = device_registry.async_get_device({(DOMAIN, "20")})
+    assert device
+    assert device.manufacturer == MANUFACTURER
+    assert device.name == "Dining Room"
+    assert device.model == "Canary View"
+
+
 async def test_sensors_entries(hass, canary) -> None:
     """Test the creation and values of the sensors for Canary Entry data."""
 
     registry = mock_registry(hass)
 
-    online_device_at_home = mock_device(20, "Dining Room", True, "Canary Pro", "12345")
+    online_device_at_home = mock_device(20, "Dining Room", True, "Canary View", "12345")
 
     instance = canary.return_value
     instance.get_locations.return_value = [
@@ -289,7 +340,7 @@ async def test_sensors_entries_with_no_data(hass, canary) -> None:
 
     registry = mock_registry(hass)
 
-    online_device_at_home = mock_device(21, "Living Room", True, "Canary Flex", "22345")
+    online_device_at_home = mock_device(21, "Living Room", True, "Canary View", "22345")
 
     instance = canary.return_value
     instance.get_locations.return_value = [
