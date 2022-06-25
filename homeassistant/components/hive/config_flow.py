@@ -103,11 +103,12 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
+            if self.device_registration:
+                self.device_name = user_input["device_name"]
+                await self.hive_auth.device_registration(user_input["device_name"])
+                self.data["device_data"] = await self.hive_auth.get_device_data()
+
             try:
-                if self.device_registration:
-                    self.device_name = user_input["device_name"]
-                    await self.hive_auth.device_registration(user_input["device_name"])
-                    self.data["device_data"] = await self.hive_auth.get_device_data()
                 return await self.async_setup_hive_entry()
             except UnknownHiveError:
                 errors["base"] = "unknown"
