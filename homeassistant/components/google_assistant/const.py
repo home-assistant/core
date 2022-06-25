@@ -86,6 +86,7 @@ TYPE_SPEAKER = f"{PREFIX_TYPES}SPEAKER"
 TYPE_SWITCH = f"{PREFIX_TYPES}SWITCH"
 TYPE_THERMOSTAT = f"{PREFIX_TYPES}THERMOSTAT"
 TYPE_TV = f"{PREFIX_TYPES}TV"
+TYPE_WINDOW = f"{PREFIX_TYPES}WINDOW"
 TYPE_VACUUM = f"{PREFIX_TYPES}VACUUM"
 
 SERVICE_REQUEST_SYNC = "request_sync"
@@ -147,7 +148,7 @@ DEVICE_CLASS_TO_GOOGLE_TYPES = {
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.DOOR): TYPE_DOOR,
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.LOCK): TYPE_SENSOR,
     (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.OPENING): TYPE_SENSOR,
-    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_SENSOR,
+    (binary_sensor.DOMAIN, binary_sensor.BinarySensorDeviceClass.WINDOW): TYPE_WINDOW,
     (
         binary_sensor.DOMAIN,
         binary_sensor.BinarySensorDeviceClass.GARAGE_DOOR,

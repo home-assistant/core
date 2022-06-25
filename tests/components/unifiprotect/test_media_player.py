@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts
+from .conftest import MockEntityFixture, assert_entity_counts, regenerate_device_ids
 
 
 @pytest.fixture(name="camera")
@@ -38,16 +38,27 @@ async def camera_fixture(
     # disable pydantic validation so mocking can happen
     Camera.__config__.validate_assignment = False
 
-    camera_obj = mock_camera.copy(deep=True)
+    camera_obj = mock_camera.copy()
     camera_obj._api = mock_entry.api
     camera_obj.channels[0]._api = mock_entry.api
     camera_obj.channels[1]._api = mock_entry.api
     camera_obj.channels[2]._api = mock_entry.api
     camera_obj.name = "Test Camera"
     camera_obj.feature_flags.has_speaker = True
+    regenerate_device_ids(camera_obj)
+
+    no_camera_obj = mock_camera.copy()
+    no_camera_obj._api = mock_entry.api
+    no_camera_obj.channels[0]._api = mock_entry.api
+    no_camera_obj.channels[1]._api = mock_entry.api
+    no_camera_obj.channels[2]._api = mock_entry.api
+    no_camera_obj.name = "Unadopted Camera"
+    no_camera_obj.is_adopted = False
+    regenerate_device_ids(no_camera_obj)
 
     mock_entry.api.bootstrap.cameras = {
         camera_obj.id: camera_obj,
+        no_camera_obj.id: no_camera_obj,
     }
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
@@ -66,7 +77,7 @@ async def test_media_player_setup(
 ):
     """Test media_player entity setup."""
 
-    unique_id = f"{camera[0].id}_speaker"
+    unique_id = f"{camera[0].mac}_speaker"
     entity_id = camera[1]
 
     entity_registry = er.async_get(hass)

@@ -1,6 +1,8 @@
 """Support for Gogogate2 garage Doors."""
 from __future__ import annotations
 
+from typing import Any
+
 from ismartgate.common import (
     AbstractDoor,
     DoorStatus,
@@ -60,12 +62,12 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         )
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the door."""
         return self.door.name
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return true if cover is closed, else False."""
         door_status = self.door_status
         if door_status == DoorStatus.OPENED:
@@ -75,21 +77,21 @@ class DeviceCover(GoGoGate2Entity, CoverEntity):
         return None
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self.door_status == TransitionDoorStatus.CLOSING
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self.door_status == TransitionDoorStatus.OPENING
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the door."""
         await self._api.async_open_door(self._door_id)
         await self.coordinator.async_refresh()
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the door."""
         await self._api.async_close_door(self._door_id)
         await self.coordinator.async_refresh()

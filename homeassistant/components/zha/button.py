@@ -4,7 +4,7 @@ from __future__ import annotations
 import abc
 import functools
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import zigpy.exceptions
 from zigpy.zcl.foundation import Status
@@ -20,8 +20,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .core import discovery
 from .core.const import CHANNEL_IDENTIFY, DATA_ZHA, SIGNAL_ADD_ENTITIES
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
+
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.BUTTON)
 CONFIG_DIAGNOSTIC_MATCH = functools.partial(
@@ -55,18 +59,18 @@ async def async_setup_entry(
 class ZHAButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button."""
 
-    _command_name: str = None
+    _command_name: str
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this button."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
 
     @abc.abstractmethod
     def get_args(self) -> list[Any]:
@@ -87,8 +91,8 @@ class ZHAIdentifyButton(ZHAButton):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -114,19 +118,19 @@ class ZHAIdentifyButton(ZHAButton):
 class ZHAAttributeButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button, which stes value to an attribute."""
 
-    _attribute_name: str = None
+    _attribute_name: str
     _attribute_value: Any = None
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this button."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
 
     async def async_press(self) -> None:
         """Write attribute with defined value."""

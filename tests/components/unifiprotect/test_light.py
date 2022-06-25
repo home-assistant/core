@@ -20,7 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, assert_entity_counts
+from .conftest import MockEntityFixture, assert_entity_counts, regenerate_device_ids
 
 
 @pytest.fixture(name="light")
@@ -32,13 +32,21 @@ async def light_fixture(
     # disable pydantic validation so mocking can happen
     Light.__config__.validate_assignment = False
 
-    light_obj = mock_light.copy(deep=True)
+    light_obj = mock_light.copy()
     light_obj._api = mock_entry.api
     light_obj.name = "Test Light"
     light_obj.is_light_on = False
+    regenerate_device_ids(light_obj)
+
+    no_light_obj = mock_light.copy()
+    no_light_obj._api = mock_entry.api
+    no_light_obj.name = "Unadopted Light"
+    no_light_obj.is_adopted = False
+    regenerate_device_ids(no_light_obj)
 
     mock_entry.api.bootstrap.lights = {
         light_obj.id: light_obj,
+        no_light_obj.id: no_light_obj,
     }
 
     await hass.config_entries.async_setup(mock_entry.entry.entry_id)
@@ -57,7 +65,7 @@ async def test_light_setup(
 ):
     """Test light entity setup."""
 
-    unique_id = light[0].id
+    unique_id = light[0].mac
     entity_id = light[1]
 
     entity_registry = er.async_get(hass)

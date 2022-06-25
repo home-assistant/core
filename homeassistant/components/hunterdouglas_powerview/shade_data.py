@@ -59,6 +59,10 @@ class PowerviewShadeData:
         """Get data for the shade."""
         return self._group_data_by_id[shade_id]
 
+    def get_all_raw_data(self) -> dict[int, dict[str | int, Any]]:
+        """Get data for all shades."""
+        return self._group_data_by_id
+
     def get_shade_positions(self, shade_id: int) -> PowerviewShadePositions:
         """Get positions for a shade."""
         if shade_id not in self.positions:

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable
 import datetime
 import logging
-import time
 from typing import Any, cast
 
 import aiohttp
@@ -50,12 +49,16 @@ class DeviceAuth(AuthImplementation):
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve a Google API Credentials object to Home Assistant token."""
         creds: Credentials = external_data[DEVICE_AUTH_CREDS]
+        delta = creds.token_expiry.replace(tzinfo=datetime.timezone.utc) - dt.utcnow()
+        _LOGGER.debug(
+            "Token expires at %s (in %s)", creds.token_expiry, delta.total_seconds()
+        )
         return {
             "access_token": creds.access_token,
             "refresh_token": creds.refresh_token,
             "scope": " ".join(creds.scopes),
             "token_type": "Bearer",
-            "expires_in": creds.token_expiry.timestamp() - time.time(),
+            "expires_in": delta.total_seconds(),
         }
 
 
@@ -170,7 +173,7 @@ async def async_create_device_flow(
     return DeviceFlow(hass, oauth_flow, device_flow_info)
 
 
-class ApiAuthImpl(AbstractAuth):  # type: ignore[misc]
+class ApiAuthImpl(AbstractAuth):
     """Authentication implementation for google calendar api library."""
 
     def __init__(
@@ -188,7 +191,7 @@ class ApiAuthImpl(AbstractAuth):  # type: ignore[misc]
         return cast(str, self._session.token["access_token"])
 
 
-class AccessTokenAuthImpl(AbstractAuth):  # type: ignore[misc]
+class AccessTokenAuthImpl(AbstractAuth):
     """Authentication implementation used during config flow, without refresh.
 
     This exists to allow the config flow to use the API before it has fully
