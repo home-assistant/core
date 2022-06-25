@@ -33,6 +33,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.helpers import entity_registry as er
@@ -99,7 +100,14 @@ async def setup_comp(hass, config_count):
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])
 async def test_state(hass, setup_comp):
-    """Test handling of state."""
+    """Test handling of state.
+
+    The group state is unknown if all group members are unknown or unavailable.
+    Otherwise, the group state is opening if at least one group member is opening.
+    Otherwise, the group state is closing if at least one group member is closing.
+    Otherwise, the group state is open if at least one group member is open.
+    Otherwise, the group state is closed.
+    """
     state = hass.states.get(COVER_GROUP)
     # No entity has a valid state -> group state unknown
     assert state.state == STATE_UNKNOWN
@@ -115,86 +123,124 @@ async def test_state(hass, setup_comp):
     assert ATTR_CURRENT_POSITION not in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
-    # Set all entities as closed -> group state closed
-    hass.states.async_set(DEMO_COVER, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_CLOSED
+    # The group state is unknown if all group members are unknown or unavailable.
+    for state_1 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        for state_2 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            for state_3 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                hass.states.async_set(DEMO_COVER, state_1, {})
+                hass.states.async_set(DEMO_COVER_POS, state_2, {})
+                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
+                hass.states.async_set(DEMO_TILT, STATE_UNAVAILABLE, {})
+                await hass.async_block_till_done()
+                state = hass.states.get(COVER_GROUP)
+                assert state.state == STATE_UNKNOWN
 
-    # Set all entities as open -> group state open
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_OPEN, {})
-    hass.states.async_set(DEMO_TILT, STATE_OPEN, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPEN
+    for state_1 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+        for state_2 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+            for state_3 in (STATE_UNAVAILABLE, STATE_UNKNOWN):
+                hass.states.async_set(DEMO_COVER, state_1, {})
+                hass.states.async_set(DEMO_COVER_POS, state_2, {})
+                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
+                hass.states.async_set(DEMO_TILT, STATE_UNKNOWN, {})
+                await hass.async_block_till_done()
+                state = hass.states.get(COVER_GROUP)
+                assert state.state == STATE_UNKNOWN
 
-    # Set first entity as open -> group state open
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPEN
+    # At least one member opening -> group opening
+    for state_1 in (
+        STATE_CLOSED,
+        STATE_CLOSING,
+        STATE_OPEN,
+        STATE_OPENING,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        for state_2 in (
+            STATE_CLOSED,
+            STATE_CLOSING,
+            STATE_OPEN,
+            STATE_OPENING,
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            for state_3 in (
+                STATE_CLOSED,
+                STATE_CLOSING,
+                STATE_OPEN,
+                STATE_OPENING,
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
+            ):
+                hass.states.async_set(DEMO_COVER, state_1, {})
+                hass.states.async_set(DEMO_COVER_POS, state_2, {})
+                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
+                hass.states.async_set(DEMO_TILT, STATE_OPENING, {})
+                await hass.async_block_till_done()
+                state = hass.states.get(COVER_GROUP)
+                assert state.state == STATE_OPENING
 
-    # Set last entity as open -> group state open
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPEN
+    # At least one member closing -> group closing
+    for state_1 in (
+        STATE_CLOSED,
+        STATE_CLOSING,
+        STATE_OPEN,
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        for state_2 in (
+            STATE_CLOSED,
+            STATE_CLOSING,
+            STATE_OPEN,
+            STATE_UNAVAILABLE,
+            STATE_UNKNOWN,
+        ):
+            for state_3 in (
+                STATE_CLOSED,
+                STATE_CLOSING,
+                STATE_OPEN,
+                STATE_UNAVAILABLE,
+                STATE_UNKNOWN,
+            ):
+                hass.states.async_set(DEMO_COVER, state_1, {})
+                hass.states.async_set(DEMO_COVER_POS, state_2, {})
+                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
+                hass.states.async_set(DEMO_TILT, STATE_CLOSING, {})
+                await hass.async_block_till_done()
+                state = hass.states.get(COVER_GROUP)
+                assert state.state == STATE_CLOSING
 
-    # Set conflicting valid states -> opening state has priority
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_OPENING, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSING, {})
-    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPENING
+    # At least one member open -> group open
+    for state_1 in (STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN):
+        for state_2 in (STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN):
+            for state_3 in (STATE_CLOSED, STATE_OPEN, STATE_UNAVAILABLE, STATE_UNKNOWN):
+                hass.states.async_set(DEMO_COVER, state_1, {})
+                hass.states.async_set(DEMO_COVER_POS, state_2, {})
+                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
+                hass.states.async_set(DEMO_TILT, STATE_OPEN, {})
+                await hass.async_block_till_done()
+                state = hass.states.get(COVER_GROUP)
+                assert state.state == STATE_OPEN
 
-    # Set all entities to unknown state -> group state unknown
-    hass.states.async_set(DEMO_COVER, STATE_UNKNOWN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_UNKNOWN, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_UNKNOWN, {})
-    hass.states.async_set(DEMO_TILT, STATE_UNKNOWN, {})
+    # At least one member closed -> group closed
+    for state_1 in (STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN):
+        for state_2 in (STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN):
+            for state_3 in (STATE_CLOSED, STATE_UNAVAILABLE, STATE_UNKNOWN):
+                hass.states.async_set(DEMO_COVER, state_1, {})
+                hass.states.async_set(DEMO_COVER_POS, state_2, {})
+                hass.states.async_set(DEMO_COVER_TILT, state_3, {})
+                hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
+                await hass.async_block_till_done()
+                state = hass.states.get(COVER_GROUP)
+                assert state.state == STATE_CLOSED
+
+    # All group members removed from the state machine -> unknown
+    hass.states.async_remove(DEMO_COVER)
+    hass.states.async_remove(DEMO_COVER_POS)
+    hass.states.async_remove(DEMO_COVER_TILT)
+    hass.states.async_remove(DEMO_TILT)
     await hass.async_block_till_done()
     state = hass.states.get(COVER_GROUP)
     assert state.state == STATE_UNKNOWN
-
-    # Set one entity to unknown state -> open state has priority
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_UNKNOWN, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSED, {})
-    hass.states.async_set(DEMO_TILT, STATE_OPEN, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPEN
-
-    # Set one entity to unknown state -> opening state has priority
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_OPENING, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_UNKNOWN, {})
-    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_OPENING
-
-    # Set one entity to unknown state -> closing state has priority
-    hass.states.async_set(DEMO_COVER, STATE_OPEN, {})
-    hass.states.async_set(DEMO_COVER_POS, STATE_UNKNOWN, {})
-    hass.states.async_set(DEMO_COVER_TILT, STATE_CLOSING, {})
-    hass.states.async_set(DEMO_TILT, STATE_CLOSED, {})
-    await hass.async_block_till_done()
-    state = hass.states.get(COVER_GROUP)
-    assert state.state == STATE_CLOSING
 
 
 @pytest.mark.parametrize("config_count", [(CONFIG_ATTRIBUTES, 1)])

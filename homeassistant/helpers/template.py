@@ -9,7 +9,7 @@ from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
-from functools import partial, wraps
+from functools import cache, lru_cache, partial, wraps
 import json
 import logging
 import math
@@ -57,6 +57,7 @@ from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
+from .json import JSON_DECODE_EXCEPTIONS, json_loads
 from .typing import TemplateVarsType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
@@ -96,6 +97,9 @@ DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
 template_cv: ContextVar[tuple[str, str] | None] = ContextVar(
     "template_cv", default=None
 )
+
+CACHED_TEMPLATE_STATES = 512
+EVAL_CACHE_SIZE = 512
 
 
 @bind_hass
@@ -221,6 +225,9 @@ def _false(arg: str) -> bool:
     return False
 
 
+_cached_literal_eval = lru_cache(maxsize=EVAL_CACHE_SIZE)(literal_eval)
+
+
 class RenderInfo:
     """Holds information about a template render."""
 
@@ -317,6 +324,7 @@ class Template:
         "_exc_info",
         "_limited",
         "_strict",
+        "_hash_cache",
     )
 
     def __init__(self, template, hass=None):
@@ -332,6 +340,7 @@ class Template:
         self._exc_info = None
         self._limited = None
         self._strict = None
+        self._hash_cache: int = hash(self.template)
 
     @property
     def _env(self) -> TemplateEnvironment:
@@ -420,7 +429,7 @@ class Template:
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
         try:
-            result = literal_eval(render_result)
+            result = _cached_literal_eval(render_result)
 
             if type(result) in RESULT_WRAPPERS:
                 result = RESULT_WRAPPERS[type(result)](
@@ -565,8 +574,8 @@ class Template:
         variables = dict(variables or {})
         variables["value"] = value
 
-        with suppress(ValueError, TypeError):
-            variables["value_json"] = json.loads(value)
+        with suppress(*JSON_DECODE_EXCEPTIONS):
+            variables["value_json"] = json_loads(value)
 
         try:
             return _render_with_context(
@@ -617,15 +626,29 @@ class Template:
 
     def __hash__(self) -> int:
         """Hash code for template."""
-        return hash(self.template)
+        return self._hash_cache
 
     def __repr__(self) -> str:
         """Representation of Template."""
         return 'Template("' + self.template + '")'
 
 
+@cache
+def _domain_states(hass: HomeAssistant, name: str) -> DomainStates:
+    return DomainStates(hass, name)
+
+
+def _readonly(*args: Any, **kwargs: Any) -> Any:
+    """Raise an exception when a states object is modified."""
+    raise RuntimeError(f"Cannot modify template States object: {args} {kwargs}")
+
+
 class AllStates:
     """Class to expose all HA states as attributes."""
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
+    __slots__ = ("_hass",)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize all states."""
@@ -642,7 +665,7 @@ class AllStates:
         if not valid_entity_id(f"{name}.entity"):
             raise TemplateError(f"Invalid domain name '{name}'")
 
-        return DomainStates(self._hass, name)
+        return _domain_states(self._hass, name)
 
     # Jinja will try __getitem__ first and it avoids the need
     # to call is_safe_attribute
@@ -680,6 +703,11 @@ class AllStates:
 
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
+
+    __slots__ = ("_hass", "_domain")
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
 
     def __init__(self, hass: HomeAssistant, domain: str) -> None:
         """Initialize the domain states."""
@@ -725,6 +753,9 @@ class TemplateStateBase(State):
     __slots__ = ("_hass", "_collect", "_entity_id")
 
     _state: State
+
+    __setitem__ = _readonly
+    __delitem__ = _readonly
 
     # Inheritance is done so functions that check against State keep working
     # pylint: disable=super-init-not-called
@@ -864,10 +895,15 @@ def _collect_state(hass: HomeAssistant, entity_id: str) -> None:
         entity_collect.entities.add(entity_id)
 
 
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
+def _template_state_no_collect(hass: HomeAssistant, state: State) -> TemplateState:
+    return TemplateState(hass, state, collect=False)
+
+
 def _state_generator(hass: HomeAssistant, domain: str | None) -> Generator:
     """State generator for a domain or all states."""
     for state in sorted(hass.states.async_all(domain), key=attrgetter("entity_id")):
-        yield TemplateState(hass, state, collect=False)
+        yield _template_state_no_collect(hass, state)
 
 
 def _get_state_if_valid(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
@@ -881,6 +917,11 @@ def _get_state(hass: HomeAssistant, entity_id: str) -> TemplateState | None:
     return _get_template_state_from_state(hass, entity_id, hass.states.get(entity_id))
 
 
+@lru_cache(maxsize=CACHED_TEMPLATE_STATES)
+def _template_state(hass: HomeAssistant, state: State) -> TemplateState:
+    return TemplateState(hass, state)
+
+
 def _get_template_state_from_state(
     hass: HomeAssistant, entity_id: str, state: State | None
 ) -> TemplateState | None:
@@ -889,7 +930,7 @@ def _get_template_state_from_state(
         # access to the state properties in the state wrapper.
         _collect_state(hass, entity_id)
         return None
-    return TemplateState(hass, state)
+    return _template_state(hass, state)
 
 
 def _resolve_state(
@@ -1370,18 +1411,18 @@ def multiply(value, amount, default=_SENTINEL):
 def logarithm(value, base=math.e, default=_SENTINEL):
     """Filter and function to get logarithm of the value with a specific base."""
     try:
-        value_float = float(value)
-    except (ValueError, TypeError):
-        if default is _SENTINEL:
-            raise_no_default("log", value)
-        return default
-    try:
         base_float = float(base)
     except (ValueError, TypeError):
         if default is _SENTINEL:
             raise_no_default("log", base)
         return default
-    return math.log(value_float, base_float)
+    try:
+        value_float = float(value)
+        return math.log(value_float, base_float)
+    except (ValueError, TypeError):
+        if default is _SENTINEL:
+            raise_no_default("log", value)
+        return default
 
 
 def sine(value, default=_SENTINEL):
@@ -1743,7 +1784,7 @@ def ordinal(value):
 
 def from_json(value):
     """Convert a JSON string to an object."""
-    return json.loads(value)
+    return json_loads(value)
 
 
 def to_json(value, ensure_ascii=True):

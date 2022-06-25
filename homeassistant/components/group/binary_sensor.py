@@ -132,7 +132,7 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         # filtered_states are members currently in the state machine
         filtered_states: list[str] = [x.state for x in all_states if x is not None]
 
-        # Set group as unavailable if all members are unavailable
+        # Set group as unavailable if all members are unavailable or missing
         self._attr_available = any(
             state != STATE_UNAVAILABLE for state in filtered_states
         )

@@ -10,29 +10,21 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .data import RestData
 
 
-class RestEntity(Entity):
+class BaseRestEntity(Entity):
     """A class for entities using DataUpdateCoordinator or rest data directly."""
 
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[Any],
         rest: RestData,
-        name,
         resource_template,
         force_update,
     ) -> None:
         """Create the entity that may have a coordinator."""
         self.coordinator = coordinator
         self.rest = rest
-        self._name = name
         self._resource_template = resource_template
         self._force_update = force_update
-        super().__init__()
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
 
     @property
     def force_update(self):
@@ -41,7 +33,7 @@ class RestEntity(Entity):
 
     @property
     def should_poll(self) -> bool:
-        """Poll only if we do noty have a coordinator."""
+        """Poll only if we do not have a coordinator."""
         return not self.coordinator
 
     @property
@@ -80,3 +72,24 @@ class RestEntity(Entity):
     @abstractmethod
     def _update_from_rest_data(self):
         """Update state from the rest data."""
+
+
+class RestEntity(BaseRestEntity):
+    """A class for entities using DataUpdateCoordinator or rest data directly."""
+
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[Any],
+        rest: RestData,
+        name,
+        resource_template,
+        force_update,
+    ) -> None:
+        """Create the entity that may have a coordinator."""
+        self._name = name
+        super().__init__(coordinator, rest, resource_template, force_update)
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name

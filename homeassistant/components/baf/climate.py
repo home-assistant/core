@@ -26,7 +26,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up BAF fan auto comfort."""
     data: BAFData = hass.data[DOMAIN][entry.entry_id]
-    if data.device.has_fan:
+    if data.device.has_fan and data.device.has_auto_comfort:
         async_add_entities(
             [BAFAutoComfort(data.device, f"{data.device.name} Auto Comfort")]
         )

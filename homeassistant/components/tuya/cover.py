@@ -360,7 +360,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
             ]
         )
 
-    def set_cover_tilt_position(self, **kwargs):
+    def set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         if self._tilt is None:
             raise RuntimeError(

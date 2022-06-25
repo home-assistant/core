@@ -4,7 +4,7 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/tplink",
   "requirements": ["python-kasa==0.5.0"],
-  "codeowners": ["@rytilahti", "@thegardenmonkey", "@bdraco"],
+  "codeowners": ["@rytilahti", "@thegardenmonkey"],
   "dependencies": ["network"],
   "quality_scale": "platinum",
   "iot_class": "local_polling",

@@ -1,0 +1,17 @@
+{
+    "config": {
+        "step": {
+            "api_key": {
+                "data": {
+                    "api_key": "API-nyckel"
+                }
+            },
+            "user": {
+                "data": {
+                    "api_key": "API-nyckel",
+                    "host": "V\u00e4rd"
+                }
+            }
+        }
+    }
+}

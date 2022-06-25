@@ -2,7 +2,7 @@
 import logging
 from unittest.mock import patch
 
-from homewizard_energy.errors import DisabledError, UnsupportedError
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
@@ -333,3 +333,31 @@ async def test_check_detects_invalid_api(hass, aioclient_mock):
 
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "unsupported_api_version"
+
+
+async def test_check_requesterror(hass, aioclient_mock):
+    """Test check detecting device endpoint failed fetching data due to a requesterror."""
+
+    def mock_initialize():
+        raise RequestError
+
+    device = get_mock_device()
+    device.device.side_effect = mock_initialize
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=device,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
+        )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "unknown_error"

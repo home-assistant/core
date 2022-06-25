@@ -3,11 +3,12 @@ from __future__ import annotations
 
 import asyncio
 import functools
-from typing import Any
+from typing import Any, cast
 
 from pydantic import ValidationError
 from pyunifiprotect.api import ProtectApiClient
-from pyunifiprotect.exceptions import BadRequest
+from pyunifiprotect.data import Chime
+from pyunifiprotect.exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
@@ -24,7 +25,7 @@ from homeassistant.helpers.service import async_extract_referenced_entity_ids
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .const import ATTR_MESSAGE, DOMAIN
-from .data import ProtectData
+from .data import async_ufp_instance_for_config_entry_ids
 
 SERVICE_ADD_DOORBELL_TEXT = "add_doorbell_text"
 SERVICE_REMOVE_DOORBELL_TEXT = "remove_doorbell_text"
@@ -59,18 +60,6 @@ CHIME_PAIRED_SCHEMA = vol.All(
 )
 
 
-def _async_ufp_instance_for_config_entry_ids(
-    hass: HomeAssistant, config_entry_ids: set[str]
-) -> ProtectApiClient | None:
-    """Find the UFP instance for the config entry ids."""
-    domain_data = hass.data[DOMAIN]
-    for config_entry_id in config_entry_ids:
-        if config_entry_id in domain_data:
-            protect_data: ProtectData = domain_data[config_entry_id]
-            return protect_data.api
-    return None
-
-
 @callback
 def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiClient:
     device_registry = dr.async_get(hass)
@@ -81,7 +70,7 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 
     config_entry_ids = device_entry.config_entries
-    if ufp_instance := _async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
+    if ufp_instance := async_ufp_instance_for_config_entry_ids(hass, config_entry_ids):
         return ufp_instance
 
     raise HomeAssistantError(f"No device found for device id: {device_id}")
@@ -111,7 +100,7 @@ async def _async_service_call_nvr(
         await asyncio.gather(
             *(getattr(i.bootstrap.nvr, method)(*args, **kwargs) for i in instances)
         )
-    except (BadRequest, ValidationError) as err:
+    except (ClientError, ValidationError) as err:
         raise HomeAssistantError(str(err)) from err
 
 
@@ -134,8 +123,8 @@ async def set_default_doorbell_text(hass: HomeAssistant, call: ServiceCall) -> N
 
 
 @callback
-def _async_unique_id_to_ufp_device_id(unique_id: str) -> str:
-    """Extract the UFP device id from the registry entry unique id."""
+def _async_unique_id_to_mac(unique_id: str) -> str:
+    """Extract the MAC address from the registry entry unique id."""
     return unique_id.split("_")[0]
 
 
@@ -148,10 +137,12 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
     chime_button = entity_registry.async_get(entity_id)
     assert chime_button is not None
     assert chime_button.device_id is not None
-    chime_ufp_device_id = _async_unique_id_to_ufp_device_id(chime_button.unique_id)
+    chime_mac = _async_unique_id_to_mac(chime_button.unique_id)
 
     instance = _async_get_ufp_instance(hass, chime_button.device_id)
-    chime = instance.bootstrap.chimes[chime_ufp_device_id]
+    chime = instance.bootstrap.get_device_from_mac(chime_mac)
+    chime = cast(Chime, chime)
+    assert chime is not None
 
     call.data = ReadOnlyDict(call.data.get("doorbells") or {})
     doorbell_refs = async_extract_referenced_entity_ids(hass, call)
@@ -166,10 +157,9 @@ async def set_chime_paired_doorbells(hass: HomeAssistant, call: ServiceCall) -> 
             != BinarySensorDeviceClass.OCCUPANCY
         ):
             continue
-        doorbell_ufp_device_id = _async_unique_id_to_ufp_device_id(
-            doorbell_sensor.unique_id
-        )
-        camera = instance.bootstrap.cameras[doorbell_ufp_device_id]
+        doorbell_mac = _async_unique_id_to_mac(doorbell_sensor.unique_id)
+        camera = instance.bootstrap.get_device_from_mac(doorbell_mac)
+        assert camera is not None
         doorbell_ids.add(camera.id)
     chime.camera_ids = sorted(doorbell_ids)
     await chime.save_device()
