@@ -28,9 +28,16 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_VISIBILITY,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
+    DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    SPEED_KILOMETERS_PER_HOUR,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
 from . import ENTITY_ID, TEST_CONFIG
@@ -67,7 +74,7 @@ async def test_setup_hass(
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
     assert state.attributes[ATTR_WEATHER_TEMPERATURE] == 17
     assert state.attributes[ATTR_WEATHER_VISIBILITY] == 50
-    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 1.9
+    assert state.attributes[ATTR_WEATHER_WIND_SPEED] == 6.84
     assert state.attributes[ATTR_WEATHER_WIND_BEARING] == 134
     assert len(state.attributes["forecast"]) == 4
 
@@ -79,7 +86,7 @@ async def test_setup_hass(
     assert forecast[ATTR_FORECAST_CONDITION] == "partlycloudy"
     assert forecast[ATTR_FORECAST_PRESSURE] == 1026
     assert forecast[ATTR_FORECAST_WIND_BEARING] == 203
-    assert forecast[ATTR_FORECAST_WIND_SPEED] == 1.7
+    assert forecast[ATTR_FORECAST_WIND_SPEED] == 6.12
 
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
@@ -311,3 +318,35 @@ def test_condition_class():
     assert get_condition(23) == "snowy-rainy"
     # 24. Heavy sleet
     assert get_condition(24) == "snowy-rainy"
+
+
+async def test_custom_speed_unit(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
+) -> None:
+    """Test Wind Gust speed with custom unit."""
+    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    aioclient_mock.get(uri, text=api_response)
+
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+
+    assert state
+    assert state.name == "test"
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7
+
+    entity_reg = er.async_get(hass)
+    entity_reg.async_update_entity_options(
+        state.entity_id,
+        WEATHER_DOMAIN,
+        {ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_KILOMETERS_PER_HOUR},
+    )
+
+    await asyncio.sleep(2)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
