@@ -18,6 +18,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPEN,
     STATE_OPENING,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -249,6 +250,28 @@ async def test_cover_operation(
         )
         await hass.async_block_till_done()
     assert hass.states.get("cover.home").state == STATE_OPENING
+
+    mock_aladdinconnect_api.async_get_door_status = AsyncMock(return_value=None)
+    mock_aladdinconnect_api.get_door_status.return_value = None
+    with patch(
+        "homeassistant.components.aladdin_connect.AladdinConnectClient",
+        return_value=mock_aladdinconnect_api,
+    ):
+
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: "cover.home"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+        async_fire_time_changed(
+            hass,
+            utcnow() + SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+    assert hass.states.get("cover.home").state == STATE_UNKNOWN
 
 
 async def test_yaml_import(
