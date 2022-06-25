@@ -34,31 +34,21 @@ async def test_import_flow(hass):
                 "AccessToken": "mock-access-token",
             },
         },
-    ):
+    ), patch(
+        "homeassistant.components.hive.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.hive.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
             data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "configuration"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.hive.async_setup", return_value=True
-    ) as mock_setup, patch(
-        "homeassistant.components.hive.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_DEVICE_NAME: DEVICE_NAME},
-        )
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == USERNAME
-    assert result2["data"] == {
+    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["title"] == USERNAME
+    assert result["data"] == {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
         "tokens": {
@@ -92,31 +82,21 @@ async def test_user_flow(hass):
                 "AccessToken": "mock-access-token",
             },
         },
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
-        )
-
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["step_id"] == "configuration"
-    assert result2["errors"] == {}
-
-    with patch(
+    ), patch(
         "homeassistant.components.hive.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.hive.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
-        result3 = await hass.config_entries.flow.async_configure(
+        result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DEVICE_NAME: DEVICE_NAME},
+            {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result3["title"] == USERNAME
-    assert result3["data"] == {
+    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["title"] == USERNAME
+    assert result2["data"] == {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: PASSWORD,
         "tokens": {
@@ -690,19 +670,10 @@ async def test_user_flow_unknown_error(hass):
             result["flow_id"],
             {CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result2["errors"] == {}
-
-    result3 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_DEVICE_NAME: DEVICE_NAME},
-    )
-    await hass.async_block_till_done()
-
-    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result3["step_id"] == "configuration"
-    assert result3["errors"] == {"base": "unknown"}
+    assert result2["errors"] == {"base": "unknown"}
 
 
 async def test_user_flow_2fa_unknown_error(hass):

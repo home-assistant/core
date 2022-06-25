@@ -29,6 +29,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.tokens = {}
         self.entry = None
         self.device_registration = False
+        self.device_name = "Home Assistant"
 
     async def async_step_user(self, user_input=None):
         """Prompt user input. Create or edit entry."""
@@ -60,11 +61,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
 
             if not errors:
-                # Configure the entry.
+                # Complete the entry.
                 try:
-                    if self.context["source"] == config_entries.SOURCE_REAUTH:
-                        return await self.async_setup_hive_entry()
-                    return await self.async_step_configuration()
+                    return await self.async_setup_hive_entry()
                 except UnknownHiveError:
                     errors["base"] = "unknown"
 
@@ -107,21 +106,17 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
-            if not errors:
-                try:
-                    if self.device_registration:
-                        await self.hive_auth.device_registration(
-                            user_input["device_name"]
-                        )
-                        self.data[
-                            "device_data"
-                        ] = await self.hive_auth.get_device_data()
-                    return await self.async_setup_hive_entry()
-                except UnknownHiveError:
-                    errors["base"] = "unknown"
+            try:
+                if self.device_registration:
+                    self.device_name = user_input["device_name"]
+                    await self.hive_auth.device_registration(user_input["device_name"])
+                    self.data["device_data"] = await self.hive_auth.get_device_data()
+                return await self.async_setup_hive_entry()
+            except UnknownHiveError:
+                errors["base"] = "unknown"
 
         schema = vol.Schema(
-            {vol.Optional(CONF_DEVICE_NAME, default="Home Assistant"): str}
+            {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
         )
         return self.async_show_form(
             step_id="configuration", data_schema=schema, errors=errors
