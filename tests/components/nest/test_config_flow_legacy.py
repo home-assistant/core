@@ -6,18 +6,11 @@ from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.nest import DOMAIN, config_flow
 from homeassistant.setup import async_setup_component
 
+from .common import TEST_CONFIG_LEGACY
+
 from tests.common import MockConfigEntry
 
-CONFIG = {DOMAIN: {"client_id": "bla", "client_secret": "bla"}}
-
-
-async def test_abort_if_no_implementation_registered(hass):
-    """Test we abort if no implementation is registered."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
+CONFIG = TEST_CONFIG_LEGACY.config
 
 
 async def test_abort_if_single_instance_allowed(hass):
@@ -59,7 +52,7 @@ async def test_full_flow_implementation(hass):
     assert (
         result["description_placeholders"]
         .get("url")
-        .startswith("https://home.nest.com/login/oauth2?client_id=bla")
+        .startswith("https://home.nest.com/login/oauth2?client_id=some-client-id")
     )
 
     def mock_login(auth):

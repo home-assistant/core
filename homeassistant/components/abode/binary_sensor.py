@@ -1,4 +1,7 @@
 """Support for Abode Security System binary sensors."""
+from typing import cast
+
+from abodepy.devices.binary_sensor import AbodeBinarySensor as ABBinarySensor
 import abodepy.helpers.constants as CONST
 
 from homeassistant.components.binary_sensor import (
@@ -9,17 +12,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AbodeDevice
+from . import AbodeDevice, AbodeSystem
 from .const import DOMAIN
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Abode binary sensor devices."""
-    data = hass.data[DOMAIN]
+    data: AbodeSystem = hass.data[DOMAIN]
 
     device_types = [
         CONST.TYPE_CONNECTIVITY,
@@ -40,14 +41,16 @@ async def async_setup_entry(
 class AbodeBinarySensor(AbodeDevice, BinarySensorEntity):
     """A binary sensor implementation for Abode device."""
 
-    @property
-    def is_on(self):
-        """Return True if the binary sensor is on."""
-        return self._device.is_on
+    _device: ABBinarySensor
 
     @property
-    def device_class(self):
+    def is_on(self) -> bool:
+        """Return True if the binary sensor is on."""
+        return cast(bool, self._device.is_on)
+
+    @property
+    def device_class(self) -> str:
         """Return the class of the binary sensor."""
         if self._device.get_value("is_window") == "1":
             return BinarySensorDeviceClass.WINDOW
-        return self._device.generic_type
+        return cast(str, self._device.generic_type)

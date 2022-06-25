@@ -16,7 +16,8 @@
                     "host": "Host",
                     "password": "Contrase\u00f1a",
                     "username": "Usuario"
-                }
+                },
+                "description": "Para los modelos m\u00e1s nuevos, introduzca el nombre de usuario `envoy` sin contrase\u00f1a. Para los modelos m\u00e1s antiguos, introduzca el nombre de usuario `installer` sin contrase\u00f1a. Para todos los dem\u00e1s modelos, introduzca un nombre de usuario y una contrase\u00f1a v\u00e1lidos."
             }
         }
     }

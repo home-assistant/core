@@ -3,10 +3,13 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
+from homeassistant.components.logbook.const import (
+    LOGBOOK_ENTRY_MESSAGE,
+    LOGBOOK_ENTRY_NAME,
+)
 from homeassistant.const import ATTR_DEVICE_ID, CONF_EVENT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.event import Event
 
 from .const import CONF_GESTURE, DOMAIN as DECONZ_DOMAIN
 from .deconz_event import CONF_DECONZ_ALARM_EVENT, CONF_DECONZ_EVENT
@@ -136,8 +139,8 @@ def async_describe_events(
         data = event.data[CONF_EVENT]
 
         return {
-            "name": f"{deconz_alarm_event.device.name}",
-            "message": f"fired event '{data}'.",
+            LOGBOOK_ENTRY_NAME: f"{deconz_alarm_event.device.name}",
+            LOGBOOK_ENTRY_MESSAGE: f"fired event '{data}'",
         }
 
     @callback
@@ -158,27 +161,27 @@ def async_describe_events(
         # Unknown event
         if not data:
             return {
-                "name": f"{deconz_event.device.name}",
-                "message": "fired an unknown event.",
+                LOGBOOK_ENTRY_NAME: f"{deconz_event.device.name}",
+                LOGBOOK_ENTRY_MESSAGE: "fired an unknown event",
             }
 
         # No device event match
         if not action:
             return {
-                "name": f"{deconz_event.device.name}",
-                "message": f"fired event '{data}'.",
+                LOGBOOK_ENTRY_NAME: f"{deconz_event.device.name}",
+                LOGBOOK_ENTRY_MESSAGE: f"fired event '{data}'",
             }
 
         # Gesture event
         if not interface:
             return {
-                "name": f"{deconz_event.device.name}",
-                "message": f"fired event '{ACTIONS[action]}'.",
+                LOGBOOK_ENTRY_NAME: f"{deconz_event.device.name}",
+                LOGBOOK_ENTRY_MESSAGE: f"fired event '{ACTIONS[action]}'",
             }
 
         return {
-            "name": f"{deconz_event.device.name}",
-            "message": f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired.",
+            LOGBOOK_ENTRY_NAME: f"{deconz_event.device.name}",
+            LOGBOOK_ENTRY_MESSAGE: f"'{ACTIONS[action]}' event for '{INTERFACES[interface]}' was fired",
         }
 
     async_describe_event(

@@ -1,22 +1,24 @@
 """Support for Android IP Webcam."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 
 from pydroid_ipcam import PyDroidIPCam
 import voluptuous as vol
 
-from homeassistant.components.mjpeg.camera import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
+from homeassistant.components.mjpeg import CONF_MJPEG_URL, CONF_STILL_IMAGE_URL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PLATFORM,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_TIMEOUT,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery
@@ -193,9 +195,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_setup_ipcamera(cam_config):
         """Set up an IP camera."""
         host = cam_config[CONF_HOST]
-        username = cam_config.get(CONF_USERNAME)
-        password = cam_config.get(CONF_PASSWORD)
-        name = cam_config[CONF_NAME]
+        username: str | None = cam_config.get(CONF_USERNAME)
+        password: str | None = cam_config.get(CONF_PASSWORD)
+        name: str = cam_config[CONF_NAME]
         interval = cam_config[CONF_SCAN_INTERVAL]
         switches = cam_config.get(CONF_SWITCHES)
         sensors = cam_config.get(CONF_SENSORS)
@@ -203,13 +205,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Init ip webcam
         cam = PyDroidIPCam(
-            hass.loop,
             websession,
             host,
             cam_config[CONF_PORT],
             username=username,
             password=password,
             timeout=cam_config[CONF_TIMEOUT],
+            ssl=False,
         )
 
         if switches is None:
@@ -237,23 +239,40 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         webcams[host] = cam
 
         mjpeg_camera = {
-            CONF_PLATFORM: "mjpeg",
             CONF_MJPEG_URL: cam.mjpeg_url,
             CONF_STILL_IMAGE_URL: cam.image_url,
-            CONF_NAME: name,
         }
         if username and password:
             mjpeg_camera.update({CONF_USERNAME: username, CONF_PASSWORD: password})
 
+        # Remove incorrect config entry setup via mjpeg platform discovery.
+        mjpeg_config_entry = next(
+            (
+                config_entry
+                for config_entry in hass.config_entries.async_entries("mjpeg")
+                if all(
+                    config_entry.options.get(key) == val
+                    for key, val in mjpeg_camera.items()
+                )
+            ),
+            None,
+        )
+        if mjpeg_config_entry:
+            await hass.config_entries.async_remove(mjpeg_config_entry.entry_id)
+
+        mjpeg_camera[CONF_NAME] = name
+
         hass.async_create_task(
-            discovery.async_load_platform(hass, "camera", "mjpeg", mjpeg_camera, config)
+            discovery.async_load_platform(
+                hass, Platform.CAMERA, DOMAIN, mjpeg_camera, config
+            )
         )
 
         if sensors:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "sensor",
+                    Platform.SENSOR,
                     DOMAIN,
                     {CONF_NAME: name, CONF_HOST: host, CONF_SENSORS: sensors},
                     config,
@@ -264,7 +283,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "switch",
+                    Platform.SWITCH,
                     DOMAIN,
                     {CONF_NAME: name, CONF_HOST: host, CONF_SWITCHES: switches},
                     config,
@@ -275,7 +294,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
-                    "binary_sensor",
+                    Platform.BINARY_SENSOR,
                     DOMAIN,
                     {CONF_HOST: host, CONF_NAME: name},
                     config,

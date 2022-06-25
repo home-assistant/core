@@ -8,6 +8,12 @@ from zwave_js_server.const import ConfigurationValueType
 from zwave_js_server.model.node import Node
 from zwave_js_server.model.value import ConfigurationValue
 
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
+
+from .const import DOMAIN
+
 NODE_STATUSES = ["asleep", "awake", "dead", "alive"]
 
 CONF_SUBTYPE = "subtype"
@@ -32,3 +38,32 @@ def get_config_parameter_value_schema(node: Node, value_id: str) -> vol.Schema |
         return vol.In({int(k): v for k, v in config_value.metadata.states.items()})
 
     return None
+
+
+def generate_config_parameter_subtype(config_value: ConfigurationValue) -> str:
+    """Generate the config parameter name used in a device automation subtype."""
+    parameter = str(config_value.property_)
+    if config_value.property_key:
+        # Property keys for config values are always an int
+        assert isinstance(config_value.property_key, int)
+        parameter = f"{parameter}[{hex(config_value.property_key)}]"
+
+    return f"{parameter} ({config_value.property_name})"
+
+
+@callback
+def async_bypass_dynamic_config_validation(hass: HomeAssistant, device_id: str) -> bool:
+    """Return whether device's config entries are not loaded."""
+    dev_reg = dr.async_get(hass)
+    if (device := dev_reg.async_get(device_id)) is None:
+        raise ValueError(f"Device {device_id} not found")
+    entry = next(
+        (
+            config_entry
+            for config_entry in hass.config_entries.async_entries(DOMAIN)
+            if config_entry.entry_id in device.config_entries
+            and config_entry.state == ConfigEntryState.LOADED
+        ),
+        None,
+    )
+    return not entry

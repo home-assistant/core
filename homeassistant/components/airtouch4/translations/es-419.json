@@ -1,0 +1,12 @@
+{
+    "config": {
+        "error": {
+            "no_units": "No se pudo encontrar ning\u00fan grupo de AirTouch 4."
+        },
+        "step": {
+            "user": {
+                "title": "Configure los detalles de conexi\u00f3n de su AirTouch 4."
+            }
+        }
+    }
+}

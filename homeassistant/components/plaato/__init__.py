@@ -1,5 +1,4 @@
 """Support for Plaato devices."""
-
 from datetime import timedelta
 import logging
 
@@ -23,6 +22,7 @@ from pyplaato.plaato import (
 )
 import voluptuous as vol
 
+from homeassistant.components import webhook
 from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -33,6 +33,7 @@ from homeassistant.const import (
     TEMP_FAHRENHEIT,
     VOLUME_GALLONS,
     VOLUME_LITERS,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -106,8 +107,8 @@ def async_setup_webhook(hass: HomeAssistant, entry: ConfigEntry):
 
     _set_entry_data(entry, hass)
 
-    hass.components.webhook.async_register(
-        DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
+    webhook.async_register(
+        hass, DOMAIN, f"{DOMAIN}.{device_name}", webhook_id, handle_webhook
     )
 
 
@@ -160,7 +161,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_webhook(hass: HomeAssistant, entry: ConfigEntry):
     """Unload webhook based entry."""
     if entry.data[CONF_WEBHOOK_ID] is not None:
-        hass.components.webhook.async_unregister(entry.data[CONF_WEBHOOK_ID])
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
     return await async_unload_platforms(hass, entry, PLATFORMS)
 
 
@@ -179,7 +180,7 @@ async def async_unload_platforms(hass: HomeAssistant, entry: ConfigEntry, platfo
     return unloaded
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry):
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
@@ -219,7 +220,7 @@ class PlaatoCoordinator(DataUpdateCoordinator):
         self.api = Plaato(auth_token=auth_token)
         self.hass = hass
         self.device_type = device_type
-        self.platforms = []
+        self.platforms: list[Platform] = []
 
         super().__init__(
             hass,

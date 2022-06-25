@@ -1,5 +1,5 @@
 """Test the Amber Electric Sensors."""
-from typing import AsyncGenerator, List
+from collections.abc import AsyncGenerator
 from unittest.mock import Mock, patch
 
 from amberelectric.model.current_interval import CurrentInterval
@@ -101,7 +101,7 @@ async def setup_general_and_feed_in(hass) -> AsyncGenerator:
 
 async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) -> None:
     """Test the General Price sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     price = hass.states.get("sensor.mock_title_general_price")
     assert price
     assert price.state == "0.08"
@@ -121,7 +121,7 @@ async def test_general_price_sensor(hass: HomeAssistant, setup_general: Mock) ->
     assert attributes.get("range_min") is None
     assert attributes.get("range_max") is None
 
-    with_range: List[CurrentInterval] = GENERAL_CHANNEL
+    with_range: list[CurrentInterval] = GENERAL_CHANNEL
     with_range[0].range = Range(7.8, 12.4)
 
     setup_general.get_current_price.return_value = with_range
@@ -140,7 +140,7 @@ async def test_general_and_controlled_load_price_sensor(
     hass: HomeAssistant, setup_general_and_controlled_load: Mock
 ) -> None:
     """Test the Controlled Price sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 8
     price = hass.states.get("sensor.mock_title_controlled_load_price")
     assert price
     assert price.state == "0.08"
@@ -163,7 +163,7 @@ async def test_general_and_feed_in_price_sensor(
     hass: HomeAssistant, setup_general_and_feed_in: Mock
 ) -> None:
     """Test the Feed In sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 8
     price = hass.states.get("sensor.mock_title_feed_in_price")
     assert price
     assert price.state == "-0.08"
@@ -186,7 +186,7 @@ async def test_general_forecast_sensor(
     hass: HomeAssistant, setup_general: Mock
 ) -> None:
     """Test the General Forecast sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     price = hass.states.get("sensor.mock_title_general_forecast")
     assert price
     assert price.state == "0.09"
@@ -204,11 +204,12 @@ async def test_general_forecast_sensor(
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
+    assert first_forecast["descriptor"] == "very_low"
 
     assert first_forecast.get("range_min") is None
     assert first_forecast.get("range_max") is None
 
-    with_range: List[CurrentInterval] = GENERAL_CHANNEL
+    with_range: list[CurrentInterval] = GENERAL_CHANNEL
     with_range[1].range = Range(7.8, 12.4)
 
     setup_general.get_current_price.return_value = with_range
@@ -228,7 +229,7 @@ async def test_controlled_load_forecast_sensor(
     hass: HomeAssistant, setup_general_and_controlled_load: Mock
 ) -> None:
     """Test the Controlled Load Forecast sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 8
     price = hass.states.get("sensor.mock_title_controlled_load_forecast")
     assert price
     assert price.state == "0.09"
@@ -246,13 +247,14 @@ async def test_controlled_load_forecast_sensor(
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
+    assert first_forecast["descriptor"] == "very_low"
 
 
 async def test_feed_in_forecast_sensor(
     hass: HomeAssistant, setup_general_and_feed_in: Mock
 ) -> None:
     """Test the Feed In Forecast sensor."""
-    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_all()) == 8
     price = hass.states.get("sensor.mock_title_feed_in_forecast")
     assert price
     assert price.state == "-0.09"
@@ -270,11 +272,42 @@ async def test_feed_in_forecast_sensor(
     assert first_forecast["end_time"] == "2021-09-21T09:00:00+10:00"
     assert first_forecast["renewables"] == 50
     assert first_forecast["spike_status"] == "none"
+    assert first_forecast["descriptor"] == "very_low"
 
 
 def test_renewable_sensor(hass: HomeAssistant, setup_general) -> None:
     """Testing the creation of the Amber renewables sensor."""
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     sensor = hass.states.get("sensor.mock_title_renewables")
     assert sensor
     assert sensor.state == "51"
+
+
+def test_general_price_descriptor_descriptor_sensor(
+    hass: HomeAssistant, setup_general: Mock
+) -> None:
+    """Test the General Price Descriptor sensor."""
+    assert len(hass.states.async_all()) == 5
+    price = hass.states.get("sensor.mock_title_general_price_descriptor")
+    assert price
+    assert price.state == "extremely_low"
+
+
+def test_general_and_controlled_load_price_descriptor_sensor(
+    hass: HomeAssistant, setup_general_and_controlled_load: Mock
+) -> None:
+    """Test the Controlled Price Descriptor sensor."""
+    assert len(hass.states.async_all()) == 8
+    price = hass.states.get("sensor.mock_title_controlled_load_price_descriptor")
+    assert price
+    assert price.state == "extremely_low"
+
+
+def test_general_and_feed_in_price_descriptor_sensor(
+    hass: HomeAssistant, setup_general_and_feed_in: Mock
+) -> None:
+    """Test the Feed In Price Descriptor sensor."""
+    assert len(hass.states.async_all()) == 8
+    price = hass.states.get("sensor.mock_title_feed_in_price_descriptor")
+    assert price
+    assert price.state == "extremely_low"

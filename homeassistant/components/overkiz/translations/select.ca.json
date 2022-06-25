@@ -1,0 +1,13 @@
+{
+    "state": {
+        "overkiz__memorized_simple_volume": {
+            "highest": "M\u00e0xim",
+            "standard": "Est\u00e0ndard"
+        },
+        "overkiz__open_closed_pedestrian": {
+            "closed": "Tancat/da",
+            "open": "Obert/a",
+            "pedestrian": "Vianant"
+        }
+    }
+}

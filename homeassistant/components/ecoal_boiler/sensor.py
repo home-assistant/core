@@ -1,11 +1,21 @@
 """Allows reading temperatures from ecoal/esterownik.pl controller."""
+from __future__ import annotations
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import AVAILABLE_SENSORS, DATA_ECOAL_BOILER
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the ecoal sensors."""
     if discovery_info is None:
         return

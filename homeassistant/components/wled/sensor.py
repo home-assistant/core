@@ -44,6 +44,8 @@ class WLEDSensorEntityDescription(
 ):
     """Describes WLED sensor entity."""
 
+    exists_fn: Callable[[WLEDDevice], bool] = lambda _: True
+
 
 SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
     WLEDSensorEntityDescription(
@@ -54,6 +56,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.info.leds.power,
+        exists_fn=lambda device: bool(device.info.leds.max_power),
     ),
     WLEDSensorEntityDescription(
         key="info_leds_count",
@@ -68,6 +71,7 @@ SENSORS: tuple[WLEDSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.CURRENT,
         value_fn=lambda device: device.info.leds.max_power,
+        exists_fn=lambda device: bool(device.info.leds.max_power),
     ),
     WLEDSensorEntityDescription(
         key="uptime",
@@ -132,7 +136,9 @@ async def async_setup_entry(
     """Set up WLED sensor based on a config entry."""
     coordinator: WLEDDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        WLEDSensorEntity(coordinator, description) for description in SENSORS
+        WLEDSensorEntity(coordinator, description)
+        for description in SENSORS
+        if description.exists_fn(coordinator.data)
     )
 
 

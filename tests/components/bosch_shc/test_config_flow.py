@@ -22,6 +22,7 @@ MOCK_SETTINGS = {
 }
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    addresses=["1.1.1.1"],
     hostname="shc012345.local.",
     name="Bosch SHC [test-mac]._http._tcp.local.",
     port=0,
@@ -533,6 +534,7 @@ async def test_zeroconf_not_bosch_shc(hass, mock_zeroconf):
         DOMAIN,
         data=zeroconf.ZeroconfServiceInfo(
             host="1.1.1.1",
+            addresses=["1.1.1.1"],
             hostname="mock_hostname",
             name="notboschshc",
             port=None,

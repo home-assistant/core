@@ -5,9 +5,9 @@ import logging
 from typing import Any
 
 from spotipy import Spotify
-import voluptuous as vol
 
 from homeassistant.components import persistent_notification
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -22,10 +22,7 @@ class SpotifyFlowHandler(
     DOMAIN = DOMAIN
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Instantiate config flow."""
-        super().__init__()
-        self.entry: dict[str, Any] | None = None
+    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -48,7 +45,7 @@ class SpotifyFlowHandler(
 
         name = data["id"] = current_user["id"]
 
-        if self.entry and self.entry["id"] != current_user["id"]:
+        if self.reauth_entry and self.reauth_entry.data["id"] != current_user["id"]:
             return self.async_abort(reason="reauth_account_mismatch")
 
         if current_user.get("display_name"):
@@ -61,8 +58,9 @@ class SpotifyFlowHandler(
 
     async def async_step_reauth(self, entry: dict[str, Any]) -> FlowResult:
         """Perform reauth upon migration of old entries."""
-        if entry:
-            self.entry = entry
+        self.reauth_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
 
         persistent_notification.async_create(
             self.hass,
@@ -77,16 +75,17 @@ class SpotifyFlowHandler(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm reauth dialog."""
-        if user_input is None:
+        if self.reauth_entry is None:
+            return self.async_abort(reason="reauth_account_mismatch")
+
+        if user_input is None and self.reauth_entry:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"account": self.entry["id"]},
-                data_schema=vol.Schema({}),
+                description_placeholders={"account": self.reauth_entry.data["id"]},
                 errors={},
             )
 
         persistent_notification.async_dismiss(self.hass, "spotify_reauth")
-
         return await self.async_step_pick_implementation(
-            user_input={"implementation": self.entry["auth_implementation"]}
+            user_input={"implementation": self.reauth_entry.data["auth_implementation"]}
         )

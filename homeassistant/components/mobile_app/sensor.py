@@ -1,20 +1,18 @@
 """Sensor platform for mobile_app."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.const import (
-    CONF_NAME,
-    CONF_UNIQUE_ID,
-    CONF_WEBHOOK_ID,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import callback
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_WEBHOOK_ID, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import (
-    ATTR_DEVICE_NAME,
     ATTR_SENSOR_ATTRIBUTES,
     ATTR_SENSOR_DEVICE_CLASS,
     ATTR_SENSOR_ENTITY_CATEGORY,
@@ -26,13 +24,16 @@ from .const import (
     ATTR_SENSOR_TYPE_SENSOR as ENTITY_TYPE,
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
-    DATA_DEVICES,
     DOMAIN,
 )
-from .entity import MobileAppEntity, unique_id
+from .entity import MobileAppEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up mobile app sensor from a config entry."""
     entities = []
 
@@ -43,7 +44,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
     for entry in entries:
         if entry.domain != ENTITY_TYPE or entry.disabled_by:
             continue
-        config = {
+        config: dict[str, Any] = {
             ATTR_SENSOR_ATTRIBUTES: {},
             ATTR_SENSOR_DEVICE_CLASS: entry.device_class or entry.original_device_class,
             ATTR_SENSOR_ICON: entry.original_icon,
@@ -54,7 +55,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
             ATTR_SENSOR_UOM: entry.unit_of_measurement,
             ATTR_SENSOR_ENTITY_CATEGORY: entry.entity_category,
         }
-        entities.append(MobileAppSensor(config, entry.device_id, config_entry))
+        entities.append(MobileAppSensor(config, config_entry))
 
     async_add_entities(entities)
 
@@ -63,16 +64,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
         if data[CONF_WEBHOOK_ID] != webhook_id:
             return
 
-        data[CONF_UNIQUE_ID] = unique_id(
-            data[CONF_WEBHOOK_ID], data[ATTR_SENSOR_UNIQUE_ID]
-        )
-        data[
-            CONF_NAME
-        ] = f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
-
-        device = hass.data[DOMAIN][DATA_DEVICES][data[CONF_WEBHOOK_ID]]
-
-        async_add_entities([MobileAppSensor(data, device, config_entry)])
+        async_add_entities([MobileAppSensor(data, config_entry)])
 
     async_dispatcher_connect(
         hass,

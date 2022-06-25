@@ -128,6 +128,35 @@ SINGLE_MONITOR_CONFIG_VOLTAGE_SENSORS = make_single_monitor_config_with_sensors(
     }
 )
 
+MULTI_MONITOR_CONFIG = {
+    DOMAIN: {
+        CONF_PORT: 7513,
+        CONF_MONITORS: [
+            {
+                CONF_SERIAL_NUMBER: "00000001",
+                CONF_TEMPERATURE_SENSORS: {
+                    CONF_TEMPERATURE_UNIT: "C",
+                    CONF_SENSORS: [{CONF_NUMBER: 1, CONF_NAME: "unit_1_temp_1"}],
+                },
+            },
+            {
+                CONF_SERIAL_NUMBER: "00000002",
+                CONF_TEMPERATURE_SENSORS: {
+                    CONF_TEMPERATURE_UNIT: "F",
+                    CONF_SENSORS: [{CONF_NUMBER: 1, CONF_NAME: "unit_2_temp_1"}],
+                },
+            },
+            {
+                CONF_SERIAL_NUMBER: "00000003",
+                CONF_TEMPERATURE_SENSORS: {
+                    CONF_TEMPERATURE_UNIT: "C",
+                    CONF_SENSORS: [{CONF_NUMBER: 1, CONF_NAME: "unit_3_temp_1"}],
+                },
+            },
+        ],
+    }
+}
+
 
 async def setup_greeneye_monitor_component_with_config(
     hass: HomeAssistant, config: ConfigType
@@ -185,6 +214,13 @@ def mock_temperature_sensor() -> MagicMock:
     return temperature_sensor
 
 
+def mock_voltage_sensor() -> MagicMock:
+    """Create a mock GreenEye Monitor voltage sensor."""
+    voltage_sensor = mock_with_listeners()
+    voltage_sensor.voltage = 120.0
+    return voltage_sensor
+
+
 def mock_channel() -> MagicMock:
     """Create a mock GreenEye Monitor CT channel."""
     channel = mock_with_listeners()
@@ -198,8 +234,18 @@ def mock_monitor(serial_number: int) -> MagicMock:
     """Create a mock GreenEye Monitor."""
     monitor = mock_with_listeners()
     monitor.serial_number = serial_number
-    monitor.voltage = 120.0
+    monitor.voltage_sensor = mock_voltage_sensor()
     monitor.pulse_counters = [mock_pulse_counter() for i in range(0, 4)]
     monitor.temperature_sensors = [mock_temperature_sensor() for i in range(0, 8)]
     monitor.channels = [mock_channel() for i in range(0, 32)]
+    return monitor
+
+
+async def connect_monitor(
+    hass: HomeAssistant, monitors: AsyncMock, serial_number: int
+) -> MagicMock:
+    """Simulate a monitor connecting to Home Assistant. Returns the mock monitor API object."""
+    monitor = mock_monitor(serial_number)
+    monitors.add_monitor(monitor)
+    await hass.async_block_till_done()
     return monitor

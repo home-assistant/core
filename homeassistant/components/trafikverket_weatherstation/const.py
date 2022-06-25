@@ -5,5 +5,13 @@ DOMAIN = "trafikverket_weatherstation"
 CONF_STATION = "station"
 PLATFORMS = [Platform.SENSOR]
 ATTRIBUTION = "Data provided by Trafikverket"
-ATTR_MEASURE_TIME = "measure_time"
-ATTR_ACTIVE = "active"
+
+NONE_IS_ZERO_SENSORS = {
+    "air_temp",
+    "road_temp",
+    "wind_direction",
+    "wind_speed",
+    "wind_speed_max",
+    "humidity",
+    "precipitation_amount",
+}

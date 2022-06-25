@@ -2,11 +2,14 @@
 from copy import deepcopy
 from unittest.mock import patch
 
-from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_EVENT
+from aiounifi.controller import MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE, MESSAGE_EVENT
 
 from homeassistant import config_entries, core
-from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+)
 from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
     CONF_DPI_RESTRICTIONS,
@@ -16,7 +19,7 @@ from homeassistant.components.unifi.const import (
     DOMAIN as UNIFI_DOMAIN,
 )
 from homeassistant.components.unifi.switch import POE_SWITCH
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import EntityCategory
@@ -289,7 +292,42 @@ DPI_GROUP_REMOVED_EVENT = {
     "data": [
         {
             "_id": "5f976f4ae3c58f018ec7dff6",
-            "name": "dpi group",
+            "name": "Block Media Streaming",
+            "site_id": "name",
+            "dpiapp_ids": [],
+        }
+    ],
+}
+
+DPI_GROUP_CREATED_EVENT = {
+    "meta": {"rc": "ok", "message": "dpigroup:add"},
+    "data": [
+        {
+            "name": "Block Media Streaming",
+            "site_id": "name",
+            "_id": "5f976f4ae3c58f018ec7dff6",
+        }
+    ],
+}
+
+DPI_GROUP_ADDED_APP = {
+    "meta": {"rc": "ok", "message": "dpigroup:sync"},
+    "data": [
+        {
+            "_id": "5f976f4ae3c58f018ec7dff6",
+            "name": "Block Media Streaming",
+            "site_id": "name",
+            "dpiapp_ids": ["5f976f62e3c58f018ec7e17d"],
+        }
+    ],
+}
+
+DPI_GROUP_REMOVE_APP = {
+    "meta": {"rc": "ok", "message": "dpigroup:sync"},
+    "data": [
+        {
+            "_id": "5f976f4ae3c58f018ec7dff6",
+            "name": "Block Media Streaming",
             "site_id": "name",
             "dpiapp_ids": [],
         }
@@ -309,6 +347,213 @@ DPI_APP_DISABLED_EVENT = {
             "site_id": "name",
         }
     ],
+}
+
+OUTLET_UP1 = {
+    "_id": "600c8356942a6ade50707b56",
+    "ip": "192.168.0.189",
+    "mac": "fc:ec:da:76:4f:5f",
+    "model": "UP1",
+    "model_in_lts": False,
+    "model_in_eol": False,
+    "type": "uap",
+    "version": "2.2.1.511",
+    "adopted": True,
+    "site_id": "545eb1f0e4b0205d14c4e548",
+    "x_authkey": "345678976545678",
+    "cfgversion": "4c62f1e663783447",
+    "syslog_key": "41c4bcefcbc842d6eefb05b8fd9b78faa1841d10a09cebb170ce3e2f474b43b3",
+    "config_network": {"type": "dhcp"},
+    "setup_id": "a8730d36-8fdd-44f9-8678-1e89676f36c1",
+    "x_vwirekey": "2dabb7e23b048c88b60123456789",
+    "vwire_table": [],
+    "dot1x_portctrl_enabled": False,
+    "outlet_overrides": [],
+    "outlet_enabled": True,
+    "license_state": "registered",
+    "x_aes_gcm": True,
+    "inform_url": "http://192.168.0.5:8080/inform",
+    "inform_ip": "192.168.0.5",
+    "required_version": "2.1.3",
+    "anon_id": "d2744a31-1c26-92fe-423d-6b9ba204abc7",
+    "board_rev": 2,
+    "manufacturer_id": 72,
+    "model_incompatible": False,
+    "antenna_table": [],
+    "radio_table": [],
+    "scan_radio_table": [],
+    "ethernet_table": [],
+    "port_table": [],
+    "switch_caps": {},
+    "has_speaker": False,
+    "has_eth1": False,
+    "fw_caps": 0,
+    "hw_caps": 128,
+    "wifi_caps": 0,
+    "sys_error_caps": 0,
+    "has_fan": False,
+    "has_temperature": False,
+    "country_code": 10752,
+    "outlet_table": [
+        {
+            "index": 1,
+            "has_relay": True,
+            "has_metering": False,
+            "relay_state": False,
+            "name": "Outlet 1",
+        }
+    ],
+    "element_ap_serial": "44:d9:e7:90:f4:24",
+    "connected_at": 1641678609,
+    "provisioned_at": 1642054077,
+    "led_override": "default",
+    "led_override_color": "#0000ff",
+    "led_override_color_brightness": 100,
+    "outdoor_mode_override": "default",
+    "lcm_brightness_override": False,
+    "lcm_idle_timeout_override": False,
+    "name": "Plug",
+    "unsupported": False,
+    "unsupported_reason": 0,
+    "two_phase_adopt": False,
+    "serial": "FCECDA764F5F",
+    "lcm_tracker_enabled": False,
+    "wlangroup_id_ng": "545eb1f0e4b0205d14c4e555",
+    "supports_fingerprint_ml": False,
+    "last_uplink": {
+        "uplink_mac": "78:45:58:87:93:16",
+        "uplink_device_name": "U6-Pro",
+        "type": "wireless",
+    },
+    "device_id": "600c8356942a6ade50707b56",
+    "uplink": {
+        "uplink_mac": "78:45:58:87:93:16",
+        "uplink_device_name": "U6-Pro",
+        "type": "wireless",
+        "up": True,
+        "ap_mac": "78:45:58:87:93:16",
+        "tx_rate": 54000,
+        "rx_rate": 72200,
+        "rssi": 60,
+        "is_11ax": False,
+        "is_11ac": False,
+        "is_11n": True,
+        "is_11b": False,
+        "radio": "ng",
+        "essid": "Network Name",
+        "channel": 11,
+        "tx_packets": 1586746,
+        "rx_packets": 362176,
+        "tx_bytes": 397773,
+        "rx_bytes": 24423980,
+        "tx_bytes-r": 0,
+        "rx_bytes-r": 45,
+        "uplink_source": "legacy",
+    },
+    "state": 1,
+    "start_disconnected_millis": 1641679166349,
+    "last_seen": 1642055273,
+    "next_interval": 40,
+    "known_cfgversion": "4c62f1e663783447",
+    "start_connected_millis": 1641679166355,
+    "upgradable": False,
+    "adoptable_when_upgraded": False,
+    "rollupgrade": False,
+    "uptime": 376083,
+    "_uptime": 376083,
+    "locating": False,
+    "connect_request_ip": "192.168.0.189",
+    "connect_request_port": "49155",
+    "sys_stats": {"mem_total": 98304, "mem_used": 87736},
+    "system-stats": {},
+    "lldp_table": [],
+    "displayable_version": "2.2.1",
+    "connection_network_name": "LAN",
+    "startup_timestamp": 1641679190,
+    "scanning": False,
+    "spectrum_scanning": False,
+    "meshv3_peer_mac": "",
+    "element_peer_mac": "",
+    "satisfaction": 100,
+    "uplink_bssid": "78:45:58:87:93:17",
+    "hide_ch_width": "none",
+    "isolated": False,
+    "radio_table_stats": [],
+    "port_stats": [],
+    "vap_table": [],
+    "downlink_table": [],
+    "vwire_vap_table": [],
+    "bytes-d": 0,
+    "tx_bytes-d": 0,
+    "rx_bytes-d": 0,
+    "bytes-r": 0,
+    "element_uplink_ap_mac": "78:45:58:87:93:16",
+    "prev_non_busy_state": 1,
+    "stat": {
+        "ap": {
+            "site_id": "5a32aa4ee4b0412345678910",
+            "o": "ap",
+            "oid": "fc:ec:da:76:4f:5f",
+            "ap": "fc:ec:da:76:4f:5f",
+            "time": 1641678600000,
+            "datetime": "2022-01-08T21:50:00Z",
+            "user-rx_packets": 0.0,
+            "guest-rx_packets": 0.0,
+            "rx_packets": 0.0,
+            "user-rx_bytes": 0.0,
+            "guest-rx_bytes": 0.0,
+            "rx_bytes": 0.0,
+            "user-rx_errors": 0.0,
+            "guest-rx_errors": 0.0,
+            "rx_errors": 0.0,
+            "user-rx_dropped": 0.0,
+            "guest-rx_dropped": 0.0,
+            "rx_dropped": 0.0,
+            "user-rx_crypts": 0.0,
+            "guest-rx_crypts": 0.0,
+            "rx_crypts": 0.0,
+            "user-rx_frags": 0.0,
+            "guest-rx_frags": 0.0,
+            "rx_frags": 0.0,
+            "user-tx_packets": 0.0,
+            "guest-tx_packets": 0.0,
+            "tx_packets": 0.0,
+            "user-tx_bytes": 0.0,
+            "guest-tx_bytes": 0.0,
+            "tx_bytes": 0.0,
+            "user-tx_errors": 0.0,
+            "guest-tx_errors": 0.0,
+            "tx_errors": 0.0,
+            "user-tx_dropped": 0.0,
+            "guest-tx_dropped": 0.0,
+            "tx_dropped": 0.0,
+            "user-tx_retries": 0.0,
+            "guest-tx_retries": 0.0,
+            "tx_retries": 0.0,
+            "user-mac_filter_rejections": 0.0,
+            "guest-mac_filter_rejections": 0.0,
+            "mac_filter_rejections": 0.0,
+            "user-wifi_tx_attempts": 0.0,
+            "guest-wifi_tx_attempts": 0.0,
+            "wifi_tx_attempts": 0.0,
+            "user-wifi_tx_dropped": 0.0,
+            "guest-wifi_tx_dropped": 0.0,
+            "wifi_tx_dropped": 0.0,
+            "bytes": 0.0,
+            "duration": 376663000.0,
+        }
+    },
+    "tx_bytes": 0,
+    "rx_bytes": 0,
+    "bytes": 0,
+    "vwireEnabled": True,
+    "uplink_table": [],
+    "num_sta": 0,
+    "user-num_sta": 0,
+    "user-wlan-num_sta": 0,
+    "guest-num_sta": 0,
+    "guest-wlan-num_sta": 0,
+    "x_has_ssh_hostkey": False,
 }
 
 
@@ -600,6 +845,161 @@ async def test_dpi_switches(hass, aioclient_mock, mock_unifi_websocket):
 
     assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
 
+    mock_unifi_websocket(data=DPI_GROUP_REMOVE_APP)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming") is None
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 0
+
+
+async def test_dpi_switches_add_second_app(hass, aioclient_mock, mock_unifi_websocket):
+    """Test the update_items function with some clients."""
+    await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        dpigroup_response=DPI_GROUPS,
+        dpiapp_response=DPI_APPS,
+    )
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+    second_app_event = {
+        "meta": {"rc": "ok", "message": "dpiapp:add"},
+        "data": [
+            {
+                "apps": [524292],
+                "blocked": False,
+                "cats": [],
+                "enabled": False,
+                "log": False,
+                "site_id": "name",
+                "_id": "61783e89c1773a18c0c61f00",
+            }
+        ],
+    }
+    mock_unifi_websocket(data=second_app_event)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+    add_second_app_to_group = {
+        "meta": {"rc": "ok", "message": "dpigroup:sync"},
+        "data": [
+            {
+                "_id": "5f976f4ae3c58f018ec7dff6",
+                "name": "Block Media Streaming",
+                "site_id": "name",
+                "dpiapp_ids": ["5f976f62e3c58f018ec7e17d", "61783e89c1773a18c0c61f00"],
+            }
+        ],
+    }
+
+    mock_unifi_websocket(data=add_second_app_to_group)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_OFF
+
+    second_app_event_enabled = {
+        "meta": {"rc": "ok", "message": "dpiapp:sync"},
+        "data": [
+            {
+                "apps": [524292],
+                "blocked": False,
+                "cats": [],
+                "enabled": True,
+                "log": False,
+                "site_id": "name",
+                "_id": "61783e89c1773a18c0c61f00",
+            }
+        ],
+    }
+    mock_unifi_websocket(data=second_app_event_enabled)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.block_media_streaming").state == STATE_ON
+
+
+async def test_outlet_switches(hass, aioclient_mock, mock_unifi_websocket):
+    """Test the update_items function with some clients."""
+    config_entry = await setup_unifi_integration(
+        hass,
+        aioclient_mock,
+        options={CONF_TRACK_DEVICES: False},
+        devices_response=[OUTLET_UP1],
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    outlet = hass.states.get("switch.plug_outlet_1")
+    assert outlet is not None
+    assert outlet.state == STATE_OFF
+
+    # State change
+
+    outlet_up1 = deepcopy(OUTLET_UP1)
+    outlet_up1["outlet_table"][0]["relay_state"] = True
+
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_DEVICE},
+            "data": [outlet_up1],
+        }
+    )
+    await hass.async_block_till_done()
+
+    outlet = hass.states.get("switch.plug_outlet_1")
+    assert outlet.state == STATE_ON
+
+    # Turn on and off outlet
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.put(
+        f"https://{controller.host}:1234/api/s/{controller.site}/rest/device/600c8356942a6ade50707b56",
+    )
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "switch.plug_outlet_1"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 1
+    assert aioclient_mock.mock_calls[0][2] == {
+        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": True}]
+    }
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "switch.plug_outlet_1"},
+        blocking=True,
+    )
+    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.mock_calls[1][2] == {
+        "outlet_overrides": [{"index": 1, "name": "Outlet 1", "relay_state": False}]
+    }
+
+    # Changes to config entry options shouldn't affect outlets
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_BLOCK_CLIENT: []},
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 1
+
+    # Unload config entry
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    assert hass.states.get("switch.plug_outlet_1").state == STATE_UNAVAILABLE
+
+    # Remove config entry
+    await hass.config_entries.async_remove(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.plug_outlet_1") is None
+
 
 async def test_new_client_discovered_on_block_control(
     hass, aioclient_mock, mock_unifi_websocket
@@ -783,8 +1183,6 @@ async def test_ignore_multiple_poe_clients_on_same_port(hass, aioclient_mock):
         clients_response=POE_SWITCH_CLIENTS,
         devices_response=[DEVICE_1],
     )
-
-    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 3
 
     switch_1 = hass.states.get("switch.poe_client_1")
     switch_2 = hass.states.get("switch.poe_client_2")

@@ -1,225 +1,176 @@
 """Setup mocks for the Plugwise integration tests."""
+from __future__ import annotations
 
-from functools import partial
-from http import HTTPStatus
-import re
-from unittest.mock import AsyncMock, Mock, patch
+from collections.abc import Generator
+import json
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock, patch
 
-import jsonpickle
-from plugwise.exceptions import (
-    ConnectionFailedError,
-    InvalidAuthentication,
-    PlugwiseException,
-    XMLDataMissingError,
-)
 import pytest
 
-from tests.common import load_fixture
-from tests.test_util.aiohttp import AiohttpClientMocker
+from homeassistant.components.plugwise.const import API, DOMAIN, PW_TYPE
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_MAC,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+)
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry, load_fixture
 
 
-def _read_json(environment, call):
+def _read_json(environment: str, call: str) -> dict[str, Any]:
     """Undecode the json data."""
     fixture = load_fixture(f"plugwise/{environment}/{call}.json")
-    return jsonpickle.decode(fixture)
+    return json.loads(fixture)
 
 
-@pytest.fixture(name="mock_smile")
-def mock_smile():
-    """Create a Mock Smile for testing exceptions."""
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="My Plugwise",
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "127.0.0.1",
+            CONF_MAC: "AA:BB:CC:DD:EE:FF",
+            CONF_PASSWORD: "test-password",
+            CONF_PORT: 80,
+            CONF_USERNAME: "smile",
+            PW_TYPE: API,
+        },
+        unique_id="smile98765",
+    )
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.plugwise.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture()
+def mock_smile_config_flow() -> Generator[None, MagicMock, None]:
+    """Return a mocked Smile client."""
     with patch(
         "homeassistant.components.plugwise.config_flow.Smile",
+        autospec=True,
     ) as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.return_value.connect.return_value = True
-        yield smile_mock.return_value
+        smile = smile_mock.return_value
+        smile.smile_hostname = "smile12345"
+        smile.smile_name = "Test Smile Name"
+        smile.connect.return_value = True
+        yield smile
 
 
-@pytest.fixture(name="mock_smile_unauth")
-def mock_smile_unauth(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the Plugwise Smile unauthorized for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
-    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.UNAUTHORIZED)
-
-
-@pytest.fixture(name="mock_smile_error")
-def mock_smile_error(aioclient_mock: AiohttpClientMocker) -> None:
-    """Mock the Plugwise Smile server failure for Home Assistant."""
-    aioclient_mock.get(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-    aioclient_mock.put(re.compile(".*"), status=HTTPStatus.INTERNAL_SERVER_ERROR)
-
-
-@pytest.fixture(name="mock_smile_notconnect")
-def mock_smile_notconnect():
-    """Mock the Plugwise Smile general connection failure for Home Assistant."""
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.PlugwiseException = PlugwiseException
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=False)
-        yield smile_mock.return_value
-
-
-def _get_device_data(chosen_env, device_id):
-    """Mock return data for specific devices."""
-    return _read_json(chosen_env, "get_device_data/" + device_id)
-
-
-@pytest.fixture(name="mock_smile_adam")
-def mock_smile_adam():
+@pytest.fixture
+def mock_smile_adam() -> Generator[None, MagicMock, None]:
     """Create a Mock Adam environment for testing exceptions."""
     chosen_env = "adam_multiple_devices_per_zone"
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.XMLDataMissingError = XMLDataMissingError
 
-        smile_mock.return_value.gateway_id = "fe799307f1624099878210aa0b9f1475"
-        smile_mock.return_value.heater_id = "90986d591dcd426cae3ec3e8111ff730"
-        smile_mock.return_value.smile_version = "3.0.15"
-        smile_mock.return_value.smile_type = "thermostat"
-        smile_mock.return_value.smile_hostname = "smile98765"
+    with patch(
+        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
 
-        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+        smile.gateway_id = "fe799307f1624099878210aa0b9f1475"
+        smile.heater_id = "90986d591dcd426cae3ec3e8111ff730"
+        smile.smile_version = "3.0.15"
+        smile.smile_type = "thermostat"
+        smile.smile_hostname = "smile98765"
+        smile.smile_name = "Adam"
 
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.full_update_device.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
-            return_value=False
-        )
-        smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_preset.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.set_temperature.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
-            return_value=True
-        )
+        smile.connect.return_value = True
 
-        smile_mock.return_value.get_all_devices.return_value = _read_json(
-            chosen_env, "get_all_devices"
-        )
-        smile_mock.return_value.get_device_data.side_effect = partial(
-            _get_device_data, chosen_env
-        )
+        smile.notifications = _read_json(chosen_env, "notifications")
+        smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        yield smile_mock.return_value
+        yield smile
 
 
-@pytest.fixture(name="mock_smile_anna")
-def mock_smile_anna():
+@pytest.fixture
+def mock_smile_anna() -> Generator[None, MagicMock, None]:
     """Create a Mock Anna environment for testing exceptions."""
     chosen_env = "anna_heatpump"
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.XMLDataMissingError = XMLDataMissingError
+    with patch(
+        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
 
-        smile_mock.return_value.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
-        smile_mock.return_value.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
-        smile_mock.return_value.smile_version = "4.0.15"
-        smile_mock.return_value.smile_type = "thermostat"
-        smile_mock.return_value.smile_hostname = "smile98765"
+        smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
+        smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
+        smile.smile_version = "4.0.15"
+        smile.smile_type = "thermostat"
+        smile.smile_hostname = "smile98765"
+        smile.smile_name = "Anna"
 
-        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+        smile.connect.return_value = True
 
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.full_update_device.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
-            return_value=True
-        )
-        smile_mock.return_value.set_schedule_state.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_preset.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.set_temperature.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
-            return_value=True
-        )
+        smile.notifications = _read_json(chosen_env, "notifications")
+        smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        smile_mock.return_value.get_all_devices.return_value = _read_json(
-            chosen_env, "get_all_devices"
-        )
-        smile_mock.return_value.get_device_data.side_effect = partial(
-            _get_device_data, chosen_env
-        )
-
-        yield smile_mock.return_value
+        yield smile
 
 
-@pytest.fixture(name="mock_smile_p1")
-def mock_smile_p1():
+@pytest.fixture
+def mock_smile_p1() -> Generator[None, MagicMock, None]:
     """Create a Mock P1 DSMR environment for testing exceptions."""
     chosen_env = "p1v3_full_option"
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.XMLDataMissingError = XMLDataMissingError
+    with patch(
+        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
 
-        smile_mock.return_value.gateway_id = "e950c7d5e1ee407a858e2a8b5016c8b3"
-        smile_mock.return_value.heater_id = None
-        smile_mock.return_value.smile_version = "3.3.9"
-        smile_mock.return_value.smile_type = "power"
-        smile_mock.return_value.smile_hostname = "smile98765"
+        smile.gateway_id = "e950c7d5e1ee407a858e2a8b5016c8b3"
+        smile.heater_id = None
+        smile.smile_version = "3.3.9"
+        smile.smile_type = "power"
+        smile.smile_hostname = "smile98765"
+        smile.smile_name = "Smile P1"
 
-        smile_mock.return_value.notifications = _read_json(chosen_env, "notifications")
+        smile.connect.return_value = True
 
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.full_update_device.side_effect = AsyncMock(
-            return_value=True
-        )
+        smile.notifications = _read_json(chosen_env, "notifications")
+        smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        smile_mock.return_value.single_master_thermostat.side_effect = Mock(
-            return_value=None
-        )
-
-        smile_mock.return_value.get_all_devices.return_value = _read_json(
-            chosen_env, "get_all_devices"
-        )
-        smile_mock.return_value.get_device_data.side_effect = partial(
-            _get_device_data, chosen_env
-        )
-
-        yield smile_mock.return_value
+        yield smile
 
 
-@pytest.fixture(name="mock_stretch")
-def mock_stretch():
+@pytest.fixture
+def mock_stretch() -> Generator[None, MagicMock, None]:
     """Create a Mock Stretch environment for testing exceptions."""
     chosen_env = "stretch_v31"
-    with patch("homeassistant.components.plugwise.gateway.Smile") as smile_mock:
-        smile_mock.InvalidAuthentication = InvalidAuthentication
-        smile_mock.ConnectionFailedError = ConnectionFailedError
-        smile_mock.XMLDataMissingError = XMLDataMissingError
+    with patch(
+        "homeassistant.components.plugwise.gateway.Smile", autospec=True
+    ) as smile_mock:
+        smile = smile_mock.return_value
 
-        smile_mock.return_value.gateway_id = "259882df3c05415b99c2d962534ce820"
-        smile_mock.return_value.heater_id = None
-        smile_mock.return_value.smile_version = "3.1.11"
-        smile_mock.return_value.smile_type = "stretch"
-        smile_mock.return_value.smile_hostname = "stretch98765"
+        smile.gateway_id = "259882df3c05415b99c2d962534ce820"
+        smile.heater_id = None
+        smile.smile_version = "3.1.11"
+        smile.smile_type = "stretch"
+        smile.smile_hostname = "stretch98765"
+        smile.smile_name = "Stretch"
 
-        smile_mock.return_value.connect.side_effect = AsyncMock(return_value=True)
-        smile_mock.return_value.full_update_device.side_effect = AsyncMock(
-            return_value=True
-        )
-        smile_mock.return_value.set_relay_state.side_effect = AsyncMock(
-            return_value=True
-        )
+        smile.connect.return_value = True
+        smile.async_update.return_value = _read_json(chosen_env, "all_data")
 
-        smile_mock.return_value.get_all_devices.return_value = _read_json(
-            chosen_env, "get_all_devices"
-        )
-        smile_mock.return_value.get_device_data.side_effect = partial(
-            _get_device_data, chosen_env
-        )
+        yield smile
 
-        yield smile_mock.return_value
+
+@pytest.fixture
+async def init_integration(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> MockConfigEntry:
+    """Set up the Plugwise integration for testing."""
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return mock_config_entry

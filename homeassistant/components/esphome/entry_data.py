@@ -19,6 +19,8 @@ from aioesphomeapi import (
     EntityState,
     FanInfo,
     LightInfo,
+    LockInfo,
+    MediaPlayerInfo,
     NumberInfo,
     SelectInfo,
     SensorInfo,
@@ -44,6 +46,8 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     CoverInfo: "cover",
     FanInfo: "fan",
     LightInfo: "light",
+    LockInfo: "lock",
+    MediaPlayerInfo: "media_player",
     NumberInfo: "number",
     SelectInfo: "select",
     SensorInfo: "sensor",
@@ -61,6 +65,7 @@ class RuntimeEntryData:
     store: Store
     state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
+    key_to_component: dict[int, str] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
@@ -77,14 +82,6 @@ class RuntimeEntryData:
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
-
-    @callback
-    def async_update_entity(
-        self, hass: HomeAssistant, component_key: str, key: int
-    ) -> None:
-        """Schedule the update of an entity."""
-        signal = f"esphome_{self.entry_id}_update_{component_key}_{key}"
-        async_dispatcher_send(hass, signal)
 
     @callback
     def async_remove_entity(
@@ -127,9 +124,11 @@ class RuntimeEntryData:
 
     @callback
     def async_update_state(self, hass: HomeAssistant, state: EntityState) -> None:
-        """Distribute an update of state information to all platforms."""
-        signal = f"esphome_{self.entry_id}_on_state"
-        async_dispatcher_send(hass, signal, state)
+        """Distribute an update of state information to the target."""
+        component_key = self.key_to_component[state.key]
+        self.state[component_key][state.key] = state
+        signal = f"esphome_{self.entry_id}_update_{component_key}_{state.key}"
+        async_dispatcher_send(hass, signal)
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:

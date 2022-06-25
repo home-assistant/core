@@ -1,6 +1,6 @@
 {
   "domain": "squeezebox",
-  "name": "Logitech Squeezebox",
+  "name": "Squeezebox (Logitech Media Server)",
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "codeowners": ["@rajlaud"],
   "requirements": ["pysqueezebox==0.5.5"],
@@ -11,5 +11,6 @@
       "macaddress": "000420*"
     }
   ],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["pysqueezebox"]
 }

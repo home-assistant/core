@@ -1,4 +1,31 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alla entiteter",
+                    "entities": "Medlemmar",
+                    "name": "Namn"
+                },
+                "title": "Ny grupp"
+            },
+            "light": {
+                "title": "L\u00e4gg till grupp"
+            },
+            "user": {
+                "title": "L\u00e4gg till grupp"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alla entiteter"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "St\u00e4ngd",

@@ -53,6 +53,15 @@ BUTTONS: dict[str, tuple[ButtonEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        ButtonEntityDescription(
+            key=DPCode.SWITCH_USB6,
+            name="Snooze",
+            icon="mdi:sleep",
+        ),
+    ),
 }
 
 
@@ -70,7 +79,7 @@ async def async_setup_entry(
             device = hass_data.device_manager.device_map[device_id]
             if descriptions := BUTTONS.get(device.category):
                 for description in descriptions:
-                    if description.key in device.function:
+                    if description.key in device.status:
                         entities.append(
                             TuyaButtonEntity(
                                 device, hass_data.device_manager, description

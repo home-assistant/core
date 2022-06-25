@@ -5,6 +5,7 @@ from datetime import timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 
+from freezegun import freeze_time
 import pytest
 import voluptuous as vol
 
@@ -16,7 +17,7 @@ from homeassistant.const import (
 import homeassistant.core as ha
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import discovery
-from homeassistant.helpers.entity_component import EntityComponent
+from homeassistant.helpers.entity_component import EntityComponent, async_update_entity
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -177,7 +178,7 @@ async def test_extract_from_service_available_device(hass):
     )
 
 
-async def test_platform_not_ready(hass, legacy_patchable_time):
+async def test_platform_not_ready(hass):
     """Test that we retry when platform not ready."""
     platform1_setup = Mock(side_effect=[PlatformNotReady, PlatformNotReady, None])
     mock_integration(hass, MockModule("mod1"))
@@ -192,7 +193,7 @@ async def test_platform_not_ready(hass, legacy_patchable_time):
 
     utcnow = dt_util.utcnow()
 
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow):
+    with freeze_time(utcnow):
         # Should not trigger attempt 2
         async_fire_time_changed(hass, utcnow + timedelta(seconds=29))
         await hass.async_block_till_done()
@@ -385,7 +386,7 @@ async def test_update_entity(hass):
     # Called as part of async_add_entities
     assert len(entity.async_write_ha_state.mock_calls) == 1
 
-    await hass.helpers.entity_component.async_update_entity(entity.entity_id)
+    await async_update_entity(hass, entity.entity_id)
 
     assert len(entity.async_update_ha_state.mock_calls) == 1
     assert entity.async_update_ha_state.mock_calls[-1][1][0] is True

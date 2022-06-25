@@ -1,6 +1,7 @@
 """Config flow for VLC media player Telnet integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -104,7 +105,7 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=user_form_schema(user_input), errors=errors
         )
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth flow."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         assert self.entry
@@ -165,7 +166,6 @@ class VLCTelnetConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="hassio_confirm",
-                data_schema=vol.Schema({}),
                 description_placeholders={"addon": self.hassio_discovery["addon"]},
             )
 

@@ -90,13 +90,15 @@ async def test_config_reauth_profile(
 
     aioclient_mock.clear_requests()
     aioclient_mock.post(
-        "https://account.withings.com/oauth2/token",
+        "https://wbsapi.withings.net/v2/oauth2",
         json={
-            "refresh_token": "mock-refresh-token",
-            "access_token": "mock-access-token",
-            "type": "Bearer",
-            "expires_in": 60,
-            "userid": "0",
+            "body": {
+                "refresh_token": "mock-refresh-token",
+                "access_token": "mock-access-token",
+                "type": "Bearer",
+                "expires_in": 60,
+                "userid": "0",
+            },
         },
     )
 

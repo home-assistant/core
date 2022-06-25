@@ -28,6 +28,7 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from .const import (
     AWAIR_UUID,
@@ -336,9 +337,7 @@ async def test_awair_unavailable(hass):
     )
 
     with patch("python_awair.AwairClient.query", side_effect=OFFLINE_FIXTURE):
-        await hass.helpers.entity_component.async_update_entity(
-            "sensor.living_room_awair_score"
-        )
+        await async_update_entity(hass, "sensor.living_room_awair_score")
         assert_expected_properties(
             hass,
             registry,

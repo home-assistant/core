@@ -1,14 +1,15 @@
 """Config flow for the Total Connect component."""
+from __future__ import annotations
+
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_LOCATION, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 
-from .const import CONF_USERCODES, DOMAIN
-
-CONF_LOCATION = "location"
+from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
 
 PASSWORD_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
 
@@ -164,3 +165,36 @@ class TotalConnectConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_abort(reason="reauth_successful")
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> TotalConnectOptionsFlowHandler:
+        """Get options flow."""
+        return TotalConnectOptionsFlowHandler(config_entry)
+
+
+class TotalConnectOptionsFlowHandler(config_entries.OptionsFlow):
+    """TotalConnect options flow handler."""
+
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
+        """Initialize options flow."""
+        self.config_entry = config_entry
+
+    async def async_step_init(self, user_input=None):
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        AUTO_BYPASS,
+                        default=self.config_entry.options.get(AUTO_BYPASS, False),
+                    ): bool
+                }
+            ),
+        )

@@ -20,7 +20,10 @@ from homeassistant.const import (
     CONF_NAME,
     DATA_RATE_MEGABITS_PER_SECOND,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
 from homeassistant.util.dt import utcnow
 
@@ -86,7 +89,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Bbox sensor."""
     # Create a data fetcher to support all of the configured sensors. Then make
     # the first call to init the data.
@@ -95,7 +103,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         bbox_data.update()
     except requests.exceptions.HTTPError as error:
         _LOGGER.error(error)
-        return False
+        return
 
     name = config[CONF_NAME]
 

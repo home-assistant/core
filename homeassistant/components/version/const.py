@@ -11,7 +11,7 @@ from homeassistant.const import CONF_NAME, Platform
 
 DOMAIN: Final = "version"
 LOGGER: Final[Logger] = getLogger(__package__)
-PLATFORMS: Final[list[Platform]] = [Platform.SENSOR]
+PLATFORMS: Final[list[Platform]] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 UPDATE_COORDINATOR_UPDATE_INTERVAL: Final[timedelta] = timedelta(minutes=5)
 
 ENTRY_TYPE_SERVICE: Final = "service"
@@ -30,8 +30,7 @@ ATTR_CHANNEL: Final = CONF_CHANNEL
 ATTR_VERSION_SOURCE: Final = CONF_VERSION_SOURCE
 ATTR_SOURCE: Final = CONF_SOURCE
 
-SOURCE_DOKCER: Final = "docker"  # Kept to not break existing configurations
-SOURCE_HASSIO: Final = "hassio"  # Kept to not break existing configurations
+SOURCE_DOCKER: Final = "docker"  # Kept to not break existing configurations
 
 VERSION_SOURCE_DOCKER_HUB: Final = "Docker Hub"
 VERSION_SOURCE_HAIO: Final = "Home Assistant Website"
@@ -41,12 +40,11 @@ VERSION_SOURCE_VERSIONS: Final = "Home Assistant Versions"
 
 DEFAULT_BETA: Final = False
 DEFAULT_BOARD: Final = "OVA"
-DEFAULT_CHANNEL: Final[HaVersionChannel] = HaVersionChannel.STABLE
+DEFAULT_CHANNEL: Final = "stable"
 DEFAULT_IMAGE: Final = "default"
 DEFAULT_NAME_CURRENT: Final = "Current Version"
-DEFAULT_NAME_LATEST: Final = "Latest Version"
 DEFAULT_NAME: Final = ""
-DEFAULT_SOURCE: Final[HaVersionSource] = HaVersionSource.LOCAL
+DEFAULT_SOURCE: Final = "local"
 DEFAULT_CONFIGURATION: Final[dict[str, Any]] = {
     CONF_NAME: DEFAULT_NAME,
     CONF_CHANNEL: DEFAULT_CHANNEL,
@@ -63,8 +61,6 @@ HA_VERSION_SOURCES: Final[list[str]] = [source.value for source in HaVersionSour
 
 BOARD_MAP: Final[dict[str, str]] = {
     "OVA": "ova",
-    "RaspberryPi": "rpi",
-    "RaspberryPi Zero-W": "rpi0-w",
     "RaspberryPi 2": "rpi2",
     "RaspberryPi 3": "rpi3",
     "RaspberryPi 3 64bit": "rpi3-64",
@@ -75,28 +71,25 @@ BOARD_MAP: Final[dict[str, str]] = {
     "ODROID C4": "odroid-c4",
     "ODROID N2": "odroid-n2",
     "ODROID XU4": "odroid-xu4",
+    "Generic AArch64": "generic-aarch64",
     "Generic x86-64": "generic-x86-64",
-    "Intel NUC": "intel-nuc",
+    "Home Assistant Yellow": "yellow",
+    "Khadas VIM3": "khadas-vim3",
 }
 
 VALID_BOARDS: Final[list[str]] = list(BOARD_MAP)
 
-VERSION_SOURCE_MAP: Final[dict[str, HaVersionSource]] = {
-    VERSION_SOURCE_LOCAL: HaVersionSource.LOCAL,
-    VERSION_SOURCE_VERSIONS: HaVersionSource.SUPERVISOR,
-    VERSION_SOURCE_HAIO: HaVersionSource.HAIO,
-    VERSION_SOURCE_DOCKER_HUB: HaVersionSource.CONTAINER,
-    VERSION_SOURCE_PYPI: HaVersionSource.PYPI,
+VERSION_SOURCE_MAP: Final[dict[str, str]] = {
+    VERSION_SOURCE_LOCAL: "local",
+    VERSION_SOURCE_VERSIONS: "supervisor",
+    VERSION_SOURCE_HAIO: "haio",
+    VERSION_SOURCE_DOCKER_HUB: "container",
+    VERSION_SOURCE_PYPI: "pypi",
 }
-
-VERSION_SOURCE_MAP_INVERTED: Final[dict[HaVersionSource, str]] = {
-    value: key for key, value in VERSION_SOURCE_MAP.items()
-}
-
 
 VALID_SOURCES: Final[list[str]] = HA_VERSION_SOURCES + [
-    SOURCE_HASSIO,  # Kept to not break existing configurations
-    SOURCE_DOKCER,  # Kept to not break existing configurations
+    "hassio",  # Kept to not break existing configurations
+    "docker",  # Kept to not break existing configurations
 ]
 
 VALID_IMAGES: Final = [

@@ -191,6 +191,8 @@ def parse_mapping(mapping, parents=None):
 def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
 
+    hass.data[DOMAIN] = {}
+
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
     device_aliases = {}
@@ -333,7 +335,7 @@ def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     def _new_device(device):
         """Handle new devices which are detected by HDMI network."""
         key = f"{DOMAIN}.{device.name}"
-        hass.data[key] = device
+        hass.data[DOMAIN][key] = device
         ent_platform = base_config[DOMAIN][CONF_TYPES].get(key, platform)
         discovery.load_platform(
             hass,

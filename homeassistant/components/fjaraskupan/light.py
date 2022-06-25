@@ -1,23 +1,16 @@
 """Support for lights."""
 from __future__ import annotations
 
-from fjaraskupan import COMMAND_LIGHT_ON_OFF, Device, State
+from fjaraskupan import COMMAND_LIGHT_ON_OFF, Device
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    COLOR_MODE_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceState, async_setup_entry_platform
+from . import Coordinator, async_setup_entry_platform
 
 
 async def async_setup_entry(
@@ -27,30 +20,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
 
-    def _constructor(device_state: DeviceState) -> list[Entity]:
-        return [
-            Light(
-                device_state.coordinator, device_state.device, device_state.device_info
-            )
-        ]
+    def _constructor(coordinator: Coordinator) -> list[Entity]:
+        return [Light(coordinator, coordinator.device, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class Light(CoordinatorEntity[State], LightEntity):
+class Light(CoordinatorEntity[Coordinator], LightEntity):
     """Light device."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: Coordinator,
         device: Device,
         device_info: DeviceInfo,
     ) -> None:
         """Init light entity."""
         super().__init__(coordinator)
         self._device = device
-        self._attr_color_mode = COLOR_MODE_BRIGHTNESS
-        self._attr_supported_color_modes = {COLOR_MODE_BRIGHTNESS}
+        self._attr_color_mode = ColorMode.BRIGHTNESS
+        self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
         self._attr_name = device_info["name"]

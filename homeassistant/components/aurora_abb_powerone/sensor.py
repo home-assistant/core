@@ -1,11 +1,11 @@
-"""Support for Aurora ABB PowerOne Solar Photvoltaic (PV) inverter."""
+"""Support for Aurora ABB PowerOne Solar Photovoltaic (PV) inverter."""
 from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-from aurorapy.client import AuroraError, AuroraSerialClient
+from aurorapy.client import AuroraError, AuroraSerialClient, AuroraTimeoutError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,8 +13,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TEMP_CELSIUS
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .aurora_device import AuroraEntity
 from .const import DOMAIN
@@ -47,7 +50,11 @@ SENSOR_TYPES = [
 ]
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities) -> None:
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up aurora_abb_powerone sensor based on a config entry."""
     entities = []
 
@@ -95,22 +102,16 @@ class AuroraSensor(AuroraEntity, SensorEntity):
                 self._attr_native_value = round(energy_wh / 1000, 2)
             self._attr_available = True
 
+        except AuroraTimeoutError:
+            self._attr_state = None
+            self._attr_native_value = None
+            self._attr_available = False
+            _LOGGER.debug("No response from inverter (could be dark)")
         except AuroraError as error:
             self._attr_state = None
             self._attr_native_value = None
             self._attr_available = False
-            # aurorapy does not have different exceptions (yet) for dealing
-            # with timeout vs other comms errors.
-            # This means the (normal) situation of no response during darkness
-            # raises an exception.
-            # aurorapy (gitlab) pull request merged 29/5/2019. When >0.2.6 is
-            # released, this could be modified to :
-            # except AuroraTimeoutError as e:
-            # Workaround: look at the text of the exception
-            if "No response after" in str(error):
-                _LOGGER.debug("No response from inverter (could be dark)")
-            else:
-                raise error
+            raise error
         finally:
             if self._attr_available != self.available_prev:
                 if self._attr_available:

@@ -217,6 +217,7 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     aioclient_mock.clear_requests()
 
     data = {
+        "config": {},
         "groups": {
             "1": {
                 "id": "Group 1 id",
@@ -254,7 +255,7 @@ async def test_service_refresh_devices(hass, aioclient_mock):
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
 
 
 async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_mock):
@@ -280,6 +281,7 @@ async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_m
     aioclient_mock.clear_requests()
 
     data = {
+        "config": {},
         "groups": {
             "1": {
                 "id": "Group 1 id",
@@ -317,7 +319,7 @@ async def test_service_refresh_devices_trigger_no_state_update(hass, aioclient_m
     )
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all()) == 4
+    assert len(hass.states.async_all()) == 5
     assert len(captured_events) == 0
 
 

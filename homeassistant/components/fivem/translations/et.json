@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Teenus on juba seadistatud"
+        },
+        "error": {
+            "cannot_connect": "\u00dchendamine eba\u00f5nnestus. Kontrolli hosti ja porti ning proovi uuesti. Veendu, et kasutad uusimat FiveM-i serverit.",
+            "invalid_game_name": "M\u00e4ngu API, millega proovid \u00fchendust luua, ei ole FiveM-m\u00e4ng.",
+            "unknown_error": "Ootamatu t\u00f5rge"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host",
+                    "name": "Nimi",
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

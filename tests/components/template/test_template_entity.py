@@ -5,9 +5,9 @@ from homeassistant.components.template import template_entity
 from homeassistant.helpers import template
 
 
-async def test_template_entity_requires_hass_set():
+async def test_template_entity_requires_hass_set(hass):
     """Test template entity requires hass to be set before accepting templates."""
-    entity = template_entity.TemplateEntity()
+    entity = template_entity.TemplateEntity(hass)
 
     with pytest.raises(AssertionError):
         entity.add_template_attribute("_hello", template.Template("Hello"))

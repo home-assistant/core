@@ -7,7 +7,9 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     LIGHT_LUX,
@@ -16,6 +18,8 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import XiaomiDevice
 from .const import BATTERY_MODELS, DOMAIN, GATEWAYS_KEY, POWER_MODELS
@@ -27,36 +31,43 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
         key="temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "humidity": SensorEntityDescription(
         key="humidity",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "illumination": SensorEntityDescription(
         key="illumination",
         native_unit_of_measurement="lm",
         device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "lux": SensorEntityDescription(
         key="lux",
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "pressure": SensorEntityDescription(
         key="pressure",
         native_unit_of_measurement=PRESSURE_HPA,
         device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "bed_activity": SensorEntityDescription(
         key="bed_activity",
         native_unit_of_measurement="μm",
         device_class=None,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "load_power": SensorEntityDescription(
         key="load_power",
         native_unit_of_measurement=POWER_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     "final_tilt_angle": SensorEntityDescription(
         key="final_tilt_angle",
@@ -66,13 +77,18 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
     "Battery": SensorEntityDescription(
         key="Battery",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Perform the setup for Xiaomi devices."""
-    entities = []
+    entities: list[XiaomiSensor | XiaomiBatterySensor] = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for device in gateway.devices["sensor"]:
         if device["model"] == "sensor_ht":

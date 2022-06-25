@@ -1,6 +1,10 @@
 """Config flow to configure Xiaomi Miio."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import logging
 from re import search
+from typing import Any
 
 from micloud import MiCloud
 from micloud.micloudexception import MiCloudAccessDenied
@@ -8,8 +12,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.config_entries import SOURCE_REAUTH
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_TOKEN
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_NAME, CONF_TOKEN
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.device_registry import format_mac
@@ -24,7 +28,6 @@ from .const import (
     CONF_GATEWAY,
     CONF_MAC,
     CONF_MANUAL,
-    CONF_MODEL,
     DEFAULT_CLOUD_COUNTRY,
     DOMAIN,
     MODELS_ALL,
@@ -62,7 +65,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         """Init object."""
         self.config_entry = config_entry
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the options."""
         errors = {}
         if user_input is not None:
@@ -106,25 +111,25 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self.host = None
-        self.mac = None
+        self.host: str | None = None
+        self.mac: str | None = None
         self.token = None
         self.model = None
         self.name = None
         self.cloud_username = None
         self.cloud_password = None
         self.cloud_country = None
-        self.cloud_devices = {}
+        self.cloud_devices: dict[str, dict[str, Any]] = {}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or missing cloud credentials."""
         self.host = user_input[CONF_HOST]
         self.token = user_input[CONF_TOKEN]
@@ -132,15 +137,15 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.model = user_input.get(CONF_MODEL)
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is not None:
             return await self.async_step_cloud()
-        return self.async_show_form(
-            step_id="reauth_confirm", data_schema=vol.Schema({})
-        )
+        return self.async_show_form(step_id="reauth_confirm")
 
-    async def async_step_import(self, conf: dict):
+    async def async_step_import(self, conf: dict[str, Any]) -> FlowResult:
         """Import a configuration from config.yaml."""
         self.host = conf[CONF_HOST]
         self.token = conf[CONF_TOKEN]
@@ -152,7 +157,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return await self.async_step_connect()
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         return await self.async_step_cloud()
 
@@ -206,7 +213,7 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         )
         return self.async_abort(reason="not_xiaomi_miio")
 
-    def extract_cloud_info(self, cloud_device_info):
+    def extract_cloud_info(self, cloud_device_info: dict[str, Any]) -> None:
         """Extract the cloud info."""
         if self.host is None:
             self.host = cloud_device_info["localip"]
@@ -218,7 +225,9 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             self.name = cloud_device_info["name"]
         self.token = cloud_device_info["token"]
 
-    async def async_step_cloud(self, user_input=None):
+    async def async_step_cloud(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Configure a xiaomi miio device through the Miio Cloud."""
         errors = {}
         if user_input is not None:
@@ -286,9 +295,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="cloud", data_schema=DEVICE_CLOUD_CONFIG, errors=errors
         )
 
-    async def async_step_select(self, user_input=None):
+    async def async_step_select(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle multiple cloud devices found."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             cloud_device = self.cloud_devices[user_input["select_device"]]
             self.extract_cloud_info(cloud_device)
@@ -302,9 +313,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="select", data_schema=select_schema, errors=errors
         )
 
-    async def async_step_manual(self, user_input=None):
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Configure a xiaomi miio device Manually."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             self.token = user_input[CONF_TOKEN]
             if user_input.get(CONF_HOST):
@@ -319,9 +332,11 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="manual", data_schema=schema, errors=errors)
 
-    async def async_step_connect(self, user_input=None):
+    async def async_step_connect(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Connect to a xiaomi miio device."""
-        errors = {}
+        errors: dict[str, str] = {}
         if self.host is None or self.token is None:
             return self.async_abort(reason="incomplete_info")
 

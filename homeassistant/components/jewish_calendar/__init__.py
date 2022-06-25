@@ -4,13 +4,14 @@ from __future__ import annotations
 from hdate import Location
 import voluptuous as vol
 
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "jewish_calendar"
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 CONF_DIASPORA = "diaspora"
 CONF_LANGUAGE = "language"
@@ -67,6 +68,9 @@ def get_unique_prefix(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Jewish Calendar component."""
+    if DOMAIN not in config:
+        return True
+
     name = config[DOMAIN][CONF_NAME]
     language = config[DOMAIN][CONF_LANGUAGE]
 
@@ -97,10 +101,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "prefix": prefix,
     }
 
-    hass.async_create_task(async_load_platform(hass, "sensor", DOMAIN, {}, config))
-
-    hass.async_create_task(
-        async_load_platform(hass, "binary_sensor", DOMAIN, {}, config)
-    )
+    for platform in PLATFORMS:
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     return True

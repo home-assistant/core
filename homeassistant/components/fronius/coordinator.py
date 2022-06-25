@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import timedelta
-from typing import TYPE_CHECKING, Any, Dict, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from pyfronius import BadStatusError, FroniusError
 
@@ -31,11 +31,11 @@ if TYPE_CHECKING:
     from . import FroniusSolarNet
     from .sensor import _FroniusSensorEntity
 
-    FroniusEntityType = TypeVar("FroniusEntityType", bound=_FroniusSensorEntity)
+    _FroniusEntityT = TypeVar("_FroniusEntityT", bound=_FroniusSensorEntity)
 
 
 class FroniusCoordinatorBase(
-    ABC, DataUpdateCoordinator[Dict[SolarNetId, Dict[str, Any]]]
+    ABC, DataUpdateCoordinator[dict[SolarNetId, dict[str, Any]]]
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
@@ -84,7 +84,7 @@ class FroniusCoordinatorBase(
     def add_entities_for_seen_keys(
         self,
         async_add_entities: AddEntitiesCallback,
-        entity_constructor: type[FroniusEntityType],
+        entity_constructor: type[_FroniusEntityT],
     ) -> None:
         """
         Add entities for received keys and registers listener for future seen keys.

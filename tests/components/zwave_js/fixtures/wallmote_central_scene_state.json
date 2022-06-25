@@ -68,7 +68,11 @@
       "inclusion": "To add the ZP3111 to the Z-Wave network (inclusion), place the Z-Wave primary controller into inclusion mode. Press the Program Switch of ZP3111 for sending the NIF. After sending NIF, Z-Wave will send the auto inclusion, otherwise, ZP3111 will go to sleep after 20 seconds.",
       "exclusion": "To remove the ZP3111 from the Z-Wave network (exclusion), place the Z-Wave primary controller into \u201cexclusion\u201d mode, and following its instruction to delete the ZP3111 to the controller. Press the Program Switch of ZP3111 once to be excluded.",
       "reset": "Remove cover to triggered tamper switch, LED flash once & send out Alarm Report. Press Program Switch 10 times within 10 seconds, ZP3111 will send the \u201cDevice Reset Locally Notification\u201d command and reset to the factory default. (Remark: This is to be used only in the case of primary controller being inoperable or otherwise unavailable.)",
-      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2479/ZP3111-5_R2_20170316.pdf"
+      "manual": "https://products.z-wavealliance.org/ProductManual/File?folder=&filename=MarketCertificationFiles/2479/ZP3111-5_R2_20170316.pdf",
+      "comments": {
+        "level": "info",
+        "text": "test"
+      }
     },
     "isEmbedded": true
   },
@@ -80,98 +84,98 @@
   "aggregatedEndpointCount": 0,
   "interviewAttempts": 1,
   "interviewStage": "NodeInfo",
-  "commandClasses": [
-    {
-      "id": 89,
-      "name": "Association Group Information",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 90,
-      "name": "Device Reset Locally",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 91,
-      "name": "Central Scene",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 94,
-      "name": "Z-Wave Plus Info",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 96,
-      "name": "Multi Channel",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 112,
-      "name": "Configuration",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 113,
-      "name": "Notification",
-      "version": 4,
-      "isSecure": false
-    },
-    {
-      "id": 114,
-      "name": "Manufacturer Specific",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 122,
-      "name": "Firmware Update Meta Data",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 128,
-      "name": "Battery",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 132,
-      "name": "Wake Up",
-      "version": 1,
-      "isSecure": false
-    },
-    {
-      "id": 133,
-      "name": "Association",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 134,
-      "name": "Version",
-      "version": 2,
-      "isSecure": false
-    },
-    {
-      "id": 142,
-      "name": "Multi Channel Association",
-      "version": 3,
-      "isSecure": false
-    }
-  ],
   "endpoints": [
     {
       "nodeId": 35,
       "index": 0,
       "installerIcon": 7172,
-      "userIcon": 7172
+      "userIcon": 7172,
+      "commandClasses": [
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 91,
+          "name": "Central Scene",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 96,
+          "name": "Multi Channel",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 4,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 122,
+          "name": "Firmware Update Meta Data",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 132,
+          "name": "Wake Up",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 142,
+          "name": "Multi Channel Association",
+          "version": 3,
+          "isSecure": false
+        }
+      ]
     },
     {
       "nodeId": 35,
@@ -694,5 +698,6 @@
         "label": "Z-Wave chip hardware version"
       }
     }
-  ]
+  ],
+  "isControllerNode": false
 }

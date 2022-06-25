@@ -5,7 +5,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "unknown": "Erreur inattendue"
         },
         "flow_title": "{mac} ({ip})",
@@ -25,17 +25,8 @@
             "cannot_connect": "\u00c9chec de connexion"
         },
         "step": {
-            "entity_config": {
-                "data": {
-                    "reverse": "La couverture est invers\u00e9e"
-                },
-                "description": "Configurer les options pour \u00ab {entity_id} \u00bb",
-                "title": "Configurez une entit\u00e9 sp\u00e9cifique"
-            },
             "init": {
                 "data": {
-                    "default_reverse": "Statut d'inversion par d\u00e9faut pour les couvertures non configur\u00e9es",
-                    "entity_id": "Configurez une entit\u00e9 sp\u00e9cifique.",
                     "target_id": "Configurez les options pour la couverture."
                 },
                 "title": "Configurer les options MyLink"
@@ -48,6 +39,5 @@
                 "title": "Configurer la couverture MyLink"
             }
         }
-    },
-    "title": "Somfy MyLink"
+    }
 }

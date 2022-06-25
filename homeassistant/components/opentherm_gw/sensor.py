@@ -3,11 +3,13 @@ import logging
 from pprint import pformat
 
 from homeassistant.components.sensor import ENTITY_ID_FORMAT, SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DOMAIN
 from .const import (
@@ -21,12 +23,16 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the OpenTherm Gateway sensors."""
     sensors = []
     deprecated_sensors = []
     gw_dev = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]]
-    ent_reg = await async_get_registry(hass)
+    ent_reg = er.async_get(hass)
     for var, info in SENSOR_INFO.items():
         device_class = info[0]
         unit = info[1]

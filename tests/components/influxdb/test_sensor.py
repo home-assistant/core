@@ -44,6 +44,7 @@ BASE_V1_QUERY = {
     "queries": [
         {
             "name": "test",
+            "unique_id": "unique_test_id",
             "measurement": "measurement",
             "where": "where",
             "field": "field",
@@ -61,7 +62,15 @@ BASE_V1_QUERY_MIXED = {
     "queries_raw": [{"name": "test_r", "query": "query"}],
 }
 BASE_V1_QUERY_RAW = {"queries_raw": [{"name": "test", "query": "query"}]}
-BASE_V2_QUERY = {"queries_flux": [{"name": "test", "query": "query"}]}
+BASE_V2_QUERY = {
+    "queries_flux": [
+        {
+            "name": "test",
+            "unique_id": "unique_test_id",
+            "query": "query",
+        }
+    ]
+}
 BASE_V2_QUERY_MIXED = {
     "queries_flux": [{"name": "test", "query": "query"}],
     "queries_raw": [{"name": "test_r", "query": "query"}],
@@ -250,6 +259,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "measurement": "measurement",
                         "where": "where",
@@ -278,6 +288,7 @@ async def test_minimal_config(hass, mock_client, config_ext, queries, set_query_
                 "queries_flux": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "unit_of_measurement": "unit",
                         "range_start": "start",
                         "range_stop": "end",
@@ -599,14 +610,14 @@ async def test_state_for_no_results(
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
         ),
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(status=HTTPStatus.BAD_REQUEST),
+            ApiException(status=HTTPStatus.BAD_REQUEST, http_resp=MagicMock()),
         ),
         (
             DEFAULT_API_VERSION,
@@ -676,6 +687,7 @@ async def test_error_querying_influx(
                 "queries": [
                     {
                         "name": "test",
+                        "unique_id": "unique_test_id",
                         "measurement": "measurement",
                         "where": "{{ illegal.template }}",
                         "field": "field",
@@ -689,7 +701,15 @@ async def test_error_querying_influx(
         (
             API_VERSION_2,
             BASE_V2_CONFIG,
-            {"queries_flux": [{"name": "test", "query": "{{ illegal.template }}"}]},
+            {
+                "queries_flux": [
+                    {
+                        "name": "test",
+                        "unique_id": "unique_test_id",
+                        "query": "{{ illegal.template }}",
+                    }
+                ]
+            },
             _set_query_mock_v2,
             _make_v2_resultset,
             "query",
@@ -758,7 +778,7 @@ async def test_error_rendering_template(
             BASE_V2_CONFIG,
             BASE_V2_QUERY,
             _set_query_mock_v2,
-            ApiException(),
+            ApiException(http_resp=MagicMock()),
             _make_v2_resultset,
         ),
     ],

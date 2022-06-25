@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
-            "cannot_connect": "Gagal terhubung"
+            "cannot_connect": "Gagal terhubung",
+            "cct_unsupported": "Perangkat WLED ini menggunakan saluran CCT, yang tidak didukung oleh integrasi ini"
         },
         "error": {
             "cannot_connect": "Gagal terhubung"

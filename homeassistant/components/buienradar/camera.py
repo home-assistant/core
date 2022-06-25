@@ -148,7 +148,7 @@ class BuienradarCam(Camera):
         """
         Return a still image response from the camera.
 
-        Uses ayncio conditions to make sure only one task enters the critical
+        Uses asyncio conditions to make sure only one task enters the critical
         section at the same time. Otherwise, two http requests would start
         when two tabs with Home Assistant are open.
 

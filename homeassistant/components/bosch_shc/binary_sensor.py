@@ -1,4 +1,6 @@
 """Platform for binarysensor integration."""
+from __future__ import annotations
+
 from boschshcpy import SHCBatteryDevice, SHCSession, SHCShutterContact
 from boschshcpy.device import SHCDevice
 
@@ -6,14 +8,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_SESSION, DOMAIN
 from .entity import SHCEntity
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the SHC binary sensor platform."""
-    entities = []
+    entities: list[BinarySensorEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for binary_sensor in session.device_helper.shutter_contacts:

@@ -2,13 +2,22 @@
 from __future__ import annotations
 
 from homeassistant.components.number import NumberEntity, NumberMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the demo Number entity."""
     async_add_entities(
         [
@@ -55,7 +64,11 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     )
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     await async_setup_platform(hass, {}, async_add_entities)
 
@@ -72,9 +85,9 @@ class DemoNumber(NumberEntity):
         state: float,
         icon: str,
         assumed: bool,
-        min_value: float | None = None,
-        max_value: float | None = None,
-        step: float | None = None,
+        native_min_value: float | None = None,
+        native_max_value: float | None = None,
+        native_step: float | None = None,
         mode: NumberMode = NumberMode.AUTO,
     ) -> None:
         """Initialize the Demo Number entity."""
@@ -82,28 +95,25 @@ class DemoNumber(NumberEntity):
         self._attr_icon = icon
         self._attr_name = name or DEVICE_DEFAULT_NAME
         self._attr_unique_id = unique_id
-        self._attr_value = state
+        self._attr_native_value = state
         self._attr_mode = mode
 
-        if min_value is not None:
-            self._attr_min_value = min_value
-        if max_value is not None:
-            self._attr_max_value = max_value
-        if step is not None:
-            self._attr_step = step
+        if native_min_value is not None:
+            self._attr_native_min_value = native_min_value
+        if native_max_value is not None:
+            self._attr_native_max_value = native_max_value
+        if native_step is not None:
+            self._attr_native_step = native_step
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info."""
-        return DeviceInfo(
+        self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, self.unique_id)
+                (DOMAIN, unique_id)
             },
             name=self.name,
         )
 
-    async def async_set_value(self, value):
+    async def async_set_native_value(self, value):
         """Update the current value."""
-        self._attr_value = value
+        self._attr_native_value = value
         self.async_write_ha_state()

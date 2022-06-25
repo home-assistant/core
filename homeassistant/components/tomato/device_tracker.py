@@ -1,4 +1,6 @@
 """Support for Tomato routers."""
+from __future__ import annotations
+
 from http import HTTPStatus
 import json
 import logging
@@ -20,7 +22,9 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 CONF_HTTP_ID = "http_id"
 
@@ -39,7 +43,7 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def get_scanner(hass, config):
+def get_scanner(hass: HomeAssistant, config: ConfigType) -> DeviceScanner:
     """Validate the configuration and returns a Tomato scanner."""
     return TomatoDeviceScanner(config[DOMAIN])
 

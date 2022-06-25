@@ -2,43 +2,36 @@
     "config": {
         "abort": {
             "already_configured": "To konto SimpliSafe jest ju\u017c w u\u017cyciu",
-            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119",
-            "wrong_account": "Podane dane uwierzytelniaj\u0105ce u\u017cytkownika nie pasuj\u0105 do tego konta SimpliSafe."
+            "email_2fa_timed_out": "Przekroczono limit czasu oczekiwania na e-mailowe uwierzytelnianie dwusk\u0142adnikowe.",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
-            "identifier_exists": "Konto jest ju\u017c zarejestrowane",
             "invalid_auth": "Niepoprawne uwierzytelnienie",
-            "still_awaiting_mfa": "Wci\u0105\u017c nie potwierdzono linka w e-mailu od SimpliSafe",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
         },
+        "progress": {
+            "email_2fa": "Sprawd\u017a e-mail z linkiem weryfikacyjnym od Simplisafe."
+        },
         "step": {
-            "input_auth_code": {
-                "data": {
-                    "auth_code": "Kod autoryzacji"
-                },
-                "description": "Wprowad\u017a kod autoryzacyjny z adresu URL aplikacji internetowej SimpliSafe:",
-                "title": "Zako\u0144cz autoryzacj\u0119"
-            },
-            "mfa": {
-                "description": "Sprawd\u017a e-mail od SimpliSafe. Po zweryfikowaniu linka, wr\u00f3\u0107 tutaj, aby doko\u0144czy\u0107 instalacj\u0119 integracji.",
-                "title": "Uwierzytelnianie wielosk\u0142adnikowe SimpliSafe"
-            },
             "reauth_confirm": {
                 "data": {
                     "password": "Has\u0142o"
                 },
-                "description": "Tw\u00f3j dost\u0119p wygas\u0142 lub zosta\u0142 uniewa\u017cniony. Wprowad\u017a has\u0142o, aby ponownie po\u0142\u0105czy\u0107 swoje konto.",
+                "description": "Wprowad\u017a ponownie has\u0142o dla u\u017cytkownika {username}.",
                 "title": "Ponownie uwierzytelnij integracj\u0119"
+            },
+            "sms_2fa": {
+                "data": {
+                    "code": "Kod"
+                },
+                "description": "Wprowad\u017a kod uwierzytelniania dwusk\u0142adnikowego, kt\u00f3ry zosta\u0142 wys\u0142any do Ciebie SMS-em."
             },
             "user": {
                 "data": {
-                    "auth_code": "Kod autoryzacji",
-                    "code": "Kod (u\u017cywany w interfejsie Home Assistant)",
                     "password": "Has\u0142o",
-                    "username": "Adres e-mail"
+                    "username": "Nazwa u\u017cytkownika"
                 },
-                "description": "SimpliSafe uwierzytelnia si\u0119 z Home Assistantem za po\u015brednictwem aplikacji internetowej SimpliSafe. Ze wzgl\u0119du na ograniczenia techniczne na ko\u0144cu tego procesu znajduje si\u0119 r\u0119czny krok; upewnij si\u0119, \u017ce przed rozpocz\u0119ciem przeczyta\u0142e\u015b [dokumentacj\u0119]( {docs_url} ).\n\n1. Kliknij [tutaj]( {url} ), aby otworzy\u0107 aplikacj\u0119 internetow\u0105 SimpliSafe i wprowadzi\u0107 swoje dane uwierzytelniaj\u0105ce. \n\n2. Po zako\u0144czeniu procesu logowania wr\u00f3\u0107 tutaj i wprowad\u017a poni\u017cszy kod autoryzacyjny.",
-                "title": "Wprowad\u017a dane"
+                "description": "Wprowad\u017a swoj\u0105 nazw\u0119 u\u017cytkownika i has\u0142o."
             }
         }
     },

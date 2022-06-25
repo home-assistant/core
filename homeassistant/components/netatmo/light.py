@@ -6,7 +6,7 @@ from typing import Any, cast
 
 import pyatmo
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
@@ -34,10 +34,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Netatmo camera light platform."""
     data_handler = hass.data[DOMAIN][entry.entry_id][DATA_HANDLER]
-
-    await data_handler.register_data_class(
-        CAMERA_DATA_CLASS_NAME, CAMERA_DATA_CLASS_NAME, None
-    )
     data_class = data_handler.data.get(CAMERA_DATA_CLASS_NAME)
 
     if not data_class or data_class.raw_data == {}:
@@ -65,6 +61,9 @@ async def async_setup_entry(
 
 class NetatmoLight(NetatmoBase, LightEntity):
     """Representation of a Netatmo Presence camera light."""
+
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
 
     def __init__(
         self,

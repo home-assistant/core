@@ -14,6 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
+from . import HassioAPIError
 from .const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
@@ -37,9 +38,11 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
 )
 
 # Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
+# pylint: disable=implicit-str-concat
 WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:" r"|/ingress/(session|validate_session)" r"|/addons/[^/]+/info" r")$"
 )
+# pylint: enable=implicit-str-concat
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -114,8 +117,8 @@ async def websocket_supervisor_api(
         )
 
         if result.get(ATTR_RESULT) == "error":
-            raise hass.components.hassio.HassioAPIError(result.get("message"))
-    except hass.components.hassio.HassioAPIError as err:
+            raise HassioAPIError(result.get("message"))
+    except HassioAPIError as err:
         _LOGGER.error("Failed to to call %s - %s", msg[ATTR_ENDPOINT], err)
         connection.send_error(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)

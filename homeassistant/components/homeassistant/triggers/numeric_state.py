@@ -4,6 +4,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import (
     CONF_ABOVE,
     CONF_ATTRIBUTE,
@@ -74,17 +78,22 @@ async def async_validate_trigger_config(
     """Validate trigger config."""
     config = _TRIGGER_SCHEMA(config)
     registry = er.async_get(hass)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type="numeric_state"
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+    *,
+    platform_type: str = "numeric_state",
 ) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    entity_ids = config.get(CONF_ENTITY_ID)
+    entity_ids: list[str] = config[CONF_ENTITY_ID]
     below = config.get(CONF_BELOW)
     above = config.get(CONF_ABOVE)
     time_delta = config.get(CONF_FOR)

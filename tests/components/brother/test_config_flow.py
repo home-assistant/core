@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_TYPE
 
 from tests.common import MockConfigEntry, load_fixture
 
-CONFIG = {CONF_HOST: "localhost", CONF_TYPE: "laser"}
+CONFIG = {CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"}
 
 
 async def test_show_form(hass):
@@ -32,13 +32,15 @@ async def test_create_entry_with_hostname(hass):
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_HOST: "example.local", CONF_TYPE: "laser"},
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
-        assert result["data"][CONF_HOST] == CONFIG[CONF_HOST]
-        assert result["data"][CONF_TYPE] == CONFIG[CONF_TYPE]
+        assert result["data"][CONF_HOST] == "example.local"
+        assert result["data"][CONF_TYPE] == "laser"
 
 
 async def test_create_entry_with_ipv4_address(hass):
@@ -48,9 +50,7 @@ async def test_create_entry_with_ipv4_address(hass):
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_USER},
-            data={CONF_HOST: "127.0.0.1", CONF_TYPE: "laser"},
+            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
         )
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
@@ -145,7 +145,8 @@ async def test_zeroconf_snmp_error(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="mock_host",
+                host="127.0.0.1",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -165,7 +166,8 @@ async def test_zeroconf_unsupported_model(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="mock_host",
+                host="127.0.0.1",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -185,15 +187,19 @@ async def test_zeroconf_device_exists_abort(hass):
         "brother.Brother._get_data",
         return_value=json.loads(load_fixture("printer_data.json", "brother")),
     ):
-        MockConfigEntry(domain=DOMAIN, unique_id="0123456789", data=CONFIG).add_to_hass(
-            hass
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            unique_id="0123456789",
+            data={CONF_HOST: "example.local", CONF_TYPE: "laser"},
         )
+        entry.add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="mock_host",
+                host="127.0.0.1",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -205,6 +211,9 @@ async def test_zeroconf_device_exists_abort(hass):
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
+    # Test config entry got updated with latest IP
+    assert entry.data["host"] == "127.0.0.1"
+
 
 async def test_zeroconf_no_probe_existing_device(hass):
     """Test we do not probe the device is the host is already configured."""
@@ -215,8 +224,9 @@ async def test_zeroconf_no_probe_existing_device(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="mock_host",
-                hostname="localhost",
+                host="127.0.0.1",
+                addresses=["mock_host"],
+                hostname="example.local.",
                 name="Brother Printer",
                 port=None,
                 properties={},
@@ -241,7 +251,8 @@ async def test_zeroconf_confirm_create_entry(hass):
             DOMAIN,
             context={"source": SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
-                host="mock_host",
+                host="127.0.0.1",
+                addresses=["mock_host"],
                 hostname="example.local.",
                 name="Brother Printer",
                 port=None,
@@ -261,5 +272,5 @@ async def test_zeroconf_confirm_create_entry(hass):
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["title"] == "HL-L2340DW 0123456789"
-        assert result["data"][CONF_HOST] == "example.local"
+        assert result["data"][CONF_HOST] == "127.0.0.1"
         assert result["data"][CONF_TYPE] == "laser"

@@ -1,17 +1,27 @@
 """Support for Keene Electronics IR-IP devices."""
+from __future__ import annotations
+
 import functools as ft
 import logging
 
 from homeassistant.components import remote
 from homeassistant.const import CONF_DEVICE, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import CONF_REMOTE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Kira platform."""
     if discovery_info:
         name = discovery_info.get(CONF_NAME)
@@ -19,7 +29,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
         kira = hass.data[DOMAIN][CONF_REMOTE][name]
         add_entities([KiraRemote(device, kira)])
-    return True
 
 
 class KiraRemote(Entity):

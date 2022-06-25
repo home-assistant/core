@@ -41,10 +41,8 @@ async def async_setup_entry(
     async_add_entities(buttons, False)
 
 
-class NAMButton(CoordinatorEntity, ButtonEntity):
+class NAMButton(CoordinatorEntity[NAMDataUpdateCoordinator], ButtonEntity):
     """Define an Nettigo Air Monitor button."""
-
-    coordinator: NAMDataUpdateCoordinator
 
     def __init__(
         self,

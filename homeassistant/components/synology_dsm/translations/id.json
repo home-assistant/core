@@ -28,16 +28,7 @@
                     "username": "Nama Pengguna",
                     "verify_ssl": "Verifikasi sertifikat SSL"
                 },
-                "description": "Ingin menyiapkan {name} ({host})?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Kata Sandi",
-                    "username": "Nama Pengguna"
-                },
-                "description": "Alasan: {details}",
-                "title": "Autentikasi Ulang Integrasi Synology DSM"
+                "description": "Ingin menyiapkan {name} ({host})?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Menggunakan sertifikat SSL",
                     "username": "Nama Pengguna",
                     "verify_ssl": "Verifikasi sertifikat SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },
@@ -64,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Interval pemindaian dalam menit",
+                    "snap_profile_type": "Tingkat kualitas snapshot kamera (0:tinggi, 1:sedang, 2:rendah)",
                     "timeout": "Tenggang waktu (detik)"
                 }
             }

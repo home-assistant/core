@@ -22,9 +22,10 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_ADDRESS,
@@ -208,7 +209,7 @@ SCHEMA_SERVICE_PUT_PARAMSET = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Homematic component."""
     conf = config[DOMAIN]
     hass.data[DATA_CONF] = remotes = {}

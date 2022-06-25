@@ -1,11 +1,13 @@
 """Test the entity helper."""
 # pylint: disable=protected-access
 import asyncio
+import dataclasses
 from datetime import timedelta
 import threading
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -544,6 +546,22 @@ async def test_async_remove_runs_callbacks(hass):
     assert len(result) == 1
 
 
+async def test_async_remove_ignores_in_flight_polling(hass):
+    """Test in flight polling is ignored after removing."""
+    result = []
+
+    ent = entity.Entity()
+    ent.hass = hass
+    ent.entity_id = "test.test"
+    ent.async_on_remove(lambda: result.append(1))
+    ent.async_write_ha_state()
+    assert hass.states.get("test.test").state == STATE_UNKNOWN
+    await ent.async_remove()
+    assert len(result) == 1
+    assert hass.states.get("test.test") is None
+    ent.async_write_ha_state()
+
+
 async def test_set_context(hass):
     """Test setting context."""
     context = Context()
@@ -829,3 +847,42 @@ async def test_entity_category_property(hass):
     )
     mock_entity2.entity_id = "hello.world"
     assert mock_entity2.entity_category == "config"
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    (
+        ("config", entity.EntityCategory.CONFIG),
+        ("diagnostic", entity.EntityCategory.DIAGNOSTIC),
+    ),
+)
+def test_entity_category_schema(value, expected):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    result = schema(value)
+    assert result == expected
+    assert isinstance(result, entity.EntityCategory)
+
+
+@pytest.mark.parametrize("value", (None, "non_existing"))
+def test_entity_category_schema_error(value):
+    """Test entity category schema."""
+    schema = vol.Schema(entity.ENTITY_CATEGORIES_SCHEMA)
+    with pytest.raises(
+        vol.Invalid,
+        match=r"expected EntityCategory or one of 'config', 'diagnostic'",
+    ):
+        schema(value)
+
+
+async def test_entity_description_fallback():
+    """Test entity description has same defaults as entity."""
+    ent = entity.Entity()
+    ent_with_description = entity.Entity()
+    ent_with_description.entity_description = entity.EntityDescription(key="test")
+
+    for field in dataclasses.fields(entity.EntityDescription):
+        if field.name == "key":
+            continue
+
+        assert getattr(ent, field.name) == getattr(ent_with_description, field.name)

@@ -30,6 +30,7 @@
         "step": {
             "init": {
                 "data": {
+                    "stream_url_template": "Plantilla de URL de transmisi\u00f3n",
                     "webhook_set": "Configure los webhooks de motionEye para informar eventos a Home Assistant",
                     "webhook_set_overwrite": "Sobrescribir webhooks no reconocidos"
                 }

@@ -1,0 +1,32 @@
+{
+  "config": {
+    "flow_title": "{name} ({ipaddress})",
+    "step": {
+      "user": {
+        "description": "If you leave the host empty, discovery will be used to find devices.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
+        }
+      },
+      "discovery_confirm": {
+        "description": "Do you want to setup {name} ({ipaddress})?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_steamist_device": "Not a steamist device"
+    }
+  }
+}

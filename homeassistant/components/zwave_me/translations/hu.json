@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
+            "no_valid_uuid_set": "Nincs \u00e9rv\u00e9nyes UUID be\u00e1ll\u00edtva"
+        },
+        "error": {
+            "no_valid_uuid_set": "Nincs \u00e9rv\u00e9nyes UUID be\u00e1ll\u00edtva"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "API Token",
+                    "url": "URL"
+                },
+                "description": "Adja meg a Z-Way szerver IP-c\u00edm\u00e9t, portj\u00e1t \u00e9s hozz\u00e1f\u00e9r\u00e9si jel\u00e9t. A token megszerz\u00e9s\u00e9hez n\u00e9zze meg a Z-Way felhaszn\u00e1l\u00f3i fel\u00fclet\u00e9n a Smart Home UI > Menu > Settings > Users > Administrator > API token men\u00fcpontot.\n\nP\u00e9lda a Z-Wayhez val\u00f3 csatlakoz\u00e1sra a helyi h\u00e1l\u00f3zaton:\nURL: {local_url}\nToken: {local_token}\n\nP\u00e9lda a Z-Wayhez t\u00e1voli el\u00e9r\u00e9ssel t\u00f6rt\u00e9n\u0151 csatlakoz\u00e1sra find.z-wave.me:\nURL: {find_url}\nToken: {find_token}\n\nP\u00e9lda a Z-Wayhez val\u00f3 csatlakoz\u00e1sra statikus nyilv\u00e1nos IP-c\u00edmmel:\nURL: {remote_url}\nToken: {local_token}\n\nA find.z-wave.me oldalon kereszt\u00fcl t\u00f6rt\u00e9n\u0151 csatlakoz\u00e1skor glob\u00e1lis hat\u00f3k\u00f6r\u0171 tokent kell haszn\u00e1lnia (ehhez a find.z-wave.me oldalon kereszt\u00fcl kell bejelentkeznie a Z-Way-be)."
+            }
+        }
+    }
+}

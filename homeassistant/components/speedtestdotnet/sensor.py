@@ -43,10 +43,11 @@ async def async_setup_entry(
     )
 
 
-class SpeedtestSensor(CoordinatorEntity, RestoreEntity, SensorEntity):
+class SpeedtestSensor(
+    CoordinatorEntity[SpeedTestDataCoordinator], RestoreEntity, SensorEntity
+):
     """Implementation of a speedtest.net sensor."""
 
-    coordinator: SpeedTestDataCoordinator
     entity_description: SpeedtestSensorEntityDescription
     _attr_icon = ICON
 

@@ -6,69 +6,78 @@ import logging
 
 import aiodns
 from aiodns.error import DNSError
-import voluptuous as vol
 
-from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
+from homeassistant.components.sensor import SensorEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import (
+    CONF_HOSTNAME,
+    CONF_IPV4,
+    CONF_IPV6,
+    CONF_RESOLVER,
+    CONF_RESOLVER_IPV6,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_HOSTNAME = "hostname"
-CONF_IPV6 = "ipv6"
-CONF_RESOLVER = "resolver"
-CONF_RESOLVER_IPV6 = "resolver_ipv6"
-
-DEFAULT_HOSTNAME = "myip.opendns.com"
-DEFAULT_IPV6 = False
-DEFAULT_NAME = "myip"
-DEFAULT_RESOLVER = "208.67.222.222"
-DEFAULT_RESOLVER_IPV6 = "2620:0:ccc::2"
-
 SCAN_INTERVAL = timedelta(seconds=120)
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Optional(CONF_NAME): cv.string,
-        vol.Optional(CONF_HOSTNAME, default=DEFAULT_HOSTNAME): cv.string,
-        vol.Optional(CONF_RESOLVER, default=DEFAULT_RESOLVER): cv.string,
-        vol.Optional(CONF_RESOLVER_IPV6, default=DEFAULT_RESOLVER_IPV6): cv.string,
-        vol.Optional(CONF_IPV6, default=DEFAULT_IPV6): cv.boolean,
-    }
-)
 
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_devices: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the DNS IP sensor."""
-    hostname = config[CONF_HOSTNAME]
-    name = config.get(CONF_NAME)
-    ipv6 = config[CONF_IPV6]
+    """Set up the dnsip sensor entry."""
 
-    if not name:
-        name = DEFAULT_NAME if hostname == DEFAULT_HOSTNAME else hostname
-    resolver = config[CONF_RESOLVER_IPV6] if ipv6 else config[CONF_RESOLVER]
+    hostname = entry.data[CONF_HOSTNAME]
+    name = entry.data[CONF_NAME]
 
-    async_add_devices([WanIpSensor(name, hostname, resolver, ipv6)], True)
+    resolver_ipv4 = entry.options[CONF_RESOLVER]
+    resolver_ipv6 = entry.options[CONF_RESOLVER_IPV6]
+    entities = []
+    if entry.data[CONF_IPV4]:
+        entities.append(WanIpSensor(name, hostname, resolver_ipv4, False))
+    if entry.data[CONF_IPV6]:
+        entities.append(WanIpSensor(name, hostname, resolver_ipv6, True))
+
+    async_add_entities(entities, update_before_add=True)
 
 
 class WanIpSensor(SensorEntity):
     """Implementation of a DNS IP sensor."""
 
-    def __init__(self, name: str, hostname: str, resolver: str, ipv6: bool) -> None:
+    _attr_icon = "mdi:web"
+
+    def __init__(
+        self,
+        name: str,
+        hostname: str,
+        resolver: str,
+        ipv6: bool,
+    ) -> None:
         """Initialize the DNS IP sensor."""
-        self._attr_name = name
+        self._attr_name = f"{name} IPv6" if ipv6 else name
+        self._attr_unique_id = f"{hostname}_{ipv6}"
         self.hostname = hostname
         self.resolver = aiodns.DNSResolver()
         self.resolver.nameservers = [resolver]
         self.querytype = "AAAA" if ipv6 else "A"
+        self._attr_extra_state_attributes = {
+            "Resolver": resolver,
+            "Querytype": self.querytype,
+        }
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={(DOMAIN, f"{hostname}_{ipv6}")},
+            manufacturer="DNS",
+            model=aiodns.__version__,
+            name=hostname,
+        )
 
     async def async_update(self) -> None:
         """Get the current DNS IP address for hostname."""
@@ -80,5 +89,6 @@ class WanIpSensor(SensorEntity):
 
         if response:
             self._attr_native_value = response[0].host
+            self._attr_available = True
         else:
-            self._attr_native_value = None
+            self._attr_available = False

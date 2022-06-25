@@ -1,4 +1,7 @@
 """Support for FleetGO Platform."""
+from __future__ import annotations
+
+from collections.abc import Callable
 import logging
 
 import requests
@@ -15,8 +18,10 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import track_utc_time_change
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +36,12 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_scanner(hass, config: dict, see, discovery_info=None):
+def setup_scanner(
+    hass: HomeAssistant,
+    config: ConfigType,
+    see: Callable[..., None],
+    discovery_info: DiscoveryInfoType | None = None,
+) -> bool:
     """Set up the DeviceScanner and check if login is valid."""
     scanner = FleetGoDeviceScanner(config, see)
     if not scanner.login(hass):

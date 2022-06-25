@@ -13,23 +13,16 @@ from xbox.webapi.api.provider.smartglass.models import (
     VolumeDirection,
 )
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_APP,
-    MEDIA_TYPE_GAME,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_APP, MEDIA_TYPE_GAME
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_PAUSED, STATE_PLAYING
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ConsoleData, XboxUpdateCoordinator
@@ -37,16 +30,16 @@ from .browse_media import build_item_response
 from .const import DOMAIN
 
 SUPPORT_XBOX = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY
-    | SUPPORT_PAUSE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_BROWSE_MEDIA
-    | SUPPORT_PLAY_MEDIA
+    MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.PLAY
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.PLAY_MEDIA
 )
 
 XBOX_STATE_MAP = {
@@ -60,7 +53,9 @@ XBOX_STATE_MAP = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
     """Set up Xbox media_player from a config entry."""
     client: XboxLiveClient = hass.data[DOMAIN][entry.entry_id]["client"]
     consoles: SmartglassConsoleList = hass.data[DOMAIN][entry.entry_id]["consoles"]
@@ -73,7 +68,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     )
 
 
-class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
+class XboxMediaPlayer(CoordinatorEntity[XboxUpdateCoordinator], MediaPlayerEntity):
     """Representation of an Xbox Media Player."""
 
     def __init__(
@@ -114,7 +109,11 @@ class XboxMediaPlayer(CoordinatorEntity, MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         if self.state not in [STATE_PLAYING, STATE_PAUSED]:
-            return SUPPORT_XBOX & ~SUPPORT_NEXT_TRACK & ~SUPPORT_PREVIOUS_TRACK
+            return (
+                SUPPORT_XBOX
+                & ~MediaPlayerEntityFeature.NEXT_TRACK
+                & ~MediaPlayerEntityFeature.PREVIOUS_TRACK
+            )
         return SUPPORT_XBOX
 
     @property

@@ -14,23 +14,15 @@ from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_IDLE,
     DOMAIN as CLIMATE_DOMAIN,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_NONE,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE_RANGE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.components.zwave_js.climate import ATTR_FAN_STATE
 from homeassistant.const import (
@@ -56,24 +48,24 @@ async def test_thermostat_v2(
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
 
     assert state
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_HVAC_MODES] == [
-        HVAC_MODE_OFF,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT_COOL,
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.HEAT_COOL,
     ]
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 30
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.2
     assert state.attributes[ATTR_TEMPERATURE] == 22.2
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
     assert state.attributes[ATTR_FAN_MODE] == "Auto low"
     assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_TARGET_TEMPERATURE
-        | SUPPORT_TARGET_TEMPERATURE_RANGE
-        | SUPPORT_FAN_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+        | ClimateEntityFeature.FAN_MODE
     )
 
     client.async_send_command.reset_mock()
@@ -84,7 +76,7 @@ async def test_thermostat_v2(
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_HVAC_MODE: HVAC_MODE_COOL,
+            ATTR_HVAC_MODE: HVACMode.COOL,
         },
         blocking=True,
     )
@@ -120,7 +112,7 @@ async def test_thermostat_v2(
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-            ATTR_HVAC_MODE: HVAC_MODE_COOL,
+            ATTR_HVAC_MODE: HVACMode.COOL,
             ATTR_TEMPERATURE: 25,
         },
         blocking=True,
@@ -193,7 +185,7 @@ async def test_thermostat_v2(
     node.receive_event(event)
 
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
-    assert state.state == HVAC_MODE_COOL
+    assert state.state == HVACMode.COOL
     assert state.attributes[ATTR_TEMPERATURE] == 22.8
 
     # Test heat_cool mode update from value updated event
@@ -217,7 +209,7 @@ async def test_thermostat_v2(
     node.receive_event(event)
 
     state = hass.states.get(CLIMATE_RADIO_THERMOSTAT_ENTITY)
-    assert state.state == HVAC_MODE_HEAT_COOL
+    assert state.state == HVACMode.HEAT_COOL
     assert state.attributes[ATTR_TARGET_TEMP_HIGH] == 22.8
     assert state.attributes[ATTR_TARGET_TEMP_LOW] == 22.2
 
@@ -289,7 +281,7 @@ async def test_thermostat_v2(
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_RADIO_THERMOSTAT_ENTITY,
-                ATTR_HVAC_MODE: HVAC_MODE_DRY,
+                ATTR_HVAC_MODE: HVACMode.DRY,
             },
             blocking=True,
         )
@@ -355,7 +347,7 @@ async def test_thermostat_different_endpoints(
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.8
     assert state.attributes[ATTR_FAN_MODE] == "Auto low"
     assert state.attributes[ATTR_FAN_STATE] == "Idle / off"
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_COOL
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
 
 async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integration):
@@ -364,10 +356,13 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     state = hass.states.get(CLIMATE_DANFOSS_LC13_ENTITY)
 
     assert state
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 14
-    assert state.attributes[ATTR_HVAC_MODES] == [HVAC_MODE_HEAT]
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_HVAC_MODES] == [HVACMode.HEAT]
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+    )
 
     client.async_send_command_no_wait.reset_mock()
 
@@ -389,19 +384,19 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
             SERVICE_SET_HVAC_MODE,
             {
                 ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-                ATTR_HVAC_MODE: HVAC_MODE_COOL,
+                ATTR_HVAC_MODE: HVACMode.COOL,
             },
             blocking=True,
         )
 
-    # Test that setting HVAC_MODE_HEAT works. If the no-op logic didn't work, this would
+    # Test that setting HVACMode.HEAT works. If the no-op logic didn't work, this would
     # raise an error
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
             ATTR_ENTITY_ID: CLIMATE_DANFOSS_LC13_ENTITY,
-            ATTR_HVAC_MODE: HVAC_MODE_HEAT,
+            ATTR_HVAC_MODE: HVACMode.HEAT,
         },
         blocking=True,
     )
@@ -455,7 +450,7 @@ async def test_setpoint_thermostat(hass, client, climate_danfoss_lc_13, integrat
     node.receive_event(event)
 
     state = hass.states.get(CLIMATE_DANFOSS_LC13_ENTITY)
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 23
 
     client.async_send_command_no_wait.reset_mock()
@@ -479,15 +474,18 @@ async def test_thermostat_heatit_z_trm3(
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_HVAC_MODES] == [
-        HVAC_MODE_OFF,
-        HVAC_MODE_HEAT,
+        HVACMode.OFF,
+        HVACMode.HEAT,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 22.9
     assert state.attributes[ATTR_TEMPERATURE] == 22.5
-    assert state.attributes[ATTR_HVAC_ACTION] == CURRENT_HVAC_IDLE
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == SUPPORT_TARGET_TEMPERATURE
+    assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
+    assert (
+        state.attributes[ATTR_SUPPORTED_FEATURES]
+        == ClimateEntityFeature.TARGET_TEMPERATURE
+    )
     assert state.attributes[ATTR_MIN_TEMP] == 5
     assert state.attributes[ATTR_MAX_TEMP] == 35
 
@@ -546,17 +544,17 @@ async def test_thermostat_heatit_z_trm2fx(
     state = hass.states.get(CLIMATE_FLOOR_THERMOSTAT_ENTITY)
 
     assert state
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_HVAC_MODES] == [
-        HVAC_MODE_OFF,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_COOL,
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 28.8
     assert state.attributes[ATTR_TEMPERATURE] == 29
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_TARGET_TEMPERATURE | SUPPORT_PRESET_MODE
+        == ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
     assert state.attributes[ATTR_MIN_TEMP] == 7
     assert state.attributes[ATTR_MAX_TEMP] == 35
@@ -593,10 +591,10 @@ async def test_thermostat_srt321_hrt4_zw(hass, client, srt321_hrt4_zw, integrati
     state = hass.states.get(CLIMATE_MAIN_HEAT_ACTIONNER)
 
     assert state
-    assert state.state == HVAC_MODE_OFF
+    assert state.state == HVACMode.OFF
     assert state.attributes[ATTR_HVAC_MODES] == [
-        HVAC_MODE_OFF,
-        HVAC_MODE_HEAT,
+        HVACMode.OFF,
+        HVACMode.HEAT,
     ]
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] is None
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
@@ -610,7 +608,7 @@ async def test_preset_and_no_setpoint(
 
     state = hass.states.get(CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY)
     assert state
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 22
 
     # Test setting preset mode Full power
@@ -676,7 +674,7 @@ async def test_preset_and_no_setpoint(
     node.receive_event(event)
 
     state = hass.states.get(CLIMATE_EUROTRONICS_SPIRIT_Z_ENTITY)
-    assert state.state == HVAC_MODE_HEAT
+    assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] is None
     assert state.attributes[ATTR_PRESET_MODE] == "Full power"
 

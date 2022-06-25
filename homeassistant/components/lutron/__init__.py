@@ -11,9 +11,11 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
 DOMAIN = "lutron"
@@ -50,7 +52,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, base_config):
+def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:
     """Set up the Lutron integration."""
     hass.data[LUTRON_BUTTONS] = []
     hass.data[LUTRON_CONTROLLER] = None
@@ -62,7 +64,7 @@ def setup(hass, base_config):
         "binary_sensor": [],
     }
 
-    config = base_config.get(DOMAIN)
+    config = base_config[DOMAIN]
     hass.data[LUTRON_CONTROLLER] = Lutron(
         config[CONF_HOST], config[CONF_USERNAME], config[CONF_PASSWORD]
     )

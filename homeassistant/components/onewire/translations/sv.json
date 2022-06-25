@@ -1,9 +1,10 @@
 {
-    "config": {
+    "options": {
         "step": {
-            "owserver": {
+            "device_selection": {
                 "data": {
-                    "port": "Port"
+                    "clear_device_options": "Rensa alla enhetskonfigurationer",
+                    "device_selection": "V\u00e4lj enheter att konfigurera"
                 }
             }
         }

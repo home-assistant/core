@@ -1,4 +1,6 @@
 """Sensor for checking the air quality forecast around Norway."""
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
 
@@ -7,8 +9,11 @@ import voluptuous as vol
 
 from homeassistant.components.air_quality import PLATFORM_SCHEMA, AirQualityEntity
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +43,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the air_quality norway sensor."""
     forecast = config.get(CONF_FORECAST)
     latitude = config.get(CONF_LATITUDE, hass.config.latitude)
@@ -96,31 +106,31 @@ class AirSensor(AirQualityEntity):
         """Return the name of the sensor."""
         return self._name
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @round_state
     def air_quality_index(self):
         """Return the Air Quality Index (AQI)."""
         return self._api.data.get("aqi")
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @round_state
     def nitrogen_dioxide(self):
         """Return the NO2 (nitrogen dioxide) level."""
         return self._api.data.get("no2_concentration")
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @round_state
     def ozone(self):
         """Return the O3 (ozone) level."""
         return self._api.data.get("o3_concentration")
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @round_state
     def particulate_matter_2_5(self):
         """Return the particulate matter 2.5 level."""
         return self._api.data.get("pm25_concentration")
 
-    @property  # type: ignore
+    @property  # type: ignore[misc]
     @round_state
     def particulate_matter_10(self):
         """Return the particulate matter 10 level."""

@@ -12,15 +12,13 @@
                 "data": {
                     "city": "Linn"
                 },
-                "description": "Vali loendist oma linn",
-                "title": ""
+                "description": "Vali loendist oma linn"
             },
             "user": {
                 "data": {
                     "city": "Linn"
                 },
-                "description": "Sisesta sihtnumber (ainult Prantsusmaa, soovitatav) v\u00f5i linna nimi",
-                "title": ""
+                "description": "Sisesta sihtnumber (ainult Prantsusmaa, soovitatav) v\u00f5i linna nimi"
             }
         }
     },

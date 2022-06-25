@@ -3,9 +3,10 @@
         "abort": {
             "all_configured": "M\u00e1r minden Philips Hue bridge konfigur\u00e1lt",
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "discover_timeout": "Nem tal\u00e1lhat\u00f3 a Hue bridge",
+            "invalid_host": "\u00c9rv\u00e9nytelen c\u00edm",
             "no_bridges": "Nem tal\u00e1lhat\u00f3 Philips Hue bridget",
             "not_hue_bridge": "Nem egy Hue Bridge",
             "unknown": "Ismeretlen hiba t\u00f6rt\u00e9nt"
@@ -69,7 +70,8 @@
                 "data": {
                     "allow_hue_groups": "Hue csoportok enged\u00e9lyez\u00e9se",
                     "allow_hue_scenes": "Hue jelenetek enged\u00e9lyez\u00e9se",
-                    "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat"
+                    "allow_unreachable": "Hagyja, hogy az el\u00e9rhetetlen izz\u00f3k helyesen jelents\u00e9k \u00e1llapotukat",
+                    "ignore_availability": "A megadott eszk\u00f6z\u00f6k kapcsol\u00f3d\u00e1si \u00e1llapot\u00e1nak figyelmen k\u00edv\u00fcl hagy\u00e1sa"
                 }
             }
         }

@@ -1,4 +1,83 @@
 {
+    "config": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435",
+                    "name": "\u0418\u043c\u0435"
+                },
+                "title": "\u041d\u043e\u0432\u0430 \u0433\u0440\u0443\u043f\u0430"
+            },
+            "fan": {
+                "data": {
+                    "name": "\u0418\u043c\u0435"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435",
+                    "name": "\u0418\u043c\u0435"
+                },
+                "title": "\u0414\u043e\u0431\u0430\u0432\u044f\u043d\u0435 \u043d\u0430 \u0433\u0440\u0443\u043f\u0430"
+            },
+            "media_player": {
+                "data": {
+                    "name": "\u0418\u043c\u0435 \u043d\u0430 \u0433\u0440\u0443\u043f\u0430"
+                }
+            },
+            "switch": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435",
+                    "name": "\u0418\u043c\u0435"
+                },
+                "title": "\u041d\u043e\u0432\u0430 \u0433\u0440\u0443\u043f\u0430"
+            },
+            "user": {
+                "title": "\u041d\u043e\u0432\u0430 \u0433\u0440\u0443\u043f\u0430"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "\u0412\u0441\u0438\u0447\u043a\u0438 \u043e\u0431\u0435\u043a\u0442\u0438",
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            },
+            "cover": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            },
+            "fan": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            },
+            "light": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            },
+            "lock": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            },
+            "media_player": {
+                "data": {
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            },
+            "switch": {
+                "data": {
+                    "all": "\u0412\u0441\u0438\u0447\u043a\u0438 \u043e\u0431\u0435\u043a\u0442\u0438",
+                    "entities": "\u0427\u043b\u0435\u043d\u043e\u0432\u0435"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "\u0417\u0430\u0442\u0432\u043e\u0440\u0435\u043d\u0430",

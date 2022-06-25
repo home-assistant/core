@@ -31,7 +31,10 @@ from homeassistant.const import (
     DATA_YOTTABYTES,
     DATA_ZETTABYTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,12 +62,6 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="upcoming",
         name="Upcoming",
-        native_unit_of_measurement="Movies",
-        icon="mdi:television",
-    ),
-    SensorEntityDescription(
-        key="wanted",
-        name="Wanted",
         native_unit_of_measurement="Movies",
         icon="mdi:television",
     ),
@@ -127,9 +124,15 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Radarr platform."""
     conditions = config[CONF_MONITORED_CONDITIONS]
+    # deprecated in 2022.3
     entities = [
         RadarrSensor(hass, config, description)
         for description in SENSOR_TYPES

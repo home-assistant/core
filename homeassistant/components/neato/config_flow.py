@@ -5,8 +5,6 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-import voluptuous as vol
-
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -46,9 +44,7 @@ class OAuth2FlowHandler(
     ) -> FlowResult:
         """Confirm reauth upon migration of old entries."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=vol.Schema({})
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:

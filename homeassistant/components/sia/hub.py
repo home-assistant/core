@@ -27,7 +27,6 @@ from .utils import get_event_data_from_sia_event
 
 _LOGGER = logging.getLogger(__name__)
 
-
 DEFAULT_TIMEBAND = (80, 40)
 IGNORED_TIMEBAND = (3600, 1800)
 

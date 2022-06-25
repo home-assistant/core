@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CONF_CONSIDER_HOME,
@@ -98,12 +97,6 @@ class KeeneticFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(
-        self, user_input: ConfigType | None = None
-    ) -> FlowResult:
-        """Import a config entry."""
-        return await self.async_step_user(user_input)
-
     async def async_step_ssdp(self, discovery_info: ssdp.SsdpServiceInfo) -> FlowResult:
         """Handle a discovered device."""
         friendly_name = discovery_info.upnp.get(ssdp.ATTR_UPNP_FRIENDLY_NAME, "")
@@ -137,7 +130,7 @@ class KeeneticOptionsFlowHandler(config_entries.OptionsFlow):
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
-        self._interface_options = {}
+        self._interface_options: dict[str, str] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

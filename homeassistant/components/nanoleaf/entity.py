@@ -2,16 +2,21 @@
 
 from aionanoleaf import Nanoleaf
 
-from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+)
 
 from .const import DOMAIN
 
 
-class NanoleafEntity(Entity):
+class NanoleafEntity(CoordinatorEntity):
     """Representation of a Nanoleaf entity."""
 
-    def __init__(self, nanoleaf: Nanoleaf) -> None:
+    def __init__(self, nanoleaf: Nanoleaf, coordinator: DataUpdateCoordinator) -> None:
         """Initialize an Nanoleaf entity."""
+        super().__init__(coordinator)
         self._nanoleaf = nanoleaf
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, nanoleaf.serial_no)},

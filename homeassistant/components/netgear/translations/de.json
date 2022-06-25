@@ -11,12 +11,9 @@
                 "data": {
                     "host": "Host (Optional)",
                     "password": "Passwort",
-                    "port": "Port (Optional)",
-                    "ssl": "Verwendet ein SSL-Zertifikat",
                     "username": "Benutzername (Optional)"
                 },
-                "description": "Standardhost: {host}\nStandardport: {port}\nStandardbenutzername: {username}",
-                "title": "Netgear"
+                "description": "Standardhost: {host}\nStandardbenutzername: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Zu Hause Zeit (Sekunden)"
                 },
-                "description": "Optionale Einstellungen angeben",
-                "title": "Netgear"
+                "description": "Optionale Einstellungen angeben"
             }
         }
     }

@@ -6,5 +6,6 @@
   "requirements": ["aiopvpc==3.0.0"],
   "codeowners": ["@azogue"],
   "quality_scale": "platinum",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["aiopvpc", "holidays"]
 }

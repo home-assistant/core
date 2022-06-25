@@ -1,15 +1,17 @@
 """The nuki component."""
-
 from datetime import timedelta
 import logging
 
 import async_timeout
-from pynuki import NukiBridge
+from pynuki import NukiBridge, NukiLock, NukiOpener
 from pynuki.bridge import InvalidCredentialsException
+from pynuki.device import NukiDevice
 from requests.exceptions import RequestException
 
 from homeassistant import exceptions
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN, Platform
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -33,11 +35,11 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LOCK]
 UPDATE_INTERVAL = timedelta(seconds=30)
 
 
-def _get_bridge_devices(bridge):
+def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOpener]]:
     return bridge.locks, bridge.openers
 
 
-def _update_devices(devices):
+def _update_devices(devices: list[NukiDevice]) -> None:
     for device in devices:
         for level in (False, True):
             try:
@@ -49,7 +51,7 @@ def _update_devices(devices):
                 break
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Nuki entry."""
 
     hass.data.setdefault(DOMAIN, {})
@@ -115,7 +117,7 @@ async def async_setup_entry(hass, entry):
     return True
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload the Nuki entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
@@ -135,7 +137,9 @@ class NukiEntity(CoordinatorEntity):
 
     """
 
-    def __init__(self, coordinator, nuki_device):
+    def __init__(
+        self, coordinator: DataUpdateCoordinator[None], nuki_device: NukiDevice
+    ) -> None:
         """Pass coordinator to CoordinatorEntity."""
         super().__init__(coordinator)
         self._nuki_device = nuki_device

@@ -2,7 +2,8 @@
     "config": {
         "abort": {
             "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane",
-            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "cct_unsupported": "To urz\u0105dzenie WLED wykorzystuje kana\u0142y CCT, kt\u00f3re nie s\u0105 obs\u0142ugiwane przez t\u0119 integracj\u0119"
         },
         "error": {
             "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia"

@@ -5,10 +5,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
     ATTRIBUTION,
@@ -23,7 +25,11 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Sense binary sensor."""
     data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DATA]
     sense_devices_data = hass.data[DOMAIN][config_entry.entry_id][SENSE_DEVICES_DATA]
@@ -44,7 +50,7 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
 
 async def _migrate_old_unique_ids(hass, devices):
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
     for device in devices:
         # Migration of old not so unique ids
         old_entity_id = registry.async_get_entity_id(

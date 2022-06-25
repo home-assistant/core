@@ -15,11 +15,11 @@
   },
   "included": [
     {
-      "type": "PVPC (\u20ac\/MWh)",
+      "type": "PVPC (\u20ac/MWh)",
       "id": "1001",
       "groupId": null,
       "attributes": {
-        "title": "PVPC (\u20ac\/MWh)",
+        "title": "PVPC (\u20ac/MWh)",
         "description": null,
         "color": "#ffcf09",
         "type": null,

@@ -1,6 +1,7 @@
 """Config flow for brunt integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -77,9 +78,7 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
             data=user_input,
         )
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
@@ -111,9 +110,3 @@ class BruntConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hass.config_entries.async_update_entry(self._reauth_entry, data=user_input)
         await self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
         return self.async_abort(reason="reauth_successful")
-
-    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
-        """Import config from configuration.yaml."""
-        await self.async_set_unique_id(import_config[CONF_USERNAME].lower())
-        self._abort_if_unique_id_configured()
-        return await self.async_step_user(import_config)

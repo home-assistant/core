@@ -11,7 +11,7 @@ import pytest
 import voluptuous as vol
 
 import homeassistant
-from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers import config_validation as cv, selector, template
 
 
 def test_boolean():
@@ -410,9 +410,15 @@ def test_service_schema():
             "entity_id": "all",
             "alias": "turn on kitchen lights",
         },
+        {"service": "scene.turn_on", "metadata": {}},
     )
     for value in options:
         cv.SERVICE_SCHEMA(value)
+
+    # Check metadata is removed from the validated output
+    assert cv.SERVICE_SCHEMA({"service": "scene.turn_on", "metadata": {}}) == {
+        "service": "scene.turn_on"
+    }
 
 
 def test_entity_service_schema():
@@ -441,6 +447,32 @@ def test_entity_service_schema():
     )
     for value in options:
         schema(value)
+
+    options = (
+        {
+            "required": 1,
+            "entity_id": "light.kitchen",
+            "metadata": {"some": "frontend_stuff"},
+        },
+    )
+    for value in options:
+        validated = schema(value)
+        assert "metadata" not in validated
+
+
+def test_entity_service_schema_with_metadata():
+    """Test make_entity_service_schema with overridden metadata key."""
+    schema = cv.make_entity_service_schema({vol.Required("metadata"): cv.positive_int})
+
+    options = ({"metadata": {"some": "frontend_stuff"}, "entity_id": "light.kitchen"},)
+    for value in options:
+        with pytest.raises(vol.MultipleInvalid):
+            cv.SERVICE_SCHEMA(value)
+
+    options = ({"metadata": 1, "entity_id": "light.kitchen"},)
+    for value in options:
+        validated = schema(value)
+        assert "metadata" in validated
 
 
 def test_slug():
@@ -685,6 +717,17 @@ def test_string_in_serializer():
     """Test string with custom_serializer."""
     assert cv.custom_serializer(cv.string) == {
         "type": "string",
+    }
+
+
+def test_selector_in_serializer():
+    """Test selector with custom_serializer."""
+    assert cv.custom_serializer(selector.selector({"text": {}})) == {
+        "selector": {
+            "text": {
+                "multiline": False,
+            }
+        }
     }
 
 

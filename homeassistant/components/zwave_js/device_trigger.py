@@ -32,6 +32,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 
 from . import trigger
+from .config_validation import VALUE_SCHEMA
 from .const import (
     ATTR_COMMAND_CLASS,
     ATTR_DATA_TYPE,
@@ -49,11 +50,15 @@ from .const import (
     ZWAVE_JS_NOTIFICATION_EVENT,
     ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
 )
-from .device_automation_helpers import CONF_SUBTYPE, NODE_STATUSES
+from .device_automation_helpers import (
+    CONF_SUBTYPE,
+    NODE_STATUSES,
+    async_bypass_dynamic_config_validation,
+    generate_config_parameter_subtype,
+)
 from .helpers import (
     async_get_node_from_device_id,
     async_get_node_status_sensor_entity_id,
-    async_is_device_config_entry_not_loaded,
     check_type_schema_map,
     copy_available_params,
     get_value_state_schema,
@@ -75,14 +80,6 @@ SCENE_ACTIVATION_VALUE_NOTIFICATION = "event.value_notification.scene_activation
 CONFIG_PARAMETER_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.config_parameter"
 VALUE_VALUE_UPDATED = f"{VALUE_UPDATED_PLATFORM_TYPE}.value"
 NODE_STATUS = "state.node_status"
-
-VALUE_SCHEMA = vol.Any(
-    bool,
-    vol.Coerce(int),
-    vol.Coerce(float),
-    cv.boolean,
-    cv.string,
-)
 
 
 NOTIFICATION_EVENT_CC_MAPPINGS = (
@@ -217,7 +214,16 @@ async def async_validate_trigger_config(
 
     # We return early if the config entry for this device is not ready because we can't
     # validate the value without knowing the state of the device
-    if async_is_device_config_entry_not_loaded(hass, config[CONF_DEVICE_ID]):
+    try:
+        bypass_dynamic_config_validation = async_bypass_dynamic_config_validation(
+            hass, config[CONF_DEVICE_ID]
+        )
+    except ValueError as err:
+        raise InvalidDeviceAutomationConfig(
+            f"Device {config[CONF_DEVICE_ID]} not found"
+        ) from err
+
+    if bypass_dynamic_config_validation:
         return config
 
     trigger_type = config[CONF_TYPE]
@@ -248,7 +254,7 @@ async def async_get_triggers(
     dev_reg = device_registry.async_get(hass)
     node = async_get_node_from_device_id(hass, device_id, dev_reg)
 
-    triggers = []
+    triggers: list[dict] = []
     base_trigger = {
         CONF_PLATFORM: "device",
         CONF_DEVICE_ID: device_id,
@@ -260,7 +266,11 @@ async def async_get_triggers(
     entity_id = async_get_node_status_sensor_entity_id(
         hass, device_id, ent_reg, dev_reg
     )
-    if (entity := ent_reg.async_get(entity_id)) is not None and not entity.disabled:
+    if (
+        entity_id
+        and (entity := ent_reg.async_get(entity_id)) is not None
+        and not entity.disabled
+    ):
         triggers.append(
             {**base_trigger, CONF_TYPE: NODE_STATUS, CONF_ENTITY_ID: entity_id}
         )
@@ -344,7 +354,7 @@ async def async_get_triggers(
                 ATTR_PROPERTY_KEY: config_value.property_key,
                 ATTR_ENDPOINT: config_value.endpoint,
                 ATTR_COMMAND_CLASS: config_value.command_class,
-                CONF_SUBTYPE: f"{config_value.value_id} ({config_value.property_name})",
+                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
             }
             for config_value in node.get_configuration_values().values()
         ]
@@ -524,7 +534,9 @@ async def async_get_trigger_capabilities(
                     vol.Required(ATTR_COMMAND_CLASS): vol.In(
                         {
                             CommandClass(cc.id).value: cc.name
-                            for cc in sorted(node.command_classes, key=lambda cc: cc.name)  # type: ignore[no-any-return]
+                            for cc in sorted(
+                                node.command_classes, key=lambda cc: cc.name
+                            )
                             if cc.id != CommandClass.CONFIGURATION
                         }
                     ),

@@ -1,0 +1,11 @@
+{
+  "domain": "rtsp_to_webrtc",
+  "name": "RTSPtoWebRTC",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/rtsp_to_webrtc",
+  "requirements": ["rtsp-to-webrtc==0.5.1"],
+  "dependencies": ["camera"],
+  "codeowners": ["@allenporter"],
+  "iot_class": "local_push",
+  "loggers": ["rtsp_to_webrtc"]
+}

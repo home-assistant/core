@@ -6,6 +6,7 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "discover_timeout": "Es k\u00f6nnen keine Hue Bridges erkannt werden",
+            "invalid_host": "Ung\u00fcltiger Host",
             "no_bridges": "Keine Philips Hue Bridges erkannt",
             "not_hue_bridge": "Keine Philips Hue Bridge entdeckt",
             "unknown": "Unerwarteter Fehler"
@@ -69,7 +70,8 @@
                 "data": {
                     "allow_hue_groups": "Hue-Gruppen erlauben",
                     "allow_hue_scenes": "Hue-Szenen zulassen",
-                    "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden"
+                    "allow_unreachable": "Erlaube nicht erreichbaren Gl\u00fchlampen, ihren Zustand korrekt zu melden",
+                    "ignore_availability": "Verbindungsstatus f\u00fcr die angegebenen Ger\u00e4te ignorieren"
                 }
             }
         }

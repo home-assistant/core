@@ -5,14 +5,16 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 import datetime
 import time
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import attr
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.storage import Store
 from homeassistant.loader import bind_hass
 
-from .typing import ZhaDeviceType
+if TYPE_CHECKING:
+    from .device import ZHADevice
 
 DATA_REGISTRY = "zha_storage"
 
@@ -38,10 +40,10 @@ class ZhaStorage:
         """Initialize the zha device storage."""
         self.hass: HomeAssistant = hass
         self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
-        self._store = hass.helpers.storage.Store(STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     @callback
-    def async_create_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
+    def async_create_device(self, device: ZHADevice) -> ZhaDeviceEntry:
         """Create a new ZhaDeviceEntry."""
         device_entry: ZhaDeviceEntry = ZhaDeviceEntry(
             name=device.name, ieee=str(device.ieee), last_seen=device.last_seen
@@ -51,7 +53,7 @@ class ZhaStorage:
         return device_entry
 
     @callback
-    def async_get_or_create_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
+    def async_get_or_create_device(self, device: ZHADevice) -> ZhaDeviceEntry:
         """Create a new ZhaDeviceEntry."""
         ieee_str: str = str(device.ieee)
         if ieee_str in self.devices:
@@ -59,14 +61,14 @@ class ZhaStorage:
         return self.async_create_device(device)
 
     @callback
-    def async_create_or_update_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
+    def async_create_or_update_device(self, device: ZHADevice) -> ZhaDeviceEntry:
         """Create or update a ZhaDeviceEntry."""
         if str(device.ieee) in self.devices:
             return self.async_update_device(device)
         return self.async_create_device(device)
 
     @callback
-    def async_delete_device(self, device: ZhaDeviceType) -> None:
+    def async_delete_device(self, device: ZHADevice) -> None:
         """Delete ZhaDeviceEntry."""
         ieee_str: str = str(device.ieee)
         if ieee_str in self.devices:
@@ -74,7 +76,7 @@ class ZhaStorage:
             self.async_schedule_save()
 
     @callback
-    def async_update_device(self, device: ZhaDeviceType) -> ZhaDeviceEntry:
+    def async_update_device(self, device: ZHADevice) -> ZhaDeviceEntry:
         """Update name of ZhaDeviceEntry."""
         ieee_str: str = str(device.ieee)
         old = self.devices[ieee_str]

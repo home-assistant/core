@@ -1,4 +1,6 @@
 """Sensor for checking the status of London Underground tube lines."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from london_tube_status import TubeData
@@ -6,7 +8,11 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA, SensorEntity
 from homeassistant.const import ATTR_ATTRIBUTION
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 ATTRIBUTION = "Powered by TfL Open Data"
 
@@ -38,16 +44,24 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Tube sensor."""
 
-    data = TubeData()
-    data.update()
+    session = async_get_clientsession(hass)
+
+    data = TubeData(session)
+    await data.update()
+
     sensors = []
-    for line in config.get(CONF_LINE):
+    for line in config[CONF_LINE]:
         sensors.append(LondonTubeSensor(line, data))
 
-    add_entities(sensors, True)
+    async_add_entities(sensors, True)
 
 
 class LondonTubeSensor(SensorEntity):
@@ -82,8 +96,8 @@ class LondonTubeSensor(SensorEntity):
         self.attrs["Description"] = self._description
         return self.attrs
 
-    def update(self):
+    async def async_update(self):
         """Update the sensor."""
-        self._data.update()
+        await self._data.update()
         self._state = self._data.data[self.name]["State"]
         self._description = self._data.data[self.name]["Description"]

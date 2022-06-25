@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, time
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -17,12 +17,12 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util
+from homeassistant.util import dt
 
-from . import ValloxDataUpdateCoordinator
+from . import ValloxDataUpdateCoordinator, ValloxEntity
 from .const import (
     DOMAIN,
     METRIC_KEY_MODE,
@@ -32,11 +32,11 @@ from .const import (
 )
 
 
-class ValloxSensor(CoordinatorEntity, SensorEntity):
+class ValloxSensor(ValloxEntity, SensorEntity):
     """Representation of a Vallox sensor."""
 
     entity_description: ValloxSensorEntityDescription
-    coordinator: ValloxDataUpdateCoordinator
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
@@ -45,14 +45,12 @@ class ValloxSensor(CoordinatorEntity, SensorEntity):
         description: ValloxSensorEntityDescription,
     ) -> None:
         """Initialize the Vallox sensor."""
-        super().__init__(coordinator)
+        super().__init__(name, coordinator)
 
         self.entity_description = description
 
         self._attr_name = f"{name} {description.name}"
-
-        uuid = self.coordinator.data.get_uuid()
-        self._attr_unique_id = f"{uuid}-{description.key}"
+        self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
     def native_value(self) -> StateType | datetime:
@@ -95,18 +93,15 @@ class ValloxFilterRemainingSensor(ValloxSensor):
     @property
     def native_value(self) -> StateType | datetime:
         """Return the value reported by the sensor."""
-        super_native_value = super().native_value
+        next_filter_change_date = self.coordinator.data.get_next_filter_change_date()
 
-        if not isinstance(super_native_value, (int, float)):
+        if next_filter_change_date is None:
             return None
 
-        # Since only a delta of days is received from the device, fix the time so the timestamp does
-        # not change with every update.
-        days_remaining = float(super_native_value)
-        days_remaining_delta = timedelta(days=days_remaining)
-        now = datetime.utcnow().replace(hour=13, minute=0, second=0, microsecond=0)
-
-        return (now + days_remaining_delta).astimezone(dt_util.UTC)
+        return datetime.combine(
+            next_filter_change_date,
+            time(hour=13, minute=0, second=0, tzinfo=dt.DEFAULT_TIME_ZONE),
+        )
 
 
 class ValloxCellStateSensor(ValloxSensor):
@@ -150,7 +145,6 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
         name="Remaining Time For Filter",
-        metric_key="A_CYC_REMAINING_TIME_FOR_FILTER",
         device_class=SensorDeviceClass.TIMESTAMP,
         sensor_type=ValloxFilterRemainingSensor,
     ),

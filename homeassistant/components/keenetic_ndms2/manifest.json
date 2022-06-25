@@ -15,5 +15,6 @@
     }
   ],
   "codeowners": ["@foxel"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["ndms2_client"]
 }

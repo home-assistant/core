@@ -41,6 +41,7 @@ from .const import (  # noqa: F401
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
     SUPPORT_MODES,
+    HumidifierEntityFeature,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -88,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_SET_MODE,
         {vol.Required(ATTR_MODE): cv.string},
         "async_set_mode",
-        [SUPPORT_MODES],
+        [HumidifierEntityFeature.MODES],
     )
     component.async_register_entity_service(
         SERVICE_SET_HUMIDITY,
@@ -137,12 +138,12 @@ class HumidifierEntity(ToggleEntity):
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         supported_features = self.supported_features or 0
-        data = {
+        data: dict[str, int | list[str] | None] = {
             ATTR_MIN_HUMIDITY: self.min_humidity,
             ATTR_MAX_HUMIDITY: self.max_humidity,
         }
 
-        if supported_features & SUPPORT_MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_AVAILABLE_MODES] = self.available_modes
 
         return data
@@ -161,12 +162,12 @@ class HumidifierEntity(ToggleEntity):
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features or 0
-        data = {}
+        data: dict[str, int | str | None] = {}
 
         if self.target_humidity is not None:
             data[ATTR_HUMIDITY] = self.target_humidity
 
-        if supported_features & SUPPORT_MODES:
+        if supported_features & HumidifierEntityFeature.MODES:
             data[ATTR_MODE] = self.mode
 
         return data
@@ -180,7 +181,7 @@ class HumidifierEntity(ToggleEntity):
     def mode(self) -> str | None:
         """Return the current mode, e.g., home, auto, baby.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_mode
 
@@ -188,7 +189,7 @@ class HumidifierEntity(ToggleEntity):
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes.
 
-        Requires SUPPORT_MODES.
+        Requires HumidifierEntityFeature.MODES.
         """
         return self._attr_available_modes
 

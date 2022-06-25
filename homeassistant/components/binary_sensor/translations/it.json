@@ -56,11 +56,9 @@
             "bat_low": "{entity_name} batteria scarica",
             "co": "{entity_name} ha iniziato a rilevare il monossido di carbonio",
             "cold": "{entity_name} \u00e8 diventato freddo",
-            "connected": "{entity_name} connesso",
+            "connected": "{entity_name} \u00e8 connesso",
             "gas": "{entity_name} ha iniziato a rilevare il gas",
             "hot": "{entity_name} \u00e8 diventato caldo",
-            "is_not_tampered": "{entity_name} ha smesso di rilevare manomissioni",
-            "is_tampered": "{entity_name} ha iniziato a rilevare manomissioni",
             "light": "{entity_name} ha iniziato a rilevare la luce",
             "locked": "{entity_name} bloccato",
             "moist": "{entity_name} diventato umido",
@@ -134,8 +132,8 @@
             "off": "Non in carica",
             "on": "In carica"
         },
-        "co": {
-            "off": "Non Rilevato",
+        "carbon_monoxide": {
+            "off": "Assente",
             "on": "Rilevato"
         },
         "cold": {
@@ -224,7 +222,7 @@
         },
         "vibration": {
             "off": "Assente",
-            "on": "Rilevata"
+            "on": "Rilevato"
         },
         "window": {
             "off": "Chiusa",

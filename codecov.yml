@@ -8,7 +8,7 @@ coverage:
         threshold: 0.09
       config-flows:
         target: auto
-        threshold: 0
+        threshold: 1
         paths:
           - homeassistant/components/*/config_flow.py
     patch:

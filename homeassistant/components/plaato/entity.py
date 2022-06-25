@@ -2,6 +2,7 @@
 from pyplaato.models.device import PlaatoDevice
 
 from homeassistant.helpers import entity
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .const import (
     DEVICE,
@@ -95,7 +96,8 @@ class PlaatoEntity(entity.Entity):
             )
         else:
             self.async_on_remove(
-                self.hass.helpers.dispatcher.async_dispatcher_connect(
+                async_dispatcher_connect(
+                    self.hass,
                     SENSOR_SIGNAL % (self._device_id, self._sensor_type),
                     self.async_write_ha_state,
                 )

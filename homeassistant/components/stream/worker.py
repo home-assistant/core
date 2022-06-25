@@ -14,11 +14,9 @@ import av
 
 from homeassistant.core import HomeAssistant
 
-from . import KeyFrameConverter, redact_credentials
+from . import redact_credentials
 from .const import (
-    ATTR_SETTINGS,
     AUDIO_CODECS,
-    DOMAIN,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
@@ -26,7 +24,8 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
 )
-from .core import Part, Segment, StreamOutput, StreamSettings
+from .core import KeyFrameConverter, Part, Segment, StreamOutput, StreamSettings
+from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,6 +51,7 @@ class StreamState:
         self,
         hass: HomeAssistant,
         outputs_callback: Callable[[], Mapping[str, StreamOutput]],
+        diagnostics: Diagnostics,
     ) -> None:
         """Initialize StreamState."""
         self._stream_id: int = 0
@@ -62,6 +62,7 @@ class StreamState:
         # sequence gets incremented before the first segment so the first segment
         # has a sequence number of 0.
         self._sequence = -1
+        self._diagnostics = diagnostics
 
     @property
     def sequence(self) -> int:
@@ -84,7 +85,7 @@ class StreamState:
         # simple to check for discontinuity at output time, and to determine
         # the discontinuity sequence number.
         self._stream_id += 1
-        # Call discontinuity to remove incomplete segment from the HLS output
+        # Call discontinuity to fix incomplete segment in HLS output
         if hls_output := self._outputs_callback().get(HLS_PROVIDER):
             cast(HlsStreamOutput, hls_output).discontinuity()
 
@@ -92,6 +93,11 @@ class StreamState:
     def outputs(self) -> list[StreamOutput]:
         """Return the active stream outputs."""
         return list(self._outputs_callback().values())
+
+    @property
+    def diagnostics(self) -> Diagnostics:
+        """Return diagnostics object."""
+        return self._diagnostics
 
 
 class StreamMuxer:
@@ -103,6 +109,7 @@ class StreamMuxer:
         video_stream: av.video.VideoStream,
         audio_stream: av.audio.stream.AudioStream | None,
         stream_state: StreamState,
+        stream_settings: StreamSettings,
     ) -> None:
         """Initialize StreamMuxer."""
         self._hass = hass
@@ -118,7 +125,7 @@ class StreamMuxer:
         self._memory_file_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
-        self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        self._stream_settings = stream_settings
         self._stream_state = stream_state
         self._start_time = datetime.datetime.utcnow()
 
@@ -437,15 +444,20 @@ def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
 
 def stream_worker(
     source: str,
-    options: dict[str, str],
+    pyav_options: dict[str, str],
+    stream_settings: StreamSettings,
     stream_state: StreamState,
     keyframe_converter: KeyFrameConverter,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
 
+    if av.library_versions["libavformat"][0] >= 59 and "stimeout" in pyav_options:
+        # the stimeout option was renamed to timeout as of ffmpeg 5.0
+        pyav_options["timeout"] = pyav_options["stimeout"]
+        del pyav_options["stimeout"]
     try:
-        container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
+        container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
             f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"
@@ -468,6 +480,13 @@ def stream_worker(
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
+    # Disable ll-hls for hls inputs
+    if container.format.name == "hls":
+        stream_settings.ll_hls = False
+    stream_state.diagnostics.set_value("container_format", container.format.name)
+    stream_state.diagnostics.set_value("video_codec", video_stream.name)
+    if audio_stream:
+        stream_state.diagnostics.set_value("audio_codec", audio_stream.name)
 
     dts_validator = TimestampValidator()
     container_packets = PeekIterator(
@@ -519,7 +538,9 @@ def stream_worker(
             "Error demuxing stream while finding first packet: %s" % str(ex)
         ) from ex
 
-    muxer = StreamMuxer(stream_state.hass, video_stream, audio_stream, stream_state)
+    muxer = StreamMuxer(
+        stream_state.hass, video_stream, audio_stream, stream_state, stream_settings
+    )
     muxer.reset(start_dts)
 
     # Mux the first keyframe, then proceed through the rest of the packets

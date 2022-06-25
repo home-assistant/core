@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HuaweiLteBaseEntity
+from . import HuaweiLteBaseEntityWithDevice
 from .const import DOMAIN, KEY_DIALUP_MOBILE_DATASWITCH
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ async def async_setup_entry(
 
 
 @dataclass
-class HuaweiLteBaseSwitch(HuaweiLteBaseEntity, SwitchEntity):
+class HuaweiLteBaseSwitch(HuaweiLteBaseEntityWithDevice, SwitchEntity):
     """Huawei LTE switch device base class."""
 
     key: str = field(init=False)

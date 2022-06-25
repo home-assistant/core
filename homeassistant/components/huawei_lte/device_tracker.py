@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import logging
 import re
-from typing import Any, Dict, List, cast
+from typing import Any, cast
 
 from stringcase import snakecase
 
@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _DEVICE_SCAN = f"{DEVICE_TRACKER_DOMAIN}/device_scan"
 
-_HostType = Dict[str, Any]
+_HostType = dict[str, Any]
 
 
 def _get_hosts(
@@ -44,7 +44,7 @@ def _get_hosts(
         if not ignore_subscriptions and key not in router.subscriptions:
             continue
         try:
-            return cast(List[_HostType], router.data[key]["Hosts"]["Host"])
+            return cast(list[_HostType], router.data[key]["Hosts"]["Host"])
         except KeyError:
             _LOGGER.debug("%s[%s][%s] not in data", key, "Hosts", "Host")
     return None
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     # Initialize already tracked entities
     tracked: set[str] = set()
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     known_entities: list[Entity] = []
     track_wired_clients = router.config_entry.options.get(
         CONF_TRACK_WIRED_CLIENTS, DEFAULT_TRACK_WIRED_CLIENTS

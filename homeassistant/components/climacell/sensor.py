@@ -1,8 +1,6 @@
 """Sensor component that handles additional ClimaCell data for your location."""
 from __future__ import annotations
 
-from abc import abstractmethod
-
 from pyclimacell.const import CURRENT
 
 from homeassistant.components.sensor import SensorEntity
@@ -13,12 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
 from . import ClimaCellDataUpdateCoordinator, ClimaCellEntity
-from .const import (
-    CC_SENSOR_TYPES,
-    CC_V3_SENSOR_TYPES,
-    DOMAIN,
-    ClimaCellSensorEntityDescription,
-)
+from .const import CC_V3_SENSOR_TYPES, DOMAIN, ClimaCellSensorEntityDescription
 
 
 async def async_setup_entry(
@@ -28,24 +21,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up a config entry."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
-    api_class: type[BaseClimaCellSensorEntity]
-    sensor_types: tuple[ClimaCellSensorEntityDescription, ...]
-
-    if (api_version := config_entry.data[CONF_API_VERSION]) == 3:
-        api_class = ClimaCellV3SensorEntity
-        sensor_types = CC_V3_SENSOR_TYPES
-    else:
-        api_class = ClimaCellSensorEntity
-        sensor_types = CC_SENSOR_TYPES
+    api_version = config_entry.data[CONF_API_VERSION]
     entities = [
-        api_class(hass, config_entry, coordinator, api_version, description)
-        for description in sensor_types
+        ClimaCellV3SensorEntity(
+            hass, config_entry, coordinator, api_version, description
+        )
+        for description in CC_V3_SENSOR_TYPES
     ]
     async_add_entities(entities)
 
 
-class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
-    """Base ClimaCell sensor entity."""
+class ClimaCellV3SensorEntity(ClimaCellEntity, SensorEntity):
+    """Sensor entity that talks to ClimaCell v3 API to retrieve non-weather data."""
 
     entity_description: ClimaCellSensorEntityDescription
 
@@ -73,14 +60,11 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
         )
 
     @property
-    @abstractmethod
-    def _state(self) -> str | int | float | None:
-        """Return the raw state."""
-
-    @property
     def native_value(self) -> str | int | float | None:
         """Return the state."""
-        state = self._state
+        state = self._get_cc_value(
+            self.coordinator.data[CURRENT], self.entity_description.key
+        )
         if (
             state is not None
             and not isinstance(state, str)
@@ -102,23 +86,3 @@ class BaseClimaCellSensorEntity(ClimaCellEntity, SensorEntity):
             return self.entity_description.value_map(state).name.lower()  # type: ignore[misc]
 
         return state
-
-
-class ClimaCellSensorEntity(BaseClimaCellSensorEntity):
-    """Sensor entity that talks to ClimaCell v4 API to retrieve non-weather data."""
-
-    @property
-    def _state(self) -> str | int | float | None:
-        """Return the raw state."""
-        return self._get_current_property(self.entity_description.key)
-
-
-class ClimaCellV3SensorEntity(BaseClimaCellSensorEntity):
-    """Sensor entity that talks to ClimaCell v3 API to retrieve non-weather data."""
-
-    @property
-    def _state(self) -> str | int | float | None:
-        """Return the raw state."""
-        return self._get_cc_value(
-            self.coordinator.data[CURRENT], self.entity_description.key
-        )

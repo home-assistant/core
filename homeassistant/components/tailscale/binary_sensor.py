@@ -111,8 +111,6 @@ class TailscaleBinarySensorEntity(TailscaleEntity, BinarySensorEntity):
     entity_description: TailscaleBinarySensorEntityDescription
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return bool(
-            self.entity_description.is_on_fn(self.coordinator.data[self.device_id])
-        )
+        return self.entity_description.is_on_fn(self.coordinator.data[self.device_id])

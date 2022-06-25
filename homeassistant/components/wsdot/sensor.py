@@ -1,4 +1,6 @@
 """Support for Washington State Department of Transportation (WSDOT) data."""
+from __future__ import annotations
+
 from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
@@ -16,7 +18,10 @@ from homeassistant.const import (
     CONF_NAME,
     TIME_MINUTES,
 )
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,17 +48,22 @@ SCAN_INTERVAL = timedelta(minutes=3)
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_API_KEY): cv.string,
-        vol.Optional(CONF_TRAVEL_TIMES): [
+        vol.Required(CONF_TRAVEL_TIMES): [
             {vol.Required(CONF_ID): cv.string, vol.Optional(CONF_NAME): cv.string}
         ],
     }
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the WSDOT sensor."""
     sensors = []
-    for travel_time in config.get(CONF_TRAVEL_TIMES):
+    for travel_time in config[CONF_TRAVEL_TIMES]:
         name = travel_time.get(CONF_NAME) or travel_time.get(CONF_ID)
         sensors.append(
             WashingtonStateTravelTimeSensor(

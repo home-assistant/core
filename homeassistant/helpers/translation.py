@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
+from collections.abc import Iterable, Mapping
 import logging
 from typing import Any
 
@@ -16,8 +17,6 @@ from homeassistant.loader import (
 )
 from homeassistant.util.async_ import gather_with_concurrency
 from homeassistant.util.json import load_json
-
-# mypy: disallow-any-generics
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -136,7 +135,7 @@ def _build_resources(
     translation_strings: dict[str, dict[str, Any]],
     components: set[str],
     category: str,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, dict[str, Any] | str]:
     """Build the resources response for the given components."""
     # Build response
     return {
@@ -253,6 +252,7 @@ class _TranslationCache:
         translation_strings: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
+        resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
         categories: set[str] = set()
         for resource in translation_strings.values():
@@ -262,7 +262,8 @@ class _TranslationCache:
             resource_func = (
                 _merge_resources if category == "state" else _build_resources
             )
-            new_resources = resource_func(translation_strings, components, category)
+            new_resources: Mapping[str, dict[str, Any] | str]
+            new_resources = resource_func(translation_strings, components, category)  # type: ignore[assignment]
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(
@@ -285,7 +286,7 @@ async def async_get_translations(
     hass: HomeAssistant,
     language: str,
     category: str,
-    integration: str | None = None,
+    integrations: Iterable[str] | None = None,
     config_flow: bool | None = None,
 ) -> dict[str, Any]:
     """Return all backend translations.
@@ -296,8 +297,8 @@ async def async_get_translations(
     """
     lock = hass.data.setdefault(TRANSLATION_LOAD_LOCK, asyncio.Lock())
 
-    if integration is not None:
-        components = {integration}
+    if integrations is not None:
+        components = set(integrations)
     elif config_flow:
         components = (await async_get_config_flows(hass)) - hass.config.components
     elif category == "state":
@@ -309,7 +310,10 @@ async def async_get_translations(
         }
 
     async with lock:
-        cache = hass.data.setdefault(TRANSLATION_FLATTEN_CACHE, _TranslationCache(hass))
+        if TRANSLATION_FLATTEN_CACHE in hass.data:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE]
+        else:
+            cache = hass.data[TRANSLATION_FLATTEN_CACHE] = _TranslationCache(hass)
         cached = await cache.async_fetch(language, category, components)
 
     return dict(ChainMap(*cached))

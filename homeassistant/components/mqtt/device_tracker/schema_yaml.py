@@ -7,16 +7,18 @@ from homeassistant.const import CONF_DEVICES, STATE_HOME, STATE_NOT_HOME
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from ... import mqtt
+from ..client import async_subscribe
+from ..config import SCHEMA_BASE
 from ..const import CONF_QOS
+from ..util import valid_subscribe_topic
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"
 
-PLATFORM_SCHEMA_YAML = PLATFORM_SCHEMA.extend(mqtt.SCHEMA_BASE).extend(
+PLATFORM_SCHEMA_YAML = PLATFORM_SCHEMA.extend(SCHEMA_BASE).extend(
     {
-        vol.Required(CONF_DEVICES): {cv.string: mqtt.valid_subscribe_topic},
+        vol.Required(CONF_DEVICES): {cv.string: valid_subscribe_topic},
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
         vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
         vol.Optional(CONF_SOURCE_TYPE): vol.In(SOURCE_TYPES),
@@ -50,6 +52,6 @@ async def async_setup_scanner_from_yaml(hass, config, async_see, discovery_info=
 
             hass.async_create_task(async_see(**see_args))
 
-        await mqtt.async_subscribe(hass, topic, async_message_received, qos)
+        await async_subscribe(hass, topic, async_message_received, qos)
 
     return True

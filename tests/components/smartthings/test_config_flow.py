@@ -355,9 +355,11 @@ async def test_entry_created_with_cloudhook(
     request.refresh_token = refresh_token
 
     with patch.object(
-        hass.components.cloud, "async_active_subscription", Mock(return_value=True)
+        smartapp.cloud,
+        "async_active_subscription",
+        Mock(return_value=True),
     ), patch.object(
-        hass.components.cloud,
+        smartapp.cloud,
         "async_create_cloudhook",
         AsyncMock(return_value="http://cloud.test"),
     ) as mock_create_cloudhook:

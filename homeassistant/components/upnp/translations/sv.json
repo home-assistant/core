@@ -7,13 +7,6 @@
         "error": {
             "one": "En",
             "other": "Andra"
-        },
-        "step": {
-            "user": {
-                "data": {
-                    "usn": "Enheten"
-                }
-            }
         }
     }
 }

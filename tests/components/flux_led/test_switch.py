@@ -2,7 +2,12 @@
 from flux_led.const import MODE_MUSIC
 
 from homeassistant.components import flux_led
-from homeassistant.components.flux_led.const import CONF_REMOTE_ACCESS_ENABLED, DOMAIN
+from homeassistant.components.flux_led.const import (
+    CONF_REMOTE_ACCESS_ENABLED,
+    CONF_REMOTE_ACCESS_HOST,
+    CONF_REMOTE_ACCESS_PORT,
+    DOMAIN,
+)
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -12,6 +17,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import (
@@ -65,11 +71,69 @@ async def test_switch_on_off(hass: HomeAssistant) -> None:
     assert hass.states.get(entity_id).state == STATE_ON
 
 
+async def test_remote_access_unique_id(hass: HomeAssistant) -> None:
+    """Test a remote access switch unique id."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        },
+        unique_id=MAC_ADDRESS,
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "switch.bulb_rgbcw_ddeeff_remote_access"
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get(entity_id).unique_id == f"{MAC_ADDRESS}_remote_access"
+    )
+
+
+async def test_effects_speed_unique_id_no_discovery(hass: HomeAssistant) -> None:
+    """Test a remote access switch unique id when discovery fails."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        },
+    )
+    config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    with _patch_discovery(no_device=True), _patch_wifibulb(device=bulb):
+        await async_setup_component(hass, flux_led.DOMAIN, {flux_led.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "switch.bulb_rgbcw_ddeeff_remote_access"
+    entity_registry = er.async_get(hass)
+    assert (
+        entity_registry.async_get(entity_id).unique_id
+        == f"{config_entry.entry_id}_remote_access"
+    )
+
+
 async def test_remote_access_on_off(hass: HomeAssistant) -> None:
     """Test enable/disable remote access."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        data={
+            CONF_REMOTE_ACCESS_HOST: "any",
+            CONF_REMOTE_ACCESS_ENABLED: True,
+            CONF_REMOTE_ACCESS_PORT: 1234,
+            CONF_HOST: IP_ADDRESS,
+            CONF_NAME: DEFAULT_ENTRY_TITLE,
+        },
         unique_id=MAC_ADDRESS,
     )
     config_entry.add_to_hass(hass)

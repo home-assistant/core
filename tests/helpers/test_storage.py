@@ -73,7 +73,9 @@ async def test_custom_encoder(hass):
             return "9"
 
     store = storage.Store(hass, MOCK_VERSION, MOCK_KEY, encoder=JSONEncoder)
-    await store.async_save(Mock())
+    with pytest.raises(ValueError):
+        await store.async_save(Mock())
+    await store.async_save(object())
     data = await store.async_load()
     assert data == "9"
 

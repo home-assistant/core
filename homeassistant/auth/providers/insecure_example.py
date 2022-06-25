@@ -14,8 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import AUTH_PROVIDER_SCHEMA, AUTH_PROVIDERS, AuthProvider, LoginFlow
 from ..models import Credentials, UserMeta
 
-# mypy: disallow-any-generics
-
 USER_SCHEMA = vol.Schema(
     {
         vol.Required("username"): str,

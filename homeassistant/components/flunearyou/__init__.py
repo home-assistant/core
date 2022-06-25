@@ -59,7 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_interval=DEFAULT_UPDATE_INTERVAL,
             update_method=partial(async_update, api_category),
         )
-        data_init_tasks.append(coordinator.async_refresh())
+        data_init_tasks.append(coordinator.async_config_entry_first_refresh())
 
     await asyncio.gather(*data_init_tasks)
     hass.data.setdefault(DOMAIN, {})

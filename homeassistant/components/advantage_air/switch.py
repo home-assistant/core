@@ -1,7 +1,7 @@
 """Switch platform for Advantage Air integration."""
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -28,7 +28,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AdvantageAirFreshAir(AdvantageAirEntity, ToggleEntity):
+class AdvantageAirFreshAir(AdvantageAirEntity, SwitchEntity):
     """Representation of Advantage Air fresh air control."""
 
     _attr_icon = "mdi:air-filter"

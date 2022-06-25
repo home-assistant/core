@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_HOST, CONF_RESOURCE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -110,10 +110,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_import(self, conf: dict) -> FlowResult:
-        """Import a configuration from config.yaml."""
-        return await self.async_step_user(user_input={CONF_HOST: conf[CONF_RESOURCE]})
-
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle a flow initiated by the DHCP client."""
         for entry in self._async_current_entries(include_ignore=False):
@@ -138,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
-        """Attempt to confim."""
+        """Attempt to confirm."""
         title = create_title(self.info)
         if user_input is not None:
             return self.async_create_entry(title=title, data=self.info)

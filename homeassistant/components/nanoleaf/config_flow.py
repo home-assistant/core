@@ -1,6 +1,7 @@
 """Config flow for Nanoleaf integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 import os
 from typing import Any, Final, cast
@@ -77,7 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
         return await self.async_step_link()
 
-    async def async_step_reauth(self, data: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle Nanoleaf reauth flow if token is invalid."""
         self.reauth_entry = cast(
             config_entries.ConfigEntry,
@@ -182,17 +183,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.config_entries.async_reload(self.reauth_entry.entry_id)
             return self.async_abort(reason="reauth_successful")
 
-        return await self.async_setup_finish()
-
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle Nanoleaf configuration import."""
-        self._async_abort_entries_match({CONF_HOST: config[CONF_HOST]})
-        _LOGGER.debug(
-            "Importing Nanoleaf on %s from your configuration.yaml", config[CONF_HOST]
-        )
-        self.nanoleaf = Nanoleaf(
-            async_get_clientsession(self.hass), config[CONF_HOST], config[CONF_TOKEN]
-        )
         return await self.async_setup_finish()
 
     async def async_setup_finish(

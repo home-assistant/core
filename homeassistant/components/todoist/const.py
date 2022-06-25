@@ -61,6 +61,8 @@ ID = "id"
 LABELS = "labels"
 # Todoist API: "Name" value
 NAME = "name"
+# Todoist API: "Full Name" value
+FULL_NAME = "full_name"
 # Attribute: Is this task overdue?
 OVERDUE = "overdue"
 # Attribute: What is this task's priority?
@@ -79,6 +81,10 @@ START = "start"
 SUMMARY = "summary"
 # Todoist API: Fetch all Tasks
 TASKS = "items"
+# Todoist API: "responsible" for a Task
+ASSIGNEE = "assignee"
+# Todoist API: Collaborators in shared projects
+COLLABORATORS = "collaborators"
 
 DOMAIN = "todoist"
 

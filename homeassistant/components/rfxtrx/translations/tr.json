@@ -66,7 +66,7 @@
                     "debug": "Hata ay\u0131klamay\u0131 etkinle\u015ftir",
                     "device": "Yap\u0131land\u0131rmak i\u00e7in cihaz\u0131 se\u00e7in",
                     "event_code": "Eklemek i\u00e7in etkinlik kodunu girin",
-                    "remove_device": "Silinecek cihaz\u0131 se\u00e7in"
+                    "protocols": "Protokoller"
                 },
                 "title": "Rfxtrx Se\u00e7enekleri"
             },
@@ -75,11 +75,9 @@
                     "command_off": "Komut kapatma i\u00e7in veri bitleri de\u011feri",
                     "command_on": "Komut i\u00e7in veri bitleri de\u011feri",
                     "data_bit": "Veri biti say\u0131s\u0131",
-                    "fire_event": "Cihaz etkinli\u011fini etkinle\u015ftir",
                     "off_delay": "Kapanma gecikmesi",
                     "off_delay_enabled": "Kapatma gecikmesini etkinle\u015ftir",
                     "replace_device": "De\u011fi\u015ftirilecek cihaz\u0131 se\u00e7in",
-                    "signal_repetitions": "Sinyal tekrar\u0131 say\u0131s\u0131",
                     "venetian_blind_mode": "Jaluzi modu"
                 },
                 "title": "Cihaz se\u00e7eneklerini yap\u0131land\u0131r\u0131n"

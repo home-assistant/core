@@ -7,6 +7,7 @@ import zigpy.zcl.clusters.closures as closures
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.const import (
     STATE_LOCKED,
     STATE_UNAVAILABLE,
@@ -24,6 +25,20 @@ UNLOCK_DOOR = 1
 SET_PIN_CODE = 5
 CLEAR_PIN_CODE = 7
 SET_USER_STATUS = 9
+
+
+@pytest.fixture(autouse=True)
+def lock_platform_only():
+    """Only setup the lock and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.LOCK,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -96,7 +111,7 @@ async def async_lock(hass, cluster, entity_id):
     ):
         # lock via UI
         await hass.services.async_call(
-            Platform.LOCK, "lock", {"entity_id": entity_id}, blocking=True
+            LOCK_DOMAIN, "lock", {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False
@@ -110,7 +125,7 @@ async def async_unlock(hass, cluster, entity_id):
     ):
         # lock via UI
         await hass.services.async_call(
-            Platform.LOCK, "unlock", {"entity_id": entity_id}, blocking=True
+            LOCK_DOMAIN, "unlock", {"entity_id": entity_id}, blocking=True
         )
         assert cluster.request.call_count == 1
         assert cluster.request.call_args[0][0] is False

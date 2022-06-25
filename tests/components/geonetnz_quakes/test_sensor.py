@@ -2,6 +2,8 @@
 import datetime
 from unittest.mock import patch
 
+from freezegun import freeze_time
+
 from homeassistant.components import geonetnz_quakes
 from homeassistant.components.geonetnz_quakes import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.geonetnz_quakes.sensor import (
@@ -27,7 +29,7 @@ from tests.components.geonetnz_quakes import _generate_mock_feed_entry
 CONFIG = {geonetnz_quakes.DOMAIN: {CONF_RADIUS: 200}}
 
 
-async def test_setup(hass, legacy_patchable_time):
+async def test_setup(hass):
     """Test the general setup of the integration."""
     # Set up some mock feed entries for this test.
     mock_entry_1 = _generate_mock_feed_entry(
@@ -53,7 +55,7 @@ async def test_setup(hass, legacy_patchable_time):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
+    with freeze_time(utcnow), patch(
         "aio_geojson_client.feed.GeoJsonFeed.update"
     ) as mock_feed_update:
         mock_feed_update.return_value = "OK", [mock_entry_1, mock_entry_2, mock_entry_3]

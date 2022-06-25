@@ -2,18 +2,18 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Generator
 from datetime import datetime, timedelta
 import logging
 from time import monotonic
-from typing import Generic, TypeVar
+from typing import Any, Generic, TypeVar
 import urllib.error
 
 import aiohttp
 import requests
 
 from homeassistant import config_entries
-from homeassistant.core import CALLBACK_TYPE, Event, HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.util.dt import utcnow
 
@@ -23,14 +23,17 @@ from .debounce import Debouncer
 REQUEST_REFRESH_DEFAULT_COOLDOWN = 10
 REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
-T = TypeVar("T")
+_T = TypeVar("_T")
+_DataUpdateCoordinatorT = TypeVar(
+    "_DataUpdateCoordinatorT", bound="DataUpdateCoordinator[Any]"
+)
 
 
 class UpdateFailed(Exception):
     """Raised when an update has failed."""
 
 
-class DataUpdateCoordinator(Generic[T]):
+class DataUpdateCoordinator(Generic[_T]):
     """Class to manage fetching data from single endpoint."""
 
     def __init__(
@@ -40,7 +43,7 @@ class DataUpdateCoordinator(Generic[T]):
         *,
         name: str,
         update_interval: timedelta | None = None,
-        update_method: Callable[[], Awaitable[T]] | None = None,
+        update_method: Callable[[], Awaitable[_T]] | None = None,
         request_refresh_debouncer: Debouncer | None = None,
     ) -> None:
         """Initialize global data updater."""
@@ -56,9 +59,9 @@ class DataUpdateCoordinator(Generic[T]):
         # to make sure the first update was successful.
         # Set type to just T to remove annoying checks that data is not None
         # when it was already checked during setup.
-        self.data: T = None  # type: ignore[assignment]
+        self.data: _T = None  # type: ignore[assignment]
 
-        self._listeners: list[CALLBACK_TYPE] = []
+        self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
         self._job = HassJob(self._handle_refresh_interval)
         self._unsub_refresh: CALLBACK_TYPE | None = None
         self._request_refresh_task: asyncio.TimerHandle | None = None
@@ -79,31 +82,45 @@ class DataUpdateCoordinator(Generic[T]):
         self._debounced_refresh = request_refresh_debouncer
 
     @callback
-    def async_add_listener(self, update_callback: CALLBACK_TYPE) -> Callable[[], None]:
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
         """Listen for data updates."""
         schedule_refresh = not self._listeners
 
-        self._listeners.append(update_callback)
+        @callback
+        def remove_listener() -> None:
+            """Remove update listener."""
+            self._listeners.pop(remove_listener)
+            if not self._listeners:
+                self._unschedule_refresh()
+
+        self._listeners[remove_listener] = (update_callback, context)
 
         # This is the first listener, set up interval.
         if schedule_refresh:
             self._schedule_refresh()
 
-        @callback
-        def remove_listener() -> None:
-            """Remove update listener."""
-            self.async_remove_listener(update_callback)
-
         return remove_listener
 
     @callback
-    def async_remove_listener(self, update_callback: CALLBACK_TYPE) -> None:
-        """Remove data update."""
-        self._listeners.remove(update_callback)
+    def async_update_listeners(self) -> None:
+        """Update all registered listeners."""
+        for update_callback, _ in list(self._listeners.values()):
+            update_callback()
 
-        if not self._listeners and self._unsub_refresh:
+    @callback
+    def _unschedule_refresh(self) -> None:
+        """Unschedule any pending refresh since there is no longer any listeners."""
+        if self._unsub_refresh:
             self._unsub_refresh()
             self._unsub_refresh = None
+
+    def async_contexts(self) -> Generator[Any, None, None]:
+        """Return all registered contexts."""
+        yield from (
+            context for _, context in self._listeners.values() if context is not None
+        )
 
     @callback
     def _schedule_refresh(self) -> None:
@@ -140,7 +157,7 @@ class DataUpdateCoordinator(Generic[T]):
         """
         await self._debounced_refresh.async_call()
 
-    async def _async_update_data(self) -> T:
+    async def _async_update_data(self) -> _T:
         """Fetch the latest data from the source."""
         if self.update_method is None:
             raise NotImplementedError("Update method not implemented")
@@ -180,7 +197,8 @@ class DataUpdateCoordinator(Generic[T]):
         if scheduled and self.hass.is_stopping:
             return
 
-        start = monotonic()
+        if log_timing := self.logger.isEnabledFor(logging.DEBUG):
+            start = monotonic()
         auth_failed = False
 
         try:
@@ -252,20 +270,20 @@ class DataUpdateCoordinator(Generic[T]):
                 self.logger.info("Fetching %s data recovered", self.name)
 
         finally:
-            self.logger.debug(
-                "Finished fetching %s data in %.3f seconds (success: %s)",
-                self.name,
-                monotonic() - start,
-                self.last_update_success,
-            )
+            if log_timing:
+                self.logger.debug(
+                    "Finished fetching %s data in %.3f seconds (success: %s)",
+                    self.name,
+                    monotonic() - start,
+                    self.last_update_success,
+                )
             if not auth_failed and self._listeners and not self.hass.is_stopping:
                 self._schedule_refresh()
 
-        for update_callback in self._listeners:
-            update_callback()
+        self.async_update_listeners()
 
     @callback
-    def async_set_updated_data(self, data: T) -> None:
+    def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
         if self._unsub_refresh:
             self._unsub_refresh()
@@ -283,24 +301,18 @@ class DataUpdateCoordinator(Generic[T]):
         if self._listeners:
             self._schedule_refresh()
 
-        for update_callback in self._listeners:
-            update_callback()
-
-    @callback
-    def _async_stop_refresh(self, _: Event) -> None:
-        """Stop refreshing when Home Assistant is stopping."""
-        self.update_interval = None
-        if self._unsub_refresh:
-            self._unsub_refresh()
-            self._unsub_refresh = None
+        self.async_update_listeners()
 
 
-class CoordinatorEntity(Generic[T], entity.Entity):
+class CoordinatorEntity(entity.Entity, Generic[_DataUpdateCoordinatorT]):
     """A class for entities using DataUpdateCoordinator."""
 
-    def __init__(self, coordinator: DataUpdateCoordinator[T]) -> None:
+    def __init__(
+        self, coordinator: _DataUpdateCoordinatorT, context: Any = None
+    ) -> None:
         """Create the entity with a DataUpdateCoordinator."""
         self.coordinator = coordinator
+        self.coordinator_context = context
 
     @property
     def should_poll(self) -> bool:
@@ -316,7 +328,9 @@ class CoordinatorEntity(Generic[T], entity.Entity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self.async_on_remove(
-            self.coordinator.async_add_listener(self._handle_coordinator_update)
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update, self.coordinator_context
+            )
         )
 
     @callback

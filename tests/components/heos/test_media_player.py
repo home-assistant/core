@@ -58,6 +58,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.setup import async_setup_component
 
 
@@ -155,7 +156,7 @@ async def test_updates_from_connection_event(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     # Connected
     player.available = True
@@ -201,7 +202,7 @@ async def test_updates_from_sources_updated(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     input_sources.clear()
     player.heos.dispatcher.send(
@@ -225,7 +226,7 @@ async def test_updates_from_players_changed(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     assert hass.states.get("media_player.test_player").state == STATE_IDLE
     player.state = const.PLAY_STATE_PLAY
@@ -259,7 +260,7 @@ async def test_updates_from_players_changed_new_ids(
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
     player.heos.dispatcher.send(
         const.SIGNAL_CONTROLLER_EVENT,
         const.EVENT_PLAYERS_CHANGED,
@@ -287,7 +288,7 @@ async def test_updates_from_user_changed(hass, config_entry, config, controller)
     async def set_signal():
         event.set()
 
-    hass.helpers.dispatcher.async_dispatcher_connect(SIGNAL_HEOS_UPDATED, set_signal)
+    async_dispatcher_connect(hass, SIGNAL_HEOS_UPDATED, set_signal)
 
     controller.is_signed_in = False
     controller.signed_in_username = None

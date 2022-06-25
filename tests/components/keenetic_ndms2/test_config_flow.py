@@ -69,25 +69,6 @@ async def test_flow_works(hass: HomeAssistant, connect) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_import_works(hass: HomeAssistant, connect) -> None:
-    """Test config flow."""
-
-    with patch(
-        "homeassistant.components.keenetic_ndms2.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result = await hass.config_entries.flow.async_init(
-            keenetic.DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=MOCK_DATA,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == MOCK_NAME
-    assert result["data"] == MOCK_DATA
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
 async def test_options(hass: HomeAssistant) -> None:
     """Test updating options."""
     entry = MockConfigEntry(domain=keenetic.DOMAIN, data=MOCK_DATA)

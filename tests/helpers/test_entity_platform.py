@@ -14,7 +14,11 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity import DeviceInfo, async_generate_entity_id
+from homeassistant.helpers.entity import (
+    DeviceInfo,
+    EntityCategory,
+    async_generate_entity_id,
+)
 from homeassistant.helpers.entity_component import (
     DEFAULT_SCAN_INTERVAL,
     EntityComponent,
@@ -328,6 +332,25 @@ async def test_parallel_updates_sync_platform(hass):
     assert entity.parallel_updates._value == 1
 
 
+async def test_parallel_updates_no_update_method(hass):
+    """Test platform parallel_updates default set to 0."""
+    platform = MockPlatform()
+
+    mock_entity_platform(hass, "test_domain.platform", platform)
+
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    component._platforms = {}
+
+    await component.async_setup({DOMAIN: {"platform": "platform"}})
+    await hass.async_block_till_done()
+
+    handle = list(component._platforms.values())[-1]
+
+    entity = MockEntity()
+    await handle.async_add_entities([entity])
+    assert entity.parallel_updates is None
+
+
 async def test_parallel_updates_sync_platform_with_constant(hass):
     """Test sync platform can set parallel_updates limit."""
     platform = MockPlatform()
@@ -388,6 +411,30 @@ async def test_async_remove_with_platform(hass):
     assert len(hass.states.async_entity_ids()) == 1
     await entity1.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
+
+
+async def test_async_remove_with_platform_update_finishes(hass):
+    """Remove an entity when an update finishes after its been removed."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass)
+    entity1 = MockEntity(name="test_1")
+
+    async def _delayed_update(*args, **kwargs):
+        await asyncio.sleep(0.01)
+
+    entity1.async_update = _delayed_update
+
+    # Add, remove, add, remove and make sure no updates
+    # cause the entity to reappear after removal
+    for i in range(2):
+        await component.async_add_entities([entity1])
+        assert len(hass.states.async_entity_ids()) == 1
+        entity1.async_write_ha_state()
+        assert hass.states.get(entity1.entity_id) is not None
+        task = asyncio.create_task(entity1.async_update_ha_state(True))
+        await entity1.async_remove()
+        assert len(hass.states.async_entity_ids()) == 0
+        await task
+        assert len(hass.states.async_entity_ids()) == 0
 
 
 async def test_not_adding_duplicate_entities_with_unique_id(hass, caplog):
@@ -1120,6 +1167,25 @@ async def test_entity_disabled_by_device(hass: HomeAssistant):
     assert entry_disabled.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
+async def test_entity_hidden_by_integration(hass):
+    """Test entity hidden by integration."""
+    component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
+
+    entity_default = MockEntity(unique_id="default")
+    entity_hidden = MockEntity(
+        unique_id="hidden", entity_registry_visible_default=False
+    )
+
+    await component.async_add_entities([entity_default, entity_hidden])
+
+    registry = er.async_get(hass)
+
+    entry_default = registry.async_get_or_create(DOMAIN, DOMAIN, "default")
+    assert entry_default.hidden_by is None
+    entry_hidden = registry.async_get_or_create(DOMAIN, DOMAIN, "hidden")
+    assert entry_hidden.hidden_by is er.RegistryEntryHider.INTEGRATION
+
+
 async def test_entity_info_added_to_entity_registry(hass):
     """Test entity info is written to entity registry."""
     component = EntityComponent(_LOGGER, DOMAIN, hass, timedelta(seconds=20))
@@ -1127,7 +1193,7 @@ async def test_entity_info_added_to_entity_registry(hass):
     entity_default = MockEntity(
         capability_attributes={"max": 100},
         device_class="mock-device-class",
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon="nice:icon",
         name="best name",
         supported_features=5,
@@ -1146,7 +1212,7 @@ async def test_entity_info_added_to_entity_registry(hass):
         "test_domain",
         capabilities={"max": 100},
         device_class=None,
-        entity_category="config",
+        entity_category=EntityCategory.CONFIG,
         icon=None,
         id=ANY,
         name=None,

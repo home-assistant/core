@@ -1,0 +1,11 @@
+{
+    "state": {
+        "uptimerobot__monitor_status": {
+            "down": "No disponible",
+            "not_checked_yet": "No comprobado",
+            "pause": "En pausa",
+            "seems_down": "Parece no disponible",
+            "up": "Funcionante"
+        }
+    }
+}

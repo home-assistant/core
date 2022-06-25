@@ -1,11 +1,11 @@
 """Support for Lupusec Home Security system."""
-# pylint: disable=import-error
 import logging
 
 import lupupy
 from lupupy.exceptions import LupusecException
 import voluptuous as vol
 
+from homeassistant.components import persistent_notification
 from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_NAME,
@@ -13,8 +13,10 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,7 +46,7 @@ LUPUSEC_PLATFORMS = [
 ]
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Lupusec component."""
     conf = config[DOMAIN]
     username = conf[CONF_USERNAME]
@@ -57,7 +59,8 @@ def setup(hass, config):
     except LupusecException as ex:
         _LOGGER.error(ex)
 
-        hass.components.persistent_notification.create(
+        persistent_notification.create(
+            hass,
             f"Error: {ex}<br />You will need to restart hass after fixing.",
             title=NOTIFICATION_TITLE,
             notification_id=NOTIFICATION_ID,

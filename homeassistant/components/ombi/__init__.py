@@ -12,9 +12,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+    Platform,
 )
-from homeassistant.core import ServiceCall
+from homeassistant.core import HomeAssistant, ServiceCall
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_SEASON,
@@ -74,7 +77,7 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-def setup(hass, config):
+def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Ombi component platform."""
 
     ombi = pyombi.Ombi(
@@ -150,6 +153,6 @@ def setup(hass, config):
         submit_tv_request,
         schema=SUBMIT_TV_REQUEST_SERVICE_SCHEMA,
     )
-    hass.helpers.discovery.load_platform("sensor", DOMAIN, {}, config)
+    load_platform(hass, Platform.SENSOR, DOMAIN, {}, config)
 
     return True

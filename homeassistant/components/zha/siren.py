@@ -1,23 +1,18 @@
 """Support for ZHA sirens."""
-
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
+
+from zigpy.zcl.clusters.security import IasWd as WD
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
-from homeassistant.components.siren.const import (
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
-    SUPPORT_TONES,
-    SUPPORT_VOLUME_SET,
-)
+from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -39,13 +34,18 @@ from .core.const import (
     WARNING_DEVICE_MODE_POLICE_PANIC,
     WARNING_DEVICE_MODE_STOP,
     WARNING_DEVICE_SOUND_HIGH,
+    WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_NO,
+    Strobe,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
 
-STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.SIREN)
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
+
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SIREN)
 DEFAULT_DURATION = 5  # seconds
 
 
@@ -64,30 +64,29 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
 
 
-@STRICT_MATCH(channel_names=CHANNEL_IAS_WD)
+@MULTI_MATCH(channel_names=CHANNEL_IAS_WD)
 class ZHASiren(ZhaEntity, SirenEntity):
     """Representation of a ZHA siren."""
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this siren."""
         self._attr_supported_features = (
-            SUPPORT_TURN_ON
-            | SUPPORT_TURN_OFF
-            | SUPPORT_DURATION
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_TONES
+            SirenEntityFeature.TURN_ON
+            | SirenEntityFeature.TURN_OFF
+            | SirenEntityFeature.DURATION
+            | SirenEntityFeature.VOLUME_SET
+            | SirenEntityFeature.TONES
         )
         self._attr_available_tones: list[int | str] | dict[int, str] | None = {
             WARNING_DEVICE_MODE_BURGLAR: "Burglar",
@@ -98,18 +97,36 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: IasWd = channels[0]
+        self._channel: IasWd = cast(IasWd, channels[0])
         self._attr_is_on: bool = False
-        self._off_listener = None
+        self._off_listener: Callable[[], None] | None = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""
         if self._off_listener:
             self._off_listener()
             self._off_listener = None
-        siren_tone = WARNING_DEVICE_MODE_EMERGENCY
+        tone_cache = self._channel.data_cache.get(WD.Warning.WarningMode.__name__)
+        siren_tone = (
+            tone_cache.value
+            if tone_cache is not None
+            else WARNING_DEVICE_MODE_EMERGENCY
+        )
         siren_duration = DEFAULT_DURATION
-        siren_level = WARNING_DEVICE_SOUND_HIGH
+        level_cache = self._channel.data_cache.get(WD.Warning.SirenLevel.__name__)
+        siren_level = (
+            level_cache.value if level_cache is not None else WARNING_DEVICE_SOUND_HIGH
+        )
+        strobe_cache = self._channel.data_cache.get(Strobe.__name__)
+        should_strobe = (
+            strobe_cache.value if strobe_cache is not None else Strobe.No_Strobe
+        )
+        strobe_level_cache = self._channel.data_cache.get(WD.StrobeLevel.__name__)
+        strobe_level = (
+            strobe_level_cache.value
+            if strobe_level_cache is not None
+            else WARNING_DEVICE_STROBE_HIGH
+        )
         if (duration := kwargs.get(ATTR_DURATION)) is not None:
             siren_duration = duration
         if (tone := kwargs.get(ATTR_TONE)) is not None:
@@ -117,7 +134,12 @@ class ZHASiren(ZhaEntity, SirenEntity):
         if (level := kwargs.get(ATTR_VOLUME_LEVEL)) is not None:
             siren_level = int(level)
         await self._channel.issue_start_warning(
-            mode=siren_tone, warning_duration=siren_duration, siren_level=siren_level
+            mode=siren_tone,
+            warning_duration=siren_duration,
+            siren_level=siren_level,
+            strobe=should_strobe,
+            strobe_duty_cycle=50 if should_strobe else 0,
+            strobe_intensity=strobe_level,
         )
         self._attr_is_on = True
         self._off_listener = async_call_later(

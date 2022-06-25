@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_SWITCHES,
     CONF_USERNAME,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -102,8 +103,8 @@ def setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     hass.data[DATA_ECOAL_BOILER] = ecoal_contr
     # Setup switches
     switches = conf[CONF_SWITCHES][CONF_MONITORED_CONDITIONS]
-    load_platform(hass, "switch", DOMAIN, switches, hass_config)
+    load_platform(hass, Platform.SWITCH, DOMAIN, switches, hass_config)
     # Setup temp sensors
     sensors = conf[CONF_SENSORS][CONF_MONITORED_CONDITIONS]
-    load_platform(hass, "sensor", DOMAIN, sensors, hass_config)
+    load_platform(hass, Platform.SENSOR, DOMAIN, sensors, hass_config)
     return True

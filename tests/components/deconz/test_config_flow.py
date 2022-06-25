@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import patch
 
 import pydeconz
+import pytest
 
 from homeassistant.components import ssdp
 from homeassistant.components.deconz.config_flow import (
@@ -17,6 +18,7 @@ from homeassistant.components.deconz.const import (
     CONF_ALLOW_NEW_DEVICES,
     CONF_MASTER_GATEWAY,
     DOMAIN as DECONZ_DOMAIN,
+    HASSIO_CONFIGURATION_URL,
 )
 from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.ssdp import ATTR_UPNP_MANUFACTURER_URL, ATTR_UPNP_SERIAL
@@ -340,7 +342,16 @@ async def test_manual_configuration_timeout_get_bridge(hass, aioclient_mock):
     assert result["reason"] == "no_bridges"
 
 
-async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
+@pytest.mark.parametrize(
+    "raised_error, error_string",
+    [
+        (pydeconz.errors.LinkButtonNotPressed, "linking_not_possible"),
+        (asyncio.TimeoutError, "no_key"),
+        (pydeconz.errors.ResponseError, "no_key"),
+        (pydeconz.errors.RequestError, "no_key"),
+    ],
+)
+async def test_link_step_fails(hass, aioclient_mock, raised_error, error_string):
     """Test config flow should abort if no API key was possible to retrieve."""
     aioclient_mock.get(
         pydeconz.utils.URL_DISCOVER,
@@ -359,7 +370,7 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
-    aioclient_mock.post("http://1.2.3.4:80/api", exc=pydeconz.errors.ResponseError)
+    aioclient_mock.post("http://1.2.3.4:80/api", exc=raised_error)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
@@ -367,7 +378,7 @@ async def test_link_get_api_key_ResponseError(hass, aioclient_mock):
 
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "link"
-    assert result["errors"] == {"base": "no_key"}
+    assert result["errors"] == {"base": error_string}
 
 
 async def test_reauth_flow_update_configuration(hass, aioclient_mock):
@@ -425,6 +436,10 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "link"
 
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0].get("context", {}).get("configuration_url") == "http://1.2.3.4:80"
+
     aioclient_mock.post(
         "http://1.2.3.4:80/api",
         json=[{"success": {"username": API_KEY}}],
@@ -442,22 +457,6 @@ async def test_flow_ssdp_discovery(hass, aioclient_mock):
         CONF_PORT: 80,
         CONF_API_KEY: API_KEY,
     }
-
-
-async def test_flow_ssdp_bad_discovery(hass, aioclient_mock):
-    """Test that SSDP discovery aborts if manufacturer URL is wrong."""
-    result = await hass.config_entries.flow.async_init(
-        DECONZ_DOMAIN,
-        data=ssdp.SsdpServiceInfo(
-            ssdp_usn="mock_usn",
-            ssdp_st="mock_st",
-            upnp={ATTR_UPNP_MANUFACTURER_URL: "other"},
-        ),
-        context={"source": SOURCE_SSDP},
-    )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "not_deconz_bridge"
 
 
 async def test_ssdp_discovery_update_configuration(hass, aioclient_mock):
@@ -557,6 +556,12 @@ async def test_flow_hassio_discovery(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "hassio_confirm"
     assert result["description_placeholders"] == {"addon": "Mock Addon"}
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0].get("context", {}).get("configuration_url") == HASSIO_CONFIGURATION_URL
+    )
 
     with patch(
         "homeassistant.components.deconz.async_setup_entry",

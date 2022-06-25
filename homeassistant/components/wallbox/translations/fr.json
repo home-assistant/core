@@ -6,7 +6,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "reauth_invalid": "\u00c9chec de la r\u00e9authentification\u00a0; Le num\u00e9ro de s\u00e9rie ne correspond pas \u00e0 l'original",
             "unknown": "Erreur inattendue"
         },
@@ -25,6 +25,5 @@
                 }
             }
         }
-    },
-    "title": "Wallbox"
+    }
 }

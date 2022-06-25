@@ -4,6 +4,7 @@ from itertools import product
 import logging
 
 from homeassistant.const import ATTR_ENTITY_ID, __version__
+from homeassistant.helpers import instance_id
 from homeassistant.util.decorator import Registry
 
 from .const import (
@@ -19,7 +20,7 @@ from .helpers import GoogleEntity, RequestData, async_get_entities
 
 EXECUTE_LIMIT = 2  # Wait 2 seconds for execute to finish
 
-HANDLERS = Registry()
+HANDLERS = Registry()  # type: ignore[var-annotated]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -83,27 +84,22 @@ async def async_devices_sync(hass, data, payload):
     )
 
     agent_user_id = data.config.get_agent_user_id(data.context)
-    entities = async_get_entities(hass, data.config)
-    results = await asyncio.gather(
-        *(
-            entity.sync_serialize(agent_user_id)
-            for entity in entities
-            if entity.should_expose()
-        ),
-        return_exceptions=True,
-    )
+    await data.config.async_connect_agent_user(agent_user_id)
 
+    entities = async_get_entities(hass, data.config)
+    instance_uuid = await instance_id.async_get(hass)
     devices = []
 
-    for entity, result in zip(entities, results):
-        if isinstance(result, Exception):
-            _LOGGER.error("Error serializing %s", entity.entity_id, exc_info=result)
-        else:
-            devices.append(result)
+    for entity in entities:
+        if not entity.should_expose():
+            continue
 
-    response = {"agentUserId": agent_user_id, "devices": devices}
+        try:
+            devices.append(entity.sync_serialize(agent_user_id, instance_uuid))
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error serializing %s", entity.entity_id)
 
-    await data.config.async_connect_agent_user(agent_user_id)
+    response = create_sync_response(agent_user_id, devices)
 
     _LOGGER.debug("Syncing entities response: %s", response)
 
@@ -252,6 +248,7 @@ async def async_devices_disconnect(hass, data: RequestData, payload):
 
     https://developers.google.com/assistant/smarthome/develop/process-intents#DISCONNECT
     """
+    assert data.context.user_id is not None
     await data.config.async_disconnect_agent_user(data.context.user_id)
     return None
 
@@ -281,7 +278,7 @@ async def async_devices_identify(hass, data: RequestData, payload):
 async def async_devices_reachable(hass, data: RequestData, payload):
     """Handle action.devices.REACHABLE_DEVICES request.
 
-    https://developers.google.com/actions/smarthome/create#actiondevicesdisconnect
+    https://developers.google.com/assistant/smarthome/develop/local#implement_the_reachable_devices_handler_hub_integrations_only
     """
     google_ids = {dev["id"] for dev in (data.devices or [])}
 
@@ -294,9 +291,33 @@ async def async_devices_reachable(hass, data: RequestData, payload):
     }
 
 
-def turned_off_response(message):
+@HANDLERS.register("action.devices.PROXY_SELECTED")
+async def async_devices_proxy_selected(hass, data: RequestData, payload):
+    """Handle action.devices.PROXY_SELECTED request.
+
+    When selected for local SDK.
+    """
+    return {}
+
+
+def create_sync_response(agent_user_id: str, devices: list):
+    """Return an empty sync response."""
+    return {
+        "agentUserId": agent_user_id,
+        "devices": devices,
+    }
+
+
+def api_disabled_response(message, agent_user_id):
     """Return a device turned off response."""
+    inputs: list = message.get("inputs")
+
+    if inputs and inputs[0].get("intent") == "action.devices.SYNC":
+        payload = create_sync_response(agent_user_id, [])
+    else:
+        payload = {"errorCode": "deviceTurnedOff"}
+
     return {
         "requestId": message.get("requestId"),
-        "payload": {"errorCode": "deviceTurnedOff"},
+        "payload": payload,
     }

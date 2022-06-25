@@ -1,10 +1,16 @@
 """Provides the constants needed for component."""
+from enum import IntEnum
+
+# How long our auth signature on the content should be valid for
+CONTENT_AUTH_EXPIRY_TIME = 3600 * 24
 
 ATTR_APP_ID = "app_id"
 ATTR_APP_NAME = "app_name"
+ATTR_ENTITY_PICTURE_LOCAL = "entity_picture_local"
 ATTR_GROUP_MEMBERS = "group_members"
 ATTR_INPUT_SOURCE = "source"
 ATTR_INPUT_SOURCE_LIST = "source_list"
+ATTR_MEDIA_ANNOUNCE = "announce"
 ATTR_MEDIA_ALBUM_ARTIST = "media_album_artist"
 ATTR_MEDIA_ALBUM_NAME = "media_album_name"
 ATTR_MEDIA_ARTIST = "media_artist"
@@ -87,6 +93,34 @@ REPEAT_MODE_OFF = "off"
 REPEAT_MODE_ONE = "one"
 REPEAT_MODES = [REPEAT_MODE_OFF, REPEAT_MODE_ALL, REPEAT_MODE_ONE]
 
+
+class MediaPlayerEntityFeature(IntEnum):
+    """Supported features of the media player entity."""
+
+    PAUSE = 1
+    SEEK = 2
+    VOLUME_SET = 4
+    VOLUME_MUTE = 8
+    PREVIOUS_TRACK = 16
+    NEXT_TRACK = 32
+
+    TURN_ON = 128
+    TURN_OFF = 256
+    PLAY_MEDIA = 512
+    VOLUME_STEP = 1024
+    SELECT_SOURCE = 2048
+    STOP = 4096
+    CLEAR_PLAYLIST = 8192
+    PLAY = 16384
+    SHUFFLE_SET = 32768
+    SELECT_SOUND_MODE = 65536
+    BROWSE_MEDIA = 131072
+    REPEAT_SET = 262144
+    GROUPING = 524288
+
+
+# These SUPPORT_* constants are deprecated as of Home Assistant 2022.5.
+# Please use the MediaPlayerEntityFeature enum instead.
 SUPPORT_PAUSE = 1
 SUPPORT_SEEK = 2
 SUPPORT_VOLUME_SET = 4

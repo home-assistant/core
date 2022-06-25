@@ -24,5 +24,13 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
+  },
+  "device_automation": {
+    "trigger_type": {
+      "swipe_up": "Swipe Up",
+      "swipe_down": "Swipe Down",
+      "swipe_left": "Swipe Left",
+      "swipe_right": "Swipe Right"
+    }
   }
 }

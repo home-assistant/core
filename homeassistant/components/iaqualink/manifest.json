@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/iaqualink/",
   "codeowners": ["@flz"],
   "requirements": ["iaqualink==0.4.1"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["iaqualink"]
 }

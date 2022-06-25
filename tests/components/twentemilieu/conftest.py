@@ -65,11 +65,11 @@ def mock_twentemilieu() -> Generator[None, MagicMock, None]:
         twentemilieu = twentemilieu_mock.return_value
         twentemilieu.unique_id.return_value = 12345
         twentemilieu.update.return_value = {
-            WasteType.NON_RECYCLABLE: date(2021, 11, 1),
-            WasteType.ORGANIC: date(2021, 11, 2),
-            WasteType.PACKAGES: date(2021, 11, 3),
-            WasteType.PAPER: None,
-            WasteType.TREE: date(2022, 1, 6),
+            WasteType.NON_RECYCLABLE: [date(2021, 11, 1), date(2021, 12, 1)],
+            WasteType.ORGANIC: [date(2021, 11, 2)],
+            WasteType.PACKAGES: [date(2021, 11, 3)],
+            WasteType.PAPER: [],
+            WasteType.TREE: [date(2022, 1, 6)],
         }
         yield twentemilieu
 

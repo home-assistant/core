@@ -1,0 +1,23 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "invalid_auth": "Ogiltig autentisering"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

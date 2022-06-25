@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "unknown": "Erro inesperado",
+            "unsupported": "Dispositivo n\u00e3o compat\u00edvel"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "unsupported": "Dispositivo n\u00e3o compat\u00edvel"
+        },
+        "flow_title": "{model} ({name})",
+        "step": {
+            "discovery_confirm": {
+                "description": "Deseja configurar o player {model} chamado {name}?"
+            },
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                }
+            }
+        }
+    }
+}

@@ -1,7 +1,12 @@
 """The tests for the Template alarm control panel platform."""
 import pytest
 
+from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.const import (
+    ATTR_DOMAIN,
+    ATTR_ENTITY_ID,
+    ATTR_SERVICE_DATA,
+    EVENT_CALL_SERVICE,
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
@@ -10,11 +15,59 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
 )
-
-from tests.components.alarm_control_panel import common
+from homeassistant.core import callback
 
 TEMPLATE_NAME = "alarm_control_panel.test_template_panel"
 PANEL_NAME = "alarm_control_panel.test"
+
+
+@pytest.fixture
+def service_calls(hass):
+    """Track service call events for alarm_control_panel.test."""
+    events = []
+    entity_id = "alarm_control_panel.test"
+
+    @callback
+    def capture_events(event):
+        if event.data[ATTR_DOMAIN] != ALARM_DOMAIN:
+            return
+        if event.data[ATTR_SERVICE_DATA][ATTR_ENTITY_ID] != [entity_id]:
+            return
+        events.append(event)
+
+    hass.bus.async_listen(EVENT_CALL_SERVICE, capture_events)
+
+    return events
+
+
+OPTIMISTIC_TEMPLATE_ALARM_CONFIG = {
+    "arm_away": {
+        "service": "alarm_control_panel.alarm_arm_away",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+    "arm_home": {
+        "service": "alarm_control_panel.alarm_arm_home",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+    "arm_night": {
+        "service": "alarm_control_panel.alarm_arm_night",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+    "disarm": {
+        "service": "alarm_control_panel.alarm_disarm",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
+    },
+}
+
+
+TEMPLATE_ALARM_CONFIG = {
+    "value_template": "{{ states('alarm_control_panel.test') }}",
+    **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
+}
 
 
 @pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
@@ -24,31 +77,7 @@ PANEL_NAME = "alarm_control_panel.test"
         {
             "alarm_control_panel": {
                 "platform": "template",
-                "panels": {
-                    "test_template_panel": {
-                        "value_template": "{{ states('alarm_control_panel.test') }}",
-                        "arm_away": {
-                            "service": "alarm_control_panel.alarm_arm_away",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "arm_home": {
-                            "service": "alarm_control_panel.alarm_arm_home",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "arm_night": {
-                            "service": "alarm_control_panel.alarm_arm_night",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "disarm": {
-                            "service": "alarm_control_panel.alarm_disarm",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                    }
-                },
+                "panels": {"test_template_panel": TEMPLATE_ALARM_CONFIG},
             }
         },
     ],
@@ -83,30 +112,7 @@ async def test_template_state_text(hass, start_ha):
         {
             "alarm_control_panel": {
                 "platform": "template",
-                "panels": {
-                    "test_template_panel": {
-                        "arm_away": {
-                            "service": "alarm_control_panel.alarm_arm_away",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "arm_home": {
-                            "service": "alarm_control_panel.alarm_arm_home",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "arm_night": {
-                            "service": "alarm_control_panel.alarm_arm_night",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "disarm": {
-                            "service": "alarm_control_panel.alarm_disarm",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                    }
-                },
+                "panels": {"test_template_panel": OPTIMISTIC_TEMPLATE_ALARM_CONFIG},
             }
         },
     ],
@@ -118,45 +124,15 @@ async def test_optimistic_states(hass, start_ha):
     await hass.async_block_till_done()
     assert state.state == "unknown"
 
-    for func, set_state in [
-        (common.async_alarm_arm_away, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_arm_home, STATE_ALARM_ARMED_HOME),
-        (common.async_alarm_arm_night, STATE_ALARM_ARMED_NIGHT),
-        (common.async_alarm_disarm, STATE_ALARM_DISARMED),
+    for service, set_state in [
+        ("alarm_arm_away", STATE_ALARM_ARMED_AWAY),
+        ("alarm_arm_home", STATE_ALARM_ARMED_HOME),
+        ("alarm_arm_night", STATE_ALARM_ARMED_NIGHT),
+        ("alarm_disarm", STATE_ALARM_DISARMED),
     ]:
-        await func(hass, entity_id=TEMPLATE_NAME)
-        await hass.async_block_till_done()
-        assert hass.states.get(TEMPLATE_NAME).state == set_state
-
-
-@pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            "alarm_control_panel": {
-                "platform": "template",
-                "panels": {
-                    "test_template_panel": {
-                        "value_template": "{{ states('alarm_control_panel.test') }}",
-                    }
-                },
-            }
-        },
-    ],
-)
-async def test_no_action_scripts(hass, start_ha):
-    """Test no action scripts per state."""
-    hass.states.async_set("alarm_control_panel.test", STATE_ALARM_ARMED_AWAY)
-    await hass.async_block_till_done()
-
-    for func, set_state in [
-        (common.async_alarm_arm_away, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_arm_home, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_arm_night, STATE_ALARM_ARMED_AWAY),
-        (common.async_alarm_disarm, STATE_ALARM_ARMED_AWAY),
-    ]:
-        await func(hass, entity_id=TEMPLATE_NAME)
+        await hass.services.async_call(
+            ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
+        )
         await hass.async_block_till_done()
         assert hass.states.get(TEMPLATE_NAME).state == set_state
 
@@ -172,26 +148,7 @@ async def test_no_action_scripts(hass, start_ha):
                     "panels": {
                         "test_template_panel": {
                             "value_template": "{% if blah %}",
-                            "arm_away": {
-                                "service": "alarm_control_panel.alarm_arm_away",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_home": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_night": {
-                                "service": "alarm_control_panel.alarm_arm_night",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
+                            **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
                         }
                     },
                 }
@@ -205,26 +162,7 @@ async def test_no_action_scripts(hass, start_ha):
                     "panels": {
                         "bad name here": {
                             "value_template": "disarmed",
-                            "arm_away": {
-                                "service": "alarm_control_panel.alarm_arm_away",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_home": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_night": {
-                                "service": "alarm_control_panel.alarm_arm_night",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
+                            **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
                         }
                     },
                 }
@@ -253,26 +191,7 @@ async def test_no_action_scripts(hass, start_ha):
                     "panels": {
                         "test_template_panel": {
                             "value_template": "disarmed",
-                            "arm_away": {
-                                "service": "alarm_control_panel.alarm_arm_away",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_home": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_night": {
-                                "service": "alarm_control_panel.alarm_arm_night",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
+                            **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
                             "code_format": "bad_format",
                         }
                     },
@@ -299,26 +218,7 @@ async def test_template_syntax_error(hass, msg, start_ha, caplog_setup_text):
                     "test_template_panel": {
                         "name": "Template Alarm Panel",
                         "value_template": "disarmed",
-                        "arm_away": {
-                            "service": "alarm_control_panel.alarm_arm_away",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "arm_home": {
-                            "service": "alarm_control_panel.alarm_arm_home",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "arm_night": {
-                            "service": "alarm_control_panel.alarm_arm_night",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
-                        "disarm": {
-                            "service": "alarm_control_panel.alarm_disarm",
-                            "entity_id": "alarm_control_panel.test",
-                            "data": {"code": "1234"},
-                        },
+                        **OPTIMISTIC_TEMPLATE_ALARM_CONFIG,
                     }
                 },
             }
@@ -334,131 +234,34 @@ async def test_name(hass, start_ha):
 
 @pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])
 @pytest.mark.parametrize(
-    "config,func",
+    "config",
     [
-        (
-            {
-                "alarm_control_panel": {
-                    "platform": "template",
-                    "panels": {
-                        "test_template_panel": {
-                            "value_template": "{{ states('alarm_control_panel.test') }}",
-                            "arm_away": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_home": {"service": "test.automation"},
-                            "arm_night": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                        }
-                    },
-                }
-            },
-            common.async_alarm_arm_home,
-        ),
-        (
-            {
-                "alarm_control_panel": {
-                    "platform": "template",
-                    "panels": {
-                        "test_template_panel": {
-                            "value_template": "{{ states('alarm_control_panel.test') }}",
-                            "arm_home": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_away": {"service": "test.automation"},
-                            "arm_night": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                        }
-                    },
-                },
-            },
-            common.async_alarm_arm_away,
-        ),
-        (
-            {
-                "alarm_control_panel": {
-                    "platform": "template",
-                    "panels": {
-                        "test_template_panel": {
-                            "value_template": "{{ states('alarm_control_panel.test') }}",
-                            "arm_home": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_night": {"service": "test.automation"},
-                            "arm_away": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                        }
-                    },
-                }
-            },
-            common.async_alarm_arm_night,
-        ),
-        (
-            {
-                "alarm_control_panel": {
-                    "platform": "template",
-                    "panels": {
-                        "test_template_panel": {
-                            "value_template": "{{ states('alarm_control_panel.test') }}",
-                            "arm_home": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "disarm": {"service": "test.automation"},
-                            "arm_away": {
-                                "service": "alarm_control_panel.alarm_arm_home",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                            "arm_night": {
-                                "service": "alarm_control_panel.alarm_disarm",
-                                "entity_id": "alarm_control_panel.test",
-                                "data": {"code": "1234"},
-                            },
-                        }
-                    },
-                }
-            },
-            common.async_alarm_disarm,
-        ),
+        {
+            "alarm_control_panel": {
+                "platform": "template",
+                "panels": {"test_template_panel": TEMPLATE_ALARM_CONFIG},
+            }
+        },
     ],
 )
-async def test_arm_home_action(hass, func, start_ha, calls):
-    """Test arm home action."""
-    await func(hass, entity_id=TEMPLATE_NAME)
+@pytest.mark.parametrize(
+    "service",
+    [
+        "alarm_arm_home",
+        "alarm_arm_away",
+        "alarm_arm_night",
+        "alarm_disarm",
+    ],
+)
+async def test_actions(hass, service, start_ha, service_calls):
+    """Test alarm actions."""
+    await hass.services.async_call(
+        ALARM_DOMAIN, service, {"entity_id": TEMPLATE_NAME}, blocking=True
+    )
     await hass.async_block_till_done()
-    assert len(calls) == 1
+    assert len(service_calls) == 1
+    assert service_calls[0].data["service"] == service
+    assert service_calls[0].data["service_data"]["code"] == TEMPLATE_NAME
 
 
 @pytest.mark.parametrize("count,domain", [(1, "alarm_control_panel")])

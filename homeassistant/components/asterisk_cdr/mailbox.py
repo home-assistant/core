@@ -1,4 +1,6 @@
 """Support for the Asterisk CDR interface."""
+from __future__ import annotations
+
 import datetime
 import hashlib
 
@@ -7,13 +9,18 @@ from homeassistant.components.asterisk_mbox import (
     SIGNAL_CDR_UPDATE,
 )
 from homeassistant.components.mailbox import Mailbox
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 MAILBOX_NAME = "asterisk_cdr"
 
 
-async def async_get_handler(hass, config, discovery_info=None):
+async def async_get_handler(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> Mailbox:
     """Set up the Asterix CDR platform."""
     return AsteriskCDR(hass, MAILBOX_NAME)
 

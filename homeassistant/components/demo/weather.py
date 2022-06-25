@@ -1,4 +1,6 @@
 """Demo platform that offers fake meteorological data."""
+from __future__ import annotations
+
 from datetime import timedelta
 
 from homeassistant.components.weather import (
@@ -24,7 +26,18 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TIME,
     WeatherEntity,
 )
-from homeassistant.const import TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    SPEED_METERS_PER_SECOND,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
 CONDITION_CLASSES = {
@@ -45,12 +58,21 @@ CONDITION_CLASSES = {
 }
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Demo config entry."""
     setup_platform(hass, {}, async_add_entities)
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Demo weather."""
     add_entities(
         [
@@ -62,6 +84,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 1099,
                 0.5,
                 TEMP_CELSIUS,
+                PRESSURE_HPA,
+                SPEED_METERS_PER_SECOND,
                 [
                     [ATTR_CONDITION_RAINY, 1, 22, 15, 60],
                     [ATTR_CONDITION_RAINY, 5, 19, 8, 30],
@@ -80,6 +104,8 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                 987,
                 4.8,
                 TEMP_FAHRENHEIT,
+                PRESSURE_INHG,
+                SPEED_MILES_PER_HOUR,
                 [
                     [ATTR_CONDITION_SNOWY, 2, -10, -15, 60],
                     [ATTR_CONDITION_PARTLYCLOUDY, 1, -13, -14, 25],
@@ -106,16 +132,20 @@ class DemoWeather(WeatherEntity):
         pressure,
         wind_speed,
         temperature_unit,
+        pressure_unit,
+        wind_speed_unit,
         forecast,
     ):
         """Initialize the Demo weather."""
         self._name = name
         self._condition = condition
-        self._temperature = temperature
-        self._temperature_unit = temperature_unit
+        self._native_temperature = temperature
+        self._native_temperature_unit = temperature_unit
         self._humidity = humidity
-        self._pressure = pressure
-        self._wind_speed = wind_speed
+        self._native_pressure = pressure
+        self._native_pressure_unit = pressure_unit
+        self._native_wind_speed = wind_speed
+        self._native_wind_speed_unit = wind_speed_unit
         self._forecast = forecast
 
     @property
@@ -129,14 +159,14 @@ class DemoWeather(WeatherEntity):
         return False
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the temperature."""
-        return self._temperature
+        return self._native_temperature
 
     @property
-    def temperature_unit(self):
+    def native_temperature_unit(self):
         """Return the unit of measurement."""
-        return self._temperature_unit
+        return self._native_temperature_unit
 
     @property
     def humidity(self):
@@ -144,14 +174,24 @@ class DemoWeather(WeatherEntity):
         return self._humidity
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
-        return self._wind_speed
+        return self._native_wind_speed
 
     @property
-    def pressure(self):
+    def native_wind_speed_unit(self):
+        """Return the wind speed."""
+        return self._native_wind_speed_unit
+
+    @property
+    def native_pressure(self):
         """Return the pressure."""
-        return self._pressure
+        return self._native_pressure
+
+    @property
+    def native_pressure_unit(self):
+        """Return the pressure."""
+        return self._native_pressure_unit
 
     @property
     def condition(self):

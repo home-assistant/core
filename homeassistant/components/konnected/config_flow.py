@@ -1,4 +1,6 @@
 """Config flow for konnected.io integration."""
+from __future__ import annotations
+
 import asyncio
 import copy
 import logging
@@ -20,6 +22,7 @@ from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_HOST,
     CONF_ID,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PORT,
     CONF_REPEAT,
@@ -38,7 +41,6 @@ from .const import (
     CONF_BLINK,
     CONF_DEFAULT_OPTIONS,
     CONF_INVERSE,
-    CONF_MODEL,
     CONF_MOMENTARY,
     CONF_PAUSE,
     CONF_POLL_INTERVAL,
@@ -373,7 +375,9 @@ class KonnectedFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Return the Options Flow."""
         return OptionsFlowHandler(config_entry)
 

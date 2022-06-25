@@ -10,6 +10,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import update_coordinator
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, UPDATE_INTERVAL_IN_MEETING, UPDATE_INTERVAL_NOT_IN_MEETING
 
@@ -21,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = mutesync.PyMutesync(
         entry.data["token"],
         entry.data["host"],
-        hass.helpers.aiohttp_client.async_get_clientsession(),
+        async_get_clientsession(hass),
     )
 
     async def update_data():

@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from fjaraskupan import Device, State
+from fjaraskupan import Device
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -15,12 +15,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceState, async_setup_entry_platform
+from . import Coordinator, async_setup_entry_platform
 
 
 @dataclass
@@ -53,12 +50,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(device_state: DeviceState) -> list[Entity]:
+    def _constructor(coordinator: Coordinator) -> list[Entity]:
         return [
             BinarySensor(
-                device_state.coordinator,
-                device_state.device,
-                device_state.device_info,
+                coordinator,
+                coordinator.device,
+                coordinator.device_info,
                 entity_description,
             )
             for entity_description in SENSORS
@@ -67,14 +64,14 @@ async def async_setup_entry(
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class BinarySensor(CoordinatorEntity[State], BinarySensorEntity):
+class BinarySensor(CoordinatorEntity[Coordinator], BinarySensorEntity):
     """Grease filter sensor."""
 
     entity_description: EntityDescription
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: Coordinator,
         device: Device,
         device_info: DeviceInfo,
         entity_description: EntityDescription,

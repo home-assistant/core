@@ -1,6 +1,7 @@
 """Config flow to configure the Tile integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pytile import async_login
@@ -11,7 +12,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
 
@@ -75,7 +75,7 @@ class TileFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry from configuration.yaml."""
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(self, config: ConfigType) -> FlowResult:
+    async def async_step_reauth(self, config: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._username = config[CONF_USERNAME]
         return await self.async_step_reauth_confirm()

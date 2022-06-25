@@ -1,28 +1,23 @@
 """Support for Axis camera streaming."""
-
 from urllib.parse import urlencode
 
-from homeassistant.components.camera import SUPPORT_STREAM
-from homeassistant.components.mjpeg.camera import (
-    CONF_MJPEG_URL,
-    CONF_STILL_IMAGE_URL,
-    MjpegCamera,
-    filter_urllib3_logging,
-)
-from homeassistant.const import (
-    CONF_AUTHENTICATION,
-    CONF_NAME,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    HTTP_DIGEST_AUTHENTICATION,
-)
+from homeassistant.components.camera import CameraEntityFeature
+from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import HTTP_DIGEST_AUTHENTICATION
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .axis_base import AxisEntityBase
 from .const import DEFAULT_STREAM_PROFILE, DEFAULT_VIDEO_SOURCE, DOMAIN as AXIS_DOMAIN
 
 
-async def async_setup_entry(hass, config_entry, async_add_entities):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the Axis camera video stream."""
     filter_urllib3_logging()
 
@@ -37,19 +32,21 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 class AxisCamera(AxisEntityBase, MjpegCamera):
     """Representation of a Axis camera."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(self, device):
         """Initialize Axis Communications camera component."""
         AxisEntityBase.__init__(self, device)
 
-        config = {
-            CONF_NAME: device.name,
-            CONF_USERNAME: device.username,
-            CONF_PASSWORD: device.password,
-            CONF_MJPEG_URL: self.mjpeg_source,
-            CONF_STILL_IMAGE_URL: self.image_source,
-            CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
-        }
-        MjpegCamera.__init__(self, config)
+        MjpegCamera.__init__(
+            self,
+            name=device.name,
+            username=device.username,
+            password=device.password,
+            mjpeg_url=self.mjpeg_source,
+            still_image_url=self.image_source,
+            authentication=HTTP_DIGEST_AUTHENTICATION,
+        )
 
         self._attr_unique_id = f"{device.unique_id}-camera"
 
@@ -62,11 +59,6 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
         )
 
         await super().async_added_to_hass()
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        return SUPPORT_STREAM
 
     def _new_address(self) -> None:
         """Set new device address for video stream."""

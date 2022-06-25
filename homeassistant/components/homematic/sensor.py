@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_NAME,
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
     ELECTRIC_CURRENT_MILLIAMPERE,
@@ -27,6 +28,9 @@ from homeassistant.const import (
     TEMP_CELSIUS,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import ATTR_DISCOVER_DEVICES, ATTR_PARAM
 from .entity import HMDevice
@@ -211,6 +215,42 @@ SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement="#",
         icon="mdi:invert-colors",
     ),
+    "MASS_CONCENTRATION_PM_1": SensorEntityDescription(
+        key="MASS_CONCENTRATION_PM_1",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "MASS_CONCENTRATION_PM_2_5": SensorEntityDescription(
+        key="MASS_CONCENTRATION_PM_2_5",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "MASS_CONCENTRATION_PM_10": SensorEntityDescription(
+        key="MASS_CONCENTRATION_PM_10",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "MASS_CONCENTRATION_PM_1_24H_AVERAGE": SensorEntityDescription(
+        key="MASS_CONCENTRATION_PM_1_24H_AVERAGE",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM1,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "MASS_CONCENTRATION_PM_2_5_24H_AVERAGE": SensorEntityDescription(
+        key="MASS_CONCENTRATION_PM_2_5_24H_AVERAGE",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    "MASS_CONCENTRATION_PM_10_24H_AVERAGE": SensorEntityDescription(
+        key="MASS_CONCENTRATION_PM_10_24H_AVERAGE",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM10,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
 }
 
 DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
@@ -219,7 +259,12 @@ DEFAULT_SENSOR_DESCRIPTION = SensorEntityDescription(
 )
 
 
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the HomeMatic sensor platform."""
     if discovery_info is None:
         return
@@ -227,8 +272,7 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
     devices = []
     for conf in discovery_info[ATTR_DISCOVER_DEVICES]:
         state = conf.get(ATTR_PARAM)
-        entity_desc = SENSOR_DESCRIPTIONS.get(state)
-        if entity_desc is None:
+        if (entity_desc := SENSOR_DESCRIPTIONS.get(state)) is None:
             name = conf.get(ATTR_NAME)
             _LOGGER.warning(
                 "Sensor (%s) entity description is missing. Sensor state (%s) needs to be maintained",

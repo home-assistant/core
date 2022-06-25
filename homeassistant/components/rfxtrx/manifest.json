@@ -2,8 +2,9 @@
   "domain": "rfxtrx",
   "name": "RFXCOM RFXtrx",
   "documentation": "https://www.home-assistant.io/integrations/rfxtrx",
-  "requirements": ["pyRFXtrx==0.27.0"],
+  "requirements": ["pyRFXtrx==0.29.0"],
   "codeowners": ["@danielhiversen", "@elupus", "@RobBie1221"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["RFXtrx"]
 }

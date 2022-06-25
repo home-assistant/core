@@ -33,18 +33,27 @@
             "init": {
                 "data": {
                     "edit_select": "Editar"
-                }
+                },
+                "description": "\u00bfQu\u00e9 le gustar\u00eda editar?"
             },
             "zone_details": {
                 "data": {
+                    "zone_loop": "Bucle de RF",
                     "zone_name": "Nombre de zona",
-                    "zone_rfid": "Serie RF"
-                }
+                    "zone_relayaddr": "Direcci\u00f3n de retransmisi\u00f3n",
+                    "zone_relaychan": "Canal de retransmisi\u00f3n",
+                    "zone_rfid": "Serie RF",
+                    "zone_type": "Tipo de zona"
+                },
+                "description": "Introduzca los detalles de la zona {zone_number}. Para eliminar la zona {zone_number}, deje el nombre de la zona en blanco.",
+                "title": "Configurar AlarmDecoder"
             },
             "zone_select": {
                 "data": {
                     "zone_number": "N\u00famero de zona"
-                }
+                },
+                "description": "Ingrese el n\u00famero de zona que le gustar\u00eda agregar, editar o eliminar.",
+                "title": "Configurar AlarmDecoder"
             }
         }
     }

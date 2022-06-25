@@ -1,8 +1,6 @@
 """Provides device triggers for Select."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -24,13 +22,13 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, HomeAssistantError
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry
 from homeassistant.helpers.entity import get_capability
 from homeassistant.helpers.typing import ConfigType
 
-from . import DOMAIN
-from .const import ATTR_OPTIONS
+from .const import ATTR_OPTIONS, DOMAIN
 
 TRIGGER_TYPES = {"current_option_changed"}
 
@@ -47,9 +45,9 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for Select devices."""
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     return [
         {
             CONF_PLATFORM: "device",

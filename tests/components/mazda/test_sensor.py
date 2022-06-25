@@ -1,6 +1,12 @@
 """The sensor tests for the Mazda Connected Services integration."""
 
+from homeassistant.components.sensor import (
+    ATTR_STATE_CLASS,
+    SensorDeviceClass,
+    SensorStateClass,
+)
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_UNIT_OF_MEASUREMENT,
@@ -12,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
-from tests.components.mazda import init_integration
+from . import init_integration
 
 
 async def test_sensors(hass):
@@ -30,6 +36,7 @@ async def test_sensors(hass):
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:gas-station"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "87.0"
     entry = entity_registry.async_get("sensor.my_mazda3_fuel_remaining_percentage")
     assert entry
@@ -43,6 +50,7 @@ async def test_sensors(hass):
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:gas-station"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "381"
     entry = entity_registry.async_get("sensor.my_mazda3_fuel_distance_remaining")
     assert entry
@@ -54,6 +62,7 @@ async def test_sensors(hass):
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Odometer"
     assert state.attributes.get(ATTR_ICON) == "mdi:speedometer"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.TOTAL_INCREASING
     assert state.state == "2796"
     entry = entity_registry.async_get("sensor.my_mazda3_odometer")
     assert entry
@@ -66,7 +75,9 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Front Left Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "35"
     entry = entity_registry.async_get("sensor.my_mazda3_front_left_tire_pressure")
     assert entry
@@ -80,7 +91,9 @@ async def test_sensors(hass):
         == "My Mazda3 Front Right Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "35"
     entry = entity_registry.async_get("sensor.my_mazda3_front_right_tire_pressure")
     assert entry
@@ -93,7 +106,9 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Left Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "33"
     entry = entity_registry.async_get("sensor.my_mazda3_rear_left_tire_pressure")
     assert entry
@@ -106,7 +121,9 @@ async def test_sensors(hass):
         state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Rear Right Tire Pressure"
     )
     assert state.attributes.get(ATTR_ICON) == "mdi:car-tire-alert"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.PRESSURE
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PRESSURE_PSI
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
     assert state.state == "33"
     entry = entity_registry.async_get("sensor.my_mazda3_rear_right_tire_pressure")
     assert entry
@@ -130,3 +147,43 @@ async def test_sensors_imperial_units(hass):
     assert state
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_MILES
     assert state.state == "1737"
+
+
+async def test_electric_vehicle_sensors(hass):
+    """Test sensors which are specific to electric vehicles."""
+
+    await init_integration(hass, electric_vehicle=True)
+
+    entity_registry = er.async_get(hass)
+
+    # Fuel Remaining Percentage should not exist for an electric vehicle
+    entry = entity_registry.async_get("sensor.my_mazda3_fuel_remaining_percentage")
+    assert entry is None
+
+    # Fuel Distance Remaining should not exist for an electric vehicle
+    entry = entity_registry.async_get("sensor.my_mazda3_fuel_distance_remaining")
+    assert entry is None
+
+    # Charge Level
+    state = hass.states.get("sensor.my_mazda3_charge_level")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Charge Level"
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.BATTERY
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.state == "80"
+    entry = entity_registry.async_get("sensor.my_mazda3_charge_level")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_ev_charge_level"
+
+    # Remaining Range
+    state = hass.states.get("sensor.my_mazda3_remaining_range")
+    assert state
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "My Mazda3 Remaining Range"
+    assert state.attributes.get(ATTR_ICON) == "mdi:ev-station"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == LENGTH_KILOMETERS
+    assert state.attributes.get(ATTR_STATE_CLASS) == SensorStateClass.MEASUREMENT
+    assert state.state == "218"
+    entry = entity_registry.async_get("sensor.my_mazda3_remaining_range")
+    assert entry
+    assert entry.unique_id == "JM000000000000000_ev_remaining_range"

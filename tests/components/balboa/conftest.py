@@ -25,7 +25,7 @@ def client_fixture() -> Generator[None, MagicMock, None]:
         client.get_model_name.return_value = "FakeSpa"
         client.get_ssid.return_value = "V0.0"
 
-        # constants should preferebly be moved in the library
+        # constants should preferably be moved in the library
         # to be class attributes or further refactored
         client.TSCALE_C = 1
         client.TSCALE_F = 0

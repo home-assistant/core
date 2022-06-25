@@ -3,8 +3,10 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import cast
 
 from pyoverkiz.enums import OverkizCommandParam, OverkizState
+from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -24,7 +26,7 @@ from .entity import OverkizDescriptiveEntity
 class OverkizBinarySensorDescriptionMixin:
     """Define an entity description mixin for binary sensor entities."""
 
-    value_fn: Callable[[str], bool]
+    value_fn: Callable[[OverkizStateType], bool]
 
 
 @dataclass
@@ -99,21 +101,31 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         device_class=BinarySensorDeviceClass.VIBRATION,
         value_fn=lambda state: state == OverkizCommandParam.DETECTED,
     ),
+    # DomesticHotWaterProduction/WaterHeatingSystem
+    OverkizBinarySensorDescription(
+        key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
+        name="Energy Demand Status",
+        device_class=BinarySensorDeviceClass.HEAT,
+        value_fn=lambda state: cast(dict, state).get(
+            OverkizCommandParam.ENERGY_DEMAND_STATUS
+        )
+        == 1,
+    ),
 ]
+
+SUPPORTED_STATES = {
+    description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-):
+) -> None:
     """Set up the Overkiz binary sensors from a config entry."""
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizBinarySensor] = []
-
-    key_supported_states = {
-        description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
-    }
 
     for device in data.coordinator.data.values():
         if (
@@ -123,7 +135,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizBinarySensor(
                         device.device_url,

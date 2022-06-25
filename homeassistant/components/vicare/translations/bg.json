@@ -12,11 +12,9 @@
             "user": {
                 "data": {
                     "client_id": "API \u043a\u043b\u044e\u0447",
-                    "name": "\u0418\u043c\u0435",
                     "password": "\u041f\u0430\u0440\u043e\u043b\u0430",
                     "username": "Email"
-                },
-                "title": "{name}"
+                }
             }
         }
     }

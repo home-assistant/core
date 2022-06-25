@@ -22,19 +22,22 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     VOLUME_CUBIC_METERS,
 )
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
-from tests.common import async_init_recorder_component
-from tests.components.recorder.common import async_wait_recording_done_without_instance
+from tests.components.recorder.common import async_wait_recording_done
 
 
-async def setup_integration(hass):
+@pytest.fixture
+async def setup_integration(recorder_mock):
     """Set up the integration."""
-    assert await async_setup_component(
-        hass, "energy", {"recorder": {"db_url": "sqlite://"}}
-    )
-    await hass.async_block_till_done()
+
+    async def setup_integration(hass):
+        assert await async_setup_component(hass, "energy", {})
+        await hass.async_block_till_done()
+
+    return setup_integration
 
 
 def get_statistics_for_entity(statistics_results, entity_id):
@@ -45,7 +48,7 @@ def get_statistics_for_entity(statistics_results, entity_id):
     return None
 
 
-async def test_cost_sensor_no_states(hass, hass_storage) -> None:
+async def test_cost_sensor_no_states(hass, hass_storage, setup_integration) -> None:
     """Test sensors are created."""
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
@@ -72,6 +75,40 @@ async def test_cost_sensor_no_states(hass, hass_storage) -> None:
     # TODO: No states, should the cost entity refuse to setup?
 
 
+async def test_cost_sensor_attributes(hass, hass_storage, setup_integration) -> None:
+    """Test sensor attributes."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "grid",
+            "flow_from": [
+                {
+                    "stat_energy_from": "sensor.energy_consumption",
+                    "entity_energy_from": "sensor.energy_consumption",
+                    "stat_cost": None,
+                    "entity_energy_price": None,
+                    "number_energy_price": 1,
+                }
+            ],
+            "flow_to": [],
+            "cost_adjustment_day": 0,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+    await setup_integration(hass)
+
+    registry = er.async_get(hass)
+    cost_sensor_entity_id = "sensor.energy_consumption_cost"
+    entry = registry.async_get(cost_sensor_entity_id)
+    assert entry.entity_category is None
+    assert entry.disabled_by is None
+    assert entry.hidden_by == er.RegistryEntryHider.INTEGRATION
+
+
 @pytest.mark.parametrize("initial_energy,initial_cost", [(0, "0.0"), (None, "unknown")])
 @pytest.mark.parametrize(
     "price_entity,fixed_price", [("sensor.energy_price", None), (None, 1)]
@@ -91,6 +128,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     hass,
     hass_storage,
     hass_ws_client,
+    setup_integration,
     initial_energy,
     initial_cost,
     price_entity,
@@ -102,14 +140,13 @@ async def test_cost_sensor_price_entity_total_increasing(
     """Test energy cost price from total_increasing type sensor entity."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -185,10 +222,12 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
-    # # Unique ID temp disabled
-    # # entity_registry = er.async_get(hass)
-    # # entry = entity_registry.async_get(cost_sensor_entity_id)
-    # # assert entry.unique_id == "energy_energy_consumption cost"
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(cost_sensor_entity_id)
+    assert entry
+    postfix = "cost" if flow_type == "flow_from" else "compensation"
+    assert entry.unique_id == f"{usage_sensor_entity_id}_grid_{postfix}"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -228,7 +267,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -268,7 +307,7 @@ async def test_cost_sensor_price_entity_total_increasing(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 38.0
@@ -294,6 +333,7 @@ async def test_cost_sensor_price_entity_total(
     hass,
     hass_storage,
     hass_ws_client,
+    setup_integration,
     initial_energy,
     initial_cost,
     price_entity,
@@ -306,14 +346,13 @@ async def test_cost_sensor_price_entity_total(
     """Test energy cost price from total type sensor entity."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: energy_state_class,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -390,10 +429,12 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
-    # # Unique ID temp disabled
-    # # entity_registry = er.async_get(hass)
-    # # entry = entity_registry.async_get(cost_sensor_entity_id)
-    # # assert entry.unique_id == "energy_energy_consumption cost"
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(cost_sensor_entity_id)
+    assert entry
+    postfix = "cost" if flow_type == "flow_from" else "compensation"
+    assert entry.unique_id == f"{usage_sensor_entity_id}_grid_{postfix}"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -433,7 +474,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -474,7 +515,7 @@ async def test_cost_sensor_price_entity_total(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 38.0
@@ -500,6 +541,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     hass,
     hass_storage,
     hass_ws_client,
+    setup_integration,
     initial_energy,
     initial_cost,
     price_entity,
@@ -512,14 +554,13 @@ async def test_cost_sensor_price_entity_total_no_reset(
     """Test energy cost price from total type sensor entity with no last_reset."""
 
     def _compile_statistics(_):
-        return compile_statistics(hass, now, now + timedelta(seconds=1))
+        return compile_statistics(hass, now, now + timedelta(seconds=1)).platform_stats
 
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
         ATTR_STATE_CLASS: energy_state_class,
     }
 
-    await async_init_recorder_component(hass)
     energy_data = data.EnergyManager.default_preferences()
     energy_data["energy_sources"].append(
         {
@@ -595,10 +636,12 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.TOTAL
     assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "EUR"
 
-    # # Unique ID temp disabled
-    # # entity_registry = er.async_get(hass)
-    # # entry = entity_registry.async_get(cost_sensor_entity_id)
-    # # assert entry.unique_id == "energy_energy_consumption cost"
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get(cost_sensor_entity_id)
+    assert entry
+    postfix = "cost" if flow_type == "flow_from" else "compensation"
+    assert entry.unique_id == f"{usage_sensor_entity_id}_grid_{postfix}"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
     # Energy use bumped to 10 kWh
     hass.states.async_set(
@@ -638,7 +681,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 19.0
@@ -655,7 +698,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     assert state.attributes[ATTR_LAST_RESET] == last_reset_cost_sensor
 
     # Check generated statistics
-    await async_wait_recording_done_without_instance(hass)
+    await async_wait_recording_done(hass)
     all_statistics = await hass.loop.run_in_executor(None, _compile_statistics, hass)
     statistics = get_statistics_for_entity(all_statistics, cost_sensor_entity_id)
     assert statistics["stat"]["sum"] == 18.0
@@ -670,7 +713,7 @@ async def test_cost_sensor_price_entity_total_no_reset(
     ],
 )
 async def test_cost_sensor_handle_energy_units(
-    hass, hass_storage, energy_unit, factor
+    hass, hass_storage, setup_integration, energy_unit, factor
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
@@ -736,7 +779,7 @@ async def test_cost_sensor_handle_energy_units(
     ],
 )
 async def test_cost_sensor_handle_price_units(
-    hass, hass_storage, price_unit, factor
+    hass, hass_storage, setup_integration, price_unit, factor
 ) -> None:
     """Test energy cost price from sensor entity."""
     energy_attributes = {
@@ -798,7 +841,7 @@ async def test_cost_sensor_handle_price_units(
     assert state.state == "20.0"
 
 
-async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
+async def test_cost_sensor_handle_gas(hass, hass_storage, setup_integration) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
@@ -847,7 +890,9 @@ async def test_cost_sensor_handle_gas(hass, hass_storage) -> None:
     assert state.state == "50.0"
 
 
-async def test_cost_sensor_handle_gas_kwh(hass, hass_storage) -> None:
+async def test_cost_sensor_handle_gas_kwh(
+    hass, hass_storage, setup_integration
+) -> None:
     """Test gas cost price from sensor entity."""
     energy_attributes = {
         ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
@@ -898,7 +943,7 @@ async def test_cost_sensor_handle_gas_kwh(hass, hass_storage) -> None:
 
 @pytest.mark.parametrize("state_class", [None])
 async def test_cost_sensor_wrong_state_class(
-    hass, hass_storage, caplog, state_class
+    hass, hass_storage, setup_integration, caplog, state_class
 ) -> None:
     """Test energy sensor rejects sensor with wrong state_class."""
     energy_attributes = {
@@ -960,7 +1005,7 @@ async def test_cost_sensor_wrong_state_class(
 
 @pytest.mark.parametrize("state_class", [SensorStateClass.MEASUREMENT])
 async def test_cost_sensor_state_class_measurement_no_reset(
-    hass, hass_storage, caplog, state_class
+    hass, hass_storage, setup_integration, caplog, state_class
 ) -> None:
     """Test energy sensor rejects state_class measurement with no last_reset."""
     energy_attributes = {
@@ -1014,3 +1059,50 @@ async def test_cost_sensor_state_class_measurement_no_reset(
 
     state = hass.states.get("sensor.energy_consumption_cost")
     assert state.state == STATE_UNKNOWN
+
+
+async def test_inherit_source_unique_id(hass, hass_storage, setup_integration):
+    """Test sensor inherits unique ID from source."""
+    energy_data = data.EnergyManager.default_preferences()
+    energy_data["energy_sources"].append(
+        {
+            "type": "gas",
+            "stat_energy_from": "sensor.gas_consumption",
+            "entity_energy_from": "sensor.gas_consumption",
+            "stat_cost": None,
+            "entity_energy_price": None,
+            "number_energy_price": 0.5,
+        }
+    )
+
+    hass_storage[data.STORAGE_KEY] = {
+        "version": 1,
+        "data": energy_data,
+    }
+
+    now = dt_util.utcnow()
+    entity_registry = er.async_get(hass)
+    source_entry = entity_registry.async_get_or_create(
+        "sensor", "test", "123456", suggested_object_id="gas_consumption"
+    )
+
+    hass.states.async_set(
+        "sensor.gas_consumption",
+        100,
+        {
+            ATTR_UNIT_OF_MEASUREMENT: VOLUME_CUBIC_METERS,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+    )
+
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        await setup_integration(hass)
+
+    state = hass.states.get("sensor.gas_consumption_cost")
+    assert state
+    assert state.state == "0.0"
+
+    entry = entity_registry.async_get("sensor.gas_consumption_cost")
+    assert entry
+    assert entry.unique_id == f"{source_entry.id}_gas_cost"
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION

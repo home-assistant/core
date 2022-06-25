@@ -4,7 +4,7 @@
             "auth_fail": "L'identifiant ou le mot de passe est incorrect.",
             "cannot_connect": "\u00c9chec de connexion",
             "connection_error": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder.",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "create_entry": {
             "default": "Serveur Zoneminder ajout\u00e9."
@@ -13,7 +13,7 @@
             "auth_fail": "L'identifiant ou le mot de passe est incorrect.",
             "cannot_connect": "\u00c9chec de connexion",
             "connection_error": "\u00c9chec de la connexion \u00e0 un serveur ZoneMinder.",
-            "invalid_auth": "Authentification invalide"
+            "invalid_auth": "Authentification non valide"
         },
         "flow_title": "ZoneMinder",
         "step": {

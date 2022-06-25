@@ -10,9 +10,6 @@ STEP_IMPORT_FAILED = "import_failed"
 ERROR_CANNOT_CONNECT = "cannot_connect"
 ABORT_REASON_CANNOT_CONNECT = "cannot_connect"
 
-BRIDGE_LEAP = "leap"
-BRIDGE_DEVICE = "bridge_device"
-BUTTON_DEVICES = "button_devices"
 LUTRON_CASETA_BUTTON_EVENT = "lutron_caseta_button_event"
 
 BRIDGE_DEVICE_ID = "1"
@@ -33,3 +30,7 @@ ACTION_RELEASE = "release"
 CONF_SUBTYPE = "subtype"
 
 BRIDGE_TIMEOUT = 35
+
+UNASSIGNED_AREA = "Unassigned"
+
+CONFIG_URL = "https://device-login.lutron.com"

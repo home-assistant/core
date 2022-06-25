@@ -4,5 +4,6 @@
   "documentation": "https://www.home-assistant.io/integrations/nissan_leaf",
   "requirements": ["pycarwings2==2.13"],
   "codeowners": ["@filcole"],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["pycarwings2"]
 }

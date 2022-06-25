@@ -194,7 +194,11 @@ class Store:
         await self._async_handle_write_data()
 
     @callback
-    def async_delay_save(self, data_func: Callable[[], dict], delay: float = 0) -> None:
+    def async_delay_save(
+        self,
+        data_func: Callable[[], dict | list],
+        delay: float = 0,
+    ) -> None:
         """Save data with an optional delay."""
         # pylint: disable-next=import-outside-toplevel
         from .event import async_call_later

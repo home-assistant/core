@@ -36,6 +36,11 @@ class AugustEntityMixin(Entity):
     def _detail(self):
         return self._data.get_device_detail(self._device.device_id)
 
+    @property
+    def _hyper_bridge(self):
+        """Check if the lock has a paired hyper bridge."""
+        return bool(self._detail.bridge and self._detail.bridge.hyper_bridge)
+
     @callback
     def _update_from_data_and_write_state(self):
         self._update_from_data()

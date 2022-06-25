@@ -2,59 +2,32 @@
 # pylint: disable=protected-access
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-import pytest
-from pyunifiprotect.data import Camera
+from pyunifiprotect.data.devices import Chime
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MockEntityFixture, enable_entity
+from .utils import MockUFPFixture, assert_entity_counts, enable_entity, init_entry
 
 
-@pytest.fixture(name="camera")
-async def camera_fixture(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_camera: Camera
-):
-    """Fixture for a single camera with only the button platform active, no extra setup."""
-
-    camera_obj = mock_camera.copy(deep=True)
-    camera_obj._api = mock_entry.api
-    camera_obj.channels[0]._api = mock_entry.api
-    camera_obj.channels[1]._api = mock_entry.api
-    camera_obj.channels[2]._api = mock_entry.api
-    camera_obj.name = "Test Camera"
-
-    mock_entry.api.bootstrap.cameras = {
-        camera_obj.id: camera_obj,
-    }
-
-    with patch("homeassistant.components.unifiprotect.PLATFORMS", [Platform.BUTTON]):
-        await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-        await hass.async_block_till_done()
-
-    entity_registry = er.async_get(hass)
-
-    assert len(hass.states.async_all()) == 0
-    assert len(entity_registry.entities) == 1
-
-    yield (camera_obj, "button.test_camera_reboot_device")
-
-
-async def test_button(
+async def test_reboot_button(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    camera: tuple[Camera, str],
+    ufp: MockUFPFixture,
+    chime: Chime,
 ):
     """Test button entity."""
 
-    mock_entry.api.reboot_device = AsyncMock()
+    await init_entry(hass, ufp, [chime])
+    assert_entity_counts(hass, Platform.BUTTON, 3, 2)
 
-    unique_id = f"{camera[0].id}"
-    entity_id = camera[1]
+    ufp.api.reboot_device = AsyncMock()
+
+    unique_id = f"{chime.mac}_reboot"
+    entity_id = "button.test_chime_reboot_device"
 
     entity_registry = er.async_get(hass)
     entity = entity_registry.async_get(entity_id)
@@ -62,7 +35,7 @@ async def test_button(
     assert entity.disabled
     assert entity.unique_id == unique_id
 
-    await enable_entity(hass, mock_entry.entry.entry_id, entity_id)
+    await enable_entity(hass, ufp.entry.entry_id, entity_id)
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
@@ -70,4 +43,35 @@ async def test_button(
     await hass.services.async_call(
         "button", "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    mock_entry.api.reboot_device.assert_called_once()
+    ufp.api.reboot_device.assert_called_once()
+
+
+async def test_chime_button(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    chime: Chime,
+):
+    """Test button entity."""
+
+    await init_entry(hass, ufp, [chime])
+    assert_entity_counts(hass, Platform.BUTTON, 3, 2)
+
+    ufp.api.play_speaker = AsyncMock()
+
+    unique_id = f"{chime.mac}_play"
+    entity_id = "button.test_chime_play_chime"
+
+    entity_registry = er.async_get(hass)
+    entity = entity_registry.async_get(entity_id)
+    assert entity
+    assert not entity.disabled
+    assert entity.unique_id == unique_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+    await hass.services.async_call(
+        "button", "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    ufp.api.play_speaker.assert_called_once()

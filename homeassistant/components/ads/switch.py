@@ -1,6 +1,7 @@
 """Support for ADS switch platform."""
 from __future__ import annotations
 
+import pyads
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -42,7 +43,7 @@ class AdsSwitch(AdsEntity, SwitchEntity):
 
     async def async_added_to_hass(self):
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var, self._ads_hub.PLCTYPE_BOOL)
+        await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
     @property
     def is_on(self) -> bool:
@@ -51,8 +52,8 @@ class AdsSwitch(AdsEntity, SwitchEntity):
 
     def turn_on(self, **kwargs):
         """Turn the switch on."""
-        self._ads_hub.write_by_name(self._ads_var, True, self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
 
     def turn_off(self, **kwargs):
         """Turn the switch off."""
-        self._ads_hub.write_by_name(self._ads_var, False, self._ads_hub.PLCTYPE_BOOL)
+        self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)

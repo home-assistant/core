@@ -71,13 +71,20 @@ set_temperature:
       selector:
         select:
           options:
-            - "off"
-            - "auto"
-            - "cool"
-            - "dry"
-            - "fan_only"
-            - "heat_cool"
-            - "heat"
+            - label: "Off"
+              value: "off"
+            - label: "Auto"
+              value: "auto"
+            - label: "Cool"
+              value: "cool"
+            - label: "Dry"
+              value: "dry"
+            - label: "Fan Only"
+              value: "fan_only"
+            - label: "Heat/Cool"
+              value: "heat_cool"
+            - label: "Heat"
+              value: "heat"
 
 set_humidity:
   name: Set target humidity
@@ -124,13 +131,20 @@ set_hvac_mode:
       selector:
         select:
           options:
-            - "off"
-            - "auto"
-            - "cool"
-            - "dry"
-            - "fan_only"
-            - "heat_cool"
-            - "heat"
+            - label: "Off"
+              value: "off"
+            - label: "Auto"
+              value: "auto"
+            - label: "Cool"
+              value: "cool"
+            - label: "Dry"
+              value: "dry"
+            - label: "Fan Only"
+              value: "fan_only"
+            - label: "Heat/Cool"
+              value: "heat_cool"
+            - label: "Heat"
+              value: "heat"
 
 set_swing_mode:
   name: Set swing mode

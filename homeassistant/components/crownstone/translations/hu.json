@@ -56,13 +56,6 @@
                 "description": "V\u00e1lassza ki a Crownstone USB kulcs soros portj\u00e1t.\n\nKeressen egy VID 10C4 \u00e9s PID EA60 azonos\u00edt\u00f3val rendelkez\u0151 eszk\u00f6zt.",
                 "title": "Crownstone USB kulcs konfigur\u00e1ci\u00f3"
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
-                },
-                "description": "V\u00e1lassza ki a Crownstone USB kulcs soros portj\u00e1t.\n\nKeressen egy VID 10C4 \u00e9s PID EA60 azonos\u00edt\u00f3val rendelkez\u0151 eszk\u00f6zt.",
-                "title": "Crownstone USB kulcs konfigur\u00e1ci\u00f3"
-            },
             "usb_manual_config": {
                 "data": {
                     "usb_manual_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
@@ -70,21 +63,7 @@
                 "description": "Adja meg manu\u00e1lisan a Crownstone USB kulcs \u00fatvonal\u00e1t.",
                 "title": "A Crownstone USB kulcs manu\u00e1lis el\u00e9r\u00e9si \u00fatja"
             },
-            "usb_manual_config_option": {
-                "data": {
-                    "usb_manual_path": "USB eszk\u00f6z el\u00e9r\u00e9si \u00fat"
-                },
-                "description": "Adja meg manu\u00e1lisan a Crownstone USB kulcs \u00fatvonal\u00e1t.",
-                "title": "A Crownstone USB kulcs manu\u00e1lis el\u00e9r\u00e9si \u00fatja"
-            },
             "usb_sphere_config": {
-                "data": {
-                    "usb_sphere": "Crownstone Sphere"
-                },
-                "description": "V\u00e1lasszon egy Crownstone Sphere-t, ahol az USB tal\u00e1lhat\u00f3.",
-                "title": "Crownstone USB Sphere"
-            },
-            "usb_sphere_config_option": {
                 "data": {
                     "usb_sphere": "Crownstone Sphere"
                 },
