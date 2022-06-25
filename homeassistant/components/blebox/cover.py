@@ -1,4 +1,6 @@
 """BleBox cover entity."""
+from __future__ import annotations
+
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -41,7 +43,7 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         )
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current cover position."""
         position = self._feature.current
         if position == -1:  # possible for shutterBox
@@ -50,17 +52,17 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         return None if position is None else 100 - position
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool | None:
         """Return whether cover is opening."""
         return self._is_state(STATE_OPENING)
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool | None:
         """Return whether cover is closing."""
         return self._is_state(STATE_CLOSING)
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return whether cover is closed."""
         return self._is_state(STATE_CLOSED)
 
@@ -82,6 +84,6 @@ class BleBoxCoverEntity(BleBoxEntity, CoverEntity):
         """Stop the cover."""
         await self._feature.async_stop()
 
-    def _is_state(self, state_name):
+    def _is_state(self, state_name) -> bool | None:
         value = BLEBOX_TO_HASS_COVER_STATES[self._feature.state]
         return None if value is None else value == state_name

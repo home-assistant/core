@@ -634,6 +634,9 @@ feedparser==6.0.2
 # homeassistant.components.fibaro
 fiblary3==0.1.8
 
+# homeassistant.components.file
+file-read-backwards==2.0.0
+
 # homeassistant.components.fints
 fints==3.1.0
 

@@ -4,23 +4,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import (
-    Doorlock,
-    LockStatusType,
-    ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
-)
+from pyunifiprotect.data import Doorlock, LockStatusType, ProtectModelWithId
 
 from homeassistant.components.lock import LockEntity, LockEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DISPATCH_ADOPT, DOMAIN
+from .const import DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
-from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +25,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up locks on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
-
-    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
-        if not device.is_adopted_by_us:
-            return
-
-        if isinstance(device, Doorlock):
-            async_add_entities([ProtectLock(data, device)])
-
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
 
     entities = []
     for device in data.api.bootstrap.doorlocks.values():
