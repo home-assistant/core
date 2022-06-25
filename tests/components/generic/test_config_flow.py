@@ -522,7 +522,7 @@ async def test_slug(hass, caplog):
     """
     Test that the slug function generates an error in case of invalid template.
 
-    Other paths in the slug function are already tested by the other tests.
+    Other paths in the slug function are already tested by other tests.
     """
     result = slug(hass, "http://127.0.0.2/testurl/{{1/0}}")
     assert result is None
