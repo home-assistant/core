@@ -349,7 +349,7 @@ class SensorEntity(Entity):
         return None
 
     @property
-    def native_value(self) -> StateType | date | datetime:
+    def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor."""
         return self._attr_native_value
 
