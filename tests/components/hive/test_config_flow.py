@@ -351,7 +351,7 @@ async def test_reauth_2fa_flow(hass):
                 CONF_CODE: MFA_CODE,
             },
         )
-    await hass.async_block_till_done()
+        await hass.async_block_till_done()
 
     assert mock_config.data.get("username") == USERNAME
     assert mock_config.data.get("password") == UPDATED_PASSWORD
