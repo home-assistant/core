@@ -234,7 +234,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
                     _LOGGER.error(NO_DATABASE_ERROR, query[CONF_DB_NAME])
 
             if query[CONF_API_VERSION] == API_VERSION_2:
+            if query[CONF_BUCKET] in influx.data_repositories:
                 entities.append(InfluxSensor(hass, influx, query))
+            else:
+                _LOGGER.error(NO_BUCKET_ERROR, query[CONF_BUCKET])
 
     add_entities(entities, update_before_add=True)
 
