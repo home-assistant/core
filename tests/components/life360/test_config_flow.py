@@ -245,28 +245,10 @@ async def reauth_flow(hass, life360_api, flow_id, user_input, auth_result=None):
 # ========== Reauth Flow Tests =========================================================
 
 
-async def test_reauth_config_flow_success_unloaded(hass, life360_api, caplog):
-    """Test a successful reauthorization config flow where entry was not loaded."""
-    config_entry = create_config_entry(hass)
-
-    # Simulate current username & password are still valid, but authorization string has
-    # expired, such that getting a new authorization string from server is successful.
-    result = await reauth_flow_init(
-        hass, life360_api, config_entry, TEST_AUTHORIZATION_2
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "reauth_successful"
-    assert "Reauthorization successful" in caplog.text
-
-    assert config_entry.data == TEST_CONFIG_DATA_2
-
-
-async def test_reauth_config_flow_success_loaded(hass, life360_api, caplog):
-    """Test a successful reauthorization config flow where config entry was loaded."""
-    config_entry = create_config_entry(
-        hass, state=config_entries.ConfigEntryState.LOADED
-    )
+@pytest.mark.parametrize("state", [None, config_entries.ConfigEntryState.LOADED])
+async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
+    """Test a successful reauthorization config flow."""
+    config_entry = create_config_entry(hass, state=state)
 
     # Simulate current username & password are still valid, but authorization string has
     # expired, such that getting a new authorization string from server is successful.
