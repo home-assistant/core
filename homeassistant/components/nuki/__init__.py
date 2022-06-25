@@ -1,6 +1,7 @@
 """The nuki component."""
 from datetime import timedelta
 import logging
+from collections import defaultdict
 
 import async_timeout
 from pynuki import NukiBridge, NukiLock, NukiOpener
@@ -40,7 +41,16 @@ def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOp
     return bridge.locks, bridge.openers
 
 
-def _update_devices(hass: HomeAssistant, ent_reg: er.EntityRegistry, devices: list[NukiDevice]) -> None:
+def _update_devices(devices: list[NukiDevice]) -> dict[str, set[str]]:
+    """
+    Update the Nuki devices
+
+    Returns:
+        A dict with the events to be fired. The event type is the key and the device ids are the value
+    """
+
+    events: dict[str, set[str]] = defaultdict(set)
+
     for device in devices:
         for level in (False, True):
             try:
@@ -50,12 +60,7 @@ def _update_devices(hass: HomeAssistant, ent_reg: er.EntityRegistry, devices: li
                     device.update(level)
 
                     if not last_ring_action_state and device.ring_action_state:
-                        entity_id = ent_reg.async_get_entity_id(Platform.LOCK, DOMAIN, device.nuki_id) 
-                        event_data = {
-                            "entity_id": entity_id,
-                            "type": "ring",
-                        }
-                        hass.bus.fire("nuki_event", event_data)
+                        events["ring"].add(device.nuki_id)
                 else:
                     device.update(level)
             except RequestException:
@@ -63,6 +68,8 @@ def _update_devices(hass: HomeAssistant, ent_reg: er.EntityRegistry, devices: li
 
             if device.state not in ERROR_STATES:
                 break
+    
+    return events
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -101,7 +108,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                await hass.async_add_executor_job(_update_devices, hass, ent_reg, locks + openers)
+                events = await hass.async_add_executor_job(_update_devices, locks + openers)
+
+                for event, device_ids in events.items():
+                    for device_id in device_ids:
+                        entity_id = ent_reg.async_get_entity_id(Platform.LOCK, DOMAIN, device_id) 
+                        event_data = {
+                            "entity_id": entity_id,
+                            "type": event,
+                        }
+                        hass.bus.async_fire("nuki_event", event_data)
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
