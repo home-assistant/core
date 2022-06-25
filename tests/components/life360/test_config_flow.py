@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from life360 import LoginError
+from life360 import Life360Error, LoginError
 import pytest
 import voluptuous as vol
 
@@ -158,16 +158,21 @@ async def test_user_config_flow_success(hass, life360_api, user_flow_init):
     assert result["options"] == DEFAULT_OPTIONS
 
 
-async def test_user_config_flow_login_error(hass, life360_api, user_flow_init, caplog):
-    """Test a user config flow with a login error."""
+@pytest.mark.parametrize(
+    "exception,error", [(LoginError, "invalid_auth"), (Life360Error, "cannot_connect")]
+)
+async def test_user_config_flow_error(
+    hass, life360_api, user_flow_init, caplog, exception, error
+):
+    """Test a user config flow with an error."""
     result = await user_flow(
-        hass, life360_api, user_flow_init["flow_id"], LoginError("test reason")
+        hass, life360_api, user_flow_init["flow_id"], exception("test reason")
     )
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
     assert result["errors"]
-    assert result["errors"]["base"] == "invalid_auth"
+    assert result["errors"]["base"] == error
 
     assert "test reason" in caplog.text
 
