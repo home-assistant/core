@@ -216,7 +216,7 @@ aioskybell==22.6.1
 aioslimproto==2.0.1
 
 # homeassistant.components.steamist
-aiosteamist==0.3.1
+aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
