@@ -19,7 +19,14 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
+from .const import (
+    DATA_COORDINATOR,
+    DATA_TYPE_ENTRY,
+    DATA_TYPE_LOCATIONS,
+    DATA_TYPE_READING,
+    DOMAIN,
+    MANUFACTURER,
+)
 from .coordinator import CanaryDataUpdateCoordinator
 from .model import SensorTypeItem
 
@@ -69,7 +76,7 @@ async def async_setup_entry(
     ]
     sensors: list[CanarySensor] = []
 
-    for location in coordinator.data["locations"].values():
+    for location in coordinator.data[DATA_TYPE_LOCATIONS].values():
         for device in location.devices:
             if device.is_online:
                 device_type = device.device_type
@@ -102,7 +109,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._attr_name = f"{location.name} {device.name} {sensor_type_name}"
 
         canary_sensor_type = None
-        self._canary_data_type = "readings"
+        self._canary_data_type = DATA_TYPE_READING
         if self._sensor_type[0] == "air_quality":
             canary_sensor_type = SensorType.AIR_QUALITY
         elif self._sensor_type[0] == "temperature":
@@ -115,10 +122,10 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
             canary_sensor_type = SensorType.BATTERY
         elif self._sensor_type[0] == "last_entry_date":
             canary_sensor_type = SensorType.DATE_LAST_ENTRY
-            self._canary_data_type = "entries"
+            self._canary_data_type = DATA_TYPE_ENTRY
         elif self._sensor_type[0] == "entries_captured_today":
             canary_sensor_type = SensorType.ENTRIES_CAPTURED_TODAY
-            self._canary_data_type = "entries"
+            self._canary_data_type = DATA_TYPE_ENTRY
 
         self._canary_type = canary_sensor_type
         self._attr_unique_id = f"{device.device_id}_{sensor_type[0]}"
@@ -156,7 +163,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     # @property
     def reading(self) -> None:
         """Return the device sensor reading."""
-        readings = self.coordinator.data["readings"][self._device_id]
+        readings = self.coordinator.data[DATA_TYPE_READING][self._device_id]
 
         value = next(
             (
@@ -174,7 +181,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     # @property
     def entry(self) -> None:
         """Return the state of the entry sensor."""
-        entry = self.coordinator.data["entries"][self._device_id]
+        entry = self.coordinator.data[DATA_TYPE_ENTRY][self._device_id]
 
         if entry is not None:
             if self._canary_type == SensorType.ENTRIES_CAPTURED_TODAY:
@@ -189,9 +196,9 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
     @property
     def native_value(self) -> float | str | datetime | int | None:
         """Return the state of the sensor."""
-        if self._canary_data_type == "readings":
+        if self._canary_data_type == DATA_TYPE_READING:
             self.reading()
-        if self._canary_data_type == "entries":
+        if self._canary_data_type == DATA_TYPE_ENTRY:
             self.entry()
         return self._state
 

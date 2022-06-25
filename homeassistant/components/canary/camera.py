@@ -31,6 +31,8 @@ from ...helpers.httpx_client import get_async_client
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
+    DATA_TYPE_ENTRY,
+    DATA_TYPE_LOCATIONS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DOMAIN,
     MANUFACTURER,
@@ -67,7 +69,7 @@ async def async_setup_entry(
     )
     cameras: list[CanaryCamera] = []
 
-    for location_id, location in coordinator.data["locations"].items():
+    for location_id, location in coordinator.data[DATA_TYPE_LOCATIONS].items():
         for device in location.devices:
             if device.is_online:
                 cameras.append(
@@ -123,7 +125,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
     @property
     def location(self) -> Location:
         """Return information about the location."""
-        return self.coordinator.data["locations"][self._location_id]
+        return self.coordinator.data[DATA_TYPE_LOCATIONS][self._location_id]
 
     @property
     def is_recording(self) -> bool:
@@ -234,7 +236,9 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
     async def _get_latest_entry(self) -> Entry | None:
         try:
-            last_event = self.coordinator.data["entries"][self._device.device_id][0]
+            last_event = self.coordinator.data[DATA_TYPE_ENTRY][self._device.device_id][
+                0
+            ]
             return last_event
         except KeyError:
             return None
