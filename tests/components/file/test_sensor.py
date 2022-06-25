@@ -1,5 +1,5 @@
 """The tests for local file sensor platform."""
-from unittest.mock import Mock, mock_open, patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -61,12 +61,15 @@ async def test_file_value_template(hass: HomeAssistant) -> None:
 @patch("os.access", Mock(return_value=True))
 async def test_file_empty(hass: HomeAssistant) -> None:
     """Test the File sensor with an empty file."""
-    config = {"sensor": {"platform": "file", "name": "file3", "file_path": "mock.file"}}
+    config = {
+        "sensor": {
+            "platform": "file",
+            "name": "file3",
+            "file_path": get_fixture_path("file_empty.txt", "file"),
+        }
+    }
 
-    m_open = mock_open(read_data="")
-    with patch(
-        "homeassistant.components.file.sensor.open", m_open, create=True
-    ), patch.object(hass.config, "is_allowed_path", return_value=True):
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
@@ -79,13 +82,14 @@ async def test_file_empty(hass: HomeAssistant) -> None:
 async def test_file_path_invalid(hass: HomeAssistant) -> None:
     """Test the File sensor with invalid path."""
     config = {
-        "sensor": {"platform": "file", "name": "file4", "file_path": "mock.file4"}
+        "sensor": {
+            "platform": "file",
+            "name": "file4",
+            "file_path": get_fixture_path("file_value.txt", "file"),
+        }
     }
 
-    m_open = mock_open(read_data="43\n45\n21")
-    with patch(
-        "homeassistant.components.file.sensor.open", m_open, create=True
-    ), patch.object(hass.config, "is_allowed_path", return_value=False):
+    with patch.object(hass.config, "is_allowed_path", return_value=False):
         assert await async_setup_component(hass, "sensor", config)
         await hass.async_block_till_done()
 
