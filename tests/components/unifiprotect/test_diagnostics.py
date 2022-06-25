@@ -4,13 +4,13 @@ from pyunifiprotect.data import NVR, Light
 
 from homeassistant.core import HomeAssistant
 
-from .utils import MockEntityFixture, init_entry
+from .utils import MockUFPFixture, init_entry
 
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 
 
 async def test_diagnostics(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, hass_client
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, hass_client
 ):
     """Test generating diagnostics for a config entry."""
 

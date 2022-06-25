@@ -40,7 +40,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
-    MockEntityFixture,
+    MockUFPFixture,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
@@ -48,7 +48,7 @@ from .utils import (
 
 
 async def test_select_setup_light(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test select entity setup for light devices."""
 
@@ -75,7 +75,7 @@ async def test_select_setup_light(
 
 
 async def test_select_setup_viewer(
-    hass: HomeAssistant, ufp: MockEntityFixture, viewer: Viewer, liveview: Liveview
+    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ):
     """Test select entity setup for light devices."""
 
@@ -101,7 +101,7 @@ async def test_select_setup_viewer(
 
 
 async def test_select_setup_camera_all(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test select entity setup for camera devices (all features)."""
 
@@ -127,7 +127,7 @@ async def test_select_setup_camera_all(
 
 
 async def test_select_setup_camera_none(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test select entity setup for camera devices (no features)."""
 
@@ -156,7 +156,7 @@ async def test_select_setup_camera_none(
 
 
 async def test_select_update_liveview(
-    hass: HomeAssistant, ufp: MockEntityFixture, viewer: Viewer, liveview: Liveview
+    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ):
     """Test select entity update (new Liveview)."""
 
@@ -192,7 +192,7 @@ async def test_select_update_liveview(
 
 
 async def test_select_update_doorbell_settings(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test select entity update (new Doorbell Message)."""
 
@@ -238,7 +238,7 @@ async def test_select_update_doorbell_settings(
 
 
 async def test_select_update_doorbell_message(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test select entity update (change doorbell message)."""
 
@@ -272,7 +272,7 @@ async def test_select_update_doorbell_message(
 
 
 async def test_select_set_option_light_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test Light Mode select."""
 
@@ -297,7 +297,7 @@ async def test_select_set_option_light_motion(
 
 
 async def test_select_set_option_light_camera(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, camera: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, camera: Camera
 ):
     """Test Paired Camera select."""
 
@@ -331,7 +331,7 @@ async def test_select_set_option_light_camera(
 
 
 async def test_select_set_option_camera_recording(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Recording Mode select."""
 
@@ -356,7 +356,7 @@ async def test_select_set_option_camera_recording(
 
 
 async def test_select_set_option_camera_ir(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Infrared Mode select."""
 
@@ -381,7 +381,7 @@ async def test_select_set_option_camera_ir(
 
 
 async def test_select_set_option_camera_doorbell_custom(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text select (user defined message)."""
 
@@ -408,7 +408,7 @@ async def test_select_set_option_camera_doorbell_custom(
 
 
 async def test_select_set_option_camera_doorbell_unifi(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text select (unifi message)."""
 
@@ -450,7 +450,7 @@ async def test_select_set_option_camera_doorbell_unifi(
 
 
 async def test_select_set_option_camera_doorbell_default(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text select (default message)."""
 
@@ -478,7 +478,7 @@ async def test_select_set_option_camera_doorbell_default(
 
 
 async def test_select_set_option_viewer(
-    hass: HomeAssistant, ufp: MockEntityFixture, viewer: Viewer, liveview: Liveview
+    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer, liveview: Liveview
 ):
     """Test Liveview select."""
 
@@ -506,7 +506,7 @@ async def test_select_set_option_viewer(
 
 
 async def test_select_service_doorbell_invalid(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text service (invalid)."""
 
@@ -532,7 +532,7 @@ async def test_select_service_doorbell_invalid(
 
 
 async def test_select_service_doorbell_success(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Test Doorbell Text service (success)."""
 
@@ -565,7 +565,7 @@ async def test_select_service_doorbell_success(
 async def test_select_service_doorbell_with_reset(
     mock_now,
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
 ):

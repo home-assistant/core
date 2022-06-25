@@ -21,12 +21,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockEntityFixture, assert_entity_counts, init_entry
+from .utils import MockUFPFixture, assert_entity_counts, init_entry
 
 
 async def test_lock_setup(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -51,7 +51,7 @@ async def test_lock_setup(
 
 async def test_lock_locked(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -78,7 +78,7 @@ async def test_lock_locked(
 
 async def test_lock_unlocking(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -105,7 +105,7 @@ async def test_lock_unlocking(
 
 async def test_lock_locking(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -132,7 +132,7 @@ async def test_lock_locking(
 
 async def test_lock_jammed(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -159,7 +159,7 @@ async def test_lock_jammed(
 
 async def test_lock_unavailable(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -186,7 +186,7 @@ async def test_lock_unavailable(
 
 async def test_lock_do_lock(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):
@@ -210,7 +210,7 @@ async def test_lock_do_lock(
 
 async def test_lock_do_unlock(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorlock: Doorlock,
     unadopted_doorlock: Doorlock,
 ):

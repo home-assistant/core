@@ -154,7 +154,7 @@ def add_device(
 
 async def init_entry(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     devices: Sequence[ProtectAdoptableDeviceModel],
     regenerate_ids: bool = True,
 ) -> None:

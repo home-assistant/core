@@ -11,12 +11,12 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockEntityFixture, assert_entity_counts, enable_entity, init_entry
+from .utils import MockUFPFixture, assert_entity_counts, enable_entity, init_entry
 
 
 async def test_reboot_button(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     chime: Chime,
 ):
     """Test button entity."""
@@ -48,7 +48,7 @@ async def test_reboot_button(
 
 async def test_chime_button(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     chime: Chime,
 ):
     """Test button entity."""

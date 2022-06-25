@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
-    MockEntityFixture,
+    MockUFPFixture,
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
@@ -39,7 +39,7 @@ CAMERA_SWITCHES_NO_EXTRA = [
 
 async def test_switch_setup_no_perm(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     light: Light,
     doorbell: Camera,
 ):
@@ -56,7 +56,7 @@ async def test_switch_setup_no_perm(
 
 async def test_switch_setup_light(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     light: Light,
 ):
     """Test switch entity setup for light devices."""
@@ -101,7 +101,7 @@ async def test_switch_setup_light(
 
 async def test_switch_setup_camera_all(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
 ):
     """Test switch entity setup for camera devices (all enabled feature flags)."""
@@ -148,7 +148,7 @@ async def test_switch_setup_camera_all(
 
 async def test_switch_setup_camera_none(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     camera: Camera,
 ):
     """Test switch entity setup for camera devices (no enabled feature flags)."""
@@ -197,7 +197,7 @@ async def test_switch_setup_camera_none(
 
 
 async def test_switch_light_status(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Tests status light switch for lights."""
 
@@ -225,7 +225,7 @@ async def test_switch_light_status(
 
 
 async def test_switch_camera_ssh(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Tests SSH switch for cameras."""
 
@@ -256,7 +256,7 @@ async def test_switch_camera_ssh(
 @pytest.mark.parametrize("description", CAMERA_SWITCHES_NO_EXTRA)
 async def test_switch_camera_simple(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     description: ProtectSwitchEntityDescription,
 ):
@@ -287,7 +287,7 @@ async def test_switch_camera_simple(
 
 
 async def test_switch_camera_highfps(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Tests High FPS switch for cameras."""
 
@@ -315,7 +315,7 @@ async def test_switch_camera_highfps(
 
 
 async def test_switch_camera_privacy(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Tests Privacy Mode switch for cameras."""
 
@@ -345,7 +345,7 @@ async def test_switch_camera_privacy(
 
 
 async def test_switch_camera_privacy_already_on(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
 ):
     """Tests Privacy Mode switch for cameras with privacy mode defaulted on."""
 

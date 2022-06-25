@@ -40,7 +40,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
-    MockEntityFixture,
+    MockUFPFixture,
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
@@ -54,7 +54,7 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
 
 
 async def test_sensor_setup_sensor(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test sensor entity setup for sensor devices."""
 
@@ -105,7 +105,7 @@ async def test_sensor_setup_sensor(
 
 
 async def test_sensor_setup_sensor_none(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor: Sensor
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
 ):
     """Test sensor entity setup for sensor devices with no sensors enabled."""
 
@@ -139,7 +139,7 @@ async def test_sensor_setup_sensor_none(
 
 
 async def test_sensor_setup_nvr(
-    hass: HomeAssistant, ufp: MockEntityFixture, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, fixed_now: datetime
 ):
     """Test sensor entity setup for NVR device."""
 
@@ -214,7 +214,7 @@ async def test_sensor_setup_nvr(
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
-async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockEntityFixture):
+async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockUFPFixture):
     """Test NVR sensor sensors if no data available."""
 
     reset_objects(ufp.api.bootstrap)
@@ -283,7 +283,7 @@ async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockEntityFix
 
 
 async def test_sensor_setup_camera(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
 ):
     """Test sensor entity setup for camera devices."""
 
@@ -386,7 +386,7 @@ async def test_sensor_setup_camera(
 async def test_sensor_setup_camera_with_last_trip_time(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: AsyncMock,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     fixed_now: datetime,
 ):
@@ -416,7 +416,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
 
 async def test_sensor_update_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, fixed_now: datetime
 ):
     """Test sensor motion entity."""
 
@@ -460,7 +460,7 @@ async def test_sensor_update_motion(
 
 
 async def test_sensor_update_alarm(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor, fixed_now: datetime
 ):
     """Test sensor motion entity."""
 
@@ -506,7 +506,7 @@ async def test_sensor_update_alarm(
 async def test_sensor_update_alarm_with_last_trip_time(
     hass: HomeAssistant,
     entity_registry_enabled_by_default: AsyncMock,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     sensor_all: Sensor,
     fixed_now: datetime,
 ):

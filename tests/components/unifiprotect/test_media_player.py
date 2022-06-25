@@ -25,12 +25,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockEntityFixture, assert_entity_counts, init_entry
+from .utils import MockUFPFixture, assert_entity_counts, init_entry
 
 
 async def test_media_player_setup(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -60,7 +60,7 @@ async def test_media_player_setup(
 
 async def test_media_player_update(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -88,7 +88,7 @@ async def test_media_player_update(
 
 async def test_media_player_set_volume(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -112,7 +112,7 @@ async def test_media_player_set_volume(
 
 async def test_media_player_stop(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -145,7 +145,7 @@ async def test_media_player_stop(
 
 async def test_media_player_play(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -180,7 +180,7 @@ async def test_media_player_play(
 
 async def test_media_player_play_media_source(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -219,7 +219,7 @@ async def test_media_player_play_media_source(
 
 async def test_media_player_play_invalid(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -248,7 +248,7 @@ async def test_media_player_play_invalid(
 
 async def test_media_player_play_error(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):

@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
-    MockEntityFixture,
+    MockUFPFixture,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
@@ -42,7 +42,7 @@ SENSE_SENSORS_WRITE = SENSE_SENSORS[:4]
 
 
 async def test_binary_sensor_setup_light(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test binary_sensor entity setup for light devices."""
 
@@ -68,7 +68,7 @@ async def test_binary_sensor_setup_light(
 
 async def test_binary_sensor_setup_camera_all(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
 ):
@@ -127,7 +127,7 @@ async def test_binary_sensor_setup_camera_all(
 
 
 async def test_binary_sensor_setup_camera_none(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test binary_sensor entity setup for camera devices (no features)."""
 
@@ -153,7 +153,7 @@ async def test_binary_sensor_setup_camera_none(
 
 
 async def test_binary_sensor_setup_sensor(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test binary_sensor entity setup for sensor devices."""
 
@@ -178,7 +178,7 @@ async def test_binary_sensor_setup_sensor(
 
 
 async def test_binary_sensor_setup_sensor_none(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor: Sensor
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor: Sensor
 ):
     """Test binary_sensor entity setup for sensor with most sensors disabled."""
 
@@ -211,7 +211,7 @@ async def test_binary_sensor_setup_sensor_none(
 
 async def test_binary_sensor_update_motion(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
     fixed_now: datetime,
@@ -257,7 +257,7 @@ async def test_binary_sensor_update_motion(
 
 
 async def test_binary_sensor_update_light_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, fixed_now: datetime
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, fixed_now: datetime
 ):
     """Test binary_sensor motion entity."""
 
@@ -300,7 +300,7 @@ async def test_binary_sensor_update_light_motion(
 
 
 async def test_binary_sensor_update_mount_type_window(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test binary_sensor motion entity."""
 
@@ -332,7 +332,7 @@ async def test_binary_sensor_update_mount_type_window(
 
 
 async def test_binary_sensor_update_mount_type_garage(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
 ):
     """Test binary_sensor motion entity."""
 

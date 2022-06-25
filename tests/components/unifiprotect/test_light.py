@@ -19,11 +19,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockEntityFixture, assert_entity_counts, init_entry
+from .utils import MockUFPFixture, assert_entity_counts, init_entry
 
 
 async def test_light_setup(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, unadopted_light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity setup."""
 
@@ -45,7 +45,7 @@ async def test_light_setup(
 
 
 async def test_light_update(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, unadopted_light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity update."""
 
@@ -71,7 +71,7 @@ async def test_light_update(
 
 
 async def test_light_turn_on(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, unadopted_light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity turn off."""
 
@@ -93,7 +93,7 @@ async def test_light_turn_on(
 
 
 async def test_light_turn_off(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, unadopted_light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ):
     """Test light entity turn on."""
 

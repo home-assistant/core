@@ -20,11 +20,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .utils import MockEntityFixture, init_entry
+from .utils import MockUFPFixture, init_entry
 
 
 @pytest.fixture(name="device")
-async def device_fixture(hass: HomeAssistant, ufp: MockEntityFixture):
+async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
     """Fixture with entry setup to call services with."""
 
     await init_entry(hass, ufp, [])
@@ -35,7 +35,7 @@ async def device_fixture(hass: HomeAssistant, ufp: MockEntityFixture):
 
 
 @pytest.fixture(name="subdevice")
-async def subdevice_fixture(hass: HomeAssistant, ufp: MockEntityFixture, light: Light):
+async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     """Fixture with entry setup to call services with."""
 
     await init_entry(hass, ufp, [light])
@@ -45,7 +45,7 @@ async def subdevice_fixture(hass: HomeAssistant, ufp: MockEntityFixture, light: 
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
-async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockEntityFixture):
+async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixture):
     """Test global service, invalid device ID."""
 
     nvr = ufp.api.bootstrap.nvr
@@ -63,7 +63,7 @@ async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockEntityFix
 
 
 async def test_global_service_exception(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockEntityFixture
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test global service, unexpected error."""
 
@@ -82,7 +82,7 @@ async def test_global_service_exception(
 
 
 async def test_add_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockEntityFixture
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test add_doorbell_text service."""
 
@@ -100,7 +100,7 @@ async def test_add_doorbell_text(
 
 
 async def test_remove_doorbell_text(
-    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockEntityFixture
+    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test remove_doorbell_text service."""
 
@@ -118,7 +118,7 @@ async def test_remove_doorbell_text(
 
 
 async def test_set_default_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockEntityFixture
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test set_default_doorbell_text service."""
 
@@ -137,7 +137,7 @@ async def test_set_default_doorbell_text(
 
 async def test_set_chime_paired_doorbells(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     chime: Chime,
     doorbell: Camera,
 ):

@@ -31,7 +31,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
 from . import _patch_discovery
-from .utils import MockEntityFixture
+from .utils import MockUFPFixture
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -128,7 +128,7 @@ def mock_entry(
 
         mock_api.return_value = ufp_client
 
-        ufp = MockEntityFixture(ufp_config_entry, ufp_client)
+        ufp = MockUFPFixture(ufp_config_entry, ufp_client)
 
         def subscribe(ws_callback: Callable[[WSSubscriptionMessage], None]) -> Any:
             ufp.ws_subscription = ws_callback

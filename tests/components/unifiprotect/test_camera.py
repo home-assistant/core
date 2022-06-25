@@ -32,7 +32,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .utils import (
-    MockEntityFixture,
+    MockUFPFixture,
     assert_entity_counts,
     enable_entity,
     init_entry,
@@ -168,7 +168,7 @@ async def validate_no_stream_camera_state(
 
 async def test_basic_setup(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     camera_all: ProtectCamera,
     doorbell: ProtectCamera,
 ):
@@ -269,7 +269,7 @@ async def test_basic_setup(
 
 
 async def test_missing_channels(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Test setting up camera with no camera channels."""
 
@@ -282,7 +282,7 @@ async def test_missing_channels(
 
 
 async def test_camera_image(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Test retrieving camera image."""
 
@@ -296,7 +296,7 @@ async def test_camera_image(
 
 
 async def test_package_camera_image(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: ProtectCamera
 ):
     """Test retrieving package camera image."""
 
@@ -310,7 +310,7 @@ async def test_package_camera_image(
 
 
 async def test_camera_generic_update(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Tests generic entity update service."""
 
@@ -336,7 +336,7 @@ async def test_camera_generic_update(
 
 
 async def test_camera_interval_update(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Interval updates updates camera entity."""
 
@@ -359,7 +359,7 @@ async def test_camera_interval_update(
 
 
 async def test_camera_bad_interval_update(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Interval updates marks camera unavailable."""
 
@@ -386,7 +386,7 @@ async def test_camera_bad_interval_update(
 
 
 async def test_camera_ws_update(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """WS update updates camera entity."""
 
@@ -421,7 +421,7 @@ async def test_camera_ws_update(
 
 
 async def test_camera_ws_update_offline(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """WS updates marks camera unavailable."""
 
@@ -463,7 +463,7 @@ async def test_camera_ws_update_offline(
 
 
 async def test_camera_enable_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Tests generic entity update service."""
 
@@ -485,7 +485,7 @@ async def test_camera_enable_motion(
 
 
 async def test_camera_disable_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: ProtectCamera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ):
     """Tests generic entity update service."""
 

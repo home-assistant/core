@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .utils import (
-    MockEntityFixture,
+    MockUFPFixture,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
@@ -28,7 +28,7 @@ from .utils import (
 
 
 async def test_number_setup_light(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test number entity setup for light devices."""
 
@@ -52,7 +52,7 @@ async def test_number_setup_light(
 
 
 async def test_number_setup_camera_all(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test number entity setup for camera devices (all features)."""
 
@@ -77,7 +77,7 @@ async def test_number_setup_camera_all(
 
 
 async def test_number_setup_camera_none(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test number entity setup for camera devices (no features)."""
 
@@ -91,7 +91,7 @@ async def test_number_setup_camera_none(
 
 
 async def test_number_setup_camera_missing_attr(
-    hass: HomeAssistant, ufp: MockEntityFixture, camera: Camera
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera
 ):
     """Test number entity setup for camera devices (no features, bad attrs)."""
 
@@ -102,7 +102,7 @@ async def test_number_setup_camera_missing_attr(
 
 
 async def test_number_light_sensitivity(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test sensitivity number entity for lights."""
 
@@ -125,7 +125,7 @@ async def test_number_light_sensitivity(
 
 
 async def test_number_light_duration(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
 ):
     """Test auto-shutoff duration number entity for lights."""
 
@@ -149,7 +149,7 @@ async def test_number_light_duration(
 @pytest.mark.parametrize("description", CAMERA_NUMBERS)
 async def test_number_camera_simple(
     hass: HomeAssistant,
-    ufp: MockEntityFixture,
+    ufp: MockUFPFixture,
     camera: Camera,
     description: ProtectNumberEntityDescription,
 ):
@@ -174,7 +174,7 @@ async def test_number_camera_simple(
 
 
 async def test_number_lock_auto_close(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorlock: Doorlock
+    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
 ):
     """Test auto-lock timeout for locks."""
 
