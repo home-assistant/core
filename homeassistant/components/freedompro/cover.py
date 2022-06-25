@@ -105,15 +105,13 @@ class Device(CoordinatorEntity, CoverEntity):
         """Close the cover."""
         await self.async_set_cover_position(position=0)
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Async function to set position to cover."""
-        payload = {}
-        payload["position"] = kwargs[ATTR_POSITION]
-        payload = json.dumps(payload)
+        payload = {"position": kwargs[ATTR_POSITION]}
         await put_state(
             self._session,
             self._api_key,
             self.unique_id,
-            payload,
+            json.dumps(payload),
         )
         await self.coordinator.async_request_refresh()
