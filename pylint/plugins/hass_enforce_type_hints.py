@@ -435,15 +435,39 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
+_TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="is_on",
+        return_type=["bool", None],
+    ),
+    TypeHintMatch(
+        function_name="turn_on",
+        kwargs_type="Any",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+    TypeHintMatch(
+        function_name="turn_off",
+        kwargs_type="Any",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+    TypeHintMatch(
+        function_name="toggle",
+        kwargs_type="Any",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "fan": [
         ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
             base_class="FanEntity",
             matches=[
-                TypeHintMatch(
-                    function_name="is_on",
-                    return_type=["bool", None],
-                ),
                 TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],

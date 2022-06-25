@@ -404,7 +404,7 @@ class ZwaveThermostatFan(ZWaveBaseEntity, FanEntity):
         return cast(str, self._fan_state.metadata.states[str(value)])
 
     @property
-    def extra_state_attributes(self) -> dict[str, str] | None:
+    def extra_state_attributes(self) -> dict[str, str]:
         """Return the optional state attributes."""
         attrs = {}
 

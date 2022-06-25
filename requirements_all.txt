@@ -162,7 +162,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.17
+aiohomekit==0.7.18
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -825,7 +825,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220601.0
+home-assistant-frontend==20220624.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.0
@@ -1083,7 +1083,7 @@ nettigo-air-monitor==1.3.0
 neurio==0.3.1
 
 # homeassistant.components.nexia
-nexia==1.0.2
+nexia==2.0.0
 
 # homeassistant.components.nextcloud
 nextcloudmonitor==1.1.0
@@ -1296,7 +1296,7 @@ pushover_complete==1.1.1
 pvo==0.2.2
 
 # homeassistant.components.canary
-py-canary==0.5.2
+py-canary==0.5.3
 
 # homeassistant.components.cpuspeed
 py-cpuinfo==8.0.0
@@ -1441,7 +1441,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==94
+pydeconz==95
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1993,7 +1993,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.7
+pyunifiprotect==4.0.8
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2220,7 +2220,7 @@ spotipy==2.20.0
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-sqlalchemy==1.4.37
+sqlalchemy==1.4.38
 
 # homeassistant.components.srp_energy
 srpenergy==1.3.6
@@ -2525,7 +2525,7 @@ zigpy==0.46.0
 zm-py==0.5.2
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.38.0
+zwave-js-server-python==0.39.0
 
 # homeassistant.components.zwave_me
 zwave_me_ws==0.2.4

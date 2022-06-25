@@ -158,7 +158,11 @@ class ElectricalMeasurementChannel(ZigbeeChannel):
             return None
 
         meas_type = self.MeasurementType(meas_type)
-        return ", ".join(m.name for m in self.MeasurementType if m in meas_type)
+        return ", ".join(
+            m.name
+            for m in self.MeasurementType
+            if m in meas_type and m.name is not None
+        )
 
 
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(
