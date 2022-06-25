@@ -88,6 +88,12 @@ def assert_entity_counts(
     assert len(hass.states.async_all(platform.value)) == enabled
 
 
+def normalize_name(name: str) -> str:
+    """Normalize name."""
+
+    return name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
+
+
 def ids_from_device_description(
     platform: Platform,
     device: ProtectAdoptableDeviceModel,
@@ -95,16 +101,8 @@ def ids_from_device_description(
 ) -> tuple[str, str]:
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
-    entity_name = (
-        device.display_name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
-    )
-    description_entity_name = (
-        str(description.name)
-        .lower()
-        .replace(":", "")
-        .replace(" ", "_")
-        .replace("-", "_")
-    )
+    entity_name = normalize_name(device.display_name)
+    description_entity_name = normalize_name(str(description.name))
 
     unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"

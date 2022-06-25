@@ -76,7 +76,6 @@ async def test_binary_sensor_setup_camera_all(
 
     ufp.api.bootstrap.nvr.system_info.ustorage = None
     await init_entry(hass, ufp, [doorbell, unadopted_camera])
-    print(list(ufp.api.bootstrap.cameras.keys()))
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
 
     entity_registry = er.async_get(hass)
@@ -215,7 +214,7 @@ async def test_binary_sensor_update_motion(
     ufp: MockEntityFixture,
     doorbell: Camera,
     unadopted_camera: Camera,
-    now: datetime,
+    fixed_now: datetime,
 ):
     """Test binary_sensor motion entity."""
 
@@ -229,7 +228,7 @@ async def test_binary_sensor_update_motion(
     event = Event(
         id="test_event_id",
         type=EventType.MOTION,
-        start=now - timedelta(seconds=1),
+        start=fixed_now - timedelta(seconds=1),
         end=None,
         score=100,
         smart_detect_types=[],
@@ -258,7 +257,7 @@ async def test_binary_sensor_update_motion(
 
 
 async def test_binary_sensor_update_light_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, now: datetime
+    hass: HomeAssistant, ufp: MockEntityFixture, light: Light, fixed_now: datetime
 ):
     """Test binary_sensor motion entity."""
 
@@ -273,7 +272,7 @@ async def test_binary_sensor_update_light_motion(
     event = Event(
         id="test_event_id",
         type=EventType.MOTION_LIGHT,
-        start=now - timedelta(seconds=1),
+        start=fixed_now - timedelta(seconds=1),
         end=None,
         score=100,
         smart_detect_types=[],

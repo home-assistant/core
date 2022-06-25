@@ -567,11 +567,11 @@ async def test_select_service_doorbell_with_reset(
     hass: HomeAssistant,
     ufp: MockEntityFixture,
     doorbell: Camera,
-    now: datetime,
+    fixed_now: datetime,
 ):
     """Test Doorbell Text service (success with reset time)."""
 
-    mock_now.return_value = now
+    mock_now.return_value = fixed_now
 
     _, entity_id = ids_from_device_description(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
@@ -597,5 +597,5 @@ async def test_select_service_doorbell_with_reset(
     doorbell.set_lcd_text.assert_called_once_with(
         DoorbellMessageType.CUSTOM_MESSAGE,
         "Test",
-        reset_at=now + timedelta(minutes=60),
+        reset_at=fixed_now + timedelta(minutes=60),
     )

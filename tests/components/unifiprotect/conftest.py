@@ -147,7 +147,7 @@ def liveview():
 
 
 @pytest.fixture(name="camera")
-def camera_fixture(now: datetime):
+def camera_fixture(fixed_now: datetime):
     """Mock UniFi Protect Camera device."""
 
     # disable pydantic validation so mocking can happen
@@ -155,7 +155,7 @@ def camera_fixture(now: datetime):
 
     data = json.loads(load_fixture("sample_camera.json", integration=DOMAIN))
     camera = Camera.from_unifi_dict(**data)
-    camera.last_motion = now - timedelta(hours=1)
+    camera.last_motion = fixed_now - timedelta(hours=1)
 
     yield camera
 
@@ -185,7 +185,7 @@ def camera_all_fixture(camera: Camera):
 
 
 @pytest.fixture(name="doorbell")
-def doorbell_fixture(camera: Camera, now: datetime):
+def doorbell_fixture(camera: Camera, fixed_now: datetime):
     """Mock UniFi Protect Camera device (with chime)."""
 
     doorbell = camera.copy()
@@ -211,7 +211,7 @@ def doorbell_fixture(camera: Camera, now: datetime):
     doorbell.feature_flags.has_smart_detect = True
     doorbell.feature_flags.has_package_camera = True
     doorbell.feature_flags.has_led_status = True
-    doorbell.last_ring = now - timedelta(hours=1)
+    doorbell.last_ring = fixed_now - timedelta(hours=1)
     return doorbell
 
 
@@ -263,7 +263,7 @@ def viewer():
 
 
 @pytest.fixture(name="sensor")
-def sensor_fixture(now: datetime):
+def sensor_fixture(fixed_now: datetime):
     """Mock UniFi Protect Sensor device."""
 
     # disable pydantic validation so mocking can happen
@@ -271,9 +271,9 @@ def sensor_fixture(now: datetime):
 
     data = json.loads(load_fixture("sample_sensor.json", integration=DOMAIN))
     sensor: Sensor = Sensor.from_unifi_dict(**data)
-    sensor.motion_detected_at = now - timedelta(hours=1)
-    sensor.open_status_changed_at = now - timedelta(hours=1)
-    sensor.alarm_triggered_at = now - timedelta(hours=1)
+    sensor.motion_detected_at = fixed_now - timedelta(hours=1)
+    sensor.open_status_changed_at = fixed_now - timedelta(hours=1)
+    sensor.alarm_triggered_at = fixed_now - timedelta(hours=1)
     yield sensor
 
     Sensor.__config__.validate_assignment = True
@@ -330,7 +330,7 @@ def chime():
     Chime.__config__.validate_assignment = True
 
 
-@pytest.fixture(name="now")
-def now_fixture():
+@pytest.fixture(name="fixed_now")
+def fixed_now_fixture():
     """Return datetime object that will be consistent throughout test."""
     return dt_util.utcnow()

@@ -39,7 +39,6 @@ async def test_lock_setup(
     entity_id = "lock.test_lock_lock"
 
     entity_registry = er.async_get(hass)
-    print(list(entity_registry.entities.keys()))
     entity = entity_registry.async_get(entity_id)
     assert entity
     assert entity.unique_id == unique_id

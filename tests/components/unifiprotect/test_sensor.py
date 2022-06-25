@@ -139,13 +139,13 @@ async def test_sensor_setup_sensor_none(
 
 
 async def test_sensor_setup_nvr(
-    hass: HomeAssistant, ufp: MockEntityFixture, now: datetime
+    hass: HomeAssistant, ufp: MockEntityFixture, fixed_now: datetime
 ):
     """Test sensor entity setup for NVR device."""
 
     reset_objects(ufp.api.bootstrap)
     nvr: NVR = ufp.api.bootstrap.nvr
-    nvr.up_since = now
+    nvr.up_since = fixed_now
     nvr.system_info.cpu.average_load = 50.0
     nvr.system_info.cpu.temperature = 50.0
     nvr.storage_stats.utilization = 50.0
@@ -167,7 +167,7 @@ async def test_sensor_setup_nvr(
     entity_registry = er.async_get(hass)
 
     expected_values = (
-        now.replace(second=0, microsecond=0).isoformat(),
+        fixed_now.replace(second=0, microsecond=0).isoformat(),
         "50.0",
         "50.0",
         "50.0",
@@ -283,7 +283,7 @@ async def test_sensor_nvr_missing_values(hass: HomeAssistant, ufp: MockEntityFix
 
 
 async def test_sensor_setup_camera(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera, now: datetime
+    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera, fixed_now: datetime
 ):
     """Test sensor entity setup for camera devices."""
 
@@ -293,7 +293,7 @@ async def test_sensor_setup_camera(
     entity_registry = er.async_get(hass)
 
     expected_values = (
-        now.replace(microsecond=0).isoformat(),
+        fixed_now.replace(microsecond=0).isoformat(),
         "100",
         "100.0",
         "20.0",
@@ -388,7 +388,7 @@ async def test_sensor_setup_camera_with_last_trip_time(
     entity_registry_enabled_by_default: AsyncMock,
     ufp: MockEntityFixture,
     doorbell: Camera,
-    now: datetime,
+    fixed_now: datetime,
 ):
     """Test sensor entity setup for camera devices with last trip time."""
 
@@ -408,12 +408,15 @@ async def test_sensor_setup_camera_with_last_trip_time(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == (now - timedelta(hours=1)).replace(microsecond=0).isoformat()
+    assert (
+        state.state
+        == (fixed_now - timedelta(hours=1)).replace(microsecond=0).isoformat()
+    )
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
 
 
 async def test_sensor_update_motion(
-    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera, now: datetime
+    hass: HomeAssistant, ufp: MockEntityFixture, doorbell: Camera, fixed_now: datetime
 ):
     """Test sensor motion entity."""
 
@@ -427,7 +430,7 @@ async def test_sensor_update_motion(
     event = Event(
         id="test_event_id",
         type=EventType.SMART_DETECT,
-        start=now - timedelta(seconds=1),
+        start=fixed_now - timedelta(seconds=1),
         end=None,
         score=100,
         smart_detect_types=[SmartDetectObjectType.PERSON],
@@ -457,7 +460,7 @@ async def test_sensor_update_motion(
 
 
 async def test_sensor_update_alarm(
-    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor, now: datetime
+    hass: HomeAssistant, ufp: MockEntityFixture, sensor_all: Sensor, fixed_now: datetime
 ):
     """Test sensor motion entity."""
 
@@ -472,7 +475,7 @@ async def test_sensor_update_alarm(
     event = Event(
         id="test_event_id",
         type=EventType.SENSOR_ALARM,
-        start=now - timedelta(seconds=1),
+        start=fixed_now - timedelta(seconds=1),
         end=None,
         score=100,
         smart_detect_types=[],
@@ -505,7 +508,7 @@ async def test_sensor_update_alarm_with_last_trip_time(
     entity_registry_enabled_by_default: AsyncMock,
     ufp: MockEntityFixture,
     sensor_all: Sensor,
-    now: datetime,
+    fixed_now: datetime,
 ):
     """Test sensor motion entity with last trip time."""
 
@@ -524,5 +527,8 @@ async def test_sensor_update_alarm_with_last_trip_time(
 
     state = hass.states.get(entity_id)
     assert state
-    assert state.state == (now - timedelta(hours=1)).replace(microsecond=0).isoformat()
+    assert (
+        state.state
+        == (fixed_now - timedelta(hours=1)).replace(microsecond=0).isoformat()
+    )
     assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
