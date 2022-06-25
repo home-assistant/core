@@ -90,13 +90,10 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
-                try:
-                    if self.context["source"] == config_entries.SOURCE_REAUTH:
-                        return await self.async_setup_hive_entry()
-                    self.device_registration = True
-                    return await self.async_step_configuration()
-                except UnknownHiveError:
-                    errors["base"] = "unknown"
+                if self.context["source"] == config_entries.SOURCE_REAUTH:
+                    return await self.async_setup_hive_entry()
+                self.device_registration = True
+                return await self.async_step_configuration()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
