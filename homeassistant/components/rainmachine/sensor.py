@@ -278,20 +278,10 @@ class ProgramTimeRemainingSensor(TimeRemainingSensor):
 
     def calculate_seconds_remaining(self) -> int:
         """Calculate the number of seconds remaining."""
-        duration = 0
-
-        for idx, zone in enumerate(
-            [z for z in self.activity_data["wateringTimes"] if z["active"]]
-        ):
-            if self.activity_data["delay_on"] and idx > 0:
-                # If the user has configured a manual delay between zones, add it to the
-                # total duration for every zone except the first (since running a
-                # one-zone program won't incur a delay):
-                duration += self.activity_data["delay"]
-
-            duration += self._zone_coordinator.data[zone["id"]]["remaining"]
-
-        return duration
+        return sum(
+            self._zone_coordinator.data[zone["id"]]["remaining"]
+            for zone in [z for z in self.activity_data["wateringTimes"] if z["active"]]
+        )
 
 
 class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
