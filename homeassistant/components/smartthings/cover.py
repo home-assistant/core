@@ -126,17 +126,17 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
             self._state_attrs[ATTR_BATTERY_LEVEL] = battery
 
     @property
-    def is_opening(self):
+    def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._state == STATE_OPENING
 
     @property
-    def is_closing(self):
+    def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._state == STATE_CLOSING
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
         if self._state == STATE_CLOSED:
             return True
@@ -150,11 +150,11 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         return self._device.status.level
 
     @property
-    def device_class(self):
+    def device_class(self) -> CoverDeviceClass | None:
         """Define this cover as a garage door."""
         return self._device_class
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional state attributes."""
         return self._state_attrs

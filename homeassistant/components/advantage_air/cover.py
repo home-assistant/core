@@ -58,12 +58,12 @@ class AdvantageAirZoneVent(AdvantageAirEntity, CoverEntity):
         )
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if vent is fully closed."""
         return self._zone["state"] == ADVANTAGE_AIR_STATE_CLOSE
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return vents current position as a percentage."""
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return self._zone["value"]

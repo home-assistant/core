@@ -52,12 +52,12 @@ class SomaTilt(SomaEntity, CoverEntity):
     )
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int:
         """Return the current cover tilt position."""
         return self.current_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover tilt is closed."""
         return self.current_position == 0
 
@@ -126,12 +126,12 @@ class SomaShade(SomaEntity, CoverEntity):
     )
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int:
         """Return the current cover position."""
         return self.current_position
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.current_position == 0
 
