@@ -555,7 +555,7 @@ growattServer==1.2.2
 guppy3==3.1.2
 
 # homeassistant.components.homekit
-ha-HAP-python==4.5.0
+ha-HAP-python==4.5.1
 
 # homeassistant.components.generic
 # homeassistant.components.stream
