@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any, cast
 
+from life360 import Life360, Life360Error, LoginError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -14,6 +15,8 @@ from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from .const import (
+    COMM_MAX_RETRIES,
+    COMM_TIMEOUT,
     CONF_AUTHORIZATION,
     CONF_DRIVING_SPEED,
     CONF_MAX_GPS_ACCURACY,
@@ -23,7 +26,6 @@ from .const import (
     OPTIONS,
     SHOW_DRIVING,
 )
-from .helpers import get_life360_api, get_life360_authorization
 
 LIMIT_GPS_ACC = "limit_gps_acc"
 SET_DRIVE_SPEED = "set_drive_speed"
@@ -54,7 +56,7 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize."""
-        self._api = get_life360_api()
+        self._api = Life360(timeout=COMM_TIMEOUT, max_retries=COMM_MAX_RETRIES)
         self._username: str | vol.UNDEFINED = vol.UNDEFINED
         self._password: str | vol.UNDEFINED = vol.UNDEFINED
         self._reauth_entry: ConfigEntry | None = None
@@ -68,9 +70,16 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_verify(self, step_id: str) -> FlowResult:
         """Attempt to authorize the provided credentials."""
         errors: dict[str, str] = {}
-        authorization = await get_life360_authorization(
-            self.hass, self._api, self._username, self._password, errors
-        )
+        try:
+            authorization = await self.hass.async_add_executor_job(
+                self._api.get_authorization, self._username, self._password
+            )
+        except LoginError as exc:
+            LOGGER.debug("Login error: %s", exc)
+            errors["base"] = "invalid_auth"
+        except Life360Error as exc:
+            LOGGER.debug("Unexpected error communicating with Life360 server: %s", exc)
+            errors["base"] = "cannot_connect"
         if errors:
             if step_id == "user":
                 schema = account_schema(self._username, self._password)
