@@ -104,24 +104,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     async def async_update_data():
         """Fetch data from Nuki bridge."""
         try:
-            ent_reg = er.async_get(hass)
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
                 events = await hass.async_add_executor_job(_update_devices, locks + openers)
-
-                for event, device_ids in events.items():
-                    for device_id in device_ids:
-                        entity_id = ent_reg.async_get_entity_id(Platform.LOCK, DOMAIN, device_id) 
-                        event_data = {
-                            "entity_id": entity_id,
-                            "type": event,
-                        }
-                        hass.bus.async_fire("nuki_event", event_data)
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
             raise UpdateFailed(f"Error communicating with Bridge: {err}") from err
+
+        ent_reg = er.async_get(hass)
+        for event, device_ids in events.items():
+            for device_id in device_ids:
+                entity_id = ent_reg.async_get_entity_id(Platform.LOCK, DOMAIN, device_id) 
+                event_data = {
+                    "entity_id": entity_id,
+                    "type": event,
+                }
+                hass.bus.async_fire("nuki_event", event_data)
 
     coordinator = DataUpdateCoordinator(
         hass,
