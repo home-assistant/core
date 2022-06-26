@@ -248,7 +248,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_VISIBILITY_DISTANCE,
         name="Visibility",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=LENGTH_METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
