@@ -13,12 +13,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import (
+    CONF_WATERMETER,
     DOMAIN,
     LOGGER,
     SCAN_INTERVAL,
     SERVICE_PHASES,
     SERVICE_SETTINGS,
     SERVICE_SMARTMETER,
+    SERVICE_WATERMETER,
 )
 
 PLATFORMS = [Platform.SENSOR]
@@ -85,5 +87,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             SERVICE_PHASES: await self.p1monitor.phases(),
             SERVICE_SETTINGS: await self.p1monitor.settings(),
         }
+        if self.config_entry.data[CONF_WATERMETER]:
+            data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()
 
         return data

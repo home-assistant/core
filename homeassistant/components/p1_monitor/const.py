@@ -9,12 +9,16 @@ DOMAIN: Final = "p1_monitor"
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
+CONF_WATERMETER: Final = "watermeter"
+
 SERVICE_SMARTMETER: Final = "smartmeter"
+SERVICE_WATERMETER: Final = "watermeter"
 SERVICE_PHASES: Final = "phases"
 SERVICE_SETTINGS: Final = "settings"
 
-SERVICES: dict[str, str] = {
-    SERVICE_SMARTMETER: "SmartMeter",
-    SERVICE_PHASES: "Phases",
-    SERVICE_SETTINGS: "Settings",
-}
+# SERVICES: dict[str, str] = {
+#     SERVICE_SMARTMETER: "SmartMeter",
+#     SERVICE_WATERMETER: "WaterMeter",
+#     SERVICE_PHASES: "Phases",
+#     SERVICE_SETTINGS: "Settings",
+# }

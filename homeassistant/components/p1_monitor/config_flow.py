@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import CONF_WATERMETER, DOMAIN
 
 
 class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -40,6 +40,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                     title=user_input[CONF_NAME],
                     data={
                         CONF_HOST: user_input[CONF_HOST],
+                        CONF_WATERMETER: user_input[CONF_WATERMETER],
                     },
                 )
 
@@ -51,6 +52,7 @@ class P1MonitorFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_NAME, default=self.hass.config.location_name
                     ): str,
                     vol.Required(CONF_HOST): str,
+                    vol.Optional(CONF_WATERMETER, default=False): bool,
                 }
             ),
             errors=errors,

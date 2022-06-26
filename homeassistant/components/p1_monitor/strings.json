@@ -5,7 +5,8 @@
         "description": "Set up P1 Monitor to integrate with Home Assistant.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "name": "[%key:common::config_flow::data::name%]",
+          "watermeter": "Add water meter"
         }
       }
     },

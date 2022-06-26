@@ -7,7 +7,8 @@
             "user": {
                 "data": {
                     "host": "Host",
-                    "name": "Name"
+                    "name": "Name",
+                    "watermeter": "Add water meter"
                 },
                 "description": "Set up P1 Monitor to integrate with Home Assistant."
             }
