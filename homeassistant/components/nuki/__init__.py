@@ -43,7 +43,7 @@ def _get_bridge_devices(bridge: NukiBridge) -> tuple[list[NukiLock], list[NukiOp
 
 def _update_devices(devices: list[NukiDevice]) -> dict[str, set[str]]:
     """
-    Update the Nuki devices
+    Update the Nuki devices.
 
     Returns:
         A dict with the events to be fired. The event type is the key and the device ids are the value
