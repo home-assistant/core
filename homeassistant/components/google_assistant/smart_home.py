@@ -71,7 +71,7 @@ async def _process(hass, data, message):
     return {"requestId": data.request_id, "payload": result}
 
 
-async def async_devices_serialize(hass, config, agent_user_id):
+async def async_devices_sync_response(hass, config, agent_user_id):
     """Generate the device serialization."""
     entities = async_get_entities(hass, config)
     instance_uuid = await instance_id.async_get(hass)
@@ -104,7 +104,7 @@ async def async_devices_sync(hass, data, payload):
     agent_user_id = data.config.get_agent_user_id(data.context)
     await data.config.async_connect_agent_user(agent_user_id)
 
-    response = await async_devices_serialize(hass, data.config, agent_user_id)
+    response = await async_devices_sync_response(hass, data.config, agent_user_id)
 
     _LOGGER.debug("Syncing entities response: %s", response)
 

@@ -12,7 +12,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_SECURE_DEVICES_PIN, CONF_SERVICE_ACCOUNT, DATA_CONFIG, DOMAIN
 from .http import GoogleConfig
-from .smart_home import async_devices_serialize
+from .smart_home import async_devices_sync_response
 
 TO_REDACT = [
     "uuid",
@@ -31,7 +31,7 @@ async def async_get_config_entry_diagnostics(
     data = hass.data[DOMAIN]
     config: GoogleConfig = data[entry.entry_id]
     yaml_config: ConfigType = data[DATA_CONFIG]
-    devices = await async_devices_serialize(hass, config, REDACTED)
+    devices = await async_devices_sync_response(hass, config, REDACTED)
 
     return {
         "config_entry": async_redact_data(entry.as_dict(), TO_REDACT),
