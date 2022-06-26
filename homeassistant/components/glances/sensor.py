@@ -7,6 +7,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import GlancesData
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
 
 
@@ -31,7 +32,6 @@ async def async_setup_entry(
                         name,
                         disk["mnt_point"],
                         description,
-                        config_entry.entry_id,
                     )
                 )
         elif description.type == "sensors":
@@ -44,16 +44,11 @@ async def async_setup_entry(
                             name,
                             sensor["label"],
                             description,
-                            config_entry.entry_id,
                         )
                     )
         elif description.type == "raid":
             for raid_device in client.api.data[description.type]:
-                dev.append(
-                    GlancesSensor(
-                        client, name, raid_device, description, config_entry.entry_id
-                    )
-                )
+                dev.append(GlancesSensor(client, name, raid_device, description))
         elif client.api.data[description.type]:
             dev.append(
                 GlancesSensor(
@@ -61,7 +56,6 @@ async def async_setup_entry(
                     name,
                     "",
                     description,
-                    config_entry.entry_id,
                 )
             )
 
@@ -75,12 +69,11 @@ class GlancesSensor(SensorEntity):
 
     def __init__(
         self,
-        glances_data,
-        name,
-        sensor_name_prefix,
+        glances_data: GlancesData,
+        name: str,
+        sensor_name_prefix: str,
         description: GlancesSensorEntityDescription,
-        config_entry_id: str,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.glances_data = glances_data
         self._sensor_name_prefix = sensor_name_prefix
@@ -90,7 +83,7 @@ class GlancesSensor(SensorEntity):
         self.entity_description = description
         self._attr_name = f"{name} {sensor_name_prefix} {description.name_suffix}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, config_entry_id)},
+            identifiers={(DOMAIN, glances_data.config_entry.entry_id)},
             manufacturer="Glances",
             name=name,
         )

@@ -216,7 +216,7 @@ aioskybell==22.6.1
 aioslimproto==2.0.1
 
 # homeassistant.components.steamist
-aiosteamist==0.3.1
+aiosteamist==0.3.2
 
 # homeassistant.components.switcher_kis
 aioswitcher==2.0.6
@@ -308,7 +308,7 @@ beautifulsoup4==4.11.1
 bellows==0.30.0
 
 # homeassistant.components.bmw_connected_drive
-bimmer_connected==0.9.5
+bimmer_connected==0.9.6
 
 # homeassistant.components.blebox
 blebox_uniapi==1.3.3
@@ -454,6 +454,9 @@ feedparser==6.0.2
 
 # homeassistant.components.fibaro
 fiblary3==0.1.8
+
+# homeassistant.components.file
+file-read-backwards==2.0.0
 
 # homeassistant.components.fivem
 fivem-api==0.1.2
@@ -1035,7 +1038,7 @@ pyhaversion==22.4.1
 pyheos==0.7.2
 
 # homeassistant.components.hive
-pyhiveapi==0.5.11
+pyhiveapi==0.5.13
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1635,7 +1638,7 @@ xknx==0.21.3
 # homeassistant.components.startca
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
-xmltodict==0.12.0
+xmltodict==0.13.0
 
 # homeassistant.components.yale_smart_alarm
 yalesmartalarmclient==0.3.8
