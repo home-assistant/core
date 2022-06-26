@@ -2,10 +2,10 @@
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from p1monitor import Phases, Settings, SmartMeter
+from p1monitor import Phases, Settings, SmartMeter, WaterMeter
 import pytest
 
-from homeassistant.components.p1_monitor.const import DOMAIN
+from homeassistant.components.p1_monitor.const import CONF_WATERMETER, DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +18,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="monitor",
         domain=DOMAIN,
-        data={CONF_HOST: "example"},
+        data={CONF_HOST: "example", CONF_WATERMETER: True},
         unique_id="unique_thingy",
     )
 
@@ -41,6 +41,11 @@ def mock_p1monitor():
         client.settings = AsyncMock(
             return_value=Settings.from_dict(
                 json.loads(load_fixture("p1_monitor/settings.json"))
+            )
+        )
+        client.watermeter = AsyncMock(
+            return_value=WaterMeter.from_dict(
+                json.loads(load_fixture("p1_monitor/watermeter.json"))
             )
         )
         yield p1monitor_mock

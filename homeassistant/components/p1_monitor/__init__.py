@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import TypedDict
 
-from p1monitor import P1Monitor, Phases, Settings, SmartMeter
+from p1monitor import P1Monitor, Phases, Settings, SmartMeter, WaterMeter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
@@ -57,6 +57,7 @@ class P1MonitorData(TypedDict):
     smartmeter: SmartMeter
     phases: Phases
     settings: Settings
+    watermeter: WaterMeter | None
 
 
 class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
@@ -86,6 +87,7 @@ class P1MonitorDataUpdateCoordinator(DataUpdateCoordinator[P1MonitorData]):
             SERVICE_SMARTMETER: await self.p1monitor.smartmeter(),
             SERVICE_PHASES: await self.p1monitor.phases(),
             SERVICE_SETTINGS: await self.p1monitor.settings(),
+            SERVICE_WATERMETER: None,
         }
         if self.config_entry.data[CONF_WATERMETER]:
             data[SERVICE_WATERMETER] = await self.p1monitor.watermeter()

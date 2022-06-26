@@ -221,11 +221,13 @@ SENSORS_WATERMETER: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="consumption_day",
         name="Consumption Day",
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=VOLUME_LITERS,
     ),
     SensorEntityDescription(
         key="consumption_total",
         name="Consumption Total",
+        state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
     ),
     SensorEntityDescription(
