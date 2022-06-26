@@ -215,7 +215,8 @@ jobs:
             libavformat-dev \
             libavutil-dev \
             libswresample-dev \
-            libswscale-dev
+            libswscale-dev \
+            libudev-dev
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
