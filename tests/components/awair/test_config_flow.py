@@ -111,7 +111,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
     with patch(
         "python_awair.AwairClient.query", side_effect=[USER_FIXTURE, DEVICES_FIXTURE]
-    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    ), patch("homeassistant.components.awair.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONFIG,
