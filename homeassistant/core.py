@@ -1110,6 +1110,13 @@ class State:
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
+    def __hash__(self) -> int:
+        """Make the state hashable.
+
+        State objects are effectively immutable.
+        """
+        return hash((id(self), self.last_updated))
+
     @property
     def name(self) -> str:
         """Name of this state."""

@@ -370,7 +370,7 @@ class ChannelPool:
         return [self.all_channels[chan_id] for chan_id in (available - claimed)]
 
     @callback
-    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
+    def zha_send_event(self, event_data: dict[str, Any]) -> None:
         """Relay events to hass."""
         self._channels.zha_send_event(
             {

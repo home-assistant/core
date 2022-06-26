@@ -758,7 +758,7 @@ def ensure_list_csv(value: Any) -> list:
 class multi_select:
     """Multi select validator returning list of selected values."""
 
-    def __init__(self, options: dict) -> None:
+    def __init__(self, options: dict | list) -> None:
         """Initialize multi select."""
         self.options = options
 

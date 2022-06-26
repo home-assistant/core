@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import cast
 
 import voluptuous as vol
@@ -55,6 +54,7 @@ from .const import (
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
+    LOGGER,
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
@@ -66,8 +66,6 @@ from .entity import ZWaveBaseEntity
 from .helpers import get_device_id, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 STATUS_ICON: dict[NodeStatus, str] = {
     NodeStatus.ALIVE: "mdi:heart-pulse",

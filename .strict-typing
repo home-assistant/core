@@ -87,6 +87,7 @@ homeassistant.components.emulated_hue.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.filesize.*
 homeassistant.components.fitbit.*

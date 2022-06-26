@@ -1,6 +1,8 @@
 """Support for Lutron Caseta fans."""
 from __future__ import annotations
 
+from typing import Any
+
 from pylutron_caseta import FAN_HIGH, FAN_LOW, FAN_MEDIUM, FAN_MEDIUM_HIGH, FAN_OFF
 
 from homeassistant.components.fan import DOMAIN, FanEntity, FanEntityFeature
@@ -58,17 +60,17 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
-    ):
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
         """Turn the fan on."""
         if percentage is None:
             percentage = DEFAULT_ON_PERCENTAGE
 
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.async_set_percentage(0)
 
@@ -84,6 +86,6 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
         await self._smartbridge.set_fan(self.device_id, named_speed)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.percentage and self.percentage > 0
+        return bool(self.percentage)

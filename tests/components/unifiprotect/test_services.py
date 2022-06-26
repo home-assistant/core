@@ -5,8 +5,7 @@ from __future__ import annotations
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from pyunifiprotect.data import Camera, Light, ModelType
-from pyunifiprotect.data.devices import Chime
+from pyunifiprotect.data import Camera, Chime, Light, ModelType
 from pyunifiprotect.exceptions import BadRequest
 
 from homeassistant.components.unifiprotect.const import ATTR_MESSAGE, DOMAIN
@@ -21,15 +20,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import MockEntityFixture, regenerate_device_ids
+from .utils import MockUFPFixture, init_entry
 
 
 @pytest.fixture(name="device")
-async def device_fixture(hass: HomeAssistant, mock_entry: MockEntityFixture):
+async def device_fixture(hass: HomeAssistant, ufp: MockUFPFixture):
     """Fixture with entry setup to call services with."""
 
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [])
 
     device_registry = dr.async_get(hass)
 
@@ -37,30 +35,20 @@ async def device_fixture(hass: HomeAssistant, mock_entry: MockEntityFixture):
 
 
 @pytest.fixture(name="subdevice")
-async def subdevice_fixture(
-    hass: HomeAssistant, mock_entry: MockEntityFixture, mock_light: Light
-):
+async def subdevice_fixture(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     """Fixture with entry setup to call services with."""
 
-    mock_light._api = mock_entry.api
-    mock_entry.api.bootstrap.lights = {
-        mock_light.id: mock_light,
-    }
-
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [light])
 
     device_registry = dr.async_get(hass)
 
     return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
 
 
-async def test_global_service_bad_device(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
-):
+async def test_global_service_bad_device(hass: HomeAssistant, ufp: MockUFPFixture):
     """Test global service, invalid device ID."""
 
-    nvr = mock_entry.api.bootstrap.nvr
+    nvr = ufp.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock()
     nvr.add_custom_doorbell_message = AsyncMock()
 
@@ -75,11 +63,11 @@ async def test_global_service_bad_device(
 
 
 async def test_global_service_exception(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test global service, unexpected error."""
 
-    nvr = mock_entry.api.bootstrap.nvr
+    nvr = ufp.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock()
     nvr.add_custom_doorbell_message = AsyncMock(side_effect=BadRequest)
 
@@ -94,11 +82,11 @@ async def test_global_service_exception(
 
 
 async def test_add_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test add_doorbell_text service."""
 
-    nvr = mock_entry.api.bootstrap.nvr
+    nvr = ufp.api.bootstrap.nvr
     nvr.__fields__["add_custom_doorbell_message"] = Mock()
     nvr.add_custom_doorbell_message = AsyncMock()
 
@@ -112,11 +100,11 @@ async def test_add_doorbell_text(
 
 
 async def test_remove_doorbell_text(
-    hass: HomeAssistant, subdevice: dr.DeviceEntry, mock_entry: MockEntityFixture
+    hass: HomeAssistant, subdevice: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test remove_doorbell_text service."""
 
-    nvr = mock_entry.api.bootstrap.nvr
+    nvr = ufp.api.bootstrap.nvr
     nvr.__fields__["remove_custom_doorbell_message"] = Mock()
     nvr.remove_custom_doorbell_message = AsyncMock()
 
@@ -130,11 +118,11 @@ async def test_remove_doorbell_text(
 
 
 async def test_set_default_doorbell_text(
-    hass: HomeAssistant, device: dr.DeviceEntry, mock_entry: MockEntityFixture
+    hass: HomeAssistant, device: dr.DeviceEntry, ufp: MockUFPFixture
 ):
     """Test set_default_doorbell_text service."""
 
-    nvr = mock_entry.api.bootstrap.nvr
+    nvr = ufp.api.bootstrap.nvr
     nvr.__fields__["set_default_doorbell_message"] = Mock()
     nvr.set_default_doorbell_message = AsyncMock()
 
@@ -149,46 +137,21 @@ async def test_set_default_doorbell_text(
 
 async def test_set_chime_paired_doorbells(
     hass: HomeAssistant,
-    mock_entry: MockEntityFixture,
-    mock_chime: Chime,
-    mock_camera: Camera,
+    ufp: MockUFPFixture,
+    chime: Chime,
+    doorbell: Camera,
 ):
     """Test set_chime_paired_doorbells."""
 
-    mock_entry.api.update_device = AsyncMock()
+    ufp.api.update_device = AsyncMock()
 
-    mock_chime._api = mock_entry.api
-    mock_chime.name = "Test Chime"
-    mock_chime._initial_data = mock_chime.dict()
-    mock_entry.api.bootstrap.chimes = {
-        mock_chime.id: mock_chime,
-    }
-
-    camera1 = mock_camera.copy()
+    camera1 = doorbell.copy()
     camera1.name = "Test Camera 1"
-    camera1._api = mock_entry.api
-    camera1.channels[0]._api = mock_entry.api
-    camera1.channels[1]._api = mock_entry.api
-    camera1.channels[2]._api = mock_entry.api
-    camera1.feature_flags.has_chime = True
-    regenerate_device_ids(camera1)
 
-    camera2 = mock_camera.copy()
+    camera2 = doorbell.copy()
     camera2.name = "Test Camera 2"
-    camera2._api = mock_entry.api
-    camera2.channels[0]._api = mock_entry.api
-    camera2.channels[1]._api = mock_entry.api
-    camera2.channels[2]._api = mock_entry.api
-    camera2.feature_flags.has_chime = True
-    regenerate_device_ids(camera2)
 
-    mock_entry.api.bootstrap.cameras = {
-        camera1.id: camera1,
-        camera2.id: camera2,
-    }
-
-    await hass.config_entries.async_setup(mock_entry.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [camera1, camera2, chime])
 
     registry = er.async_get(hass)
     chime_entry = registry.async_get("button.test_chime_play_chime")
@@ -209,6 +172,6 @@ async def test_set_chime_paired_doorbells(
         blocking=True,
     )
 
-    mock_entry.api.update_device.assert_called_once_with(
-        ModelType.CHIME, mock_chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
+    ufp.api.update_device.assert_called_once_with(
+        ModelType.CHIME, chime.id, {"cameraIds": sorted([camera1.id, camera2.id])}
     )
