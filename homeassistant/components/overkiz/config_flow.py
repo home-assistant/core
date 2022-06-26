@@ -236,6 +236,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
+            self._default_host = user_input[CONF_HOST]
             self._default_user = user_input[CONF_USERNAME]
             user_input[CONF_HUB] = self._default_hub
 
@@ -288,9 +289,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="local",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_HOST, default="gateway-xxxx-xxxx-xxxx.local:8443"
-                    ): str,
+                    vol.Required(CONF_HOST, default=self._default_host): str,
                     vol.Required(CONF_USERNAME, default=self._default_user): str,
                     vol.Required(CONF_PASSWORD): str,
                 }
