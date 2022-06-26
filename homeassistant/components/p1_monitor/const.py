@@ -15,10 +15,3 @@ SERVICE_SMARTMETER: Final = "smartmeter"
 SERVICE_WATERMETER: Final = "watermeter"
 SERVICE_PHASES: Final = "phases"
 SERVICE_SETTINGS: Final = "settings"
-
-# SERVICES: dict[str, str] = {
-#     SERVICE_SMARTMETER: "SmartMeter",
-#     SERVICE_WATERMETER: "WaterMeter",
-#     SERVICE_PHASES: "Phases",
-#     SERVICE_SETTINGS: "Settings",
-# }
