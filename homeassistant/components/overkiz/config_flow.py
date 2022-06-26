@@ -86,9 +86,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             user_input[CONF_TOKEN] = token
             user_input[CONF_TOKEN_UUID] = uuid
 
+            # Verify SSL blocked by https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode/issues/5
+            # Somfy (self-signed) SSL cert uses the wrong common name
             session = async_create_clientsession(self.hass, verify_ssl=False)
 
-            # TODO try if we can access the .local, otherwise remove the token
             client = OverkizClient(
                 username="",
                 password="",
@@ -101,6 +102,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     configuration_url=None,
                 ),
             )
+
+            # TODO try if we can access the .local, otherwise remove the token
+
         else:
             server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
 

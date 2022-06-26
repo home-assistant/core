@@ -16,7 +16,7 @@
         }
       },
       "local": {
-        "description": "If you have activated the [Developer Mode of your TaHoma box](https://developer.somfy.com/developer-mode), you authorize third-party softwares to connect to it via your local network",
+        "description": "If you have activated the [Developer Mode of your TaHoma box](https://developer.somfy.com/developer-mode), you authorize third-party softwares to connect to it via your local network. \n\n Log in with your Somfy application credentials and change host to include your gateway-pin.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",
