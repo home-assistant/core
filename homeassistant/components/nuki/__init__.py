@@ -1,7 +1,7 @@
 """The nuki component."""
+from collections import defaultdict
 from datetime import timedelta
 import logging
-from collections import defaultdict
 
 import async_timeout
 from pynuki import NukiBridge, NukiLock, NukiOpener
