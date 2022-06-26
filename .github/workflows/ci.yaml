@@ -204,7 +204,7 @@ jobs:
 
           # Temporary workaround
           # https://github.com/actions/virtual-environments/issues/5806
-          sudo apt-get -y install
+          sudo apt-get -y install \
             libudev1=249.11-0ubuntu3.3 \
             libudev-dev=249.11-0ubuntu3.3
 
