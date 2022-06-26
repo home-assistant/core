@@ -46,7 +46,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_AUTO,
     HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY
+    HVAC_MODE_FAN_ONLY,
 )
 
 
@@ -117,7 +117,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             ):
 
                 if conf_value in mode_value_config:
-                    self._hvac_mode_mapping.append((mode_value_config[conf_value], hvac_mode))
+                    self._hvac_mode_mapping.append(
+                        (mode_value_config[conf_value], hvac_mode)
+                    )
                     self._attr_hvac_modes.append(hvac_mode)
 
         else:

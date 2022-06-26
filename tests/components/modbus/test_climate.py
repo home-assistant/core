@@ -35,7 +35,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_AUTO,
     HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY
+    HVAC_MODE_FAN_ONLY,
 )
 
 
@@ -100,10 +100,9 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                             HVAC_MODE_DRY: 4,
                             HVAC_MODE_FAN_ONLY: 5,
                             HVAC_MODE_AUTO: 6,
+                        },
+                    },
                 }
-
-                        }
-                    }
             ],
         },
     ],
@@ -130,7 +129,7 @@ async def test_config_climate(hass, mock_modbus):
                             HVAC_MODE_HEAT: 1,
                             HVAC_MODE_COOL: 2,
                             HVAC_MODE_HEAT_COOL: 3,
-                        }
+                        },
                     },
                 }
             ],
@@ -218,8 +217,8 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                                 HVAC_MODE_COOL: 0,
                                 HVAC_MODE_HEAT: 1,
                                 HVAC_MODE_DRY: 2,
-                            }
-                        }
+                            },
+                        },
                     },
                 ]
             },
@@ -242,8 +241,8 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                                 HVAC_MODE_COOL: 0,
                                 HVAC_MODE_HEAT: 1,
                                 HVAC_MODE_DRY: 2,
-                            }
-                        }
+                            },
+                        },
                     },
                 ]
             },
@@ -266,7 +265,7 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                                 HVAC_MODE_COOL: 0,
                                 HVAC_MODE_HEAT: 2,
                                 HVAC_MODE_DRY: 3,
-                            }
+                            },
                         },
                         CONF_HVAC_ONOFF_REGISTER: 119,
                     },
@@ -388,8 +387,8 @@ async def test_service_climate_set_temperature(
                             CONF_HVAC_MODE_VALUES: {
                                 HVAC_MODE_COOL: 1,
                                 HVAC_MODE_HEAT: 2,
-                            }
-                        }
+                            },
+                        },
                     }
                 ]
             },
@@ -409,8 +408,8 @@ async def test_service_climate_set_temperature(
                             CONF_HVAC_MODE_VALUES: {
                                 HVAC_MODE_COOL: 1,
                                 HVAC_MODE_HEAT: 2,
-                            }
-                        }
+                            },
+                        },
                     }
                 ]
             },

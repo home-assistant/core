@@ -120,7 +120,7 @@ from homeassistant.components.climate.const import (
     HVAC_MODE_HEAT_COOL,
     HVAC_MODE_AUTO,
     HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY
+    HVAC_MODE_FAN_ONLY,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -229,18 +229,19 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe({
-                CONF_ADDRESS: cv.positive_int,
-                CONF_HVAC_MODE_VALUES: {
-                    vol.Optional(HVAC_MODE_OFF): cv.positive_int,
-                    vol.Optional(HVAC_MODE_HEAT): cv.positive_int,
-                    vol.Optional(HVAC_MODE_COOL): cv.positive_int,
-                    vol.Optional(HVAC_MODE_HEAT_COOL): cv.positive_int,
-                    vol.Optional(HVAC_MODE_AUTO): cv.positive_int,
-                    vol.Optional(HVAC_MODE_DRY): cv.positive_int,
-                    vol.Optional(HVAC_MODE_FAN_ONLY): cv.positive_int
-                }              
-            }
+            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe(
+                {
+                    CONF_ADDRESS: cv.positive_int,
+                    CONF_HVAC_MODE_VALUES: {
+                        vol.Optional(HVAC_MODE_OFF): cv.positive_int,
+                        vol.Optional(HVAC_MODE_HEAT): cv.positive_int,
+                        vol.Optional(HVAC_MODE_COOL): cv.positive_int,
+                        vol.Optional(HVAC_MODE_HEAT_COOL): cv.positive_int,
+                        vol.Optional(HVAC_MODE_AUTO): cv.positive_int,
+                        vol.Optional(HVAC_MODE_DRY): cv.positive_int,
+                        vol.Optional(HVAC_MODE_FAN_ONLY): cv.positive_int,
+                    },
+                }
             ),
         }
     ),
