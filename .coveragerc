@@ -512,6 +512,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/diagnostics.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/model.py
     homeassistant/components/hunterdouglas_powerview/scene.py
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
@@ -1064,6 +1065,7 @@ omit =
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/sigfox/sensor.py
+    homeassistant/components/simplepush/__init__.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
@@ -1301,9 +1303,6 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
-    homeassistant/components/trafikverket_ferry/__init__.py
-    homeassistant/components/trafikverket_ferry/coordinator.py
-    homeassistant/components/trafikverket_ferry/sensor.py
     homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
@@ -1519,7 +1518,6 @@ omit =
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/registries.py
-    homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py

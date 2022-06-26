@@ -1,0 +1,26 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Konto har redan konfigurerats"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn",
+                    "verify_ssl": "Verifiera SSL-certifikat"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "password": "L\u00f6senord",
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

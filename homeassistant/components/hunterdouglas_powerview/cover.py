@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Iterable
 from contextlib import suppress
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -37,23 +38,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    COORDINATOR,
-    DEVICE_INFO,
-    DEVICE_MODEL,
     DOMAIN,
     LEGACY_DEVICE_MODEL,
     POS_KIND_PRIMARY,
     POS_KIND_SECONDARY,
     POS_KIND_VANE,
-    PV_API,
-    PV_ROOM_DATA,
-    PV_SHADE_DATA,
     ROOM_ID_IN_SHADE,
     ROOM_NAME_UNICODE,
     STATE_ATTRIBUTE_ROOM_NAME,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeMove
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,24 +70,22 @@ RESYNC_DELAY = 60
 # implemented for top/down shades, but also works fine with normal shades
 CLOSED_POSITION = (0.75 / 100) * (MAX_POSITION - MIN_POSITION)
 
+SCAN_INTERVAL = timedelta(minutes=10)
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the hunter douglas shades."""
 
-    pv_data = hass.data[DOMAIN][entry.entry_id]
-    room_data: dict[str | int, Any] = pv_data[PV_ROOM_DATA]
-    shade_data = pv_data[PV_SHADE_DATA]
-    pv_request = pv_data[PV_API]
-    coordinator: PowerviewShadeUpdateCoordinator = pv_data[COORDINATOR]
-    device_info: dict[str, Any] = pv_data[DEVICE_INFO]
+    pv_entry: PowerviewEntryData = hass.data[DOMAIN][entry.entry_id]
+    coordinator: PowerviewShadeUpdateCoordinator = pv_entry.coordinator
 
     entities: list[ShadeEntity] = []
-    for raw_shade in shade_data.values():
+    for raw_shade in pv_entry.shade_data.values():
         # The shade may be out of sync with the hub
         # so we force a refresh when we add it if possible
-        shade: BaseShade = PvShade(raw_shade, pv_request)
+        shade: BaseShade = PvShade(raw_shade, pv_entry.api)
         name_before_refresh = shade.name
         with suppress(asyncio.TimeoutError):
             async with async_timeout.timeout(1):
@@ -105,10 +99,10 @@ async def async_setup_entry(
             continue
         coordinator.data.update_shade_positions(shade.raw_data)
         room_id = shade.raw_data.get(ROOM_ID_IN_SHADE)
-        room_name = room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
+        room_name = pv_entry.room_data.get(room_id, {}).get(ROOM_NAME_UNICODE, "")
         entities.extend(
             create_powerview_shade_entity(
-                coordinator, device_info, room_name, shade, name_before_refresh
+                coordinator, pv_entry.device_info, room_name, shade, name_before_refresh
             )
         )
     async_add_entities(entities)
@@ -116,7 +110,7 @@ async def async_setup_entry(
 
 def create_powerview_shade_entity(
     coordinator: PowerviewShadeUpdateCoordinator,
-    device_info: dict[str, Any],
+    device_info: PowerviewDeviceInfo,
     room_name: str,
     shade: BaseShade,
     name_before_refresh: str,
@@ -152,15 +146,13 @@ def hass_position_to_hd(hass_position: int, max_val: int = MAX_POSITION) -> int:
 class PowerViewShadeBase(ShadeEntity, CoverEntity):
     """Representation of a powerview shade."""
 
-    # The hub frequently reports stale states
-    _attr_assumed_state = True
     _attr_device_class = CoverDeviceClass.SHADE
     _attr_supported_features = 0
 
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -170,9 +162,29 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         self._shade: BaseShade = shade
         self._attr_name = self._shade_name
         self._scheduled_transition_update: CALLBACK_TYPE | None = None
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP
         self._forced_resync = None
+
+    @property
+    def assumed_state(self) -> bool:
+        """If the device is hard wired we are polling state.
+
+        The hub will frequently provide the wrong state
+        for battery power devices so we set assumed
+        state in this case.
+        """
+        return not self._is_hard_wired
+
+    @property
+    def should_poll(self) -> bool:
+        """Only poll if the device is hard wired.
+
+        We cannot poll battery powered devices
+        as it would drain their batteries in a matter
+        of days.
+        """
+        return self._is_hard_wired
 
     @property
     def extra_state_attributes(self) -> dict[str, str]:
@@ -180,7 +192,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.primary <= CLOSED_POSITION
 
@@ -336,14 +348,28 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         """Cancel any pending refreshes."""
         self._async_cancel_scheduled_transition_update()
 
+    @property
+    def _update_in_progress(self) -> bool:
+        """Check if an update is already in progress."""
+        return bool(self._scheduled_transition_update or self._forced_resync)
+
     @callback
     def _async_update_shade_from_group(self) -> None:
         """Update with new data from the coordinator."""
-        if self._scheduled_transition_update or self._forced_resync:
+        if self._update_in_progress:
             # If a transition is in progress the data will be wrong
             return
         self.data.update_from_group_data(self._shade.id)
         self.async_write_ha_state()
+
+    async def async_update(self) -> None:
+        """Refresh shade position."""
+        if self._update_in_progress:
+            # The update will likely timeout and
+            # error if are already have one in flight
+            return
+        await self._shade.refresh()
+        self._async_update_shade_data(self._shade.raw_data)
 
 
 class PowerViewShade(PowerViewShadeBase):
@@ -352,7 +378,7 @@ class PowerViewShade(PowerViewShadeBase):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -383,7 +409,7 @@ class PowerViewShadeTDBUBottom(PowerViewShadeTDBU):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -420,7 +446,7 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -439,7 +465,16 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         }
 
     @property
-    def is_closed(self):
+    def should_poll(self) -> bool:
+        """Certain shades create multiple entities.
+
+        Do not poll shade multiple times. One shade will return data
+        for both and multiple polling will cause timeouts.
+        """
+        return False
+
+    @property
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # top shade needs to check other motor
         return self.positions.secondary <= CLOSED_POSITION
@@ -479,7 +514,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
     def __init__(
         self,
         coordinator: PowerviewShadeUpdateCoordinator,
-        device_info: dict[str, Any],
+        device_info: PowerviewDeviceInfo,
         room_name: str,
         shade: BaseShade,
         name: str,
@@ -491,7 +526,7 @@ class PowerViewShadeWithTilt(PowerViewShade):
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.SET_TILT_POSITION
         )
-        if self._device_info[DEVICE_MODEL] != LEGACY_DEVICE_MODEL:
+        if self._device_info.model != LEGACY_DEVICE_MODEL:
             self._attr_supported_features |= CoverEntityFeature.STOP_TILT
 
     @property

@@ -14,7 +14,7 @@ import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import mqtt
-from homeassistant.components.mqtt import debug_info
+from homeassistant.components.mqtt import CONFIG_SCHEMA, debug_info
 from homeassistant.components.mqtt.mixins import MQTT_ENTITY_DEVICE_INFO_SCHEMA
 from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.const import (
@@ -1312,6 +1312,20 @@ async def test_publish_error(hass, caplog):
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
+async def test_subscribe_error(
+    hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+):
+    """Test publish error."""
+    await mqtt_mock_entry_no_yaml_config()
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
+    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        # simulate client is not connected error before subscribing
+        mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
+        await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
+        await hass.async_block_till_done()
+
+
 async def test_handle_message_callback(
     hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
 ):
@@ -1373,40 +1387,47 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
     config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    with pytest.raises(AssertionError):
+        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
-        "Invalid config for [light]: [platform] is an invalid option for [light]. "
-        "Check: light->platform. (See ?, line ?)" in caplog.text
+        "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
+        in caplog.text
     )
 
 
-@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LIGHT])
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
     config = {"name": "test"}
-    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
+    with pytest.raises(AssertionError):
+        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
-        "Invalid config for [light]: required key not provided @ data['command_topic']."
+        "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
     )
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
-    config = None
+    config = []
     await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_setup_mqtt_client_protocol(hass):
     """Test MQTT client protocol setup."""
     entry = MockConfigEntry(
         domain=mqtt.DOMAIN,
-        data={mqtt.CONF_BROKER: "test-broker", mqtt.config.CONF_PROTOCOL: "3.1"},
+        data={
+            mqtt.CONF_BROKER: "test-broker",
+            mqtt.config_integration.CONF_PROTOCOL: "3.1",
+        },
     )
     with patch("paho.mqtt.client.Client") as mock_client:
         mock_client.on_connect(return_value=0)
@@ -1417,6 +1438,7 @@ async def test_setup_mqtt_client_protocol(hass):
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_handle_mqtt_timeout_on_callback(hass, caplog):
     """Test publish without receiving an ACK callback."""
     mid = 0
@@ -1757,9 +1779,12 @@ async def test_mqtt_subscribes_topics_on_connect(
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
-    expected = {"topic/test": 0, "home/sensor": 2, "still/pending": 1}
-    calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
-    assert calls == expected
+    assert len(hass.add_job.mock_calls) == 1
+    assert set(hass.add_job.mock_calls[0][1][1]) == {
+        ("home/sensor", 2),
+        ("still/pending", 1),
+        ("topic/test", 0),
+    }
 
 
 async def test_setup_entry_with_config_override(
@@ -2612,3 +2637,10 @@ async def test_one_deprecation_warning_per_platform(
         ):
             count += 1
     assert count == 1
+
+
+async def test_config_schema_validation(hass):
+    """Test invalid platform options in the config schema do not pass the config validation."""
+    config = {"mqtt": {"sensor": [{"some_illegal_topic": "mystate/topic/path"}]}}
+    with pytest.raises(vol.MultipleInvalid):
+        CONFIG_SCHEMA(config)

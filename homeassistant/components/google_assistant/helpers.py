@@ -90,6 +90,7 @@ class AbstractConfig(ABC):
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
+        self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -358,9 +359,6 @@ class AbstractConfig(ABC):
                 pprint.pformat(payload),
             )
 
-        if not self.enabled:
-            return json_response(smart_home.turned_off_response(payload))
-
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
@@ -371,6 +369,11 @@ class AbstractConfig(ABC):
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
+
+        if not self.enabled:
+            return json_response(
+                smart_home.api_disabled_response(payload, agent_user_id)
+            )
 
         result = await smart_home.async_handle_message(
             self.hass,
@@ -541,7 +544,17 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return bool(self.traits())
+        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        result = self.config.is_supported_cache.get(self.entity_id)
+
+        if result is None or result[0] != features:
+            result = self.config.is_supported_cache[self.entity_id] = (
+                features,
+                bool(self.traits()),
+            )
+
+        return result[1]
 
     @callback
     def might_2fa(self) -> bool:

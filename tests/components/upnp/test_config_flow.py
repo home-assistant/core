@@ -14,6 +14,7 @@ from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
+    ST_IGD_V1,
 )
 from homeassistant.core import HomeAssistant
 
@@ -75,12 +76,34 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
             upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: ST_IGD_V1,
                 # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
             },
         ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "incomplete_discovery"
+
+
+@pytest.mark.usefixtures("mock_get_source_ip")
+async def test_flow_ssdp_non_igd_device(hass: HomeAssistant):
+    """Test config flow: incomplete discovery through ssdp."""
+    # Discovered via step ssdp.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn=TEST_USN,
+            ssdp_st=TEST_ST,
+            ssdp_location=TEST_LOCATION,
+            upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
+                ssdp.ATTR_UPNP_UDN: TEST_UDN,
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "non_igd_device"
 
 
 @pytest.mark.usefixtures(
