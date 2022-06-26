@@ -68,7 +68,7 @@ def _update_devices(devices: list[NukiDevice]) -> dict[str, set[str]]:
 
             if device.state not in ERROR_STATES:
                 break
-    
+
     return events
 
 
@@ -107,7 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                events = await hass.async_add_executor_job(_update_devices, locks + openers)
+                events = await hass.async_add_executor_job(
+                    _update_devices, locks + openers
+                )
         except InvalidCredentialsException as err:
             raise UpdateFailed(f"Invalid credentials for Bridge: {err}") from err
         except RequestException as err:
@@ -116,7 +118,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ent_reg = er.async_get(hass)
         for event, device_ids in events.items():
             for device_id in device_ids:
-                entity_id = ent_reg.async_get_entity_id(Platform.LOCK, DOMAIN, device_id) 
+                entity_id = ent_reg.async_get_entity_id(
+                    Platform.LOCK, DOMAIN, device_id
+                )
                 event_data = {
                     "entity_id": entity_id,
                     "type": event,
