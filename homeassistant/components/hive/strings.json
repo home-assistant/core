@@ -13,14 +13,10 @@
       "2fa": {
         "title": "Hive Two-factor Authentication.",
         "description": "Enter your Hive authentication code. \n \n Please enter code 0000 to request another code.",
-        "data": {
-          "2fa": "Two-factor code"
-        }
+        "data": { "2fa": "Two-factor code" }
       },
       "configuration": {
-        "data": {
-          "device_name": "Device Name"
-        },
+        "data": { "device_name": "Device Name" },
         "description": "Enter your Hive configuration ",
         "title": "Hive Configuration."
       },
@@ -51,9 +47,7 @@
       "user": {
         "title": "Options for Hive",
         "description": "Update the scan interval to poll for data more often.",
-        "data": {
-          "scan_interval": "Scan Interval (seconds)"
-        }
+        "data": { "scan_interval": "Scan Interval (seconds)" }
       }
     }
   }
