@@ -51,7 +51,7 @@ jobs:
       test_groups: ${{ steps.info.outputs.test_groups }}
       tests_glob: ${{ steps.info.outputs.tests_glob }}
       tests: ${{ steps.info.outputs.tests }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -160,7 +160,7 @@ jobs:
   # This prevent upcoming jobs to do the same individually
   prepare-base:
     name: Prepare dependencies
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: info
     timeout-minutes: 60
     strategy:
@@ -200,11 +200,6 @@ jobs:
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          # libudev issues, this is a temporary workaround
-          # https://github.com/actions/virtual-environments/issues/5806
-          echo 'APT::Get::Always-Include-Phased-Updates "true";' \
-            | sudo tee -a /etc/apt/apt.conf.d/99-phased-updates
-
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
@@ -244,7 +239,7 @@ jobs:
 
   lint-black:
     name: Check black
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs:
       - info
       - prepare-base
@@ -294,7 +289,7 @@ jobs:
 
   # lint-flake8:
   #   name: Check flake8
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs:
   #     - changes
   #     - prepare-base
@@ -347,7 +342,7 @@ jobs:
 
   # lint-isort:
   #   name: Check isort
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs: prepare-base
   #   steps:
   #     - name: Check out code from GitHub
@@ -387,7 +382,7 @@ jobs:
 
   # lint-other:
   #   name: Check other linters
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs:
   #     - changes
   #     - prepare-base
@@ -508,7 +503,7 @@ jobs:
 
   # hassfest:
   #   name: Check hassfest
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs: prepare-tests
   #   strategy:
   #     matrix:
@@ -536,7 +531,7 @@ jobs:
 
   # gen-requirements-all:
   #   name: Check all requirements
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs: prepare-base
   #   steps:
   #     - name: Check out code from GitHub
@@ -565,7 +560,7 @@ jobs:
 
   # prepare-tests:
   #   name: Prepare tests for Python ${{ matrix.python-version }}
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   timeout-minutes: 60
   #   strategy:
   #     matrix:
@@ -632,7 +627,7 @@ jobs:
 
   # pylint:
   #   name: Check pylint
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   timeout-minutes: 20
   #   needs:
   #     - changes
@@ -675,7 +670,7 @@ jobs:
 
   # mypy:
   #   name: Check mypy
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs:
   #     - changes
   #     - prepare-tests
@@ -716,7 +711,7 @@ jobs:
   #         mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   # pip-check:
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   if: needs.changes.outputs.requirements == 'true' || github.event.inputs.full == 'true'
   #   needs:
   #     - changes
@@ -748,7 +743,7 @@ jobs:
   #         ./script/pip_check $PIP_CACHE
 
   pytest:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
@@ -854,7 +849,7 @@ jobs:
 
   # coverage:
   #   name: Upload test coverage to Codecov
-  #   runs-on: ubuntu-22.04
+  #   runs-on: ubuntu-20.04
   #   needs:
   #     - changes
   #     - pytest
