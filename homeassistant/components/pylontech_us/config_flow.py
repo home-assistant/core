@@ -54,6 +54,7 @@ class PylontechHub:
             raise CannotConnect("Connection Error, check Port and Baudrate")
 
         if stack.battcount != self._config["battery_count"]:
+            self._config["battery_count"] = stack.battcount
             raise CannotConnect(
                 "Wrong battery count will result in slow update please count again."
             )
@@ -103,15 +104,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                pass
+                return self.async_create_entry(
+                    title="Pylontech " + user_input["port"], data=user_input
+                )
 
         return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA)
-
-        # return self.async_create_entry(title=info["title"], data=user_input)
-
-        # return self.async_show_form(
-        #     step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-        # )
 
 
 class CannotConnect(HomeAssistantError):

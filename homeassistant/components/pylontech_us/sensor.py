@@ -48,6 +48,7 @@ PYLONTECH_STACK_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class="Capacity",
         native_unit_of_measurement="Ah",
+        entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
     ),
@@ -57,6 +58,7 @@ PYLONTECH_STACK_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class="Capacity",
         native_unit_of_measurement="Ah",
+        entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
     ),
@@ -66,6 +68,7 @@ PYLONTECH_STACK_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
     ),
@@ -75,7 +78,7 @@ PYLONTECH_STACK_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
     ),
@@ -85,7 +88,7 @@ PYLONTECH_STACK_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
     ),
@@ -95,7 +98,7 @@ PYLONTECH_STACK_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=POWER_KILO_WATT,
-        entity_registry_enabled_default=False,
+        entity_registry_enabled_default=True,
         icon="mdi:battery"
         # value_fn=_get_instant_power,
     ),
@@ -181,7 +184,7 @@ class PylontechStackSensor(CoordinatorEntity, SensorEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Return if the entity should be enabled when first added to the entity registry."""
-        # return self._enabled_default
+        return True
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
