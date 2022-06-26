@@ -31,7 +31,7 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import (
     DEGREE,
-    LENGTH_KILOMETERS,
+    LENGTH_METERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_HPA,
