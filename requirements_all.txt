@@ -2465,7 +2465,7 @@ xknx==0.21.3
 # homeassistant.components.startca
 # homeassistant.components.ted5000
 # homeassistant.components.zestimate
-xmltodict==0.12.0
+xmltodict==0.13.0
 
 # homeassistant.components.xs1
 xs1-api-client==3.0.0
