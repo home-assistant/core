@@ -346,7 +346,7 @@ async def test_custom_speed_unit(
         {ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_KILOMETERS_PER_HOUR},
     )
 
-    await asyncio.sleep(2)
+    await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
