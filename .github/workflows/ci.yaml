@@ -207,6 +207,7 @@ jobs:
           sudo apt-get -y install \
             libudev1=249.11-0ubuntu3.3 \
             libudev-dev=249.11-0ubuntu3.3 \
+            udev=249.11-0ubuntu3.3 \
             bluez \
             ffmpeg \
             libavcodec-dev \
