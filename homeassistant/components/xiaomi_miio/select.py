@@ -69,7 +69,7 @@ class AttributeEnumMapping(NamedTuple):
     """Class to mapping Attribute to Enum Class."""
 
     attr_name: str
-    options: type
+    enum_class: type
 
 
 MODEL_TO_ATTR_MAP: dict[str, list] = {
@@ -199,7 +199,7 @@ async def async_setup_entry(
                         f"{description.key}_{unique_id}",
                         coordinator,
                         description,
-                        attribute.options,
+                        attribute.enum_class,
                     )
                 )
 
