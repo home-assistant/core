@@ -50,7 +50,6 @@ from .device import XiaomiCoordinatedMiioEntity
 
 ATTR_DISPLAY_ORIENTATION = "display_orientation"
 ATTR_LED_BRIGHTNESS = "led_brightness"
-ATTR_LED_BRIGHTNESS_HUMIDIFIER_MIOT = "led_brightness_miot"
 ATTR_PTC_LEVEL = "ptc_level"
 
 
@@ -84,9 +83,7 @@ MODEL_TO_ATTR_MAP: dict[str, list] = {
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
     ],
     MODEL_AIRHUMIDIFIER_CA4: [
-        AttributeEnumMapping(
-            ATTR_LED_BRIGHTNESS_HUMIDIFIER_MIOT, AirhumidifierMiotLedBrightness
-        )
+        AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierMiotLedBrightness)
     ],
     MODEL_AIRHUMIDIFIER_CB1: [
         AttributeEnumMapping(ATTR_LED_BRIGHTNESS, AirhumidifierLedBrightness)
@@ -122,7 +119,11 @@ SELECTOR_TYPES = (
         key=ATTR_DISPLAY_ORIENTATION,
         attr_name=ATTR_DISPLAY_ORIENTATION,
         name="Display Orientation",
-        options_map={"Forward": "forward", "Left": "left", "Right": "right"},
+        options_map={
+            "Portrait": "Forward",
+            "LandscapeLeft": "Left",
+            "LandscapeRight": "Right",
+        },
         set_method="set_display_orientation",
         set_method_error_message="Setting the display orientation failed.",
         icon="mdi:tablet",
@@ -134,19 +135,6 @@ SELECTOR_TYPES = (
         key=ATTR_LED_BRIGHTNESS,
         attr_name=ATTR_LED_BRIGHTNESS,
         name="Led Brightness",
-        options_map={"Bright": 0, "Dim": 1, "Off": 2},
-        set_method="set_led_brightness",
-        set_method_error_message="Setting the led brightness failed.",
-        icon="mdi:brightness-6",
-        device_class="xiaomi_miio__led_brightness",
-        options=("bright", "dim", "off"),
-        entity_category=EntityCategory.CONFIG,
-    ),
-    XiaomiMiioSelectDescription(
-        key=ATTR_LED_BRIGHTNESS_HUMIDIFIER_MIOT,
-        attr_name=ATTR_LED_BRIGHTNESS,
-        name="Led Brightness",
-        options_map={"Bright": 2, "Dim": 1, "Off": 0},
         set_method="set_led_brightness",
         set_method_error_message="Setting the led brightness failed.",
         icon="mdi:brightness-6",
@@ -158,7 +146,6 @@ SELECTOR_TYPES = (
         key=ATTR_PTC_LEVEL,
         attr_name=ATTR_PTC_LEVEL,
         name="Auxiliary Heat Level",
-        options_map={"Low": "low", "Medium": "medium", "High": "high"},
         set_method="set_ptc_level",
         set_method_error_message="Setting the ptc level failed.",
         icon="mdi:fire-circle",
@@ -226,18 +213,28 @@ class XiaomiGenericSelector(XiaomiSelector):
     ):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator, description)
-        self._current_attr = self._extract_value_from_attribute(
-            self.coordinator.data, self.entity_description.attr_name
+        self._current_attr = enum_class(
+            self._extract_value_from_attribute(
+                self.coordinator.data, self.entity_description.attr_name
+            )
         )
-        self._options_map = description.options_map
+
+        if description.options_map:
+            self._options_map = {}
+            for key, val in enum_class._member_map_.items():
+                self._options_map[description.options_map[key]] = val
+        else:
+            self._options_map = enum_class._member_map_
         self._reverse_map = {val: key for key, val in self._options_map.items()}
         self._enum_class = enum_class
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
-        attr = self._extract_value_from_attribute(
-            self.coordinator.data, self.entity_description.attr_name
+        attr = self._enum_class(
+            self._extract_value_from_attribute(
+                self.coordinator.data, self.entity_description.attr_name
+            )
         )
         if attr is not None:
             self._current_attr = attr
