@@ -200,8 +200,8 @@ jobs:
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          apt-get update
-          apt-get -y install \
+          sudo apt-get update
+          sudo apt-get -y install \
             bluez \
             ffmpeg \
             libavcodec-dev \
