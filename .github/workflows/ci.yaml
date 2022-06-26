@@ -224,6 +224,7 @@ jobs:
           pip install -e .
 
       - name: Restore pre-commit environment from cache
+        if: matrix.python-version == env.DEFAULT_PYTHON
         id: cache-precommit
         uses: actions/cache@v3.0.4
         with:
@@ -232,7 +233,7 @@ jobs:
             ${{ runner.os }}-${{ needs.info.outputs.pre-commit_cache_key }}
 
       - name: Install pre-commit dependencies
-        if: steps.cache-precommit.outputs.cache-hit != 'true'
+        if: matrix.python-version == env.DEFAULT_PYTHON && steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
           . venv/bin/activate
           pre-commit install-hooks
