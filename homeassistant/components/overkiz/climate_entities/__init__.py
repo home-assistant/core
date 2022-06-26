@@ -11,5 +11,4 @@ WIDGET_TO_CLIMATE_ENTITY = {
     UIWidget.ATLANTIC_HEAT_RECOVERY_VENTILATION: AtlanticHeatRecoveryVentilation,
     UIWidget.ATLANTIC_PASS_APC_ZONE_CONTROL: AtlanticPassAPCZoneControl,
     UIWidget.SOMFY_THERMOSTAT: SomfyThermostat,
-    UIWidget.ATLANTIC_ELECTRICAL_HEATER: AtlanticElectricalHeater,
 }
