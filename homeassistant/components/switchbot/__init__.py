@@ -6,7 +6,6 @@ import switchbot  # pylint: disable=import-error
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SENSOR_TYPE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import (
     ATTR_BOT,
@@ -81,9 +80,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = hass.data[DOMAIN][DATA_COORDINATOR]
 
     await coordinator.async_config_entry_first_refresh()
-
-    if not coordinator.last_update_success:
-        raise ConfigEntryNotReady
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
