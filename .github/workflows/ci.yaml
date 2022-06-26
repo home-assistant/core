@@ -735,13 +735,14 @@ jobs:
       && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
     needs:
       - info
-      - gen-requirements-all
-      - hassfest
-      - lint-black
-      - lint-other
-      - lint-isort
-      - mypy
-      - prepare-tests
+      - prepare-base
+      # - gen-requirements-all
+      # - hassfest
+      # - lint-black
+      # - lint-other
+      # - lint-isort
+      # - mypy
+      # - prepare-tests
     strategy:
       fail-fast: false
       matrix:
