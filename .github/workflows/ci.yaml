@@ -200,14 +200,13 @@ jobs:
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get update
-
-          # libudev pins is a temporary workaround
+          # libudev issues, this is a temporary workaround
           # https://github.com/actions/virtual-environments/issues/5806
+          echo 'APT::Get::Always-Include-Phased-Updates "true";' \
+            | sudo tee -a /etc/apt/apt.conf.d/99-phased-updates
+
+          sudo apt-get update
           sudo apt-get -y install \
-            libudev1=249.11-0ubuntu3.3 \
-            libudev-dev=249.11-0ubuntu3.3 \
-            udev=249.11-0ubuntu3.3 \
             bluez \
             ffmpeg \
             libavcodec-dev \
