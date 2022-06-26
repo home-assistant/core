@@ -41,18 +41,13 @@ class SwitchbotDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.api_lock = api_lock
 
-    def _update_data(self) -> dict | None:
-        """Fetch device states from switchbot api."""
-
-        return self.switchbot_data.discover(
-            retry=self.retry_count, scan_timeout=self.scan_timeout
-        )
-
     async def _async_update_data(self) -> dict | None:
         """Fetch data from switchbot."""
 
         async with self.api_lock:
-            switchbot_data = await self.hass.async_add_executor_job(self._update_data)
+            switchbot_data = await self.switchbot_data.discover(
+                retry=self.retry_count, scan_timeout=self.scan_timeout
+            )
 
         if not switchbot_data:
             raise UpdateFailed("Unable to fetch switchbot services data")

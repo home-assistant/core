@@ -30,10 +30,10 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def _btle_connect() -> dict:
+async def _btle_connect() -> dict:
     """Scan for BTLE advertisement data."""
 
-    switchbot_devices = GetSwitchbotDevices().discover()
+    switchbot_devices = await GetSwitchbotDevices().discover()
 
     if not switchbot_devices:
         raise NotConnectedError("Failed to discover switchbot")
@@ -59,7 +59,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Discover switchbots nearby.
         async with connect_lock:
-            _btle_adv_data = await self.hass.async_add_executor_job(_btle_connect)
+            _btle_adv_data = await _btle_connect()
 
         return _btle_adv_data
 
