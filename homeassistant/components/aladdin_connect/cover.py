@@ -22,7 +22,7 @@ from homeassistant.const import (
     STATE_CLOSING,
     STATE_OPENING,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -94,14 +94,12 @@ class AladdinDevice(CoverEntity):
     async def async_added_to_hass(self) -> None:
         """Connect Aladdin Connect to the cloud."""
 
-        @callback
         async def update_callback() -> None:
             """Schedule a state update."""
             self.async_write_ha_state()
 
         self._acc.register_callback(update_callback, self._number)
         await self._acc.get_doors(self._number)
-        self.async_write_ha_state()
 
     async def async_will_remove_from_hass(self) -> None:
         """Close Aladdin Connect before removing."""

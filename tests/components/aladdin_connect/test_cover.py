@@ -1,7 +1,6 @@
 """Test the Aladdin Connect Cover."""
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientConnectionError
 import pytest
 
 from homeassistant.components.aladdin_connect.const import DOMAIN
@@ -81,84 +80,6 @@ DEVICE_CONFIG_BAD_NO_DOOR = {
     "status": "open",
     "link_status": "Disconnected",
 }
-
-
-async def test_setup_get_doors_errors(hass: HomeAssistant) -> None:
-    """Test component setup Get Doors Errors."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ), patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.get_doors",
-        return_value=None,
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
-        await hass.async_block_till_done()
-        assert len(hass.states.async_all()) == 0
-
-
-async def test_setup_login_error(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-) -> None:
-    """Test component setup Login Errors."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    mock_aladdinconnect_api.login.return_value = False
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-
-
-async def test_setup_connection_error(
-    hass: HomeAssistant, mock_aladdinconnect_api: MagicMock
-) -> None:
-    """Test component setup Login Errors."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    mock_aladdinconnect_api.login.side_effect = ClientConnectionError
-    with patch(
-        "homeassistant.components.aladdin_connect.AladdinConnectClient",
-        return_value=mock_aladdinconnect_api,
-    ):
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is False
-
-
-async def test_setup_component_noerror(hass: HomeAssistant) -> None:
-    """Test component setup No Error."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=YAML_CONFIG,
-        unique_id="test-id",
-    )
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.aladdin_connect.cover.AladdinConnectClient.login",
-        return_value=True,
-    ):
-
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state == ConfigEntryState.LOADED
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
 async def test_cover_operation(
@@ -318,8 +239,6 @@ async def test_callback(
         unique_id="test-id",
     )
     config_entry.add_to_hass(hass)
-
-    assert await async_setup_component(hass, "homeassistant", {})
     await hass.async_block_till_done()
 
     with patch(
