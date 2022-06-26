@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbot import Switchbot  # pylint: disable=import-error
+from switchbot import Switchbot
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
@@ -84,21 +84,19 @@ class SwitchBotBotEntity(SwitchbotEntity, SwitchEntity, RestoreEntity):
         """Turn device on."""
         _LOGGER.info("Turn Switchbot bot on %s", self._mac)
 
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self._device.turn_on())
-            if self._last_run_success:
-                self._attr_is_on = True
-            self.async_write_ha_state()
+        self._last_run_success = bool(await self._device.turn_on())
+        if self._last_run_success:
+            self._attr_is_on = True
+        self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn device off."""
         _LOGGER.info("Turn Switchbot bot off %s", self._mac)
 
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self._device.turn_off())
-            if self._last_run_success:
-                self._attr_is_on = False
-            self.async_write_ha_state()
+        self._last_run_success = bool(await self._device.turn_off())
+        if self._last_run_success:
+            self._attr_is_on = False
+        self.async_write_ha_state()
 
     @property
     def assumed_state(self) -> bool:

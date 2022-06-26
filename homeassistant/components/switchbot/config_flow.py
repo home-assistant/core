@@ -1,11 +1,10 @@
 """Config flow for Switchbot."""
 from __future__ import annotations
 
-from asyncio import Lock
 import logging
 from typing import Any
 
-from switchbot import GetSwitchbotDevices  # pylint: disable=import-error
+from switchbot import GetSwitchbotDevices
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
@@ -14,7 +13,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
-    BTLE_LOCK,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
     CONF_SCAN_TIMEOUT,
@@ -52,14 +50,9 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         # store asyncio.lock in hass data if not present.
         if DOMAIN not in self.hass.data:
             self.hass.data.setdefault(DOMAIN, {})
-        if BTLE_LOCK not in self.hass.data[DOMAIN]:
-            self.hass.data[DOMAIN][BTLE_LOCK] = Lock()
-
-        connect_lock = self.hass.data[DOMAIN][BTLE_LOCK]
 
         # Discover switchbots nearby.
-        async with connect_lock:
-            _btle_adv_data = await _btle_connect()
+        _btle_adv_data = await _btle_connect()
 
         return _btle_adv_data
 

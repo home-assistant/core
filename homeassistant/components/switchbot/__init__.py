@@ -1,7 +1,6 @@
 """Support for Switchbot devices."""
-from asyncio import Lock
 
-import switchbot  # pylint: disable=import-error
+import switchbot
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SENSOR_TYPE, Platform
@@ -10,7 +9,6 @@ from homeassistant.core import HomeAssistant
 from .const import (
     ATTR_BOT,
     ATTR_CURTAIN,
-    BTLE_LOCK,
     COMMON_OPTIONS,
     CONF_RETRY_COUNT,
     CONF_RETRY_TIMEOUT,
@@ -49,12 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Uses BTLE advertisement data, all Switchbot devices in range is stored here.
     if DATA_COORDINATOR not in hass.data[DOMAIN]:
 
-        # Check if asyncio.lock is stored in hass data.
-        # BTLE has issues with multiple connections,
-        # so we use a lock to ensure that only one API request is reaching it at a time:
-        if BTLE_LOCK not in hass.data[DOMAIN]:
-            hass.data[DOMAIN][BTLE_LOCK] = Lock()
-
         if COMMON_OPTIONS not in hass.data[DOMAIN]:
             hass.data[DOMAIN][COMMON_OPTIONS] = {**entry.options}
 
@@ -71,7 +63,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             api=switchbot,
             retry_count=hass.data[DOMAIN][COMMON_OPTIONS][CONF_RETRY_COUNT],
             scan_timeout=hass.data[DOMAIN][COMMON_OPTIONS][CONF_SCAN_TIMEOUT],
-            api_lock=hass.data[DOMAIN][BTLE_LOCK],
         )
 
         hass.data[DOMAIN][DATA_COORDINATOR] = coordinator

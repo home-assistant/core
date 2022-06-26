@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from switchbot import SwitchbotCurtain  # pylint: disable=import-error
+from switchbot import SwitchbotCurtain
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -98,30 +98,21 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         """Open the curtain."""
 
         _LOGGER.debug("Switchbot to open curtain %s", self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self._device.open())
-
+        self._last_run_success = bool(await self._device.open())
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the curtain."""
 
         _LOGGER.debug("Switchbot to close the curtain %s", self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self._device.close())
-
+        self._last_run_success = bool(await self._device.close())
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the moving of this device."""
 
         _LOGGER.debug("Switchbot to stop %s", self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self._device.stop())
-
+        self._last_run_success = bool(await self._device.stop())
         self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
@@ -129,10 +120,7 @@ class SwitchBotCurtainEntity(SwitchbotEntity, CoverEntity, RestoreEntity):
         position = kwargs.get(ATTR_POSITION)
 
         _LOGGER.debug("Switchbot to move at %d %s", position, self._mac)
-
-        async with self.coordinator.api_lock:
-            self._last_run_success = bool(await self._device.set_position(position))
-
+        self._last_run_success = bool(await self._device.set_position(position))
         self.async_write_ha_state()
 
     @callback
