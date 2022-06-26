@@ -63,14 +63,8 @@ from .const import (
     CONF_CLOSE_COMM_ON_ERROR,
     CONF_DATA_TYPE,
     CONF_FANS,
-    CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_LAZY_ERROR,
@@ -118,6 +112,15 @@ from .validators import (
     number_validator,
     scan_interval_validator,
     struct_validator,
+)
+from homeassistant.components.climate.const import (
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -225,15 +228,20 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): cv.positive_int,
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_HVAC_MODE_REGISTER): cv.positive_int,
             vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_OFF): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_HEAT): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_COOL): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_HEAT_COOL): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_DRY): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_FAN_ONLY): cv.positive_int,
-            vol.Optional(CONF_HVAC_MODE_AUTO): cv.positive_int,
+            vol.Optional(CONF_HVAC_MODE_REGISTER): vol.Maybe({
+                CONF_ADDRESS: cv.positive_int,
+                CONF_HVAC_MODE_VALUES: {
+                    vol.Optional(HVAC_MODE_OFF): cv.positive_int,
+                    vol.Optional(HVAC_MODE_HEAT): cv.positive_int,
+                    vol.Optional(HVAC_MODE_COOL): cv.positive_int,
+                    vol.Optional(HVAC_MODE_HEAT_COOL): cv.positive_int,
+                    vol.Optional(HVAC_MODE_AUTO): cv.positive_int,
+                    vol.Optional(HVAC_MODE_DRY): cv.positive_int,
+                    vol.Optional(HVAC_MODE_FAN_ONLY): cv.positive_int
+                }              
+            }
+            ),
         }
     ),
 )

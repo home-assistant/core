@@ -9,6 +9,7 @@ from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_ADDRESS,
     CONF_NAME,
     CONF_TEMPERATURE_UNIT,
     PRECISION_TENTHS,
@@ -28,14 +29,8 @@ from .const import (
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
-    CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -44,6 +39,16 @@ from .const import (
     DataType,
 )
 from .modbus import ModbusHub
+from homeassistant.components.climate.const import (
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY
+)
+
 
 PARALLEL_UPDATES = 1
 
@@ -95,22 +100,24 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self._attr_target_temperature_step = config[CONF_STEP]
 
         if CONF_HVAC_MODE_REGISTER in config:
-            self._hvac_mode_register = config[CONF_HVAC_MODE_REGISTER]
+            mode_config = config[CONF_HVAC_MODE_REGISTER]
+            self._hvac_mode_register = mode_config[CONF_ADDRESS]
             self._attr_hvac_modes = cast(list[HVACMode], [])
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
+            mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
             for (conf_value, hvac_mode) in (
-                (CONF_HVAC_MODE_OFF, HVACMode.OFF),
-                (CONF_HVAC_MODE_HEAT, HVACMode.HEAT),
-                (CONF_HVAC_MODE_COOL, HVACMode.COOL),
-                (CONF_HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
-                (CONF_HVAC_MODE_DRY, HVACMode.DRY),
-                (CONF_HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
-                (CONF_HVAC_MODE_AUTO, HVACMode.AUTO),
+                (HVAC_MODE_OFF, HVACMode.OFF),
+                (HVAC_MODE_HEAT, HVACMode.HEAT),
+                (HVAC_MODE_COOL, HVACMode.COOL),
+                (HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
+                (HVAC_MODE_DRY, HVACMode.DRY),
+                (HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
+                (HVAC_MODE_AUTO, HVACMode.AUTO),
             ):
 
-                if conf_value in config:
-                    self._hvac_mode_mapping.append((config[conf_value], hvac_mode))
+                if conf_value in mode_value_config:
+                    self._hvac_mode_mapping.append((mode_value_config[conf_value], hvac_mode))
                     self._attr_hvac_modes.append(hvac_mode)
 
         else:

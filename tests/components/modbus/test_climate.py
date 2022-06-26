@@ -10,14 +10,8 @@ from homeassistant.components.climate.const import (
 from homeassistant.components.modbus.const import (
     CONF_CLIMATES,
     CONF_DATA_TYPE,
-    CONF_HVAC_MODE_AUTO,
-    CONF_HVAC_MODE_COOL,
-    CONF_HVAC_MODE_DRY,
-    CONF_HVAC_MODE_FAN_ONLY,
-    CONF_HVAC_MODE_HEAT,
-    CONF_HVAC_MODE_HEAT_COOL,
-    CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
+    CONF_HVAC_MODE_VALUES,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_LAZY_ERROR,
     CONF_TARGET_TEMP,
@@ -34,6 +28,16 @@ from homeassistant.const import (
 )
 from homeassistant.core import State
 from homeassistant.setup import async_setup_component
+from homeassistant.components.climate.const import (
+    HVAC_MODE_OFF,
+    HVAC_MODE_HEAT,
+    HVAC_MODE_COOL,
+    HVAC_MODE_HEAT_COOL,
+    HVAC_MODE_AUTO,
+    HVAC_MODE_DRY,
+    HVAC_MODE_FAN_ONLY
+)
+
 
 from .conftest import TEST_ENTITY_NAME, ReadResult, do_next_cycle
 
@@ -86,14 +90,20 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_SLAVE: 10,
                     CONF_HVAC_MODE_REGISTER: 11,
                     CONF_HVAC_ONOFF_REGISTER: 12,
-                    CONF_HVAC_MODE_OFF: 0,
-                    CONF_HVAC_MODE_HEAT: 1,
-                    CONF_HVAC_MODE_COOL: 2,
-                    CONF_HVAC_MODE_HEAT_COOL: 3,
-                    CONF_HVAC_MODE_DRY: 4,
-                    CONF_HVAC_MODE_FAN_ONLY: 5,
-                    CONF_HVAC_MODE_AUTO: 6,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_HVAC_MODE_VALUES: {
+                            HVAC_MODE_OFF: 0,
+                            HVAC_MODE_HEAT: 1,
+                            HVAC_MODE_COOL: 2,
+                            HVAC_MODE_HEAT_COOL: 3,
+                            HVAC_MODE_DRY: 4,
+                            HVAC_MODE_FAN_ONLY: 5,
+                            HVAC_MODE_AUTO: 6,
                 }
+
+                        }
+                    }
             ],
         },
     ],
@@ -113,11 +123,15 @@ async def test_config_climate(hass, mock_modbus):
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
-                    CONF_HVAC_MODE_REGISTER: 11,
-                    CONF_HVAC_MODE_OFF: 0,
-                    CONF_HVAC_MODE_HEAT: 1,
-                    CONF_HVAC_MODE_COOL: 2,
-                    CONF_HVAC_MODE_HEAT_COOL: 3,
+                    CONF_HVAC_MODE_REGISTER: {
+                        CONF_ADDRESS: 11,
+                        CONF_HVAC_MODE_VALUES: {
+                            HVAC_MODE_OFF: 0,
+                            HVAC_MODE_HEAT: 1,
+                            HVAC_MODE_COOL: 2,
+                            HVAC_MODE_HEAT_COOL: 3,
+                        }
+                    },
                 }
             ],
         },
@@ -198,10 +212,14 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
-                        CONF_HVAC_MODE_REGISTER: 118,
-                        CONF_HVAC_MODE_COOL: 0,
-                        CONF_HVAC_MODE_HEAT: 1,
-                        CONF_HVAC_MODE_DRY: 2,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVAC_MODE_COOL: 0,
+                                HVAC_MODE_HEAT: 1,
+                                HVAC_MODE_DRY: 2,
+                            }
+                        }
                     },
                 ]
             },
@@ -218,10 +236,14 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
-                        CONF_HVAC_MODE_REGISTER: 118,
-                        CONF_HVAC_MODE_COOL: 0,
-                        CONF_HVAC_MODE_HEAT: 1,
-                        CONF_HVAC_MODE_DRY: 2,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVAC_MODE_COOL: 0,
+                                HVAC_MODE_HEAT: 1,
+                                HVAC_MODE_DRY: 2,
+                            }
+                        }
                     },
                 ]
             },
@@ -238,10 +260,14 @@ async def test_temperature_climate(hass, expected, mock_do_cycle):
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
                         CONF_DATA_TYPE: DataType.INT32,
-                        CONF_HVAC_MODE_REGISTER: 118,
-                        CONF_HVAC_MODE_COOL: 0,
-                        CONF_HVAC_MODE_HEAT: 2,
-                        CONF_HVAC_MODE_DRY: 3,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVAC_MODE_COOL: 0,
+                                HVAC_MODE_HEAT: 2,
+                                HVAC_MODE_DRY: 3,
+                            }
+                        },
                         CONF_HVAC_ONOFF_REGISTER: 119,
                     },
                 ]
@@ -357,9 +383,13 @@ async def test_service_climate_set_temperature(
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_HVAC_MODE_REGISTER: 118,
-                        CONF_HVAC_MODE_COOL: 1,
-                        CONF_HVAC_MODE_HEAT: 2,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVAC_MODE_COOL: 1,
+                                HVAC_MODE_HEAT: 2,
+                            }
+                        }
                     }
                 ]
             },
@@ -374,9 +404,13 @@ async def test_service_climate_set_temperature(
                         CONF_TARGET_TEMP: 117,
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
-                        CONF_HVAC_MODE_REGISTER: 118,
-                        CONF_HVAC_MODE_COOL: 1,
-                        CONF_HVAC_MODE_HEAT: 2,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                HVAC_MODE_COOL: 1,
+                                HVAC_MODE_HEAT: 2,
+                            }
+                        }
                     }
                 ]
             },
