@@ -123,7 +123,9 @@ async def test_reauth(hass: HomeAssistant) -> None:
 
 async def test_reauth_error(hass: HomeAssistant) -> None:
     """Test reauth flow."""
-    mock_config = MockConfigEntry(domain=DOMAIN, unique_id=UNIQUE_ID, data=CONFIG)
+    mock_config = MockConfigEntry(
+        domain=DOMAIN, unique_id=UNIQUE_ID, data={**CONFIG, CONF_ACCESS_TOKEN: "blah"}
+    )
     mock_config.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config, data={**CONFIG, CONF_ACCESS_TOKEN: "blah"}
