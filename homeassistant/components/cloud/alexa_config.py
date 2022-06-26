@@ -193,7 +193,7 @@ class CloudAlexaConfig(alexa_config.AbstractConfig):
         self._token_valid = utcnow() + timedelta(seconds=body["expires_in"])
         return self._token
 
-    async def _async_prefs_updated(self, prefs: CloudPreferences):
+    async def _async_prefs_updated(self, prefs: CloudPreferences) -> None:
         """Handle updated preferences."""
         if not self._cloud.is_logged_in:
             if self.is_reporting_states:
