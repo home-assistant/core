@@ -162,7 +162,7 @@ jobs:
     name: Prepare dependencies
     runs-on: ubuntu-22.04
     needs: info
-    timeout-minutes: 20
+    timeout-minutes: 60
     strategy:
       matrix:
         python-version: ["3.9", "3.10"]
@@ -197,6 +197,21 @@ jobs:
             needs.info.outputs.python_cache_key }}
           restore-keys: |
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+      - name: Install additional OS dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          apt-get update
+          apt-get -y install \
+            bluez \
+            ffmpeg \
+            libavcodec-dev \
+            libavdevice-dev \
+            libavfilter-dev \
+            libavformat-dev \
+            libavutil-dev \
+            libswresample-dev \
+            libswscale-dev \
+            libudev-dev
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
