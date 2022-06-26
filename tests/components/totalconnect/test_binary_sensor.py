@@ -29,21 +29,21 @@ async def test_entity_registry(hass: HomeAssistant) -> None:
     entry_low_battery = entity_registry.async_get(ZONE_LOW_BATTERY_ID)
     entry_tamper = entity_registry.async_get(ZONE_TAMPER_ID)
 
-    assert entry.unique_id == f"{LOCATION_ID} {ZONE_NORMAL['ZoneID']} zone"
+    assert entry.unique_id == f"{LOCATION_ID}_{ZONE_NORMAL['ZoneID']}_zone"
     assert (
         entry_low_battery.unique_id
-        == f"{LOCATION_ID} {ZONE_NORMAL['ZoneID']} low battery"
+        == f"{LOCATION_ID}_{ZONE_NORMAL['ZoneID']}_low_battery"
     )
-    assert entry_tamper.unique_id == f"{LOCATION_ID} {ZONE_NORMAL['ZoneID']} tamper"
+    assert entry_tamper.unique_id == f"{LOCATION_ID}_{ZONE_NORMAL['ZoneID']}_tamper"
 
     # ensure panel diagnostic zones are created
     panel_battery = entity_registry.async_get(PANEL_BATTERY_ID)
     panel_tamper = entity_registry.async_get(PANEL_TAMPER_ID)
     panel_power = entity_registry.async_get(PANEL_POWER_ID)
 
-    assert panel_battery.unique_id == f"{LOCATION_ID} low battery"
-    assert panel_tamper.unique_id == f"{LOCATION_ID} tamper"
-    assert panel_power.unique_id == f"{LOCATION_ID} power"
+    assert panel_battery.unique_id == f"{LOCATION_ID}_low_battery"
+    assert panel_tamper.unique_id == f"{LOCATION_ID}_tamper"
+    assert panel_power.unique_id == f"{LOCATION_ID}_power"
 
 
 async def test_attributes(hass: HomeAssistant) -> None:
