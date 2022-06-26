@@ -8,8 +8,8 @@ from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     FAN_AUTO,
-    HVAC_MODE_FAN_ONLY,
     ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import TEMP_CELSIUS
 
@@ -35,12 +35,14 @@ OVERKIZ_TO_FAN_MODES: dict[str, str] = {
 
 FAN_MODES_TO_OVERKIZ = {v: k for k, v in OVERKIZ_TO_FAN_MODES.items()}
 
+TEMPERATURE_SENSOR_DEVICE_INDEX = 4
+
 
 class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     """Representation of a AtlanticHeatRecoveryVentilation device."""
 
     _attr_fan_modes = [*FAN_MODES_TO_OVERKIZ]
-    _attr_hvac_modes = [HVAC_MODE_FAN_ONLY]
+    _attr_hvac_modes = [HVACMode.FAN_ONLY]
     _attr_preset_modes = [PRESET_AUTO, PRESET_PROG, PRESET_MANUAL]
     _attr_temperature_unit = TEMP_CELSIUS
     _attr_supported_features = (
@@ -52,7 +54,9 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self.temperature_device = self.executor.linked_device(4)
+        self.temperature_device = self.executor.linked_device(
+            TEMPERATURE_SENSOR_DEVICE_INDEX
+        )
 
     @property
     def current_temperature(self) -> float | None:
@@ -65,7 +69,7 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
-        return HVAC_MODE_FAN_ONLY
+        return HVACMode.FAN_ONLY
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Not implemented since there is only one hvac_mode."""
@@ -76,6 +80,13 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
         ventilation_configuration = self.executor.select_state(
             OverkizState.IO_VENTILATION_CONFIGURATION_MODE
         )
+
+        if ventilation_configuration == OverkizCommandParam.COMFORT:
+            return PRESET_AUTO
+
+        if ventilation_configuration == OverkizCommandParam.STANDARD:
+            return PRESET_MANUAL
+
         ventilation_mode = cast(
             dict, self.executor.select_state(OverkizState.IO_VENTILATION_MODE)
         )
@@ -83,12 +94,6 @@ class AtlanticHeatRecoveryVentilation(OverkizEntity, ClimateEntity):
 
         if prog == OverkizCommandParam.ON:
             return PRESET_PROG
-
-        if ventilation_configuration == OverkizCommandParam.COMFORT:
-            return PRESET_AUTO
-
-        if ventilation_configuration == OverkizCommandParam.STANDARD:
-            return PRESET_MANUAL
 
         return None
 
