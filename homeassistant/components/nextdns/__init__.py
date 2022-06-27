@@ -39,69 +39,6 @@ from .const import (
     UPDATE_INTERVAL_ANALYTICS,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
-PLATFORMS = ["sensor"]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up NextDNS as config entry."""
-    api_key = entry.data[CONF_API_KEY]
-    profile_id = entry.data[CONF_PROFILE_ID]
-
-    websession = async_get_clientsession(hass)
-    try:
-        with async_timeout.timeout(10):
-            nextdns = await NextDns.create(websession, api_key)
-    except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
-        raise ConfigEntryNotReady from err
-
-    dnssec_coordinator = NextDnsDnssecUpdateCoordinator(
-        hass, nextdns, profile_id, UPDATE_INTERVAL_ANALYTICS
-    )
-    encryption_coordinator = NextDnsEncryptionUpdateCoordinator(
-        hass, nextdns, profile_id, UPDATE_INTERVAL_ANALYTICS
-    )
-    ip_versions_coordinator = NextDnsIpVersionsUpdateCoordinator(
-        hass, nextdns, profile_id, UPDATE_INTERVAL_ANALYTICS
-    )
-    protocols_coordinator = NextDnsProtocolsUpdateCoordinator(
-        hass, nextdns, profile_id, UPDATE_INTERVAL_ANALYTICS
-    )
-    status_coordinator = NextDnsStatusUpdateCoordinator(
-        hass, nextdns, profile_id, UPDATE_INTERVAL_ANALYTICS
-    )
-
-    await asyncio.gather(
-        dnssec_coordinator.async_config_entry_first_refresh(),
-        encryption_coordinator.async_config_entry_first_refresh(),
-        ip_versions_coordinator.async_config_entry_first_refresh(),
-        protocols_coordinator.async_config_entry_first_refresh(),
-        status_coordinator.async_config_entry_first_refresh(),
-    )
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
-    hass.data[DOMAIN][entry.entry_id][ATTR_DNSSEC] = dnssec_coordinator
-    hass.data[DOMAIN][entry.entry_id][ATTR_ENCRYPTION] = encryption_coordinator
-    hass.data[DOMAIN][entry.entry_id][ATTR_IP_VERSIONS] = ip_versions_coordinator
-    hass.data[DOMAIN][entry.entry_id][ATTR_PROTOCOLS] = protocols_coordinator
-    hass.data[DOMAIN][entry.entry_id][ATTR_STATUS] = status_coordinator
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
-
-    return True
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a config entry."""
-    unload_ok: bool = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
-
 
 class NextDnsUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NextDNS data API."""
@@ -190,3 +127,57 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
                 return await self.nextdns.get_analytics_protocols(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
+
+
+_LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = ["sensor"]
+COORDINATORS = [
+    (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+    (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+    (ATTR_IP_VERSIONS, NextDnsIpVersionsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+    (ATTR_PROTOCOLS, NextDnsProtocolsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+    (ATTR_STATUS, NextDnsStatusUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+]
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up NextDNS as config entry."""
+    api_key = entry.data[CONF_API_KEY]
+    profile_id = entry.data[CONF_PROFILE_ID]
+
+    websession = async_get_clientsession(hass)
+    try:
+        with async_timeout.timeout(10):
+            nextdns = await NextDns.create(websession, api_key)
+    except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
+        raise ConfigEntryNotReady from err
+
+    hass.data.setdefault(DOMAIN, {})
+    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+
+    tasks = []
+
+    for coordinator_name, coordinator_class, update_interval in COORDINATORS:
+        hass.data[DOMAIN][entry.entry_id][coordinator_name] = coordinator_class(
+            hass, nextdns, profile_id, update_interval
+        )
+        tasks.append(
+            hass.data[DOMAIN][entry.entry_id][coordinator_name].async_refresh()
+        )
+
+    await asyncio.gather(*tasks)
+
+    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    unload_ok: bool = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+
+    return unload_ok
