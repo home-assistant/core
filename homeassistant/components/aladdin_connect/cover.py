@@ -1,7 +1,6 @@
 """Platform for the Aladdin Connect cover component."""
 from __future__ import annotations
 
-from collections.abc import Mapping
 from datetime import timedelta
 import logging
 from typing import Any, Final
@@ -116,24 +115,6 @@ class AladdinDevice(CoverEntity):
     async def async_update(self) -> None:
         """Update status of cover."""
         await self._acc.get_doors(self._number)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Update state attributes."""
-        extra_attributes = {}
-        extra_attributes.update(
-            {
-                "battery_level": self._acc.get_battery_status(
-                    self._device_id, self._number
-                )
-            }
-        )
-
-        extra_attributes.update(
-            {"RSSI": self._acc.get_rssi_status(self._device_id, self._number)}
-        )
-
-        return extra_attributes
 
     @property
     def is_closed(self) -> bool | None:
