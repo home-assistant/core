@@ -5,7 +5,7 @@ from ast import literal_eval
 import asyncio
 import base64
 import collections.abc
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Collection, Generator, Iterable
 from contextlib import contextmanager, suppress
 from contextvars import ContextVar
 from datetime import datetime, timedelta
@@ -54,6 +54,7 @@ from homeassistant.util import (
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.thread import ThreadWithException
 
 from . import area_registry, device_registry, entity_registry, location as loc_helper
@@ -764,6 +765,7 @@ class TemplateStateBase(State):
         self._hass = hass
         self._collect = collect
         self._entity_id = entity_id
+        self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
     def _collect_state(self) -> None:
         if self._collect and _RENDER_INFO in self._hass.data:
