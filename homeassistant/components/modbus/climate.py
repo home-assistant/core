@@ -40,7 +40,6 @@ from .const import (
 )
 from .modbus import ModbusHub
 
-
 PARALLEL_UPDATES = 1
 
 

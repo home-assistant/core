@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA as BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
 )
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA as COVER_DEVICE_CLASSES_SCHEMA,
 )
@@ -113,7 +114,6 @@ from .validators import (
     scan_interval_validator,
     struct_validator,
 )
-from homeassistant.components.climate.const import HVACMode
 
 _LOGGER = logging.getLogger(__name__)
 
