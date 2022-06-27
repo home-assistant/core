@@ -474,6 +474,10 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         return_type=["DeviceInfo", None],
     ),
     TypeHintMatch(
+        function_name="device_class",
+        return_type=[DEVICE_CLASS, "str", None],
+    ),
+    TypeHintMatch(
         function_name="unit_of_measurement",
         return_type=["str", None],
     ),
