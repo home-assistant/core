@@ -773,14 +773,14 @@ jobs:
           sudo apt-get -y install \
             bluez \
             ffmpeg
-            # libavcodec58 \
-            # libavdevice58 \
-            # libavfilter7 \
-            # libavformat58 \
-            # libavutil56 \
-            # libswresample3 \
-            # libswscale5 \
-            # libudev1
+            libavcodec-dev \
+            libavdevice-dev \
+            libavfilter-dev \
+            libavformat-dev \
+            libavutil-dev \
+            libswresample-dev \
+            libswscale-dev \
+            libudev-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ matrix.python-version }}
