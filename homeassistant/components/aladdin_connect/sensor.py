@@ -11,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PERCENTAGE, SIGNAL_STRENGTH_DECIBELS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -71,6 +72,10 @@ class AladdinConnectSensor(SensorEntity):
         self.entity_description = description
         self._attr_name = f"{self._name} {description.name}"
         self._attr_unique_id = f"{self._device_id}-{self._number}-{description.key}"
+        if self.entity_description.key == "battery_level":
+            self._attr_native_unit_of_measurement = PERCENTAGE
+        if self.entity_description.key == "rssi":
+            self._attr_native_unit_of_measurement = SIGNAL_STRENGTH_DECIBELS
 
     @property
     def native_value(self) -> float | None:
