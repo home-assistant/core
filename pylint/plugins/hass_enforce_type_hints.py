@@ -817,10 +817,8 @@ def _is_valid_type(
     if expected_type == DEVICE_CLASS and in_return:
         return (
             isinstance(node, nodes.Name)
-            and node.name
             and node.name.endswith("DeviceClass")
             or isinstance(node, nodes.Attribute)
-            and node.attrname
             and node.attrname.endswith("DeviceClass")
         )
 
