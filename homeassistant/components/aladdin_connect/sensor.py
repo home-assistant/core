@@ -64,7 +64,7 @@ class AladdinConnectSensor(SensorEntity):
         device: DoorDevice,
         description: SensorEntityDescription,
     ) -> None:
-        """Initialize a sensor for an Abode device."""
+        """Initialize a sensor for an Aladdin Connect device."""
         self._device_id = device["device_id"]
         self._number = device["door_number"]
         self._name = device["name"]
