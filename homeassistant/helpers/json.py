@@ -7,7 +7,6 @@ from typing import Any, Final
 import orjson
 
 JSON_ENCODE_EXCEPTIONS = (TypeError, ValueError)
-JSON_DECODE_EXCEPTIONS = (orjson.JSONDecodeError,)
 
 
 class JSONEncoder(json.JSONEncoder):
