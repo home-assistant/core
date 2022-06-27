@@ -71,6 +71,24 @@ async def _process(hass, data, message):
     return {"requestId": data.request_id, "payload": result}
 
 
+async def async_devices_sync_response(hass, config, agent_user_id):
+    """Generate the device serialization."""
+    entities = async_get_entities(hass, config)
+    instance_uuid = await instance_id.async_get(hass)
+    devices = []
+
+    for entity in entities:
+        if not entity.should_expose():
+            continue
+
+        try:
+            devices.append(entity.sync_serialize(agent_user_id, instance_uuid))
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.exception("Error serializing %s", entity.entity_id)
+
+    return devices
+
+
 @HANDLERS.register("action.devices.SYNC")
 async def async_devices_sync(hass, data, payload):
     """Handle action.devices.SYNC request.
@@ -86,19 +104,7 @@ async def async_devices_sync(hass, data, payload):
     agent_user_id = data.config.get_agent_user_id(data.context)
     await data.config.async_connect_agent_user(agent_user_id)
 
-    entities = async_get_entities(hass, data.config)
-    instance_uuid = await instance_id.async_get(hass)
-    devices = []
-
-    for entity in entities:
-        if not entity.should_expose():
-            continue
-
-        try:
-            devices.append(entity.sync_serialize(agent_user_id, instance_uuid))
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception("Error serializing %s", entity.entity_id)
-
+    devices = await async_devices_sync_response(hass, data.config, agent_user_id)
     response = create_sync_response(agent_user_id, devices)
 
     _LOGGER.debug("Syncing entities response: %s", response)
