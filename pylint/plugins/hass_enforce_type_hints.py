@@ -10,6 +10,7 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
+DEVICE_CLASS = object()
 UNDEFINED = object()
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
@@ -474,7 +475,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_class",
-        return_type=["str", None],
+        return_type=[DEVICE_CLASS, "str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -571,6 +572,101 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "cover": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="CoverEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["CoverDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_cover_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_cover_tilt_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_opening",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_closing",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_closed",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="open_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="close_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_cover_position",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="stop_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="open_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="close_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_cover_tilt_position",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="stop_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -583,6 +679,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="FanEntity",
             matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
                 TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
@@ -657,6 +757,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="LockEntity",
             matches=[
                 TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
                 ),
@@ -712,6 +816,15 @@ def _is_valid_type(
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
         return True
+
+    # Special case for device_class
+    if expected_type == DEVICE_CLASS and in_return:
+        return (
+            isinstance(node, nodes.Name)
+            and node.name.endswith("DeviceClass")
+            or isinstance(node, nodes.Attribute)
+            and node.attrname.endswith("DeviceClass")
+        )
 
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
