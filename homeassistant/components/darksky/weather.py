@@ -36,8 +36,12 @@ from homeassistant.const import (
     CONF_LONGITUDE,
     CONF_MODE,
     CONF_NAME,
+    LENGTH_KILOMETERS,
+    LENGTH_MILLIMETERS,
     PRESSURE_HPA,
     PRESSURE_INHG,
+    PRESSURE_MBAR,
+    SPEED_METERS_PER_SECOND,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
 )
@@ -101,9 +105,7 @@ def setup_platform(
     name = config.get(CONF_NAME)
     mode = config.get(CONF_MODE)
 
-    if not (units := config.get(CONF_UNITS)):
-        units = "ca" if hass.config.units.is_metric else "us"
-
+    units = "si"
     dark_sky = DarkSkyData(config.get(CONF_API_KEY), latitude, longitude, units)
 
     add_entities([DarkSkyWeather(name, dark_sky, mode)], True)
@@ -111,6 +113,12 @@ def setup_platform(
 
 class DarkSkyWeather(WeatherEntity):
     """Representation of a weather condition."""
+
+    _attr_native_precipitation_unit = LENGTH_MILLIMETERS
+    _attr_native_pressure_unit = PRESSURE_MBAR
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_visibility_unit = LENGTH_KILOMETERS
+    _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
 
     def __init__(self, name, dark_sky, mode):
         """Initialize Dark Sky weather."""
