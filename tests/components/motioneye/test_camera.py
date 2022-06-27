@@ -351,13 +351,13 @@ async def test_camera_option_stream_url_template(
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
-            CONF_URL: f"http://localhost:{stream_server.port}",
+            CONF_URL: f"http://127.0.0.1:{stream_server.port}",
             # The port won't be used as the client is a mock.
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
         options={
             CONF_STREAM_URL_TEMPLATE: (
-                f"http://localhost:{stream_server.port}/" "{{ name }}/{{ id }}"
+                f"http://127.0.0.1:{stream_server.port}/" "{{ name }}/{{ id }}"
             )
         },
     )
