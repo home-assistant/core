@@ -202,7 +202,7 @@ class FanGroup(BaseFan, ZhaGroupEntity):
             self.error("Could not set fan mode: %s", ex)
         self.async_set_state(0, "fan_mode", fan_mode)
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve on off state from the fan."""
         all_states = [self.hass.states.get(x) for x in self._entity_ids]
         states: list[State] = list(filter(None, all_states))
