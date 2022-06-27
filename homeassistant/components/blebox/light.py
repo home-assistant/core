@@ -46,8 +46,7 @@ COLOR_MODE_MAP = {
     BleboxColorMode.RGBW: ColorMode.RGBW,
     BleboxColorMode.RGB: ColorMode.RGB,
     BleboxColorMode.MONO: ColorMode.BRIGHTNESS,
-    BleboxColorMode.RGBorW: ColorMode.RGBW,
-    # RGB and White, where white hex is prioritised over RGB channel
+    BleboxColorMode.RGBorW: ColorMode.RGBW,  # white hex is prioritised over RGB channel
     BleboxColorMode.CT: ColorMode.COLOR_TEMP,
     BleboxColorMode.CTx2: ColorMode.COLOR_TEMP,  # two instances
     BleboxColorMode.RGBWW: ColorMode.RGBWW,
