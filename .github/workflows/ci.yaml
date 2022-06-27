@@ -568,122 +568,131 @@ jobs:
           . venv/bin/activate
           python -m script.gen_requirements_all validate
 
-  # pylint:
-  #   name: Check pylint
-  #   runs-on: ubuntu-20.04
-  #   timeout-minutes: 20
-  #   needs:
-  #     - changes
-  #     - prepare-tests
-  #   strategy:
-  #     matrix:
-  #       python-version: [3.9]
-  #   container: homeassistant/ci-azure:${{ matrix.python-version }}
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Restore full Python ${{ matrix.python-version }} virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-  #           needs.prepare-tests.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Register pylint problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/pylint.json"
-  #     - name: Run pylint (fully)
-  #       if: needs.changes.outputs.test_full_suite == 'true'
-  #       run: |
-  #         . venv/bin/activate
-  #         python --version
-  #         pylint homeassistant
-  #     - name: Run pylint (partially)
-  #       if: needs.changes.outputs.test_full_suite == 'false'
-  #       shell: bash
-  #       run: |
-  #         . venv/bin/activate
-  #         python --version
-  #         pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+  pylint:
+    name: Check pylint
+    runs-on: ubuntu-20.04
+    timeout-minutes: 20
+    needs:
+      - info
+      - prepare-tests
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Register pylint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pylint.json"
+      - name: Run pylint (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint homeassistant
+      - name: Run pylint (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          pylint homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
-  # mypy:
-  #   name: Check mypy
-  #   runs-on: ubuntu-20.04
-  #   needs:
-  #     - changes
-  #     - prepare-tests
-  #   strategy:
-  #     matrix:
-  #       python-version: [3.9]
-  #   container: homeassistant/ci-azure:${{ matrix.python-version }}
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Restore full Python ${{ matrix.python-version }} virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-  #           needs.prepare-tests.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Register mypy problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/mypy.json"
-  #     - name: Run mypy (fully)
-  #       if: needs.changes.outputs.test_full_suite == 'true'
-  #       run: |
-  #         . venv/bin/activate
-  #         python --version
-  #         mypy homeassistant pylint
-  #     - name: Run mypy (partially)
-  #       if: needs.changes.outputs.test_full_suite == 'false'
-  #       shell: bash
-  #       run: |
-  #         . venv/bin/activate
-  #         python --version
-  #         mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+  mypy:
+    name: Check mypy
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - prepare-tests
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Register mypy problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/mypy.json"
+      - name: Run mypy (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          python --version
+          mypy homeassistant pylint
+      - name: Run mypy (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          python --version
+          mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
-  # pip-check:
-  #   runs-on: ubuntu-20.04
-  #   if: needs.changes.outputs.requirements == 'true' || github.event.inputs.full == 'true'
-  #   needs:
-  #     - changes
-  #     - prepare-tests
-  #   strategy:
-  #     fail-fast: false
-  #     matrix:
-  #       python-version: [3.9]
-  #   name: Run pip check ${{ matrix.python-version }}
-  #   container: homeassistant/ci-azure:${{ matrix.python-version }}
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Restore full Python ${{ matrix.python-version }} virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-  #           needs.prepare-tests.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Run pip check
-  #       run: |
-  #         . venv/bin/activate
-  #         ./script/pip_check $PIP_CACHE
+  pip-check:
+    runs-on: ubuntu-20.04
+    if: needs.info.outputs.requirements == 'true' || github.event.inputs.full == 'true'
+    needs:
+      - info
+      - prepare-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.9", "3.10"]
+    name: Run pip check ${{ matrix.python-version }}
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Run pip check
+        run: |
+          . venv/bin/activate
+          ./script/pip_check $PIP_CACHE
 
   pytest:
     runs-on: ubuntu-20.04
