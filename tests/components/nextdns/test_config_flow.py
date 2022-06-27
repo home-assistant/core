@@ -14,9 +14,7 @@ from homeassistant.components.nextdns.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_KEY
 
-from tests.common import MockConfigEntry
-
-PROFILES = [{"id": "xyz12", "fingerprint": "aabbccdd123", "name": "Fake Profile"}]
+from . import PROFILES, init_integration
 
 
 async def test_form_create_entry(hass):
@@ -79,11 +77,7 @@ async def test_form_errors(hass, error):
 
 async def test_form_already_configured(hass):
     """Test that errors are shown when duplicates are added."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="xyz12",
-        data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
-    )
+    entry = await init_integration(hass)
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
