@@ -198,7 +198,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
-        if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           sudo apt-get update
           sudo apt-get -y install \
