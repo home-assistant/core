@@ -8,7 +8,6 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
-import os
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -161,10 +160,9 @@ class ZHAGateway:
         self.radio_description = RadioType[radio_type].description
 
         app_config = self._config.get(CONF_ZIGPY, {})
-        assert self._hass.config.config_dir
         database = self._config.get(
             CONF_DATABASE,
-            os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
+            self._hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
