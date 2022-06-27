@@ -803,7 +803,12 @@ jobs:
             exit 1
           fi
 
-          python3 -X dev -m pytest \
+          ulimit -c unlimited
+          sudo mkdir -p /tmp/cores
+          sudo chmod -R +rwx /tmp/cores
+          sudo echo "/tmp/cores/core.%e.%p.%h.%t" > /proc/sys/kernel/core_pattern
+
+          sudo python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
@@ -816,6 +821,12 @@ jobs:
             --durations-min=1 \
             -p no:sugar \
             tests/components/${{ matrix.group }}
+      - name: Upload core dump
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v3.1.0
+        with:
+          name: core-dump-${{ matrix.python-version }}-${{ matrix.group }}
+          path: /tmp/cores
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v3.1.0
         with:
