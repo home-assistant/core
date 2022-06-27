@@ -150,7 +150,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.zha.core.group",
     "homeassistant.components.zha.core.helpers",
     "homeassistant.components.zha.core.registries",
-    "homeassistant.components.zha.core.store",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
