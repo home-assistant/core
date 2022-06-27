@@ -15,7 +15,9 @@
                 "data": {
                     "flow_type": "Ba\u011flant\u0131 t\u00fcr\u00fc",
                     "host": "IP Adresi",
-                    "port": "Port"
+                    "password": "Smile Kimli\u011fi",
+                    "port": "Port",
+                    "username": "Smile Kullan\u0131c\u0131 Ad\u0131"
                 },
                 "description": "\u00dcr\u00fcn:",
                 "title": "Plugwise tipi"

@@ -60,6 +60,7 @@ from .core.const import (
     ZHA_CHANNEL_MSG,
     ZHA_CONFIG_SCHEMAS,
 )
+from .core.gateway import EntityReference
 from .core.group import GroupMember
 from .core.helpers import (
     async_cluster_exists,
@@ -68,11 +69,11 @@ from .core.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
-from .core.typing import ZhaDeviceType
 
 if TYPE_CHECKING:
     from homeassistant.components.websocket_api.connection import ActiveConnection
 
+    from .core.device import ZHADevice
     from .core.gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
@@ -316,6 +317,22 @@ async def websocket_get_devices(
     connection.send_result(msg[ID], devices)
 
 
+@callback
+def _get_entity_name(
+    zha_gateway: ZHAGateway, entity_ref: EntityReference
+) -> str | None:
+    entry = zha_gateway.ha_entity_registry.async_get(entity_ref.reference_id)
+    return entry.name if entry else None
+
+
+@callback
+def _get_entity_original_name(
+    zha_gateway: ZHAGateway, entity_ref: EntityReference
+) -> str | None:
+    entry = zha_gateway.ha_entity_registry.async_get(entity_ref.reference_id)
+    return entry.original_name if entry else None
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required(TYPE): "zha/devices/groupable"})
 @websocket_api.async_response
@@ -329,19 +346,17 @@ async def websocket_get_groupable_devices(
     groupable_devices = []
 
     for device in devices:
-        entity_refs = zha_gateway.device_registry.get(device.ieee)
+        entity_refs = zha_gateway.device_registry[device.ieee]
         for ep_id in device.async_get_groupable_endpoints():
             groupable_devices.append(
                 {
                     "endpoint_id": ep_id,
                     "entities": [
                         {
-                            "name": zha_gateway.ha_entity_registry.async_get(
-                                entity_ref.reference_id
-                            ).name,
-                            "original_name": zha_gateway.ha_entity_registry.async_get(
-                                entity_ref.reference_id
-                            ).original_name,
+                            "name": _get_entity_name(zha_gateway, entity_ref),
+                            "original_name": _get_entity_original_name(
+                                zha_gateway, entity_ref
+                            ),
                         }
                         for entity_ref in entity_refs
                         if list(entity_ref.cluster_channels.values())[
@@ -441,6 +456,7 @@ async def websocket_add_group(
     group_id: int | None = msg.get(GROUP_ID)
     members: list[GroupMember] | None = msg.get(ATTR_MEMBERS)
     group = await zha_gateway.async_create_zigpy_group(group_name, members, group_id)
+    assert group
     connection.send_result(msg[ID], group.group_info)
 
 
@@ -544,7 +560,7 @@ async def websocket_reconfigure_node(
     """Reconfigure a ZHA nodes entities by its ieee address."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee: EUI64 = msg[ATTR_IEEE]
-    device: ZhaDeviceType = zha_gateway.get_device(ieee)
+    device: ZHADevice | None = zha_gateway.get_device(ieee)
 
     async def forward_messages(data):
         """Forward events to websocket."""
@@ -562,6 +578,7 @@ async def websocket_reconfigure_node(
     connection.subscriptions[msg["id"]] = async_cleanup
 
     _LOGGER.debug("Reconfiguring node with ieee_address: %s", ieee)
+    assert device
     hass.async_create_task(device.async_configure())
 
 
@@ -890,6 +907,7 @@ async def websocket_bind_group(
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
+    assert source_device
     await source_device.async_bind_to_group(group_id, bindings)
 
 
@@ -912,6 +930,7 @@ async def websocket_unbind_group(
     group_id: int = msg[GROUP_ID]
     bindings: list[ClusterBinding] = msg[BINDINGS]
     source_device = zha_gateway.get_device(source_ieee)
+    assert source_device
     await source_device.async_unbind_from_group(group_id, bindings)
 
 
@@ -926,6 +945,8 @@ async def async_binding_operation(
     source_device = zha_gateway.get_device(source_ieee)
     target_device = zha_gateway.get_device(target_ieee)
 
+    assert source_device
+    assert target_device
     clusters_to_bind = await get_matched_clusters(source_device, target_device)
 
     zdo = source_device.device.zdo
@@ -982,7 +1003,7 @@ async def websocket_get_configuration(
 
         return cv.custom_serializer(schema)
 
-    data = {"schemas": {}, "data": {}}
+    data: dict[str, dict[str, Any]] = {"schemas": {}, "data": {}}
     for section, schema in ZHA_CONFIG_SCHEMAS.items():
         if section == ZHA_ALARM_OPTIONS and not async_cluster_exists(
             hass, IasAce.cluster_id
@@ -1069,7 +1090,7 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: ZhaDeviceType = zha_gateway.get_device(ieee)
+        zha_device: ZHADevice | None = zha_gateway.get_device(ieee)
         if zha_device is not None and (
             zha_device.is_coordinator
             and zha_device.ieee == zha_gateway.application_controller.ieee

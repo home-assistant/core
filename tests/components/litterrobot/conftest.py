@@ -1,7 +1,6 @@
 """Configure pytest for Litter-Robot tests."""
 from __future__ import annotations
 
-from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -10,7 +9,6 @@ from pylitterbot.exceptions import InvalidCommandException
 import pytest
 
 from homeassistant.components import litterrobot
-from homeassistant.components.litterrobot.vacuum import UNAVAILABLE_AFTER
 from homeassistant.core import HomeAssistant
 
 from .common import CONFIG, ROBOT_DATA
@@ -71,14 +69,6 @@ def mock_account_with_sleeping_robot() -> MagicMock:
 def mock_account_with_sleep_disabled_robot() -> MagicMock:
     """Mock a Litter-Robot account with a robot that has sleep mode disabled."""
     return create_mock_account({"sleepModeActive": "0"})
-
-
-@pytest.fixture
-def mock_account_with_robot_not_recently_seen() -> MagicMock:
-    """Mock a Litter-Robot account with a sleeping robot."""
-    return create_mock_account(
-        {"lastSeen": (datetime.now() - UNAVAILABLE_AFTER).isoformat()}
-    )
 
 
 @pytest.fixture

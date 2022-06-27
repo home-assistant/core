@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import ValuesView
 from typing import Optional, TypedDict
 
-from canary.api import Location
+from canary.model import Location
 
 
 class CanaryData(TypedDict):
