@@ -194,9 +194,9 @@ jobs:
           path: ${{ env.PIP_CACHE }}
           key: >-
             ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.info.outputs.python_cache_key }}
+            steps.generate-pip-key.outputs.key }}
           restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
       - name: Install additional OS dependencies
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -772,7 +772,7 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg
+            ffmpeg \
             libavcodec-dev \
             libavdevice-dev \
             libavfilter-dev \
