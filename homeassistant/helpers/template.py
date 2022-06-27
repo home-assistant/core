@@ -946,6 +946,19 @@ def _resolve_state(
     return None
 
 
+def forgiving_boolean(value, default=_SENTINEL):
+    """Try to convert value to a boolean."""
+    try:
+        # Import here, not at top-level to avoid circular import
+        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
+
+        return cv.boolean(value)
+    except vol.Invalid:
+        if default is _SENTINEL:
+            raise_no_default("boolean", value)
+        return default
+
+
 def result_as_boolean(template_result: Any | None) -> bool:
     """Convert the template result to a boolean.
 
@@ -956,13 +969,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
     if template_result is None:
         return False
 
-    try:
-        # Import here, not at top-level to avoid circular import
-        from . import config_validation as cv  # pylint: disable=import-outside-toplevel
-
-        return cv.boolean(template_result)
-    except vol.Invalid:
-        return False
+    return cast(bool, forgiving_boolean(template_result, default=False))
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
@@ -1981,6 +1988,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
+        self.filters["boolean"] = forgiving_boolean
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2012,6 +2020,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
+        self.globals["boolean"] = forgiving_boolean
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
