@@ -807,6 +807,7 @@ jobs:
           sudo mkdir -p /tmp/cores
           sudo chmod -R +rwx /tmp/cores
           sudo echo "/tmp/cores/core.%e.%p.%h.%t" > /proc/sys/kernel/core_pattern
+          cat /proc/sys/kernel/core_pattern
 
           sudo python3 -X dev -m pytest \
             -qq \
