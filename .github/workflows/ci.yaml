@@ -158,7 +158,7 @@ jobs:
 
   # Separate job to pre-populate the base dependency cache
   # This prevent upcoming jobs to do the same individually
-  prepare-base:
+  base:
     name: Prepare dependencies
     runs-on: ubuntu-20.04
     needs: info
@@ -243,7 +243,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -293,7 +293,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -319,7 +319,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+          key: ${{ runner.os }}-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -346,7 +346,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -388,7 +388,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -509,7 +509,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-tests
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -541,7 +541,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -574,7 +574,7 @@ jobs:
     timeout-minutes: 20
     needs:
       - info
-      - prepare-tests
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -618,7 +618,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-tests
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -662,7 +662,7 @@ jobs:
     if: needs.info.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
       - info
-      - prepare-tests
+      - base
     strategy:
       fail-fast: false
       matrix:
@@ -702,14 +702,13 @@ jobs:
       && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
     needs:
       - info
-      - prepare-base
-      # - gen-requirements-all
-      # - hassfest
-      # - lint-black
-      # - lint-other
-      # - lint-isort
-      # - mypy
-      # - prepare-tests
+      - base
+      - gen-requirements-all
+      - hassfest
+      - lint-black
+      - lint-other
+      - lint-isort
+      - mypy
     strategy:
       fail-fast: false
       matrix:
