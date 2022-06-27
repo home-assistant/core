@@ -341,45 +341,47 @@ jobs:
           shopt -s globstar
           pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
 
-  # lint-isort:
-  #   name: Check isort
-  #   runs-on: ubuntu-20.04
-  #   needs: prepare-base
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v4.0.0
-  #       id: python
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: Restore base Python virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-  #           needs.prepare-base.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Restore pre-commit environment from cache
-  #       id: cache-precommit
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: ${{ env.PRE_COMMIT_CACHE }}
-  #         key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
-  #     - name: Fail job if pre-commit cache restore failed
-  #       if: steps.cache-precommit.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore pre-commit environment from cache"
-  #         exit 1
-  #     - name: Run isort
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
+  lint-isort:
+    name: Check isort
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - prepare-base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.0.0
+        id: python
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Restore pre-commit environment from cache
+        id: cache-precommit
+        uses: actions/cache@v3.0.4
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore pre-commit environment from cache"
+          exit 1
+      - name: Run isort
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
 
   # lint-other:
   #   name: Check other linters
