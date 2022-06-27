@@ -435,11 +435,12 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
-_BASE_DEVICE_CLASS = TypeHintMatch(
-    function_name="device_class",
-    return_type=["str", None],
-)
 _ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="device_class",
+        return_type=["*DeviceClass", "str", None],
+        check_return_type_inheritance=True,
+    ),
     TypeHintMatch(
         function_name="should_poll",
         return_type="bool",
@@ -572,10 +573,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "cover": [
-        ClassTypeHintMatch(
-            base_class="Entity",
-            matches=_ENTITY_MATCH,
-        ),
+        ClassTypeHintMatch(base_class="Entity", matches=_ENTITY_MATCH),
         ClassTypeHintMatch(
             base_class="CoverEntity",
             matches=[
@@ -669,7 +667,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
-            matches=_ENTITY_MATCH + [_BASE_DEVICE_CLASS],
+            matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="ToggleEntity",
@@ -746,7 +744,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "lock": [
         ClassTypeHintMatch(
             base_class="Entity",
-            matches=_ENTITY_MATCH + [_BASE_DEVICE_CLASS],
+            matches=_ENTITY_MATCH,
         ),
         ClassTypeHintMatch(
             base_class="LockEntity",
@@ -872,6 +870,16 @@ def _is_valid_type(
             isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
             and _is_valid_type(match.group(2), node.slice)
+        )
+
+    if expected_type == "*DeviceClass" and in_return:
+        return (
+            isinstance(node, nodes.Name)
+            and node.name
+            and node.name.endswith("DeviceClass")
+            or isinstance(node, nodes.Attribute)
+            and node.attrname
+            and node.attrname.endswith("DeviceClass")
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
