@@ -142,6 +142,14 @@ jobs:
             test_full_suite="true"
           fi
 
+          # Force wled
+          test_full_suite="false"
+          integrations_glob="wled"
+          test_group_count=1
+          test_groups="[\"wled\"]"
+          tests="[\"wled\"]"
+          tests_glob="wled"
+
           # Output & sent to GitHub Actions
           echo "test_full_suite: ${test_full_suite}"
           echo "::set-output name=test_full_suite::${test_full_suite}"
