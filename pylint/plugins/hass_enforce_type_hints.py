@@ -572,6 +572,65 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "air_quality": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="AirQualityEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="particulate_matter_2_5",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="particulate_matter_10",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="particulate_matter_0_1",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="air_quality_index",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="ozone",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="carbon_monoxide",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="carbon_dioxide",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="sulphur_dioxide",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="nitrogen_oxide",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="nitrogen_monoxide",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+                TypeHintMatch(
+                    function_name="nitrogen_dioxide",
+                    return_type=["StateType", None, "str", "int", "float"],
+                ),
+            ],
+        ),
+    ],
     "cover": [
         ClassTypeHintMatch(
             base_class="Entity",
