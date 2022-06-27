@@ -70,7 +70,7 @@ async def test_setup_connection_error(
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
 
 
-async def test_setup_component_noerror(hass: HomeAssistant) -> None:
+async def test_setup_component_no_error(hass: HomeAssistant) -> None:
     """Test component setup No Error."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
