@@ -804,7 +804,7 @@ jobs:
           fi
 
           ulimit -c unlimited
-          sudo python3 -X dev -m pytest \
+          python3 -X dev -m pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
