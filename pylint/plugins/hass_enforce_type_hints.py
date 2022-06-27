@@ -438,11 +438,6 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 # be checked by pylint when --ignore-missing-annotations is False
 _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
-        function_name="device_class",
-        return_type=[DEVICE_CLASS, "str", None],
-        check_return_type_inheritance=True,
-    ),
-    TypeHintMatch(
         function_name="should_poll",
         return_type="bool",
     ),
@@ -574,10 +569,17 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "cover": [
-        ClassTypeHintMatch(base_class="Entity", matches=_ENTITY_MATCH),
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
         ClassTypeHintMatch(
             base_class="CoverEntity",
             matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["CoverDeviceClass", "str", None],
+                ),
                 TypeHintMatch(
                     function_name="current_cover_position",
                     return_type=["int", None],
@@ -585,10 +587,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="current_cover_tilt_position",
                     return_type=["int", None],
-                ),
-                TypeHintMatch(
-                    function_name="device_class",
-                    return_type=["CoverDeviceClass", "str", None],
                 ),
                 TypeHintMatch(
                     function_name="is_opening",
@@ -678,6 +676,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="FanEntity",
             matches=[
                 TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
                     function_name="percentage",
                     return_type=["int", None],
                 ),
@@ -750,6 +752,10 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
         ClassTypeHintMatch(
             base_class="LockEntity",
             matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
                 TypeHintMatch(
                     function_name="changed_by",
                     return_type=["str", None],
