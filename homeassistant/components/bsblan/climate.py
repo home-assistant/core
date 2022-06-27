@@ -82,7 +82,9 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         self._attr_unique_id = f"{format_mac(device.MAC)}-climate"
         self._attr_name = device.name
 
-        self._attr_supported_features = SUPPORT_FLAGS
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
         self._attr_hvac_modes = HVAC_MODES
         self._attr_preset_modes = PRESET_MODES
         self._attr_min_temp = float(self.coordinator.data.min_temp.value)
@@ -107,7 +109,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
     def hvac_mode(self) -> str:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.hvac_mode.value == PRESET_ECO:
-            return HVAC_MODE_AUTO
+            return HVACMode.AUTO
 
         return self.coordinator.data.hvac_mode.value
 
@@ -115,7 +117,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         if (
-            self.hvac_mode == HVAC_MODE_AUTO
+            self.hvac_mode == HVACMode.AUTO
             and self.coordinator.data.hvac_mode.value == PRESET_ECO
         ):
             return PRESET_ECO
@@ -128,7 +130,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         # only allow preset mode when hvac mode is auto
-        if self.hvac_mode == HVAC_MODE_AUTO:
+        if self.hvac_mode == HVACMode.AUTO:
             await self.async_set_data(preset_mode=preset_mode)
         else:
             LOGGER.error("Can't set preset mode when hvac mode is not auto")
@@ -147,7 +149,7 @@ class BSBLANClimate(BSBLANEntity, CoordinatorEntity, ClimateEntity):
         if ATTR_PRESET_MODE in kwargs:
             # If preset mode is None, set hvac to auto
             if kwargs[ATTR_PRESET_MODE] == PRESET_NONE:
-                data[ATTR_HVAC_MODE] = HVAC_MODE_AUTO
+                data[ATTR_HVAC_MODE] = HVACMode.AUTO
             else:
                 data[ATTR_HVAC_MODE] = kwargs[ATTR_PRESET_MODE]
         try:

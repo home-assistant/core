@@ -1351,14 +1351,14 @@ pyswitchbee==1.4.8
 # homeassistant.components.syncthru
 pysyncthru==0.7.10
 
-# homeassistant.components.bsblan
-python-bsblan==0.5.5
-
 # homeassistant.components.tankerkoenig
 pytankerkoenig==0.0.6
 
 # homeassistant.components.tautulli
 pytautulli==21.11.0
+
+# homeassistant.components.bsblan
+python-bsblan==0.5.5
 
 # homeassistant.components.ecobee
 python-ecobee-api==0.2.14
