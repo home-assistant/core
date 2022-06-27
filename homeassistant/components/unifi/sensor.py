@@ -3,19 +3,35 @@
 Support for bandwidth sensors of network clients.
 Support for uptime sensors of network clients.
 """
-from datetime import datetime, timedelta
+from __future__ import annotations
 
-from homeassistant.components.sensor import DOMAIN, SensorDeviceClass, SensorEntity
+from collections.abc import Callable
+from dataclasses import dataclass
+from datetime import datetime, timedelta
+from typing import Any
+
+from aiounifi.models.device import Device as UniFiDevice
+
+from homeassistant.components.sensor import (
+    DOMAIN,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES
+from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from .const import DOMAIN as UNIFI_DOMAIN
+from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
+from .controller import UniFiController
 from .unifi_client import UniFiClient
+from .unifi_entity_base import UniFiBase
 
 RX_SENSOR = "rx"
 TX_SENSOR = "tx"
@@ -33,6 +49,7 @@ async def async_setup_entry(
         RX_SENSOR: set(),
         TX_SENSOR: set(),
         UPTIME_SENSOR: set(),
+        **{desc.key: set() for desc in DEVICE_SENSORS},
     }
 
     @callback
@@ -45,6 +62,9 @@ async def async_setup_entry(
 
         if controller.option_allow_uptime_sensors:
             add_uptime_entities(controller, async_add_entities, clients)
+
+        if controller.option_track_devices:
+            add_device_entities(controller, async_add_entities, devices)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         config_entry.async_on_unload(
@@ -82,6 +102,27 @@ def add_uptime_entities(controller, async_add_entities, clients):
 
         client = controller.api.clients[mac]
         sensors.append(UniFiUpTimeSensor(client, controller))
+
+    if sensors:
+        async_add_entities(sensors)
+
+
+@callback
+def add_device_entities(
+    controller: UniFiController, async_add_entities: AddEntitiesCallback, devices: set
+) -> None:
+    """Add new device sensor entities from the controller."""
+    sensors = []
+
+    for mac in devices:
+        device = controller.api.devices[mac]
+
+        for desc in DEVICE_SENSORS:
+            # Why is this needed?
+            if mac in controller.entities[UniFiDeviceSensor.DOMAIN][desc.key]:
+                continue
+
+            sensors.append(UniFiDeviceSensor(device, controller, desc))
 
     if sensors:
         async_add_entities(sensors)
@@ -185,3 +226,98 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
         """Config entry options are updated, remove entity if option is disabled."""
         if not self.controller.option_allow_uptime_sensors:
             await self.remove_item({self.client.mac})
+
+
+@dataclass
+class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
+    """Describes UniFi device sensor entities."""
+
+    value_fn: Callable[[UniFiDevice], Any] | None = None
+
+    def get_value(self, device: UniFiDevice) -> Any:
+        """Return value from UniFi device."""
+        if self.value_fn is not None:
+            return self.value_fn(device)
+
+        # pragma: no cover
+        raise RuntimeError("`value_fn` is required")
+
+
+DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
+    UniFiDeviceSensorEntityDescription(
+        key="cpu_utilization",
+        name="CPU Utilization",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:speedometer",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: float(device.raw["system-stats"]["cpu"]),
+    ),
+    UniFiDeviceSensorEntityDescription(
+        key="memory_utilization",
+        name="Memory Utilization",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda device: float(device.raw["system-stats"]["mem"]),
+    ),
+    UniFiDeviceSensorEntityDescription(
+        key="uptime",
+        name="Uptime",
+        icon="mdi:clock",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: dt_util.now() - timedelta(seconds=device.raw["uptime"]),
+    ),
+)
+
+
+class UniFiDeviceSensor(UniFiBase, SensorEntity):
+    """Base class for UniFi device sensors."""
+
+    DOMAIN = DOMAIN
+
+    entity_description: UniFiDeviceSensorEntityDescription
+
+    def __init__(
+        self,
+        device: UniFiDevice,
+        controller: UniFiController,
+        description: UniFiDeviceSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        # pylint: disable=invalid-name
+        self.TYPE = description.key
+        super().__init__(device, controller)
+        self.device = self._item
+        self.entity_description = description
+
+        self._attr_unique_id = f"{self.device.mac}_{description.key}"
+        self._attr_name = f"{self.device.name} {(description.name or '')}"
+
+    @property
+    def available(self) -> bool:
+        """Return whether the device is available."""
+        return self.controller.available and self.device.state != 0
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return a device description for the device registry."""
+        return DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self.device.mac)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self.device.model,
+            name=self.device.name,
+            sw_version=self.device.version,
+        )
+
+    @property
+    def native_value(self) -> Any:
+        """Return the native value of the sensor."""
+        return self.entity_description.get_value(self.device)
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        if not self.controller.option_track_devices:
+            await self.remove_item({self.device.mac})

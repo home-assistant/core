@@ -435,36 +435,16 @@ class UniFiDeviceTracker(UniFiBase, ScannerEntity):
         if self.device.state == 0:
             return {}
 
-        attributes = {
-            "cpu": float(self.device.raw["system-stats"]["cpu"]),
-            "memory": float(self.device.raw["system-stats"]["mem"]),
-            "overheating": self.device.overheating,
-            "upgradable": self.device.upgradable,
-            "uptime": dt_util.utcnow() - timedelta(seconds=self.device.raw["uptime"]),
-            "user_num_sta": self.device.user_num_sta,
-        }
+        attributes = {}
 
         if self.device.has_fan:
             attributes["fan_level"] = self.device.fan_level
 
-        if self.device.raw["has_temperature"]:
-            attributes["temperature"] = self.device.raw["general_temperature"]
+        if self.device.overheating:
+            attributes["overheating"] = self.device.overheating
 
-        if "temperatures" in self.device.raw:
-            attributes["temperatures"] = {
-                temperature["name"]: temperature["value"]
-                for temperature in self.device.raw["temperatures"]
-            }
-
-        if "uptime_stats" in self.device.raw:
-            metrics = ["availability", "latency_average", "time_period"]
-            attributes["uptime_stats"] = {
-                interface: {metric: stats[metric] for metric in metrics}
-                for interface, stats in self.device.raw["uptime_stats"].items()
-            }
-
-        if "satisfaction" in self.device.raw:
-            attributes["satisfaction"] = self.device.raw["satisfaction"]
+        if self.device.upgradable:
+            attributes["upgradable"] = self.device.upgradable
 
         return attributes
 

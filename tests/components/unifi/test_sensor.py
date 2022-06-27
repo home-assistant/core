@@ -1,9 +1,9 @@
 """UniFi Network sensor platform tests."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
-from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED
+from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE
 import pytest
 
 from homeassistant.components.device_tracker import DOMAIN as TRACKER_DOMAIN
@@ -325,3 +325,76 @@ async def test_remove_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.wireless_client_rx")
     assert hass.states.get("sensor.wireless_client_tx")
     assert hass.states.get("sensor.wireless_client_uptime")
+
+
+async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
+    """Verify that device sensors are working as expected."""
+    device = {
+        "board_rev": 3,
+        "device_id": "mock-id",
+        "last_seen": 1562600145,
+        "ip": "10.0.1.1",
+        "mac": "00:00:00:00:01:01",
+        "model": "US16P150",
+        "name": "Device",
+        "next_interval": 20,
+        "overheating": True,
+        "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
+        "type": "usw",
+        "upgradable": True,
+        "uptime": 0,
+        "version": "4.0.42.10433",
+    }
+    now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        config_entry = await setup_unifi_integration(
+            hass,
+            aioclient_mock,
+            devices_response=[device],
+        )
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == "1.23"
+    assert hass.states.get("sensor.device_memory_utilization").state == "50.0"
+    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:01:00+00:00"
+
+    # Verify state update
+    device["system-stats"]["cpu"] = "3.21"
+    device["system-stats"]["mem"] = "51.0"
+    device["uptime"] = 1
+
+    now = now + timedelta(seconds=1)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        mock_unifi_websocket(
+            data={
+                "meta": {"message": MESSAGE_DEVICE},
+                "data": [device],
+            }
+        )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.device_cpu_utilization").state == "3.21"
+    assert hass.states.get("sensor.device_memory_utilization").state == "51.0"
+    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:01:00+00:00"
+
+    # Disable option
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TRACK_DEVICES: False},
+    )
+    await hass.async_block_till_done()
+
+    assert not hass.states.get("sensor.device_cpu_utilization")
+    assert not hass.states.get("sensor.device_memory_utilization")
+    assert not hass.states.get("sensor.device_uptime")
+
+    # Enable option
+    hass.config_entries.async_update_entry(
+        config_entry,
+        options={CONF_TRACK_DEVICES: True},
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.device_cpu_utilization")
+    assert hass.states.get("sensor.device_memory_utilization")
+    assert hass.states.get("sensor.device_uptime")
