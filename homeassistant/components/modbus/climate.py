@@ -39,15 +39,6 @@ from .const import (
     DataType,
 )
 from .modbus import ModbusHub
-from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-)
 
 
 PARALLEL_UPDATES = 1
@@ -106,19 +97,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._attr_hvac_mode = None
             self._hvac_mode_mapping: list[tuple[int, HVACMode]] = []
             mode_value_config = mode_config[CONF_HVAC_MODE_VALUES]
-            for (conf_value, hvac_mode) in (
-                (HVAC_MODE_OFF, HVACMode.OFF),
-                (HVAC_MODE_HEAT, HVACMode.HEAT),
-                (HVAC_MODE_COOL, HVACMode.COOL),
-                (HVAC_MODE_HEAT_COOL, HVACMode.HEAT_COOL),
-                (HVAC_MODE_DRY, HVACMode.DRY),
-                (HVAC_MODE_FAN_ONLY, HVACMode.FAN_ONLY),
-                (HVAC_MODE_AUTO, HVACMode.AUTO),
-            ):
-
-                if conf_value in mode_value_config:
+            for hvac_mode in HVACMode:
+                if hvac_mode.value in mode_value_config:
                     self._hvac_mode_mapping.append(
-                        (mode_value_config[conf_value], hvac_mode)
+                        (mode_value_config[hvac_mode.value], hvac_mode)
                     )
                     self._attr_hvac_modes.append(hvac_mode)
 

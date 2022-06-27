@@ -113,15 +113,7 @@ from .validators import (
     scan_interval_validator,
     struct_validator,
 )
-from homeassistant.components.climate.const import (
-    HVAC_MODE_OFF,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-)
+from homeassistant.components.climate.const import HVACMode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -233,13 +225,13 @@ CLIMATE_SCHEMA = vol.All(
                 {
                     CONF_ADDRESS: cv.positive_int,
                     CONF_HVAC_MODE_VALUES: {
-                        vol.Optional(HVAC_MODE_OFF): cv.positive_int,
-                        vol.Optional(HVAC_MODE_HEAT): cv.positive_int,
-                        vol.Optional(HVAC_MODE_COOL): cv.positive_int,
-                        vol.Optional(HVAC_MODE_HEAT_COOL): cv.positive_int,
-                        vol.Optional(HVAC_MODE_AUTO): cv.positive_int,
-                        vol.Optional(HVAC_MODE_DRY): cv.positive_int,
-                        vol.Optional(HVAC_MODE_FAN_ONLY): cv.positive_int,
+                        vol.Optional(HVACMode.OFF.value): cv.positive_int,
+                        vol.Optional(HVACMode.HEAT.value): cv.positive_int,
+                        vol.Optional(HVACMode.COOL.value): cv.positive_int,
+                        vol.Optional(HVACMode.HEAT_COOL.value): cv.positive_int,
+                        vol.Optional(HVACMode.AUTO.value): cv.positive_int,
+                        vol.Optional(HVACMode.DRY.value): cv.positive_int,
+                        vol.Optional(HVACMode.FAN_ONLY.value): cv.positive_int,
                     },
                 }
             ),
