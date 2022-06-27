@@ -1,14 +1,33 @@
 """Support gathering system information of hosts which are running glances."""
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import GlancesData
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
+
+
+@callback
+def _migrate_old_unique_ids(
+    hass: HomeAssistant, entry_id: str, old_unique_id: str, new_key: str
+) -> None:
+    """Migrate unique IDs to the new format."""
+    ent_reg = entity_registry.async_get(hass)
+
+    if entity := ent_reg.async_get_or_create(Platform.SENSOR, DOMAIN, old_unique_id):
+
+        # skip if unique_id has the new format
+        if entity.unique_id.startswith(entry_id):
+            return
+
+        ent_reg.async_update_entity(
+            entity.entity_id, new_unique_id=f"{entry_id}-{new_key}"
+        )
 
 
 async def async_setup_entry(
@@ -18,7 +37,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Glances sensors."""
 
-    client = hass.data[DOMAIN][config_entry.entry_id]
+    client: GlancesData = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data[CONF_NAME]
     dev = []
 
@@ -26,6 +45,12 @@ async def async_setup_entry(
         if description.type == "fs":
             # fs will provide a list of disks attached
             for disk in client.api.data[description.type]:
+                _migrate_old_unique_ids(
+                    hass,
+                    config_entry.entry_id,
+                    f"{client.host}-{name} {disk['mnt_point']} {description.name_suffix}",
+                    f"{disk['mnt_point']}-{description.key}",
+                )
                 dev.append(
                     GlancesSensor(
                         client,
@@ -38,6 +63,12 @@ async def async_setup_entry(
             # sensors will provide temp for different devices
             for sensor in client.api.data[description.type]:
                 if sensor["type"] == description.key:
+                    _migrate_old_unique_ids(
+                        hass,
+                        config_entry.entry_id,
+                        f"{client.host}-{name} {sensor['label']} {description.name_suffix}",
+                        f"{sensor['label']}-{description.key}",
+                    )
                     dev.append(
                         GlancesSensor(
                             client,
@@ -48,8 +79,20 @@ async def async_setup_entry(
                     )
         elif description.type == "raid":
             for raid_device in client.api.data[description.type]:
+                _migrate_old_unique_ids(
+                    hass,
+                    config_entry.entry_id,
+                    f"{client.host}-{name} {raid_device} {description.name_suffix}",
+                    f"{raid_device}-{description.key}",
+                )
                 dev.append(GlancesSensor(client, name, raid_device, description))
         elif client.api.data[description.type]:
+            _migrate_old_unique_ids(
+                hass,
+                config_entry.entry_id,
+                f"{client.host}-{name} {description.name_suffix}",
+                f"-{description.key}",
+            )
             dev.append(
                 GlancesSensor(
                     client,
@@ -87,11 +130,7 @@ class GlancesSensor(SensorEntity):
             manufacturer="Glances",
             name=name,
         )
-
-    @property
-    def unique_id(self):
-        """Set unique_id for sensor."""
-        return f"{self.glances_data.host}-{self.name}"
+        self._attr_unique_id = f"{self.glances_data.config_entry.entry_id}-{sensor_name_prefix}-{description.key}"
 
     @property
     def available(self):
