@@ -136,7 +136,7 @@ class ProbeEndpoint:
 
     @staticmethod
     def probe_single_cluster(
-        component: str,
+        component: ha_const.Platform | None,
         channel: base.ZigbeeChannel,
         ep_channels: ChannelPool,
     ) -> None:

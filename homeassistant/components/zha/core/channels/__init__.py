@@ -221,7 +221,7 @@ class ChannelPool:
         return self._channels.zha_device.is_mains_powered
 
     @property
-    def manufacturer(self) -> str | None:
+    def manufacturer(self) -> str:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
 
@@ -236,7 +236,7 @@ class ChannelPool:
         return self._channels.zha_device.hass
 
     @property
-    def model(self) -> str | None:
+    def model(self) -> str:
         """Return device model."""
         return self._channels.zha_device.model
 
