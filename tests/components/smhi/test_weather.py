@@ -31,11 +31,7 @@ from homeassistant.components.weather import (
     ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
 )
-from homeassistant.const import (
-    ATTR_ATTRIBUTION,
-    SPEED_KILOMETERS_PER_HOUR,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import ATTR_ATTRIBUTION, SPEED_METERS_PER_SECOND, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
@@ -68,7 +64,7 @@ async def test_setup_hass(
     assert state.state == "sunny"
     assert state.attributes[ATTR_SMHI_CLOUDINESS] == 50
     assert state.attributes[ATTR_SMHI_THUNDER_PROBABILITY] == 33
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
     assert state.attributes[ATTR_ATTRIBUTION].find("SMHI") >= 0
     assert state.attributes[ATTR_WEATHER_HUMIDITY] == 55
     assert state.attributes[ATTR_WEATHER_PRESSURE] == 1024
@@ -337,16 +333,16 @@ async def test_custom_speed_unit(
 
     assert state
     assert state.name == "test"
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
 
     entity_reg = er.async_get(hass)
     entity_reg.async_update_entity_options(
         state.entity_id,
         WEATHER_DOMAIN,
-        {ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_KILOMETERS_PER_HOUR},
+        {ATTR_WEATHER_WIND_SPEED_UNIT: SPEED_METERS_PER_SECOND},
     )
 
     await hass.async_block_till_done()
 
     state = hass.states.get(ENTITY_ID)
-    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 16.92
+    assert state.attributes[ATTR_SMHI_WIND_GUST_SPEED] == 4.7

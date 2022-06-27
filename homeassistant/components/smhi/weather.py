@@ -154,13 +154,11 @@ class SmhiWeather(WeatherEntity):
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return additional attributes."""
         if self._forecasts:
-            wind_gust = self._forecasts[0].wind_gust
-            if (wind_speed_unit := self._weather_option_wind_speed_unit) is not None:
-                wind_gust = speed_util.convert(
-                    self._forecasts[0].wind_gust,
-                    SPEED_METERS_PER_SECOND,
-                    wind_speed_unit,
-                )
+            wind_gust = speed_util.convert(
+                self._forecasts[0].wind_gust,
+                SPEED_METERS_PER_SECOND,
+                self._wind_speed_unit,
+            )
             return {
                 ATTR_SMHI_CLOUDINESS: self._forecasts[0].cloudiness,
                 ATTR_SMHI_WIND_GUST_SPEED: round(wind_gust, ROUNDING_PRECISION),
