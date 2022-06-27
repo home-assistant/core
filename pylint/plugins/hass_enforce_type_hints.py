@@ -540,6 +540,11 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
         function_name="async_registry_entry_updated",
         return_type=None,
     ),
+    TypeHintMatch(
+        function_name="update",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
 ]
 _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
