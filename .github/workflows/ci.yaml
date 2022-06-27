@@ -772,15 +772,15 @@ jobs:
           sudo apt-get update
           sudo apt-get -y install \
             bluez \
-            ffmpeg \
-            libavcodec-dev \
-            libavdevice-dev \
-            libavfilter-dev \
-            libavformat-dev \
-            libavutil-dev \
-            libswresample-dev \
-            libswscale-dev \
-            libudev-dev
+            ffmpeg
+            # libavcodec-dev \
+            # libavdevice-dev \
+            # libavfilter-dev \
+            # libavformat-dev \
+            # libavutil-dev \
+            # libswresample-dev \
+            # libswscale-dev \
+            # libudev-dev
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ matrix.python-version }}
