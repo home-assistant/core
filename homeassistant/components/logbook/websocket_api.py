@@ -299,9 +299,9 @@ async def ws_event_stream(
 
     device_ids = msg.get("device_ids")
     entity_ids = msg.get("entity_ids")
-    if entity_ids and not device_ids:
+    if entity_ids:
         entity_ids = async_filter_entities(hass, entity_ids)
-        if not entity_ids:
+        if not entity_ids and not device_ids:
             _async_send_empty_response(connection, msg_id, start_time, end_time)
             return
 
