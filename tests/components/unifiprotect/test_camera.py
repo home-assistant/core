@@ -33,9 +33,11 @@ from homeassistant.setup import async_setup_component
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     enable_entity,
     init_entry,
+    remove_entities,
     time_changed,
 )
 
@@ -268,17 +270,36 @@ async def test_basic_setup(
     await validate_no_stream_camera_state(hass, doorbell, 3, entity_id, features=0)
 
 
-async def test_missing_channels(
-    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
-):
+async def test_adopt(hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera):
     """Test setting up camera with no camera channels."""
 
     camera1 = camera.copy()
     camera1.channels = []
 
     await init_entry(hass, ufp, [camera1])
-
     assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    await remove_entities(hass, [camera1])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+    camera1.channels = []
+    await adopt_devices(hass, ufp, [camera1])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+
+    camera1.channels = camera.channels
+    for channel in camera1.channels:
+        channel._api = ufp.api
+
+    mock_msg = Mock()
+    mock_msg.changed_data = {"channels": camera.channels}
+    mock_msg.new_obj = camera1
+    ufp.ws_msg(mock_msg)
+    await hass.async_block_till_done()
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+
+    await remove_entities(hass, [camera1])
+    assert_entity_counts(hass, Platform.CAMERA, 0, 0)
+    await adopt_devices(hass, ufp, [camera1])
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
 
 
 async def test_camera_image(

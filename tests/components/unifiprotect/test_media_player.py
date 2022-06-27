@@ -25,7 +25,26 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockUFPFixture, assert_entity_counts, init_entry
+from .utils import (
+    MockUFPFixture,
+    adopt_devices,
+    assert_entity_counts,
+    init_entry,
+    remove_entities,
+)
+
+
+async def test_media_player_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera
+):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
+    await remove_entities(hass, [doorbell])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 0, 0)
+    await adopt_devices(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.MEDIA_PLAYER, 1, 1)
 
 
 async def test_media_player_setup(
