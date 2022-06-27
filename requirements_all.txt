@@ -775,9 +775,6 @@ gstreamer-player==1.1.2
 # homeassistant.components.profiler
 guppy3==3.1.2
 
-# homeassistant.components.homekit
-ha-HAP-python==4.5.1
-
 # homeassistant.components.generic
 # homeassistant.components.stream
 ha-av==10.0.0b3
