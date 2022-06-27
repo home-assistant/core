@@ -26,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -3841,3 +3842,12 @@ async def test_template_states_blocks_setitem(hass):
     template_state = template.TemplateState(hass, state, True)
     with pytest.raises(RuntimeError):
         template_state["any"] = "any"
+
+
+async def test_template_states_can_serialize(hass):
+    """Test TemplateState is serializable."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    assert template_state.as_dict() is template_state.as_dict()
+    assert json_dumps(template_state) == json_dumps(template_state)
