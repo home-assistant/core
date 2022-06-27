@@ -11,6 +11,7 @@ from pylint.lint import PyLinter
 from homeassistant.const import Platform
 
 DEVICE_CLASS = object()
+STATE_TYPE = ["StateType", None, "str", "int", "float"]
 UNDEFINED = object()
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
@@ -451,7 +452,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="state",
-        return_type=["StateType", None, "str", "int", "float"],
+        return_type=STATE_TYPE,
     ),
     TypeHintMatch(
         function_name="capability_attributes",
@@ -586,47 +587,47 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="particulate_matter_2_5",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="particulate_matter_10",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="particulate_matter_0_1",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="air_quality_index",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="ozone",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="carbon_monoxide",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="carbon_dioxide",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="sulphur_dioxide",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="nitrogen_oxide",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="nitrogen_monoxide",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
                 TypeHintMatch(
                     function_name="nitrogen_dioxide",
-                    return_type=["StateType", None, "str", "int", "float"],
+                    return_type=STATE_TYPE,
                 ),
             ],
         ),
