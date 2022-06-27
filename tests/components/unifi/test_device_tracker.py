@@ -325,21 +325,35 @@ async def test_tracked_devices(
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {
+            "cpu": "3.1",
+            "mem": "10.0",
+            "uptime": "1000",
+        },
         "type": "usw",
         "upgradable": True,
+        "uptime": 123,
+        "user-num_sta": 10,
         "version": "4.0.42.10433",
     }
     device_2 = {
         "board_rev": 3,
         "device_id": "mock-id",
-        "has_fan": True,
+        "has_fan": False,
         "ip": "10.0.1.2",
         "mac": "00:00:00:00:01:02",
         "model": "US16P150",
         "name": "Device 2",
         "next_interval": 20,
         "state": 0,
+        "system-stats": {
+            "cpu": "3.1",
+            "mem": "10.0",
+            "uptime": "1000",
+        },
         "type": "usw",
+        "uptime": 0,
+        "user-num_sta": 0,
         "version": "4.0.42.10433",
     }
     await setup_unifi_integration(
@@ -370,8 +384,30 @@ async def test_tracked_devices(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.device_1").state == STATE_HOME
-    assert hass.states.get("device_tracker.device_2").state == STATE_HOME
+    now = datetime(1970, month=1, day=1)
+    with patch("homeassistant.util.dt.now", return_value=now):
+        device_1_state = hass.states.get("device_tracker.device_1")
+        assert device_1_state.state == STATE_HOME
+        assert device_1_state.attributes["cpu"] == float(device_1["system-stats"]["cpu"])
+        assert device_1_state.attributes["memory"] == float(device_1["system-stats"]["mem"])
+        assert device_1_state.attributes["overheating"] == device_1["overheating"]
+        assert device_1_state.attributes["upgradable"] == device_1["upgradable"]
+        assert device_1_state.attributes["uptime"] == 0
+        assert device_1_state.attributes["user_num_sta"] == device_1["user-num_sta"]
+        assert device_1_state.attributes["fan_level"] == device_1["fan_level"]
+        # temperature
+        # temperatures
+        #
+
+        device_2_state = hass.states.get("device_tracker.device_2")
+        assert device_2_state.state == STATE_HOME
+        assert device_2_state.attributes["cpu"] == float(device_2["system-stats"]["cpu"])
+        assert device_2_state.attributes["memory"] == float(device_2["system-stats"]["mem"])
+        assert device_2_state.attributes["overheating"] == False
+        assert device_2_state.attributes["upgradable"] == False
+        assert device_2_state.attributes["uptime"] == 0
+        assert device_2_state.attributes["user_num_sta"] == device_2["user-num_sta"]
+        assert "fan_level" not in device_2_state.attributes
 
     # Change of time can mark device not_home outside of expected reporting interval
 
@@ -1125,8 +1161,15 @@ async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {
+            "cpu": "0.0",
+            "mem": "0.0",
+            "uptime": "0"
+        },
         "type": "usw",
+        "uptime": 0,
         "upgradable": True,
+        "user-num_sta": 0,
         "version": "4.0.42.10433",
     }
 
