@@ -10,6 +10,7 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
+DEVICE_CLASS = object()
 UNDEFINED = object()
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
@@ -438,7 +439,7 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_class",
-        return_type=["*DeviceClass", "str", None],
+        return_type=[DEVICE_CLASS, "str", None],
         check_return_type_inheritance=True,
     ),
     TypeHintMatch(
@@ -806,6 +807,17 @@ def _is_valid_type(
     if expected_type is UNDEFINED:
         return True
 
+    # Special case for device_class
+    if expected_type == DEVICE_CLASS and in_return:
+        return (
+            isinstance(node, nodes.Name)
+            and node.name
+            and node.name.endswith("DeviceClass")
+            or isinstance(node, nodes.Attribute)
+            and node.attrname
+            and node.attrname.endswith("DeviceClass")
+        )
+
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
             if _is_valid_type(expected_type_item, node, in_return):
@@ -870,16 +882,6 @@ def _is_valid_type(
             isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
             and _is_valid_type(match.group(2), node.slice)
-        )
-
-    if expected_type == "*DeviceClass" and in_return:
-        return (
-            isinstance(node, nodes.Name)
-            and node.name
-            and node.name.endswith("DeviceClass")
-            or isinstance(node, nodes.Attribute)
-            and node.attrname
-            and node.attrname.endswith("DeviceClass")
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
