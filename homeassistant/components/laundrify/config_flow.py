@@ -77,7 +77,7 @@ class LaundrifyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="init", data_schema=CONFIG_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 
