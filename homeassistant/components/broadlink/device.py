@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections import defaultdict
 from collections.abc import Generator
 from contextlib import suppress
+from dataclasses import dataclass
 from functools import partial
 import logging
 
@@ -28,9 +29,10 @@ from homeassistant.const import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
-from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES
+from .const import DEFAULT_PORT, DOMAIN, DOMAINS_AND_TYPES, SIGNAL_STORES_CHANGED
 from .helpers import data_packet
 from .updater import get_update_manager
 
@@ -48,19 +50,43 @@ def get_domains(device_type):
     return {d for d, t in DOMAINS_AND_TYPES.items() if device_type in t}
 
 
+@dataclass
+class BroadlinkStoresChanges:
+    """Data in a changed signal."""
+
+    subdevice: str
+    added: set[str]
+    removed: set[str]
+
+
 class BroadlinkStores:
     """Manages a storage setup for a device."""
 
-    def __init__(self, codes_store: Store, flags_store: Store) -> None:
+    _code_storage: Store
+    _flag_storage: Store
+
+    def __init__(self, hass: HomeAssistant, unique_id: str) -> None:
         """Initialize stores."""
-        self._code_storage = codes_store
-        self._flag_storage = flags_store
+        self._hass = hass
         self._codes: dict[str, dict[str, str | list[str]]] = {}
         self._flags: dict[str, int] = defaultdict(int)
         self._storage_loaded = False
+        self._unique_id = unique_id
 
     async def async_setup(self) -> None:
         """Load all stores and data."""
+
+        self._code_storage = Store(
+            self._hass,
+            CODE_STORAGE_VERSION,
+            f"broadlink_remote_{self._unique_id}_codes",
+        )
+        self._flag_storage = Store(
+            self._hass,
+            FLAG_STORAGE_VERSION,
+            f"broadlink_remote_{self._unique_id}_flags",
+        )
+
         self._codes.update(await self._code_storage.async_load() or {})
         self._flags.update(await self._flag_storage.async_load() or {})
 
@@ -133,6 +159,16 @@ class BroadlinkStores:
         self._codes.setdefault(subdevice, {}).update(commands)
         self._code_storage.async_delay_save(lambda: self._codes, CODE_SAVE_DELAY)
 
+        async_dispatcher_send(
+            self._hass,
+            SIGNAL_STORES_CHANGED.format(self._unique_id),
+            BroadlinkStoresChanges(
+                subdevice=subdevice,
+                added=set(commands.keys()),
+                removed=set(),
+            ),
+        )
+
     def delete_commands(self, commands: list[str], subdevice: str) -> None:
         """Delete commands from a subdevice."""
 
@@ -169,6 +205,14 @@ class BroadlinkStores:
                 )
 
         self._code_storage.async_delay_save(lambda: self._codes, CODE_SAVE_DELAY)
+
+        async_dispatcher_send(
+            self._hass,
+            SIGNAL_STORES_CHANGED.format(self._unique_id),
+            BroadlinkStoresChanges(
+                subdevice=subdevice, added=set(), removed=set(commands)
+            ),
+        )
 
 
 class BroadlinkDevice:
@@ -263,17 +307,7 @@ class BroadlinkDevice:
         domains = get_domains(api.type)
 
         if Platform.REMOTE in domains or Platform.BUTTON in domains:
-            code_storage = Store(
-                self.hass,
-                CODE_STORAGE_VERSION,
-                f"broadlink_remote_{config.unique_id}_codes",
-            )
-            flag_storage = Store(
-                self.hass,
-                FLAG_STORAGE_VERSION,
-                f"broadlink_remote_{config.unique_id}_flags",
-            )
-            self.store = BroadlinkStores(code_storage, flag_storage)
+            self.store = BroadlinkStores(self.hass, config.unique_id)
             await self.store.async_setup()
 
         update_manager = get_update_manager(self)

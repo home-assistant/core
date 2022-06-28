@@ -38,3 +38,5 @@ DEVICE_TYPES = set.union(*DOMAINS_AND_TYPES.values())
 
 DEFAULT_PORT = 80
 DEFAULT_TIMEOUT = 5
+
+SIGNAL_STORES_CHANGED = "broadlink.stores_changed_{}"

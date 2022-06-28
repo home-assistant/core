@@ -1,26 +1,49 @@
 """Tests for Broadlink remotes."""
+from __future__ import annotations
 
 from base64 import b64decode
 from unittest.mock import call
 
 import pytest
 
+from homeassistant.components.broadlink import BroadlinkData
+from homeassistant.components.broadlink.device import BroadlinkStores
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_entries_for_device
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import get_device
 
-from tests.common import mock_device_registry, mock_registry
+
+def _get_states(
+    hass: HomeAssistant, device_id: str, subdevice: str, attributes: set[str]
+):
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+
+    device_entry = device_registry.async_get_device(
+        {("broadlink", f"{device_id}-codes-{subdevice}")}
+    )
+    assert device_entry
+
+    entries = er.async_entries_for_device(entity_registry, device_entry.id)
+    return {
+        state.entity_id: {
+            attribute_name: attribute
+            for attribute_name in attributes
+            if (attribute := state.attributes.get(attribute_name)) is not None
+        }
+        for entry in entries
+        if entry.domain == Platform.BUTTON
+        and (state := hass.states.get(entry.entity_id))
+    }
 
 
 @pytest.mark.parametrize(
-    ("device_name, device_id, subdevice, result_entries"),
+    ("subdevice, result"),
     [
         (
-            "Entrance",
-            "34ea34befc25",
             "smsl",
             {
                 "button.smsl_toggled": {"friendly_name": "smsl toggled"},
@@ -33,35 +56,96 @@ from tests.common import mock_device_registry, mock_registry
 )
 async def test_button_setup_works(
     hass: HomeAssistant,
-    device_name: str,
-    device_id: str,
     subdevice: str,
-    result_entries: dict,
+    result: dict,
 ):
     """Test a successful setup with all remotes."""
-    device = get_device(device_name)
-    device_registry = mock_device_registry(hass)
-    entity_registry = mock_registry(hass)
-    await device.setup_entry(hass)
+    device = get_device("Entrance")
+    setup = await device.setup_entry(hass)
+    device_id = setup.entry.unique_id
 
-    device_entry = device_registry.async_get_device(
-        {("broadlink", f"{device_id}-codes-{subdevice}")}
-    )
-    assert device_entry
+    states = _get_states(hass, device_id, subdevice, {"friendly_name"})
 
-    entries = async_entries_for_device(entity_registry, device_entry.id)
-    states = {
-        state.entity_id: {
-            attribute_name: attribute
-            for attribute_name in ["friendly_name"]
-            if (attribute := state.attributes.get(attribute_name)) is not None
-        }
-        for entry in entries
-        if entry.domain == Platform.BUTTON
-        and (state := hass.states.get(entry.entity_id))
-    }
+    assert states == result
 
-    assert states == result_entries
+
+@pytest.mark.parametrize(
+    ("subdevice, result, commands"),
+    [
+        (
+            "smsl",
+            {
+                "button.smsl_toggled": {"friendly_name": "smsl toggled"},
+                "button.smsl_standby": {
+                    "friendly_name": "smsl standby",
+                },
+                "button.smsl_dummy": {"friendly_name": "smsl dummy"},
+            },
+            {"dummy": "1234"},
+        ),
+        (
+            "added_device",
+            {
+                "button.added_device_dummy": {"friendly_name": "added_device dummy"},
+            },
+            {"dummy": "1234"},
+        ),
+    ],
+)
+async def test_button_adding(
+    hass: HomeAssistant,
+    subdevice: str,
+    commands: dict[str, str | list[str]],
+    result: dict,
+):
+    """Test a successful setup with all remotes."""
+
+    device = get_device("Entrance")
+    setup = await device.setup_entry(hass)
+    device_id = setup.entry.unique_id
+
+    data: BroadlinkData = hass.data["broadlink"]
+    stores: BroadlinkStores = data.devices[setup.entry.entry_id].store
+    stores.add_commands(commands, subdevice)
+    await hass.async_block_till_done()
+
+    states = _get_states(hass, device_id, subdevice, {"friendly_name"})
+
+    assert states == result
+
+
+@pytest.mark.parametrize(
+    ("subdevice, result, commands"),
+    [
+        (
+            "smsl",
+            {
+                "button.smsl_toggled": {"friendly_name": "smsl toggled"},
+            },
+            ["standby"],
+        ),
+    ],
+)
+async def test_button_deleting(
+    hass: HomeAssistant,
+    subdevice: str,
+    commands: list[str],
+    result: dict,
+):
+    """Test a successful setup with all remotes."""
+
+    device = get_device("Entrance")
+    setup = await device.setup_entry(hass)
+    device_id = setup.entry.unique_id
+
+    data: BroadlinkData = hass.data["broadlink"]
+    stores: BroadlinkStores = data.devices[setup.entry.entry_id].store
+    stores.delete_commands(commands, subdevice)
+    await hass.async_block_till_done()
+
+    states = _get_states(hass, device_id, subdevice, {"friendly_name"})
+
+    assert states == result
 
 
 @pytest.mark.parametrize(
