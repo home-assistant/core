@@ -1,7 +1,7 @@
 """Support to interface with Sonos players."""
 from __future__ import annotations
 
-import asyncio
+from asyncio import run_coroutine_threadsafe
 import datetime
 import logging
 from typing import Any
@@ -556,7 +556,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
-                asyncio.run_coroutine_threadsafe(
+                run_coroutine_threadsafe(
                     media_source.async_resolve_media(
                         self.hass, media_id, self.entity_id
                     ),
