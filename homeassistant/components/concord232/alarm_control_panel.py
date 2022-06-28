@@ -72,6 +72,8 @@ def setup_platform(
 class Concord232Alarm(alarm.AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
+    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -80,28 +82,12 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
     def __init__(self, url, name, code, mode):
         """Initialize the Concord232 alarm panel."""
 
-        self._state = None
-        self._name = name
+        self._attr_name = name
         self._code = code
         self._mode = mode
         self._url = url
         self._alarm = concord232_client.Client(self._url)
         self._alarm.partitions = self._alarm.list_partitions()
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def code_format(self):
-        """Return the characters if code is defined."""
-        return alarm.CodeFormat.NUMBER
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     def update(self) -> None:
         """Update values from API."""
@@ -118,11 +104,11 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
             return
 
         if part["arming_level"] == "Off":
-            self._state = STATE_ALARM_DISARMED
+            self._attr_state = STATE_ALARM_DISARMED
         elif "Home" in part["arming_level"]:
-            self._state = STATE_ALARM_ARMED_HOME
+            self._attr_state = STATE_ALARM_ARMED_HOME
         else:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = STATE_ALARM_ARMED_AWAY
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -152,7 +138,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         if isinstance(self._code, str):
             alarm_code = self._code
         else:
-            alarm_code = self._code.render(from_state=self._state, to_state=state)
+            alarm_code = self._code.render(from_state=self._attr_state, to_state=state)
         check = not alarm_code or code == alarm_code
         if not check:
             _LOGGER.warning("Invalid code given for %s", state)
