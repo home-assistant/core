@@ -31,7 +31,7 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
 from .const import CONF_JSON_ATTRS, CONF_JSON_ATTRS_PATH, DEFAULT_SENSOR_NAME
-from .entity import BaseRestEntity
+from .entity import RestEntity
 from .schema import RESOURCE_SCHEMA, SENSOR_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
@@ -82,7 +82,7 @@ async def async_setup_platform(
     )
 
 
-class RestSensor(BaseRestEntity, TemplateSensor):
+class RestSensor(RestEntity, TemplateSensor):
     """Implementation of a REST sensor."""
 
     def __init__(
@@ -94,7 +94,7 @@ class RestSensor(BaseRestEntity, TemplateSensor):
         unique_id,
     ):
         """Initialize the REST sensor."""
-        BaseRestEntity.__init__(
+        RestEntity.__init__(
             self,
             coordinator,
             rest,
