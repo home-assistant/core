@@ -10,6 +10,13 @@
             "unknown": "Unexpected error"
         },
         "step": {
+            "reauth": {
+                "data": {
+                    "access_token": "Access Token",
+                    "email": "Email"
+                },
+                "description": "Please re-enter your Awair developer access token."
+            },
             "reauth_confirm": {
                 "data": {
                     "access_token": "Access Token",

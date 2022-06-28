@@ -20,6 +20,13 @@
                 "description": "Sisesta oma Hive autentimiskood. \n\n Uue koodi taotlemiseks sisesta kood 0000.",
                 "title": "Hive kaheastmeline autentimine."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Seadme nimi"
+                },
+                "description": "Sisesta oma Hive andmed",
+                "title": "Hive s\u00e4tted"
+            },
             "reauth": {
                 "data": {
                     "password": "Salas\u00f5na",
@@ -34,7 +41,7 @@
                     "scan_interval": "P\u00e4ringute intervall (sekundites)",
                     "username": "Kasutajanimi"
                 },
-                "description": "Sisesta oma Hive sisselogimisteave ja s\u00e4tted.",
+                "description": "Sisesta oma Hive sisselogimisteave.",
                 "title": "Hive sisselogimine"
             }
         }
