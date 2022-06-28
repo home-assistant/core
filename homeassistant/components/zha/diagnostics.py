@@ -17,18 +17,23 @@ import zigpy_znp
 
 from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_UNIQUE_ID
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .core.const import (
+    ATTR_ATTRIBUTE_NAME,
+    ATTR_DEVICE_TYPE,
     ATTR_IEEE,
     ATTR_IN_CLUSTERS,
     ATTR_OUT_CLUSTERS,
+    ATTR_PROFILE_ID,
+    ATTR_VALUE,
     CONF_ALARM_MASTER_CODE,
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DATA_ZHA_GATEWAY,
+    UNKNOWN,
 )
 from .core.device import ZHADevice
 from .core.gateway import ZHAGateway
@@ -104,22 +109,29 @@ def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
         if ep_id == 0:
             continue
         endpoint_key = (
-            f"{PROFILES.get(endpoint.profile_id).DeviceType(endpoint.device_type).name}[{ep_id}]"
+            f"{PROFILES.get(endpoint.profile_id).DeviceType(endpoint.device_type).name}"
             if PROFILES.get(endpoint.profile_id) is not None
             and endpoint.device_type is not None
-            else ep_id
+            else UNKNOWN
         )
-        cluster_details[endpoint_key] = {
+        cluster_details[ep_id] = {
+            ATTR_DEVICE_TYPE: {
+                CONF_NAME: endpoint_key,
+                CONF_ID: endpoint.device_type,
+            },
+            ATTR_PROFILE_ID: endpoint.profile_id,
             ATTR_IN_CLUSTERS: {
-                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": get_cluster_attr_data(
-                    cluster
-                )
+                f"0x{cluster_id:04x}": {
+                    "endpoint_attribute": cluster.ep_attribute,
+                    **get_cluster_attr_data(cluster),
+                }
                 for cluster_id, cluster in endpoint.in_clusters.items()
             },
             ATTR_OUT_CLUSTERS: {
-                f"{cluster.ep_attribute}[0x{cluster.cluster_id:04x}]": get_cluster_attr_data(
-                    cluster
-                )
+                f"0x{cluster_id:04x}": {
+                    "endpoint_attribute": cluster.ep_attribute,
+                    **get_cluster_attr_data(cluster),
+                }
                 for cluster_id, cluster in endpoint.out_clusters.items()
             },
         }
@@ -130,12 +142,17 @@ def get_cluster_attr_data(cluster: Cluster) -> dict:
     """Return cluster attribute data."""
     return {
         ATTRIBUTES: {
-            f"{attr_def.name}[0x{attr_id:04x}]": attr_value
+            f"0x{attr_id:04x}": {
+                ATTR_ATTRIBUTE_NAME: attr_def.name,
+                ATTR_VALUE: attr_value,
+            }
             for attr_id, attr_def in cluster.attributes.items()
             if (attr_value := cluster.get(attr_def.name)) is not None
         },
         UNSUPPORTED_ATTRIBUTES: {
-            f"{cluster.find_attribute(u_attr).name}[0x{cluster.find_attribute(u_attr).id:04x}]"
+            f"0x{cluster.find_attribute(u_attr).id:04x}": {
+                ATTR_ATTRIBUTE_NAME: cluster.find_attribute(u_attr).name
+            }
             for u_attr in cluster.unsupported_attributes
         },
     }
