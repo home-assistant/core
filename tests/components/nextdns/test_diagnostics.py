@@ -1,6 +1,6 @@
 """Test NextDNS diagnostics."""
 from tests.components.diagnostics import get_diagnostics_for_config_entry
-from tests.components.nam import init_integration
+from tests.components.nextdns import init_integration
 
 
 async def test_entry_diagnostics(hass, hass_client):
