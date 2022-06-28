@@ -110,7 +110,7 @@ CLIENT_CHANNELS_REGISTRY: DictRegistry[type[ClientChannel]] = DictRegistry()
 ZIGBEE_CHANNEL_REGISTRY: DictRegistry[type[ZigbeeChannel]] = DictRegistry()
 
 
-def set_or_callable(value) -> frozenset[str]:
+def set_or_callable(value) -> frozenset[str] | Callable:
     """Convert single str or None to a set. Pass through callables and sets."""
     if value is None:
         return frozenset()
@@ -121,19 +121,29 @@ def set_or_callable(value) -> frozenset[str]:
     return frozenset([str(value)])
 
 
+def _get_empty_frozenset() -> frozenset[str]:
+    return frozenset()
+
+
 @attr.s(frozen=True)
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
     channel_names: frozenset[str] = attr.ib(
-        factory=frozenset, converter=set_or_callable
+        factory=_get_empty_frozenset, converter=set_or_callable
     )
-    generic_ids: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
-    manufacturers: frozenset[str] = attr.ib(
-        factory=frozenset, converter=set_or_callable
+    generic_ids: frozenset[str] = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
     )
-    models: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
-    aux_channels: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
+    manufacturers: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
+    )
+    models: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
+    )
+    aux_channels: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
+    )
 
     @property
     def weight(self) -> int:
@@ -158,7 +168,8 @@ class MatchRule:
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)
-        weight += 1 * len(self.aux_channels)
+        if isinstance(self.aux_channels, frozenset):
+            weight += 1 * len(self.aux_channels)
         return weight
 
     def claim_channels(self, channel_pool: list[ZigbeeChannel]) -> list[ZigbeeChannel]:
