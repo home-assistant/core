@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from bond_async import Action, BPUPSubscriptions
 
@@ -290,7 +289,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             hub, device, bpup_subs, description.name, description.key.lower()
         )
 
-    async def async_press(self, **kwargs: Any) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.argument:
             action = Action(
