@@ -293,24 +293,30 @@ class AppleTVManager:
     async def _connect(self, conf, raise_missing_credentials):
         """Connect to device."""
         credentials = self.config_entry.data[CONF_CREDENTIALS]
-        session = async_get_clientsession(self.hass)
-
+        name = self.config_entry.data[CONF_NAME]
+        missing_protocols = []
         for protocol_int, creds in credentials.items():
             protocol = Protocol(int(protocol_int))
             if conf.get_service(protocol) is not None:
                 conf.set_credentials(protocol, creds)
-            elif raise_missing_credentials:
-                raise ConfigEntryNotReady(
-                    "Protocol {protocol.name} not found for {self.config_entry.data[CONF_NAME]}, waiting for discovery."
-                )
             else:
-                _LOGGER.warning(
-                    "Protocol %s not found for %s, functionality will be reduced",
-                    protocol.name,
-                    self.config_entry.data[CONF_NAME],
+                missing_protocols.append(protocol.name)
+
+        if missing_protocols:
+            missing_protocols_str = ", ".join(missing_protocols)
+            if raise_missing_credentials:
+                raise ConfigEntryNotReady(
+                    f"Protocol(s) {missing_protocols_str} not yet found for {name}, waiting for discovery."
                 )
+            _LOGGER.info(
+                "Protocol(s) %s not yet found for %s, trying later",
+                missing_protocols_str,
+                name,
+            )
+            return
 
         _LOGGER.debug("Connecting to device %s", self.config_entry.data[CONF_NAME])
+        session = async_get_clientsession(self.hass)
         self.atv = await connect(conf, self.hass.loop, session=session)
         self.atv.listener = self
 
