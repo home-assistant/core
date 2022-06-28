@@ -200,11 +200,16 @@ def _generate_filter_from_sets_and_pattern_lists(
             or _test_against_patterns(exclude_eg, entity_id)
         )
 
-    # Case 1 - no includes or excludes - accept all entities
+    # Case 1 - No filter
+    # - All entities included
     if not have_include and not have_exclude:
         return lambda entity_id: True
 
-    # Case 2 - includes, no excludes - only include specified entities
+    # Case 2 - Only includes
+    # - Entity listed in entities include: include
+    # - Otherwise, entity matches domain include: include
+    # - Otherwise, entity matches glob include: include
+    # - Otherwise: exclude
     if have_include and not have_exclude:
 
         def entity_filter_2(entity_id: str) -> bool:
@@ -214,7 +219,11 @@ def _generate_filter_from_sets_and_pattern_lists(
 
         return entity_filter_2
 
-    # Case 3 - excludes, no includes - only exclude specified entities
+    # Case 3 - Only excludes
+    # - Entity listed in exclude: exclude
+    # - Otherwise, entity matches domain exclude: exclude
+    # - Otherwise, entity matches glob exclude: exclude
+    # - Otherwise: include
     if not have_include and have_exclude:
 
         def entity_filter_3(entity_id: str) -> bool:
@@ -224,14 +233,13 @@ def _generate_filter_from_sets_and_pattern_lists(
 
         return entity_filter_3
 
-    # Case 4 - both includes and excludes specified
-    # Case 4a - include domain or glob specified
-    #  - if entity_id is included, accept
-    #  - if entity_id is excluded, reject
-    #  - if included by glob, accept
-    #  - if excluded by glob, reject
-    #  - if domain matches, accept
-    #  - reject
+    # Case 4 - Domain and/or glob includes (may also have excludes)
+    # - Entity listed in entities include: include
+    # - Otherwise, entity listed in entities exclude: exclude
+    # - Otherwise, entity matches glob include: include
+    # - Otherwise, entity matches glob exclude: exclude
+    # - Otherwise, entity matches domain include: include
+    # - Otherwise: exclude
     if include_d or include_eg:
 
         def entity_filter_4a(entity_id: str) -> bool:
@@ -249,16 +257,12 @@ def _generate_filter_from_sets_and_pattern_lists(
 
         return entity_filter_4a
 
-    # Case 4b - exclude domain or glob specified, include has no domain or glob
-    # In this one case the traditional include logic is inverted. Even though an
-    # include is specified since its only a list of entity IDs its used only to
-    # expose specific entities excluded by domain or glob. Any entities not
-    # excluded are then presumed included. Logic is as follows
-    #  - if entity_id is included, accept
-    #  - if entity_id is excluded, reject
-    #  - if domain is excluded, reject
-    #  - if excluded by glob, reject
-    #  - accept
+    # Case 5 - Domain and/or glob excludes (no domain and/or glob includes)
+    # - Entity listed in entities include: include
+    # - Otherwise, entity listed in exclude: exclude
+    # - Otherwise, entity matches glob exclude: exclude
+    # - Otherwise, entity matches domain exclude: exclude
+    # - Otherwise: include
     if exclude_d or exclude_eg:
 
         def entity_filter_4b(entity_id: str) -> bool:
@@ -272,6 +276,7 @@ def _generate_filter_from_sets_and_pattern_lists(
 
         return entity_filter_4b
 
-    # Case 4c - neither include or exclude domain specified
-    #  - Only accept if entity is included.  Ignore entity excludes.
+    # Case 6 - No Domain and/or glob includes or excludes
+    # - Entity listed in entities include: include
+    # - Otherwise: exclude
     return lambda entity_id: entity_id in include_e

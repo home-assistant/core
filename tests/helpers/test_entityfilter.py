@@ -91,8 +91,8 @@ def test_excludes_only_with_glob_case_3():
     assert testfilter("cover.garage_door")
 
 
-def test_with_include_domain_case4a():
-    """Test case 4a - include and exclude specified, with included domain."""
+def test_with_include_domain_case4():
+    """Test case 4 - include and exclude specified, with included domain."""
     incl_dom = {"light", "sensor"}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {}
@@ -108,8 +108,8 @@ def test_with_include_domain_case4a():
     assert testfilter("sun.sun") is False
 
 
-def test_with_include_domain_exclude_glob_case4a():
-    """Test case 4a - include and exclude specified, with included domain but excluded by glob."""
+def test_with_include_domain_exclude_glob_case4():
+    """Test case 4 - include and exclude specified, with included domain but excluded by glob."""
     incl_dom = {"light", "sensor"}
     incl_ent = {"binary_sensor.working"}
     incl_glob = {}
@@ -130,8 +130,8 @@ def test_with_include_domain_exclude_glob_case4a():
     assert testfilter("sun.sun") is False
 
 
-def test_with_include_glob_case4a():
-    """Test case 4a - include and exclude specified, with included glob."""
+def test_with_include_glob_case4():
+    """Test case 4 - include and exclude specified, with included glob."""
     incl_dom = {}
     incl_glob = {"light.*", "sensor.*"}
     incl_ent = {"binary_sensor.working"}
@@ -151,8 +151,8 @@ def test_with_include_glob_case4a():
     assert testfilter("sun.sun") is False
 
 
-def test_with_include_domain_glob_filtering_case4a():
-    """Test case 4a - include and exclude specified, both have domains and globs."""
+def test_with_include_domain_glob_filtering_case4():
+    """Test case 4 - include and exclude specified, both have domains and globs."""
     incl_dom = {"light"}
     incl_glob = {"*working"}
     incl_ent = {}
@@ -174,7 +174,7 @@ def test_with_include_domain_glob_filtering_case4a():
 
 
 def test_with_include_domain_glob_filtering_case4a_include_strong():
-    """Test case 4a - include and exclude specified, both have domains and globs, and a specifically included entity."""
+    """Test case 4 - include and exclude specified, both have domains and globs, and a specifically included entity."""
     incl_dom = {"light"}
     incl_glob = {"*working"}
     incl_ent = {"binary_sensor.specificly_included"}
@@ -197,7 +197,7 @@ def test_with_include_domain_glob_filtering_case4a_include_strong():
 
 
 def test_with_include_glob_filtering_case4a_include_strong():
-    """Test case 4a - include and exclude specified, both have globs, and a specifically included entity."""
+    """Test case 4 - include and exclude specified, both have globs, and a specifically included entity."""
     incl_dom = {}
     incl_glob = {"*working"}
     incl_ent = {"binary_sensor.specificly_included"}
@@ -220,8 +220,8 @@ def test_with_include_glob_filtering_case4a_include_strong():
     assert testfilter("sun.sun") is False
 
 
-def test_exclude_domain_case4b():
-    """Test case 4b - include and exclude specified, with excluded domain."""
+def test_exclude_domain_case5():
+    """Test case 5 - include and exclude specified, with excluded domain."""
     incl_dom = {}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {"binary_sensor"}
@@ -237,8 +237,8 @@ def test_exclude_domain_case4b():
     assert testfilter("sun.sun") is True
 
 
-def test_exclude_glob_case4b():
-    """Test case 4b - include and exclude specified, with excluded glob."""
+def test_exclude_glob_case5():
+    """Test case 5 - include and exclude specified, with excluded glob."""
     incl_dom = {}
     incl_glob = {}
     incl_ent = {"binary_sensor.working"}
@@ -258,8 +258,8 @@ def test_exclude_glob_case4b():
     assert testfilter("sun.sun") is True
 
 
-def test_exclude_glob_case4b_include_strong():
-    """Test case 4b - include and exclude specified, with excluded glob, and a specifically included entity."""
+def test_exclude_glob_case5_include_strong():
+    """Test case 5 - include and exclude specified, with excluded glob, and a specifically included entity."""
     incl_dom = {}
     incl_glob = {}
     incl_ent = {"binary_sensor.working"}
@@ -279,8 +279,8 @@ def test_exclude_glob_case4b_include_strong():
     assert testfilter("sun.sun") is True
 
 
-def test_no_domain_case4c():
-    """Test case 4c - include and exclude specified, with no domains."""
+def test_no_domain_case6():
+    """Test case 6 - include and exclude specified, with no domains."""
     incl_dom = {}
     incl_ent = {"binary_sensor.working"}
     excl_dom = {}
