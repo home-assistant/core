@@ -38,6 +38,9 @@ SENSOR_ATTRS = [
     "status",
     "time",
     "time_iso",
+    "battery_warn",
+    "battery_crit",
+    "battery_level",
 ]
 
 
