@@ -5,7 +5,7 @@ from dataclasses import asdict
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -18,7 +18,7 @@ from .const import (
     DOMAIN,
 )
 
-TO_REDACT = {CONF_API_KEY, CONF_PROFILE_ID}
+TO_REDACT = {CONF_API_KEY, CONF_PROFILE_ID, CONF_UNIQUE_ID}
 
 
 async def async_get_config_entry_diagnostics(
@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     status_coordinator = coordinators[ATTR_STATUS]
 
     diagnostics_data = {
-        "config_entry_data": async_redact_data(config_entry.data, TO_REDACT),
+        "config_entry_data": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "dnssec_coordinator_data": asdict(dnssec_coordinator.data),
         "encryption_coordinator_data": asdict(encryption_coordinator.data),
         "ip_versions_coordinator_data": asdict(ip_versions_coordinator.data),
