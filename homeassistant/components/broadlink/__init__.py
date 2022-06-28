@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
-from .device import BroadlinkDevice, BroadlinkStores
+from .device import BroadlinkDevice
 from .heartbeat import BroadlinkHeartbeat
 
 
@@ -19,7 +19,6 @@ class BroadlinkData:
     devices: dict = field(default_factory=dict)
     platforms: dict = field(default_factory=dict)
     heartbeat: BroadlinkHeartbeat | None = None
-    stores: BroadlinkStores | None = None
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
