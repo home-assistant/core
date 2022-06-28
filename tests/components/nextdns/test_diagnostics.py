@@ -1,4 +1,6 @@
 """Test NextDNS diagnostics."""
+from homeassistant.components.diagnostics import REDACTED
+
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.components.nextdns import init_integration
 
@@ -10,16 +12,16 @@ async def test_entry_diagnostics(hass, hass_client):
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
     assert result["config_entry_data"] == {
-        "entry_id": "b2554ff74cbf9123ba93b45eb5c65048",
+        "entry_id": entry.entry_id,
         "version": 1,
         "domain": "nextdns",
         "title": "Fake Profile",
-        "data": {"profile_id": "**REDACTED**", "api_key": "**REDACTED**"},
+        "data": {"profile_id": REDACTED, "api_key": REDACTED},
         "options": {},
         "pref_disable_new_entities": False,
         "pref_disable_polling": False,
         "source": "user",
-        "unique_id": "**REDACTED**",
+        "unique_id": REDACTED,
         "disabled_by": None,
     }
     assert result["dnssec_coordinator_data"] == {
