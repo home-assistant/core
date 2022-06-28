@@ -34,7 +34,7 @@ async def async_get_config_entry_diagnostics(
     status_coordinator = coordinators[ATTR_STATUS]
 
     diagnostics_data = {
-        "config_entry_data": async_redact_data(config_entry.as_dict(), TO_REDACT),
+        "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "dnssec_coordinator_data": asdict(dnssec_coordinator.data),
         "encryption_coordinator_data": asdict(encryption_coordinator.data),
         "ip_versions_coordinator_data": asdict(ip_versions_coordinator.data),

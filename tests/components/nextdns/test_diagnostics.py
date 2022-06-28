@@ -11,7 +11,7 @@ async def test_entry_diagnostics(hass, hass_client):
 
     result = await get_diagnostics_for_config_entry(hass, hass_client, entry)
 
-    assert result["config_entry_data"] == {
+    assert result["config_entry"] == {
         "entry_id": entry.entry_id,
         "version": 1,
         "domain": "nextdns",
