@@ -73,7 +73,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
     """Representation of the Concord232-based alarm panel."""
 
     _attr_code_format = alarm.CodeFormat.NUMBER
-    _attr_state: str | None = None
+    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
