@@ -172,7 +172,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
 
     def __init__(self, hass, config, config_entry, discovery_data):
         """Init the MQTT Alarm Control Panel."""
-        self._state = None
+        self._state: str | None = None
 
         MqttEntity.__init__(self, hass, config, config_entry, discovery_data)
 
@@ -233,7 +233,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
@@ -250,7 +250,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         )
 
     @property
-    def code_format(self):
+    def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
         if (code := self._config.get(CONF_CODE)) is None:
             return None
@@ -259,10 +259,9 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         return alarm.CodeFormat.TEXT
 
     @property
-    def code_arm_required(self):
+    def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
-        return code_required
+        return self._config[CONF_CODE_ARM_REQUIRED]
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.
