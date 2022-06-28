@@ -129,7 +129,6 @@ BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
         key="boot_time",
         name="Boot Time",
         device_class=SensorDeviceClass.TIMESTAMP,
-        state_class=SensorStateClass.MEASUREMENT,
         icon="mdi:av-timer",
         value=lambda data: datetime.fromtimestamp(
             data.system.boot_time, tz=timezone.utc
