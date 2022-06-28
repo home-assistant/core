@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, STATE_UNAV
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
-from . import STATUS, init_integration
+from . import DNSSEC, ENCRYPTION, IP_VERSIONS, PROTOCOLS, STATUS, init_integration
 
 from tests.common import async_fire_time_changed
 
@@ -358,6 +358,16 @@ async def test_sensor(hass):
 
 async def test_availability(hass):
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
+    registry = er.async_get(hass)
+
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "xyz12_doh_queries",
+        suggested_object_id="fake_profile_dns_over_https_queries",
+        disabled_by=None,
+    )
+
     await init_integration(hass)
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
@@ -365,9 +375,26 @@ async def test_availability(hass):
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "100"
 
+    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "20"
+
     future = utcnow() + timedelta(minutes=10)
     with patch(
         "homeassistant.components.nextdns.NextDns.get_analytics_status",
+        side_effect=ApiError("API Error"),
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
+        side_effect=ApiError("API Error"),
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
+        side_effect=ApiError("API Error"),
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
+        side_effect=ApiError("API Error"),
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
         side_effect=ApiError("API Error"),
     ):
         async_fire_time_changed(hass, future)
@@ -381,6 +408,18 @@ async def test_availability(hass):
     with patch(
         "homeassistant.components.nextdns.NextDns.get_analytics_status",
         return_value=STATUS,
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_encryption",
+        return_value=ENCRYPTION,
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_dnssec",
+        return_value=DNSSEC,
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_ip_versions",
+        return_value=IP_VERSIONS,
+    ), patch(
+        "homeassistant.components.nextdns.NextDns.get_analytics_protocols",
+        return_value=PROTOCOLS,
     ):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
@@ -389,3 +428,8 @@ async def test_availability(hass):
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "100"
+
+    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "20"
