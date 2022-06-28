@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import cast
 
 from pytautulli import (
     PyTautulliApiActivity,
@@ -36,7 +36,7 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import TautulliEntity
 from .const import (
@@ -84,7 +84,7 @@ def get_top_stats(
 class TautulliSensorEntityMixin:
     """Mixin for Tautulli sensor."""
 
-    value_fn: Callable[[PyTautulliApiHomeStats, PyTautulliApiActivity, str], Any]
+    value_fn: Callable[[PyTautulliApiHomeStats, PyTautulliApiActivity, str], StateType]
 
 
 @dataclass
@@ -100,7 +100,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         key="watching_count",
         name="Tautulli",
         native_unit_of_measurement="Watching",
-        value_fn=lambda home_stats, activity, _: activity.stream_count,
+        value_fn=lambda home_stats, activity, _: cast(int, activity.stream_count),
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
@@ -109,7 +109,9 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
-        value_fn=lambda home_stats, activity, _: activity.stream_count_direct_play,
+        value_fn=lambda home_stats, activity, _: cast(
+            int, activity.stream_count_direct_play
+        ),
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
@@ -118,8 +120,9 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
-        value_fn=lambda home_stats, activity, _: activity.stream_count_direct_stream
-        or 0,
+        value_fn=lambda home_stats, activity, _: cast(
+            int, activity.stream_count_direct_stream
+        ),
     ),
     TautulliSensorEntityDescription(
         icon="mdi:plex",
@@ -128,7 +131,9 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement="Streams",
         entity_registry_enabled_default=False,
-        value_fn=lambda home_stats, activity, _: activity.stream_count_transcode,
+        value_fn=lambda home_stats, activity, _: cast(
+            int, activity.stream_count_transcode
+        ),
     ),
     TautulliSensorEntityDescription(
         key="total_bandwidth",
@@ -136,7 +141,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=DATA_KILOBITS,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda home_stats, activity, _: activity.total_bandwidth,
+        value_fn=lambda home_stats, activity, _: cast(int, activity.total_bandwidth),
     ),
     TautulliSensorEntityDescription(
         key="lan_bandwidth",
@@ -145,7 +150,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_KILOBITS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda home_stats, activity, _: activity.lan_bandwidth,
+        value_fn=lambda home_stats, activity, _: cast(int, activity.lan_bandwidth),
     ),
     TautulliSensorEntityDescription(
         key="wan_bandwidth",
@@ -154,7 +159,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
         native_unit_of_measurement=DATA_KILOBITS,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda home_stats, activity, _: activity.wan_bandwidth,
+        value_fn=lambda home_stats, activity, _: cast(int, activity.wan_bandwidth),
     ),
     TautulliSensorEntityDescription(
         icon="mdi:movie-open",
@@ -184,7 +189,7 @@ SENSOR_TYPES: tuple[TautulliSensorEntityDescription, ...] = (
 class TautulliSessionSensorEntityMixin:
     """Mixin for Tautulli session sensor."""
 
-    value_fn: Callable[[PyTautulliApiSession], Any]
+    value_fn: Callable[[PyTautulliApiSession], StateType]
 
 
 @dataclass
@@ -199,13 +204,13 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         icon="mdi:plex",
         key="state",
         name="State",
-        value_fn=lambda session: session.state,
+        value_fn=lambda session: cast(str, session.state),
     ),
     TautulliSessionSensorEntityDescription(
         key="full_title",
         name="Full Title",
         entity_registry_enabled_default=False,
-        value_fn=lambda session: session.full_title,
+        value_fn=lambda session: cast(str, session.full_title),
     ),
     TautulliSessionSensorEntityDescription(
         icon="mdi:progress-clock",
@@ -213,14 +218,14 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         name="Progress",
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
-        value_fn=lambda session: session.progress_percent,
+        value_fn=lambda session: cast(str, session.progress_percent),
     ),
     TautulliSessionSensorEntityDescription(
         key="stream_resolution",
         name="Stream Resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda session: session.stream_video_resolution,
+        value_fn=lambda session: cast(str, session.stream_video_resolution),
     ),
     TautulliSessionSensorEntityDescription(
         icon="mdi:plex",
@@ -228,21 +233,21 @@ SESSION_SENSOR_TYPES: tuple[TautulliSessionSensorEntityDescription, ...] = (
         name="Transcode Decision",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda session: session.transcode_decision,
+        value_fn=lambda session: cast(str, session.transcode_decision),
     ),
     TautulliSessionSensorEntityDescription(
         key="session_thumb",
         name="session Thumbnail",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda session: session.user_thumb,
+        value_fn=lambda session: cast(str, session.user_thumb),
     ),
     TautulliSessionSensorEntityDescription(
         key="video_resolution",
         name="Video Resolution",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda session: session.video_resolution,
+        value_fn=lambda session: cast(str, session.video_resolution),
     ),
 )
 
@@ -293,7 +298,7 @@ class TautulliSensor(TautulliEntity, SensorEntity):
     entity_description: TautulliSensorEntityDescription
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
             self.coordinator.home_stats,
@@ -320,7 +325,7 @@ class TautulliSessionSensor(TautulliEntity, SensorEntity):
         self._attr_name = f"{user.username} {description.name}"
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if self.coordinator.activity:
             for session in self.coordinator.activity.sessions:
