@@ -264,7 +264,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         code_required = self._config.get(CONF_CODE_ARM_REQUIRED)
         return code_required
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command.
 
         This method is a coroutine.
@@ -275,7 +275,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         payload = self._config[CONF_PAYLOAD_DISARM]
         await self._publish(code, payload)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command.
 
         This method is a coroutine.
@@ -286,7 +286,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_HOME]
         await self._publish(code, action)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command.
 
         This method is a coroutine.
@@ -297,7 +297,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_AWAY]
         await self._publish(code, action)
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command.
 
         This method is a coroutine.
@@ -308,7 +308,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_NIGHT]
         await self._publish(code, action)
 
-    async def async_alarm_arm_vacation(self, code=None):
+    async def async_alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command.
 
         This method is a coroutine.
@@ -319,7 +319,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_VACATION]
         await self._publish(code, action)
 
-    async def async_alarm_arm_custom_bypass(self, code=None):
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command.
 
         This method is a coroutine.
@@ -330,7 +330,7 @@ class MqttAlarm(MqttEntity, alarm.AlarmControlPanelEntity):
         action = self._config[CONF_PAYLOAD_ARM_CUSTOM_BYPASS]
         await self._publish(code, action)
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send trigger command.
 
         This method is a coroutine.

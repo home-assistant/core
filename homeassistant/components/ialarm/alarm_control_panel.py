@@ -1,4 +1,6 @@
 """Interfaces with iAlarm control panels."""
+from __future__ import annotations
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -52,14 +54,14 @@ class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         """Return the state of the device."""
         return self.coordinator.state
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self.coordinator.ialarm.disarm()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self.coordinator.ialarm.arm_stay()
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self.coordinator.ialarm.arm_away()
