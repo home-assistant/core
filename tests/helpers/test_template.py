@@ -296,32 +296,32 @@ def test_int_function(hass):
     assert render(hass, "{{ int('bad', default=1) }}") == 1
 
 
-def test_boolean_function(hass):
-    """Test boolean function."""
-    assert render(hass, "{{ boolean(true) }}") is True
-    assert render(hass, "{{ boolean(false) }}") is False
-    assert render(hass, "{{ boolean('on') }}") is True
-    assert render(hass, "{{ boolean('off') }}") is False
+def test_bool_function(hass):
+    """Test bool function."""
+    assert render(hass, "{{ bool(true) }}") is True
+    assert render(hass, "{{ bool(false) }}") is False
+    assert render(hass, "{{ bool('on') }}") is True
+    assert render(hass, "{{ bool('off') }}") is False
     with pytest.raises(TemplateError):
-        render(hass, "{{ boolean('unknown') }}")
+        render(hass, "{{ bool('unknown') }}")
     with pytest.raises(TemplateError):
-        render(hass, "{{ boolean(none) }}")
-    assert render(hass, "{{ boolean('unavailable', none) }}") is None
-    assert render(hass, "{{ boolean('unavailable', default=none) }}") is None
+        render(hass, "{{ bool(none) }}")
+    assert render(hass, "{{ bool('unavailable', none) }}") is None
+    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
 
 
-def test_boolean_filter(hass):
-    """Test boolean filter."""
-    assert render(hass, "{{ true | boolean }}") is True
-    assert render(hass, "{{ false | boolean }}") is False
-    assert render(hass, "{{ 'on' | boolean }}") is True
-    assert render(hass, "{{ 'off' | boolean }}") is False
+def test_bool_filter(hass):
+    """Test bool filter."""
+    assert render(hass, "{{ true | bool }}") is True
+    assert render(hass, "{{ false | bool }}") is False
+    assert render(hass, "{{ 'on' | bool }}") is True
+    assert render(hass, "{{ 'off' | bool }}") is False
     with pytest.raises(TemplateError):
-        render(hass, "{{ 'unknown' | boolean }}")
+        render(hass, "{{ 'unknown' | bool }}")
     with pytest.raises(TemplateError):
-        render(hass, "{{ none | boolean }}")
-    assert render(hass, "{{ 'unavailable' | boolean(none) }}") is None
-    assert render(hass, "{{ 'unavailable' | boolean(default=none) }}") is None
+        render(hass, "{{ none | bool }}")
+    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
+    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
 
 
 @pytest.mark.parametrize(

@@ -969,7 +969,7 @@ def forgiving_boolean(
         return cv.boolean(value)
     except vol.Invalid:
         if default is _SENTINEL:
-            raise_no_default("boolean", value)
+            raise_no_default("bool", value)
         return default
 
 
@@ -2002,7 +2002,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.filters["relative_time"] = relative_time
         self.filters["slugify"] = slugify
         self.filters["iif"] = iif
-        self.filters["boolean"] = forgiving_boolean
+        self.filters["bool"] = forgiving_boolean
         self.globals["log"] = logarithm
         self.globals["sin"] = sine
         self.globals["cos"] = cosine
@@ -2034,7 +2034,7 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         self.globals["unpack"] = struct_unpack
         self.globals["slugify"] = slugify
         self.globals["iif"] = iif
-        self.globals["boolean"] = forgiving_boolean
+        self.globals["bool"] = forgiving_boolean
         self.tests["is_number"] = is_number
         self.tests["match"] = regex_match
         self.tests["search"] = regex_search
