@@ -2,6 +2,16 @@
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.weather import (
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_WIND_SPEED,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION
 from homeassistant.core import HomeAssistant
@@ -24,6 +34,13 @@ from .const import (
     WEATHER_SENSOR_TYPES,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
+
+RENAMED_KEYS = {
+    ATTR_FORECAST_NATIVE_PRECIPITATION: ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP: ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW: ATTR_FORECAST_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED: ATTR_FORECAST_WIND_SPEED,
+}
 
 
 async def async_setup_entry(
@@ -94,9 +111,10 @@ class AemetSensor(AbstractAemetSensor):
         description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
+        unique_id = f"{unique_id}-{RENAMED_KEYS.get(description.key, description.key)}"
         super().__init__(
             name=name,
-            unique_id=f"{unique_id}-{description.key}",
+            unique_id=unique_id,
             coordinator=weather_coordinator,
             description=description,
         )
