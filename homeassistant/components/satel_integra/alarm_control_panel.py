@@ -61,6 +61,9 @@ async def async_setup_platform(
 class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of an AlarmDecoder-based alarm panel."""
 
+    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_should_poll = False
+    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -68,8 +71,7 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
 
     def __init__(self, controller, name, arm_home_mode, partition_id):
         """Initialize the alarm panel."""
-        self._name = name
-        self._state = None
+        self._attr_name = name
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
         self._satel = controller
@@ -89,8 +91,8 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
         """Handle alarm status update."""
         state = self._read_alarm_state()
         _LOGGER.debug("Got status update, current status: %s", state)
-        if state != self._state:
-            self._state = state
+        if state != self._attr_state:
+            self._attr_state = state
             self.async_write_ha_state()
         else:
             _LOGGER.debug("Ignoring alarm status message, same state")
@@ -129,35 +131,15 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
 
         return hass_alarm_status
 
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def code_format(self):
-        """Return the regex for code format or None if no code is required."""
-        return alarm.CodeFormat.NUMBER
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
-
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not code:
             _LOGGER.debug("Code was empty or None")
             return
 
-        clear_alarm_necessary = self._state == STATE_ALARM_TRIGGERED
+        clear_alarm_necessary = self._attr_state == STATE_ALARM_TRIGGERED
 
-        _LOGGER.debug("Disarming, self._state: %s", self._state)
+        _LOGGER.debug("Disarming, self._attr_state: %s", self._attr_state)
 
         await self._satel.disarm(code, [self._partition_id])
 
