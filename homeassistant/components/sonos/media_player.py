@@ -1,7 +1,7 @@
 """Support to interface with Sonos players."""
 from __future__ import annotations
 
-from asyncio import Event, run_coroutine_threadsafe
+import asyncio
 import datetime
 import logging
 from typing import Any
@@ -556,7 +556,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             is_radio = media_id.startswith("media-source://radio_browser/")
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
-                run_coroutine_threadsafe(
+                asyncio.run_coroutine_threadsafe(
                     media_source.async_resolve_media(
                         self.hass, media_id, self.entity_id
                     ),
@@ -777,41 +777,28 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
             await self.hass.async_add_executor_job(self.speaker.join, speakers)
 
-    async def async_process_unjoin(self, time: datetime.datetime) -> None:
-        """Process the unjoin with all remove requests within the coalescing period."""
-        unjoin_event = self.hass.data[DATA_SONOS].unjoin_events[
-            self.speaker.household_id
-        ]
-        speakers = self.hass.data[DATA_SONOS].unjoin_speakers.get(
-            self.speaker.household_id
-        )
-
-        await SonosSpeaker.unjoin_multi(self.hass, speakers)
-        del self.hass.data[DATA_SONOS].unjoin_speakers[self.speaker.household_id]
-
-        unjoin_event.set()
-        del self.hass.data[DATA_SONOS].unjoin_events[self.speaker.household_id]
-
     async def async_unjoin_player(self):
-        """Remove this player from its group.
+        """Remove this player from any group.
 
         Coalesces all calls within 0.5s to allow use of SonosSpeaker.unjoin_multi()
         which optimizes the order in which speakers are removed from their groups.
         Removing coordinators last better preserves playqueues on the speakers.
         """
-        unjoin_event = self.hass.data[DATA_SONOS].unjoin_events.get(
-            self.speaker.household_id
-        )
+        sonos_data = self.hass.data[DATA_SONOS]
+        household_id = self.speaker.household_id
 
-        if unjoin_event is None:
-            unjoin_event = self.hass.data[DATA_SONOS].unjoin_events[
-                self.speaker.household_id
-            ] = Event()
-            async_call_later(self.hass, 0.5, self.async_process_unjoin)
+        async def async_process_unjoin(now: datetime.datetime) -> None:
+            """Process the unjoin with all remove requests within the coalescing period."""
+            unjoin_event = sonos_data.unjoin_events.pop(household_id)
+            speakers = sonos_data.unjoin_speakers.pop(household_id, [])
+            await SonosSpeaker.unjoin_multi(self.hass, speakers)
+            unjoin_event.set()
 
-        unjoin_speakers = self.hass.data[DATA_SONOS].unjoin_speakers.setdefault(
-            self.speaker.household_id, []
-        )
+        if (unjoin_event := sonos_data.unjoin_events.get(household_id)) is None:
+            unjoin_event = sonos_data.unjoin_events[household_id] = asyncio.Event()
+            async_call_later(self.hass, 0.5, async_process_unjoin)
+
+        unjoin_speakers = sonos_data.unjoin_speakers.setdefault(household_id, [])
         unjoin_speakers.append(self.speaker)
 
         await unjoin_event.wait()
