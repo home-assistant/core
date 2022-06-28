@@ -180,7 +180,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _disarm(self, code: str | None = None) -> None:
+    def _disarm(self, code=None):
         """Disarm synchronous."""
         ArmingHelper(self._partition).disarm()
 
@@ -218,7 +218,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_away(self, code: str | None = None) -> None:
+    def _arm_away(self, code=None):
         """Arm away synchronous."""
         ArmingHelper(self._partition).arm_away()
 
@@ -237,7 +237,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_night(self, code: str | None = None) -> None:
+    def _arm_night(self, code=None):
         """Arm night synchronous."""
         ArmingHelper(self._partition).arm_stay_night()
 
@@ -275,6 +275,6 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_away_instant(self, code: str | None = None) -> None:
+    def _arm_away_instant(self, code=None):
         """Arm away instant synchronous."""
         ArmingHelper(self._partition).arm_away_instant()
