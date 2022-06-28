@@ -247,7 +247,7 @@ class AqaraMonitoringMode(ZCLEnumSelectEntity, id_suffix="monitoring_mode"):
     """Representation of a ZHA monitoring mode configuration entity."""
 
     _select_attr = "monitoring_mode"
-    _enum: Enum = AqaraMonitoringModess
+    _enum = AqaraMonitoringModess
 
 
 class AqaraApproachDistances(types.enum8):
@@ -263,4 +263,4 @@ class AqaraApproachDistance(ZCLEnumSelectEntity, id_suffix="approach_distance"):
     """Representation of a ZHA approach distance configuration entity."""
 
     _select_attr = "approach_distance"
-    _enum: Enum = AqaraApproachDistances
+    _enum = AqaraApproachDistances
