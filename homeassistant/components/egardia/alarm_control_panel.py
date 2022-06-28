@@ -63,7 +63,7 @@ def setup_platform(
 class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
-    _attr_state: str | None = None
+    _attr_state: str | None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
