@@ -1,6 +1,7 @@
 """Config flow for Google integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -155,9 +156,7 @@ class OAuth2FlowHandler(
             },
         )
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
