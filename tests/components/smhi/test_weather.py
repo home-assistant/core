@@ -46,10 +46,12 @@ async def test_setup_hass(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test for successfully setting up the smhi integration."""
-    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -87,7 +89,7 @@ async def test_setup_hass(
 
 async def test_properties_no_data(hass: HomeAssistant) -> None:
     """Test properties when no API data available."""
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     with patch(
@@ -176,7 +178,7 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
 
     testdata = [data, data2, data3]
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     with patch(
@@ -203,7 +205,7 @@ async def test_refresh_weather_forecast_retry(
     hass: HomeAssistant, error: Exception
 ) -> None:
     """Test the refresh weather forecast function."""
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
     now = utcnow()
 
@@ -320,10 +322,12 @@ async def test_custom_speed_unit(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test Wind Gust speed with custom unit."""
-    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
