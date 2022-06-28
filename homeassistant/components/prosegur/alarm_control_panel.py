@@ -46,12 +46,12 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.ARM_HOME
     )
+    _installation: Installation
 
     def __init__(self, contract: str, auth: Auth) -> None:
         """Initialize the Prosegur alarm panel."""
         self._changed_by = None
 
-        self._installation = None
         self.contract = contract
         self._auth = auth
 
@@ -69,21 +69,17 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
             self._attr_available = False
             return
 
-        assert self._installation
         self._attr_state = STATE_MAPPING.get(self._installation.status)
         self._attr_available = True
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        assert self._installation
         await self._installation.disarm(self._auth)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm away command."""
-        assert self._installation
         await self._installation.arm_partially(self._auth)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        assert self._installation
         await self._installation.arm(self._auth)
