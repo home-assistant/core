@@ -25,7 +25,9 @@ async def async_setup_entry(
     async_add_entities([IAlarmPanel(coordinator)], False)
 
 
-class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
+class IAlarmPanel(
+    CoordinatorEntity[IAlarmDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of an iAlarm device."""
 
     _attr_name = "iAlarm"
@@ -33,7 +35,6 @@ class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
-    coordinator: IAlarmDataUpdateCoordinator
 
     def __init__(self, coordinator: IAlarmDataUpdateCoordinator) -> None:
         """Create the entity with a DataUpdateCoordinator."""
