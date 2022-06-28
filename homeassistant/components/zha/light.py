@@ -74,6 +74,7 @@ CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
 DEFAULT_TRANSITION = 1
+DEFAULT_MIN_BRIGHTNESS = 2
 
 UPDATE_COLORLOOP_ACTION = 0x1
 UPDATE_COLORLOOP_DIRECTION = 0x2
@@ -260,7 +261,9 @@ class BaseLight(LogMixin, light.LightEntity):
         if color_provided_from_off:
             # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
-            result = await self._level_channel.move_to_level_with_on_off(2, 0)
+            result = await self._level_channel.move_to_level_with_on_off(
+                DEFAULT_MIN_BRIGHTNESS, DEFAULT_TRANSITION
+            )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
