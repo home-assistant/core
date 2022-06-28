@@ -141,14 +141,14 @@ class EnvisalinkAlarm(EnvisalinkDevice, AlarmControlPanelEntity):
             self.async_write_ha_state()
 
     @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Regex for code format or None if no code is required."""
         if self._code:
             return None
         return CodeFormat.NUMBER
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         state = STATE_UNKNOWN
 
