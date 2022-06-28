@@ -130,11 +130,9 @@ class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
     channel_names: frozenset[str] = attr.ib(
-        factory=_get_empty_frozenset, converter=set_or_callable
+        factory=frozenset, converter=set_or_callable
     )
-    generic_ids: frozenset[str] = attr.ib(
-        factory=_get_empty_frozenset, converter=set_or_callable
-    )
+    generic_ids: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
     manufacturers: frozenset[str] | Callable = attr.ib(
         factory=_get_empty_frozenset, converter=set_or_callable
     )
