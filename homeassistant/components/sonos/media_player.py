@@ -1,7 +1,7 @@
 """Support to interface with Sonos players."""
 from __future__ import annotations
 
-from asyncio import run_coroutine_threadsafe
+from asyncio import Event, run_coroutine_threadsafe
 import datetime
 import logging
 from typing import Any
@@ -44,6 +44,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from . import media_browser
 from .const import (
@@ -776,7 +777,41 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
             await self.hass.async_add_executor_job(self.speaker.join, speakers)
 
+    async def async_process_unjoin(self, time: datetime.datetime) -> None:
+        """Process the unjoin with all remove requests within the coalescing period."""
+        unjoin_event = self.hass.data[DATA_SONOS].unjoin_events[
+            self.speaker.household_id
+        ]
+        speakers = self.hass.data[DATA_SONOS].unjoin_speakers.get(
+            self.speaker.household_id
+        )
+
+        await SonosSpeaker.unjoin_multi(self.hass, speakers)
+        del self.hass.data[DATA_SONOS].unjoin_speakers[self.speaker.household_id]
+
+        unjoin_event.set()
+        del self.hass.data[DATA_SONOS].unjoin_events[self.speaker.household_id]
+
     async def async_unjoin_player(self):
-        """Remove this player from any group."""
-        async with self.hass.data[DATA_SONOS].topology_condition:
-            await self.hass.async_add_executor_job(self.speaker.unjoin)
+        """Remove this player from its group.
+
+        Coalesces all calls within 0.5s to allow use of SonosSpeaker.unjoin_multi()
+        which optimizes the order in which speakers are removed from their groups.
+        Removing coordinators last better preserves playqueues on the speakers.
+        """
+        unjoin_event = self.hass.data[DATA_SONOS].unjoin_events.get(
+            self.speaker.household_id
+        )
+
+        if unjoin_event is None:
+            unjoin_event = self.hass.data[DATA_SONOS].unjoin_events[
+                self.speaker.household_id
+            ] = Event()
+            async_call_later(self.hass, 0.5, self.async_process_unjoin)
+
+        unjoin_speakers = self.hass.data[DATA_SONOS].unjoin_speakers.setdefault(
+            self.speaker.household_id, []
+        )
+        unjoin_speakers.append(self.speaker)
+
+        await unjoin_event.wait()

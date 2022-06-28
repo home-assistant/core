@@ -84,6 +84,8 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
+        self.unjoin_events: dict[str, asyncio.Event] = {}
+        self.unjoin_speakers: dict[str, list[SonosSpeaker]] = {}
         self.hosts_heartbeat = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
