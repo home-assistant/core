@@ -215,7 +215,7 @@ class ViCareBinarySensor(BinarySensorEntity):
         return self._state is not None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         tmp_id = (
             f"{self._device_config.getConfig().serial}-{self.entity_description.key}"

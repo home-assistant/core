@@ -162,7 +162,7 @@ class ViCareClimate(ClimateEntity):
         self._current_action = None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         return f"{self._device_config.getConfig().serial}-{self._circuit.id}"
 
