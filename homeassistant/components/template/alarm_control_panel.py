@@ -144,8 +144,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
-        self._code_arm_required = config[CONF_CODE_ARM_REQUIRED]
-        self._code_format = config[CONF_CODE_FORMAT]
+        self._code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
+        self._code_format: TemplateCodeFormat = config[CONF_CODE_FORMAT]
         if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
             self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
@@ -158,10 +158,10 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         if (arm_night_action := config.get(CONF_ARM_NIGHT_ACTION)) is not None:
             self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
-        self._state = None
+        self._state: str | None = None
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
@@ -187,12 +187,12 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         return supported_features
 
     @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Regex for code format or None if no code is required."""
         return self._code_format.value
 
     @property
-    def code_arm_required(self):
+    def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
         return self._code_arm_required
 
