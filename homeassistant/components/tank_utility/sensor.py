@@ -42,7 +42,7 @@ SENSOR_ATTRS = [
     "battery_crit",
     "battery_level",
     "rssi",
-    "temperature"
+    "temperature",
 ]
 
 
