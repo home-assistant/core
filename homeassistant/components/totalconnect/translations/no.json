@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Auto bypass lavt batteri"
+                },
+                "description": "Omg\u00e5 automatisk soner i det \u00f8yeblikket de rapporterer lavt batteri.",
+                "title": "TotalConnect-alternativer"
+            }
+        }
     }
 }

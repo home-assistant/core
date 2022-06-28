@@ -389,23 +389,32 @@ class RainMachineZone(RainMachineActivitySwitch):
 
         self._attr_is_on = bool(data["state"])
 
-        self._attr_extra_state_attributes.update(
-            {
-                ATTR_AREA: round(data["waterSense"]["area"], 2),
-                ATTR_CURRENT_CYCLE: data["cycle"],
-                ATTR_FIELD_CAPACITY: round(data["waterSense"]["fieldCapacity"], 2),
-                ATTR_ID: data["uid"],
-                ATTR_NO_CYCLES: data["noOfCycles"],
-                ATTR_PRECIP_RATE: round(data["waterSense"]["precipitationRate"], 2),
-                ATTR_RESTRICTIONS: data["restriction"],
-                ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
-                ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
-                ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
-                ATTR_STATUS: RUN_STATE_MAP[data["state"]],
-                ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
-                ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data["type"], 99),
-            }
-        )
+        attrs = {
+            ATTR_CURRENT_CYCLE: data["cycle"],
+            ATTR_ID: data["uid"],
+            ATTR_NO_CYCLES: data["noOfCycles"],
+            ATTR_RESTRICTIONS: data["restriction"],
+            ATTR_SLOPE: SLOPE_TYPE_MAP.get(data["slope"], 99),
+            ATTR_SOIL_TYPE: SOIL_TYPE_MAP.get(data["soil"], 99),
+            ATTR_SPRINKLER_TYPE: SPRINKLER_TYPE_MAP.get(data["group_id"], 99),
+            ATTR_STATUS: RUN_STATE_MAP[data["state"]],
+            ATTR_SUN_EXPOSURE: SUN_EXPOSURE_MAP.get(data.get("sun")),
+            ATTR_VEGETATION_TYPE: VEGETATION_MAP.get(data["type"], 99),
+        }
+
+        if "waterSense" in data:
+            if "area" in data["waterSense"]:
+                attrs[ATTR_AREA] = round(data["waterSense"]["area"], 2)
+            if "fieldCapacity" in data["waterSense"]:
+                attrs[ATTR_FIELD_CAPACITY] = round(
+                    data["waterSense"]["fieldCapacity"], 2
+                )
+            if "precipitationRate" in data["waterSense"]:
+                attrs[ATTR_PRECIP_RATE] = round(
+                    data["waterSense"]["precipitationRate"], 2
+                )
+
+        self._attr_extra_state_attributes.update(attrs)
 
 
 class RainMachineZoneEnabled(RainMachineEnabledSwitch):

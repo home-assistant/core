@@ -90,6 +90,8 @@ async def async_setup_platform(
 class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
     """Representation of a Template switch."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -148,11 +150,6 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
     def is_on(self):
         """Return true if device is on."""
         return self._state
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
 
     async def async_turn_on(self, **kwargs):
         """Fire the on action."""

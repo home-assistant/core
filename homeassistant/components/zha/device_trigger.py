@@ -1,4 +1,5 @@
 """Provides device automations for ZHA devices that emit events."""
+
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -16,12 +17,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .core.const import ZHA_EVENT
 from .core.helpers import async_get_zha_device
 
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
-ZHA_EVENT = "zha_event"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}

@@ -9,7 +9,7 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
+                    "host": "Nome do host",
                     "port": "Porta"
                 },
                 "title": "Definir detalhes do servidor"

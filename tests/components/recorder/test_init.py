@@ -25,7 +25,7 @@ from homeassistant.components.recorder import (
     get_instance,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE, KEEPALIVE_TIME
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
     Events,
@@ -33,8 +33,8 @@ from homeassistant.components.recorder.models import (
     StateAttributes,
     States,
     StatisticsRuns,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,
@@ -116,6 +116,26 @@ async def test_shutdown_before_startup_finishes(
     assert run_info.run_id == 1
     assert run_info.start is not None
     assert run_info.end is not None
+
+
+async def test_canceled_before_startup_finishes(
+    hass: HomeAssistant,
+    async_setup_recorder_instance: SetupRecorderInstanceT,
+    caplog: pytest.LogCaptureFixture,
+):
+    """Test recorder shuts down when its startup future is canceled out from under it."""
+    hass.state = CoreState.not_running
+    await async_setup_recorder_instance(hass)
+    instance = get_instance(hass)
+    await instance.async_db_ready
+    instance._hass_started.cancel()
+    with patch.object(instance, "engine"):
+        await hass.async_block_till_done()
+        await hass.async_add_executor_job(instance.join)
+    assert (
+        "Recorder startup was externally canceled before it could complete"
+        in caplog.text
+    )
 
 
 async def test_shutdown_closes_connections(hass, recorder_mock):

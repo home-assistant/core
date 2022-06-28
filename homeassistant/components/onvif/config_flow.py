@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pprint import pformat
+from typing import Any
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -44,7 +45,7 @@ def wsdiscovery() -> list[Service]:
     return services
 
 
-async def async_discovery(hass) -> bool:
+async def async_discovery(hass) -> list[dict[str, Any]]:
     """Return if there are devices that can be discovered."""
     LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)
@@ -76,7 +77,9 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OnvifOptionsFlowHandler:
         """Get the options flow for this handler."""
         return OnvifOptionsFlowHandler(config_entry)
 
@@ -262,7 +265,7 @@ class OnvifFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class OnvifOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle ONVIF options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize ONVIF options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
