@@ -126,25 +126,21 @@ class ZHAAlarmControlPanel(ZhaEntity, AlarmControlPanelEntity):
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
-        assert code is not None
         self._channel.arm(IasAce.ArmMode.Disarm, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        assert code is not None
         self._channel.arm(IasAce.ArmMode.Arm_Day_Home_Only, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        assert code is not None
         self._channel.arm(IasAce.ArmMode.Arm_All_Zones, code, 0)
         self.async_write_ha_state()
 
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        assert code is not None
         self._channel.arm(IasAce.ArmMode.Arm_Night_Sleep_Only, code, 0)
         self.async_write_ha_state()
 
