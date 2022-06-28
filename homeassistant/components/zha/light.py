@@ -228,25 +228,11 @@ class BaseLight(LogMixin, light.LightEntity):
         effect = kwargs.get(light.ATTR_EFFECT)
         flash = kwargs.get(light.ATTR_FLASH)
 
-        if (
-            brightness is None
-            and self._off_with_transition
-            and self._off_brightness is not None
-        ):
-            brightness = self._off_brightness
-
-        # TODO: Move this block somewhere else?
-        if brightness is not None:
-            level = min(254, brightness)
-        else:
-            level = self._brightness or 254
-
         # If the light is currently off but a turn_on call with a color/temperature is sent,
         # the light needs to be turned on first at a low brightness level where the light is immediately transitioned
         # to the correct color. Afterwards, the transition is only from the low brightness to the new brightness.
         # Otherwise, the transition is from the color the light had before being turned on to the new color.
         # This can look especially bad with transitions longer than a second.
-        # TODO: Name this differently?
         color_provided_from_off = (
             not self._state
             and brightness_supported(self._attr_supported_color_modes)
@@ -256,6 +242,18 @@ class BaseLight(LogMixin, light.LightEntity):
         if color_provided_from_off:
             # Set the duration for the color changing commands to 0.
             duration = 0
+
+        if (
+            brightness is None
+            and (self._off_with_transition or color_provided_from_off)
+            and self._off_brightness is not None
+        ):
+            brightness = self._off_brightness
+
+        if brightness is not None:
+            level = min(254, brightness)
+        else:
+            level = self._brightness or 254
 
         t_log = {}
 
