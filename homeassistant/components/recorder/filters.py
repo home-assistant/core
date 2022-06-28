@@ -153,21 +153,16 @@ class Filters:
 
         # Case 4 - both includes and excludes specified
         # Case 4a - include domain or glob specified
-        #  - if domain is included, pass if entity not excluded
-        #  - if glob is included, pass if entity and domain not excluded
-        #  - if domain and glob are not included, pass if entity is included
-        # note: if both include domain matches then exclude domains ignored.
-        #   If glob matches then exclude domains and glob checked
+        #  - if entity_id is included, accept
+        #  - if entity_id is excluded, reject
+        #  - if included by glob, accept
+        #  - if excluded by glob, reject
+        #  - if domain matches, accept
+        #  - reject
         if self.included_domains or self.included_entity_globs:
             return or_(
-                (i_domains & ~(e_entities | e_entity_globs)),
-                (
-                    ~i_domains
-                    & or_(
-                        (i_entity_globs & ~(or_(*excludes))),
-                        (~i_entity_globs & i_entities),
-                    )
-                ),
+                i_entities,
+                (~e_entities & (i_entity_globs | (~e_entity_globs & i_domains))),
             ).self_group()
 
         # Case 4b - exclude domain or glob specified, include has no domain or glob
@@ -175,8 +170,11 @@ class Filters:
         # include is specified since its only a list of entity IDs its used only to
         # expose specific entities excluded by domain or glob. Any entities not
         # excluded are then presumed included. Logic is as follows
-        #  - if domain or glob is excluded, pass if entity is included
-        #  - if domain is not excluded, pass if entity not excluded by ID
+        #  - if entity_id is included, accept
+        #  - if entity_id is excluded, reject
+        #  - if domain is excluded, reject
+        #  - if excluded by glob, reject
+        #  - accept
         if self.excluded_domains or self.excluded_entity_globs:
             return (not_(or_(*excludes)) | i_entities).self_group()
 
