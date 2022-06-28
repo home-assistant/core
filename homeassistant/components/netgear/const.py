@@ -13,6 +13,7 @@ KEY_ROUTER = "router"
 KEY_COORDINATOR = "coordinator"
 KEY_COORDINATOR_TRAFFIC = "coordinator_traffic"
 KEY_COORDINATOR_SPEED = "coordinator_speed"
+KEY_COORDINATOR_LINK = "coordinator_link"
 
 DEFAULT_CONSIDER_HOME = timedelta(seconds=180)
 DEFAULT_NAME = "Netgear router"
