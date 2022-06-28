@@ -145,11 +145,7 @@ def _glob_to_re(glob: str) -> re.Pattern[str]:
 
 def _test_against_patterns(patterns: list[re.Pattern[str]], entity_id: str) -> bool:
     """Test entity against list of patterns, true if any match."""
-    for pattern in patterns:
-        if pattern.match(entity_id):
-            return True
-
-    return False
+    return any(pattern.match(entity_id) for pattern in patterns)
 
 
 def _convert_globs_to_pattern_list(globs: list[str] | None) -> list[re.Pattern[str]]:
@@ -193,7 +189,7 @@ def _generate_filter_from_sets_and_pattern_lists(
         return (
             entity_id in include_e
             or domain in include_d
-            or bool(include_eg and _test_against_patterns(include_eg, entity_id))
+            or _test_against_patterns(include_eg, entity_id)
         )
 
     def entity_excluded(domain: str, entity_id: str) -> bool:
@@ -201,10 +197,10 @@ def _generate_filter_from_sets_and_pattern_lists(
         return (
             entity_id in exclude_e
             or domain in exclude_d
-            or bool(exclude_eg and _test_against_patterns(exclude_eg, entity_id))
+            or _test_against_patterns(exclude_eg, entity_id)
         )
 
-    # Case 1 - no includes or excludes - pass all entities
+    # Case 1 - no includes or excludes - accept all entities
     if not have_include and not have_exclude:
         return lambda entity_id: True
 
@@ -230,26 +226,26 @@ def _generate_filter_from_sets_and_pattern_lists(
 
     # Case 4 - both includes and excludes specified
     # Case 4a - include domain or glob specified
-    #  - if domain is included, pass if entity not excluded
-    #  - if glob is included, pass if entity and domain not excluded
-    #  - if domain and glob are not included, pass if entity is included
-    # note: if both include domain matches then exclude domains ignored.
-    #   If glob matches then exclude domains and glob checked
+    #  - if entity_id is included, accept
+    #  - if entity_id is excluded, reject
+    #  - if included by glob, accept
+    #  - if excluded by glob, reject
+    #  - if domain matches, accept
+    #  - reject
     if include_d or include_eg:
 
         def entity_filter_4a(entity_id: str) -> bool:
             """Return filter function for case 4a."""
-            domain = split_entity_id(entity_id)[0]
-            if domain in include_d:
-                return not (
-                    entity_id in exclude_e
-                    or bool(
-                        exclude_eg and _test_against_patterns(exclude_eg, entity_id)
+            return entity_id in include_e or (
+                entity_id not in exclude_e
+                and (
+                    _test_against_patterns(include_eg, entity_id)
+                    or (
+                        split_entity_id(entity_id)[0] in include_d
+                        and not _test_against_patterns(exclude_eg, entity_id)
                     )
                 )
-            if _test_against_patterns(include_eg, entity_id):
-                return not entity_excluded(domain, entity_id)
-            return entity_id in include_e
+            )
 
         return entity_filter_4a
 
@@ -258,8 +254,11 @@ def _generate_filter_from_sets_and_pattern_lists(
     # include is specified since its only a list of entity IDs its used only to
     # expose specific entities excluded by domain or glob. Any entities not
     # excluded are then presumed included. Logic is as follows
-    #  - if domain or glob is excluded, pass if entity is included
-    #  - if domain is not excluded, pass if entity not excluded by ID
+    #  - if entity_id is included, accept
+    #  - if entity_id is excluded, reject
+    #  - if domain is excluded, reject
+    #  - if excluded by glob, reject
+    #  - accept
     if exclude_d or exclude_eg:
 
         def entity_filter_4b(entity_id: str) -> bool:
@@ -274,5 +273,5 @@ def _generate_filter_from_sets_and_pattern_lists(
         return entity_filter_4b
 
     # Case 4c - neither include or exclude domain specified
-    #  - Only pass if entity is included.  Ignore entity excludes.
+    #  - Only accept if entity is included.  Ignore entity excludes.
     return lambda entity_id: entity_id in include_e
