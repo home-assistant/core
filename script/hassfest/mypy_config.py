@@ -146,7 +146,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xiaomi_miio.switch",
     "homeassistant.components.zha.core.discovery",
     "homeassistant.components.zha.core.registries",
-    "homeassistant.components.zha.core.store",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
