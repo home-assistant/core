@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import logging
 
-from nessclient import ArmingState
+from nessclient import ArmingState, Client
 
 import homeassistant.components.alarm_control_panel as alarm
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntityFeature
@@ -41,17 +41,18 @@ async def async_setup_platform(
 class NessAlarmPanel(alarm.AlarmControlPanelEntity):
     """Representation of a Ness alarm panel."""
 
+    _attr_code_format = alarm.CodeFormat.NUMBER
+    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
         | AlarmControlPanelEntityFeature.TRIGGER
     )
 
-    def __init__(self, client, name):
+    def __init__(self, client: Client, name: str) -> None:
         """Initialize the alarm panel."""
         self._client = client
-        self._name = name
-        self._state = None
+        self._attr_name = name
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -60,26 +61,6 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
                 self.hass, SIGNAL_ARMING_STATE_CHANGED, self._handle_arming_state_change
             )
         )
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def code_format(self):
-        """Return the regex for code format or None if no code is required."""
-        return alarm.CodeFormat.NUMBER
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._state
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -98,23 +79,23 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         await self._client.panic(code)
 
     @callback
-    def _handle_arming_state_change(self, arming_state):
+    def _handle_arming_state_change(self, arming_state: ArmingState) -> None:
         """Handle arming state update."""
 
         if arming_state == ArmingState.UNKNOWN:
-            self._state = None
+            self._attr_state = None
         elif arming_state == ArmingState.DISARMED:
-            self._state = STATE_ALARM_DISARMED
+            self._attr_state = STATE_ALARM_DISARMED
         elif arming_state == ArmingState.ARMING:
-            self._state = STATE_ALARM_ARMING
+            self._attr_state = STATE_ALARM_ARMING
         elif arming_state == ArmingState.EXIT_DELAY:
-            self._state = STATE_ALARM_ARMING
+            self._attr_state = STATE_ALARM_ARMING
         elif arming_state == ArmingState.ARMED:
-            self._state = STATE_ALARM_ARMED_AWAY
+            self._attr_state = STATE_ALARM_ARMED_AWAY
         elif arming_state == ArmingState.ENTRY_DELAY:
-            self._state = STATE_ALARM_PENDING
+            self._attr_state = STATE_ALARM_PENDING
         elif arming_state == ArmingState.TRIGGERED:
-            self._state = STATE_ALARM_TRIGGERED
+            self._attr_state = STATE_ALARM_TRIGGERED
         else:
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 
