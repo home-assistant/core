@@ -30,6 +30,7 @@ from homeassistant.const import (
     STATE_ALARM_PENDING,
     STATE_ALARM_TRIGGERED,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -110,6 +111,15 @@ DEFAULT_CONFIG_REMOTE_CODE_TEXT = {
         "code_arm_required": True,
     }
 }
+
+
+@pytest.fixture(autouse=True)
+def alarm_control_panel_platform_only():
+    """Only setup the alarm_control_panel platform to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS", [Platform.ALARM_CONTROL_PANEL]
+    ):
+        yield
 
 
 async def test_fail_setup_without_state_topic(hass, mqtt_mock_entry_no_yaml_config):
@@ -953,13 +963,11 @@ async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
     await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = alarm_control_panel.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

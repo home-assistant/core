@@ -1,14 +1,19 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Enheten \u00e4r redan konfigurerad"
+        },
         "error": {
-            "cannot_connect": "Det gick inte att ansluta, f\u00f6rs\u00f6k igen",
+            "cannot_connect": "Det gick inte att ansluta",
+            "invalid_auth": "Felaktig autentisering",
             "unknown": "Ov\u00e4ntat fel",
             "wrong_version": "Powerwall anv\u00e4nder en programvaruversion som inte st\u00f6ds. T\u00e4nk p\u00e5 att uppgradera eller rapportera det h\u00e4r problemet s\u00e5 att det kan l\u00f6sas."
         },
         "step": {
             "user": {
                 "data": {
-                    "ip_address": "IP-adress"
+                    "ip_address": "IP-adress",
+                    "password": "L\u00f6senord"
                 }
             }
         }

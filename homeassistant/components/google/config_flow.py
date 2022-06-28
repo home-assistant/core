@@ -59,14 +59,6 @@ class OAuth2FlowHandler(
         self.external_data = info
         return await super().async_step_creation(info)
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle external yaml configuration."""
-        if not self._reauth_config_entry and self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-        return await super().async_step_user(user_input)
-
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -135,14 +127,14 @@ class OAuth2FlowHandler(
 
     async def async_oauth_create_entry(self, data: dict) -> FlowResult:
         """Create an entry for the flow, or update existing entry."""
-        existing_entries = self._async_current_entries()
-        if existing_entries:
-            assert len(existing_entries) == 1
-            entry = existing_entries[0]
-            self.hass.config_entries.async_update_entry(entry, data=data)
-            await self.hass.config_entries.async_reload(entry.entry_id)
+        if self._reauth_config_entry:
+            self.hass.config_entries.async_update_entry(
+                self._reauth_config_entry, data=data
+            )
+            await self.hass.config_entries.async_reload(
+                self._reauth_config_entry.entry_id
+            )
             return self.async_abort(reason="reauth_successful")
-
         calendar_service = GoogleCalendarService(
             AccessTokenAuthImpl(
                 async_get_clientsession(self.hass), data["token"]["access_token"]
@@ -151,11 +143,12 @@ class OAuth2FlowHandler(
         try:
             primary_calendar = await calendar_service.async_get_calendar("primary")
         except ApiException as err:
-            _LOGGER.debug("Error reading calendar primary calendar: %s", err)
-            primary_calendar = None
-        title = primary_calendar.id if primary_calendar else self.flow_impl.name
+            _LOGGER.error("Error reading primary calendar: %s", err)
+            return self.async_abort(reason="cannot_connect")
+        await self.async_set_unique_id(primary_calendar.id)
+        self._abort_if_unique_id_configured()
         return self.async_create_entry(
-            title=title,
+            title=primary_calendar.id,
             data=data,
             options={
                 CONF_CALENDAR_ACCESS: get_feature_access(self.hass).name,

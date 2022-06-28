@@ -1,6 +1,7 @@
 """Support for balance data via the Starling Bank API."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 
 import requests
@@ -26,6 +27,7 @@ DEFAULT_SANDBOX = False
 DEFAULT_ACCOUNT_NAME = "Starling"
 
 ICON = "mdi:currency-gbp"
+SCAN_INTERVAL = timedelta(seconds=180)
 
 ACCOUNT_SCHEMA = vol.Schema(
     {

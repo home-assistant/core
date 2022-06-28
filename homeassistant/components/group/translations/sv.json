@@ -9,8 +9,20 @@
                 },
                 "title": "Ny grupp"
             },
+            "light": {
+                "title": "L\u00e4gg till grupp"
+            },
             "user": {
-                "title": "Ny grupp"
+                "title": "L\u00e4gg till grupp"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "binary_sensor": {
+                "data": {
+                    "all": "Alla entiteter"
+                }
             }
         }
     },

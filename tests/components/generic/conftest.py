@@ -1,13 +1,13 @@
 """Test fixtures for the generic component."""
 
 from io import BytesIO
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from PIL import Image
 import pytest
 import respx
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components.generic.const import DOMAIN
 
 from tests.common import MockConfigEntry
@@ -59,21 +59,26 @@ def fakeimg_gif(fakeimgbytes_gif):
 
 
 @pytest.fixture(scope="package")
-def mock_av_open():
-    """Fake container object with .streams.video[0] != None."""
-    fake = Mock()
-    fake.streams.video = ["fakevid"]
-    return patch(
-        "homeassistant.components.generic.config_flow.av.open",
-        return_value=fake,
+def mock_create_stream():
+    """Mock create stream."""
+    mock_stream = Mock()
+    mock_provider = Mock()
+    mock_provider.part_recv = AsyncMock()
+    mock_provider.part_recv.return_value = True
+    mock_stream.add_provider.return_value = mock_provider
+    mock_stream.start = AsyncMock()
+    mock_stream.stop = AsyncMock()
+    fake_create_stream = patch(
+        "homeassistant.components.generic.config_flow.create_stream",
+        return_value=mock_stream,
     )
+    return fake_create_stream
 
 
 @pytest.fixture
 async def user_flow(hass):
     """Initiate a user flow."""
 
-    await setup.async_setup_component(hass, "persistent_notification", {})
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

@@ -12,14 +12,13 @@ from sqlalchemy import text
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import history
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     Events,
-    LazyState,
     RecorderRuns,
     StateAttributes,
     States,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import LazyState, process_timestamp
 from homeassistant.components.recorder.util import session_scope
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State

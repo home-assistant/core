@@ -10,8 +10,7 @@ from sqlalchemy.sql.elements import ClauseList
 from sqlalchemy.sql.expression import literal
 from sqlalchemy.sql.selectable import Select
 
-from homeassistant.components.recorder.filters import like_domain_matchers
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     EVENTS_CONTEXT_ID_INDEX,
     OLD_FORMAT_ATTRS_JSON,
     OLD_STATE,
@@ -22,6 +21,7 @@ from homeassistant.components.recorder.models import (
     StateAttributes,
     States,
 )
+from homeassistant.components.recorder.filters import like_domain_matchers
 
 from ..const import ALWAYS_CONTINUOUS_DOMAINS, CONDITIONALLY_CONTINUOUS_DOMAINS
 
@@ -87,7 +87,7 @@ EVENT_COLUMNS_FOR_STATE_SELECT = [
 ]
 
 EMPTY_STATE_COLUMNS = (
-    literal(value=None, type_=sqlalchemy.String).label("state_id"),
+    literal(value=0, type_=sqlalchemy.Integer).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),
