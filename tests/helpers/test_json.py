@@ -8,6 +8,7 @@ from homeassistant import core
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     JSONEncoder,
+    json_dumps,
     json_dumps_sorted,
 )
 from homeassistant.util import dt as dt_util
@@ -77,3 +78,12 @@ def test_json_dumps_sorted():
     assert json_dumps_sorted(data) == json.dumps(
         data, sort_keys=True, separators=(",", ":")
     )
+
+
+def test_json_dumps_float_subclass():
+    """Test the json dumps a float subclass."""
+
+    class FloatSubclass(float):
+        """A float subclass."""
+
+    assert json_dumps({"c": FloatSubclass(1.2)}) == '{"c":1.2}'
