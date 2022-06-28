@@ -322,10 +322,12 @@ async def test_custom_speed_unit(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test Wind Gust speed with custom unit."""
-    uri = APIURL_TEMPLATE.format(TEST_CONFIG["longitude"], TEST_CONFIG["latitude"])
+    uri = APIURL_TEMPLATE.format(
+        TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
+    )
     aioclient_mock.get(uri, text=api_response)
 
-    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG)
+    entry = MockConfigEntry(domain="smhi", data=TEST_CONFIG, version=2)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

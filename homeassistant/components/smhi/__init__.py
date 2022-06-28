@@ -42,12 +42,12 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         }
         new_unique_id = f"smhi-{entry.data[CONF_LATITUDE]}-{entry.data[CONF_LONGITUDE]}"
 
-        if update_entry := hass.config_entries.async_update_entry(
+        if not hass.config_entries.async_update_entry(
             entry, data=new_data, unique_id=new_unique_id
         ):
-            entry.version = 2
+            return False
 
-    if entry.version == 2:
+        entry.version = 2
         new_unique_id_entity = f"smhi-{entry.data[CONF_LOCATION][CONF_LATITUDE]}-{entry.data[CONF_LOCATION][CONF_LONGITUDE]}"
 
         @callback
@@ -57,4 +57,4 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         await async_migrate_entries(hass, entry.entry_id, update_unique_id)
 
-    return update_entry
+    return True
