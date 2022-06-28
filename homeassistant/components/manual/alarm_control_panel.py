@@ -297,7 +297,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if self._attr_code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_HOME
         ):
             return
@@ -306,7 +306,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self._attr_code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_AWAY
         ):
             return
@@ -315,7 +315,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if self._attr_code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_NIGHT
         ):
             return
@@ -324,7 +324,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
-        if self._attr_code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_VACATION
         ):
             return
@@ -333,7 +333,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
     def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
-        if self._attr_code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_CUSTOM_BYPASS
         ):
             return
