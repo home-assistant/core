@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass, field
 import datetime
 from functools import partial
 import logging
@@ -74,6 +75,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@dataclass
+class UnjoinData:
+    """Class to track data necessary for unjoin coalescing."""
+
+    speakers: list[SonosSpeaker]
+    event: asyncio.Event = field(default_factory=asyncio.Event)
+
+
 class SonosData:
     """Storage class for platform global data."""
 
@@ -84,13 +93,12 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
-        self.unjoin_events: dict[str, asyncio.Event] = {}
-        self.unjoin_speakers: dict[str, list[SonosSpeaker]] = {}
         self.hosts_heartbeat = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
         self.entity_id_mappings: dict[str, SonosSpeaker] = {}
+        self.unjoin_data: dict[str, UnjoinData] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:

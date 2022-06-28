@@ -46,7 +46,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
-from . import media_browser
+from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -789,16 +789,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         async def async_process_unjoin(now: datetime.datetime) -> None:
             """Process the unjoin with all remove requests within the coalescing period."""
-            unjoin_event = sonos_data.unjoin_events.pop(household_id)
-            speakers = sonos_data.unjoin_speakers.pop(household_id, [])
-            await SonosSpeaker.unjoin_multi(self.hass, speakers)
-            unjoin_event.set()
+            unjoin_data = sonos_data.unjoin_data.pop(household_id)
+            await SonosSpeaker.unjoin_multi(self.hass, unjoin_data.speakers)
+            unjoin_data.event.set()
 
-        if (unjoin_event := sonos_data.unjoin_events.get(household_id)) is None:
-            unjoin_event = sonos_data.unjoin_events[household_id] = asyncio.Event()
+        if unjoin_data := sonos_data.unjoin_data.get(household_id):
+            unjoin_data.speakers.append(self.speaker)
+        else:
+            unjoin_data = sonos_data.unjoin_data[household_id] = UnjoinData(
+                speakers=[self.speaker]
+            )
             async_call_later(self.hass, 0.5, async_process_unjoin)
 
-        unjoin_speakers = sonos_data.unjoin_speakers.setdefault(household_id, [])
-        unjoin_speakers.append(self.speaker)
-
-        await unjoin_event.wait()
+        await unjoin_data.event.wait()
