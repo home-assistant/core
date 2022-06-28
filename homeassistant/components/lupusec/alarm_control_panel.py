@@ -69,14 +69,14 @@ class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
             state = None
         return state
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._device.set_away()
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._device.set_standby()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._device.set_home()

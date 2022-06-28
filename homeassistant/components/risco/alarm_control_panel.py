@@ -1,4 +1,6 @@
 """Support for Risco alarms."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.alarm_control_panel import (
@@ -138,26 +140,26 @@ class RiscoAlarm(AlarmControlPanelEntity, RiscoEntity):
         """Validate given code."""
         return code == self._code
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if self._code_disarm_required and not self._validate_code(code):
             _LOGGER.warning("Wrong code entered for disarming")
             return
         await self._call_alarm_method("disarm")
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._arm(STATE_ALARM_ARMED_HOME, code)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._arm(STATE_ALARM_ARMED_AWAY, code)
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         await self._arm(STATE_ALARM_ARMED_NIGHT, code)
 
-    async def async_alarm_arm_custom_bypass(self, code=None):
+    async def async_alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         await self._arm(STATE_ALARM_ARMED_CUSTOM_BYPASS, code)
 

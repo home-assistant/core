@@ -216,7 +216,7 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         )
         self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template:
             self.add_template_attribute(
@@ -239,25 +239,25 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         if optimistic_set:
             self.async_write_ha_state()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
             STATE_ALARM_ARMED_AWAY, script=self._arm_away_script, code=code
         )
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
             STATE_ALARM_ARMED_HOME, script=self._arm_home_script, code=code
         )
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
             STATE_ALARM_ARMED_NIGHT, script=self._arm_night_script, code=code
         )
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
             STATE_ALARM_DISARMED, script=self._disarm_script, code=code
