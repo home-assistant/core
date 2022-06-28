@@ -1084,8 +1084,8 @@ class SonosSpeaker:
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
-        for speaker in hass.data[DATA_SONOS].discovered.values():
-            speaker.soco._zgs_cache.clear()  # pylint: disable=protected-access
+        any_speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))
+        any_speaker.soco.zone_group_state.clear_cache()
 
     #
     # Media and playback state handlers

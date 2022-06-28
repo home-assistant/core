@@ -37,6 +37,8 @@ class TypeHintMatch:
             self.function_name == node.name
             or self.has_async_counterpart
             and node.name == f"async_{self.function_name}"
+            or self.function_name.endswith("*")
+            and node.name.startswith(self.function_name[:-1])
         )
 
 
@@ -371,6 +373,16 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
+            base_class="FlowHandler",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="FlowResult",
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
             base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
@@ -406,6 +418,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_step_mqtt",
                     arg_types={
                         1: "MqttServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_reauth",
+                    arg_types={
+                        1: "Mapping[str, Any]",
                     },
                     return_type="FlowResult",
                 ),
@@ -572,6 +591,93 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "alarm_control_panel": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="AlarmControlPanelEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_format",
+                    return_type=["CodeFormat", None],
+                ),
+                TypeHintMatch(
+                    function_name="changed_by",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_arm_required",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="alarm_disarm",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_home",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_away",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_night",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_vacation",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_trigger",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_custom_bypass",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "cover": [
         ClassTypeHintMatch(
             base_class="Entity",

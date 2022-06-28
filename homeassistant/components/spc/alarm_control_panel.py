@@ -62,7 +62,7 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
         self._area = area
         self._api = api
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call for adding new entities."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -97,22 +97,22 @@ class SpcAlarm(alarm.AlarmControlPanelEntity):
         """Return the state of the device."""
         return _get_alarm_state(self._area)
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.UNSET)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_A)
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm home command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.PART_SET_B)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
 
         await self._api.change_mode(area=self._area, new_mode=AreaMode.FULL_SET)
