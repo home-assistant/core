@@ -63,6 +63,7 @@ def setup_platform(
 class EgardiaAlarm(alarm.AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
+    _attr_state: str | None = None
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -72,9 +73,8 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
         self, name, egardiasystem, rs_enabled=False, rs_codes=None, rs_port=52010
     ):
         """Initialize the Egardia alarm."""
-        self._name = name
+        self._attr_name = name
         self._egardiasystem = egardiasystem
-        self._status = None
         self._rs_enabled = rs_enabled
         self._rs_codes = rs_codes
         self._rs_port = rs_port
@@ -86,17 +86,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             self.hass.data[EGARDIA_SERVER].register_callback(self.handle_status_event)
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
-        """Return the state of the device."""
-        return self._status
-
-    @property
-    def should_poll(self):
+    def should_poll(self) -> bool:
         """Poll if no report server is enabled."""
         if not self._rs_enabled:
             return True
@@ -130,7 +120,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
             _LOGGER.debug("Not ignoring status %s", status)
             newstatus = STATES.get(status.upper())
             _LOGGER.debug("newstatus %s", newstatus)
-            self._status = newstatus
+            self._attr_state = newstatus
         else:
             _LOGGER.error("Ignoring status")
 
