@@ -18,7 +18,7 @@ PROFILES = [{"id": "xyz12", "fingerprint": "aabbccdd123", "name": "Fake Profile"
 STATUS = AnalyticsStatus(
     default_queries=40, allowed_queries=30, blocked_queries=20, relayed_queries=10
 )
-DNSSEC = AnalyticsDnssec(not_validated_queries=30, validated_queries=70)
+DNSSEC = AnalyticsDnssec(not_validated_queries=25, validated_queries=75)
 ENCRYPTION = AnalyticsEncryption(encrypted_queries=60, unencrypted_queries=40)
 IP_VERSIONS = AnalyticsIpVersions(ipv4_queries=90, ipv6_queries=10)
 PROTOCOLS = AnalyticsProtocols(

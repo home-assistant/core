@@ -176,7 +176,7 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         icon="mdi:lock-open",
-        name="{profile_name} Unncrypted Queries",
+        name="{profile_name} Unencrypted Queries",
         native_unit_of_measurement="queries",
         state_class=SensorStateClass.MEASUREMENT,
     ),
