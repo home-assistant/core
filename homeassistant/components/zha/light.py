@@ -262,6 +262,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
+            self._color_mode = ColorMode.COLOR_TEMP
             self._color_temp = temperature
             self._hs_color = None
 
@@ -275,6 +276,7 @@ class BaseLight(LogMixin, light.LightEntity):
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
+            self._color_mode = ColorMode.HS
             self._hs_color = hs_color
             self._color_temp = None
 
