@@ -119,7 +119,7 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
         """Return the state of the device."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Process new events from panel."""
         try:
             part = self._alarm.list_partitions()[0]
@@ -157,15 +157,15 @@ class NX584Alarm(alarm.AlarmControlPanelEntity):
             if flag == "Siren on":
                 self._state = STATE_ALARM_TRIGGERED
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         self._alarm.disarm(code)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._alarm.arm("stay")
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._alarm.arm("exit")
 

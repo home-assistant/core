@@ -1,4 +1,6 @@
 """Interfaces with TotalConnect alarm control panels."""
+from __future__ import annotations
+
 from total_connect_client import ArmingHelper
 from total_connect_client.exceptions import BadResultCodeError, UsercodeInvalid
 
@@ -163,7 +165,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Return the state attributes of the device."""
         return self._extra_state_attributes
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
             await self.hass.async_add_executor_job(self._disarm)
@@ -178,11 +180,11 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _disarm(self, code=None):
+    def _disarm(self, code: str | None = None) -> None:
         """Disarm synchronous."""
         ArmingHelper(self._partition).disarm()
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         try:
             await self.hass.async_add_executor_job(self._arm_home)
@@ -201,7 +203,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm home synchronous."""
         ArmingHelper(self._partition).arm_stay()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         try:
             await self.hass.async_add_executor_job(self._arm_away)
@@ -216,11 +218,11 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_away(self, code=None):
+    def _arm_away(self, code: str | None = None) -> None:
         """Arm away synchronous."""
         ArmingHelper(self._partition).arm_away()
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         try:
             await self.hass.async_add_executor_job(self._arm_night)
@@ -235,11 +237,11 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_night(self, code=None):
+    def _arm_night(self, code: str | None = None) -> None:
         """Arm night synchronous."""
         ArmingHelper(self._partition).arm_stay_night()
 
-    async def async_alarm_arm_home_instant(self, code=None):
+    async def async_alarm_arm_home_instant(self, code: str | None = None) -> None:
         """Send arm home instant command."""
         try:
             await self.hass.async_add_executor_job(self._arm_home_instant)
@@ -258,7 +260,7 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
         """Arm home instant synchronous."""
         ArmingHelper(self._partition).arm_stay_instant()
 
-    async def async_alarm_arm_away_instant(self, code=None):
+    async def async_alarm_arm_away_instant(self, code: str | None = None) -> None:
         """Send arm away instant command."""
         try:
             await self.hass.async_add_executor_job(self._arm_away_instant)
@@ -273,6 +275,6 @@ class TotalConnectAlarm(CoordinatorEntity, alarm.AlarmControlPanelEntity):
             ) from error
         await self.coordinator.async_request_refresh()
 
-    def _arm_away_instant(self, code=None):
+    def _arm_away_instant(self, code: str | None = None) -> None:
         """Arm away instant synchronous."""
         ArmingHelper(self._partition).arm_away_instant()

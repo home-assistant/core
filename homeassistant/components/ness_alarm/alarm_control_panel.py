@@ -53,7 +53,7 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         self._name = name
         self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -81,19 +81,19 @@ class NessAlarmPanel(alarm.AlarmControlPanelEntity):
         """Return the state of the device."""
         return self._state
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self._client.disarm(code)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         await self._client.arm_away(code)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         await self._client.arm_home(code)
 
-    async def async_alarm_trigger(self, code=None):
+    async def async_alarm_trigger(self, code: str | None = None) -> None:
         """Send trigger/panic command."""
         await self._client.panic(code)
 

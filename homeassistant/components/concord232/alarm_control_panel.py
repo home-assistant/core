@@ -103,7 +103,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         """Return the state of the device."""
         return self._state
 
-    def update(self):
+    def update(self) -> None:
         """Update values from API."""
         try:
             part = self._alarm.list_partitions()[0]
@@ -124,13 +124,13 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         else:
             self._state = STATE_ALARM_ARMED_AWAY
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
             return
         self._alarm.disarm(code)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_HOME):
             return
@@ -139,7 +139,7 @@ class Concord232Alarm(alarm.AlarmControlPanelEntity):
         else:
             self._alarm.arm("stay")
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._validate_code(code, STATE_ALARM_ARMED_AWAY):
             return

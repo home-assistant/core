@@ -79,7 +79,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
         self._rs_codes = rs_codes
         self._rs_port = rs_port
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Add Egardiaserver callback if enabled."""
         if self._rs_enabled:
             _LOGGER.debug("Registering callback to Egardiaserver")
@@ -134,12 +134,12 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
         else:
             _LOGGER.error("Ignoring status")
 
-    def update(self):
+    def update(self) -> None:
         """Update the alarm status."""
         status = self._egardiasystem.getstate()
         self.parsestatus(status)
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
             self._egardiasystem.alarm_disarm()
@@ -149,7 +149,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
                 err,
             )
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         try:
             self._egardiasystem.alarm_arm_home()
@@ -160,7 +160,7 @@ class EgardiaAlarm(alarm.AlarmControlPanelEntity):
                 err,
             )
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         try:
             self._egardiasystem.alarm_arm_away()

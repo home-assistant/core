@@ -179,25 +179,25 @@ class IFTTTAlarmPanel(AlarmControlPanelEntity):
             return CodeFormat.NUMBER
         return CodeFormat.TEXT
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._check_code(code):
             return
         self.set_alarm_state(self._event_disarm, STATE_ALARM_DISARMED)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_away, STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._check_code(code):
             return
         self.set_alarm_state(self._event_home, STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._check_code(code):
             return
