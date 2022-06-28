@@ -53,6 +53,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     if manager.is_on:
         await manager.connect_once(raise_missing_credentials=True)
+        if not manager.atv:
+            name = entry.data[CONF_NAME]
+            raise ConfigEntryNotReady(f"Failed to find device {name}")
 
     hass.data.setdefault(DOMAIN, {})[entry.unique_id] = manager
 
