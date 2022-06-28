@@ -110,7 +110,7 @@ CLIENT_CHANNELS_REGISTRY: DictRegistry[type[ClientChannel]] = DictRegistry()
 ZIGBEE_CHANNEL_REGISTRY: DictRegistry[type[ZigbeeChannel]] = DictRegistry()
 
 
-def set_or_callable(value):
+def set_or_callable(value) -> frozenset[str]:
     """Convert single str or None to a set. Pass through callables and sets."""
     if value is None:
         return frozenset()
@@ -125,19 +125,15 @@ def set_or_callable(value):
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
-    channel_names: set[str] | str = attr.ib(
+    channel_names: frozenset[str] = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    generic_ids: set[str] | str = attr.ib(factory=frozenset, converter=set_or_callable)
-    manufacturers: Callable | set[str] | str = attr.ib(
+    generic_ids: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
+    manufacturers: frozenset[str] = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    models: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
-    )
-    aux_channels: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
-    )
+    models: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
+    aux_channels: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
 
     @property
     def weight(self) -> int:
@@ -321,11 +317,11 @@ class ZHAEntityRegistry:
     def strict_match(
         self,
         component: str,
-        channel_names: set[str] | str = None,
-        generic_ids: set[str] | str = None,
-        manufacturers: Callable | set[str] | str = None,
-        models: Callable | set[str] | str = None,
-        aux_channels: Callable | set[str] | str = None,
+        channel_names: set[str] | str | None = None,
+        generic_ids: set[str] | str | None = None,
+        manufacturers: Callable | set[str] | str | None = None,
+        models: Callable | set[str] | str | None = None,
+        aux_channels: Callable | set[str] | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a strict match rule."""
 
@@ -346,11 +342,11 @@ class ZHAEntityRegistry:
     def multipass_match(
         self,
         component: str,
-        channel_names: set[str] | str = None,
-        generic_ids: set[str] | str = None,
-        manufacturers: Callable | set[str] | str = None,
-        models: Callable | set[str] | str = None,
-        aux_channels: Callable | set[str] | str = None,
+        channel_names: set[str] | str | None = None,
+        generic_ids: set[str] | str | None = None,
+        manufacturers: Callable | set[str] | str | None = None,
+        models: Callable | set[str] | str | None = None,
+        aux_channels: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
@@ -379,11 +375,11 @@ class ZHAEntityRegistry:
     def config_diagnostic_match(
         self,
         component: str,
-        channel_names: set[str] | str = None,
-        generic_ids: set[str] | str = None,
-        manufacturers: Callable | set[str] | str = None,
-        models: Callable | set[str] | str = None,
-        aux_channels: Callable | set[str] | str = None,
+        channel_names: set[str] | str | None = None,
+        generic_ids: set[str] | str | None = None,
+        manufacturers: Callable | set[str] | str | None = None,
+        models: Callable | set[str] | str | None = None,
+        aux_channels: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
     ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
@@ -432,9 +428,9 @@ class ZHAEntityRegistry:
 
     def clean_up(self) -> None:
         """Clean up post discovery."""
-        self.single_device_matches: dict[
-            Platform, dict[EUI64, list[str]]
-        ] = collections.defaultdict(lambda: collections.defaultdict(list))
+        self.single_device_matches = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )
 
 
 ZHA_ENTITIES = ZHAEntityRegistry()
