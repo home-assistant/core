@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 
 from aiohttp.client_exceptions import ClientConnectorError
-import async_timeout
+from async_timeout import timeout
 from nextdns import (
     AnalyticsDnssec,
     AnalyticsEncryption,
@@ -75,7 +75,7 @@ class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator):
     async def _async_update_data(self) -> AnalyticsStatus:
         """Update data via library."""
         try:
-            with async_timeout.timeout(10):
+            async with timeout(10):
                 return await self.nextdns.get_analytics_status(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -87,7 +87,7 @@ class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator):
     async def _async_update_data(self) -> AnalyticsDnssec:
         """Update data via library."""
         try:
-            with async_timeout.timeout(10):
+            async with timeout(10):
                 return await self.nextdns.get_analytics_dnssec(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -99,7 +99,7 @@ class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator):
     async def _async_update_data(self) -> AnalyticsEncryption:
         """Update data via library."""
         try:
-            with async_timeout.timeout(10):
+            async with timeout(10):
                 return await self.nextdns.get_analytics_encryption(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -111,7 +111,7 @@ class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator):
     async def _async_update_data(self) -> AnalyticsIpVersions:
         """Update data via library."""
         try:
-            with async_timeout.timeout(10):
+            async with timeout(10):
                 return await self.nextdns.get_analytics_ip_versions(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -123,7 +123,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
     async def _async_update_data(self) -> AnalyticsProtocols:
         """Update data via library."""
         try:
-            with async_timeout.timeout(10):
+            async with timeout(10):
                 return await self.nextdns.get_analytics_protocols(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
@@ -148,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     websession = async_get_clientsession(hass)
     try:
-        with async_timeout.timeout(10):
+        async with timeout(10):
             nextdns = await NextDns.create(websession, api_key)
     except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err

@@ -5,7 +5,7 @@ import asyncio
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectorError
-import async_timeout
+from async_timeout import timeout
 from nextdns import ApiError, InvalidApiKeyError, NextDns
 import voluptuous as vol
 
@@ -38,7 +38,7 @@ class NextDnsFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.api_key = user_input[CONF_API_KEY]
             try:
-                async with async_timeout.timeout(10):
+                async with timeout(10):
                     self.nextdns = await NextDns.create(
                         websession, user_input[CONF_API_KEY]
                     )
