@@ -134,7 +134,7 @@ backoff<2.0
 pydantic!=1.9.1
 
 # Pin charset-normalizer to 2.0.12 due to version conflict.
-# https://github.com/home-assistant/core/pull/xxxx
+# https://github.com/home-assistant/core/pull/74104
 charset-normalizer==2.0.12
 """
 
