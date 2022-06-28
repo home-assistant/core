@@ -158,7 +158,7 @@ class AlarmDecoderAlarmPanel(AlarmControlPanelEntity):
             auto_bypass=self._auto_bypass,
         )
 
-    def alarm_toggle_chime(self, code: str | None = None) -> None:
+    def alarm_toggle_chime(self, code=None):
         """Send toggle chime command."""
         if code:
             self._client.send(f"{code!s}9")
