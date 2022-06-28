@@ -1,4 +1,4 @@
-"""TestNextDNS system health."""
+"""Test NextDNS system health."""
 import asyncio
 
 from aiohttp import ClientError
