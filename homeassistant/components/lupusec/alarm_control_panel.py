@@ -19,8 +19,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN as LUPUSEC_DOMAIN, LupusecDevice
 
-ICON = "mdi:security"
-
 SCAN_INTERVAL = timedelta(seconds=2)
 
 
@@ -44,18 +42,14 @@ def setup_platform(
 class LupusecAlarm(LupusecDevice, AlarmControlPanelEntity):
     """An alarm_control_panel implementation for Lupusec."""
 
+    _attr_icon = "mdi:security"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
     @property
-    def icon(self):
-        """Return the icon."""
-        return ICON
-
-    @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         if self._device.is_standby:
             state = STATE_ALARM_DISARMED
