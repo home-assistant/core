@@ -124,15 +124,15 @@ class Life360ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._async_verify("user")
 
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthorization."""
-        self._username = user_input[CONF_USERNAME]
+        self._username = data[CONF_USERNAME]
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
         # Always start with current credentials since they may still be valid and a
         # simple reauthorization will be successful.
-        return await self.async_step_reauth_confirm(user_input)
+        return await self.async_step_reauth_confirm(dict(data))
 
     async def async_step_reauth_confirm(self, user_input: dict[str, Any]) -> FlowResult:
         """Handle reauthorization completion."""

@@ -94,45 +94,17 @@ def create_config_entry(hass, state=None):
     return config_entry
 
 
-# ========== User Flow Fixtures & Functions ============================================
+# ========== User Flow Tests ===========================================================
 
 
-@pytest.fixture
-async def user_flow_init(hass, life360_api):
-    """Initialize user flow."""
+async def test_user_show_form(hass, life360_api):
+    """Test that the form is served with no input."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     await hass.async_block_till_done()
-    return result
 
-
-async def user_flow(hass, life360_api, flow_id, auth_result=None):
-    """Continue user flow."""
-    life360_api.reset_mock(return_value=True, side_effect=True)
-    if auth_result:
-        if isinstance(auth_result, Exception):
-            life360_api.get_authorization.side_effect = auth_result
-        else:
-            life360_api.get_authorization.return_value = auth_result
-
-    result = await hass.config_entries.flow.async_configure(flow_id, USER_INPUT)
-    await hass.async_block_till_done()
-
-    if auth_result:
-        life360_api.get_authorization.assert_called_once()
-    else:
-        life360_api.get_authorization.assert_not_called()
-
-    return result
-
-
-# ========== User Flow Tests ===========================================================
-
-
-async def test_user_show_form(user_flow_init):
-    """Test that the form is served with no input."""
-    result = user_flow_init
+    life360_api.get_authorization.assert_not_called()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -146,11 +118,21 @@ async def test_user_show_form(user_flow_init):
         assert keys[keys.index(key)].default == vol.UNDEFINED
 
 
-async def test_user_config_flow_success(hass, life360_api, user_flow_init):
+async def test_user_config_flow_success(hass, life360_api):
     """Test a successful user config flow."""
-    result = await user_flow(
-        hass, life360_api, user_flow_init["flow_id"], TEST_AUTHORIZATION
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.return_value = TEST_AUTHORIZATION
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.assert_called_once()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == TEST_USER.lower()
@@ -161,13 +143,21 @@ async def test_user_config_flow_success(hass, life360_api, user_flow_init):
 @pytest.mark.parametrize(
     "exception,error", [(LoginError, "invalid_auth"), (Life360Error, "cannot_connect")]
 )
-async def test_user_config_flow_error(
-    hass, life360_api, user_flow_init, caplog, exception, error
-):
+async def test_user_config_flow_error(hass, life360_api, caplog, exception, error):
     """Test a user config flow with an error."""
-    result = await user_flow(
-        hass, life360_api, user_flow_init["flow_id"], exception("test reason")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.side_effect = exception("test reason")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.assert_called_once()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"
@@ -186,26 +176,35 @@ async def test_user_config_flow_error(
         assert default() == val
 
 
-async def test_user_config_flow_already_configured(hass, life360_api, user_flow_init):
+async def test_user_config_flow_already_configured(hass, life360_api):
     """Test a user config flow with an account already configured."""
     create_config_entry(hass)
 
-    result = await user_flow(hass, life360_api, user_flow_init["flow_id"])
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.assert_not_called()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
 
 
-# ========== Reauth Flow Functions =====================================================
+# ========== Reauth Flow Tests =========================================================
 
 
-async def reauth_flow_init(hass, life360_api, config_entry, auth_result=None):
-    """Initialize reauthorization flow."""
-    if auth_result:
-        if isinstance(auth_result, Exception):
-            life360_api.get_authorization.side_effect = auth_result
-        else:
-            life360_api.get_authorization.return_value = auth_result
+@pytest.mark.parametrize("state", [None, config_entries.ConfigEntryState.LOADED])
+async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
+    """Test a successful reauthorization config flow."""
+    config_entry = create_config_entry(hass, state=state)
+
+    # Simulate current username & password are still valid, but authorization string has
+    # expired, such that getting a new authorization string from server is successful.
+    life360_api.get_authorization.return_value = TEST_AUTHORIZATION_2
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -219,50 +218,11 @@ async def reauth_flow_init(hass, life360_api, config_entry, auth_result=None):
     )
     await hass.async_block_till_done()
 
-    if auth_result:
-        life360_api.get_authorization.assert_called_once()
-    else:
-        life360_api.get_authorization.assert_not_called()
-
-    return result
-
-
-async def reauth_flow(hass, life360_api, flow_id, user_input, auth_result=None):
-    """Continue reauthorization flow."""
-    life360_api.reset_mock(return_value=True, side_effect=True)
-    if auth_result:
-        if isinstance(auth_result, Exception):
-            life360_api.get_authorization.side_effect = auth_result
-        else:
-            life360_api.get_authorization.return_value = auth_result
-
-    result = await hass.config_entries.flow.async_configure(flow_id, user_input)
-    await hass.async_block_till_done()
-
-    if auth_result:
-        life360_api.get_authorization.assert_called_once()
-    else:
-        life360_api.get_authorization.assert_not_called()
-
-    return result
-
-
-# ========== Reauth Flow Tests =========================================================
-
-
-@pytest.mark.parametrize("state", [None, config_entries.ConfigEntryState.LOADED])
-async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
-    """Test a successful reauthorization config flow."""
-    config_entry = create_config_entry(hass, state=state)
-
-    # Simulate current username & password are still valid, but authorization string has
-    # expired, such that getting a new authorization string from server is successful.
-    result = await reauth_flow_init(
-        hass, life360_api, config_entry, TEST_AUTHORIZATION_2
-    )
+    life360_api.get_authorization.assert_called_once()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
+
     assert "Reauthorization successful" in caplog.text
 
     assert config_entry.data == TEST_CONFIG_DATA_2
@@ -274,9 +234,21 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
 
     # Simulate current username & password are invalid, which results in a form
     # requesting new password, with old password as default value.
-    result = await reauth_flow_init(
-        hass, life360_api, config_entry, LoginError("test reason")
+    life360_api.get_authorization.side_effect = LoginError("test reason")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": config_entry.entry_id,
+            "title_placeholders": {"name": config_entry.title},
+            "unique_id": config_entry.unique_id,
+        },
+        data=config_entry.data,
     )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.assert_called_once()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "reauth_confirm"
@@ -292,16 +264,19 @@ async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
     assert key.default() == TEST_PW
 
     # Simulate getting a new, valid password.
-    result = await reauth_flow(
-        hass,
-        life360_api,
-        result["flow_id"],
-        {CONF_PASSWORD: TEST_PW_3},
-        TEST_AUTHORIZATION_3,
+    life360_api.get_authorization.reset_mock(side_effect=True)
+    life360_api.get_authorization.return_value = TEST_AUTHORIZATION_3
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: TEST_PW_3}
     )
+    await hass.async_block_till_done()
+
+    life360_api.get_authorization.assert_called_once()
 
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
+
     assert "Reauthorization successful" in caplog.text
 
     assert config_entry.data == TEST_CONFIG_DATA_3
