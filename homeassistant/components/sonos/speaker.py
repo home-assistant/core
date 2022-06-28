@@ -906,6 +906,8 @@ class SonosSpeaker:
     @soco_error()
     def unjoin(self) -> None:
         """Unjoin the player from a group."""
+        if self.sonos_group == [self]:
+            return
         self.soco.unjoin()
         self.coordinator = None
 
