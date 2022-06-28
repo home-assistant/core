@@ -1,4 +1,6 @@
 """Support for Prosegur alarm control panels."""
+from __future__ import annotations
+
 import logging
 
 from pyprosegur.auth import Auth
@@ -57,7 +59,7 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
         self._attr_name = f"contract {self.contract}"
         self._attr_unique_id = self.contract
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update alarm status."""
 
         try:
@@ -67,17 +69,21 @@ class ProsegurAlarm(alarm.AlarmControlPanelEntity):
             self._attr_available = False
             return
 
+        assert self._installation
         self._attr_state = STATE_MAPPING.get(self._installation.status)
         self._attr_available = True
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
+        assert self._installation
         await self._installation.disarm(self._auth)
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm away command."""
+        assert self._installation
         await self._installation.arm_partially(self._auth)
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
+        assert self._installation
         await self._installation.arm(self._auth)
