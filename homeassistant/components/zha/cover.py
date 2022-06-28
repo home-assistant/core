@@ -162,7 +162,7 @@ class ZhaCover(ZhaEntity, CoverEntity):
             self._state = STATE_OPEN if self._current_position > 0 else STATE_CLOSED
             self.async_write_ha_state()
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Attempt to retrieve the open/close state of the cover."""
         await super().async_update()
         await self.async_get_state()
