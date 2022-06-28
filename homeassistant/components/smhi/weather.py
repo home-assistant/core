@@ -42,6 +42,7 @@ from homeassistant.components.weather import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_LATITUDE,
+    CONF_LOCATION,
     CONF_LONGITUDE,
     CONF_NAME,
     LENGTH_KILOMETERS,
@@ -106,8 +107,8 @@ async def async_setup_entry(
 
     entity = SmhiWeather(
         location[CONF_NAME],
-        location[CONF_LATITUDE],
-        location[CONF_LONGITUDE],
+        location[CONF_LOCATION][CONF_LATITUDE],
+        location[CONF_LOCATION][CONF_LONGITUDE],
         session=session,
     )
     entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
@@ -135,7 +136,7 @@ class SmhiWeather(WeatherEntity):
         """Initialize the SMHI weather entity."""
 
         self._attr_name = name
-        self._attr_unique_id = f"{latitude}, {longitude}"
+        self._attr_unique_id = f"smhi-{latitude}-{longitude}"
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(longitude, latitude, session=session)
