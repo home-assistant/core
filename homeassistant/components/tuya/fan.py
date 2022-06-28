@@ -74,7 +74,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         super().__init__(device, device_manager)
 
         self._switch = self.find_dpcode(
-            (DPCode.SWITCH_FAN, DPCode.SWITCH), prefer_function=True
+            (DPCode.SWITCH_FAN, DPCode.FAN_SWITCH, DPCode.SWITCH), prefer_function=True
         )
 
         self._attr_preset_modes = []
@@ -158,8 +158,8 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
 
     def turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
@@ -177,7 +177,6 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
                     "value": int(self._speed.remap_value_from(percentage, 1, 100)),
                 }
             )
-            return
 
         if percentage is not None and self._speeds is not None:
             commands.append(

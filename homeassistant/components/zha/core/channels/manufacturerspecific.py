@@ -1,9 +1,14 @@
 """Manufacturer specific channels module for Zigbee Home Automation."""
+from __future__ import annotations
+
 import logging
+from typing import TYPE_CHECKING
+
+import zigpy.zcl
 
 from homeassistant.core import callback
 
-from .. import registries, typing as zha_typing
+from .. import registries
 from ..const import (
     ATTR_ATTRIBUTE_ID,
     ATTR_ATTRIBUTE_NAME,
@@ -14,7 +19,10 @@ from ..const import (
     SIGNAL_ATTR_UPDATED,
     UNKNOWN,
 )
-from .base import ClientChannel, ZigbeeChannel
+from .base import AttrReportConfig, ClientChannel, ZigbeeChannel
+
+if TYPE_CHECKING:
+    from . import ChannelPool
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,12 +31,12 @@ _LOGGER = logging.getLogger(__name__)
 class SmartThingsHumidity(ZigbeeChannel):
     """Smart Things Humidity channel."""
 
-    REPORT_CONFIG = [
+    REPORT_CONFIG = (
         {
             "attr": "measured_value",
             "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 50),
-        }
-    ]
+        },
+    )
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFD00)
@@ -36,7 +44,7 @@ class SmartThingsHumidity(ZigbeeChannel):
 class OsramButton(ZigbeeChannel):
     """Osram button channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG = ()
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(registries.PHILLIPS_REMOTE_CLUSTER)
@@ -44,7 +52,7 @@ class OsramButton(ZigbeeChannel):
 class PhillipsRemote(ZigbeeChannel):
     """Phillips remote channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG = ()
 
 
 @registries.CHANNEL_ONLY_CLUSTERS.register(0xFCC0)
@@ -52,11 +60,9 @@ class PhillipsRemote(ZigbeeChannel):
 class OppleRemote(ZigbeeChannel):
     """Opple button channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG = ()
 
-    def __init__(
-        self, cluster: zha_typing.ZigpyClusterType, ch_pool: zha_typing.ChannelPoolType
-    ) -> None:
+    def __init__(self, cluster: zigpy.zcl.Cluster, ch_pool: ChannelPool) -> None:
         """Initialize Opple channel."""
         super().__init__(cluster, ch_pool)
         if self.cluster.endpoint.model == "lumi.motion.ac02":
@@ -64,6 +70,13 @@ class OppleRemote(ZigbeeChannel):
                 "detection_interval": True,
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
+            }
+        elif self.cluster.endpoint.model == "lumi.motion.ac01":
+            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+                "presence": True,
+                "monitoring_mode": True,
+                "motion_sensitivity": True,
+                "approach_distance": True,
             }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
@@ -81,12 +94,12 @@ class OppleRemote(ZigbeeChannel):
 class SmartThingsAcceleration(ZigbeeChannel):
     """Smart Things Acceleration channel."""
 
-    REPORT_CONFIG = [
-        {"attr": "acceleration", "config": REPORT_CONFIG_ASAP},
-        {"attr": "x_axis", "config": REPORT_CONFIG_ASAP},
-        {"attr": "y_axis", "config": REPORT_CONFIG_ASAP},
-        {"attr": "z_axis", "config": REPORT_CONFIG_ASAP},
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="acceleration", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="x_axis", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="y_axis", config=REPORT_CONFIG_ASAP),
+        AttrReportConfig(attr="z_axis", config=REPORT_CONFIG_ASAP),
+    )
 
     @callback
     def attribute_updated(self, attrid, value):
@@ -115,4 +128,4 @@ class SmartThingsAcceleration(ZigbeeChannel):
 class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG = ()

@@ -11,7 +11,7 @@ from yeelight.aio import AsyncBulb
 from yeelight.main import get_known_models
 
 from homeassistant import config_entries, exceptions
-from homeassistant.components import dhcp, ssdp, zeroconf
+from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.core import callback
@@ -134,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_discovery_confirm(self, user_input=None):
         """Confirm discovery."""
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
                 title=async_format_model_id(self._discovered_model, self.unique_id),
                 data={

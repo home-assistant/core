@@ -11,6 +11,7 @@ import voluptuous as vol
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
+from homeassistant.helpers.json import JSON_DUMP
 
 from . import const, messages
 
@@ -56,7 +57,7 @@ class ActiveConnection:
     async def send_big_result(self, msg_id: int, result: Any) -> None:
         """Send a result message that would be expensive to JSON serialize."""
         content = await self.hass.async_add_executor_job(
-            const.JSON_DUMP, messages.result_message(msg_id, result)
+            JSON_DUMP, messages.result_message(msg_id, result)
         )
         self.send_message(content)
 

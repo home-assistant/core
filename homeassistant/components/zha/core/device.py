@@ -12,6 +12,7 @@ import time
 from typing import TYPE_CHECKING, Any
 
 from zigpy import types
+import zigpy.device
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
 import zigpy.quirks
@@ -27,7 +28,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_track_time_interval
 
-from . import channels, typing as zha_typing
+from . import channels
 from .const import (
     ATTR_ARGS,
     ATTR_ATTRIBUTE,
@@ -78,6 +79,7 @@ from .helpers import LogMixin, async_get_zha_config_value
 
 if TYPE_CHECKING:
     from ..api import ClusterBinding
+    from .gateway import ZHAGateway
 
 _LOGGER = logging.getLogger(__name__)
 _UPDATE_ALIVE_INTERVAL = (60, 90)
@@ -99,8 +101,8 @@ class ZHADevice(LogMixin):
     def __init__(
         self,
         hass: HomeAssistant,
-        zigpy_device: zha_typing.ZigpyDeviceType,
-        zha_gateway: zha_typing.ZhaGatewayType,
+        zigpy_device: zigpy.device.Device,
+        zha_gateway: ZHAGateway,
     ) -> None:
         """Initialize the gateway."""
         self.hass = hass
@@ -150,17 +152,17 @@ class ZHADevice(LogMixin):
         self._ha_device_id = device_id
 
     @property
-    def device(self) -> zha_typing.ZigpyDeviceType:
+    def device(self) -> zigpy.device.Device:
         """Return underlying Zigpy device."""
         return self._zigpy_device
 
     @property
-    def channels(self) -> zha_typing.ChannelsType:
+    def channels(self) -> channels.Channels:
         """Return ZHA channels."""
         return self._channels
 
     @channels.setter
-    def channels(self, value: zha_typing.ChannelsType) -> None:
+    def channels(self, value: channels.Channels) -> None:
         """Channels setter."""
         assert isinstance(value, channels.Channels)
         self._channels = value
@@ -274,7 +276,7 @@ class ZHADevice(LogMixin):
     @property
     def skip_configuration(self) -> bool:
         """Return true if the device should not issue configuration related commands."""
-        return self._zigpy_device.skip_configuration or self.is_coordinator
+        return self._zigpy_device.skip_configuration or bool(self.is_coordinator)
 
     @property
     def gateway(self):
@@ -331,8 +333,8 @@ class ZHADevice(LogMixin):
     def new(
         cls,
         hass: HomeAssistant,
-        zigpy_dev: zha_typing.ZigpyDeviceType,
-        gateway: zha_typing.ZhaGatewayType,
+        zigpy_dev: zigpy.device.Device,
+        gateway: ZHAGateway,
         restored: bool = False,
     ):
         """Create new device."""
@@ -817,7 +819,7 @@ class ZHADevice(LogMixin):
                 fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level: int, msg: str, *args: Any, **kwargs: dict) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args

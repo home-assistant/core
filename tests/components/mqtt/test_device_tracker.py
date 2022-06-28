@@ -1,13 +1,22 @@
 """The tests for the MQTT device tracker platform using configuration.yaml."""
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.device_tracker.const import DOMAIN, SOURCE_TYPE_BLUETOOTH
-from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME
+from homeassistant.const import CONF_PLATFORM, STATE_HOME, STATE_NOT_HOME, Platform
 from homeassistant.setup import async_setup_component
 
 from .test_common import help_test_setup_manual_entity_from_yaml
 
 from tests.common import async_fire_mqtt_message
+
+
+@pytest.fixture(autouse=True)
+def device_tracker_platform_only():
+    """Only setup the device_tracker platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.DEVICE_TRACKER]):
+        yield
 
 
 # Deprecated in HA Core 2022.6
