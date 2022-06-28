@@ -10,7 +10,14 @@ import voluptuous as vol
 
 from homeassistant.components.device_tracker import CONF_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PREFIX, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_EXCLUDE,
+    CONF_INCLUDE,
+    CONF_PASSWORD,
+    CONF_PREFIX,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -39,15 +46,17 @@ CONF_ACCOUNTS = "accounts"
 SHOW_AS_STATE_OPTS = [SHOW_DRIVING, SHOW_MOVING]
 
 
-def _show_as_state(opts: list[str]) -> list[str]:
-    """Warn about unsupported show_as_state options and remove from config."""
-    if SHOW_MOVING in opts:
-        LOGGER.warning(
-            "%s is no longer supported as an option for %s",
-            SHOW_MOVING,
-            CONF_SHOW_AS_STATE,
-        )
-    return [value for value in opts if value != SHOW_MOVING]
+def _show_as_state(config: dict) -> dict:
+    if opts := config.pop(CONF_SHOW_AS_STATE):
+        if SHOW_DRIVING in opts:
+            config[SHOW_DRIVING] = True
+        if SHOW_MOVING in opts:
+            LOGGER.warning(
+                "%s is no longer supported as an option for %s",
+                SHOW_MOVING,
+                CONF_SHOW_AS_STATE,
+            )
+    return config
 
 
 def _unsupported(unsupported: set[str]) -> Callable[[dict], dict]:
@@ -64,20 +73,28 @@ def _unsupported(unsupported: set[str]) -> Callable[[dict], dict]:
     return validator
 
 
+ACCOUNT_SCHEMA = {
+    vol.Required(CONF_USERNAME): cv.string,
+    vol.Required(CONF_PASSWORD): cv.string,
+}
+CIRCLES_MEMBERS = {
+    vol.Optional(CONF_EXCLUDE): vol.All(cv.ensure_list, [cv.string]),
+    vol.Optional(CONF_INCLUDE): vol.All(cv.ensure_list, [cv.string]),
+}
 LIFE360_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(CONF_ACCOUNTS): vol.All(cv.ensure_list, [{}]),
-            vol.Optional(CONF_CIRCLES): {},
+            vol.Optional(CONF_ACCOUNTS): vol.All(cv.ensure_list, [ACCOUNT_SCHEMA]),
+            vol.Optional(CONF_CIRCLES): CIRCLES_MEMBERS,
             vol.Optional(CONF_DRIVING_SPEED): vol.Coerce(float),
             vol.Optional(CONF_ERROR_THRESHOLD): vol.Coerce(int),
             vol.Optional(CONF_MAX_GPS_ACCURACY): vol.Coerce(float),
             vol.Optional(CONF_MAX_UPDATE_WAIT): cv.time_period,
-            vol.Optional(CONF_MEMBERS): {},
+            vol.Optional(CONF_MEMBERS): CIRCLES_MEMBERS,
             vol.Optional(CONF_PREFIX): vol.Any(None, cv.string),
             vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
             vol.Optional(CONF_SHOW_AS_STATE, default=[]): vol.All(
-                cv.ensure_list, [vol.In(SHOW_AS_STATE_OPTS)], _show_as_state
+                cv.ensure_list, [vol.In(SHOW_AS_STATE_OPTS)]
             ),
             vol.Optional(CONF_WARNING_THRESHOLD): vol.Coerce(int),
         }
@@ -94,6 +111,7 @@ LIFE360_SCHEMA = vol.All(
             CONF_WARNING_THRESHOLD,
         }
     ),
+    _show_as_state,
 )
 CONFIG_SCHEMA = vol.Schema(
     vol.All({DOMAIN: LIFE360_SCHEMA}, cv.removed(DOMAIN, raise_if_present=False)),
