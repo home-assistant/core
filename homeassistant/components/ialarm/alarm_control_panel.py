@@ -11,6 +11,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import IAlarmDataUpdateCoordinator
 from .const import DATA_COORDINATOR, DOMAIN
 
 
@@ -18,39 +19,35 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up a iAlarm alarm control panel based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
+    coordinator: IAlarmDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
+        DATA_COORDINATOR
+    ]
     async_add_entities([IAlarmPanel(coordinator)], False)
 
 
-class IAlarmPanel(CoordinatorEntity, AlarmControlPanelEntity):
+class IAlarmPanel(
+    CoordinatorEntity[IAlarmDataUpdateCoordinator], AlarmControlPanelEntity
+):
     """Representation of an iAlarm device."""
 
+    _attr_name = "iAlarm"
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
 
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device info for this device."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+    def __init__(self, coordinator: IAlarmDataUpdateCoordinator) -> None:
+        """Create the entity with a DataUpdateCoordinator."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.mac)},
             manufacturer="Antifurto365 - Meian",
-            name=self.name,
+            name="iAlarm",
         )
+        self._attr_unique_id = coordinator.mac
 
     @property
-    def unique_id(self):
-        """Return a unique id."""
-        return self.coordinator.mac
-
-    @property
-    def name(self):
-        """Return the name."""
-        return "iAlarm"
-
-    @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self.coordinator.state
 
