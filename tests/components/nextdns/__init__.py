@@ -26,7 +26,7 @@ PROTOCOLS = AnalyticsProtocols(
 )
 
 
-async def init_integration(hass) -> MockConfigEntry:
+async def init_integration(hass, add_to_hass=True) -> MockConfigEntry:
     """Set up the NextDNS integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -34,6 +34,9 @@ async def init_integration(hass) -> MockConfigEntry:
         unique_id="xyz12",
         data={CONF_API_KEY: "fake_api_key", CONF_PROFILE_ID: "xyz12"},
     )
+
+    if not add_to_hass:
+        return entry
 
     with patch(
         "homeassistant.components.nextdns.NextDns.get_profiles", return_value=PROFILES
