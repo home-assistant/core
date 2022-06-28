@@ -78,7 +78,6 @@ ENTITY_ID = f"{CLIMATE_DOMAIN}.{TEST_ENTITY_NAME}".replace(" ", "_")
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
                     CONF_SLAVE: 10,
-                    CONF_HVAC_MODE_REGISTER: 11,
                     CONF_HVAC_ONOFF_REGISTER: 12,
                     CONF_HVAC_MODE_REGISTER: {
                         CONF_ADDRESS: 11,
