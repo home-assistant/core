@@ -156,7 +156,7 @@ class OAuth2FlowHandler(
             },
         )
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
