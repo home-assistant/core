@@ -125,8 +125,6 @@ async def async_setup_platform(
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
-    _state: bool | None
-
     async def async_added_to_hass(self) -> None:
         """Restore RFLink cover state (OPEN/CLOSE)."""
         await super().async_added_to_hass()

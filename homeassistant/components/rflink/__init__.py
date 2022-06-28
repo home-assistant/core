@@ -1,4 +1,6 @@
 """Support for Rflink devices."""
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 import logging
@@ -315,6 +317,7 @@ class RflinkDevice(Entity):
     """
 
     platform = None
+    _state: bool | None = None
     _available = True
 
     def __init__(
@@ -344,7 +347,6 @@ class RflinkDevice(Entity):
         self._nogroup_aliases = nogroup_aliases
         self._should_fire_event = fire_event
         self._signal_repetitions = signal_repetitions
-        self._state = None
 
     @callback
     def handle_event_callback(self, event):
