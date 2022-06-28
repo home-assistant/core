@@ -1,4 +1,6 @@
 """Support for Minut Point."""
+from __future__ import annotations
+
 import logging
 
 from homeassistant.components.alarm_control_panel import (
@@ -58,14 +60,14 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._async_unsub_hook_dispatcher_connect = None
         self._changed_by = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity is added to HOme Assistant."""
         await super().async_added_to_hass()
         self._async_unsub_hook_dispatcher_connect = async_dispatcher_connect(
             self.hass, SIGNAL_WEBHOOK, self._webhook_event
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Disconnect dispatcher listener when removed."""
         await super().async_will_remove_from_hass()
         if self._async_unsub_hook_dispatcher_connect:
@@ -106,13 +108,13 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         """Return the user the last change was triggered by."""
         return self._changed_by
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         status = await self._client.async_alarm_disarm(self._home_id)
         if status:
             self._home["alarm_status"] = "off"
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         status = await self._client.async_alarm_arm(self._home_id)
         if status:
