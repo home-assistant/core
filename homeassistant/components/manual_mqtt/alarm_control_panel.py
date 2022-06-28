@@ -325,7 +325,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if self.code_arm_required and not self._validate_code(
+        if self._attr_code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_HOME
         ):
             return
@@ -334,7 +334,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self.code_arm_required and not self._validate_code(
+        if self._attr_code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_AWAY
         ):
             return
@@ -343,7 +343,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if self.code_arm_required and not self._validate_code(
+        if self._attr_code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_NIGHT
         ):
             return
