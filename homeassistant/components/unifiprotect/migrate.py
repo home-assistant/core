@@ -14,8 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import entity_registry as er
 
-from .utils import async_device_by_id
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -69,7 +67,7 @@ async def async_migrate_buttons(
     bootstrap = await async_get_bootstrap(protect)
     count = 0
     for button in to_migrate:
-        device = async_device_by_id(bootstrap, button.unique_id)
+        device = bootstrap.get_device_from_id(button.unique_id)
         if device is None:
             continue
 
@@ -130,7 +128,7 @@ async def async_migrate_device_ids(
         if parts[0] == bootstrap.nvr.id:
             device: NVR | ProtectAdoptableDeviceModel | None = bootstrap.nvr
         else:
-            device = async_device_by_id(bootstrap, parts[0])
+            device = bootstrap.get_device_from_id(parts[0])
 
         if device is None:
             continue

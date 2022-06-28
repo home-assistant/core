@@ -311,6 +311,7 @@ FLOWS = {
         "shelly",
         "shopping_list",
         "sia",
+        "simplepush",
         "simplisafe",
         "skybell",
         "slack",

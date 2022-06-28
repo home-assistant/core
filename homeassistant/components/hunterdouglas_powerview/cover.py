@@ -192,7 +192,7 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.positions.primary <= CLOSED_POSITION
 
@@ -465,7 +465,16 @@ class PowerViewShadeTDBUTop(PowerViewShadeTDBU):
         }
 
     @property
-    def is_closed(self):
+    def should_poll(self) -> bool:
+        """Certain shades create multiple entities.
+
+        Do not poll shade multiple times. One shade will return data
+        for both and multiple polling will cause timeouts.
+        """
+        return False
+
+    @property
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         # top shade needs to check other motor
         return self.positions.secondary <= CLOSED_POSITION

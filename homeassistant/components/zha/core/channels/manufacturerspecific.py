@@ -74,6 +74,13 @@ class OppleRemote(ZigbeeChannel):
                 "motion_sensitivity": True,
                 "trigger_indicator": True,
             }
+        elif self.cluster.endpoint.model == "lumi.motion.ac01":
+            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+                "presence": True,
+                "monitoring_mode": True,
+                "motion_sensitivity": True,
+                "approach_distance": True,
+            }
 
     async def async_initialize_channel_specific(self, from_cache: bool) -> None:
         """Initialize channel specific."""
