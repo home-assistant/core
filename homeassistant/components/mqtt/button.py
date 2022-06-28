@@ -130,7 +130,7 @@ class MqttButton(MqttEntity, ButtonEntity):
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
-    async def async_press(self, **kwargs):
+    async def async_press(self) -> None:
         """Turn the device on.
 
         This method is a coroutine.
