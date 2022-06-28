@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "Akun sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "cannot_connect": "Gagal terhubung",
             "code_expired": "Kode autentikasi kedaluwarsa atau penyiapan kredensial tidak valid, coba lagi.",
             "invalid_access_token": "Token akses tidak valid",
             "missing_configuration": "Komponen tidak dikonfigurasi. Ikuti petunjuk dalam dokumentasi.",
