@@ -19,7 +19,7 @@ import re
 import statistics
 from struct import error as StructError, pack, unpack_from
 import sys
-from typing import Any, cast
+from typing import Any, NoReturn, TypeVar, cast, overload
 from urllib.parse import urlencode as urllib_urlencode
 import weakref
 
@@ -91,6 +91,8 @@ _COLLECTABLE_STATE_ATTRIBUTES = {
     "object_id",
     "name",
 }
+
+_T = TypeVar("_T")
 
 ALL_STATES_RATE_LIMIT = timedelta(minutes=1)
 DOMAIN_STATES_RATE_LIMIT = timedelta(seconds=1)
@@ -946,7 +948,19 @@ def _resolve_state(
     return None
 
 
-def forgiving_boolean(value, default=_SENTINEL):
+@overload
+def forgiving_boolean(value: Any) -> bool | object:
+    ...
+
+
+@overload
+def forgiving_boolean(value: Any, default: _T) -> bool | _T:
+    ...
+
+
+def forgiving_boolean(
+    value: Any, default: _T | object = _SENTINEL
+) -> bool | _T | object:
     """Try to convert value to a boolean."""
     try:
         # Import here, not at top-level to avoid circular import
@@ -969,7 +983,7 @@ def result_as_boolean(template_result: Any | None) -> bool:
     if template_result is None:
         return False
 
-    return cast(bool, forgiving_boolean(template_result, default=False))
+    return forgiving_boolean(template_result, default=False)
 
 
 def expand(hass: HomeAssistant, *args: Any) -> Iterable[State]:
@@ -1375,7 +1389,7 @@ def utcnow(hass: HomeAssistant) -> datetime:
     return dt_util.utcnow()
 
 
-def raise_no_default(function, value):
+def raise_no_default(function: str, value: Any) -> NoReturn:
     """Log warning if no default is specified."""
     template, action = template_cv.get() or ("", "rendering or compiling")
     raise ValueError(
