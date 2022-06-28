@@ -699,6 +699,7 @@ build.json @home-assistant/supervisor
 /tests/components/nextbus/ @vividboarder
 /homeassistant/components/nextcloud/ @meichthys
 /homeassistant/components/nextdns/ @bieniu
+/tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
 /tests/components/nfandroidtv/ @tkdrob
 /homeassistant/components/nightscout/ @marciogranzotto
