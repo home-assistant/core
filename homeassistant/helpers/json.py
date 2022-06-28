@@ -35,6 +35,8 @@ def json_encoder_default(obj: Any) -> Any:
     """
     if isinstance(obj, set):
         return list(obj)
+    if isinstance(obj, float):
+        return float(obj)
     if hasattr(obj, "as_dict"):
         return obj.as_dict()
     if isinstance(obj, Path):
