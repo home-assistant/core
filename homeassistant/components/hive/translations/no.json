@@ -20,6 +20,13 @@
                 "description": "Skriv inn din Hive-godkjenningskode. \n\n Vennligst skriv inn kode 0000 for \u00e5 be om en annen kode.",
                 "title": "Hive Totrinnsbekreftelse autentisering."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Enhetsnavn"
+                },
+                "description": "Skriv inn Hive-konfigurasjonen din",
+                "title": "Hive-konfigurasjon."
+            },
             "reauth": {
                 "data": {
                     "password": "Passord",
@@ -34,7 +41,7 @@
                     "scan_interval": "Skanneintervall (sekunder)",
                     "username": "Brukernavn"
                 },
-                "description": "Skriv inn inn innloggingsinformasjonen og konfigurasjonen for Hive.",
+                "description": "Skriv inn Hive-p\u00e5loggingsinformasjonen din.",
                 "title": "Hive-p\u00e5logging"
             }
         }
