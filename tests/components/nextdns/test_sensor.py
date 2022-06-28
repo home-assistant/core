@@ -367,6 +367,27 @@ async def test_availability(hass):
         suggested_object_id="fake_profile_dns_over_https_queries",
         disabled_by=None,
     )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "xyz12_validated_queries",
+        suggested_object_id="fake_profile_dnssec_validated_queries",
+        disabled_by=None,
+    )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "xyz12_encrypted_queries",
+        suggested_object_id="fake_profile_encrypted_queries",
+        disabled_by=None,
+    )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "xyz12_ipv4_queries",
+        suggested_object_id="fake_profile_ipv4_queries",
+        disabled_by=None,
+    )
 
     await init_integration(hass)
 
@@ -379,6 +400,21 @@ async def test_availability(hass):
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "20"
+
+    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "75"
+
+    state = hass.states.get("sensor.fake_profile_encrypted_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "60"
+
+    state = hass.states.get("sensor.fake_profile_ipv4_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "90"
 
     future = utcnow() + timedelta(minutes=10)
     with patch(
@@ -401,6 +437,22 @@ async def test_availability(hass):
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.fake_profile_dns_queries")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.fake_profile_dns_over_https_queries")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.fake_profile_encrypted_queries")
+    assert state
+    assert state.state == STATE_UNAVAILABLE
+
+    state = hass.states.get("sensor.fake_profile_ipv4_queries")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -433,3 +485,18 @@ async def test_availability(hass):
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "20"
+
+    state = hass.states.get("sensor.fake_profile_dnssec_validated_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "75"
+
+    state = hass.states.get("sensor.fake_profile_encrypted_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "60"
+
+    state = hass.states.get("sensor.fake_profile_ipv4_queries")
+    assert state
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "90"
