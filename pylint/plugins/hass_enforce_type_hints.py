@@ -697,6 +697,26 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "button": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ButtonEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["ButtonDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="press",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "cover": [
         ClassTypeHintMatch(
             base_class="Entity",
