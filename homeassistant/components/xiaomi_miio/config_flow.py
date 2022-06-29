@@ -129,12 +129,12 @@ class XiaomiMiioFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an authentication error or missing cloud credentials."""
-        self.host = user_input[CONF_HOST]
-        self.token = user_input[CONF_TOKEN]
-        self.mac = user_input[CONF_MAC]
-        self.model = user_input.get(CONF_MODEL)
+        self.host = entry_data[CONF_HOST]
+        self.token = entry_data[CONF_TOKEN]
+        self.mac = entry_data[CONF_MAC]
+        self.model = entry_data.get(CONF_MODEL)
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
