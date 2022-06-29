@@ -31,17 +31,14 @@ async def async_setup_entry(
     """Configure the fan entry.."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if not coordinator.data.has_thermostat:
-        # dont bother setting up if we don't have a thermostat
-        return
-
-    async_add_entities(
-        IntellifireClimate(
-            coordinator=coordinator,
-            description=description,
+    if coordinator.data.has_thermostat:
+        async_add_entities(
+            IntellifireClimate(
+                coordinator=coordinator,
+                description=description,
+            )
+            for description in INTELLIFIRE_CLIMATES
         )
-        for description in INTELLIFIRE_CLIMATES
-    )
 
 
 class IntellifireClimate(IntellifireEntity, ClimateEntity):
