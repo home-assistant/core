@@ -5,7 +5,6 @@ import pytest
 
 from homeassistant.components.frontier_silicon.const import (
     CONF_PIN,
-    CONF_USE_SESSION,
     CONF_WEBFSAPI_URL,
     DOMAIN,
 )
@@ -19,11 +18,7 @@ def config_entry():
     return MockConfigEntry(
         domain=DOMAIN,
         unique_id="mock_radio_id",
-        data={
-            CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
-            CONF_PIN: "1234",
-            CONF_USE_SESSION: False,
-        },
+        data={CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi", CONF_PIN: "1234"},
     )
 
 

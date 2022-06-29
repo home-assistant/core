@@ -18,8 +18,6 @@ from homeassistant.data_entry_flow import (
     RESULT_TYPE_FORM,
 )
 
-from tests.common import MockConfigEntry
-
 VALID_DEVICE_URL_PATCH = patch(
     "afsapi.AFSAPI.get_webfsapi_endpoint",
     return_value="http://1.1.1.1:80/webfsapi",
@@ -150,19 +148,9 @@ async def test_import(hass: HomeAssistant) -> None:
         assert result["reason"] == "unknown"
 
 
-async def test_import_already_exists(hass: HomeAssistant) -> None:
+async def test_import_already_exists(hass: HomeAssistant, config_entry) -> None:
     """Test import of device which already exists."""
-    mock_existing_entry = MockConfigEntry(
-        domain="frontier_silicon",
-        unique_id="mock_radio_id",
-        data={
-            "webfsapi_url": "http://1.1.1.1:80/webfsapi",
-            "pin": "1234",
-            "use_session": False,
-        },
-    )
-
-    mock_existing_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     with VALID_DEVICE_URL_PATCH:
         result = await hass.config_entries.flow.async_init(
@@ -176,7 +164,7 @@ async def test_import_already_exists(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == "abort"
+        assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "already_configured"
 
 
