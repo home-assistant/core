@@ -249,7 +249,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         try:
             self._serial = await validate_host_input(host, dhcp_mode=True)
         except (ConnectionError, ClientConnectionError):
-            LOGGER.info(
+            LOGGER.debug(
                 "DHCP Discovery has determined %s is not an IntelliFire device", host
             )
             return self.async_abort(reason="not_intellifire_device")
