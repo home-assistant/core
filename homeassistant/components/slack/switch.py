@@ -21,8 +21,8 @@ async def async_setup_entry(
             SlackSwitchEntity(
                 hass.data[DOMAIN][entry.entry_id][DATA_CLIENT],
                 SwitchEntityDescription(
-                    key="status",
-                    name="Status",
+                    key="active",
+                    name="Active",
                 ),
                 entry,
             )
