@@ -307,7 +307,10 @@ def test_invalid_config_flow_step(
     """Ensure invalid hints are rejected for ConfigFlow step."""
     class_node, func_node, arg_node = astroid.extract_node(
         """
-    class ConfigFlow():
+    class FlowHandler():
+        pass
+
+    class ConfigFlow(FlowHandler):
         pass
 
     class AxisFlowHandler( #@
@@ -331,7 +334,7 @@ def test_invalid_config_flow_step(
             args=(2, "ZeroconfServiceInfo", "async_step_zeroconf"),
             line=10,
             col_offset=8,
-            end_line=10,
+            end_line=13,
             end_col_offset=27,
         ),
         pylint.testutils.MessageTest(
@@ -340,7 +343,7 @@ def test_invalid_config_flow_step(
             args=("FlowResult", "async_step_zeroconf"),
             line=8,
             col_offset=4,
-            end_line=8,
+            end_line=11,
             end_col_offset=33,
         ),
     ):
