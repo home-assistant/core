@@ -552,25 +552,6 @@ async def test_audio_packets_not_found(hass):
     assert len(decoded_stream.audio_packets) == 0
 
 
-async def test_adts_aac_audio(hass):
-    """Set up an ADTS AAC audio stream and disable audio."""
-    py_av = MockPyAv(audio=True)
-
-    num_packets = PACKETS_TO_WAIT_FOR_AUDIO + 1
-    packets = list(PacketSequence(num_packets))
-    packets[1].stream = AUDIO_STREAM
-    packets[1].dts = int(packets[0].dts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    packets[1].pts = int(packets[0].pts / VIDEO_FRAME_RATE * AUDIO_SAMPLE_RATE)
-    # The following is packet data is a sign of ADTS AAC
-    packets[1][0] = 255
-    packets[1][1] = 241
-
-    decoded_stream = await async_decode_stream(hass, packets, py_av=py_av)
-    assert len(decoded_stream.audio_packets) == 0
-    # All decoded video packets are still preserved
-    assert len(decoded_stream.video_packets) == num_packets - 1
-
-
 async def test_audio_is_first_packet(hass):
     """Set up an audio stream and audio packet is the first packet in the stream."""
     py_av = MockPyAv(audio=True)
