@@ -300,9 +300,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = {**self.discovered_conf, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_conf = data
+        self.reauth_conf = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

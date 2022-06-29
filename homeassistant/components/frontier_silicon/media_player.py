@@ -100,6 +100,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
         | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
     def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
@@ -115,6 +116,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         self._max_volume = None
 
         self.__modes_by_label = None
+        self.__sound_modes_by_label = None
 
     async def async_update(self):
         """Get the latest date and update device state."""
@@ -156,6 +158,13 @@ class AFSAPIDevice(MediaPlayerEntity):
             }
             self._attr_source_list = list(self.__modes_by_label)
 
+        if not self._attr_sound_mode_list:
+            self.__sound_modes_by_label = {
+                sound_mode.label: sound_mode.key
+                for sound_mode in await afsapi.get_equalisers()
+            }
+            self._attr_sound_mode_list = list(self.__sound_modes_by_label)
+
         # The API seems to include 'zero' in the number of steps (e.g. if the range is
         # 0-40 then get_volume_steps returns 41) subtract one to get the max volume.
         # If call to get_volume fails set to 0 and try again next time.
@@ -174,6 +183,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
             self._attr_is_volume_muted = await afsapi.get_mute()
             self._attr_media_image_url = await afsapi.get_play_graphic()
+            self._attr_sound_mode = (await afsapi.get_eq_preset()).label
 
             volume = await self.fs_device.get_volume()
 
@@ -188,6 +198,7 @@ class AFSAPIDevice(MediaPlayerEntity):
 
             self._attr_is_volume_muted = None
             self._attr_media_image_url = None
+            self._attr_sound_mode = None
 
             self._attr_volume_level = None
 
@@ -255,3 +266,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         """Select input source."""
         await self.fs_device.set_power(True)
         await self.fs_device.set_mode(self.__modes_by_label.get(source))
+
+    async def async_select_sound_mode(self, sound_mode):
+        """Select EQ Preset."""
+        await self.fs_device.set_eq_preset(self.__sound_modes_by_label[sound_mode])

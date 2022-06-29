@@ -214,8 +214,9 @@ class EntityPlatform:
         def async_create_setup_task() -> Coroutine:
             """Get task to set up platform."""
             config_entries.current_entry.set(config_entry)
+
             return platform.async_setup_entry(  # type: ignore[no-any-return,union-attr]
-                self.hass, config_entry, self._async_schedule_add_entities
+                self.hass, config_entry, self._async_schedule_add_entities_for_entry
             )
 
         return await self._async_setup_platform(async_create_setup_task)
@@ -328,6 +329,20 @@ class EntityPlatform:
     ) -> None:
         """Schedule adding entities for a single platform async."""
         task = self.hass.async_create_task(
+            self.async_add_entities(new_entities, update_before_add=update_before_add),
+        )
+
+        if not self._setup_complete:
+            self._tasks.append(task)
+
+    @callback
+    def _async_schedule_add_entities_for_entry(
+        self, new_entities: Iterable[Entity], update_before_add: bool = False
+    ) -> None:
+        """Schedule adding entities for a single platform async and track the task."""
+        assert self.config_entry
+        task = self.config_entry.async_create_task(
+            self.hass,
             self.async_add_entities(new_entities, update_before_add=update_before_add),
         )
 

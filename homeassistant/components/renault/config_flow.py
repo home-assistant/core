@@ -93,9 +93,9 @@ class RenaultFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._original_data = data
+        self._original_data = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
