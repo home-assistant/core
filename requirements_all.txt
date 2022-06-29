@@ -34,7 +34,7 @@ PyRMVtransport==0.3.3
 PySocks==1.7.1
 
 # homeassistant.components.switchbot
-# PySwitchbot==0.13.3
+PySwitchbot==0.14.0
 
 # homeassistant.components.transport_nsw
 PyTransportNSW==0.1.1
@@ -259,7 +259,7 @@ aiosyncthing==0.5.1
 aiotractive==0.5.4
 
 # homeassistant.components.unifi
-aiounifi==32
+aiounifi==34
 
 # homeassistant.components.vlc_telnet
 aiovlc==0.1.0
@@ -1580,7 +1580,7 @@ pyirishrail==0.0.2
 pyiss==1.0.1
 
 # homeassistant.components.isy994
-pyisy==3.0.6
+pyisy==3.0.7
 
 # homeassistant.components.itach
 pyitachip2ir==0.0.7

@@ -233,7 +233,7 @@ class GaradgetCover(CoverEntity):
             self._start_watcher("stop")
             return ret["return_value"] == 1
 
-    def update(self):
+    def update(self) -> None:
         """Get updated status from API."""
         try:
             status = self._get_variable("doorStatus")

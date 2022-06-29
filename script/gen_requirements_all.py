@@ -30,7 +30,6 @@ COMMENT_REQUIREMENTS = (
     "opencv-python-headless",
     "pybluez",
     "pycups",
-    "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
     "python-gammu",
