@@ -89,7 +89,7 @@ async def async_generate_media_info(
     for attrib in MEDIA_DIAGNOSTIC_ATTRIBUTES:
         payload[attrib] = getattr(speaker.media, attrib)
 
-    def poll_current_track_info() -> str:
+    def poll_current_track_info() -> dict[str, Any] | str:
         try:
             return speaker.soco.avTransport.GetPositionInfo(
                 [("InstanceID", 0), ("Channel", "Master")],

@@ -593,8 +593,9 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
-        async with self._subscription_lock:
-            await self._async_offline()
+        if self._subscription_lock:
+            async with self._subscription_lock:
+                await self._async_offline()
 
     async def _async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""

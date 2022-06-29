@@ -213,7 +213,6 @@ class SonosAlarmEntity(SonosEntity, SwitchEntity):
 
     _attr_entity_category = EntityCategory.CONFIG
     _attr_icon = "mdi:alarm"
-    speaker: SonosSpeaker
 
     def __init__(self, alarm_id: str, speaker: SonosSpeaker) -> None:
         """Initialize the switch."""
