@@ -1702,9 +1702,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             )
 
         # Check the return type.
-        if match.return_type != _Special.UNDEFINED and not _is_valid_return_type(
-            match, node.returns
-        ):
+        if not _is_valid_return_type(match, node.returns):
             self.add_message(
                 "hass-return-type",
                 node=node,
