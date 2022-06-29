@@ -1,7 +1,9 @@
 """Config flow to configure Blink."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from blinkpy.auth import Auth, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
@@ -15,6 +17,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import DEFAULT_SCAN_INTERVAL, DEVICE_ID, DOMAIN
 
@@ -120,9 +123,9 @@ class BlinkConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, entry_data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon migration of old entries."""
-        return await self.async_step_user(entry_data)
+        return await self.async_step_user(dict(entry_data))
 
     @callback
     def _async_finish_flow(self):

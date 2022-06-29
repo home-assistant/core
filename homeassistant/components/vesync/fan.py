@@ -113,9 +113,9 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         )
 
     @property
-    def preset_modes(self):
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
-        return PRESET_MODES[SKU_TO_BASE_DEVICE.get(self.device.device_type)]
+        return PRESET_MODES[SKU_TO_BASE_DEVICE[self.device.device_type]]
 
     @property
     def preset_mode(self) -> str | None:
@@ -130,7 +130,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return self.smartfan.uuid
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr = {}
 

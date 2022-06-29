@@ -70,7 +70,7 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
 
         await self.async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.async_set_percentage(0)
 
@@ -86,6 +86,6 @@ class LutronCasetaFan(LutronCasetaDeviceUpdatableEntity, FanEntity):
         await self._smartbridge.set_fan(self.device_id, named_speed)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
-        return self.percentage and self.percentage > 0
+        return bool(self.percentage)

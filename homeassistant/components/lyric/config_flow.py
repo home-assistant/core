@@ -1,6 +1,9 @@
 """Config flow for Honeywell Lyric."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -18,7 +21,7 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 

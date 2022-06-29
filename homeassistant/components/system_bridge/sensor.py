@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Final, cast
 
 from homeassistant.components.sensor import (
@@ -125,6 +125,15 @@ def memory_used(data: SystemBridgeCoordinatorData) -> float | None:
 
 
 BASE_SENSOR_TYPES: tuple[SystemBridgeSensorEntityDescription, ...] = (
+    SystemBridgeSensorEntityDescription(
+        key="boot_time",
+        name="Boot Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:av-timer",
+        value=lambda data: datetime.fromtimestamp(
+            data.system.boot_time, tz=timezone.utc
+        ),
+    ),
     SystemBridgeSensorEntityDescription(
         key="cpu_speed",
         name="CPU Speed",

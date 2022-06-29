@@ -502,7 +502,7 @@ class MqttFan(MqttEntity, FanEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
@@ -568,7 +568,7 @@ class MqttFan(MqttEntity, FanEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
         This method is a coroutine.
