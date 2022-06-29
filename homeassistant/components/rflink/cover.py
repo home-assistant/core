@@ -125,6 +125,9 @@ async def async_setup_platform(
 class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
     """Rflink entity which can switch on/stop/off (eg: cover)."""
 
+    _attr_assumed_state = True
+    _attr_should_poll = False
+
     async def async_added_to_hass(self) -> None:
         """Restore RFLink cover state (OPEN/CLOSE)."""
         await super().async_added_to_hass()
@@ -142,19 +145,9 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
             self._state = False
 
     @property
-    def should_poll(self) -> bool:
-        """No polling available in RFlink cover."""
-        return False
-
-    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return not self._state
-
-    @property
-    def assumed_state(self) -> bool:
-        """Return True because covers can be stopped midway."""
-        return True
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Turn the device close."""
