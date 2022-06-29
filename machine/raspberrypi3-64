@@ -5,9 +5,10 @@ RUN apk --no-cache add \
         raspberrypi \
         raspberrypi-libs \
         usbutils \
-    && sed -i "s|# RPi.GPIO|RPi.GPIO|g" /usr/src/homeassistant/requirements_all.txt \
     && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
-        RPi.GPIO bluepy pybluez -c /usr/src/homeassistant/requirements_all.txt \
+        pybluez \
+        pygatt[GATTTOOL] \
+        -c /usr/src/homeassistant/requirements_all.txt \
         --use-deprecated=legacy-resolver
 
 ##

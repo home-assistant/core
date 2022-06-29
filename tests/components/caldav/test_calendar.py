@@ -937,5 +937,7 @@ async def test_get_events_custom_calendars(hass, calendar, get_api_events):
             "end": {"dateTime": "2017-11-27T10:00:00-08:00"},
             "start": {"dateTime": "2017-11-27T09:00:00-08:00"},
             "summary": "This is a normal event",
+            "location": "Hamburg",
+            "description": "Surprisingly rainy",
         }
     ]

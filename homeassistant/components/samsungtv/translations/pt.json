@@ -7,9 +7,6 @@
         },
         "flow_title": "TV Samsung: {model}",
         "step": {
-            "confirm": {
-                "title": "TV Samsung"
-            },
             "user": {
                 "data": {
                     "host": "Servidor",

@@ -45,6 +45,7 @@ from homeassistant.util.yaml import load_yaml
 
 from . import device_registry as dr, storage
 from .device_registry import EVENT_DEVICE_REGISTRY_UPDATED
+from .frame import report
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
@@ -59,7 +60,7 @@ SAVE_DELAY = 10
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 6
+STORAGE_VERSION_MINOR = 7
 STORAGE_KEY = "core.entity_registry"
 
 # Attributes relevant to describing entity
@@ -110,6 +111,7 @@ class RegistryEntry:
     hidden_by: RegistryEntryHider | None = attr.ib(default=None)
     icon: str | None = attr.ib(default=None)
     id: str = attr.ib(factory=uuid_util.random_uuid_hex)
+    has_entity_name: bool = attr.ib(default=False)
     name: str | None = attr.ib(default=None)
     options: Mapping[str, Mapping[str, Any]] = attr.ib(
         default=None, converter=attr.converters.default_if_none(factory=dict)  # type: ignore[misc]
@@ -327,6 +329,7 @@ class EntityRegistry:
         config_entry: ConfigEntry | None = None,
         device_id: str | None = None,
         entity_category: EntityCategory | None = None,
+        has_entity_name: bool | None = None,
         original_device_class: str | None = None,
         original_icon: str | None = None,
         original_name: str | None = None,
@@ -348,6 +351,9 @@ class EntityRegistry:
                 config_entry_id=config_entry_id or UNDEFINED,
                 device_id=device_id or UNDEFINED,
                 entity_category=entity_category or UNDEFINED,
+                has_entity_name=has_entity_name
+                if has_entity_name is not None
+                else UNDEFINED,
                 original_device_class=original_device_class or UNDEFINED,
                 original_icon=original_icon or UNDEFINED,
                 original_name=original_name or UNDEFINED,
@@ -368,6 +374,8 @@ class EntityRegistry:
 
         if disabled_by and not isinstance(disabled_by, RegistryEntryDisabler):
             raise ValueError("disabled_by must be a RegistryEntryDisabler value")
+        if hidden_by and not isinstance(hidden_by, RegistryEntryHider):
+            raise ValueError("hidden_by must be a RegistryEntryHider value")
 
         if (
             disabled_by is None
@@ -390,6 +398,7 @@ class EntityRegistry:
             entity_category=entity_category,
             entity_id=entity_id,
             hidden_by=hidden_by,
+            has_entity_name=has_entity_name or False,
             original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
@@ -496,6 +505,7 @@ class EntityRegistry:
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
+        has_entity_name: bool | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -519,6 +529,12 @@ class EntityRegistry:
             and not isinstance(disabled_by, RegistryEntryDisabler)
         ):
             raise ValueError("disabled_by must be a RegistryEntryDisabler value")
+        if (
+            hidden_by
+            and hidden_by is not UNDEFINED
+            and not isinstance(hidden_by, RegistryEntryHider)
+        ):
+            raise ValueError("hidden_by must be a RegistryEntryHider value")
 
         from .entity import EntityCategory  # pylint: disable=import-outside-toplevel
 
@@ -539,6 +555,7 @@ class EntityRegistry:
             ("entity_category", entity_category),
             ("hidden_by", hidden_by),
             ("icon", icon),
+            ("has_entity_name", has_entity_name),
             ("name", name),
             ("original_device_class", original_device_class),
             ("original_icon", original_icon),
@@ -612,6 +629,7 @@ class EntityRegistry:
         entity_category: EntityCategory | None | UndefinedType = UNDEFINED,
         hidden_by: RegistryEntryHider | None | UndefinedType = UNDEFINED,
         icon: str | None | UndefinedType = UNDEFINED,
+        has_entity_name: bool | UndefinedType = UNDEFINED,
         name: str | None | UndefinedType = UNDEFINED,
         new_entity_id: str | UndefinedType = UNDEFINED,
         new_unique_id: str | UndefinedType = UNDEFINED,
@@ -633,6 +651,7 @@ class EntityRegistry:
             entity_category=entity_category,
             hidden_by=hidden_by,
             icon=icon,
+            has_entity_name=has_entity_name,
             name=name,
             new_entity_id=new_entity_id,
             new_unique_id=new_unique_id,
@@ -711,6 +730,10 @@ class EntityRegistry:
                 if not valid_entity_id(entity["entity_id"]):
                     continue
 
+                # We removed this in 2022.5. Remove this check in 2023.1.
+                if entity["entity_category"] == "system":
+                    entity["entity_category"] = None
+
                 entities[entity["entity_id"]] = RegistryEntry(
                     area_id=entity["area_id"],
                     capabilities=entity["capabilities"],
@@ -724,9 +747,12 @@ class EntityRegistry:
                     if entity["entity_category"]
                     else None,
                     entity_id=entity["entity_id"],
-                    hidden_by=entity["hidden_by"],
+                    hidden_by=RegistryEntryHider(entity["hidden_by"])
+                    if entity["hidden_by"]
+                    else None,
                     icon=entity["icon"],
                     id=entity["id"],
+                    has_entity_name=entity["has_entity_name"],
                     name=entity["name"],
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -763,6 +789,7 @@ class EntityRegistry:
                 "hidden_by": entry.hidden_by,
                 "icon": entry.icon,
                 "id": entry.id,
+                "has_entity_name": entry.has_entity_name,
                 "name": entry.name,
                 "options": entry.options,
                 "original_device_class": entry.original_device_class,
@@ -815,6 +842,9 @@ async def async_get_registry(hass: HomeAssistant) -> EntityRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
+    report(
+        "uses deprecated `async_get_registry` to access entity registry, use async_get instead"
+    )
     return async_get(hass)
 
 
@@ -926,6 +956,11 @@ async def _async_migrate(
         for entity in data["entities"]:
             entity["hidden_by"] = None
 
+    if old_major_version == 1 and old_minor_version < 7:
+        # Version 1.6 adds has_entity_name
+        for entity in data["entities"]:
+            entity["has_entity_name"] = False
+
     if old_major_version > 1:
         raise NotImplementedError
     return data
@@ -991,7 +1026,7 @@ async def async_migrate_entries(
     entry_callback: Callable[[RegistryEntry], dict[str, Any] | None],
 ) -> None:
     """Migrator of unique IDs."""
-    ent_reg = await async_get_registry(hass)
+    ent_reg = async_get(hass)
 
     for entry in ent_reg.entities.values():
         if entry.config_entry_id != config_entry_id:

@@ -120,6 +120,8 @@ class SonosMedia:
         self.clear()
 
         track_info = self.poll_track_info()
+        if not track_info["uri"]:
+            return
         self.uri = track_info["uri"]
 
         audio_source = self.soco.music_source_from_uri(self.uri)
@@ -203,13 +205,15 @@ class SonosMedia:
         self, position_info: dict[str, int], force_update: bool = False
     ) -> None:
         """Update state when playing music tracks."""
-        if (duration := position_info.get(DURATION_SECONDS)) == 0:
+        duration = position_info.get(DURATION_SECONDS)
+        current_position = position_info.get(POSITION_SECONDS)
+
+        if not (duration or current_position):
             self.clear_position()
             return
 
         should_update = force_update
         self.duration = duration
-        current_position = position_info.get(POSITION_SECONDS)
 
         # player started reporting position?
         if current_position is not None and self.position is None:

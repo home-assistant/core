@@ -8,7 +8,6 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
-import os
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -25,18 +24,9 @@ from homeassistant.components.system_log import LogEntry, _figure_out_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.device_registry import (
-    CONNECTION_ZIGBEE,
-    DeviceRegistry,
-    async_get_registry as get_dev_reg,
-)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.entity_registry import (
-    EntityRegistry,
-    async_entries_for_device,
-    async_get_registry as get_ent_reg,
-)
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -129,8 +119,8 @@ class ZHAGateway:
 
     # -- Set in async_initialize --
     zha_storage: ZhaStorage
-    ha_device_registry: DeviceRegistry
-    ha_entity_registry: EntityRegistry
+    ha_device_registry: dr.DeviceRegistry
+    ha_entity_registry: er.EntityRegistry
     application_controller: ControllerApplication
     radio_description: str
 
@@ -161,8 +151,8 @@ class ZHAGateway:
         discovery.GROUP_PROBE.initialize(self._hass)
 
         self.zha_storage = await async_get_registry(self._hass)
-        self.ha_device_registry = await get_dev_reg(self._hass)
-        self.ha_entity_registry = await get_ent_reg(self._hass)
+        self.ha_device_registry = dr.async_get(self._hass)
+        self.ha_entity_registry = er.async_get(self._hass)
 
         radio_type = self.config_entry.data[CONF_RADIO_TYPE]
 
@@ -172,7 +162,7 @@ class ZHAGateway:
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
             CONF_DATABASE,
-            os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
+            self._hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
@@ -342,7 +332,7 @@ class ZHAGateway:
     def group_removed(self, zigpy_group: zigpy.group.Group) -> None:
         """Handle zigpy group removed event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
-        zha_group = self._groups.pop(zigpy_group.group_id, None)
+        zha_group = self._groups.pop(zigpy_group.group_id)
         zha_group.info("group_removed")
         self._cleanup_group_entity_registry_entries(zigpy_group)
 
@@ -437,7 +427,8 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
-        all_group_entity_entries = async_entries_for_device(
+        assert self.coordinator_zha_device
+        all_group_entity_entries = er.async_entries_for_device(
             self.ha_entity_registry,
             self.coordinator_zha_device.device_id,
             include_disabled_entities=True,
@@ -528,7 +519,7 @@ class ZHAGateway:
             self._devices[zigpy_device.ieee] = zha_device
             device_registry_device = self.ha_device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
-                connections={(CONNECTION_ZIGBEE, str(zha_device.ieee))},
+                connections={(dr.CONNECTION_ZIGBEE, str(zha_device.ieee))},
                 identifiers={(DOMAIN, str(zha_device.ieee))},
                 name=zha_device.name,
                 manufacturer=zha_device.manufacturer,
@@ -681,7 +672,7 @@ class ZHAGateway:
     async def async_remove_zigpy_group(self, group_id: int) -> None:
         """Remove a Zigbee group from Zigpy."""
         if not (group := self.groups.get(group_id)):
-            _LOGGER.debug("Group: %s:0x%04x could not be found", group.name, group_id)
+            _LOGGER.debug("Group: 0x%04x could not be found", group_id)
             return
         if group.members:
             tasks = []
@@ -696,7 +687,7 @@ class ZHAGateway:
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         for unsubscribe in self._unsubs:
             unsubscribe()
-        await self.application_controller.pre_shutdown()
+        await self.application_controller.shutdown()
 
     def handle_message(
         self,

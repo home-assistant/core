@@ -10,6 +10,7 @@ from homeassistant.components import recorder, sensor
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ENERGY_KILO_WATT_HOUR,
+    ENERGY_MEGA_WATT_HOUR,
     ENERGY_WATT_HOUR,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
@@ -23,7 +24,11 @@ from .const import DOMAIN
 
 ENERGY_USAGE_DEVICE_CLASSES = (sensor.SensorDeviceClass.ENERGY,)
 ENERGY_USAGE_UNITS = {
-    sensor.SensorDeviceClass.ENERGY: (ENERGY_KILO_WATT_HOUR, ENERGY_WATT_HOUR)
+    sensor.SensorDeviceClass.ENERGY: (
+        ENERGY_KILO_WATT_HOUR,
+        ENERGY_MEGA_WATT_HOUR,
+        ENERGY_WATT_HOUR,
+    )
 }
 ENERGY_PRICE_UNITS = tuple(
     f"/{unit}" for units in ENERGY_USAGE_UNITS.values() for unit in units

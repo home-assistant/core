@@ -35,6 +35,10 @@
             "pick_implementation": {
                 "title": "\uc778\uc99d \ubc29\ubc95 \uc120\ud0dd\ud558\uae30"
             },
+            "pubsub": {
+                "description": "[Cloud Console]( {url} )\uc744 \ubc29\ubb38\ud558\uc5ec Google Cloud \ud504\ub85c\uc81d\ud2b8 ID\ub97c \ucc3e\uc73c\uc138\uc694.",
+                "title": "\uad6c\uae00 \ud074\ub77c\uc6b0\ub4dc \uad6c\uc131"
+            },
             "reauth_confirm": {
                 "description": "Nest \ud1b5\ud569 \uad6c\uc131\uc694\uc18c\ub294 \uacc4\uc815\uc744 \ub2e4\uc2dc \uc778\uc99d\ud574\uc57c \ud569\ub2c8\ub2e4",
                 "title": "\ud1b5\ud569 \uad6c\uc131\uc694\uc18c \uc7ac\uc778\uc99d\ud558\uae30"

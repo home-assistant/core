@@ -1,14 +1,14 @@
 """Recorder constants."""
 
-from functools import partial
-import json
-from typing import Final
-
+from homeassistant.backports.enum import StrEnum
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import (  # noqa: F401 pylint: disable=unused-import
+    JSON_DUMP,
+)
 
 DATA_INSTANCE = "recorder_instance"
 SQLITE_URL_PREFIX = "sqlite://"
+MYSQLDB_URL_PREFIX = "mysql://"
 DOMAIN = "recorder"
 
 CONF_DB_INTEGRITY_CHECK = "db_integrity_check"
@@ -25,6 +25,21 @@ MAX_ROWS_TO_PURGE = 998
 
 DB_WORKER_PREFIX = "DbWorker"
 
-JSON_DUMP: Final = partial(json.dumps, cls=JSONEncoder, separators=(",", ":"))
-
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
+
+ATTR_KEEP_DAYS = "keep_days"
+ATTR_REPACK = "repack"
+ATTR_APPLY_FILTER = "apply_filter"
+
+KEEPALIVE_TIME = 30
+
+
+EXCLUDE_ATTRIBUTES = f"{DOMAIN}_exclude_attributes_by_domain"
+
+
+class SupportedDialect(StrEnum):
+    """Supported dialects."""
+
+    SQLITE = "sqlite"
+    MYSQL = "mysql"
+    POSTGRESQL = "postgresql"

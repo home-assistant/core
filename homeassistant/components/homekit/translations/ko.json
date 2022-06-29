@@ -20,9 +20,6 @@
     "options": {
         "step": {
             "advanced": {
-                "data": {
-                    "auto_start": "\uc790\ub3d9 \uc2dc\uc791 (homekit.start \uc11c\ube44\uc2a4\ub97c \uc218\ub3d9\uc73c\ub85c \ud638\ucd9c\ud558\ub824\uba74 \ube44\ud65c\uc131\ud654\ud574\uc8fc\uc138\uc694)"
-                },
                 "description": "\uc774 \uc124\uc815\uc740 HomeKit\uac00 \uc791\ub3d9\ud558\uc9c0 \uc54a\ub294 \uacbd\uc6b0\uc5d0\ub9cc \uc124\uc815\ud574\uc8fc\uc138\uc694.",
                 "title": "\uace0\uae09 \uad6c\uc131"
             },

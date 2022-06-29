@@ -1,13 +1,20 @@
 {
     "config": {
         "abort": {
-            "already_configured": "V\u00e4rden \u00e4r redan konfigurerad."
+            "already_configured": "V\u00e4rden \u00e4r redan konfigurerad.",
+            "reauth_successful": "\u00c5terautentisering lyckades"
         },
         "error": {
             "cannot_connect": "Det g\u00e5r inte att ansluta till v\u00e4rden",
             "name_exists": "Namnet finns redan"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "L\u00f6senord"
+                },
+                "title": "\u00c5terautenticera integration"
+            },
             "user": {
                 "data": {
                     "host": "V\u00e4rd",

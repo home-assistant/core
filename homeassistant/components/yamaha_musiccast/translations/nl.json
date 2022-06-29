@@ -10,7 +10,7 @@
         "flow_title": "MusicCast: {name}",
         "step": {
             "confirm": {
-                "description": "Wilt u beginnen met instellen?"
+                "description": "Wil je beginnen met instellen?"
             },
             "user": {
                 "data": {

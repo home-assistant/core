@@ -2,11 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Apparaat is al geconfigureerd",
-            "cannot_connect": "Kon niet verbinden",
+            "cannot_connect": "Kan geen verbinding maken",
             "not_lutron_device": "Ontdekt apparaat is geen Lutron-apparaat"
         },
         "error": {
-            "cannot_connect": "Kon niet verbinden"
+            "cannot_connect": "Kan geen verbinding maken"
         },
         "flow_title": "{name} ({host})",
         "step": {

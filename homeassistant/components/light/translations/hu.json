@@ -14,7 +14,6 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} be- vagy kikapcsolt",
-            "toggled": "{entity_name} \u00e1tkapcsolt",
             "turned_off": "{entity_name} le lett kapcsolva",
             "turned_on": "{entity_name} fel lett kapcsolva"
         }

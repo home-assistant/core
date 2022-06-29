@@ -10,6 +10,7 @@ import logging
 import pprint
 
 from aiohttp.web import json_response
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components import webhook
 from homeassistant.const import (
@@ -43,6 +44,8 @@ from .error import SmartHomeError
 
 SYNC_DELAY = 15
 _LOGGER = logging.getLogger(__name__)
+LOCAL_SDK_VERSION_HEADER = "HA-Cloud-Version"
+LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 
 
 @callback
@@ -86,6 +89,8 @@ class AbstractConfig(ABC):
         self._google_sync_unsub = {}
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
+        self._local_sdk_version_warn = False
+        self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -155,7 +160,9 @@ class AbstractConfig(ABC):
 
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        if data := self._store.agent_user_ids.get(agent_user_id):
+            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        return None
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -209,6 +216,9 @@ class AbstractConfig(ABC):
 
     async def async_sync_entities_all(self):
         """Sync all entities to Google for all registered agents."""
+        if not self._store.agent_user_ids:
+            return 204
+
         res = await gather(
             *(
                 self.async_sync_entities(agent_user_id)
@@ -327,6 +337,18 @@ class AbstractConfig(ABC):
         from . import smart_home
 
         self._local_last_active = utcnow()
+
+        # Check version local SDK.
+        version = request.headers.get("HA-Cloud-Version")
+        if not self._local_sdk_version_warn and (
+            not version or AwesomeVersion(version) < LOCAL_SDK_MIN_VERSION
+        ):
+            _LOGGER.warning(
+                "Local SDK version is too old (%s), check documentation on how to update to the latest version",
+                version,
+            )
+            self._local_sdk_version_warn = True
+
         payload = await request.json()
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
@@ -336,9 +358,6 @@ class AbstractConfig(ABC):
                 request.headers.get("HA-Cloud-Version", "unknown"),
                 pprint.pformat(payload),
             )
-
-        if not self.enabled:
-            return json_response(smart_home.turned_off_response(payload))
 
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
@@ -350,6 +369,11 @@ class AbstractConfig(ABC):
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
+
+        if not self.enabled:
+            return json_response(
+                smart_home.api_disabled_response(payload, agent_user_id)
+            )
 
         result = await smart_home.async_handle_message(
             self.hass,
@@ -520,7 +544,17 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return bool(self.traits())
+        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        result = self.config.is_supported_cache.get(self.entity_id)
+
+        if result is None or result[0] != features:
+            result = self.config.is_supported_cache[self.entity_id] = (
+                features,
+                bool(self.traits()),
+            )
+
+        return result[1]
 
     @callback
     def might_2fa(self) -> bool:
@@ -577,8 +611,9 @@ class GoogleEntity:
             device["customData"] = {
                 "webhookId": self.config.get_local_webhook_id(agent_user_id),
                 "httpPort": self.hass.http.server_port,
-                "httpSSL": self.hass.config.api.use_ssl,
                 "uuid": instance_uuid,
+                # Below can be removed in HA 2022.9
+                "httpSSL": self.hass.config.api.use_ssl,
                 "baseUrl": get_url(self.hass, prefer_external=True),
                 "proxyDeviceId": agent_user_id,
             }

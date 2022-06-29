@@ -4,15 +4,20 @@ import logging
 import voluptuous as vol
 
 from homeassistant import exceptions
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.const import CONF_FOR, CONF_PLATFORM, CONF_VALUE_TEMPLATE
-from homeassistant.core import HassJob, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.event import (
     TrackTemplate,
     async_call_later,
     async_track_template_result,
 )
-from homeassistant.helpers.template import result_as_boolean
+from homeassistant.helpers.template import Template, result_as_boolean
+from homeassistant.helpers.typing import ConfigType
 
 # mypy: allow-untyped-defs, no-check-untyped-defs
 
@@ -28,11 +33,16 @@ TRIGGER_SCHEMA = IF_ACTION_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
 
 
 async def async_attach_trigger(
-    hass, config, action, automation_info, *, platform_type="template"
-):
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+    *,
+    platform_type: str = "template",
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
     trigger_data = automation_info["trigger_data"]
-    value_template = config.get(CONF_VALUE_TEMPLATE)
+    value_template: Template = config[CONF_VALUE_TEMPLATE]
     value_template.hass = hass
     time_delta = config.get(CONF_FOR)
     template.attach(hass, time_delta)

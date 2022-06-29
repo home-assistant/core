@@ -16,9 +16,7 @@
             },
             "user": {
                 "data": {
-                    "scan_interval": "Aktualisierungsintervall (Sekunden, mindestens 30)",
-                    "unique_id": "Ger\u00e4t",
-                    "usn": "Ger\u00e4t"
+                    "unique_id": "Ger\u00e4t"
                 }
             }
         }

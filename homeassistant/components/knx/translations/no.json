@@ -15,10 +15,8 @@
             "manual_tunnel": {
                 "data": {
                     "host": "Vert",
-                    "individual_address": "Individuell adresse for tilkoblingen",
                     "local_ip": "Lokal IP for hjemmeassistent",
                     "port": "Port",
-                    "route_back": "Rute tilbake / NAT-modus",
                     "tunneling_type": "KNX tunneltype"
                 },
                 "data_description": {
@@ -104,15 +102,13 @@
                     "multicast_group": "Brukes til ruting og oppdagelse. Standard: `224.0.23.12`",
                     "multicast_port": "Brukes til ruting og oppdagelse. Standard: `3671`",
                     "rate_limit": "Maksimalt utg\u00e5ende telegrammer per sekund.\n Anbefalt: 20 til 40",
-                    "state_updater": "Globalt aktiver eller deaktiver lesetilstander fra KNX-bussen. N\u00e5r den er deaktivert, vil ikke Home Assistant aktivt hente statuser fra KNX-bussen, \"sync_state\"-enhetsalternativer vil ikke ha noen effekt."
+                    "state_updater": "Sett standard for lesing av tilstander fra KNX-bussen. N\u00e5r den er deaktivert, vil ikke Home Assistant aktivt hente enhetstilstander fra KNX-bussen. Kan overstyres av entitetsalternativer for \"sync_state\"."
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Vert",
-                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
                     "port": "Port",
-                    "route_back": "Rute tilbake / NAT-modus",
                     "tunneling_type": "KNX tunneltype"
                 },
                 "data_description": {

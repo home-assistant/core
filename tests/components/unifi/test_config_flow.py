@@ -7,7 +7,7 @@ import aiounifi
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import ssdp
-from homeassistant.components.unifi.config_flow import async_discover_unifi
+from homeassistant.components.unifi.config_flow import _async_discover_unifi
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
@@ -686,10 +686,10 @@ async def test_form_ssdp_gets_form_with_ignored_entry(hass):
 async def test_discover_unifi_positive(hass):
     """Verify positive run of UniFi discovery."""
     with patch("socket.gethostbyname", return_value=True):
-        assert await async_discover_unifi(hass)
+        assert await _async_discover_unifi(hass)
 
 
 async def test_discover_unifi_negative(hass):
     """Verify negative run of UniFi discovery."""
     with patch("socket.gethostbyname", side_effect=socket.gaierror):
-        assert await async_discover_unifi(hass) is None
+        assert await _async_discover_unifi(hass) is None

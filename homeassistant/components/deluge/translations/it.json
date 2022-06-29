@@ -16,7 +16,7 @@
                     "username": "Nome utente",
                     "web_port": "Porta web (per il servizio di visita)"
                 },
-                "description": "Per poter utilizzare questa integrazione, devi abilitare la seguente opzione nelle impostazioni di diluvio: Demone > Consenti controlli "
+                "description": "Per poter utilizzare questa integrazione, devi abilitare la seguente opzione nelle impostazioni di diluvio: Daemon > Consenti controlli remoti"
             }
         }
     }

@@ -7,9 +7,7 @@
             "user": {
                 "data": {
                     "county": "Kota/kabupaten"
-                },
-                "description": "Pilih kota/kabupaten Anda di bawah ini.",
-                "title": "Penghitung Pemadaman PECO"
+                }
             }
         }
     }

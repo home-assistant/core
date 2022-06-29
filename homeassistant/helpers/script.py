@@ -205,6 +205,10 @@ async def trace_action(hass, script_run, stop, variables):
     except _AbortScript as ex:
         trace_element.set_error(ex.__cause__ or ex)
         raise ex
+    except _ConditionFail as ex:
+        # Clear errors which may have been set when evaluating the condition
+        trace_element.set_error(None)
+        raise ex
     except _StopScript as ex:
         raise ex
     except Exception as ex:
@@ -325,11 +329,19 @@ async def async_validate_action_config(
     return config
 
 
-class _AbortScript(Exception):
+class _HaltScript(Exception):
+    """Throw if script needs to stop executing."""
+
+
+class _AbortScript(_HaltScript):
     """Throw if script needs to abort because of an unexpected error."""
 
 
-class _StopScript(Exception):
+class _ConditionFail(_HaltScript):
+    """Throw if script needs to stop because a condition evaluated to False."""
+
+
+class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
 
 
@@ -393,14 +405,16 @@ class _ScriptRun:
                 await self._async_step(log_exceptions=False)
             else:
                 script_execution_set("finished")
-        except _StopScript:
-            script_execution_set("finished")
-            # Let the _StopScript bubble up if this is a sub-script
-            if not self._script.top_level:
-                raise
         except _AbortScript:
             script_execution_set("aborted")
             # Let the _AbortScript bubble up if this is a sub-script
+            if not self._script.top_level:
+                raise
+        except _ConditionFail:
+            script_execution_set("aborted")
+        except _StopScript:
+            script_execution_set("finished")
+            # Let the _StopScript bubble up if this is a sub-script
             if not self._script.top_level:
                 raise
         except Exception:
@@ -425,6 +439,7 @@ class _ScriptRun:
                     self._log(
                         "Skipped disabled step %s", self._action.get(CONF_ALIAS, action)
                     )
+                    trace_set_result(enabled=False)
                     return
 
                 try:
@@ -450,7 +465,7 @@ class _ScriptRun:
     def _handle_exception(
         self, exception: Exception, continue_on_error: bool, log_exceptions: bool
     ) -> None:
-        if not isinstance(exception, (_AbortScript, _StopScript)) and log_exceptions:
+        if not isinstance(exception, _HaltScript) and log_exceptions:
             self._log_exception(exception)
 
         if not continue_on_error:
@@ -726,7 +741,7 @@ class _ScriptRun:
         self._log("Test condition %s: %s", self._script.last_action, check)
         trace_update_result(result=check)
         if not check:
-            raise _AbortScript
+            raise _ConditionFail
 
     def _test_conditions(self, conditions, name, condition_path=None):
         if condition_path is None:
@@ -1133,13 +1148,14 @@ class Script:
         domain: str,
         *,
         # Used in "Running <running_description>" log message
-        running_description: str | None = None,
         change_listener: Callable[..., Any] | None = None,
-        script_mode: str = DEFAULT_SCRIPT_MODE,
-        max_runs: int = DEFAULT_MAX,
-        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
-        logger: logging.Logger | None = None,
+        copy_variables: bool = False,
         log_exceptions: bool = True,
+        logger: logging.Logger | None = None,
+        max_exceeded: str = DEFAULT_MAX_EXCEEDED,
+        max_runs: int = DEFAULT_MAX,
+        running_description: str | None = None,
+        script_mode: str = DEFAULT_SCRIPT_MODE,
         top_level: bool = True,
         variables: ScriptVariables | None = None,
     ) -> None:
@@ -1192,6 +1208,7 @@ class Script:
         self._variables_dynamic = template.is_complex(variables)
         if self._variables_dynamic:
             template.attach(hass, variables)
+        self._copy_variables_on_run = copy_variables
 
     @property
     def change_listener(self) -> Callable[..., Any] | None:
@@ -1454,7 +1471,10 @@ class Script:
 
             variables["context"] = context
         else:
-            variables = cast(dict, run_variables)
+            if self._copy_variables_on_run:
+                variables = cast(dict, copy(run_variables))
+            else:
+                variables = cast(dict, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to
         # stop (restart) or wait for (queued) our own script run.
@@ -1671,6 +1691,7 @@ class Script:
                 max_runs=self.max_runs,
                 logger=self._logger,
                 top_level=False,
+                copy_variables=True,
             )
             parallel_script.change_listener = partial(
                 self._chain_change_listener, parallel_script

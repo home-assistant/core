@@ -5,10 +5,9 @@ from datetime import timedelta
 from typing import TypedDict
 
 # Set up.
-from aiohwenergy.device import Device
+from homewizard_energy.models import Data, Device, State
 
 from homeassistant.const import Platform
-from homeassistant.helpers.typing import StateType
 
 DOMAIN = "homewizard"
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
@@ -29,4 +28,5 @@ class DeviceResponseEntry(TypedDict):
     """Dict describing a single response entry."""
 
     device: Device
-    data: dict[str, StateType]
+    data: Data
+    state: State

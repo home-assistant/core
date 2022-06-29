@@ -87,13 +87,8 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.omnilogic.switch",
     "homeassistant.components.onvif.base",
     "homeassistant.components.onvif.binary_sensor",
-    "homeassistant.components.onvif.button",
     "homeassistant.components.onvif.camera",
-    "homeassistant.components.onvif.config_flow",
     "homeassistant.components.onvif.device",
-    "homeassistant.components.onvif.event",
-    "homeassistant.components.onvif.models",
-    "homeassistant.components.onvif.parsers",
     "homeassistant.components.onvif.sensor",
     "homeassistant.components.philips_js",
     "homeassistant.components.philips_js.config_flow",
@@ -129,8 +124,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.unifi.device_tracker",
     "homeassistant.components.unifi.diagnostics",
     "homeassistant.components.unifi.unifi_entity_base",
-    "homeassistant.components.vizio.config_flow",
-    "homeassistant.components.vizio.media_player",
     "homeassistant.components.withings",
     "homeassistant.components.withings.binary_sensor",
     "homeassistant.components.withings.common",
@@ -141,10 +134,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xbox.browse_media",
     "homeassistant.components.xbox.media_source",
     "homeassistant.components.xbox.sensor",
-    "homeassistant.components.xiaomi_aqara",
-    "homeassistant.components.xiaomi_aqara.binary_sensor",
-    "homeassistant.components.xiaomi_aqara.lock",
-    "homeassistant.components.xiaomi_aqara.sensor",
     "homeassistant.components.xiaomi_miio",
     "homeassistant.components.xiaomi_miio.air_quality",
     "homeassistant.components.xiaomi_miio.binary_sensor",
@@ -155,51 +144,16 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xiaomi_miio.light",
     "homeassistant.components.xiaomi_miio.sensor",
     "homeassistant.components.xiaomi_miio.switch",
-    "homeassistant.components.zha.alarm_control_panel",
-    "homeassistant.components.zha.api",
-    "homeassistant.components.zha.binary_sensor",
-    "homeassistant.components.zha.button",
-    "homeassistant.components.zha.climate",
-    "homeassistant.components.zha.config_flow",
-    "homeassistant.components.zha.core.channels",
-    "homeassistant.components.zha.core.channels.base",
-    "homeassistant.components.zha.core.channels.closures",
-    "homeassistant.components.zha.core.channels.general",
-    "homeassistant.components.zha.core.channels.homeautomation",
-    "homeassistant.components.zha.core.channels.hvac",
-    "homeassistant.components.zha.core.channels.lighting",
-    "homeassistant.components.zha.core.channels.lightlink",
-    "homeassistant.components.zha.core.channels.manufacturerspecific",
-    "homeassistant.components.zha.core.channels.measurement",
-    "homeassistant.components.zha.core.channels.protocol",
-    "homeassistant.components.zha.core.channels.security",
-    "homeassistant.components.zha.core.channels.smartenergy",
-    "homeassistant.components.zha.core.decorators",
-    "homeassistant.components.zha.core.device",
-    "homeassistant.components.zha.core.discovery",
-    "homeassistant.components.zha.core.gateway",
-    "homeassistant.components.zha.core.group",
-    "homeassistant.components.zha.core.helpers",
-    "homeassistant.components.zha.core.registries",
-    "homeassistant.components.zha.core.store",
-    "homeassistant.components.zha.core.typing",
-    "homeassistant.components.zha.cover",
-    "homeassistant.components.zha.device_action",
-    "homeassistant.components.zha.device_tracker",
-    "homeassistant.components.zha.entity",
-    "homeassistant.components.zha.fan",
-    "homeassistant.components.zha.light",
-    "homeassistant.components.zha.lock",
-    "homeassistant.components.zha.select",
-    "homeassistant.components.zha.sensor",
-    "homeassistant.components.zha.siren",
-    "homeassistant.components.zha.switch",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
 NO_IMPLICIT_REEXPORT_MODULES: set[str] = {
     "homeassistant.components",
+    "homeassistant.components.application_credentials.*",
     "homeassistant.components.diagnostics.*",
+    "homeassistant.components.spotify.*",
+    "homeassistant.components.stream.*",
+    "homeassistant.components.update.*",
 }
 
 HEADER: Final = """
@@ -363,7 +317,9 @@ def generate_and_validate(config: Config) -> str:
         if strict_module in NO_IMPLICIT_REEXPORT_MODULES:
             mypy_config.set(strict_section, "no_implicit_reexport", "true")
 
-    for reexport_module in NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules):
+    for reexport_module in sorted(
+        NO_IMPLICIT_REEXPORT_MODULES.difference(strict_modules)
+    ):
         reexport_section = f"mypy-{reexport_module}"
         mypy_config.add_section(reexport_section)
         mypy_config.set(reexport_section, "no_implicit_reexport", "true")

@@ -18,6 +18,7 @@ from homeassistant.const import (
     MASS_GRAMS,
     PRESSURE_PA,
     SPEED_KILOMETERS_PER_HOUR,
+    STATE_ON,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
@@ -25,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -233,11 +235,11 @@ def test_float_function(hass):
         is True
     )
 
-    assert (
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
         template.Template("{{ float('forgiving') }}", hass).async_render()
-        == "forgiving"
-    )
 
+    # Test handling of default return value
     assert render(hass, "{{ float('bad', 1) }}") == 1
     assert render(hass, "{{ float('bad', default=1) }}") == 1
 
@@ -248,7 +250,12 @@ def test_float_filter(hass):
 
     assert render(hass, "{{ states.sensor.temperature.state | float }}") == 12.0
     assert render(hass, "{{ states.sensor.temperature.state | float > 11 }}") is True
-    assert render(hass, "{{ 'bad' | float }}") == 0
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'bad' | float }}")
+
+    # Test handling of default return value
     assert render(hass, "{{ 'bad' | float(1) }}") == 1
     assert render(hass, "{{ 'bad' | float(default=1) }}") == 1
 
@@ -262,7 +269,11 @@ def test_int_filter(hass):
     hass.states.async_set("sensor.temperature", "0x10")
     assert render(hass, "{{ states.sensor.temperature.state | int(base=16) }}") == 16
 
-    assert render(hass, "{{ 'bad' | int }}") == 0
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'bad' | int }}")
+
+    # Test handling of default return value
     assert render(hass, "{{ 'bad' | int(1) }}") == 1
     assert render(hass, "{{ 'bad' | int(default=1) }}") == 1
 
@@ -276,9 +287,41 @@ def test_int_function(hass):
     hass.states.async_set("sensor.temperature", "0x10")
     assert render(hass, "{{ int(states.sensor.temperature.state, base=16) }}") == 16
 
-    assert render(hass, "{{ int('bad') }}") == "bad"
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        render(hass, "{{ int('bad') }}")
+
+    # Test handling of default return value
     assert render(hass, "{{ int('bad', 1) }}") == 1
     assert render(hass, "{{ int('bad', default=1) }}") == 1
+
+
+def test_bool_function(hass):
+    """Test bool function."""
+    assert render(hass, "{{ bool(true) }}") is True
+    assert render(hass, "{{ bool(false) }}") is False
+    assert render(hass, "{{ bool('on') }}") is True
+    assert render(hass, "{{ bool('off') }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool('unknown') }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool(none) }}")
+    assert render(hass, "{{ bool('unavailable', none) }}") is None
+    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
+
+
+def test_bool_filter(hass):
+    """Test bool filter."""
+    assert render(hass, "{{ true | bool }}") is True
+    assert render(hass, "{{ false | bool }}") is False
+    assert render(hass, "{{ 'on' | bool }}") is True
+    assert render(hass, "{{ 'off' | bool }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'unknown' | bool }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ none | bool }}")
+    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
+    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
 
 
 @pytest.mark.parametrize(
@@ -364,12 +407,12 @@ def test_rounding_value(hass):
 
 def test_rounding_value_on_error(hass):
     """Test rounding value handling of error."""
-    assert template.Template("{{ None | round }}", hass).async_render() is None
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ None | round }}", hass).async_render()
 
-    assert (
+    with pytest.raises(TemplateError):
         template.Template('{{ "no_number" | round }}', hass).async_render()
-        == "no_number"
-    )
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | round(default=1) }}") == 1
@@ -377,7 +420,7 @@ def test_rounding_value_on_error(hass):
 
 def test_multiply(hass):
     """Test multiply."""
-    tests = {None: None, 10: 100, '"abcd"': "abcd"}
+    tests = {10: 100}
 
     for inp, out in tests.items():
         assert (
@@ -386,6 +429,10 @@ def test_multiply(hass):
             ).async_render()
             == out
         )
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ abcd | multiply(10) }}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | multiply(10, 1) }}") == 1
@@ -397,9 +444,7 @@ def test_logarithm(hass):
     tests = [
         (4, 2, 2.0),
         (1000, 10, 3.0),
-        (math.e, "", 1.0),
-        ('"invalid"', "_", "invalid"),
-        (10, '"invalid"', 10.0),
+        (math.e, "", 1.0),  # The "" means the default base (e) will be used
     ]
 
     for value, base, expected in tests:
@@ -417,11 +462,23 @@ def test_logarithm(hass):
             == expected
         )
 
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ invalid | log(_) }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ log(invalid, _) }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ 10 | log(invalid) }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ log(10, invalid) }}", hass).async_render()
+
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | log(10, 1) }}") == 1
     assert render(hass, "{{ 'no_number' | log(10, default=1) }}") == 1
     assert render(hass, "{{ log('no_number', 10, 1) }}") == 1
     assert render(hass, "{{ log('no_number', 10, default=1) }}") == 1
+    assert render(hass, "{{ log(0, 10, 1) }}") == 1
+    assert render(hass, "{{ log(0, 10, default=1) }}") == 1
 
 
 def test_sine(hass):
@@ -432,7 +489,6 @@ def test_sine(hass):
         (math.pi, 0.0),
         (math.pi * 1.5, -1.0),
         (math.pi / 10, 0.309),
-        ('"duck"', "duck"),
     ]
 
     for value, expected in tests:
@@ -441,6 +497,12 @@ def test_sine(hass):
             == expected
         )
         assert render(hass, f"{{{{ sin({value}) | round(3) }}}}") == expected
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ 'duck' | sin }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ invalid | sin('duck') }}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
@@ -457,7 +519,6 @@ def test_cos(hass):
         (math.pi, -1.0),
         (math.pi * 1.5, -0.0),
         (math.pi / 10, 0.951),
-        ("'error'", "error"),
     ]
 
     for value, expected in tests:
@@ -467,11 +528,17 @@ def test_cos(hass):
         )
         assert render(hass, f"{{{{ cos({value}) | round(3) }}}}") == expected
 
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ 'error' | cos }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ invalid | cos('error') }}", hass).async_render()
+
     # Test handling of default return value
-    assert render(hass, "{{ 'no_number' | sin(1) }}") == 1
-    assert render(hass, "{{ 'no_number' | sin(default=1) }}") == 1
-    assert render(hass, "{{ sin('no_number', 1) }}") == 1
-    assert render(hass, "{{ sin('no_number', default=1) }}") == 1
+    assert render(hass, "{{ 'no_number' | cos(1) }}") == 1
+    assert render(hass, "{{ 'no_number' | cos(default=1) }}") == 1
+    assert render(hass, "{{ cos('no_number', 1) }}") == 1
+    assert render(hass, "{{ cos('no_number', default=1) }}") == 1
 
 
 def test_tan(hass):
@@ -482,7 +549,6 @@ def test_tan(hass):
         (math.pi / 180 * 45, 1.0),
         (math.pi / 180 * 90, "1.633123935319537e+16"),
         (math.pi / 180 * 135, -1.0),
-        ("'error'", "error"),
     ]
 
     for value, expected in tests:
@@ -491,6 +557,12 @@ def test_tan(hass):
             == expected
         )
         assert render(hass, f"{{{{ tan({value}) | round(3) }}}}") == expected
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ 'error' | tan }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ invalid | tan('error') }}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | tan(1) }}") == 1
@@ -507,7 +579,6 @@ def test_sqrt(hass):
         (2, 1.414),
         (10, 3.162),
         (100, 10.0),
-        ("'error'", "error"),
     ]
 
     for value, expected in tests:
@@ -516,6 +587,12 @@ def test_sqrt(hass):
             == expected
         )
         assert render(hass, f"{{{{ sqrt({value}) | round(3) }}}}") == expected
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ 'error' | sqrt }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ invalid | sqrt('error') }}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | sqrt(1) }}") == 1
@@ -527,14 +604,11 @@ def test_sqrt(hass):
 def test_arc_sine(hass):
     """Test arcus sine."""
     tests = [
-        (-2.0, -2.0),  # value error
         (-1.0, -1.571),
         (-0.5, -0.524),
         (0.0, 0.0),
         (0.5, 0.524),
         (1.0, 1.571),
-        (2.0, 2.0),  # value error
-        ('"error"', "error"),
     ]
 
     for value, expected in tests:
@@ -543,6 +617,19 @@ def test_arc_sine(hass):
             == expected
         )
         assert render(hass, f"{{{{ asin({value}) | round(3) }}}}") == expected
+
+    # Test handling of invalid input
+    invalid_tests = [
+        -2.0,  # value error
+        2.0,  # value error
+        '"error"',
+    ]
+
+    for value in invalid_tests:
+        with pytest.raises(TemplateError):
+            template.Template("{{ %s | asin | round(3) }}" % value, hass).async_render()
+        with pytest.raises(TemplateError):
+            assert render(hass, f"{{{{ asin({value}) | round(3) }}}}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | asin(1) }}") == 1
@@ -554,14 +641,11 @@ def test_arc_sine(hass):
 def test_arc_cos(hass):
     """Test arcus cosine."""
     tests = [
-        (-2.0, -2.0),  # value error
         (-1.0, 3.142),
         (-0.5, 2.094),
         (0.0, 1.571),
         (0.5, 1.047),
         (1.0, 0.0),
-        (2.0, 2.0),  # value error
-        ('"error"', "error"),
     ]
 
     for value, expected in tests:
@@ -570,6 +654,19 @@ def test_arc_cos(hass):
             == expected
         )
         assert render(hass, f"{{{{ acos({value}) | round(3) }}}}") == expected
+
+    # Test handling of invalid input
+    invalid_tests = [
+        -2.0,  # value error
+        2.0,  # value error
+        '"error"',
+    ]
+
+    for value in invalid_tests:
+        with pytest.raises(TemplateError):
+            template.Template("{{ %s | acos | round(3) }}" % value, hass).async_render()
+        with pytest.raises(TemplateError):
+            assert render(hass, f"{{{{ acos({value}) | round(3) }}}}")
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | acos(1) }}") == 1
@@ -590,7 +687,6 @@ def test_arc_tan(hass):
         (1.0, 0.785),
         (2.0, 1.107),
         (10.0, 1.471),
-        ('"error"', "error"),
     ]
 
     for value, expected in tests:
@@ -599,6 +695,12 @@ def test_arc_tan(hass):
             == expected
         )
         assert render(hass, f"{{{{ atan({value}) | round(3) }}}}") == expected
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ 'error' | atan }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ invalid | atan('error') }}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ 'no_number' | atan(1) }}") == 1
@@ -622,7 +724,6 @@ def test_arc_tan2(hass):
         (-4.0, 3.0, -0.927),
         (-1.0, 2.0, -0.464),
         (2.0, 1.0, 1.107),
-        ('"duck"', '"goose"', ("duck", "goose")),
     ]
 
     for y, x, expected in tests:
@@ -638,6 +739,12 @@ def test_arc_tan2(hass):
             ).async_render()
             == expected
         )
+
+    # Test handling of invalid input
+    with pytest.raises(TemplateError):
+        template.Template("{{ ('duck', 'goose') | atan2 }}", hass).async_render()
+    with pytest.raises(TemplateError):
+        template.Template("{{ atan2('duck', 'goose') }}", hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ ('duck', 'goose') | atan2(1) }}") == 1
@@ -655,8 +762,6 @@ def test_strptime(hass):
         ("2016-10-19", "%Y-%m-%d", None),
         ("2016", "%Y", None),
         ("15:22:05", "%H:%M:%S", None),
-        ("1469119144", "%Y", 1469119144),
-        ("invalid", "%Y", "invalid"),
     ]
 
     for inp, fmt, expected in tests:
@@ -666,6 +771,18 @@ def test_strptime(hass):
         temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
 
         assert template.Template(temp, hass).async_render() == expected
+
+    # Test handling of invalid input
+    invalid_tests = [
+        ("1469119144", "%Y"),
+        ("invalid", "%Y"),
+    ]
+
+    for inp, fmt in invalid_tests:
+        temp = f"{{{{ strptime('{inp}', '{fmt}') }}}}"
+
+        with pytest.raises(TemplateError):
+            template.Template(temp, hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ strptime('invalid', '%Y', 1) }}") == 1
@@ -677,7 +794,6 @@ def test_timestamp_custom(hass):
     hass.config.set_time_zone("UTC")
     now = dt_util.utcnow()
     tests = [
-        (None, None, None, None),
         (1469119144, None, True, "2016-07-21 16:39:04"),
         (1469119144, "%Y", True, 2016),
         (1469119144, "invalid", True, "invalid"),
@@ -694,6 +810,22 @@ def test_timestamp_custom(hass):
 
         assert template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render() == out
 
+    # Test handling of invalid input
+    invalid_tests = [
+        (None, None, None),
+    ]
+
+    for inp, fmt, local in invalid_tests:
+        if fmt:
+            fil = f"timestamp_custom('{fmt}')"
+        elif fmt and local:
+            fil = f"timestamp_custom('{fmt}', {local})"
+        else:
+            fil = "timestamp_custom"
+
+        with pytest.raises(TemplateError):
+            template.Template(f"{{{{ {inp} | {fil} }}}}", hass).async_render()
+
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_custom('invalid', True, 1) }}") == 1
     assert render(hass, "{{ None | timestamp_custom(default=1) }}") == 1
@@ -702,13 +834,24 @@ def test_timestamp_custom(hass):
 def test_timestamp_local(hass):
     """Test the timestamps to local filter."""
     hass.config.set_time_zone("UTC")
-    tests = {None: None, 1469119144: "2016-07-21T16:39:04+00:00"}
+    tests = [
+        (1469119144, "2016-07-21T16:39:04+00:00"),
+    ]
 
-    for inp, out in tests.items():
+    for inp, out in tests:
         assert (
             template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
             == out
         )
+
+    # Test handling of invalid input
+    invalid_tests = [
+        None,
+    ]
+
+    for inp in invalid_tests:
+        with pytest.raises(TemplateError):
+            template.Template("{{ %s | timestamp_local }}" % inp, hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_local(1) }}") == 1
@@ -1002,17 +1145,25 @@ def test_ordinal(hass):
 def test_timestamp_utc(hass):
     """Test the timestamps to local filter."""
     now = dt_util.utcnow()
-    tests = {
-        None: None,
-        1469119144: "2016-07-21T16:39:04+00:00",
-        dt_util.as_timestamp(now): now.isoformat(),
-    }
+    tests = [
+        (1469119144, "2016-07-21T16:39:04+00:00"),
+        (dt_util.as_timestamp(now), now.isoformat()),
+    ]
 
-    for inp, out in tests.items():
+    for inp, out in tests:
         assert (
             template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
             == out
         )
+
+    # Test handling of invalid input
+    invalid_tests = [
+        None,
+    ]
+
+    for inp in invalid_tests:
+        with pytest.raises(TemplateError):
+            template.Template("{{ %s | timestamp_utc }}" % inp, hass).async_render()
 
     # Test handling of default return value
     assert render(hass, "{{ None | timestamp_utc(1) }}") == 1
@@ -1021,14 +1172,12 @@ def test_timestamp_utc(hass):
 
 def test_as_timestamp(hass):
     """Test the as_timestamp function."""
-    assert (
-        template.Template('{{ as_timestamp("invalid") }}', hass).async_render() is None
-    )
-    hass.mock = None
-    assert (
-        template.Template("{{ as_timestamp(states.mock) }}", hass).async_render()
-        is None
-    )
+    with pytest.raises(TemplateError):
+        template.Template('{{ as_timestamp("invalid") }}', hass).async_render()
+
+    hass.states.async_set("test.object", None)
+    with pytest.raises(TemplateError):
+        template.Template("{{ as_timestamp(states.test.object) }}", hass).async_render()
 
     tpl = (
         '{{ as_timestamp(strptime("2024-02-03T09:10:24+0000", '
@@ -1822,7 +1971,8 @@ def test_distance_function_return_none_if_invalid_state(hass):
     """Test distance function return None if invalid state."""
     hass.states.async_set("test.object_2", "happy", {"latitude": 10})
     tpl = template.Template("{{ distance(states.test.object_2) | round }}", hass)
-    assert tpl.async_render() is None
+    with pytest.raises(TemplateError):
+        tpl.async_render()
 
 
 def test_distance_function_return_none_if_invalid_coord(hass):
@@ -3270,6 +3420,18 @@ def test_urlencode(hass):
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
+def test_as_timedelta(hass: HomeAssistant) -> None:
+    """Test the as_timedelta function/filter."""
+    tpl = template.Template("{{ as_timedelta('PT10M') }}", hass)
+    assert tpl.async_render() == "0:10:00"
+
+    tpl = template.Template("{{ 'PT10M' | as_timedelta }}", hass)
+    assert tpl.async_render() == "0:10:00"
+
+    tpl = template.Template("{{ 'T10M' | as_timedelta }}", hass)
+    assert tpl.async_render() is None
+
+
 def test_iif(hass: HomeAssistant) -> None:
     """Test the immediate if function/filter."""
     tpl = template.Template("{{ (1 == 1) | iif }}", hass)
@@ -3359,7 +3521,11 @@ async def test_protected_blocked(hass):
 
 async def test_demo_template(hass):
     """Test the demo template works as expected."""
-    hass.states.async_set("sun.sun", "above", {"elevation": 50, "next_rising": "later"})
+    hass.states.async_set(
+        "sun.sun",
+        "above",
+        {"elevation": 50, "next_rising": "2022-05-12T03:00:08.503651+00:00"},
+    )
     for i in range(2):
         hass.states.async_set(f"sensor.sensor{i}", "on")
 
@@ -3375,7 +3541,7 @@ The temperature is {{ my_test_json.temperature }} {{ my_test_json.unit }}.
 {% if is_state("sun.sun", "above_horizon") -%}
   The sun rose {{ relative_time(states.sun.sun.last_changed) }} ago.
 {%- else -%}
-  The sun will rise at {{ as_timestamp(strptime(state_attr("sun.sun", "next_rising"), "")) | timestamp_local }}.
+  The sun will rise at {{ as_timestamp(state_attr("sun.sun", "next_rising")) | timestamp_local }}.
 {%- endif %}
 
 For loop example getting 3 entity values:
@@ -3695,3 +3861,21 @@ async def test_undefined_variable(hass, caplog):
         "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
         in caplog.text
     )
+
+
+async def test_template_states_blocks_setitem(hass):
+    """Test we cannot setitem on TemplateStates."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    with pytest.raises(RuntimeError):
+        template_state["any"] = "any"
+
+
+async def test_template_states_can_serialize(hass):
+    """Test TemplateState is serializable."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    assert template_state.as_dict() is template_state.as_dict()
+    assert json_dumps(template_state) == json_dumps(template_state)

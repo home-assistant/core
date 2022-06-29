@@ -17,10 +17,8 @@
                     "longitude": "Longitude",
                     "radius": "Rayon d'action de la station (en miles, facultatif)"
                 },
-                "description": "Pour g\u00e9n\u00e9rer une cl\u00e9 d'API, rendez-vous sur https://docs.airnowapi.org/account/request/",
-                "title": "AirNow"
+                "description": "Pour g\u00e9n\u00e9rer une cl\u00e9 d'API, rendez-vous sur https://docs.airnowapi.org/account/request/"
             }
         }
-    },
-    "title": "AirNow"
+    }
 }

@@ -18,6 +18,7 @@ from .common import (
     async_recorder_block_till_done,
     async_wait_recording_done,
     create_engine_test,
+    do_adhoc_statistics,
 )
 
 from tests.common import async_fire_time_changed
@@ -84,7 +85,7 @@ async def test_clear_statistics(hass, hass_ws_client, recorder_mock):
     hass.states.async_set("sensor.test3", state * 3, attributes=attributes)
     await async_wait_recording_done(hass)
 
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -208,7 +209,7 @@ async def test_update_statistics_metadata(
     hass.states.async_set("sensor.test", state, attributes=attributes)
     await async_wait_recording_done(hass)
 
-    hass.data[DATA_INSTANCE].do_adhoc_statistics(period="hourly", start=now)
+    do_adhoc_statistics(hass, period="hourly", start=now)
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -323,9 +324,10 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics"
     ), patch(
-        "homeassistant.components.recorder.create_engine", new=create_engine_test
+        "homeassistant.components.recorder.core.create_engine",
+        new=create_engine_test,
     ), patch.object(
-        recorder, "MAX_QUEUE_BACKLOG", 1
+        recorder.core, "MAX_QUEUE_BACKLOG", 1
     ), patch(
         "homeassistant.components.recorder.migration.migrate_schema",
         wraps=stalled_migration,
@@ -384,7 +386,7 @@ async def test_backup_start_timeout(
     # Ensure there are no queued events
     await async_wait_recording_done(hass)
 
-    with patch.object(recorder, "DB_LOCK_TIMEOUT", 0):
+    with patch.object(recorder.core, "DB_LOCK_TIMEOUT", 0):
         try:
             await client.send_json({"id": 1, "type": "backup/start"})
             response = await client.receive_json()
@@ -520,7 +522,7 @@ async def test_get_statistics_metadata(
         }
     ]
 
-    hass.data[recorder.DATA_INSTANCE].do_adhoc_statistics(start=now)
+    do_adhoc_statistics(hass, start=now)
     await async_recorder_block_till_done(hass)
     # Remove the state, statistics will now be fetched from the database
     hass.states.async_remove("sensor.test")

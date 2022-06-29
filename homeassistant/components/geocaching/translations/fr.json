@@ -1,0 +1,25 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Le compte est d\u00e9j\u00e0 configur\u00e9",
+            "already_in_progress": "La configuration est d\u00e9j\u00e0 en cours",
+            "authorize_url_timeout": "D\u00e9lai de g\u00e9n\u00e9ration de l'URL d'authentification expir\u00e9.",
+            "missing_configuration": "Le composant n'est pas configur\u00e9. Veuillez suivre la documentation.",
+            "no_url_available": "Aucune URL disponible. Pour plus d'informations sur cette erreur, [consultez la section d'aide]({docs_url})",
+            "oauth_error": "Des donn\u00e9es de jeton non valides ont \u00e9t\u00e9 re\u00e7ues.",
+            "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
+        },
+        "create_entry": {
+            "default": "Authentification r\u00e9ussie"
+        },
+        "step": {
+            "pick_implementation": {
+                "title": "S\u00e9lectionner une m\u00e9thode d'authentification"
+            },
+            "reauth_confirm": {
+                "description": "L'int\u00e9gration Geocaching doit r\u00e9-authentifier votre compte",
+                "title": "R\u00e9-authentifier l'int\u00e9gration"
+            }
+        }
+    }
+}

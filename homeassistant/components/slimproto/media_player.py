@@ -118,7 +118,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
                     EventType.PLAYER_CONNECTED,
                     EventType.PLAYER_DISCONNECTED,
                     EventType.PLAYER_NAME_RECEIVED,
-                    EventType.PLAYER_RPC_EVENT,
+                    EventType.PLAYER_CLI_EVENT,
                 ),
                 player_filter=self.player.player_id,
             )
@@ -180,7 +180,9 @@ class SlimProtoPlayer(MediaPlayerEntity):
         to_send_media_type: str | None = media_type
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = sourced_media.url
             to_send_media_type = sourced_media.mime_type
 
@@ -205,7 +207,7 @@ class SlimProtoPlayer(MediaPlayerEntity):
         if event.type == EventType.PLAYER_CONNECTED:
             # player reconnected, update our player object
             self.player = self.slimserver.get_player(event.player_id)
-        if event.type == EventType.PLAYER_RPC_EVENT:
+        if event.type == EventType.PLAYER_CLI_EVENT:
             # rpc event from player such as a button press,
             # forward on the eventbus for others to handle
             dev_id = self.registry_entry.device_id if self.registry_entry else None

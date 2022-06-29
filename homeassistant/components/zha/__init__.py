@@ -9,8 +9,8 @@ from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from homeassistant import const as ha_const
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -106,10 +106,12 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
         zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))},
+        connections={
+            (dr.CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))
+        },
         identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},
         name="Zigbee Coordinator",
         manufacturer="ZHA",

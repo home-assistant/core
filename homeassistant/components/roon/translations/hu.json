@@ -20,10 +20,6 @@
                 "title": "Enged\u00e9lyezze a Home Assistant alkalmaz\u00e1st Roon-ban"
             },
             "user": {
-                "data": {
-                    "host": "C\u00edm"
-                },
-                "description": "A Roon szerver nem tal\u00e1lhat\u00f3, adja meg a hosztnev\u00e9t vagy c\u00edm\u00e9t",
                 "one": "\u00dcres",
                 "other": "\u00dcres"
             }
