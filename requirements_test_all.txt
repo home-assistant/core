@@ -637,7 +637,7 @@ influxdb==5.3.1
 insteon-frontend-home-assistant==0.1.1
 
 # homeassistant.components.intellifire
-intellifire4py==2.0.0
+intellifire4py==2.0.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -671,6 +671,9 @@ librouteros==3.2.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
+
+# homeassistant.components.life360
+life360==4.1.1
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3

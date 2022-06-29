@@ -556,6 +556,7 @@ omit =
     homeassistant/components/insteon/utils.py
     homeassistant/components/intellifire/__init__.py
     homeassistant/components/intellifire/coordinator.py
+    homeassistant/components/intellifire/climate.py
     homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
@@ -641,8 +642,8 @@ omit =
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/life360/__init__.py
     homeassistant/components/life360/const.py
+    homeassistant/components/life360/coordinator.py
     homeassistant/components/life360/device_tracker.py
-    homeassistant/components/life360/helpers.py
     homeassistant/components/lifx/__init__.py
     homeassistant/components/lifx/const.py
     homeassistant/components/lifx/light.py
