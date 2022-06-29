@@ -90,7 +90,7 @@ async def test_device_trackers(hass, mock_device_registry_devices):
         # test device_2 is added after connecting to wireless network
         WIRELESS_DATA.append(DEVICE_2_WIRELESS)
 
-        await hub.async_update()
+        await hub.async_refresh()
         await hass.async_block_till_done()
 
         device_2 = hass.states.get("device_tracker.device_2")
@@ -117,7 +117,7 @@ async def test_device_trackers(hass, mock_device_registry_devices):
         hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
             minutes=5
         )
-        await hub.async_update()
+        await hub.async_refresh()
         await hass.async_block_till_done()
 
         device_2 = hass.states.get("device_tracker.device_2")

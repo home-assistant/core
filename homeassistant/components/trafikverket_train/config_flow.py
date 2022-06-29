@@ -55,7 +55,7 @@ class TVTrainConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await train_api.async_get_train_station(train_from)
         await train_api.async_get_train_station(train_to)
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Trafikverket."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])

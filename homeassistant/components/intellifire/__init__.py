@@ -60,18 +60,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             username=entry.data[CONF_USERNAME],
             password=entry.data[CONF_PASSWORD],
         )
-        api_key = (cloud_api.get_fireplace_api_key(),)
-        user_id = (cloud_api.get_user_id(),)
+        api_key = cloud_api.get_fireplace_api_key()
+        user_id = cloud_api.get_user_id()
+        # Update data entry
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_API_KEY: api_key,
+                CONF_USER_ID: user_id,
+            },
+        )
 
     else:
-        api_key = (entry.data[CONF_API_KEY],)
-        user_id = (entry.data[CONF_USER_ID],)
+        api_key = entry.data[CONF_API_KEY]
+        user_id = entry.data[CONF_USER_ID]
 
     # Instantiate local control
     api = IntellifireAPILocal(
         fireplace_ip=entry.data[CONF_HOST],
-        api_key=api_key[0],
-        user_id=user_id[0],
+        api_key=api_key,
+        user_id=user_id,
     )
 
     # Define the update coordinator

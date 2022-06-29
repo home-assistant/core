@@ -48,7 +48,7 @@ class AwairFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-auth if token invalid."""
         return await self.async_step_reauth_confirm()
 

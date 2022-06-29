@@ -6,6 +6,9 @@
 # homeassistant.components.aemet
 AEMET-OpenData==0.2.1
 
+# homeassistant.components.aladdin_connect
+AIOAladdinConnect==0.1.21
+
 # homeassistant.components.adax
 Adax-local==0.1.4
 
@@ -89,6 +92,9 @@ aio_geojson_geonetnz_volcano==0.6
 
 # homeassistant.components.nsw_rural_fire_service_feed
 aio_geojson_nsw_rfs_incidents==0.4
+
+# homeassistant.components.usgs_earthquakes_feed
+aio_geojson_usgs_earthquakes==0.1
 
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
@@ -251,9 +257,6 @@ airthings_cloud==0.1.0
 # homeassistant.components.airtouch4
 airtouch4pyapi==1.0.5
 
-# homeassistant.components.aladdin_connect
-aladdin_connect==0.4
-
 # homeassistant.components.ambee
 ambee==0.4.0
 
@@ -305,13 +308,13 @@ base36==0.1.1
 beautifulsoup4==4.11.1
 
 # homeassistant.components.zha
-bellows==0.30.0
+bellows==0.31.0
 
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
 
 # homeassistant.components.blebox
-blebox_uniapi==1.3.3
+blebox_uniapi==2.0.0
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -499,9 +502,6 @@ gcal-sync==0.10.0
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
 
-# homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.6
-
 # homeassistant.components.aprs
 geopy==2.1.0
 
@@ -559,7 +559,7 @@ guppy3==3.1.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-ha-av==10.0.0b3
+ha-av==10.0.0b4
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
@@ -598,7 +598,7 @@ holidays==0.14.2
 home-assistant-frontend==20220624.0
 
 # homeassistant.components.home_connect
-homeconnect==0.7.0
+homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.0.2
@@ -751,7 +751,7 @@ netmap==0.7.0.2
 nettigo-air-monitor==1.3.0
 
 # homeassistant.components.nexia
-nexia==2.0.0
+nexia==2.0.1
 
 # homeassistant.components.discord
 nextcord==2.0.0a8
@@ -938,7 +938,7 @@ pyatag==0.3.5.3
 pyatmo==6.2.4
 
 # homeassistant.components.apple_tv
-pyatv==0.10.0
+pyatv==0.10.2
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1134,7 +1134,7 @@ pymyq==3.1.4
 pymysensors==0.22.1
 
 # homeassistant.components.netgear
-pynetgear==0.10.4
+pynetgear==0.10.6
 
 # homeassistant.components.nina
 pynina==0.1.8
@@ -1437,7 +1437,7 @@ simplehound==0.3
 simplepush==1.1.4
 
 # homeassistant.components.simplisafe
-simplisafe-python==2022.06.0
+simplisafe-python==2022.06.1
 
 # homeassistant.components.slack
 slackclient==2.5.0
@@ -1581,10 +1581,10 @@ vallox-websocket-api==2.11.0
 vehicle==0.4.0
 
 # homeassistant.components.velbus
-velbus-aio==2022.6.1
+velbus-aio==2022.6.2
 
 # homeassistant.components.venstar
-venstarcolortouch==0.15
+venstarcolortouch==0.16
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
@@ -1630,7 +1630,7 @@ wolf_smartset==0.1.11
 xbox-webapi==2.0.11
 
 # homeassistant.components.knx
-xknx==0.21.3
+xknx==0.21.5
 
 # homeassistant.components.bluesound
 # homeassistant.components.fritz
@@ -1659,22 +1659,22 @@ youless-api==0.16
 zeroconf==0.38.7
 
 # homeassistant.components.zha
-zha-quirks==0.0.75
+zha-quirks==0.0.77
 
 # homeassistant.components.zha
-zigpy-deconz==0.16.0
+zigpy-deconz==0.18.0
 
 # homeassistant.components.zha
-zigpy-xbee==0.14.0
+zigpy-xbee==0.15.0
 
 # homeassistant.components.zha
-zigpy-zigate==0.7.4
+zigpy-zigate==0.9.0
 
 # homeassistant.components.zha
-zigpy-znp==0.7.0
+zigpy-znp==0.8.0
 
 # homeassistant.components.zha
-zigpy==0.46.0
+zigpy==0.47.2
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.39.0

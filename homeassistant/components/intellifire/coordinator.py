@@ -39,7 +39,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
             await self._api.start_background_polling()
 
             # Don't return uninitialized poll data
-            async with timeout(100):
+            async with timeout(15):
                 try:
                     await self._api.poll()
                 except (ConnectionError, ClientConnectionError) as exception:
