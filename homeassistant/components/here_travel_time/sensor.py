@@ -1,8 +1,10 @@
 """Support for HERE travel time sensors."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,6 +17,8 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
@@ -24,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -146,30 +150,38 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             icon="mdi:directions",
             key=ATTR_ROUTE,
         ),
+    )
+
+
+def create_origin_sensor(
+    config_entry: ConfigEntry, hass: HomeAssistant
+) -> OriginSensor:
+    """Create a origin sensor."""
+    return OriginSensor(
+        config_entry.entry_id,
+        config_entry.data[CONF_NAME],
         SensorEntityDescription(
             name="Origin",
-            icon="mdi:map-marker",
-            key=ATTR_ORIGIN,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            name="Origin Name",
             icon="mdi:store-marker",
             key=ATTR_ORIGIN_NAME,
-            entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        hass.data[DOMAIN][config_entry.entry_id],
+    )
+
+
+def create_destination_sensor(
+    config_entry: ConfigEntry, hass: HomeAssistant
+) -> DestinationSensor:
+    """Create a destination sensor."""
+    return DestinationSensor(
+        config_entry.entry_id,
+        config_entry.data[CONF_NAME],
         SensorEntityDescription(
             name="Destination",
-            icon="mdi:map-marker",
-            key=ATTR_DESTINATION,
-            entity_category=EntityCategory.DIAGNOSTIC,
-        ),
-        SensorEntityDescription(
-            name="Destination Name",
             icon="mdi:store-marker",
             key=ATTR_DESTINATION_NAME,
-            entity_category=EntityCategory.DIAGNOSTIC,
         ),
+        hass.data[DOMAIN][config_entry.entry_id],
     )
 
 
@@ -212,6 +224,8 @@ async def async_setup_entry(
                 hass.data[DOMAIN][config_entry.entry_id],
             )
         )
+    sensors.append(create_origin_sensor(config_entry, hass))
+    sensors.append(create_destination_sensor(config_entry, hass))
     async_add_entities(sensors)
 
 
@@ -258,4 +272,32 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Return the attribution."""
         if self.coordinator.data is not None:
             return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        return None
+
+
+class OriginSensor(HERETravelTimeSensor):
+    """Sensor holding information about the route origin."""
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """GPS coordinates."""
+        if self.coordinator.data is not None:
+            return {
+                ATTR_LATITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[0],
+                ATTR_LONGITUDE: self.coordinator.data[ATTR_ORIGIN].split(",")[1],
+            }
+        return None
+
+
+class DestinationSensor(HERETravelTimeSensor):
+    """Sensor holding information about the route destination."""
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """GPS coordinates."""
+        if self.coordinator.data is not None:
+            return {
+                ATTR_LATITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[0],
+                ATTR_LONGITUDE: self.coordinator.data[ATTR_DESTINATION].split(",")[1],
+            }
         return None

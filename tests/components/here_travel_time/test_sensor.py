@@ -35,6 +35,8 @@ from homeassistant.components.here_travel_time.const import (
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ICON,
+    ATTR_LATITUDE,
+    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_MODE,
     CONF_NAME,
@@ -170,14 +172,35 @@ async def test_sensor(
         hass.states.get("sensor.test_duration_in_traffic").state
         == expected_duration_in_traffic
     )
-    assert hass.states.get("sensor.test_origin").state == ",".join(
-        [CAR_ORIGIN_LATITUDE, CAR_ORIGIN_LONGITUDE]
+    assert hass.states.get("sensor.test_origin").state == "22nd St NW"
+    assert (
+        hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
+        == CAR_ORIGIN_LATITUDE
     )
-    assert hass.states.get("sensor.test_origin_name").state == "22nd St NW"
-    assert hass.states.get("sensor.test_destination").state == ",".join(
-        [CAR_DESTINATION_LATITUDE, CAR_DESTINATION_LONGITUDE]
+    assert (
+        hass.states.get("sensor.test_origin").attributes.get(ATTR_LONGITUDE)
+        == CAR_ORIGIN_LONGITUDE
     )
-    assert hass.states.get("sensor.test_destination_name").state == "Service Rd S"
+
+    assert hass.states.get("sensor.test_origin").state == "22nd St NW"
+    assert (
+        hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
+        == CAR_ORIGIN_LATITUDE
+    )
+    assert (
+        hass.states.get("sensor.test_origin").attributes.get(ATTR_LONGITUDE)
+        == CAR_ORIGIN_LONGITUDE
+    )
+
+    assert hass.states.get("sensor.test_destination").state == "Service Rd S"
+    assert (
+        hass.states.get("sensor.test_destination").attributes.get(ATTR_LATITUDE)
+        == CAR_DESTINATION_LATITUDE
+    )
+    assert (
+        hass.states.get("sensor.test_destination").attributes.get(ATTR_LONGITUDE)
+        == CAR_DESTINATION_LONGITUDE
+    )
 
 
 @pytest.mark.usefixtures("valid_response")
