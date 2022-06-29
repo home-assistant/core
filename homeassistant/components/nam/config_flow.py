@@ -190,11 +190,11 @@ class NAMFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         if entry := self.hass.config_entries.async_get_entry(self.context["entry_id"]):
             self.entry = entry
-        self.host = data[CONF_HOST]
+        self.host = entry_data[CONF_HOST]
         self.context["title_placeholders"] = {"host": self.host}
         return await self.async_step_reauth_confirm()
 

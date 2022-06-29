@@ -5,6 +5,7 @@ import copy
 import datetime
 import logging
 import re
+from typing import Any
 
 import voluptuous as vol
 
@@ -204,6 +205,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
     A trigger_time of zero disables the alarm_trigger service.
     """
 
+    _attr_should_poll = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -231,7 +233,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         """Init the manual MQTT alarm panel."""
         self._state = STATE_ALARM_DISARMED
         self._hass = hass
-        self._name = name
+        self._attr_name = name
         if code_template:
             self._code = code_template
             self._code.hass = hass
@@ -257,24 +259,14 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         self._state_topic = state_topic
         self._command_topic = command_topic
         self._qos = qos
-        self._code_arm_required = code_arm_required
+        self._attr_code_arm_required = code_arm_required
         self._payload_disarm = payload_disarm
         self._payload_arm_home = payload_arm_home
         self._payload_arm_away = payload_arm_away
         self._payload_arm_night = payload_arm_night
 
     @property
-    def should_poll(self):
-        """Return the polling state."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if self._state == STATE_ALARM_TRIGGERED:
             if self._within_pending_time(self._state):
@@ -314,18 +306,13 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return self._state_ts + self._pending_time(state) > dt_util.utcnow()
 
     @property
-    def code_format(self):
+    def code_format(self) -> alarm.CodeFormat | None:
         """Return one or more digits/characters."""
         if self._code is None:
             return None
         if isinstance(self._code, str) and re.search("^\\d+$", self._code):
             return alarm.CodeFormat.NUMBER
         return alarm.CodeFormat.TEXT
-
-    @property
-    def code_arm_required(self):
-        """Whether the code is required for arm actions."""
-        return self._code_arm_required
 
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
@@ -338,7 +325,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        if self._code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_HOME
         ):
             return
@@ -347,7 +334,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        if self._code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_AWAY
         ):
             return
@@ -356,7 +343,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
 
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
-        if self._code_arm_required and not self._validate_code(
+        if self.code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_NIGHT
         ):
             return
@@ -417,7 +404,7 @@ class ManualMQTTAlarm(alarm.AlarmControlPanelEntity):
         return check
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self.state != STATE_ALARM_PENDING:
             return {}
