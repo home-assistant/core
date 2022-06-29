@@ -12,11 +12,7 @@ from homeassistant.components.frontier_silicon.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PIN, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 VALID_DEVICE_URL_PATCH = patch(
     "afsapi.AFSAPI.get_webfsapi_endpoint",
@@ -59,7 +55,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
 
     with INVALID_DEVICE_URL_PATCH:
 
@@ -74,7 +70,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
     with UNEXPECTED_ERROR_GET_WEBFSAPI_ENDPOINT_PATCH:
@@ -90,7 +86,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
     with VALID_DEVICE_URL_PATCH, patch(
@@ -108,7 +104,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "cannot_connect"
 
     with VALID_DEVICE_URL_PATCH, patch(
@@ -126,7 +122,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "invalid_auth"
 
     with VALID_DEVICE_URL_PATCH, patch(
@@ -144,7 +140,7 @@ async def test_import(hass: HomeAssistant) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "unknown"
 
 
@@ -164,7 +160,7 @@ async def test_import_already_exists(hass: HomeAssistant, config_entry) -> None:
             },
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -173,7 +169,7 @@ async def test_form_default_pin(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with VALID_DEVICE_URL_PATCH, VALID_DEVICE_CONFIG_PATCH, patch(
@@ -186,7 +182,7 @@ async def test_form_default_pin(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         "webfsapi_url": "http://1.1.1.1:80/webfsapi",
@@ -200,7 +196,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with VALID_DEVICE_URL_PATCH, INVALID_PIN_PATCH:
@@ -210,7 +206,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] is None
 
     with VALID_DEVICE_CONFIG_PATCH, patch(
@@ -223,7 +219,7 @@ async def test_form_nondefault_pin(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result3["type"] == FlowResultType.CREATE_ENTRY
     assert result3["title"] == "Name of the device"
     assert result3["data"] == {
         "webfsapi_url": "http://1.1.1.1:80/webfsapi",
@@ -237,7 +233,7 @@ async def test_form_nondefault_pin_invalid(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with VALID_DEVICE_URL_PATCH, INVALID_PIN_PATCH:
@@ -247,7 +243,7 @@ async def test_form_nondefault_pin_invalid(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] is None
 
     with INVALID_PIN_PATCH:
@@ -257,7 +253,7 @@ async def test_form_nondefault_pin_invalid(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result3["type"] == RESULT_TYPE_FORM
+    assert result3["type"] == FlowResultType.FORM
     assert result3["errors"] == {"base": "invalid_auth"}
 
 
@@ -266,7 +262,7 @@ async def test_invalid_device_url(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with INVALID_DEVICE_URL_PATCH:
@@ -276,7 +272,7 @@ async def test_invalid_device_url(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -285,7 +281,7 @@ async def test_device_url_unexpected_error(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with UNEXPECTED_ERROR_GET_WEBFSAPI_ENDPOINT_PATCH:
@@ -295,7 +291,7 @@ async def test_device_url_unexpected_error(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -316,7 +312,7 @@ async def test_ssdp(hass):
             ),
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -324,7 +320,7 @@ async def test_ssdp(hass):
         {},
     )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -349,7 +345,7 @@ async def test_ssdp_nondefault_pin(hass):
             ),
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "device_config"
 
     with patch(
@@ -361,7 +357,7 @@ async def test_ssdp_nondefault_pin(hass):
             {CONF_PIN: "4321"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -373,7 +369,7 @@ async def test_ssdp_nondefault_pin(hass):
             {CONF_PIN: "4321"},
         )
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
     with VALID_DEVICE_CONFIG_PATCH, patch(
@@ -385,7 +381,7 @@ async def test_ssdp_nondefault_pin(hass):
             {CONF_PIN: "4321"},
         )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == "Name of the device"
     assert result2["data"] == {
         CONF_WEBFSAPI_URL: "http://1.1.1.1:80/webfsapi",
@@ -411,7 +407,7 @@ async def test_ssdp_fail(hass):
             ),
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
     with INVALID_DEVICE_URL_PATCH:
@@ -428,7 +424,7 @@ async def test_ssdp_fail(hass):
             ),
         )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -444,7 +440,7 @@ async def test_unignore_flow(hass: HomeAssistant):
             data={"unique_id": "mock_udn"},
         )
 
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "discovery_error"
 
     found_mock = AsyncMock(
@@ -468,7 +464,7 @@ async def test_unignore_flow(hass: HomeAssistant):
             data={"unique_id": "mock_udn"},
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "confirm"
 
 
@@ -481,7 +477,7 @@ async def test_unignore_flow_invalid(hass: HomeAssistant):
         data={},
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -499,7 +495,7 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry):
         },
         data=config_entry.data,
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "device_config"
 
     with VALID_DEVICE_CONFIG_PATCH:
@@ -507,6 +503,6 @@ async def test_reauth_flow(hass: HomeAssistant, config_entry):
             result["flow_id"],
             user_input={CONF_PIN: "4242"},
         )
-        assert result2["type"] == RESULT_TYPE_ABORT
+        assert result2["type"] == FlowResultType.ABORT
         assert result2["reason"] == "reauth_successful"
         assert config_entry.data[CONF_PIN] == "4242"
