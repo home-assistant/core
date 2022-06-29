@@ -414,6 +414,11 @@ ZEROCONF = {
             "domain": "homekit_controller",
         },
     ],
+    "_hassmpris._tcp.local.": [
+        {
+            "domain": "hassmpris",
+        },
+    ],
     "_homekit._tcp.local.": [
         {
             "domain": "homekit",

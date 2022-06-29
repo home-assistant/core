@@ -1,0 +1,49 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up MPRIS multimedia remote control",
+        "description": "Enter the name or address of your computer running the MPRIS agent.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Set up MPRIS multimedia remote control",
+        "description": "Confirm the name or address of your computer running the MPRIS agent.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The MPRIS agent on this computer revoked our authorization.  Continue to the next step to reauthorize."
+      },
+      "confirm": {
+        "title": "Verify identity of the agent",
+        "description": "Click Verify on the desktop notification that just appeared on your computer.  Then follow the instructions onscreen.",
+        "data": {
+          "emojis": "Do these emojis match what's onscreen there?"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "unimplemented": "This flow is currently not implemented",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "rejected": "The device rejected our verification request",
+      "timeout_connect": "[%key:common::config_flow::error::timeout_connect%]",
+      "cannot_decrypt": "Could not decrypt the response from the device",
+      "ignored": "The device ignored our verification request",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    }
+  }
+}

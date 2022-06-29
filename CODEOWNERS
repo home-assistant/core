@@ -472,6 +472,8 @@ build.json @home-assistant/supervisor
 /tests/components/harmony/ @ehendrix23 @bramkragten @bdraco @mkeesey @Aohzan
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
+/homeassistant/components/hassmpris/ @Rudd-O
+/tests/components/hassmpris/ @Rudd-O
 /homeassistant/components/hdmi_cec/ @inytar
 /tests/components/hdmi_cec/ @inytar
 /homeassistant/components/heatmiser/ @andylockran
