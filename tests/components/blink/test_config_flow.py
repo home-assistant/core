@@ -246,7 +246,9 @@ async def test_form_unknown_error(hass):
 async def test_reauth_shows_user_step(hass):
     """Test reauth shows the user form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+        DOMAIN,
+        context={"source": config_entries.SOURCE_REAUTH},
+        data={"username": "blink@example.com", "password": "invalid_password"},
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["step_id"] == "user"

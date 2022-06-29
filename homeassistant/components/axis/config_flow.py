@@ -139,18 +139,18 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
         title = f"{model} - {serial}"
         return self.async_create_entry(title=title, data=self.device_config)
 
-    async def async_step_reauth(self, device_config: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Trigger a reauthentication flow."""
         self.context["title_placeholders"] = {
-            CONF_NAME: device_config[CONF_NAME],
-            CONF_HOST: device_config[CONF_HOST],
+            CONF_NAME: entry_data[CONF_NAME],
+            CONF_HOST: entry_data[CONF_HOST],
         }
 
         self.discovery_schema = {
-            vol.Required(CONF_HOST, default=device_config[CONF_HOST]): str,
-            vol.Required(CONF_USERNAME, default=device_config[CONF_USERNAME]): str,
+            vol.Required(CONF_HOST, default=entry_data[CONF_HOST]): str,
+            vol.Required(CONF_USERNAME, default=entry_data[CONF_USERNAME]): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Required(CONF_PORT, default=device_config[CONF_PORT]): int,
+            vol.Required(CONF_PORT, default=entry_data[CONF_PORT]): int,
         }
 
         return await self.async_step_user()

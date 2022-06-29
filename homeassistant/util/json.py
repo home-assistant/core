@@ -7,6 +7,8 @@ import json
 import logging
 from typing import Any
 
+import orjson
+
 from homeassistant.core import Event, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -30,7 +32,7 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
     """
     try:
         with open(filename, encoding="utf-8") as fdesc:
-            return json.loads(fdesc.read())  # type: ignore[no-any-return]
+            return orjson.loads(fdesc.read())  # type: ignore[no-any-return]
     except FileNotFoundError:
         # This is not a fatal error
         _LOGGER.debug("JSON file not found: %s", filename)
@@ -41,6 +43,13 @@ def load_json(filename: str, default: list | dict | None = None) -> list | dict:
         _LOGGER.exception("JSON file reading failed: %s", filename)
         raise HomeAssistantError(error) from error
     return {} if default is None else default
+
+
+def _orjson_encoder(data: Any) -> str:
+    """JSON encoder that uses orjson."""
+    return orjson.dumps(
+        data, option=orjson.OPT_INDENT_2 | orjson.OPT_NON_STR_KEYS
+    ).decode("utf-8")
 
 
 def save_json(
@@ -55,10 +64,15 @@ def save_json(
 
     Returns True on success.
     """
+    dump: Callable[[Any], Any] = json.dumps
     try:
-        json_data = json.dumps(data, indent=4, cls=encoder)
+        if encoder:
+            json_data = json.dumps(data, indent=2, cls=encoder)
+        else:
+            dump = _orjson_encoder
+            json_data = _orjson_encoder(data)
     except TypeError as error:
-        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data))}"
+        msg = f"Failed to serialize to JSON: {filename}. Bad data at {format_unserializable_data(find_paths_unserializable_data(data, dump=dump))}"
         _LOGGER.error(msg)
         raise SerializationError(msg) from error
 

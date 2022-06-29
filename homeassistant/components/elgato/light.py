@@ -15,6 +15,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
     async_get_current_platform,
@@ -25,7 +26,7 @@ from homeassistant.helpers.update_coordinator import (
 )
 
 from . import HomeAssistantElgatoData
-from .const import DOMAIN, LOGGER, SERVICE_IDENTIFY
+from .const import DOMAIN, SERVICE_IDENTIFY
 from .entity import ElgatoEntity
 
 PARALLEL_UPDATES = 1
@@ -121,9 +122,12 @@ class ElgatoLight(
         """Turn off the light."""
         try:
             await self.client.light(on=False)
-        except ElgatoError:
-            LOGGER.error("An error occurred while updating the Elgato Light")
-        await self.coordinator.async_refresh()
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while updating the Elgato Light"
+            ) from error
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
@@ -159,14 +163,18 @@ class ElgatoLight(
                 saturation=saturation,
                 temperature=temperature,
             )
-        except ElgatoError:
-            LOGGER.error("An error occurred while updating the Elgato Light")
-        await self.coordinator.async_refresh()
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while updating the Elgato Light"
+            ) from error
+        finally:
+            await self.coordinator.async_refresh()
 
     async def async_identify(self) -> None:
         """Identify the light, will make it blink."""
         try:
             await self.client.identify()
-        except ElgatoError:
-            LOGGER.exception("An error occurred while identifying the Elgato Light")
-            await self.coordinator.async_refresh()
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while identifying the Elgato Light"
+            ) from error

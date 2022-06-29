@@ -1,4 +1,6 @@
 """Config flow for Monoprice 6-Zone Amplifier integration."""
+from __future__ import annotations
+
 import logging
 
 from pymonoprice import get_async_monoprice
@@ -90,7 +92,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @core.callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MonopriceOptionsFlowHandler:
         """Define the config flow to handle options."""
         return MonopriceOptionsFlowHandler(config_entry)
 
@@ -110,7 +114,7 @@ def _key_for_source(index, source, previous_sources):
 class MonopriceOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle a Monoprice options flow."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize."""
         self.config_entry = config_entry
 

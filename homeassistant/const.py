@@ -608,10 +608,12 @@ CONCENTRATION_PARTS_PER_BILLION: Final = "ppb"
 
 # Speed units
 SPEED_MILLIMETERS_PER_DAY: Final = "mm/d"
+SPEED_FEET_PER_SECOND: Final = "ft/s"
 SPEED_INCHES_PER_DAY: Final = "in/d"
 SPEED_METERS_PER_SECOND: Final = "m/s"
 SPEED_INCHES_PER_HOUR: Final = "in/h"
 SPEED_KILOMETERS_PER_HOUR: Final = "km/h"
+SPEED_KNOTS: Final = "kn"
 SPEED_MILES_PER_HOUR: Final = "mph"
 
 # Signal_strength units

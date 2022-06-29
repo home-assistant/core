@@ -4,7 +4,7 @@ from __future__ import annotations
 import collections
 from collections.abc import Callable
 import dataclasses
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypeVar
 
 import attr
 from zigpy import zcl
@@ -17,10 +17,14 @@ from homeassistant.const import Platform
 # importing channels updates registries
 from . import channels as zha_channels  # noqa: F401 pylint: disable=unused-import
 from .decorators import DictRegistry, SetRegistry
-from .typing import CALLABLE_T, ChannelType
 
 if TYPE_CHECKING:
+    from ..entity import ZhaEntity, ZhaGroupEntity
     from .channels.base import ClientChannel, ZigbeeChannel
+
+
+_ZhaEntityT = TypeVar("_ZhaEntityT", bound=type["ZhaEntity"])
+_ZhaGroupEntityT = TypeVar("_ZhaGroupEntityT", bound=type["ZhaGroupEntity"])
 
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 
@@ -106,7 +110,7 @@ CLIENT_CHANNELS_REGISTRY: DictRegistry[type[ClientChannel]] = DictRegistry()
 ZIGBEE_CHANNEL_REGISTRY: DictRegistry[type[ZigbeeChannel]] = DictRegistry()
 
 
-def set_or_callable(value):
+def set_or_callable(value) -> frozenset[str] | Callable:
     """Convert single str or None to a set. Pass through callables and sets."""
     if value is None:
         return frozenset()
@@ -117,22 +121,26 @@ def set_or_callable(value):
     return frozenset([str(value)])
 
 
+def _get_empty_frozenset() -> frozenset[str]:
+    return frozenset()
+
+
 @attr.s(frozen=True)
 class MatchRule:
     """Match a ZHA Entity to a channel name or generic id."""
 
-    channel_names: set[str] | str = attr.ib(
+    channel_names: frozenset[str] = attr.ib(
         factory=frozenset, converter=set_or_callable
     )
-    generic_ids: set[str] | str = attr.ib(factory=frozenset, converter=set_or_callable)
-    manufacturers: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
+    generic_ids: frozenset[str] = attr.ib(factory=frozenset, converter=set_or_callable)
+    manufacturers: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
     )
-    models: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
+    models: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
     )
-    aux_channels: Callable | set[str] | str = attr.ib(
-        factory=frozenset, converter=set_or_callable
+    aux_channels: frozenset[str] | Callable = attr.ib(
+        factory=_get_empty_frozenset, converter=set_or_callable
     )
 
     @property
@@ -158,10 +166,11 @@ class MatchRule:
 
         weight += 10 * len(self.channel_names)
         weight += 5 * len(self.generic_ids)
-        weight += 1 * len(self.aux_channels)
+        if isinstance(self.aux_channels, frozenset):
+            weight += 1 * len(self.aux_channels)
         return weight
 
-    def claim_channels(self, channel_pool: list[ChannelType]) -> list[ChannelType]:
+    def claim_channels(self, channel_pool: list[ZigbeeChannel]) -> list[ZigbeeChannel]:
         """Return a list of channels this rule matches + aux channels."""
         claimed = []
         if isinstance(self.channel_names, frozenset):
@@ -215,8 +224,8 @@ class MatchRule:
 class EntityClassAndChannels:
     """Container for entity class and corresponding channels."""
 
-    entity_class: CALLABLE_T
-    claimed_channel: list[ChannelType]
+    entity_class: type[ZhaEntity]
+    claimed_channel: list[ZigbeeChannel]
 
 
 class ZHAEntityRegistry:
@@ -225,19 +234,19 @@ class ZHAEntityRegistry:
     def __init__(self):
         """Initialize Registry instance."""
         self._strict_registry: dict[
-            str, dict[MatchRule, CALLABLE_T]
+            str, dict[MatchRule, type[ZhaEntity]]
         ] = collections.defaultdict(dict)
         self._multi_entity_registry: dict[
-            str, dict[int | str | None, dict[MatchRule, list[CALLABLE_T]]]
+            str, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
         self._config_diagnostic_entity_registry: dict[
-            str, dict[int | str | None, dict[MatchRule, list[CALLABLE_T]]]
+            str, dict[int | str | None, dict[MatchRule, list[type[ZhaEntity]]]]
         ] = collections.defaultdict(
             lambda: collections.defaultdict(lambda: collections.defaultdict(list))
         )
-        self._group_registry: dict[str, CALLABLE_T] = {}
+        self._group_registry: dict[str, type[ZhaGroupEntity]] = {}
         self.single_device_matches: dict[
             Platform, dict[EUI64, list[str]]
         ] = collections.defaultdict(lambda: collections.defaultdict(list))
@@ -247,9 +256,9 @@ class ZHAEntityRegistry:
         component: str,
         manufacturer: str,
         model: str,
-        channels: list[ChannelType],
-        default: CALLABLE_T = None,
-    ) -> tuple[CALLABLE_T, list[ChannelType]]:
+        channels: list[ZigbeeChannel],
+        default: type[ZhaEntity] | None = None,
+    ) -> tuple[type[ZhaEntity] | None, list[ZigbeeChannel]]:
         """Match a ZHA Channels to a ZHA Entity class."""
         matches = self._strict_registry[component]
         for match in sorted(matches, key=lambda x: x.weight, reverse=True):
@@ -263,11 +272,11 @@ class ZHAEntityRegistry:
         self,
         manufacturer: str,
         model: str,
-        channels: list[ChannelType],
-    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
+        channels: list[ZigbeeChannel],
+    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ZigbeeChannel]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
-        all_claimed: set[ChannelType] = set()
+        all_claimed: set[ZigbeeChannel] = set()
         for component, stop_match_groups in self._multi_entity_registry.items():
             for stop_match_grp, matches in stop_match_groups.items():
                 sorted_matches = sorted(matches, key=lambda x: x.weight, reverse=True)
@@ -287,11 +296,11 @@ class ZHAEntityRegistry:
         self,
         manufacturer: str,
         model: str,
-        channels: list[ChannelType],
-    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ChannelType]]:
+        channels: list[ZigbeeChannel],
+    ) -> tuple[dict[str, list[EntityClassAndChannels]], list[ZigbeeChannel]]:
         """Match ZHA Channels to potentially multiple ZHA Entity classes."""
         result: dict[str, list[EntityClassAndChannels]] = collections.defaultdict(list)
-        all_claimed: set[ChannelType] = set()
+        all_claimed: set[ZigbeeChannel] = set()
         for (
             component,
             stop_match_groups,
@@ -310,26 +319,26 @@ class ZHAEntityRegistry:
 
         return result, list(all_claimed)
 
-    def get_group_entity(self, component: str) -> CALLABLE_T:
+    def get_group_entity(self, component: str) -> type[ZhaGroupEntity] | None:
         """Match a ZHA group to a ZHA Entity class."""
         return self._group_registry.get(component)
 
     def strict_match(
         self,
         component: str,
-        channel_names: set[str] | str = None,
-        generic_ids: set[str] | str = None,
-        manufacturers: Callable | set[str] | str = None,
-        models: Callable | set[str] | str = None,
-        aux_channels: Callable | set[str] | str = None,
-    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+        channel_names: set[str] | str | None = None,
+        generic_ids: set[str] | str | None = None,
+        manufacturers: Callable | set[str] | str | None = None,
+        models: Callable | set[str] | str | None = None,
+        aux_channels: Callable | set[str] | str | None = None,
+    ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a strict match rule."""
 
         rule = MatchRule(
             channel_names, generic_ids, manufacturers, models, aux_channels
         )
 
-        def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
+        def decorator(zha_ent: _ZhaEntityT) -> _ZhaEntityT:
             """Register a strict match rule.
 
             All non empty fields of a match rule must match.
@@ -342,13 +351,13 @@ class ZHAEntityRegistry:
     def multipass_match(
         self,
         component: str,
-        channel_names: set[str] | str = None,
-        generic_ids: set[str] | str = None,
-        manufacturers: Callable | set[str] | str = None,
-        models: Callable | set[str] | str = None,
-        aux_channels: Callable | set[str] | str = None,
+        channel_names: set[str] | str | None = None,
+        generic_ids: set[str] | str | None = None,
+        manufacturers: Callable | set[str] | str | None = None,
+        models: Callable | set[str] | str | None = None,
+        aux_channels: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
-    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
         rule = MatchRule(
@@ -359,7 +368,7 @@ class ZHAEntityRegistry:
             aux_channels,
         )
 
-        def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
+        def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
             """Register a loose match rule.
 
             All non empty fields of a match rule must match.
@@ -375,13 +384,13 @@ class ZHAEntityRegistry:
     def config_diagnostic_match(
         self,
         component: str,
-        channel_names: set[str] | str = None,
-        generic_ids: set[str] | str = None,
-        manufacturers: Callable | set[str] | str = None,
-        models: Callable | set[str] | str = None,
-        aux_channels: Callable | set[str] | str = None,
+        channel_names: set[str] | str | None = None,
+        generic_ids: set[str] | str | None = None,
+        manufacturers: Callable | set[str] | str | None = None,
+        models: Callable | set[str] | str | None = None,
+        aux_channels: Callable | set[str] | str | None = None,
         stop_on_match_group: int | str | None = None,
-    ) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    ) -> Callable[[_ZhaEntityT], _ZhaEntityT]:
         """Decorate a loose match rule."""
 
         rule = MatchRule(
@@ -392,7 +401,7 @@ class ZHAEntityRegistry:
             aux_channels,
         )
 
-        def decorator(zha_entity: CALLABLE_T) -> CALLABLE_T:
+        def decorator(zha_entity: _ZhaEntityT) -> _ZhaEntityT:
             """Register a loose match rule.
 
             All non empty fields of a match rule must match.
@@ -405,10 +414,12 @@ class ZHAEntityRegistry:
 
         return decorator
 
-    def group_match(self, component: str) -> Callable[[CALLABLE_T], CALLABLE_T]:
+    def group_match(
+        self, component: str
+    ) -> Callable[[_ZhaGroupEntityT], _ZhaGroupEntityT]:
         """Decorate a group match rule."""
 
-        def decorator(zha_ent: CALLABLE_T) -> CALLABLE_T:
+        def decorator(zha_ent: _ZhaGroupEntityT) -> _ZhaGroupEntityT:
             """Register a group match rule."""
             self._group_registry[component] = zha_ent
             return zha_ent
@@ -426,9 +437,9 @@ class ZHAEntityRegistry:
 
     def clean_up(self) -> None:
         """Clean up post discovery."""
-        self.single_device_matches: dict[
-            Platform, dict[EUI64, list[str]]
-        ] = collections.defaultdict(lambda: collections.defaultdict(list))
+        self.single_device_matches = collections.defaultdict(
+            lambda: collections.defaultdict(list)
+        )
 
 
 ZHA_ENTITIES = ZHAEntityRegistry()
