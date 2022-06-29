@@ -1,6 +1,7 @@
 """Config flow for IntelliFire integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
@@ -220,10 +221,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Running Step: manual_device_entry")
         return await self.async_step_manual_device_entry()
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         LOGGER.debug("STEP: reauth")
         entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        assert entry
+        assert entry.unique_id
 
         # populate the expected vars
         self._serial = entry.unique_id
