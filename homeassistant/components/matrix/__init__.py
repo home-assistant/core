@@ -4,7 +4,6 @@ import logging
 import mimetypes
 import os
 
-import markdown
 from matrix_client.client import MatrixClient, MatrixRequestError
 import voluptuous as vol
 
@@ -26,7 +25,6 @@ from homeassistant.util.json import load_json, save_json
 from .const import (
     DOMAIN,
     FORMAT_HTML,
-    FORMAT_MARKDOWN,
     FORMAT_TEXT,
     SERVICE_SEND_MESSAGE,
 )
@@ -43,7 +41,7 @@ CONF_EXPRESSION = "expression"
 
 DEFAULT_CONTENT_TYPE = "application/octet-stream"
 
-MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT, FORMAT_MARKDOWN]
+MESSAGE_FORMATS = [FORMAT_HTML, FORMAT_TEXT]
 DEFAULT_MESSAGE_FORMAT = FORMAT_TEXT
 
 EVENT_MATRIX_COMMAND = "matrix_command"
@@ -393,8 +391,6 @@ class MatrixBot:
                 if message is not None:
                     if data.get(ATTR_FORMAT) == FORMAT_HTML:
                         _LOGGER.debug(room.send_html(message))
-                    elif data.get(ATTR_FORMAT) == FORMAT_MARKDOWN:
-                        _LOGGER.debug(room.send_html(markdown.markdown(message)))
                     else:
                         _LOGGER.debug(room.send_text(message))
             except MatrixRequestError as ex:
