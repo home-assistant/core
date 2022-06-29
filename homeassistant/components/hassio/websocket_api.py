@@ -1,4 +1,4 @@
-"""Websocekt API handlers for the hassio integration."""
+"""Websocket API handlers for the hassio integration."""
 import logging
 import re
 
