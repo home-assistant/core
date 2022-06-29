@@ -678,6 +678,60 @@ send_location:
       selector:
         text:
 
+send_poll:
+  name: Send poll
+  description: Send a poll.
+  fields:
+    target:
+      name: Target
+      description: An array of pre-authorized chat_ids to send the location to. If not present, first allowed chat_id is the default.
+      example: "[12345, 67890] or 12345"
+      selector:
+        object:
+    question:
+      name: Question
+      description: Poll question, 1-300 characters
+      required: true
+      selector:
+        text:
+    options:
+      name: Options
+      description: List of answer options, 2-10 strings 1-100 characters each
+      required: true
+      selector:
+        object:
+    is_anonymous:
+      name: Is Anonymous
+      description: If the poll needs to be anonymous, defaults to True
+      selector:
+        boolean:
+    allows_multiple_answers:
+      name: Allow Multiple Answers
+      description: If the poll allows multiple answers, defaults to False
+      selector:
+        boolean:
+    open_period:
+      name: Open Period
+      description: Amount of time in seconds the poll will be active after creation, 5-600.
+      selector:
+        number:
+          min: 5
+          max: 600
+          unit_of_measurement: seconds
+    disable_notification:
+      name: Disable notification
+      description: Sends the message silently. iOS users and Web users will not receive a notification, Android users will receive a notification with no sound.
+      selector:
+        boolean:
+    timeout:
+      name: Timeout
+      description: Timeout for send poll. Will help with timeout errors (poor internet connection, etc)
+      selector:
+        number:
+          min: 1
+          max: 3600
+          unit_of_measurement: seconds
+
 edit_message:
   name: Edit message
   description: Edit a previously sent message.
