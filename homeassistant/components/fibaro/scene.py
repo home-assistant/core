@@ -7,6 +7,7 @@ from homeassistant.components.scene import Scene
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import FIBARO_DEVICES, FibaroDevice
@@ -38,7 +39,9 @@ class FibaroScene(FibaroDevice, Scene):
         super().__init__(fibaro_device)
 
         # All scenes are shown on hub device
-        self._attr_device_info = self.controller.hub_device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self.controller.hub_serial)}
+        )
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""

@@ -18,7 +18,6 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ARMED,
     ATTR_BATTERY_LEVEL,
-    ATTR_MODEL,
     CONF_DEVICE_CLASS,
     CONF_EXCLUDE,
     CONF_ICON,
@@ -158,27 +157,21 @@ class FibaroController:
         )  # List of devices by entity platform
         self._callbacks: dict[Any, Any] = {}  # Update value callbacks by deviceId
         self._state_handler = None  # Fiblary's StateHandler object
-        self.hub_serial = None  # Unique serial number of the hub
-        self.name = None  # The friendly name of the hub
+        self.hub_serial: str  # Unique serial number of the hub
+        self.hub_name: str  # The friendly name of the hub
+        self.hub_software_version: str
+        self.hub_api_url: str = config[CONF_URL]
         # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
-        self.hub_device_info: DeviceInfo
 
     def connect(self):
         """Start the communication with the Fibaro controller."""
         try:
             login = self._client.login.get()
             info = self._client.info.get()
-            self.hub_serial = slugify(info.serialNumber)
-            self.name = slugify(info.hcName)
-            self.hub_device_info = DeviceInfo(
-                identifiers={(DOMAIN, info.serialNumber)},
-                manufacturer="Fibaro",
-                name=info.hcName,
-                model=info.serialNumber,
-                sw_version=info.softVersion,
-                configuration_url=self._client.client.base_url.removesuffix("/api/"),
-            )
+            self.hub_serial = info.serialNumber
+            self.hub_name = info.hcName
+            self.hub_software_version = info.softVersion
         except AssertionError:
             _LOGGER.error("Can't connect to Fibaro HC. Please check URL")
             return False
@@ -345,7 +338,7 @@ class FibaroController:
             identifiers={(DOMAIN, master_entity.id)},
             manufacturer=manufacturer,
             name=master_entity.name,
-            via_device=(DOMAIN, str(self.hub_device_info[ATTR_MODEL])),
+            via_device=(DOMAIN, self.hub_serial),
         )
 
     def get_device_info(self, device: Any) -> DeviceInfo:
@@ -354,7 +347,7 @@ class FibaroController:
             return self._device_infos[device.id]
         if "parentId" in device and device.parentId in self._device_infos:
             return self._device_infos[device.parentId]
-        return self.hub_device_info
+        return DeviceInfo(identifiers={(DOMAIN, self.hub_serial)})
 
     def _read_scenes(self):
         scenes = self._client.scenes.list()
@@ -372,7 +365,7 @@ class FibaroController:
             device.ha_id = (
                 f"scene_{slugify(room_name)}_{slugify(device.name)}_{device.id}"
             )
-            device.unique_id_str = f"{self.hub_serial}.scene.{device.id}"
+            device.unique_id_str = f"{slugify(self.hub_serial)}.scene.{device.id}"
             self._scene_map[device.id] = device
             self.fibaro_devices[Platform.SCENE].append(device)
             _LOGGER.debug("%s scene -> %s", device.ha_id, device)
@@ -406,7 +399,7 @@ class FibaroController:
                     device.mapped_platform = None
                 if (platform := device.mapped_platform) is None:
                     continue
-                device.unique_id_str = f"{self.hub_serial}.{device.id}"
+                device.unique_id_str = f"{slugify(self.hub_serial)}.{device.id}"
                 self._create_device_info(device, devices)
                 self._device_map[device.id] = device
                 _LOGGER.debug(
@@ -517,7 +510,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # register the hub device info separately as the hub has sometimes no entities
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, **controller.hub_device_info
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, controller.hub_serial)},
+        manufacturer="Fibaro",
+        name=controller.hub_name,
+        model=controller.hub_serial,
+        sw_version=controller.hub_software_version,
+        configuration_url=controller.hub_api_url.removesuffix("/api/"),
     )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
