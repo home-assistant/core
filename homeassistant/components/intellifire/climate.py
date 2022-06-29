@@ -63,7 +63,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         """Turn on thermostat by setting a target temperature."""
         raw_target_temp = kwargs[ATTR_TEMPERATURE]
         self.last_temp = int(raw_target_temp)
-        LOGGER.info(
+        LOGGER.debug(
             "Setting target temp to %sc %sf",
             int(raw_target_temp),
             (raw_target_temp * 9 / 5) + 32,
