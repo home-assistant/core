@@ -23,7 +23,7 @@ NEIGHBORING_WIFI_NETWORKS = "neighboring_wifi_networks"
 
 WIFI_APTYPE = {
     "WIFI_VAP_MAIN_AP": "Main",
-    "WIFI_VAP_Guest_AP": "Guest",
+    "WIFI_VAP_GUEST_AP": "Guest",
 }
 WIFI_BANDS = {
     "WIFI_BAND_2G": 2.4,
