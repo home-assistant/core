@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -253,7 +254,7 @@ SENSOR_UTILIZATION = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cpu-64-bit",
-        state_class=MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     NetgearSensorEntityDescription(
         key="NewMemoryUtilization",
@@ -261,7 +262,7 @@ SENSOR_UTILIZATION = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
-        state_class=MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
