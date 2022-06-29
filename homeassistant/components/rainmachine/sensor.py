@@ -243,6 +243,8 @@ class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
             seconds_remaining = self.calculate_seconds_remaining()
             new_timestamp = now + timedelta(seconds=seconds_remaining)
 
+            assert isinstance(self._attr_native_value, datetime)
+
             if (
                 self._attr_native_value
                 and new_timestamp - self._attr_native_value
