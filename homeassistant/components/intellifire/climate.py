@@ -87,7 +87,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
         return float(self.coordinator.read_api.data.temperature_c)
 
     @property
-    def target_temperature(self) -> float | None:
+    def target_temperature(self) -> float:
         """Return target temperature."""
         return float(self.coordinator.read_api.data.thermostat_setpoint_c)
 
