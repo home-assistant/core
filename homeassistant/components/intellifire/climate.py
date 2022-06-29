@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IntellifireDataUpdateCoordinator
-from .const import DOMAIN, LOGGER
+from .const import DEFAULT_THERMOSTAT_TEMP, DOMAIN, LOGGER
 from .entity import IntellifireEntity
 
 INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
@@ -50,7 +50,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = TEMP_CELSIUS
-    last_temp = 21
+    last_temp = DEFAULT_THERMOSTAT_TEMP
 
     @property
     def hvac_mode(self) -> str:
