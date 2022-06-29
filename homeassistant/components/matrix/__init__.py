@@ -22,12 +22,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.json import load_json, save_json
 
-from .const import (
-    DOMAIN,
-    FORMAT_HTML,
-    FORMAT_TEXT,
-    SERVICE_SEND_MESSAGE,
-)
+from .const import DOMAIN, FORMAT_HTML, FORMAT_TEXT, SERVICE_SEND_MESSAGE
 
 _LOGGER = logging.getLogger(__name__)
 
