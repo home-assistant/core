@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     DOMAIN,
     KEY_COORDINATOR,
+    KEY_COORDINATOR_FIRMWARE,
     KEY_COORDINATOR_LINK,
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
@@ -29,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 SPEED_TEST_INTERVAL = timedelta(seconds=1800)
+SCAN_INTERVAL_FIRMWARE = timedelta(seconds=18000)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -85,6 +87,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from the router."""
         return await router.async_get_speed_test()
 
+    async def async_check_firmware() -> dict[str, Any] | None:
+        """Check for new firmware of the router."""
+        return await router.async_check_new_firmware()
+
     async def async_update_utilization() -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await router.async_get_utilization()
@@ -115,6 +121,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_speed_test,
         update_interval=SPEED_TEST_INTERVAL,
     )
+    coordinator_firmware = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{router.device_name} Firmware",
+        update_method=async_check_firmware,
+        update_interval=SCAN_INTERVAL_FIRMWARE,
+    )
     coordinator_utilization = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -133,6 +146,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if router.track_devices:
         await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
+    await coordinator_firmware.async_config_entry_first_refresh()
     await coordinator_utilization.async_config_entry_first_refresh()
     await coordinator_link.async_config_entry_first_refresh()
 
@@ -141,6 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         KEY_COORDINATOR: coordinator,
         KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
         KEY_COORDINATOR_SPEED: coordinator_speed_test,
+        KEY_COORDINATOR_FIRMWARE: coordinator_firmware,
         KEY_COORDINATOR_UTIL: coordinator_utilization,
         KEY_COORDINATOR_LINK: coordinator_link,
     }
