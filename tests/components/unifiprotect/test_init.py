@@ -109,11 +109,10 @@ async def test_reload(hass: HomeAssistant, ufp: MockUFPFixture):
     assert ufp.api.async_disconnect_ws.called
 
 
-async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture):
+async def test_unload(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
     """Test unloading of unifiprotect entry."""
 
-    await hass.config_entries.async_setup(ufp.entry.entry_id)
-    await hass.async_block_till_done()
+    await init_entry(hass, ufp, [light])
     assert ufp.entry.state == ConfigEntryState.LOADED
 
     await hass.config_entries.async_unload(ufp.entry.entry_id)

@@ -1,6 +1,9 @@
 """Config Flow for Hive."""
 from __future__ import annotations
 
+from collections.abc import Mapping
+from typing import Any
+
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
     HiveApiError,
@@ -13,6 +16,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 
 from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
@@ -136,11 +140,11 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="reauth_successful")
         return self.async_create_entry(title=self.data["username"], data=self.data)
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Re Authenticate a user."""
         data = {
-            CONF_USERNAME: user_input[CONF_USERNAME],
-            CONF_PASSWORD: user_input[CONF_PASSWORD],
+            CONF_USERNAME: entry_data[CONF_USERNAME],
+            CONF_PASSWORD: entry_data[CONF_PASSWORD],
         }
         return await self.async_step_user(data)
 
