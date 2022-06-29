@@ -115,7 +115,7 @@ class ProtectProxyView(HomeAssistantView):
 class ThumbnailProxyView(ProtectProxyView):
     """View to proxy event thumbnails from UniFi Protect."""
 
-    url = "/api/ufp/thumbnail/{nvr_id}/{event_id}"
+    url = "/api/unifiprotect/thumbnail/{nvr_id}/{event_id}"
     name = "api:unifiprotect_thumbnail"
 
     async def get(
