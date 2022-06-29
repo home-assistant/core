@@ -50,7 +50,6 @@ async def test_import(hass: HomeAssistant) -> None:
     """Test import."""
 
     with VALID_DEVICE_URL_PATCH:
-
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_IMPORT},
@@ -96,12 +95,66 @@ async def test_import(hass: HomeAssistant) -> None:
         assert result["type"] == RESULT_TYPE_ABORT
         assert result["reason"] == "unknown"
 
+    with VALID_DEVICE_URL_PATCH, patch(
+        "afsapi.AFSAPI.get_radio_id",
+        side_effect=ConnectionError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_PIN: "1234",
+                CONF_NAME: "Test name",
+            },
+        )
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "cannot_connect"
+
+    with VALID_DEVICE_URL_PATCH, patch(
+        "afsapi.AFSAPI.get_radio_id",
+        side_effect=InvalidPinException,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_PIN: "1234",
+                CONF_NAME: "Test name",
+            },
+        )
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "invalid_auth"
+
+    with VALID_DEVICE_URL_PATCH, patch(
+        "afsapi.AFSAPI.get_radio_id",
+        side_effect=ValueError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_IMPORT},
+            data={
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_PIN: "1234",
+                CONF_NAME: "Test name",
+            },
+        )
+
+        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["reason"] == "unknown"
+
 
 async def test_import_already_exists(hass: HomeAssistant) -> None:
     """Test import of device which already exists."""
     mock_existing_entry = MockConfigEntry(
         domain="frontier_silicon",
-        unique_id="http://1.1.1.1:80/webfsapi",
+        unique_id="mock_radio_id",
         data={
             "webfsapi_url": "http://1.1.1.1:80/webfsapi",
             "pin": "1234",
@@ -444,28 +497,19 @@ async def test_unignore_flow_invalid(hass: HomeAssistant):
     assert result["reason"] == "unknown"
 
 
-async def test_reauth_flow(hass: HomeAssistant):
+async def test_reauth_flow(hass: HomeAssistant, config_entry):
     """Test reauth flow."""
 
-    mock_entry = MockConfigEntry(
-        domain="frontier_silicon",
-        unique_id="http://1.1.1.1:80/webfsapi",
-        data={
-            "webfsapi_url": "http://1.1.1.1:80/webfsapi",
-            "pin": "1234",
-            "use_session": False,
-        },
-    )
-    mock_entry.add_to_hass(hass)
+    config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={
             "source": config_entries.SOURCE_REAUTH,
-            "unique_id": mock_entry.unique_id,
-            "entry_id": mock_entry.entry_id,
+            "unique_id": config_entry.unique_id,
+            "entry_id": config_entry.entry_id,
         },
-        data=mock_entry.data,
+        data=config_entry.data,
     )
     assert result["type"] == RESULT_TYPE_FORM
     assert result["step_id"] == "device_config"
@@ -477,4 +521,4 @@ async def test_reauth_flow(hass: HomeAssistant):
         )
         assert result2["type"] == RESULT_TYPE_ABORT
         assert result2["reason"] == "reauth_successful"
-        assert mock_entry.data[CONF_PIN] == "4242"
+        assert config_entry.data[CONF_PIN] == "4242"

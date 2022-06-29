@@ -275,4 +275,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+
+        # Set unique_id to prevent check for duplicate entity
+        assert self._reauth_entry
+        self._unique_id = self._reauth_entry.unique_id
         return await self.async_step_device_config()
