@@ -873,6 +873,110 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "light": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="LightEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="brightness",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_mode",
+                    return_type=["ColorMode", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="hs_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="xy_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgb_color",
+                    return_type=["tuple[int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbw_color",
+                    return_type=["tuple[int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbww_color",
+                    return_type=["tuple[int, int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_temp",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="min_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="max_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="white_value",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_color_modes",
+                    return_type=["set[ColorMode]", "set[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    named_arg_types={
+                        "brightness": "int | None",
+                        "brightness_pct": "float | None",
+                        "brightness_step": "int | None",
+                        "brightness_step_pct": "float | None",
+                        "color_name": "str | None",
+                        "color_temp": "int | None",
+                        "effect": "str | None",
+                        "flash": "str | None",
+                        "kelvin": "int | None",
+                        "hs_color": "tuple[float, float] | None",
+                        "rgb_color": "tuple[int, int, int] | None",
+                        "rgbw_color": "tuple[int, int, int, int] | None",
+                        "rgbww_color": "tuple[int, int, int, int, int] | None",
+                        "transition": "float | None",
+                        "xy_color": "tuple[float, float] | None",
+                        "white": "int | None",
+                        "white_value": "int | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "lock": [
         ClassTypeHintMatch(
             base_class="Entity",
