@@ -97,7 +97,6 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
             "Setting mode to [%s] - using last temp: %s", hvac_mode, self.last_temp
         )
 
-        # Dear Reviewer - Is there a way to use a := here?
         if hvac_mode == HVAC_MODE_HEAT:
             # 1) Set the desired target temp
             await self.coordinator.control_api.set_thermostat_c(
