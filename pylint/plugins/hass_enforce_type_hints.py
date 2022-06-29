@@ -468,7 +468,6 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 _BASE_DEVICE_CLASS = TypeHintMatch(
     function_name="device_class",
     return_type=["str", None],
-    check_return_type_inheritance=True,
 )
 _ENTITY_MATCH: list[TypeHintMatch] = [
     _BASE_DEVICE_CLASS,
