@@ -35,3 +35,4 @@ logger:
   logs:
     homeassistant.components.cloud: debug
 " >> config/configuration.yaml
+
