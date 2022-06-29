@@ -144,12 +144,12 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        LOGGER.debug("On  [ Set Function   ] - Turn On Fan percentage [%s]", percentage)
+        LOGGER.debug("Turn fan on: percentage [%s]", percentage)
         await self.entity_description.set_fn(self.coordinator.control_api, 1)
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
-        LOGGER.debug("Off [ Set Function   ] - Turn Off Fan")
+        LOGGER.debug("Turn fan off")
         await self.entity_description.set_fn(self.coordinator.control_api, 0)
         await self.async_update_ha_state(force_refresh=True)
