@@ -25,6 +25,8 @@ from .const import (
     CONF_SINGLE_SENSOR,
     CONST_REGION_MAPPING,
     CONST_REGIONS,
+    DEFAULT_MULTIPLE_SENSOR,
+    DEFAULT_SINGLE_SENSOR,
     DOMAIN,
 )
 
@@ -122,37 +124,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
+            # user_input[CONF_SINGLE_SENSOR] = DEFAULT_SINGLE_SENSOR
+            # user_input[CONF_MULTIPLE_SENSOR] = DEFAULT_MULTIPLE_SENSOR
 
-            if user_input.get(CONF_SINGLE_SENSOR, False) or user_input.get(
-                CONF_MULTIPLE_SENSOR, False
-            ):
+            for group in CONST_REGIONS:
+                if group_input := user_input.get(group):
+                    user_input[CONF_REGIONS] += group_input
 
-                for group in CONST_REGIONS:
-                    if group_input := user_input.get(group):
-                        user_input[CONF_REGIONS] += group_input
+            if user_input[CONF_REGIONS]:
 
-                if user_input[CONF_REGIONS]:
-                    tmp: dict[str, Any] = {}
+                user_input = prepare_user_input(
+                    user_input, self._all_region_codes_sorted
+                )
 
-                    for reg in user_input[CONF_REGIONS]:
-                        tmp[self._all_region_codes_sorted[reg]] = reg.split("_", 1)[0]
+                return self.async_create_entry(title="NINA", data=user_input)
 
-                    compact: dict[str, Any] = {}
-
-                    for key, val in tmp.items():
-                        if val in compact:
-                            # Abenberg, St + Abenberger Wald
-                            compact[val] = f"{compact[val]} + {key}"
-                            break
-                        compact[val] = key
-
-                    user_input[CONF_REGIONS] = compact
-
-                    return self.async_create_entry(title="NINA", data=user_input)
-
-                errors["base"] = "no_selection"
-            else:
-                errors["base"] = "no_type"
+            errors["base"] = "no_selection"
 
         return self.async_show_form(
             step_id="user",
@@ -166,8 +153,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         int, vol.Range(min=1, max=20)
                     ),
                     vol.Required(CONF_FILTER_CORONA, default=True): cv.boolean,
-                    vol.Optional(CONF_SINGLE_SENSOR, default=False): cv.boolean,
-                    vol.Optional(CONF_MULTIPLE_SENSOR, default=True): cv.boolean,
                 }
             ),
             errors=errors,
@@ -196,6 +181,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if name not in self.data:
                 self.data[name] = []
 
+        # Migrate from versions without multiple sensor types
+        if CONF_SINGLE_SENSOR not in self.data:
+            self.data[CONF_SINGLE_SENSOR] = DEFAULT_SINGLE_SENSOR
+
+        if CONF_MULTIPLE_SENSOR not in self.data:
+            self.data[CONF_MULTIPLE_SENSOR] = DEFAULT_MULTIPLE_SENSOR
+
     async def async_step_init(self, user_input=None):
         """Handle options flow."""
         errors: dict[str, Any] = {}
@@ -218,50 +210,74 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
 
-            for group in CONST_REGIONS:
-                if group_input := user_input.get(group):
-                    user_input[CONF_REGIONS] += group_input
+            if user_input.get(CONF_SINGLE_SENSOR, False) or user_input.get(
+                CONF_MULTIPLE_SENSOR, False
+            ):
 
-            if user_input[CONF_REGIONS]:
+                for group in CONST_REGIONS:
+                    if group_input := user_input.get(group):
+                        user_input[CONF_REGIONS] += group_input
 
-                user_input = prepare_user_input(
-                    user_input, self._all_region_codes_sorted
-                )
+                if user_input[CONF_REGIONS]:
 
-                entity_registry = async_get(self.hass)
+                    user_input = prepare_user_input(
+                        user_input, self._all_region_codes_sorted
+                    )
 
-                entries = async_entries_for_config_entry(
-                    entity_registry, self.config_entry.entry_id
-                )
+                    entity_registry = async_get(self.hass)
 
-                removed_entities_slots = [
-                    f"{region}-{slot_id}"
-                    for region in self.data[CONF_REGIONS]
-                    for slot_id in range(0, self.data[CONF_MESSAGE_SLOTS] + 1)
-                    if slot_id > user_input[CONF_MESSAGE_SLOTS]
-                ]
+                    entries = async_entries_for_config_entry(
+                        entity_registry, self.config_entry.entry_id
+                    )
 
-                removed_entites_area = [
-                    f"{cfg_region}-{slot_id}"
-                    for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
-                    for cfg_region in self.data[CONF_REGIONS]
-                    if cfg_region not in user_input[CONF_REGIONS]
-                ]
+                    removed_entities_slots = [
+                        f"{region}-{slot_id}"
+                        for region in self.data[CONF_REGIONS]
+                        for slot_id in range(0, self.data[CONF_MESSAGE_SLOTS] + 1)
+                        if slot_id > user_input[CONF_MESSAGE_SLOTS]
+                    ]
 
-                for entry in entries:
-                    for entity_uid in list(
-                        set(removed_entities_slots + removed_entites_area)
-                    ):
-                        if entry.unique_id == entity_uid:
-                            entity_registry.async_remove(entry.entity_id)
+                    removed_entites_area = [
+                        f"{cfg_region}-{slot_id}"
+                        for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
+                        for cfg_region in self.data[CONF_REGIONS]
+                        if cfg_region not in user_input[CONF_REGIONS]
+                    ]
 
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=user_input
-                )
+                    removed_entites_single_sensor = [
+                        f"{region}-warnings"
+                        for region in self.data[CONF_REGIONS]
+                        if not user_input[CONF_SINGLE_SENSOR]
+                    ]
 
-                return self.async_create_entry(title="", data=None)
+                    removed_entites_multiple_sensor = [
+                        f"{cfg_region}-{slot_id}"
+                        for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
+                        for cfg_region in self.data[CONF_REGIONS]
+                        if not user_input[CONF_MULTIPLE_SENSOR]
+                    ]
 
-            errors["base"] = "no_selection"
+                    for entry in entries:
+                        for entity_uid in list(
+                            set(
+                                removed_entities_slots
+                                + removed_entites_area
+                                + removed_entites_single_sensor
+                                + removed_entites_multiple_sensor
+                            )
+                        ):
+                            if entry.unique_id == entity_uid:
+                                entity_registry.async_remove(entry.entity_id)
+
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, data=user_input
+                    )
+
+                    return self.async_create_entry(title="", data=None)
+
+                errors["base"] = "no_selection"
+            else:
+                errors["base"] = "no_type"
 
         return self.async_show_form(
             step_id="init",
@@ -280,6 +296,12 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     vol.Required(
                         CONF_FILTER_CORONA,
                         default=self.data[CONF_FILTER_CORONA],
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_SINGLE_SENSOR, default=self.data[CONF_SINGLE_SENSOR]
+                    ): cv.boolean,
+                    vol.Optional(
+                        CONF_MULTIPLE_SENSOR, default=self.data[CONF_MULTIPLE_SENSOR]
                     ): cv.boolean,
                 }
             ),

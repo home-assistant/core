@@ -19,6 +19,9 @@ CONF_SINGLE_SENSOR: str = "single_sensor"
 
 ATTRIBUTION: str = "Data provided by NINA"
 
+DEFAULT_SINGLE_SENSOR = False
+DEFAULT_MULTIPLE_SENSOR = True
+
 ATTR_WARNING_COUNT = "warning_count"
 ATTR_HEADLINE: str = "headline"
 ATTR_DESCRIPTION: str = "description"

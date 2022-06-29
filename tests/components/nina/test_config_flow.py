@@ -12,6 +12,7 @@ from homeassistant.components.nina.const import (
     CONF_FILTER_CORONA,
     CONF_MESSAGE_SLOTS,
     CONF_MULTIPLE_SENSOR,
+    CONF_REGIONS,
     CONF_SINGLE_SENSOR,
     CONST_REGION_A_TO_D,
     CONST_REGION_E_TO_H,
@@ -116,7 +117,7 @@ async def test_step_user_no_selection_regions(hass: HomeAssistant) -> None:
     """Test starting a flow by user with no region selected."""
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
-        return_value=DUMMY_RESPONSE,
+        return_value=DUMMY_RESPONSE_REGIONS,
     ):
 
         result: dict[str, Any] = await hass.config_entries.flow.async_init(
@@ -126,22 +127,6 @@ async def test_step_user_no_selection_regions(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "no_selection"}
-
-
-async def test_step_user_no_selection_sensors(hass: HomeAssistant) -> None:
-    """Test starting a flow by user with no sensor type selected."""
-    with patch(
-        "pynina.baseApi.BaseAPI._makeRequest",
-        wraps=mocked_request_function,
-    ):
-
-        result: dict[str, Any] = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data={}
-        )
-
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": "no_type"}
 
 
 async def test_step_user_already_configured(hass: HomeAssistant) -> None:
@@ -196,6 +181,8 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
+                CONF_SINGLE_SENSOR: True,
+                CONF_MULTIPLE_SENSOR: False,
             },
         )
 
@@ -214,6 +201,8 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
             CONF_REGIONS: {
                 "072350000000": "Damflos (Trier-Saarburg - Rheinland-Pfalz)"
             },
+            CONF_SINGLE_SENSOR: True,
+            CONF_MULTIPLE_SENSOR: False,
         }
 
 
@@ -247,6 +236,8 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
+                CONF_SINGLE_SENSOR: False,
+                CONF_MULTIPLE_SENSOR: True,
             },
         )
 
@@ -294,6 +285,45 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
         assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
 
 
+async def test_options_flow_no_selection_sensors(hass: HomeAssistant) -> None:
+    """Test config flow options but with no sensor type selected."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NINA",
+        data=DUMMY_DATA,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "pynina.baseApi.BaseAPI._makeRequest",
+        wraps=mocked_request_function,
+    ):
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_MESSAGE_SLOTS: 2,
+                CONST_REGION_A_TO_D: ["072350000000", "095760000000"],
+                CONST_REGION_E_TO_H: [],
+                CONST_REGION_I_TO_L: [],
+                CONST_REGION_M_TO_Q: [],
+                CONST_REGION_R_TO_U: [],
+                CONST_REGION_V_TO_Z: [],
+                CONF_SINGLE_SENSOR: False,
+                CONF_MULTIPLE_SENSOR: False,
+            },
+        )
+
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["step_id"] == "init"
+        assert result["errors"] == {"base": "no_type"}
+
+
 async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
     """Test if old entities are removed."""
     config_entry = MockConfigEntry(
@@ -322,6 +352,8 @@ async def test_options_flow_entity_removal(hass: HomeAssistant) -> None:
                 CONST_REGION_M_TO_Q: [],
                 CONST_REGION_R_TO_U: [],
                 CONST_REGION_V_TO_Z: [],
+                CONF_SINGLE_SENSOR: False,
+                CONF_MULTIPLE_SENSOR: True,
             },
         )
 
