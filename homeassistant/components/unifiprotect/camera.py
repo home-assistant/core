@@ -120,8 +120,14 @@ async def async_setup_entry(
         entities = _async_camera_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device)
+    unsub = async_dispatcher_connect(
+        hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device
+    )
+    data.async_dispatch_callback(unsub)
+    unsub = async_dispatcher_connect(
+        hass, _ufpd(entry, DISPATCH_CHANNELS), _add_new_device
+    )
+    data.async_dispatch_callback(unsub)
 
     entities = _async_camera_entities(data)
     async_add_entities(entities)

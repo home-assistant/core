@@ -72,6 +72,7 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
+        self._dispatch_subscriptions: list[CALLBACK_TYPE] = []
 
         self.last_update_success = False
         self.api = protect
@@ -99,6 +100,11 @@ class ProtectData:
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
+
+        for unsub in self._dispatch_subscriptions:
+            unsub()
+        self._dispatch_subscriptions = []
+
         if self._unsub_websocket:
             self._unsub_websocket()
             self._unsub_websocket = None
@@ -142,6 +148,12 @@ class ProtectData:
         """
 
         self._pending_camera_ids.add(camera_id)
+
+    @callback
+    def async_dispatch_callback(self, unsub: CALLBACK_TYPE) -> None:
+        """Add unsub dispatch to be called when integration is unloaded."""
+
+        self._dispatch_subscriptions.append(unsub)
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:
@@ -211,28 +223,28 @@ class ProtectData:
 
     @callback
     def async_subscribe_device_id(
-        self, device_id: str, update_callback: Callable[[ProtectModelWithId], None]
+        self, mac: str, update_callback: Callable[[ProtectModelWithId], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
             self._unsub_interval = async_track_time_interval(
                 self._hass, self.async_refresh, self._update_interval
             )
-        self._subscriptions.setdefault(device_id, []).append(update_callback)
+        self._subscriptions.setdefault(mac, []).append(update_callback)
 
         def _unsubscribe() -> None:
-            self.async_unsubscribe_device_id(device_id, update_callback)
+            self.async_unsubscribe_device_id(mac, update_callback)
 
         return _unsubscribe
 
     @callback
     def async_unsubscribe_device_id(
-        self, device_id: str, update_callback: Callable[[ProtectModelWithId], None]
+        self, mac: str, update_callback: Callable[[ProtectModelWithId], None]
     ) -> None:
         """Remove a callback subscriber."""
-        self._subscriptions[device_id].remove(update_callback)
-        if not self._subscriptions[device_id]:
-            del self._subscriptions[device_id]
+        self._subscriptions[mac].remove(update_callback)
+        if not self._subscriptions[mac]:
+            del self._subscriptions[mac]
         if not self._subscriptions and self._unsub_interval:
             self._unsub_interval()
             self._unsub_interval = None
@@ -240,12 +252,12 @@ class ProtectData:
     @callback
     def _async_signal_device_update(self, device: ProtectModelWithId) -> None:
         """Call the callbacks for a device_id."""
-        device_id = device.id
-        if not self._subscriptions.get(device_id):
+
+        if not self._subscriptions.get(device.mac):
             return
 
-        _LOGGER.debug("Updating device: %s", device_id)
-        for update_callback in self._subscriptions[device_id]:
+        _LOGGER.debug("Updating device: %s (%s)", device.name, device.mac)
+        for update_callback in self._subscriptions[device.mac]:
             update_callback(device)
 
 

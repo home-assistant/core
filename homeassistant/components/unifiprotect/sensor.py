@@ -613,7 +613,10 @@ async def async_setup_entry(
             entities += _async_motion_entities(data, ufp_device=device)
         async_add_entities(entities)
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    unsub = async_dispatcher_connect(
+        hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device
+    )
+    data.async_dispatch_callback(unsub)
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,

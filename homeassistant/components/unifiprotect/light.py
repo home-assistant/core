@@ -42,7 +42,10 @@ async def async_setup_entry(
         ):
             async_add_entities([ProtectLight(data, device)])
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    unsub = async_dispatcher_connect(
+        hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device
+    )
+    data.async_dispatch_callback(unsub)
 
     entities = []
     for device in data.api.bootstrap.lights.values():
