@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 ATTRIBUTION = "Powered by ViaggiaTreno Data"
 
 VIAGGIATRENO_ENDPOINT = (
-    "http://www.viaggiatreno.it/viaggiatrenonew/"
+    "http://www.viaggiatreno.it/infomobilita/"
     "resteasy/viaggiatreno/andamentoTreno/"
     "{station_id}/{train_id}/{timestamp}"
 )

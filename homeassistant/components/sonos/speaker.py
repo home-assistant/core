@@ -883,9 +883,9 @@ class SonosSpeaker:
 
         for speaker in speakers:
             if speaker.soco.uid != self.soco.uid:
-                speaker.soco.join(self.soco)
-                speaker.coordinator = self
                 if speaker not in group:
+                    speaker.soco.join(self.soco)
+                    speaker.coordinator = self
                     group.append(speaker)
 
         return group
@@ -906,6 +906,8 @@ class SonosSpeaker:
     @soco_error()
     def unjoin(self) -> None:
         """Unjoin the player from a group."""
+        if self.sonos_group == [self]:
+            return
         self.soco.unjoin()
         self.coordinator = None
 

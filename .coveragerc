@@ -210,7 +210,6 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/cover.py
     homeassistant/components/devolo_home_control/light.py
     homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/switch.py
@@ -633,11 +632,9 @@ omit =
     homeassistant/components/launch_library/const.py
     homeassistant/components/launch_library/diagnostics.py
     homeassistant/components/launch_library/sensor.py
-    homeassistant/components/lcn/binary_sensor.py
     homeassistant/components/lcn/climate.py
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
-    homeassistant/components/lcn/sensor.py
     homeassistant/components/lcn/services.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
@@ -795,6 +792,7 @@ omit =
     homeassistant/components/netgear/router.py
     homeassistant/components/netgear/sensor.py
     homeassistant/components/netgear/switch.py
+    homeassistant/components/netgear/update.py
     homeassistant/components/netgear_lte/*
     homeassistant/components/netio/switch.py
     homeassistant/components/neurio_energy/sensor.py
@@ -1361,6 +1359,7 @@ omit =
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
+    homeassistant/components/velbus/button.py
     homeassistant/components/velbus/climate.py
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py

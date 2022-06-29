@@ -2,9 +2,11 @@
 import pytest
 
 from homeassistant.const import (
+    SPEED_FEET_PER_SECOND,
     SPEED_INCHES_PER_DAY,
     SPEED_INCHES_PER_HOUR,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     SPEED_MILLIMETERS_PER_DAY,
@@ -59,8 +61,12 @@ def test_convert_nonnumeric_value():
         (5, SPEED_INCHES_PER_HOUR, 3048, SPEED_MILLIMETERS_PER_DAY),
         # 5 m/s * 39.3701 in/m * 3600 s/hr = 708661
         (5, SPEED_METERS_PER_SECOND, 708661, SPEED_INCHES_PER_HOUR),
-        # 5000 in/hr / 39.3701 in/m / 3600 s/hr = 0.03528 m/s
+        # 5000 in/h / 39.3701 in/m / 3600 s/h = 0.03528 m/s
         (5000, SPEED_INCHES_PER_HOUR, 0.03528, SPEED_METERS_PER_SECOND),
+        # 5 kt * 1852 m/nmi / 3600 s/h = 2.5722 m/s
+        (5, SPEED_KNOTS, 2.5722, SPEED_METERS_PER_SECOND),
+        # 5 ft/s * 0.3048 m/ft = 1.524 m/s
+        (5, SPEED_FEET_PER_SECOND, 1.524, SPEED_METERS_PER_SECOND),
     ],
 )
 def test_convert_different_units(from_value, from_unit, expected, to_unit):

@@ -285,3 +285,21 @@ class P1MotionTriggerIndicatorSwitch(
     """Representation of a ZHA motion triggering configuration entity."""
 
     _zcl_attribute: str = "trigger_indicator"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
+)
+class ChildLock(ZHASwitchConfigurationEntity, id_suffix="child_lock"):
+    """ZHA BinarySensor."""
+
+    _zcl_attribute: str = "child_lock"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
+)
+class DisableLed(ZHASwitchConfigurationEntity, id_suffix="disable_led"):
+    """ZHA BinarySensor."""
+
+    _zcl_attribute: str = "disable_led"
