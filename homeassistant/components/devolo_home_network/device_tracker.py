@@ -11,11 +11,7 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    DATA_RATE_MEGABITS_PER_SECOND,
-    FREQUENCY_GIGAHERTZ,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import FREQUENCY_GIGAHERTZ, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -66,13 +62,18 @@ async def async_setup_entry(
     def restore_entities() -> None:
         """Restore clients that are not a part of active clients list."""
         missing = []
-        for entity in registry.entities.values():
-            mac_address = entity.unique_id.replace(f"{device.serial_number}_", "")
+        for entity in entity_registry.async_entries_for_config_entry(
+            registry, entry.entry_id
+        ):
             if (
-                entity.config_entry_id == entry.entry_id
-                and entity.platform == DOMAIN
+                entity.platform == DOMAIN
                 and entity.domain == DEVICE_TRACKER_DOMAIN
-                and mac_address not in tracked
+                and (
+                    mac_address := entity.unique_id.replace(
+                        f"{device.serial_number}_", ""
+                    )
+                )
+                not in tracked
             ):
                 missing.append(
                     DevoloScannerEntity(
@@ -106,28 +107,24 @@ class DevoloScannerEntity(CoordinatorEntity, ScannerEntity):
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the attributes."""
         attrs: dict[str, str] = {}
-        if self.coordinator.data[CONNECTED_STATIONS]:
-            station: dict[str, Any] = next(
-                (
-                    station
-                    for station in self.coordinator.data[CONNECTED_STATIONS]
-                    if station[MAC_ADDRESS] == self.mac_address
-                ),
-                {},
+        if not self.coordinator.data[CONNECTED_STATIONS]:
+            return {}
+
+        station: dict[str, Any] = next(
+            (
+                station
+                for station in self.coordinator.data[CONNECTED_STATIONS]
+                if station[MAC_ADDRESS] == self.mac_address
+            ),
+            {},
+        )
+        if station:
+            attrs["wifi"] = WIFI_APTYPE.get(station["vap_type"], STATE_UNKNOWN)
+            attrs["band"] = (
+                f"{WIFI_BANDS.get(station['band'])} {FREQUENCY_GIGAHERTZ}"
+                if WIFI_BANDS.get(station["band"])
+                else STATE_UNKNOWN
             )
-            if station:
-                attrs["wifi"] = WIFI_APTYPE.get(station["vap_type"], STATE_UNKNOWN)
-                attrs["band"] = (
-                    f"{WIFI_BANDS.get(station['band'])} {FREQUENCY_GIGAHERTZ}"
-                    if WIFI_BANDS.get(station["band"])
-                    else STATE_UNKNOWN
-                )
-                attrs[
-                    "rx_rate"
-                ] = f"{round(station['rx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
-                attrs[
-                    "tx_rate"
-                ] = f"{round(station['tx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
         return attrs
 
     @property

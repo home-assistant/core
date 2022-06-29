@@ -12,7 +12,6 @@ from homeassistant.components.devolo_home_network.const import (
     WIFI_BANDS,
 )
 from homeassistant.const import (
-    DATA_RATE_MEGABITS_PER_SECOND,
     FREQUENCY_GIGAHERTZ,
     STATE_HOME,
     STATE_NOT_HOME,
@@ -55,14 +54,6 @@ async def test_device_tracker(hass: HomeAssistant):
     assert (
         state.attributes["band"]
         == f"{WIFI_BANDS[STATION['band']]} {FREQUENCY_GIGAHERTZ}"
-    )
-    assert (
-        state.attributes["rx_rate"]
-        == f"{round(STATION['rx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
-    )
-    assert (
-        state.attributes["tx_rate"]
-        == f"{round(STATION['tx_rate']/1000)} {DATA_RATE_MEGABITS_PER_SECOND}"
     )
 
     # Emulate state change
