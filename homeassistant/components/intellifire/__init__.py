@@ -62,6 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         api_key = cloud_api.get_fireplace_api_key()
         user_id = cloud_api.get_user_id()
+        # Update data entry
+        hass.config_entries.async_update_entry(entry, data=entry.data)
 
     else:
         api_key = entry.data[CONF_API_KEY]
