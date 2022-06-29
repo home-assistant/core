@@ -111,7 +111,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
                     fireplace=self.coordinator.control_api.default_fireplace,
                 )
 
-        if hvac_mode == HVAC_MODE_OFF:
+        elif hvac_mode == HVAC_MODE_OFF:
             await self.coordinator.control_api.turn_off_thermostat(
                 fireplace=self.coordinator.control_api.default_fireplace
             )
