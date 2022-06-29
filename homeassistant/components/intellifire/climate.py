@@ -52,19 +52,18 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
     _attr_target_temperature_step = 1.0
     _attr_temperature_unit = TEMP_CELSIUS
+    last_temp = DEFAULT_THERMOSTAT_TEMP
 
     def __init__(
         self,
         coordinator: IntellifireDataUpdateCoordinator,
         description: ClimateEntityDescription,
     ) -> None:
-        """Configure climate entry specifically which setpoint to use for last_temp."""
+        """Configure climate entry - and override last_temp if the thermostat is currently on."""
         super().__init__(coordinator, description)
 
         if coordinator.data.thermostat_on:
             self.last_temp = coordinator.data.thermostat_setpoint_c
-        else:
-            self.last_temp = DEFAULT_THERMOSTAT_TEMP
 
     @property
     def hvac_mode(self) -> str:
