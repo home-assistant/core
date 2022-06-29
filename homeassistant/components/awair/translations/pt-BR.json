@@ -17,6 +17,13 @@
                 },
                 "description": "Insira novamente seu token de acesso de desenvolvedor Awair."
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Token de acesso",
+                    "email": "E-mail"
+                },
+                "description": "Insira novamente seu token de acesso de desenvolvedor Awair."
+            },
             "user": {
                 "data": {
                     "access_token": "Token de acesso",
