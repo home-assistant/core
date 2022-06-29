@@ -253,6 +253,7 @@ SENSOR_UTILIZATION = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:cpu-64-bit",
+        state_class=MEASUREMENT,
     ),
     NetgearSensorEntityDescription(
         key="NewMemoryUtilization",
@@ -260,6 +261,7 @@ SENSOR_UTILIZATION = [
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
+        state_class=MEASUREMENT,
     ),
 ]
 
