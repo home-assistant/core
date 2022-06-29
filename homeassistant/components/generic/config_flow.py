@@ -203,7 +203,7 @@ def slug(
         url = template.async_render(parse_result=False)
         return slugify(yarl.URL(url).host)
     except (ValueError, TemplateError, TypeError) as err:
-        _LOGGER.error("Syntax error in '%s': %s", url, err)
+        _LOGGER.error("Syntax error in '%s': %s", template, err)
     return None
 
 
