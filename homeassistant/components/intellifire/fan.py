@@ -83,9 +83,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     """This is Fan entity for the fireplace."""
 
     entity_description: IntellifireFanEntityDescription
-    _attr_supported_features: int = (
-        FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
-    )
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
 
     @property
     def is_on(self):
