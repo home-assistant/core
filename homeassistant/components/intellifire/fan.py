@@ -16,10 +16,7 @@ from homeassistant.components.fan import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.percentage import (
-    ordered_list_item_to_percentage,
-    percentage_to_ordered_list_item,
-)
+from homeassistant.util.percentage import ordered_list_item_to_percentage
 
 from .const import DOMAIN, LOGGER
 from .coordinator import IntellifireDataUpdateCoordinator
@@ -127,15 +124,6 @@ class IntellifireFan(IntellifireEntity, FanEntity):
             self.coordinator.read_api, self.entity_description.data_field, int_value
         )
         self.async_write_ha_state()
-        LOGGER.debug(
-            "Fan speed %s [%s%%] = %s: [%s]",
-            int_value,
-            int_value * 25,
-            self.entity_description.name,
-            percentage_to_ordered_list_item(
-                self.entity_description.named_speeds, int(int_value * percent_step)
-            ),
-        )
 
     async def async_turn_on(
         self,
