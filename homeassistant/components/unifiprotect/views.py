@@ -116,7 +116,7 @@ class ThumbnailProxyView(ProtectProxyView):
     """View to proxy event thumbnails from UniFi Protect."""
 
     url = "/api/ufp/thumbnail/{nvr_id}/{event_id}"
-    name = "api:ufp_thumbnail"
+    name = "api:unifiprotect_thumbnail"
 
     async def get(
         self, request: web.Request, nvr_id: str, event_id: str
@@ -157,8 +157,8 @@ class ThumbnailProxyView(ProtectProxyView):
 class VideoProxyView(ProtectProxyView):
     """View to proxy video clips from UniFi Protect."""
 
-    url = "/api/ufp/video/{nvr_id}/{camera_id}/{start}/{end}"
-    name = "api:ufp_thumbnail"
+    url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{start}/{end}"
+    name = "api:unifiprotect_thumbnail"
 
     async def get(
         self, request: web.Request, nvr_id: str, camera_id: str, start: str, end: str
