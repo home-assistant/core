@@ -11,60 +11,22 @@ from pytautulli import (
     PyTautulliApiSession,
     PyTautulliApiUser,
 )
-import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_MONITORED_CONDITIONS,
-    CONF_NAME,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_VERIFY_SSL,
-    DATA_KILOBITS,
-    PERCENTAGE,
-)
+from homeassistant.const import DATA_KILOBITS, PERCENTAGE
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory, EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
 from . import TautulliEntity
-from .const import (
-    ATTR_TOP_USER,
-    CONF_MONITORED_USERS,
-    DEFAULT_NAME,
-    DEFAULT_PATH,
-    DEFAULT_PORT,
-    DEFAULT_SSL,
-    DEFAULT_VERIFY_SSL,
-    DOMAIN,
-)
+from .const import ATTR_TOP_USER, DOMAIN
 from .coordinator import TautulliDataUpdateCoordinator
-
-# Deprecated in Home Assistant 2022.4
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_API_KEY): cv.string,
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_MONITORED_CONDITIONS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_MONITORED_USERS): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
-        vol.Optional(CONF_PATH, default=DEFAULT_PATH): cv.string,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
 
 
 def get_top_stats(
