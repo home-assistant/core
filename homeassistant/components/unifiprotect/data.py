@@ -4,10 +4,11 @@ from __future__ import annotations
 from collections.abc import Callable, Generator, Iterable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, Union
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
+    NVR,
     Bootstrap,
     Event,
     EventType,
@@ -27,7 +28,6 @@ from homeassistant.helpers.event import async_track_time_interval
 from .const import (
     CONF_DISABLE_RTSP,
     DEVICES_THAT_ADOPT,
-    DEVICES_WITH_ENTITIES,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
     DOMAIN,
@@ -39,6 +39,7 @@ from .utils import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+ProtectDeviceType = Union[ProtectAdoptableDeviceModel, NVR]
 
 
 @callback
@@ -68,7 +69,7 @@ class ProtectData:
         self._entry = entry
         self._hass = hass
         self._update_interval = update_interval
-        self._subscriptions: dict[str, list[Callable[[ProtectModelWithId], None]]] = {}
+        self._subscriptions: dict[str, list[Callable[[ProtectDeviceType], None]]] = {}
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
@@ -164,7 +165,7 @@ class ProtectData:
             return
 
         obj = message.new_obj
-        if obj.model in DEVICES_WITH_ENTITIES:
+        if isinstance(obj, (ProtectAdoptableDeviceModel, NVR)):
             self._async_signal_device_update(obj)
             if (
                 obj.model == ModelType.CAMERA
@@ -223,7 +224,7 @@ class ProtectData:
 
     @callback
     def async_subscribe_device_id(
-        self, mac: str, update_callback: Callable[[ProtectModelWithId], None]
+        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> CALLBACK_TYPE:
         """Add an callback subscriber."""
         if not self._subscriptions:
@@ -239,7 +240,7 @@ class ProtectData:
 
     @callback
     def async_unsubscribe_device_id(
-        self, mac: str, update_callback: Callable[[ProtectModelWithId], None]
+        self, mac: str, update_callback: Callable[[ProtectDeviceType], None]
     ) -> None:
         """Remove a callback subscriber."""
         self._subscriptions[mac].remove(update_callback)
@@ -250,7 +251,7 @@ class ProtectData:
             self._unsub_interval = None
 
     @callback
-    def _async_signal_device_update(self, device: ProtectModelWithId) -> None:
+    def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
 
         if not self._subscriptions.get(device.mac):
