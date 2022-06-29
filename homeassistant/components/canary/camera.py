@@ -133,11 +133,10 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             _LOGGER.debug("Grabbing a live view image from %s", self.name)
             await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
-            if self._live_stream_session is None:
+            if (live_stream_session := self._live_stream_session) is None:
                 return None
 
-            live_stream_url = self._live_stream_session.live_stream_url
-            if not live_stream_url:
+            if not (live_stream_url := live_stream_session.live_stream_url):
                 return None
 
             if self._image is None and live_stream_url:
