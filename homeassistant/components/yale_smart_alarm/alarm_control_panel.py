@@ -98,7 +98,7 @@ class YaleAlarmDevice(YaleAlarmEntity, AlarmControlPanelEntity):
         """Return True if alarm is available."""
         if STATE_MAP.get(self.coordinator.data["alarm"]) is None:
             return False
-        return super().available
+        return bool(self.coordinator.failure_count <= 10)
 
     @property
     def state(self) -> StateType:

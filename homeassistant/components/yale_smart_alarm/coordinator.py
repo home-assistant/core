@@ -23,6 +23,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
         """Initialize the Yale hub."""
         self.entry = entry
         self.yale: YaleSmartAlarmClient | None = None
+        self.failure_count: int = 0
         super().__init__(
             hass,
             LOGGER,
@@ -146,7 +147,10 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator):
         except AuthenticationError as error:
             raise ConfigEntryAuthFailed from error
         except YALE_BASE_ERRORS as error:
+            self.failure_count += 1
             raise UpdateFailed from error
+
+        self.failure_count = 0
 
         return {
             "arm_status": arm_status,

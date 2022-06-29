@@ -25,6 +25,11 @@ class YaleEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
             via_device=(DOMAIN, self.coordinator.entry.data[CONF_USERNAME]),
         )
 
+    @property
+    def available(self) -> bool:
+        """Return if entity is available."""
+        return bool(self.coordinator.failure_count <= 10)
+
 
 class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
     """Base implementation for Yale Alarm device."""
@@ -41,3 +46,8 @@ class YaleAlarmEntity(CoordinatorEntity[YaleDataUpdateCoordinator], Entity):
             connections={(CONNECTION_NETWORK_MAC, panel_info["mac"])},
             sw_version=panel_info["version"],
         )
+
+    @property
+    def available(self) -> bool:
+        """Return True if alarm is available."""
+        return bool(self.coordinator.failure_count <= 10)
