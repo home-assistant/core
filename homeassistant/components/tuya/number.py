@@ -146,7 +146,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             key=DPCode.COOK_TIME,
             name="Cook Time",
             icon="mdi:timer",
-            unit_of_measurement=TIME_MINUTES,
+            native_unit_of_measurement=TIME_MINUTES,
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
