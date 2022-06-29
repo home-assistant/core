@@ -76,7 +76,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
         client = await hass_client()
         preview_id = result1["flow_id"] + "_1"
         # Check the preview image works.
-        resp = await client.get(f"/api/camera_preview_proxy/{preview_id}")
+        resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
         assert resp.status == HTTPStatus.OK
         assert await resp.read() == fakeimgbytes_png
         result2 = await hass.config_entries.flow.async_configure(
@@ -100,7 +100,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
 
     await hass.async_block_till_done()
     # Check that the preview image is disabled after.
-    resp = await client.get(f"/api/camera_preview_proxy/{preview_id}")
+    resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
     assert resp.status == HTTPStatus.NOT_FOUND
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -181,7 +181,7 @@ async def test_form_still_preview_cam_off(
         preview_id = result1["flow_id"] + "_1"
         # Try to view the image, should be unavailable.
         client = await hass_client()
-        resp = await client.get(f"/api/camera_preview_proxy/{preview_id}")
+        resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
     assert resp.status == HTTPStatus.SERVICE_UNAVAILABLE
 
 

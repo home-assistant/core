@@ -327,7 +327,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     preview_id = f"{self.flow_id}_{self.preview_iterator}"
                     cam = GenericCamera(self.hass, user_input, preview_id, "preview")
                     self.temp_view = CameraImagePreView(self.hass, cam, preview_id)
-                    preview_url = f"/api/camera_preview_proxy/{preview_id}"
+                    preview_url = f"/api/generic/preview_flow/{preview_id}"
                     return self.async_show_form(
                         step_id="user_confirm_still",
                         data_schema=vol.Schema(
@@ -451,7 +451,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 class CameraImagePreView(CameraImageView):
     """Camera view to temporarily serve an image."""
 
-    name = "api:camera:imgepreview"
+    name = "api:generic:preview_flow_image"
     previews: dict[str, GenericCamera] = {}
     initialized = False
 
@@ -462,7 +462,7 @@ class CameraImagePreView(CameraImageView):
         self.preview_id = preview_id
         if not self.initialized:
             super().__init__(EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL))
-            self.url = "/api/camera_preview_proxy/{entity_id}"
+            self.url = "/api/generic/preview_flow_image/{entity_id}"
             hass.http.register_view(self)
 
         _LOGGER.debug("Adding temporary camera preview '%s'", preview_id)
