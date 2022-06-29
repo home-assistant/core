@@ -671,6 +671,15 @@ async def test_camera_with_linked_motion_sensor(hass, run_driver, events):
     await hass.async_block_till_done()
     assert len(broker.mock_calls) == 0
     broker.reset_mock()
+
+    hass.states.async_set(
+        motion_entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert len(broker.mock_calls) == 0
+    broker.reset_mock()
     # Ensure we do not throw when the linked
     # motion sensor is removed
     hass.states.async_remove(motion_entity_id)
@@ -796,6 +805,17 @@ async def test_camera_with_linked_doorbell_sensor(hass, run_driver, events):
         STATE_ON,
         {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.OCCUPANCY},
         force_update=True,
+    )
+    await hass.async_block_till_done()
+    assert char.value is None
+    assert char2.value is None
+    assert len(broker.mock_calls) == 0
+    broker.reset_mock()
+
+    hass.states.async_set(
+        doorbell_entity_id,
+        STATE_ON,
+        {ATTR_DEVICE_CLASS: BinarySensorDeviceClass.OCCUPANCY, "other": "attr"},
     )
     await hass.async_block_till_done()
     assert char.value is None
