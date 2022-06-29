@@ -833,6 +833,7 @@ def test_invalid_long_tuple(
     ):
         type_hint_checker.visit_classdef(class_node)
 
+
 def test_invalid_device_class(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:

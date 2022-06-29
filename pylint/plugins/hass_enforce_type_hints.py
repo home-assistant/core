@@ -505,7 +505,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_class",
-        return_type=["str", None],
+        return_type=[_Special.DEVICE_CLASS, "str", None],
         check_return_type_inheritance=True,
     ),
     TypeHintMatch(
@@ -1417,6 +1417,14 @@ def _is_valid_type(
     if expected_type is _Special.UNDEFINED:
         return True
 
+    if expected_type is _Special.DEVICE_CLASS and in_return:
+        return (
+            isinstance(node, nodes.Name)
+            and node.name.endswith("DeviceClass")
+            or isinstance(node, nodes.Attribute)
+            and node.attrname.endswith("DeviceClass")
+        )
+
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
             if _is_valid_type(expected_type_item, node, in_return):
@@ -1495,18 +1503,6 @@ def _is_valid_type(
     return isinstance(node, nodes.Attribute) and node.attrname == expected_type
 
 
-def _is_valid_inherited_return_type(return_type: str, node: nodes.Name) -> bool:
-    ancestor: nodes.ClassDef
-    for infer_node in node.infer():
-        if isinstance(infer_node, nodes.ClassDef):
-            if infer_node.name == return_type:
-                return True
-            for ancestor in infer_node.ancestors():
-                if ancestor.name == return_type:
-                    return True
-    return False
-
-
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
     if _is_valid_type(match.return_type, node, True):
         return True
@@ -1516,14 +1512,19 @@ def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
             match, node.right
         )
 
-    if match.check_return_type_inheritance and isinstance(node, nodes.Name):
-        if isinstance(match.return_type, str):
-            return _is_valid_inherited_return_type(match.return_type, node)
-        if isinstance(match.return_type, list):
-            for return_type in match.return_type:
-                if _is_valid_inherited_return_type(return_type, node):
+    if (
+        match.check_return_type_inheritance
+        and isinstance(match.return_type, str)
+        and isinstance(node, nodes.Name)
+    ):
+        ancestor: nodes.ClassDef
+        for infer_node in node.infer():
+            if isinstance(infer_node, nodes.ClassDef):
+                if infer_node.name == match.return_type:
                     return True
-            return False
+                for ancestor in infer_node.ancestors():
+                    if ancestor.name == match.return_type:
+                        return True
 
     return False
 
