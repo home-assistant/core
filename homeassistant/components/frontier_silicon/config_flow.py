@@ -52,6 +52,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._webfsapi_url: str | None = None
         self._name: str | None = None
+        self._unique_id: str | None = None
 
         # Only used in reauth flows:
         self._reauth_entry: config_entries.ConfigEntry | None = None
@@ -68,9 +69,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             return self.async_abort(reason="unknown")
 
-        # For manually added devices the unique_id is the webfsapi_url,
+        try:
+            afsapi = AFSAPI(self._webfsapi_url, import_info[CONF_PIN])
+
+            self._unique_id = await afsapi.get_radio_id()
+        except FSConnectionError:
+            return self.async_abort(reason="cannot_connect")
+        except InvalidPinException:
+            return self.async_abort(reason="invalid_auth")
+        except Exception as exception:  # pylint: disable=broad-except
+            _LOGGER.exception(exception)
+            return self.async_abort(reason="unknown")
+
+        # For manually added devices the unique_id is the radio_id,
         # for devices discovered through SSDP it is the UDN
-        await self.async_set_unique_id(self._webfsapi_url, raise_on_progress=False)
+        await self.async_set_unique_id(self._unique_id, raise_on_progress=False)
         self._abort_if_unique_id_configured()
 
         self._name = import_info[CONF_NAME] or "Radio"
@@ -98,12 +111,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             errors["base"] = "unknown"
         else:
-
-            # For manually added devices the unique_id is the webfsapi_url,
-            # for devices discovered through SSDP it is the UDN
-            await self.async_set_unique_id(self._webfsapi_url)
-            self._abort_if_unique_id_configured()
-
             return await self._async_step_device_config_if_needed()
 
         return self.async_show_form(
@@ -126,9 +133,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.exception(exception)
             return self.async_abort(reason="unknown")
 
-        # For manually added devices the unique_id is the webfsapi_url,
+        # For manually added devices the unique_id is the radio_id,
         # for devices discovered through SSDP it is the UDN
-        await self.async_set_unique_id(discovery_info.ssdp_udn)
+        self._unique_id = discovery_info.ssdp_udn
+        await self.async_set_unique_id(self._unique_id)
         self._abort_if_unique_id_configured(
             updates={CONF_WEBFSAPI_URL: self._webfsapi_url}, reload_on_update=True
         )
@@ -170,6 +178,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.context["title_placeholders"] = {"name": self._name}
 
+            # _unique_id will already be set when discovered through SSDP with the SSDP UDN,
+            # however, when adding a device manually, it will still be empty at this point.
+            # Now we have successfully logged in, we can check the radio_id of this device
+            if self._unique_id is None:
+                self._unique_id = await afsapi.get_radio_id()
+                await self.async_set_unique_id(self._unique_id)
+                self._abort_if_unique_id_configured()
+
             if show_confirm:
                 return await self.async_step_confirm()
 
@@ -210,6 +226,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             afsapi = AFSAPI(self._webfsapi_url, user_input[CONF_PIN])
 
             self._name = await afsapi.get_friendly_name()
+
+            # _unique_id will already be set when discovered through SSDP with the SSDP UDN,
+            # however, when adding a device manually, it will still be empty at this point.
+            # Now we have successfully logged in, we can check the radio_id of this device
+            if self._unique_id is None:
+                self._unique_id = await afsapi.get_radio_id()
+                await self.async_set_unique_id(self._unique_id)
+                self._abort_if_unique_id_configured()
+
         except FSConnectionError:
             errors["base"] = "cannot_connect"
         except InvalidPinException:
