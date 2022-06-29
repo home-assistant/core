@@ -8,6 +8,7 @@ from homeassistant.components.climate import (
     ClimateEntityDescription,
     ClimateEntityFeature,
 )
+from homeassistant.components.climate.const import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -44,7 +45,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
 
     entity_description: ClimateEntityDescription
 
-    _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
+    _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
     _attr_min_temp = 0
     _attr_max_temp = 37
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
