@@ -40,13 +40,14 @@ _LOGGER = logging.getLogger(__name__)
 
 IH_DEVICE_INTESISHOME = "IntesisHome"
 IH_DEVICE_AIRCONWITHME = "airconwithme"
+IH_DEVICE_ANYWAIR = "anywair"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
         vol.Optional(CONF_DEVICE, default=IH_DEVICE_INTESISHOME): vol.In(
-            [IH_DEVICE_AIRCONWITHME, IH_DEVICE_INTESISHOME]
+            [IH_DEVICE_AIRCONWITHME, IH_DEVICE_ANYWAIR, IH_DEVICE_INTESISHOME]
         ),
     }
 )
