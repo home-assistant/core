@@ -41,7 +41,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import API_DELAY, DOMAIN
+from .const import API_DELAY, CONSECUTIVE_FAILURE_THRESHOLD, DOMAIN
 
 FAN_ELECTRA_TO_HASS = {
     electra.OPER_FAN_SPEED_AUTO: FAN_AUTO,
@@ -94,7 +94,7 @@ async def async_setup_entry(
     api = hass.data[DOMAIN][entry.entry_id]
 
     devices = await get_devices(api)
-
+    _LOGGER.debug("Discovered %i Electra devices", len(devices))
     async_add_entities((ElectraClimate(device, api) for device in devices), True)
 
 
@@ -157,6 +157,9 @@ class ElectraClimate(ClimateEntity):
 
         # This attribute will be used to mark the time we communicated a command to the API
         self._last_state_update = 0
+        self._consecutive_failures = 0
+
+        _LOGGER.debug("Added %s Electra AC device", self._attr_name)
 
     async def async_update(self):
         """Update Electra device."""
@@ -180,15 +183,20 @@ class ElectraClimate(ClimateEntity):
                 self._electra_ac_device.__dict__,
             )
         except electra.ElectraApiError as exp:
-            _LOGGER.error(
-                "Failed to get %s state: %s, keeping old state",
+            self._consecutive_failures += 1
+            _LOGGER.warning(
+                "Failed to get %s state: %s (try #%i since last success), keeping old state",
                 self._electra_ac_device.name,
                 exp,
+                self._consecutive_failures,
             )
-            raise HomeAssistantError from electra.ElectraApiError
 
+            if self._consecutive_failures >= CONSECUTIVE_FAILURE_THRESHOLD:
+                raise HomeAssistantError(
+                    f"Failed to get {self._electra_ac_device.name} state: {exp} for the {self._consecutive_failures} time",
+                ) from electra.ElectraApiError
         else:
-
+            self._consecutive_failures = 0
             self._update_device_attrs()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -272,37 +280,32 @@ class ElectraClimate(ClimateEntity):
     async def _async_update_electra_ac_state(self) -> None:
         """Send HVAC parameters to API."""
 
-        # No need to communicate with the API as the AC is off,
-        # the change will be done once the AC is turned on
-        if self._electra_ac_device.is_on() or (
-            not self._electra_ac_device.is_on()
-            and self._attr_hvac_mode != HVAC_MODE_OFF
-        ):
-            try:
-                resp = await self._api.set_state(self._electra_ac_device)
-            except electra.ElectraApiError as exp:
-                err_message = f"Error communicating with API: {exp}"
-                if "client error" in err_message:
-                    err_message += ", Check your internet connection."
-                    raise HomeAssistantError(err_message) from electra.ElectraApiError
+        try:
+            resp = await self._api.set_state(self._electra_ac_device)
+        except electra.ElectraApiError as exp:
+            err_message = f"Error communicating with API: {exp}"
+            if "client error" in err_message:
+                err_message += ", Check your internet connection."
+                raise HomeAssistantError(err_message) from electra.ElectraApiError
 
-                if electra.INTRUDER_LOCKOUT in err_message:
-                    err_message += (
-                        ", You must re-authenticate by adding the integration again"
-                    )
-                    raise ConfigEntryAuthFailed(
-                        err_message
-                    ) from electra.ElectraApiError
-            else:
-                if not (
-                    resp[electra.ATTR_STATUS] == electra.STATUS_SUCCESS
-                    and resp[electra.ATTR_DATA][electra.ATTR_RES]
-                    == electra.STATUS_SUCCESS
-                ):
-                    raise HomeAssistantError(
-                        f"Failed to update {self._attr_name}, error: {resp}"
-                    )
+            if electra.INTRUDER_LOCKOUT in err_message:
+                err_message += (
+                    ", You must re-authenticate by adding the integration again"
+                )
+                raise ConfigEntryAuthFailed(err_message) from electra.ElectraApiError
 
-                self._update_device_attrs()
-                self._last_state_update = int(time.time())
+            self._async_write_ha_state()
+
+        else:
+            if not (
+                resp[electra.ATTR_STATUS] == electra.STATUS_SUCCESS
+                and resp[electra.ATTR_DATA][electra.ATTR_RES] == electra.STATUS_SUCCESS
+            ):
                 self._async_write_ha_state()
+                raise HomeAssistantError(
+                    f"Failed to update {self._attr_name}, error: {resp}"
+                )
+
+            self._update_device_attrs()
+            self._last_state_update = int(time.time())
+            self._async_write_ha_state()
