@@ -1,8 +1,8 @@
 """Support for BSH Home Connect appliances."""
+from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Optional
 
 from requests import HTTPError
 import voluptuous as vol
@@ -105,7 +105,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.S
 
 def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
-) -> Optional[api.HomeConnectDevice]:
+) -> api.HomeConnectDevice | None:
     """Return a Home Connect appliance instance given an device_id."""
     for hc in hass.data[DOMAIN].values():
         for dev_dict in hc.devices:
