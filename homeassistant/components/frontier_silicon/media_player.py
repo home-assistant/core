@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -32,7 +33,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import DEFAULT_PIN, DEFAULT_PORT, DOMAIN
 
@@ -48,42 +48,16 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Frontier Silicon platform."""
-    if discovery_info is not None:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            discovery_info["ssdp_description"]
-        )
-        afsapi = AFSAPI(webfsapi_url, DEFAULT_PIN)
+    """Set up the Frontier Silicon entity."""
 
-        name = await afsapi.get_friendly_name()
-        async_add_entities(
-            [AFSAPIDevice(name, afsapi)],
-            True,
-        )
-        return
+    afsapi = hass.data[DOMAIN][config_entry.entry_id]  # type: AFSAPI
 
-    host = config.get(CONF_HOST)
-    port = config.get(CONF_PORT)
-    password = config.get(CONF_PASSWORD)
-    name = config.get(CONF_NAME)
-
-    try:
-        webfsapi_url = await AFSAPI.get_webfsapi_endpoint(
-            f"http://{host}:{port}/device"
-        )
-    except FSConnectionError:
-        _LOGGER.error(
-            "Could not add the FSAPI device at %s:%s -> %s", host, port, password
-        )
-        return
-    afsapi = AFSAPI(webfsapi_url, password)
-    async_add_entities([AFSAPIDevice(name, afsapi)], True)
+    async_add_entities([AFSAPIDevice(config_entry, afsapi)], True)
 
 
 class AFSAPIDevice(MediaPlayerEntity):
@@ -108,15 +82,15 @@ class AFSAPIDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
-    def __init__(self, name: str | None, afsapi: AFSAPI) -> None:
+    def __init__(self, config_entry: ConfigEntry, afsapi: AFSAPI) -> None:
         """Initialize the Frontier Silicon API device."""
         self.fs_device = afsapi
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, afsapi.webfsapi_endpoint)},
-            name=name,
+            name=config_entry.title,
         )
-        self._attr_name = name
+        self._attr_name = config_entry.title
 
         self._max_volume: int | None = None
 
