@@ -223,7 +223,7 @@ async def async_test_stream(
         stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
 
     url = yarl.URL(stream_source)
-    if not url.user and not url.password:
+    if not url.user and not url.password and url.is_absolute():
         username = info.get(CONF_USERNAME)
         password = info.get(CONF_PASSWORD)
         if username and password:
