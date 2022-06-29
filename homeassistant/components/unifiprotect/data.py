@@ -15,7 +15,6 @@ from pyunifiprotect.data import (
     Liveview,
     ModelType,
     ProtectAdoptableDeviceModel,
-    ProtectModelWithId,
     WSSubscriptionMessage,
 )
 from pyunifiprotect.exceptions import ClientError, NotAuthorized
@@ -73,7 +72,6 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsub_interval: CALLBACK_TYPE | None = None
         self._unsub_websocket: CALLBACK_TYPE | None = None
-        self._dispatch_subscriptions: list[CALLBACK_TYPE] = []
 
         self.last_update_success = False
         self.api = protect
@@ -101,11 +99,6 @@ class ProtectData:
 
     async def async_stop(self, *args: Any) -> None:
         """Stop processing data."""
-
-        for unsub in self._dispatch_subscriptions:
-            unsub()
-        self._dispatch_subscriptions = []
-
         if self._unsub_websocket:
             self._unsub_websocket()
             self._unsub_websocket = None
@@ -149,12 +142,6 @@ class ProtectData:
         """
 
         self._pending_camera_ids.add(camera_id)
-
-    @callback
-    def async_dispatch_callback(self, unsub: CALLBACK_TYPE) -> None:
-        """Add unsub dispatch to be called when integration is unloaded."""
-
-        self._dispatch_subscriptions.append(unsub)
 
     @callback
     def _async_process_ws_message(self, message: WSSubscriptionMessage) -> None:

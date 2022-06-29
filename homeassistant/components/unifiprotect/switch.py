@@ -318,10 +318,9 @@ async def async_setup_entry(
         )
         async_add_entities(entities)
 
-    unsub = async_dispatcher_connect(
-        hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
     )
-    data.async_dispatch_callback(unsub)
 
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
