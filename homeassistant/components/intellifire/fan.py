@@ -28,7 +28,7 @@ from .entity import IntellifireEntity
 
 @dataclass
 class IntellifireFanRequiredKeysMixin:
-    """REquired keys for fan entity."""
+    """Required keys for fan entity."""
 
     set_fn: Callable[[IntellifireControlAsync, int], Awaitable]
     value_fn: Callable[[IntellifirePollData], bool]
@@ -75,6 +75,8 @@ async def async_setup_entry(
             IntellifireFan(coordinator=coordinator, description=description)
             for description in INTELLIFIRE_FANS
         )
+    else:
+        LOGGER.info("Disabling Fan - IntelliFire device does not appear to have one")
 
 
 class IntellifireFan(IntellifireEntity, FanEntity):
@@ -156,14 +158,3 @@ class IntellifireFan(IntellifireEntity, FanEntity):
         LOGGER.debug("Off [ Set Function   ] - Turn Off Fan")
         await self.entity_description.set_fn(self.coordinator.control_api, 0)
         await self.async_update_ha_state(force_refresh=True)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Enable entity if configured with a thermostat."""
-        enabled = bool(self.coordinator.data.has_fan)
-
-        if not enabled:
-            LOGGER.info(
-                "Disabling Fan - IntelliFire device does not appear to have one"
-            )
-        return enabled
