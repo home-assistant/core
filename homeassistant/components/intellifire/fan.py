@@ -75,8 +75,8 @@ async def async_setup_entry(
             IntellifireFan(coordinator=coordinator, description=description)
             for description in INTELLIFIRE_FANS
         )
-    else:
-        LOGGER.info("Disabling Fan - IntelliFire device does not appear to have one")
+        return
+    LOGGER.info("Disabling Fan - IntelliFire device does not appear to have one")
 
 
 class IntellifireFan(IntellifireEntity, FanEntity):
@@ -119,7 +119,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         # Calculate percentage steps
-        LOGGER.debug("--Setting Fan Speed %s", percentage)
+        LOGGER.debug("Setting Fan Speed %s", percentage)
         percent_step = 100.0 / len(self.entity_description.named_speeds)
         int_value = int(math.ceil(float(percentage) / percent_step))
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
