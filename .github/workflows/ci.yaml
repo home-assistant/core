@@ -20,8 +20,8 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 9
-  PIP_CACHE_VERSION: 3
+  CACHE_VERSION: 10
+  PIP_CACHE_VERSION: 4
   HA_SHORT_VERSION: 2022.7
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
@@ -796,14 +796,14 @@ jobs:
             --dist=loadfile \
             --test-group-count ${{ needs.changes.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
-            --cov homeassistant \
+            --cov="homeassistant" \
             --cov-report=xml \
             -o console_output_style=count \
             -p no:sugar \
             tests
       - name: Run pytest (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
-        timeout-minutes: 10
+        timeout-minutes: 20
         shell: bash
         run: |
           . venv/bin/activate
@@ -819,7 +819,7 @@ jobs:
             --timeout=9 \
             --durations=10 \
             -n auto \
-            --cov homeassistant.components.${{ matrix.group }} \
+            --cov="homeassistant.components.${{ matrix.group }}" \
             --cov-report=xml \
             --cov-report=term-missing \
             -o console_output_style=count \

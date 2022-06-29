@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from pyunifiprotect.data import Camera, ProtectModelWithId
+from pyunifiprotect.data import Camera, ProtectAdoptableDeviceModel, ProtectModelWithId
 from pyunifiprotect.exceptions import StreamError
 
 from homeassistant.components import media_source
@@ -23,11 +23,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,12 +42,23 @@ async def async_setup_entry(
     """Discover cameras with speakers on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        if not device.is_adopted_by_us:
+            return
+
+        if isinstance(device, Camera) and device.feature_flags.has_speaker:
+            async_add_entities([ProtectMediaPlayer(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities = []
     for device in data.api.bootstrap.cameras.values():
-        if not device.is_adopted_by_us or not device.feature_flags.has_speaker:
+        if not device.is_adopted_by_us:
             continue
-
-        entities.append(ProtectMediaPlayer(data, device))
+        if device.feature_flags.has_speaker:
+            entities.append(ProtectMediaPlayer(data, device))
 
     async_add_entities(entities)
 

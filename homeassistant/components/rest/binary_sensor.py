@@ -11,18 +11,20 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
-    CONF_NAME,
     CONF_RESOURCE,
     CONF_RESOURCE_TEMPLATE,
+    CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.template_entity import TemplateEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import async_get_config_and_coordinator, create_rest_data_from_config
+from .const import DEFAULT_BINARY_SENSOR_NAME
 from .entity import RestEntity
 from .schema import BINARY_SENSOR_SCHEMA, RESOURCE_SCHEMA
 
@@ -57,51 +59,55 @@ async def async_setup_platform(
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
-    name = conf.get(CONF_NAME)
-    device_class = conf.get(CONF_DEVICE_CLASS)
-    value_template = conf.get(CONF_VALUE_TEMPLATE)
-    force_update = conf.get(CONF_FORCE_UPDATE)
-    resource_template = conf.get(CONF_RESOURCE_TEMPLATE)
-
-    if value_template is not None:
-        value_template.hass = hass
+    unique_id = conf.get(CONF_UNIQUE_ID)
 
     async_add_entities(
         [
             RestBinarySensor(
+                hass,
                 coordinator,
                 rest,
-                name,
-                device_class,
-                value_template,
-                force_update,
-                resource_template,
+                conf,
+                unique_id,
             )
         ],
     )
 
 
-class RestBinarySensor(RestEntity, BinarySensorEntity):
+class RestBinarySensor(RestEntity, TemplateEntity, BinarySensorEntity):
     """Representation of a REST binary sensor."""
 
     def __init__(
         self,
+        hass,
         coordinator,
         rest,
-        name,
-        device_class,
-        value_template,
-        force_update,
-        resource_template,
+        config,
+        unique_id,
     ):
         """Initialize a REST binary sensor."""
-        super().__init__(coordinator, rest, name, resource_template, force_update)
+        RestEntity.__init__(
+            self,
+            coordinator,
+            rest,
+            config.get(CONF_RESOURCE_TEMPLATE),
+            config.get(CONF_FORCE_UPDATE),
+        )
+        TemplateEntity.__init__(
+            self,
+            hass,
+            config=config,
+            fallback_name=DEFAULT_BINARY_SENSOR_NAME,
+            unique_id=unique_id,
+        )
         self._state = False
         self._previous_data = None
-        self._value_template = value_template
+        self._value_template = config.get(CONF_VALUE_TEMPLATE)
+        if (value_template := self._value_template) is not None:
+            value_template.hass = hass
         self._is_on = None
 
-        self._attr_device_class = device_class
+        self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
     @property
     def is_on(self):

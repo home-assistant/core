@@ -633,11 +633,9 @@ omit =
     homeassistant/components/launch_library/const.py
     homeassistant/components/launch_library/diagnostics.py
     homeassistant/components/launch_library/sensor.py
-    homeassistant/components/lcn/binary_sensor.py
     homeassistant/components/lcn/climate.py
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
-    homeassistant/components/lcn/sensor.py
     homeassistant/components/lcn/services.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
@@ -1065,6 +1063,7 @@ omit =
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/sigfox/sensor.py
+    homeassistant/components/simplepush/__init__.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
@@ -1360,6 +1359,7 @@ omit =
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
+    homeassistant/components/velbus/button.py
     homeassistant/components/velbus/climate.py
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py

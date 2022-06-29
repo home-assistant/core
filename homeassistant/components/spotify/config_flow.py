@@ -1,6 +1,7 @@
 """Config flow for Spotify."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -56,7 +57,7 @@ class SpotifyFlowHandler(
 
         return self.async_create_entry(title=name, data=data)
 
-    async def async_step_reauth(self, entry: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon migration of old entries."""
         self.reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

@@ -135,7 +135,7 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
         else:
             raise UnsupportedPreset(f"The preset {preset_mode} is unsupported")
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self._device.send_command(COMMAND_STOP_FAN)
         self.coordinator.async_set_updated_data(self._device.state)

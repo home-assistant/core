@@ -473,10 +473,6 @@ def stream_worker(
         audio_stream = None
     if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None
-    # These formats need aac_adtstoasc bitstream filter, but auto_bsf not
-    # compatible with empty_moov and manual bitstream filters not in PyAV
-    if container.format.name in {"hls", "mpegts"}:
-        audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
         audio_stream = None

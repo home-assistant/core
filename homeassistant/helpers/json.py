@@ -35,6 +35,8 @@ def json_encoder_default(obj: Any) -> Any:
     """
     if isinstance(obj, set):
         return list(obj)
+    if isinstance(obj, float):
+        return float(obj)
     if hasattr(obj, "as_dict"):
         return obj.as_dict()
     if isinstance(obj, Path):
@@ -84,6 +86,15 @@ def json_dumps(data: Any) -> str:
     """
     return orjson.dumps(
         data, option=orjson.OPT_NON_STR_KEYS, default=json_encoder_default
+    ).decode("utf-8")
+
+
+def json_dumps_sorted(data: Any) -> str:
+    """Dump json string with keys sorted."""
+    return orjson.dumps(
+        data,
+        option=orjson.OPT_NON_STR_KEYS | orjson.OPT_SORT_KEYS,
+        default=json_encoder_default,
     ).decode("utf-8")
 
 

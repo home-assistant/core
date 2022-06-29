@@ -29,11 +29,16 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_WIND_SPEED,
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_OZONE,
+    ATTR_WEATHER_PRECIPITATION_UNIT,
     ATTR_WEATHER_PRESSURE,
+    ATTR_WEATHER_PRESSURE_UNIT,
     ATTR_WEATHER_TEMPERATURE,
+    ATTR_WEATHER_TEMPERATURE_UNIT,
     ATTR_WEATHER_VISIBILITY,
+    ATTR_WEATHER_VISIBILITY_UNIT,
     ATTR_WEATHER_WIND_BEARING,
     ATTR_WEATHER_WIND_SPEED,
+    ATTR_WEATHER_WIND_SPEED_UNIT,
     DOMAIN as WEATHER_DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -99,13 +104,18 @@ async def test_v4_weather(hass: HomeAssistant) -> None:
         ATTR_FORECAST_TEMP: 45.9,
         ATTR_FORECAST_TEMP_LOW: 26.1,
         ATTR_FORECAST_WIND_BEARING: 239.6,
-        ATTR_FORECAST_WIND_SPEED: 9.49,
+        ATTR_FORECAST_WIND_SPEED: 34.16,  # 9.49 m/s -> km/h
     }
     assert weather_state.attributes[ATTR_FRIENDLY_NAME] == "Tomorrow.io - Daily"
     assert weather_state.attributes[ATTR_WEATHER_HUMIDITY] == 23
     assert weather_state.attributes[ATTR_WEATHER_OZONE] == 46.53
-    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 3035.0
+    assert weather_state.attributes[ATTR_WEATHER_PRECIPITATION_UNIT] == "mm"
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE] == 30.35
+    assert weather_state.attributes[ATTR_WEATHER_PRESSURE_UNIT] == "hPa"
     assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE] == 44.1
+    assert weather_state.attributes[ATTR_WEATHER_TEMPERATURE_UNIT] == "°C"
     assert weather_state.attributes[ATTR_WEATHER_VISIBILITY] == 8.15
+    assert weather_state.attributes[ATTR_WEATHER_VISIBILITY_UNIT] == "km"
     assert weather_state.attributes[ATTR_WEATHER_WIND_BEARING] == 315.14
-    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 9.33
+    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED] == 33.59  # 9.33 m/s ->km/h
+    assert weather_state.attributes[ATTR_WEATHER_WIND_SPEED_UNIT] == "km/h"

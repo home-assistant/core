@@ -9,6 +9,7 @@ from datetime import timedelta
 import logging
 import time
 from typing import Any, NamedTuple, cast
+from xml.parsers.expat import ExpatError
 
 from huawei_lte_api.Client import Client
 from huawei_lte_api.Connection import Connection
@@ -204,14 +205,13 @@ class Router:
                 "%s requires authorization, excluding from future updates", key
             )
             self.subscriptions.pop(key)
-        except ResponseErrorException as exc:
+        except (ResponseErrorException, ExpatError) as exc:
+            # Take ResponseErrorNotSupportedException, ExpatError, and generic
+            # ResponseErrorException with a few select codes to mean the endpoint is
+            # not supported.
             if not isinstance(
-                exc, ResponseErrorNotSupportedException
-            ) and exc.code not in (
-                # additional codes treated as unusupported
-                -1,
-                100006,
-            ):
+                exc, (ResponseErrorNotSupportedException, ExpatError)
+            ) and exc.code not in (-1, 100006):
                 raise
             _LOGGER.info(
                 "%s apparently not supported by device, excluding from future updates",

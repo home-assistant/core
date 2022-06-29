@@ -38,12 +38,16 @@ def _async_device_entities(
     klass: type[ProtectDeviceEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     if len(descs) == 0:
         return []
 
     entities: list[ProtectDeviceEntity] = []
-    for device in data.get_by_types({model_type}):
+    devices = (
+        [ufp_device] if ufp_device is not None else data.get_by_types({model_type})
+    )
+    for device in devices:
         if not device.is_adopted_by_us:
             continue
 
@@ -89,6 +93,7 @@ def async_all_device_entities(
     lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
     all_descs = list(all_descs or [])
@@ -99,14 +104,33 @@ def async_all_device_entities(
     lock_descs = list(lock_descs or []) + all_descs
     chime_descs = list(chime_descs or []) + all_descs
 
-    return (
-        _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
-        + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
-        + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
-        + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
-        + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
-        + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
-    )
+    if ufp_device is None:
+        return (
+            _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
+            + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
+            + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
+            + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
+            + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
+            + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
+        )
+
+    descs = []
+    if ufp_device.model == ModelType.CAMERA:
+        descs = camera_descs
+    elif ufp_device.model == ModelType.LIGHT:
+        descs = light_descs
+    elif ufp_device.model == ModelType.SENSOR:
+        descs = sense_descs
+    elif ufp_device.model == ModelType.VIEWPORT:
+        descs = viewer_descs
+    elif ufp_device.model == ModelType.DOORLOCK:
+        descs = lock_descs
+    elif ufp_device.model == ModelType.CHIME:
+        descs = chime_descs
+
+    if len(descs) == 0 or ufp_device.model is None:
+        return []
+    return _async_device_entities(data, klass, ufp_device.model, descs, ufp_device)
 
 
 class ProtectDeviceEntity(Entity):
@@ -191,7 +215,7 @@ class ProtectDeviceEntity(Entity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_device_id(
-                self.device.id, self._async_updated_event
+                self.device.mac, self._async_updated_event
             )
         )
 

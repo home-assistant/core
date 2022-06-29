@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "A fi\u00f3k m\u00e1r konfigur\u00e1lva van",
             "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
+            "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "code_expired": "A hiteles\u00edt\u00e9si k\u00f3d lej\u00e1rt vagy a hiteles\u00edt\u0151 adatok be\u00e1ll\u00edt\u00e1sa \u00e9rv\u00e9nytelen, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra.",
             "invalid_access_token": "\u00c9rv\u00e9nytelen hozz\u00e1f\u00e9r\u00e9si token",
             "missing_configuration": "A komponens nincs konfigur\u00e1lva. K\u00e9rem, k\u00f6vesse a dokument\u00e1ci\u00f3t.",

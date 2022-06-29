@@ -22,6 +22,7 @@ from sqlalchemy.engine.row import Row
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
 from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
@@ -165,9 +166,9 @@ def execute(
     assert False  # unreachable # pragma: no cover
 
 
-def execute_stmt(
+def execute_stmt_lambda_element(
     session: Session,
-    query: Query,
+    stmt: StatementLambdaElement,
     start_time: datetime | None = None,
     end_time: datetime | None = None,
     yield_per: int | None = DEFAULT_YIELD_STATES_ROWS,
@@ -183,12 +184,11 @@ def execute_stmt(
     specific entities) since they are usually faster
     with .all().
     """
+    executed = session.execute(stmt)
     use_all = not start_time or ((end_time or dt_util.utcnow()) - start_time).days <= 1
     for tryno in range(0, RETRIES):
         try:
-            if use_all:
-                return session.execute(query).all()  # type: ignore[no-any-return]
-            return session.execute(query).yield_per(yield_per)  # type: ignore[no-any-return]
+            return executed.all() if use_all else executed.yield_per(yield_per)  # type: ignore[no-any-return]
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
             if tryno == RETRIES - 1:
