@@ -191,7 +191,7 @@ def async_host_input_received(
 def _async_fire_access_control_event(
     hass: HomeAssistant, device: dr.DeviceEntry, address: AddressType, inp: InputType
 ) -> None:
-    """Fire access control event (transponder, transmitter, fingerprint)."""
+    """Fire access control event (transponder, transmitter, fingerprint, codelock)."""
     event_data = {
         "segment_id": address[0],
         "module_id": address[1],

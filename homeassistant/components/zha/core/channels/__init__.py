@@ -221,7 +221,7 @@ class ChannelPool:
         return self._channels.zha_device.is_mains_powered
 
     @property
-    def manufacturer(self) -> str | None:
+    def manufacturer(self) -> str:
         """Return device manufacturer."""
         return self._channels.zha_device.manufacturer
 
@@ -236,7 +236,7 @@ class ChannelPool:
         return self._channels.zha_device.hass
 
     @property
-    def model(self) -> str | None:
+    def model(self) -> str:
         """Return device model."""
         return self._channels.zha_device.model
 
@@ -370,7 +370,7 @@ class ChannelPool:
         return [self.all_channels[chan_id] for chan_id in (available - claimed)]
 
     @callback
-    def zha_send_event(self, event_data: dict[str, str | int]) -> None:
+    def zha_send_event(self, event_data: dict[str, Any]) -> None:
         """Relay events to hass."""
         self._channels.zha_send_event(
             {

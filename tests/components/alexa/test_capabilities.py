@@ -846,6 +846,57 @@ async def test_report_image_processing(hass):
     )
 
 
+@pytest.mark.parametrize("domain", ["button", "input_button"])
+async def test_report_button_pressed(hass, domain):
+    """Test button presses report human presence detection events to trigger routines."""
+    hass.states.async_set(
+        f"{domain}.test_button", "now", {"friendly_name": "Test button"}
+    )
+
+    properties = await reported_properties(hass, f"{domain}#test_button")
+    properties.assert_equal(
+        "Alexa.EventDetectionSensor",
+        "humanPresenceDetectionState",
+        {"value": "DETECTED"},
+    )
+
+
+@pytest.mark.parametrize("domain", ["switch", "input_boolean"])
+async def test_toggle_entities_report_contact_events(hass, domain):
+    """Test toggles and switches report contact sensor events to trigger routines."""
+    hass.states.async_set(
+        f"{domain}.test_toggle", "on", {"friendly_name": "Test toggle"}
+    )
+
+    properties = await reported_properties(hass, f"{domain}#test_toggle")
+    properties.assert_equal(
+        "Alexa.PowerController",
+        "powerState",
+        "ON",
+    )
+    properties.assert_equal(
+        "Alexa.ContactSensor",
+        "detectionState",
+        "DETECTED",
+    )
+
+    hass.states.async_set(
+        f"{domain}.test_toggle", "off", {"friendly_name": "Test toggle"}
+    )
+
+    properties = await reported_properties(hass, f"{domain}#test_toggle")
+    properties.assert_equal(
+        "Alexa.PowerController",
+        "powerState",
+        "OFF",
+    )
+    properties.assert_equal(
+        "Alexa.ContactSensor",
+        "detectionState",
+        "NOT_DETECTED",
+    )
+
+
 async def test_get_property_blowup(hass, caplog):
     """Test we handle a property blowing up."""
     hass.states.async_set(

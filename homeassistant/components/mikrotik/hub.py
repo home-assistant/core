@@ -9,7 +9,7 @@ from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import slugify
 import homeassistant.util.dt as dt_util
 
@@ -25,13 +25,13 @@ from .const import (
     CONF_FORCE_DHCP,
     DEFAULT_DETECTION_TIME,
     DHCP,
+    DOMAIN,
     IDENTITY,
     INFO,
     IS_CAPSMAN,
     IS_WIRELESS,
     MIKROTIK_SERVICES,
     NAME,
-    PLATFORMS,
     WIRELESS,
 )
 from .errors import CannotConnect, LoginError
@@ -154,10 +154,8 @@ class MikrotikData:
         """Connect to hub."""
         try:
             self.api = get_api(self.hass, self.config_entry.data)
-            self.available = True
             return True
         except (LoginError, CannotConnect):
-            self.available = False
             return False
 
     def get_list_from_interface(self, interface):
@@ -194,9 +192,8 @@ class MikrotikData:
             # get new hub firmware version if updated
             self.firmware = self.get_info(ATTR_FIRMWARE)
 
-        except (CannotConnect, socket.timeout, OSError):
-            self.available = False
-            return
+        except (CannotConnect, socket.timeout, OSError) as err:
+            raise UpdateFailed from err
 
         if not device_list:
             return
@@ -263,7 +260,8 @@ class MikrotikData:
             socket.timeout,
         ) as api_error:
             _LOGGER.error("Mikrotik %s connection error %s", self._host, api_error)
-            raise CannotConnect from api_error
+            if not self.connect_to_hub():
+                raise CannotConnect from api_error
         except librouteros.exceptions.ProtocolError as api_error:
             _LOGGER.warning(
                 "Mikrotik %s failed to retrieve data. cmd=[%s] Error: %s",
@@ -275,15 +273,8 @@ class MikrotikData:
 
         return response if response else None
 
-    def update(self):
-        """Update device_tracker from Mikrotik API."""
-        if (not self.available or not self.api) and not self.connect_to_hub():
-            return
-        _LOGGER.debug("updating network devices for host: %s", self._host)
-        self.update_devices()
 
-
-class MikrotikHub:
+class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
     """Mikrotik Hub Object."""
 
     def __init__(self, hass, config_entry):
@@ -291,7 +282,13 @@ class MikrotikHub:
         self.hass = hass
         self.config_entry = config_entry
         self._mk_data = None
-        self.progress = None
+        super().__init__(
+            self.hass,
+            _LOGGER,
+            name=f"{DOMAIN} - {self.host}",
+            update_method=self.async_update,
+            update_interval=timedelta(seconds=10),
+        )
 
     @property
     def host(self):
@@ -329,11 +326,6 @@ class MikrotikHub:
         return timedelta(seconds=self.config_entry.options[CONF_DETECTION_TIME])
 
     @property
-    def signal_update(self):
-        """Event specific per Mikrotik entry to signal updates."""
-        return f"mikrotik-update-{self.host}"
-
-    @property
     def api(self):
         """Represent Mikrotik data object."""
         return self._mk_data
@@ -354,21 +346,9 @@ class MikrotikHub:
                 self.config_entry, data=data, options=options
             )
 
-    async def request_update(self):
-        """Request an update."""
-        if self.progress is not None:
-            await self.progress
-            return
-
-        self.progress = self.hass.async_create_task(self.async_update())
-        await self.progress
-
-        self.progress = None
-
     async def async_update(self):
         """Update Mikrotik devices information."""
-        await self.hass.async_add_executor_job(self._mk_data.update)
-        async_dispatcher_send(self.hass, self.signal_update)
+        await self.hass.async_add_executor_job(self._mk_data.update_devices)
 
     async def async_setup(self):
         """Set up the Mikrotik hub."""
@@ -384,9 +364,7 @@ class MikrotikHub:
         self._mk_data = MikrotikData(self.hass, self.config_entry, api)
         await self.async_add_options()
         await self.hass.async_add_executor_job(self._mk_data.get_hub_details)
-        await self.hass.async_add_executor_job(self._mk_data.update)
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
         return True
 
 

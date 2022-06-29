@@ -8,7 +8,6 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
-import os
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -163,7 +162,7 @@ class ZHAGateway:
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
             CONF_DATABASE,
-            os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
+            self._hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
@@ -333,7 +332,7 @@ class ZHAGateway:
     def group_removed(self, zigpy_group: zigpy.group.Group) -> None:
         """Handle zigpy group removed event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
-        zha_group = self._groups.pop(zigpy_group.group_id, None)
+        zha_group = self._groups.pop(zigpy_group.group_id)
         zha_group.info("group_removed")
         self._cleanup_group_entity_registry_entries(zigpy_group)
 
@@ -428,6 +427,7 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
+        assert self.coordinator_zha_device
         all_group_entity_entries = er.async_entries_for_device(
             self.ha_entity_registry,
             self.coordinator_zha_device.device_id,
@@ -687,7 +687,7 @@ class ZHAGateway:
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         for unsubscribe in self._unsubs:
             unsubscribe()
-        await self.application_controller.pre_shutdown()
+        await self.application_controller.shutdown()
 
     def handle_message(
         self,

@@ -189,12 +189,12 @@ class MqttLock(MqttEntity, LockEntity):
         return self._state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in self._config else 0
 

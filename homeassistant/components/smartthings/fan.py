@@ -78,7 +78,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         """Turn the fan on."""
         await self._async_set_percentage(percentage)
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._device.switch_off(set_status=True)
         # State is set optimistically in the command above, therefore update
