@@ -1,4 +1,6 @@
 """BleBox switch implementation."""
+from datetime import timedelta
+
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -6,6 +8,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
+
+SCAN_INTERVAL = timedelta(seconds=5)
 
 
 async def async_setup_entry(

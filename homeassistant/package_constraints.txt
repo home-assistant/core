@@ -8,18 +8,19 @@ async-upnp-client==0.31.2
 async_timeout==4.0.2
 atomicwrites==1.4.0
 attrs==21.2.0
-awesomeversion==22.5.2
+awesomeversion==22.6.0
 bcrypt==3.1.7
 certifi>=2021.5.30
 ciso8601==2.2.0
 cryptography==36.0.2
 fnvhash==0.1.0
 hass-nabucasa==0.54.0
-home-assistant-frontend==20220601.0
+home-assistant-frontend==20220624.0
 httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
 lru-dict==1.1.7
+orjson==3.7.5
 paho-mqtt==1.6.1
 pillow==9.1.1
 pip>=21.0,<22.2
@@ -29,7 +30,7 @@ pyudev==0.22.0
 pyyaml==6.0
 requests==2.28.0
 scapy==2.4.5
-sqlalchemy==1.4.37
+sqlalchemy==1.4.38
 typing-extensions>=3.10.0.2,<5.0
 voluptuous-serialize==2.5.0
 voluptuous==0.13.1
@@ -86,6 +87,9 @@ httpcore==0.15.0
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
+# Ensure we run compatible with musllinux build env
+numpy>=1.22.0
+
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
 
@@ -110,3 +114,7 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
+
+# Pin charset-normalizer to 2.0.12 due to version conflict.
+# https://github.com/home-assistant/core/pull/74104
+charset-normalizer==2.0.12

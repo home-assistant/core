@@ -9,13 +9,16 @@ from typing import Any
 
 from pyunifiprotect.data import (
     Bootstrap,
+    Light,
+    LightModeEnableType,
+    LightModeType,
     ProtectAdoptableDeviceModel,
-    ProtectDeviceModel,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import DEVICES_THAT_ADOPT, ModelType
+from .const import DOMAIN, ModelType
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -75,32 +78,31 @@ def async_get_devices_by_type(
 
 
 @callback
-def async_device_by_id(
-    bootstrap: Bootstrap,
-    device_id: str,
-    device_type: ModelType | None = None,
-) -> ProtectAdoptableDeviceModel | None:
-    """Get devices by type."""
-
-    device_types = DEVICES_THAT_ADOPT
-    if device_type is not None:
-        device_types = {device_type}
-
-    device = None
-    for model in device_types:
-        device = async_get_devices_by_type(bootstrap, model).get(device_id)
-        if device is not None:
-            break
-    return device
-
-
-@callback
 def async_get_devices(
     bootstrap: Bootstrap, model_type: Iterable[ModelType]
-) -> Generator[ProtectDeviceModel, None, None]:
+) -> Generator[ProtectAdoptableDeviceModel, None, None]:
     """Return all device by type."""
     return (
         device
         for device_type in model_type
         for device in async_get_devices_by_type(bootstrap, device_type).values()
     )
+
+
+@callback
+def async_get_light_motion_current(obj: Light) -> str:
+    """Get light motion mode for Flood Light."""
+
+    if (
+        obj.light_mode_settings.mode == LightModeType.MOTION
+        and obj.light_mode_settings.enable_at == LightModeEnableType.DARK
+    ):
+        return f"{LightModeType.MOTION.value}Dark"
+    return obj.light_mode_settings.mode.value
+
+
+@callback
+def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
+    """Generate entry specific dispatch ID."""
+
+    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"

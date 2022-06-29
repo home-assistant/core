@@ -11,7 +11,6 @@ from collections.abc import Callable
 from contextlib import suppress
 import functools as ft
 import importlib
-import json
 import logging
 import pathlib
 import sys
@@ -30,6 +29,7 @@ from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
@@ -366,8 +366,8 @@ class Integration:
                 continue
 
             try:
-                manifest = json.loads(manifest_path.read_text())
-            except ValueError as err:
+                manifest = json_loads(manifest_path.read_text())
+            except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
                 )

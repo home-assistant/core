@@ -59,7 +59,7 @@ async def async_setup_entry(
 class ZHAButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button."""
 
-    _command_name: str = None
+    _command_name: str
 
     def __init__(
         self,
@@ -118,7 +118,7 @@ class ZHAIdentifyButton(ZHAButton):
 class ZHAAttributeButton(ZhaEntity, ButtonEntity):
     """Defines a ZHA button, which stes value to an attribute."""
 
-    _attribute_name: str = None
+    _attribute_name: str
     _attribute_value: Any = None
 
     def __init__(
@@ -154,9 +154,21 @@ class ZHAAttributeButton(ZhaEntity, ButtonEntity):
     },
 )
 class FrostLockResetButton(ZHAAttributeButton, id_suffix="reset_frost_lock"):
-    """Defines a ZHA identify button."""
+    """Defines a ZHA frost lock reset button."""
 
     _attribute_name = "frost_lock_reset"
     _attribute_value = 0
+    _attr_device_class = ButtonDeviceClass.RESTART
+    _attr_entity_category = EntityCategory.CONFIG
+
+
+@CONFIG_DIAGNOSTIC_MATCH(channel_names="opple_cluster", models={"lumi.motion.ac01"})
+class NoPresenceStatusResetButton(
+    ZHAAttributeButton, id_suffix="reset_no_presence_status"
+):
+    """Defines a ZHA no presence status reset button."""
+
+    _attribute_name = "reset_no_presence_status"
+    _attribute_value = 1
     _attr_device_class = ButtonDeviceClass.RESTART
     _attr_entity_category = EntityCategory.CONFIG

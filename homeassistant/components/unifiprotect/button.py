@@ -13,12 +13,14 @@ from homeassistant.components.button import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import ProtectDeviceEntity, async_all_device_entities
-from .models import ProtectSetableKeysMixin, T
+from .models import PermRequired, ProtectSetableKeysMixin, T
+from .utils import async_dispatch_id as _ufpd
 
 
 @dataclass
@@ -40,6 +42,7 @@ ALL_DEVICE_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         device_class=ButtonDeviceClass.RESTART,
         name="Reboot Device",
         ufp_press="reboot",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -49,6 +52,7 @@ SENSOR_BUTTONS: tuple[ProtectButtonEntityDescription, ...] = (
         name="Clear Tamper",
         icon="mdi:notification-clear-all",
         ufp_press="clear_tamper",
+        ufp_perm=PermRequired.WRITE,
     ),
 )
 
@@ -77,6 +81,21 @@ async def async_setup_entry(
     """Discover devices on a UniFi Protect NVR."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
 
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities = async_all_device_entities(
+            data,
+            ProtectButton,
+            all_descs=ALL_DEVICE_BUTTONS,
+            chime_descs=CHIME_BUTTONS,
+            sense_descs=SENSOR_BUTTONS,
+            ufp_device=device,
+        )
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectButton,
@@ -84,7 +103,6 @@ async def async_setup_entry(
         chime_descs=CHIME_BUTTONS,
         sense_descs=SENSOR_BUTTONS,
     )
-
     async_add_entities(entities)
 
 
@@ -101,7 +119,7 @@ class ProtectButton(ProtectDeviceEntity, ButtonEntity):
     ) -> None:
         """Initialize an UniFi camera."""
         super().__init__(data, device, description)
-        self._attr_name = f"{self.device.name} {self.entity_description.name}"
+        self._attr_name = f"{self.device.display_name} {self.entity_description.name}"
 
     async def async_press(self) -> None:
         """Press the button."""

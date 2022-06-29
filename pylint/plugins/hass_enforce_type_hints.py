@@ -10,6 +10,7 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
+DEVICE_CLASS = object()
 UNDEFINED = object()
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
@@ -20,9 +21,25 @@ class TypeHintMatch:
     """Class for pattern matching."""
 
     function_name: str
-    arg_types: dict[int, str]
     return_type: list[str] | str | None | object
+    arg_types: dict[int, str] | None = None
+    """arg_types is for positional arguments"""
+    named_arg_types: dict[str, str] | None = None
+    """named_arg_types is for named or keyword arguments"""
+    kwargs_type: str | None = None
+    """kwargs_type is for the special case `**kwargs`"""
     check_return_type_inheritance: bool = False
+    has_async_counterpart: bool = False
+
+    def need_to_check_function(self, node: nodes.FunctionDef) -> bool:
+        """Confirm if function should be checked."""
+        return (
+            self.function_name == node.name
+            or self.has_async_counterpart
+            and node.name == f"async_{self.function_name}"
+            or self.function_name.endswith("*")
+            and node.name.startswith(self.function_name[:-1])
+        )
 
 
 @dataclass
@@ -55,14 +72,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type="bool",
-        ),
-        TypeHintMatch(
-            function_name="async_setup",
-            arg_types={
-                0: "HomeAssistant",
-                1: "ConfigType",
-            },
-            return_type="bool",
+            has_async_counterpart=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -116,16 +126,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 3: "DiscoveryInfoType | None",
             },
             return_type=None,
-        ),
-        TypeHintMatch(
-            function_name="async_setup_platform",
-            arg_types={
-                0: "HomeAssistant",
-                1: "ConfigType",
-                2: "AddEntitiesCallback",
-                3: "DiscoveryInfoType | None",
-            },
-            return_type=None,
+            has_async_counterpart=True,
         ),
         TypeHintMatch(
             function_name="async_setup_entry",
@@ -309,14 +310,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
                 1: "ConfigType",
             },
             return_type=["DeviceScanner", "DeviceScanner | None"],
-        ),
-        TypeHintMatch(
-            function_name="async_get_scanner",
-            arg_types={
-                0: "HomeAssistant",
-                1: "ConfigType",
-            },
-            return_type=["DeviceScanner", "DeviceScanner | None"],
+            has_async_counterpart=True,
         ),
     ],
     "device_trigger": [
@@ -379,6 +373,16 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
+            base_class="FlowHandler",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="FlowResult",
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
             base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
@@ -418,6 +422,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="FlowResult",
                 ),
                 TypeHintMatch(
+                    function_name="async_step_reauth",
+                    arg_types={
+                        1: "Mapping[str, Any]",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
                     function_name="async_step_ssdp",
                     arg_types={
                         1: "SsdpServiceInfo",
@@ -440,20 +451,633 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
             ],
         ),
-    ]
+    ],
+}
+# Overriding properties and functions are normally checked by mypy, and will only
+# be checked by pylint when --ignore-missing-annotations is False
+_ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="should_poll",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="unique_id",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="name",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="state",
+        return_type=["StateType", None, "str", "int", "float"],
+    ),
+    TypeHintMatch(
+        function_name="capability_attributes",
+        return_type=["Mapping[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="state_attributes",
+        return_type=["dict[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="device_state_attributes",
+        return_type=["Mapping[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="extra_state_attributes",
+        return_type=["Mapping[str, Any]", None],
+    ),
+    TypeHintMatch(
+        function_name="device_info",
+        return_type=["DeviceInfo", None],
+    ),
+    TypeHintMatch(
+        function_name="device_class",
+        return_type=[DEVICE_CLASS, "str", None],
+    ),
+    TypeHintMatch(
+        function_name="unit_of_measurement",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="icon",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="entity_picture",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="available",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="assumed_state",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="force_update",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="supported_features",
+        return_type=["int", None],
+    ),
+    TypeHintMatch(
+        function_name="context_recent_time",
+        return_type="timedelta",
+    ),
+    TypeHintMatch(
+        function_name="entity_registry_enabled_default",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="entity_registry_visible_default",
+        return_type="bool",
+    ),
+    TypeHintMatch(
+        function_name="attribution",
+        return_type=["str", None],
+    ),
+    TypeHintMatch(
+        function_name="entity_category",
+        return_type=["EntityCategory", None],
+    ),
+    TypeHintMatch(
+        function_name="async_removed_from_registry",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="async_added_to_hass",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="async_will_remove_from_hass",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="async_registry_entry_updated",
+        return_type=None,
+    ),
+    TypeHintMatch(
+        function_name="update",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+]
+_TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
+    TypeHintMatch(
+        function_name="is_on",
+        return_type=["bool", None],
+    ),
+    TypeHintMatch(
+        function_name="turn_on",
+        kwargs_type="Any",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+    TypeHintMatch(
+        function_name="turn_off",
+        kwargs_type="Any",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+    TypeHintMatch(
+        function_name="toggle",
+        kwargs_type="Any",
+        return_type=None,
+        has_async_counterpart=True,
+    ),
+]
+_INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "alarm_control_panel": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="AlarmControlPanelEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_format",
+                    return_type=["CodeFormat", None],
+                ),
+                TypeHintMatch(
+                    function_name="changed_by",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_arm_required",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="alarm_disarm",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_home",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_away",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_night",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_vacation",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_trigger",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_custom_bypass",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "binary_sensor": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="BinarySensorEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["BinarySensorDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type=["bool", None],
+                ),
+            ],
+        ),
+    ],
+    "button": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ButtonEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["ButtonDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="press",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "cover": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="CoverEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["CoverDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_cover_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_cover_tilt_position",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_opening",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_closing",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_closed",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="open_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="close_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_cover_position",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="stop_cover",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="open_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="close_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_cover_tilt_position",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="stop_cover_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="toggle_tilt",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "fan": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="FanEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="percentage",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="speed_count",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="percentage_step",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="current_direction",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="oscillating",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="preset_mode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="preset_modes",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_percentage",
+                    arg_types={1: "int"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_preset_mode",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_direction",
+                    arg_types={1: "str"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    named_arg_types={
+                        "percentage": "int | None",
+                        "preset_mode": "str | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="oscillate",
+                    arg_types={1: "bool"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "light": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="LightEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="brightness",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_mode",
+                    return_type=["ColorMode", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="hs_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="xy_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgb_color",
+                    return_type=["tuple[int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbw_color",
+                    return_type=["tuple[int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbww_color",
+                    return_type=["tuple[int, int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_temp",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="min_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="max_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="white_value",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_color_modes",
+                    return_type=["set[ColorMode]", "set[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    named_arg_types={
+                        "brightness": "int | None",
+                        "brightness_pct": "float | None",
+                        "brightness_step": "int | None",
+                        "brightness_step_pct": "float | None",
+                        "color_name": "str | None",
+                        "color_temp": "int | None",
+                        "effect": "str | None",
+                        "flash": "str | None",
+                        "kelvin": "int | None",
+                        "hs_color": "tuple[float, float] | None",
+                        "rgb_color": "tuple[int, int, int] | None",
+                        "rgbw_color": "tuple[int, int, int, int] | None",
+                        "rgbww_color": "tuple[int, int, int, int, int] | None",
+                        "transition": "float | None",
+                        "xy_color": "tuple[float, float] | None",
+                        "white": "int | None",
+                        "white_value": "int | None",
+                    },
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "lock": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="LockEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="changed_by",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_format",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_locked",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_locking",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_unlocking",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_jammed",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="lock",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="unlock",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="open",
+                    kwargs_type="Any",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
 }
 
 
 def _is_valid_type(
-    expected_type: list[str] | str | None | object, node: nodes.NodeNG
+    expected_type: list[str] | str | None | object,
+    node: nodes.NodeNG,
+    in_return: bool = False,
 ) -> bool:
     """Check the argument node against the expected type."""
     if expected_type is UNDEFINED:
         return True
 
+    # Special case for device_class
+    if expected_type == DEVICE_CLASS and in_return:
+        return (
+            isinstance(node, nodes.Name)
+            and node.name.endswith("DeviceClass")
+            or isinstance(node, nodes.Attribute)
+            and node.attrname.endswith("DeviceClass")
+        )
+
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
-            if _is_valid_type(expected_type_item, node):
+            if _is_valid_type(expected_type_item, node, in_return):
                 return True
         return False
 
@@ -489,6 +1113,18 @@ def _is_valid_type(
 
     # Special case for xxx[yyy, zzz]`
     if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
+        # Handle special case of Mapping[xxx, Any]
+        if in_return and match.group(1) == "Mapping" and match.group(3) == "Any":
+            return (
+                isinstance(node, nodes.Subscript)
+                and isinstance(node.value, nodes.Name)
+                # We accept dict when Mapping is needed
+                and node.value.name in ("Mapping", "dict")
+                and isinstance(node.slice, nodes.Tuple)
+                and _is_valid_type(match.group(2), node.slice.elts[0])
+                # Ignore second item
+                # and _is_valid_type(match.group(3), node.slice.elts[1])
+            )
         return (
             isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)
@@ -514,7 +1150,7 @@ def _is_valid_type(
 
 
 def _is_valid_return_type(match: TypeHintMatch, node: nodes.NodeNG) -> bool:
-    if _is_valid_type(match.return_type, node):
+    if _is_valid_type(match.return_type, node, True):
         return True
 
     if isinstance(node, nodes.BinOp):
@@ -551,6 +1187,21 @@ def _get_all_annotations(node: nodes.FunctionDef) -> list[nodes.NodeNG | None]:
     return annotations
 
 
+def _get_named_annotation(
+    node: nodes.FunctionDef, key: str
+) -> tuple[nodes.NodeNG, nodes.NodeNG] | tuple[None, None]:
+    args = node.args
+    for index, arg_node in enumerate(args.args):
+        if key == arg_node.name:
+            return arg_node, args.annotations[index]
+
+    for index, arg_node in enumerate(args.kwonlyargs):
+        if key == arg_node.name:
+            return arg_node, args.kwonlyargs_annotations[index]
+
+    return None, None
+
+
 def _has_valid_annotations(
     annotations: list[nodes.NodeNG | None],
 ) -> bool:
@@ -578,7 +1229,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     priority = -1
     msgs = {
         "W7431": (
-            "Argument %d should be of type %s",
+            "Argument %s should be of type %s",
             "hass-argument-type",
             "Used when method argument type is incorrect",
         ),
@@ -621,7 +1272,12 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             self._function_matchers.extend(function_matches)
 
         if class_matches := _CLASS_MATCH.get(module_platform):
-            self._class_matchers = class_matches
+            self._class_matchers.extend(class_matches)
+
+        if not self.linter.config.ignore_missing_annotations and (
+            property_matches := _INHERITANCE_MATCH.get(module_platform)
+        ):
+            self._class_matchers.extend(property_matches)
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
@@ -636,14 +1292,13 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     ) -> None:
         for match in matches:
             for function_node in node.mymethods():
-                function_name: str | None = function_node.name
-                if match.function_name == function_name:
+                if match.need_to_check_function(function_node):
                     self._check_function(function_node, match)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""
         for match in self._function_matchers:
-            if node.name != match.function_name or node.is_method():
+            if not match.need_to_check_function(node) or node.is_method():
                 continue
             self._check_function(node, match)
 
@@ -659,14 +1314,36 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         ):
             return
 
-        # Check that all arguments are correctly annotated.
-        for key, expected_type in match.arg_types.items():
-            if not _is_valid_type(expected_type, annotations[key]):
-                self.add_message(
-                    "hass-argument-type",
-                    node=node.args.args[key],
-                    args=(key + 1, expected_type),
-                )
+        # Check that all positional arguments are correctly annotated.
+        if match.arg_types:
+            for key, expected_type in match.arg_types.items():
+                if not _is_valid_type(expected_type, annotations[key]):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=node.args.args[key],
+                        args=(key + 1, expected_type),
+                    )
+
+        # Check that all keyword arguments are correctly annotated.
+        if match.named_arg_types is not None:
+            for arg_name, expected_type in match.named_arg_types.items():
+                arg_node, annotation = _get_named_annotation(node, arg_name)
+                if arg_node and not _is_valid_type(expected_type, annotation):
+                    self.add_message(
+                        "hass-argument-type",
+                        node=arg_node,
+                        args=(arg_name, expected_type),
+                    )
+
+        # Check that kwargs is correctly annotated.
+        if match.kwargs_type and not _is_valid_type(
+            match.kwargs_type, node.args.kwargannotation
+        ):
+            self.add_message(
+                "hass-argument-type",
+                node=node,
+                args=(node.args.kwarg, match.kwargs_type),
+            )
 
         # Check the return type.
         if not _is_valid_return_type(match, node.returns):

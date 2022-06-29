@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 import datetime
+import http
 from typing import Any, Generator, TypeVar
 from unittest.mock import Mock, mock_open, patch
 
@@ -27,6 +28,7 @@ YieldFixture = Generator[_T, None, None]
 
 
 CALENDAR_ID = "qwertyuiopasdfghjklzxcvbnm@import.calendar.google.com"
+EMAIL_ADDRESS = "user@gmail.com"
 
 # Entities can either be created based on data directly from the API, or from
 # the yaml config that overrides the entity name and other settings. A test
@@ -52,6 +54,9 @@ TEST_API_CALENDAR = {
     "colorId": "8",
     "defaultReminders": [],
 }
+
+CLIENT_ID = "client-id"
+CLIENT_SECRET = "client-secret"
 
 
 @pytest.fixture
@@ -148,8 +153,8 @@ def creds(
     """Fixture that defines creds used in the test."""
     return OAuth2Credentials(
         access_token="ACCESS_TOKEN",
-        client_id="client-id",
-        client_secret="client-secret",
+        client_id=CLIENT_ID,
+        client_secret=CLIENT_SECRET,
         refresh_token="REFRESH_TOKEN",
         token_expiry=token_expiry,
         token_uri="http://example.com",
@@ -179,7 +184,14 @@ def config_entry_options() -> dict[str, Any] | None:
 
 
 @pytest.fixture
+def config_entry_unique_id() -> str:
+    """Fixture that returns the default config entry unique id."""
+    return EMAIL_ADDRESS
+
+
+@pytest.fixture
 def config_entry(
+    config_entry_unique_id: str,
     token_scopes: list[str],
     config_entry_token_expiry: float,
     config_entry_options: dict[str, Any] | None,
@@ -187,6 +199,7 @@ def config_entry(
     """Fixture to create a config entry for the integration."""
     return MockConfigEntry(
         domain=DOMAIN,
+        unique_id=config_entry_unique_id,
         data={
             "auth_implementation": "device_auth",
             "token": {
@@ -271,12 +284,16 @@ def mock_calendar_get(
     """Fixture for returning a calendar get response."""
 
     def _result(
-        calendar_id: str, response: dict[str, Any], exc: ClientError | None = None
+        calendar_id: str,
+        response: dict[str, Any],
+        exc: ClientError | None = None,
+        status: http.HTTPStatus = http.HTTPStatus.OK,
     ) -> None:
         aioclient_mock.get(
             f"{API_BASE_URL}/calendars/{calendar_id}",
             json=response,
             exc=exc,
+            status=status,
         )
         return
 
@@ -315,7 +332,7 @@ def google_config_track_new() -> None:
 @pytest.fixture
 def google_config(google_config_track_new: bool | None) -> dict[str, Any]:
     """Fixture for overriding component config."""
-    google_config = {CONF_CLIENT_ID: "client-id", CONF_CLIENT_SECRET: "client-secret"}
+    google_config = {CONF_CLIENT_ID: CLIENT_ID, CONF_CLIENT_SECRET: CLIENT_SECRET}
     if google_config_track_new is not None:
         google_config[CONF_TRACK_NEW] = google_config_track_new
     return google_config

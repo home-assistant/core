@@ -1,6 +1,9 @@
 """The tests for the USGS Earthquake Hazards Program Feed platform."""
 import datetime
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import ANY, MagicMock, call, patch
+
+from aio_geojson_usgs_earthquakes import UsgsEarthquakeHazardsProgramFeed
+from freezegun import freeze_time
 
 from homeassistant.components import geo_location
 from homeassistant.components.geo_location import ATTR_SOURCE
@@ -111,11 +114,10 @@ async def test_setup(hass):
 
     # Patching 'utcnow' to gain more control over the timed update.
     utcnow = dt_util.utcnow()
-    with patch("homeassistant.util.dt.utcnow", return_value=utcnow), patch(
-        "geojson_client.usgs_earthquake_hazards_program_feed."
-        "UsgsEarthquakeHazardsProgramFeed"
-    ) as mock_feed:
-        mock_feed.return_value.update.return_value = (
+    with freeze_time(utcnow), patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = (
             "OK",
             [mock_entry_1, mock_entry_2, mock_entry_3],
         )
@@ -184,9 +186,9 @@ async def test_setup(hass):
             }
             assert round(abs(float(state.state) - 25.5), 7) == 0
 
-            # Simulate an update - one existing, one new entry,
+            # Simulate an update - two existing, one new entry,
             # one outdated entry
-            mock_feed.return_value.update.return_value = (
+            mock_feed_update.return_value = (
                 "OK",
                 [mock_entry_1, mock_entry_4, mock_entry_3],
             )
@@ -198,7 +200,7 @@ async def test_setup(hass):
 
             # Simulate an update - empty data, but successful update,
             # so no changes to entities.
-            mock_feed.return_value.update.return_value = "OK_NO_DATA", None
+            mock_feed_update.return_value = "OK_NO_DATA", None
             async_fire_time_changed(hass, utcnow + 2 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -206,7 +208,7 @@ async def test_setup(hass):
             assert len(all_states) == 3
 
             # Simulate an update - empty data, removes all entities
-            mock_feed.return_value.update.return_value = "ERROR", None
+            mock_feed_update.return_value = "ERROR", None
             async_fire_time_changed(hass, utcnow + 3 * SCAN_INTERVAL)
             await hass.async_block_till_done()
 
@@ -220,10 +222,12 @@ async def test_setup_with_custom_location(hass):
     mock_entry_1 = _generate_mock_feed_entry("1234", "Title 1", 20.5, (-31.1, 150.1))
 
     with patch(
-        "geojson_client.usgs_earthquake_hazards_program_feed."
-        "UsgsEarthquakeHazardsProgramFeed"
-    ) as mock_feed:
-        mock_feed.return_value.update.return_value = "OK", [mock_entry_1]
+        "aio_geojson_usgs_earthquakes.feed_manager.UsgsEarthquakeHazardsProgramFeed",
+        wraps=UsgsEarthquakeHazardsProgramFeed,
+    ) as mock_feed, patch(
+        "aio_geojson_client.feed.GeoJsonFeed.update"
+    ) as mock_feed_update:
+        mock_feed_update.return_value = "OK", [mock_entry_1]
 
         with assert_setup_component(1, geo_location.DOMAIN):
             assert await async_setup_component(
@@ -240,6 +244,7 @@ async def test_setup_with_custom_location(hass):
             assert len(all_states) == 1
 
             assert mock_feed.call_args == call(
+                ANY,
                 (15.1, 25.2),
                 "past_hour_m25_earthquakes",
                 filter_minimum_magnitude=0.0,

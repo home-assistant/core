@@ -27,10 +27,15 @@ def _async_get_nest_devices(
     if DATA_SDM not in config_entry.data:
         return {}
 
-    if DATA_DEVICE_MANAGER not in hass.data[DOMAIN]:
+    if (
+        config_entry.entry_id not in hass.data[DOMAIN]
+        or DATA_DEVICE_MANAGER not in hass.data[DOMAIN][config_entry.entry_id]
+    ):
         return {}
 
-    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][config_entry.entry_id][
+        DATA_DEVICE_MANAGER
+    ]
     return device_manager.devices
 
 

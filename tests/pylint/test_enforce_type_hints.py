@@ -469,3 +469,271 @@ def test_valid_config_flow_async_get_options_flow(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_entity_properties(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check missing entity properties when ignore_missing_annotations is False."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, prop_node, func_node = astroid.extract_node(
+        """
+    class LockEntity():
+        pass
+
+    class DoorLock( #@
+        LockEntity
+    ):
+        @property
+        def changed_by( #@
+            self
+        ):
+            pass
+
+        async def async_lock( #@
+            self,
+            **kwargs
+        ) -> bool:
+            pass
+    """,
+        "homeassistant.components.pylint_test.lock",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=prop_node,
+            args=["str", None],
+            line=9,
+            col_offset=4,
+            end_line=9,
+            end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("kwargs", "Any"),
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=24,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="None",
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=24,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_ignore_invalid_entity_properties(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    class_node = astroid.extract_node(
+        """
+    class LockEntity():
+        pass
+
+    class DoorLock( #@
+        LockEntity
+    ):
+        @property
+        def changed_by(
+            self
+        ):
+            pass
+
+        async def async_lock(
+            self,
+            **kwargs
+        ) -> bool:
+            pass
+    """,
+        "homeassistant.components.pylint_test.lock",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_named_arguments(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check missing entity properties when ignore_missing_annotations is False."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, func_node, percentage_node, preset_mode_node = astroid.extract_node(
+        """
+    class FanEntity():
+        pass
+
+    class MyFan( #@
+        FanEntity
+    ):
+        async def async_turn_on( #@
+            self,
+            percentage, #@
+            *,
+            preset_mode: str, #@
+            **kwargs
+        ) -> bool:
+            pass
+    """,
+        "homeassistant.components.pylint_test.fan",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=percentage_node,
+            args=("percentage", "int | None"),
+            line=10,
+            col_offset=8,
+            end_line=10,
+            end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=preset_mode_node,
+            args=("preset_mode", "str | None"),
+            line=12,
+            col_offset=8,
+            end_line=12,
+            end_col_offset=24,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("kwargs", "Any"),
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args="None",
+            line=8,
+            col_offset=4,
+            end_line=8,
+            end_col_offset=27,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+@pytest.mark.parametrize(
+    "return_hint",
+    [
+        "",
+        "-> Mapping[int, int]",
+        "-> dict[int, Any]",
+    ],
+)
+def test_invalid_mapping_return_type(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    return_hint: str,
+) -> None:
+    """Check that Mapping[xxx, Any] doesn't accept invalid Mapping or dict."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, property_node = astroid.extract_node(
+        f"""
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class FanEntity(ToggleEntity):
+        pass
+
+    class MyFanA( #@
+        FanEntity
+    ):
+        @property
+        def capability_attributes( #@
+            self
+        ){return_hint}:
+            pass
+    """,
+        "homeassistant.components.pylint_test.fan",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=property_node,
+            args=["Mapping[str, Any]", None],
+            line=15,
+            col_offset=4,
+            end_line=15,
+            end_col_offset=29,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
+
+
+@pytest.mark.parametrize(
+    "return_hint",
+    [
+        "-> Mapping[str, Any]",
+        "-> Mapping[str, bool | int]",
+        "-> dict[str, Any]",
+        "-> dict[str, str]",
+    ],
+)
+def test_valid_mapping_return_type(
+    linter: UnittestLinter,
+    type_hint_checker: BaseChecker,
+    return_hint: str,
+) -> None:
+    """Check that Mapping[xxx, Any] accepts both Mapping and dict."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node = astroid.extract_node(
+        f"""
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class FanEntity(ToggleEntity):
+        pass
+
+    class MyFanA( #@
+        FanEntity
+    ):
+        @property
+        def capability_attributes(
+            self
+        ){return_hint}:
+            pass
+    """,
+        "homeassistant.components.pylint_test.fan",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)

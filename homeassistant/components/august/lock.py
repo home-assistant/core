@@ -127,7 +127,7 @@ class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
                 "keypad_battery_level"
             ] = self._detail.keypad.battery_level
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
         await super().async_added_to_hass()
 
