@@ -2,7 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 from homeassistant import config_entries
-from homeassistant.components.lg_soundbar.const import DOMAIN
+from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 from tests.common import MockConfigEntry
@@ -30,7 +30,6 @@ async def test_form(hass):
             result["flow_id"],
             {
                 CONF_HOST: "1.1.1.1",
-                CONF_PORT: 0000,
             },
         )
         await hass.async_block_till_done()
@@ -39,7 +38,7 @@ async def test_form(hass):
     assert result2["title"] == "name"
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
-        CONF_PORT: 0000,
+        CONF_PORT: DEFAULT_PORT,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -58,7 +57,6 @@ async def test_form_cannot_connect(hass):
             result["flow_id"],
             {
                 CONF_HOST: "1.1.1.1",
-                CONF_PORT: 0000,
             },
         )
 
@@ -90,7 +88,6 @@ async def test_form_already_configured(hass):
             result["flow_id"],
             {
                 CONF_HOST: "1.1.1.1",
-                CONF_PORT: 0000,
             },
         )
 

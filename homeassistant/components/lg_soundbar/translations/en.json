@@ -10,11 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "port": "Port"
-                },
-                "description": "Enter your Connection details.",
-                "title": "LG Soundbar Connection details"
+                    "host": "Host"
+                }
             }
         }
     }

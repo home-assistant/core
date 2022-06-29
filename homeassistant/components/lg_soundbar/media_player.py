@@ -1,8 +1,6 @@
 """Support for LG soundbars."""
 from __future__ import annotations
 
-import logging
-
 import temescal
 
 from homeassistant.components.media_player import (
@@ -10,13 +8,9 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_UNIQUE_ID, STATE_ON
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -25,23 +19,21 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up media_player from a config entry created in the integrations UI."""
-    config = config_entry.data
-    # Update our config.
-    if config_entry.options:
-        hass.data[DOMAIN][config_entry.entry_id].update(config_entry.options)
-    if config[CONF_HOST] is not None and config[CONF_PORT] is not None:
-        info = {
-            CONF_UNIQUE_ID: config_entry.unique_id,
-            CONF_HOST: config[CONF_HOST],
-            CONF_PORT: config[CONF_PORT],
-        }
-        entities = [LGDevice(info)]
-        async_add_entities(entities)
+    async_add_entities(
+        [
+            LGDevice(
+                config_entry.data[CONF_HOST],
+                config_entry.data[CONF_PORT],
+                config_entry.unique_id,
+            )
+        ]
+    )
 
 
 class LGDevice(MediaPlayerEntity):
     """Representation of an LG soundbar device."""
 
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -49,11 +41,11 @@ class LGDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
 
-    def __init__(self, info):
+    def __init__(self, host, port, unique_id):
         """Initialize the LG speakers."""
-        self._host = info[CONF_HOST]
-        self._port = info[CONF_PORT]
-        self._attr_unique_id = info[CONF_UNIQUE_ID]
+        self._host = host
+        self._port = port
+        self._attr_unique_id = unique_id
 
         self._name = None
         self._volume = 0
@@ -133,7 +125,7 @@ class LGDevice(MediaPlayerEntity):
             if "i_curr_eq" in data:
                 self._equaliser = data["i_curr_eq"]
             if "s_user_name" in data:
-                self._name = data["s_user_name"]
+                self._attr_name = data["s_user_name"]
 
         self.schedule_update_ha_state()
 
@@ -143,16 +135,6 @@ class LGDevice(MediaPlayerEntity):
         self._device.get_info()
         self._device.get_func()
         self._device.get_settings()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
 
     @property
     def volume_level(self):

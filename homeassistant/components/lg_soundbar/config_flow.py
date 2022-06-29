@@ -12,7 +12,6 @@ from .const import DEFAULT_PORT, DOMAIN
 
 DATA_SCHEMA = {
     vol.Required(CONF_HOST): str,
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.Coerce(int),
 }
 
 
@@ -49,30 +48,28 @@ class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initiated by the user."""
-        errors = {}
         if user_input is None:
-            return await self._show_form(user_input)
-        if not errors:
-            try:
-                details = test_connect(user_input[CONF_HOST], user_input[CONF_PORT])
-            except ConnectionError:
-                errors["base"] = "cannot_connect"
-            else:
-                await self.async_set_unique_id(details["uuid"])
-                self._abort_if_unique_id_configured()
-                info = {
-                    CONF_HOST: user_input[CONF_HOST],
-                    CONF_PORT: user_input[CONF_PORT],
-                }
-                return self.async_create_entry(title=details["name"], data=info)
+            return self._show_form()
 
-            return self.async_show_form(
-                step_id="user",
-                data_schema=vol.Schema(DATA_SCHEMA),
-                errors=errors,
+        errors = {}
+        try:
+            details = await self.hass.async_add_executor_job(
+                test_connect, user_input[CONF_HOST], DEFAULT_PORT
             )
+        except ConnectionError:
+            errors["base"] = "cannot_connect"
+        else:
+            await self.async_set_unique_id(details["uuid"])
+            self._abort_if_unique_id_configured()
+            info = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_PORT: DEFAULT_PORT,
+            }
+            return self.async_create_entry(title=details["name"], data=info)
 
-    async def _show_form(self, errors=None):
+        return self._show_form(errors)
+
+    def _show_form(self, errors=None):
         """Show the form to the user."""
         return self.async_show_form(
             step_id="user",
