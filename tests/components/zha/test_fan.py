@@ -57,11 +57,15 @@ def fan_platform_only():
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
+            Platform.BUTTON,
+            Platform.BINARY_SENSOR,
             Platform.FAN,
             Platform.LIGHT,
             Platform.DEVICE_TRACKER,
             Platform.NUMBER,
+            Platform.SENSOR,
             Platform.SELECT,
+            Platform.SWITCH,
         ),
     ):
         yield
