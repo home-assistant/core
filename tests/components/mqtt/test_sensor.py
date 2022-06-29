@@ -14,6 +14,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     TEMP_CELSIUS,
     TEMP_FAHRENHEIT,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.helpers import device_registry as dr
@@ -70,6 +71,13 @@ from tests.common import (
 DEFAULT_CONFIG = {
     sensor.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def sensor_platform_only():
+    """Only setup the sensor platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def test_setting_sensor_value_via_mqtt_message(

@@ -17,6 +17,13 @@
                 },
                 "description": "Veuillez ressaisir votre jeton d'acc\u00e8s d\u00e9veloppeur Awair."
             },
+            "reauth_confirm": {
+                "data": {
+                    "access_token": "Jeton d'acc\u00e8s",
+                    "email": "Courriel"
+                },
+                "description": "Veuillez ressaisir votre jeton d'acc\u00e8s d\u00e9veloppeur Awair."
+            },
             "user": {
                 "data": {
                     "access_token": "Jeton d'acc\u00e8s",

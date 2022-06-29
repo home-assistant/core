@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_FORCE_UPDATE,
     CONF_HEADERS,
     CONF_METHOD,
-    CONF_NAME,
     CONF_PARAMS,
     CONF_PASSWORD,
     CONF_PAYLOAD,
@@ -28,12 +27,14 @@ from homeassistant.const import (
     HTTP_DIGEST_AUTHENTICATION,
 )
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.template_entity import TEMPLATE_SENSOR_BASE_SCHEMA
+from homeassistant.helpers.template_entity import (
+    TEMPLATE_ENTITY_BASE_SCHEMA,
+    TEMPLATE_SENSOR_BASE_SCHEMA,
+)
 
 from .const import (
     CONF_JSON_ATTRS,
     CONF_JSON_ATTRS_PATH,
-    DEFAULT_BINARY_SENSOR_NAME,
     DEFAULT_FORCE_UPDATE,
     DEFAULT_METHOD,
     DEFAULT_VERIFY_SSL,
@@ -67,7 +68,7 @@ SENSOR_SCHEMA = {
 }
 
 BINARY_SENSOR_SCHEMA = {
-    vol.Optional(CONF_NAME, default=DEFAULT_BINARY_SENSOR_NAME): cv.string,
+    **TEMPLATE_ENTITY_BASE_SCHEMA.schema,
     vol.Optional(CONF_DEVICE_CLASS): BINARY_SENSOR_DEVICE_CLASSES_SCHEMA,
     vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
     vol.Optional(CONF_FORCE_UPDATE, default=DEFAULT_FORCE_UPDATE): cv.boolean,

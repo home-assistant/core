@@ -1,8 +1,10 @@
 """Config flow for Broadlink devices."""
+from collections.abc import Mapping
 import errno
 from functools import partial
 import logging
 import socket
+from typing import Any
 
 import broadlink as blk
 from broadlink.exceptions import (
@@ -12,9 +14,10 @@ from broadlink.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME, CONF_TIMEOUT, CONF_TYPE
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_PORT, DEFAULT_TIMEOUT, DEVICE_TYPES, DOMAIN
@@ -40,7 +43,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 "an issue at https://github.com/home-assistant/core/issues",
                 hex(device.devtype),
             )
-            raise data_entry_flow.AbortFlow("not_supported")
+            raise AbortFlow("not_supported")
 
         await self.async_set_unique_id(
             device.mac.hex(), raise_on_progress=raise_on_progress
@@ -53,9 +56,7 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "host": device.host[0],
         }
 
-    async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
         host = discovery_info.ip
         unique_id = discovery_info.macaddress.lower().replace(":", "")
@@ -300,14 +301,14 @@ class BroadlinkFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: import_info[CONF_HOST]})
         return await self.async_step_user(import_info)
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Reauthenticate to the device."""
         device = blk.gendevice(
-            data[CONF_TYPE],
-            (data[CONF_HOST], DEFAULT_PORT),
-            bytes.fromhex(data[CONF_MAC]),
-            name=data[CONF_NAME],
+            entry_data[CONF_TYPE],
+            (entry_data[CONF_HOST], DEFAULT_PORT),
+            bytes.fromhex(entry_data[CONF_MAC]),
+            name=entry_data[CONF_NAME],
         )
-        device.timeout = data[CONF_TIMEOUT]
+        device.timeout = entry_data[CONF_TIMEOUT]
         await self.async_set_device(device)
         return await self.async_step_reset()

@@ -5,7 +5,12 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import button
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.setup import async_setup_component
 
 from .test_common import (
@@ -39,6 +44,13 @@ from .test_common import (
 DEFAULT_CONFIG = {
     button.DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def button_platform_only():
+    """Only setup the button platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.BUTTON]):
+        yield
 
 
 @pytest.mark.freeze_time("2021-11-08 13:31:44+00:00")

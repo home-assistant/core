@@ -94,7 +94,7 @@ async def _async_mock_entity_with_logbook_platform(hass):
     return entry
 
 
-async def _async_mock_device_with_logbook_platform(hass):
+async def _async_mock_devices_with_logbook_platform(hass):
     """Mock an integration that provides a device that are described by the logbook."""
     entry = MockConfigEntry(domain="test", data={"first": True}, options=None)
     entry.add_to_hass(hass)
@@ -109,8 +109,18 @@ async def _async_mock_device_with_logbook_platform(hass):
         model="model",
         suggested_area="Game Room",
     )
+    device2 = dev_reg.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:CC")},
+        identifiers={("bridgeid", "4567")},
+        sw_version="sw-version",
+        name="device name",
+        manufacturer="manufacturer",
+        model="model",
+        suggested_area="Living Room",
+    )
     await _async_mock_logbook_platform(hass)
-    return device
+    return [device, device2]
 
 
 async def test_get_events(hass, hass_ws_client, recorder_mock):
@@ -392,10 +402,13 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
         ]
     )
 
-    device = await _async_mock_device_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass)
+    device = devices[0]
+    device2 = devices[1]
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     hass.bus.async_fire("mock_event", {"device_id": device.id})
+    hass.bus.async_fire("mock_event", {"device_id": device2.id})
 
     hass.states.async_set("light.kitchen", STATE_OFF)
     await hass.async_block_till_done()
@@ -423,7 +436,7 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
             "id": 1,
             "type": "logbook/get_events",
             "start_time": now.isoformat(),
-            "device_ids": [device.id],
+            "device_ids": [device.id, device2.id],
         }
     )
     response = await client.receive_json()
@@ -431,10 +444,13 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
     assert response["id"] == 1
 
     results = response["result"]
-    assert len(results) == 1
+    assert len(results) == 2
     assert results[0]["name"] == "device name"
     assert results[0]["message"] == "is on fire"
     assert isinstance(results[0]["when"], float)
+    assert results[1]["name"] == "device name"
+    assert results[1]["message"] == "is on fire"
+    assert isinstance(results[1]["when"], float)
 
     await client.send_json(
         {
@@ -470,17 +486,20 @@ async def test_get_events_with_device_ids(hass, hass_ws_client, recorder_mock):
     assert response["id"] == 3
 
     results = response["result"]
-    assert len(results) == 4
+    assert len(results) == 5
     assert results[0]["message"] == "started"
     assert results[1]["name"] == "device name"
     assert results[1]["message"] == "is on fire"
     assert isinstance(results[1]["when"], float)
-    assert results[2]["entity_id"] == "light.kitchen"
-    assert results[2]["state"] == "on"
+    assert results[2]["name"] == "device name"
+    assert results[2]["message"] == "is on fire"
     assert isinstance(results[2]["when"], float)
     assert results[3]["entity_id"] == "light.kitchen"
-    assert results[3]["state"] == "off"
+    assert results[3]["state"] == "on"
     assert isinstance(results[3]["when"], float)
+    assert results[4]["entity_id"] == "light.kitchen"
+    assert results[4]["state"] == "off"
+    assert isinstance(results[4]["when"], float)
 
 
 @patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
@@ -1731,7 +1750,9 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    device = await _async_mock_device_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass)
+    device = devices[0]
+    device2 = devices[1]
 
     await hass.async_block_till_done()
     init_count = sum(hass.bus.async_listeners().values())
@@ -1743,7 +1764,7 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
             "id": 7,
             "type": "logbook/event_stream",
             "start_time": now.isoformat(),
-            "device_ids": [device.id],
+            "device_ids": [device.id, device2.id],
         }
     )
 
@@ -1774,6 +1795,29 @@ async def test_subscribe_unsubscribe_logbook_stream_device(
     assert msg["event"]["events"] == [
         {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY}
     ]
+
+    for _ in range(3):
+        hass.bus.async_fire("mock_event", {"device_id": device.id})
+        hass.bus.async_fire("mock_event", {"device_id": device2.id})
+        await hass.async_block_till_done()
+
+        msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+        assert msg["id"] == 7
+        assert msg["type"] == "event"
+        assert msg["event"]["events"] == [
+            {
+                "domain": "test",
+                "message": "is on fire",
+                "name": "device name",
+                "when": ANY,
+            },
+            {
+                "domain": "test",
+                "message": "is on fire",
+                "name": "device name",
+                "when": ANY,
+            },
+        ]
 
     await websocket_client.send_json(
         {"id": 8, "type": "unsubscribe_events", "subscription": 7}
@@ -1950,7 +1994,8 @@ async def test_live_stream_with_one_second_commit_interval(
             for comp in ("homeassistant", "logbook", "automation", "script")
         ]
     )
-    device = await _async_mock_device_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass)
+    device = devices[0]
 
     await hass.async_block_till_done()
     init_count = sum(hass.bus.async_listeners().values())
@@ -2143,7 +2188,8 @@ async def test_recorder_is_far_behind(hass, recorder_mock, hass_ws_client, caplo
         ]
     )
     await async_wait_recording_done(hass)
-    device = await _async_mock_device_with_logbook_platform(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass)
+    device = devices[0]
     await async_wait_recording_done(hass)
 
     # Block the recorder queue
@@ -2515,6 +2561,99 @@ async def test_logbook_stream_ignores_forced_updates(
     assert msg["id"] == 8
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
+
+    # Check our listener got unsubscribed
+    assert sum(hass.bus.async_listeners().values()) == init_count
+
+
+@patch("homeassistant.components.logbook.websocket_api.EVENT_COALESCE_TIME", 0)
+async def test_subscribe_all_entities_are_continuous_with_device(
+    hass, recorder_mock, hass_ws_client
+):
+    """Test subscribe/unsubscribe logbook stream with entities that are always filtered and a device."""
+    now = dt_util.utcnow()
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, comp, {})
+            for comp in ("homeassistant", "logbook", "automation", "script")
+        ]
+    )
+    await async_wait_recording_done(hass)
+    devices = await _async_mock_devices_with_logbook_platform(hass)
+    device = devices[0]
+    device2 = devices[1]
+
+    entity_ids = ("sensor.uom", "sensor.uom_two")
+
+    def _create_events():
+        for entity_id in entity_ids:
+            for state in ("1", "2", "3"):
+                hass.states.async_set(
+                    entity_id, state, {ATTR_UNIT_OF_MEASUREMENT: "any"}
+                )
+                hass.states.async_set("counter.any", state)
+                hass.states.async_set("proximity.any", state)
+        hass.bus.async_fire("mock_event", {"device_id": device.id})
+        hass.bus.async_fire("mock_event", {"device_id": device2.id})
+
+    init_count = sum(hass.bus.async_listeners().values())
+    _create_events()
+
+    await async_wait_recording_done(hass)
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json(
+        {
+            "id": 7,
+            "type": "logbook/event_stream",
+            "start_time": now.isoformat(),
+            "entity_ids": ["sensor.uom", "counter.any", "proximity.any"],
+            "device_ids": [device.id, device2.id],
+        }
+    )
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == TYPE_RESULT
+    assert msg["success"]
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == [
+        {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY},
+        {"domain": "test", "message": "is on fire", "name": "device name", "when": ANY},
+    ]
+    assert msg["event"]["partial"] is True
+
+    msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+    assert msg["id"] == 7
+    assert msg["type"] == "event"
+    assert msg["event"]["events"] == []
+    assert "partial" not in msg["event"]
+
+    for _ in range(2):
+        _create_events()
+        msg = await asyncio.wait_for(websocket_client.receive_json(), 2)
+        assert msg["id"] == 7
+        assert msg["type"] == "event"
+        assert msg["event"]["events"] == [
+            {
+                "domain": "test",
+                "message": "is on fire",
+                "name": "device name",
+                "when": ANY,
+            },
+            {
+                "domain": "test",
+                "message": "is on fire",
+                "name": "device name",
+                "when": ANY,
+            },
+        ]
+        assert "partial" not in msg["event"]
+
+    await websocket_client.close()
+    await hass.async_block_till_done()
 
     # Check our listener got unsubscribed
     assert sum(hass.bus.async_listeners().values()) == init_count

@@ -13,8 +13,6 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 
-from .const import X_HASSIO
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -246,7 +244,9 @@ class HassIO:
                 method,
                 f"http://{self._ip}{command}",
                 json=payload,
-                headers={X_HASSIO: os.environ.get("SUPERVISOR_TOKEN", "")},
+                headers={
+                    aiohttp.hdrs.AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 

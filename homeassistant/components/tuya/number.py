@@ -3,8 +3,13 @@ from __future__ import annotations
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
@@ -12,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import HomeAssistantTuyaData
 from .base import IntegerTypeData, TuyaEntity
-from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
+from .const import DEVICE_CLASS_UNITS, DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType
 
 # All descriptions can be found here. Mostly the Integer data types in the
 # default instructions set of each category end up being a number.
@@ -33,24 +38,28 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
             name="Temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_C,
             name="Temperature After Boiling",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_BOILING_F,
             name="Temperature After Boiling",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -108,6 +117,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer",
             entity_category=EntityCategory.CONFIG,
         ),
@@ -120,6 +130,28 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.POWDER_SET,
             name="Powder",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        NumberEntityDescription(
+            key=DPCode.COOK_TEMPERATURE,
+            name="Cook Temperature",
+            icon="mdi:thermometer",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.COOK_TIME,
+            name="Cook Time",
+            icon="mdi:timer",
+            native_unit_of_measurement=TIME_MINUTES,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        NumberEntityDescription(
+            key=DPCode.CLOUD_RECIPE_NUMBER,
+            name="Cloud Recipe",
             entity_category=EntityCategory.CONFIG,
         ),
     ),
@@ -256,6 +288,7 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP,
             name="Temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
     ),
@@ -265,11 +298,13 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
         NumberEntityDescription(
             key=DPCode.TEMP_SET,
             name="Temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
         NumberEntityDescription(
             key=DPCode.TEMP_SET_F,
             name="Temperature",
+            device_class=NumberDeviceClass.TEMPERATURE,
             icon="mdi:thermometer-lines",
         ),
     ),
@@ -326,14 +361,49 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
             description.key, dptype=DPType.INTEGER, prefer_function=True
         ):
             self._number = int_type
-            self._attr_max_value = self._number.max_scaled
-            self._attr_min_value = self._number.min_scaled
-            self._attr_step = self._number.step_scaled
-            if description.unit_of_measurement is None:
-                self._attr_unit_of_measurement = self._number.unit
+            self._attr_native_max_value = self._number.max_scaled
+            self._attr_native_min_value = self._number.min_scaled
+            self._attr_native_step = self._number.step_scaled
+
+        # Logic to ensure the set device class and API received Unit Of Measurement
+        # match Home Assistants requirements.
+        if (
+            self.device_class is not None
+            and not self.device_class.startswith(DOMAIN)
+            and description.native_unit_of_measurement is None
+        ):
+
+            # We cannot have a device class, if the UOM isn't set or the
+            # device class cannot be found in the validation mapping.
+            if (
+                self.native_unit_of_measurement is None
+                or self.device_class not in DEVICE_CLASS_UNITS
+            ):
+                self._attr_device_class = None
+                return
+
+            uoms = DEVICE_CLASS_UNITS[self.device_class]
+            self._uom = uoms.get(self.native_unit_of_measurement) or uoms.get(
+                self.native_unit_of_measurement.lower()
+            )
+
+            # Unknown unit of measurement, device class should not be used.
+            if self._uom is None:
+                self._attr_device_class = None
+                return
+
+            # If we still have a device class, we should not use an icon
+            if self.device_class:
+                self._attr_icon = None
+
+            # Found unit of measurement, use the standardized Unit
+            # Use the target conversion unit (if set)
+            self._attr_native_unit_of_measurement = (
+                self._uom.conversion_unit or self._uom.unit
+            )
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         # Unknown or unsupported data type
         if self._number is None:
@@ -345,7 +415,7 @@ class TuyaNumberEntity(TuyaEntity, NumberEntity):
 
         return self._number.scale_value(value)
 
-    def set_value(self, value: float) -> None:
+    def set_native_value(self, value: float) -> None:
         """Set new value."""
         if self._number is None:
             raise RuntimeError("Cannot set value, device doesn't provide type data")

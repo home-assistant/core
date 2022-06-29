@@ -3,9 +3,10 @@ from __future__ import annotations
 
 from datetime import datetime as dt
 
+from sqlalchemy import lambda_stmt
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
-from sqlalchemy.sql.selectable import Select
+from sqlalchemy.sql.lambdas import StatementLambdaElement
 
 from homeassistant.components.recorder.db_schema import (
     LAST_UPDATED_INDEX,
@@ -28,29 +29,32 @@ def all_stmt(
     states_entity_filter: ClauseList | None = None,
     events_entity_filter: ClauseList | None = None,
     context_id: str | None = None,
-) -> Select:
+) -> StatementLambdaElement:
     """Generate a logbook query for all entities."""
-    stmt = select_events_without_states(start_day, end_day, event_types)
+    stmt = lambda_stmt(
+        lambda: select_events_without_states(start_day, end_day, event_types)
+    )
     if context_id is not None:
         # Once all the old `state_changed` events
         # are gone from the database remove the
         # _legacy_select_events_context_id()
-        stmt = stmt.where(Events.context_id == context_id).union_all(
+        stmt += lambda s: s.where(Events.context_id == context_id).union_all(
             _states_query_for_context_id(start_day, end_day, context_id),
             legacy_select_events_context_id(start_day, end_day, context_id),
         )
     else:
         if events_entity_filter is not None:
-            stmt = stmt.where(events_entity_filter)
+            stmt += lambda s: s.where(events_entity_filter)
 
         if states_entity_filter is not None:
-            stmt = stmt.union_all(
+            stmt += lambda s: s.union_all(
                 _states_query_for_all(start_day, end_day).where(states_entity_filter)
             )
         else:
-            stmt = stmt.union_all(_states_query_for_all(start_day, end_day))
+            stmt += lambda s: s.union_all(_states_query_for_all(start_day, end_day))
 
-    return stmt.order_by(Events.time_fired)
+    stmt += lambda s: s.order_by(Events.time_fired)
+    return stmt
 
 
 def _states_query_for_all(start_day: dt, end_day: dt) -> Query:

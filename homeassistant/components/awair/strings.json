@@ -8,7 +8,7 @@
           "email": "[%key:common::config_flow::data::email%]"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "description": "Please re-enter your Awair developer access token.",
         "data": {
           "access_token": "[%key:common::config_flow::data::access_token%]",
