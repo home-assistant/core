@@ -404,61 +404,55 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type="OptionsFlow",
                     check_return_type_inheritance=True,
                 ),
+                # Ignore return-type to avoid double message.
+                # It is already covered by async_step_*
                 TypeHintMatch(
                     function_name="async_step_dhcp",
                     arg_types={
                         1: "DhcpServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_hassio",
                     arg_types={
                         1: "HassioServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_homekit",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_mqtt",
                     arg_types={
                         1: "MqttServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_reauth",
                     arg_types={
                         1: "Mapping[str, Any]",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_ssdp",
                     arg_types={
                         1: "SsdpServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_usb",
                     arg_types={
                         1: "UsbServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_zeroconf",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type="FlowResult",
                 ),
             ],
         ),
@@ -1700,7 +1694,9 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
             )
 
         # Check the return type.
-        if not _is_valid_return_type(match, node.returns):
+        if match.return_type != _Special.UNDEFINED and not _is_valid_return_type(
+            match, node.returns
+        ):
             self.add_message(
                 "hass-return-type",
                 node=node,
