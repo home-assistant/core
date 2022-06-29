@@ -18,6 +18,7 @@ from .const import (
     KEY_COORDINATOR_LINK,
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
+    KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
     PLATFORMS,
 )
@@ -84,6 +85,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Fetch data from the router."""
         return await router.async_get_speed_test()
 
+    async def async_update_utilization() -> dict[str, Any] | None:
+        """Fetch data from the router."""
+        return await router.async_get_utilization()
+
     async def async_check_link_status() -> dict[str, Any] | None:
         """Fetch data from the router."""
         return await router.async_get_link_status()
@@ -110,6 +115,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_method=async_update_speed_test,
         update_interval=SPEED_TEST_INTERVAL,
     )
+    coordinator_utilization = DataUpdateCoordinator(
+        hass,
+        _LOGGER,
+        name=f"{router.device_name} Utilization",
+        update_method=async_update_utilization,
+        update_interval=SCAN_INTERVAL,
+    )
     coordinator_link = DataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -121,6 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if router.track_devices:
         await coordinator.async_config_entry_first_refresh()
     await coordinator_traffic_meter.async_config_entry_first_refresh()
+    await coordinator_utilization.async_config_entry_first_refresh()
     await coordinator_link.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = {
@@ -128,6 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         KEY_COORDINATOR: coordinator,
         KEY_COORDINATOR_TRAFFIC: coordinator_traffic_meter,
         KEY_COORDINATOR_SPEED: coordinator_speed_test,
+        KEY_COORDINATOR_UTIL: coordinator_utilization,
         KEY_COORDINATOR_LINK: coordinator_link,
     }
 
