@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -32,6 +33,7 @@ from .const import (
     KEY_COORDINATOR_LINK,
     KEY_COORDINATOR_SPEED,
     KEY_COORDINATOR_TRAFFIC,
+    KEY_COORDINATOR_UTIL,
     KEY_ROUTER,
 )
 from .router import NetgearDeviceEntity, NetgearRouter, NetgearRouterEntity
@@ -245,6 +247,25 @@ SENSOR_SPEED_TYPES = [
     ),
 ]
 
+SENSOR_UTILIZATION = [
+    NetgearSensorEntityDescription(
+        key="NewCPUUtilization",
+        name="CPU Utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:cpu-64-bit",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    NetgearSensorEntityDescription(
+        key="NewMemoryUtilization",
+        name="Memory Utilization",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=PERCENTAGE,
+        icon="mdi:memory",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+]
+
 SENSOR_LINK_TYPES = [
     NetgearSensorEntityDescription(
         key="NewEthernetLinkStatus",
@@ -263,6 +284,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR]
     coordinator_traffic = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_TRAFFIC]
     coordinator_speed = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_SPEED]
+    coordinator_utilization = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_UTIL]
     coordinator_link = hass.data[DOMAIN][entry.entry_id][KEY_COORDINATOR_LINK]
 
     # Router entities
@@ -276,6 +298,11 @@ async def async_setup_entry(
     for description in SENSOR_SPEED_TYPES:
         router_entities.append(
             NetgearRouterSensorEntity(coordinator_speed, router, description)
+        )
+
+    for description in SENSOR_UTILIZATION:
+        router_entities.append(
+            NetgearRouterSensorEntity(coordinator_utilization, router, description)
         )
 
     for description in SENSOR_LINK_TYPES:
