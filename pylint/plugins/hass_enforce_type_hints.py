@@ -10,7 +10,7 @@ from pylint.lint import PyLinter
 
 from homeassistant.const import Platform
 
-DEVICE_CLASS = "***DeviceClass"
+DEVICE_CLASS = object()
 UNDEFINED = object()
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
