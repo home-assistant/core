@@ -678,6 +678,25 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "binary_sensor": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="BinarySensorEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["BinarySensorDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type=["bool", None],
+                ),
+            ],
+        ),
+    ],
     "cover": [
         ClassTypeHintMatch(
             base_class="Entity",
