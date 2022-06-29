@@ -29,7 +29,7 @@ from homeassistant.helpers.event import (
     TrackTemplateResult,
     async_track_template_result,
 )
-from homeassistant.helpers.json import ExtendedJSONEncoder
+from homeassistant.helpers.json import JSON_DUMP, ExtendedJSONEncoder
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 from homeassistant.setup import DATA_SETUP_TIME, async_get_loaded_integrations
@@ -241,13 +241,13 @@ def handle_get_states(
     # to succeed for the UI to show.
     response = messages.result_message(msg["id"], states)
     try:
-        connection.send_message(const.JSON_DUMP(response))
+        connection.send_message(JSON_DUMP(response))
         return
     except (ValueError, TypeError):
         connection.logger.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
+                find_paths_unserializable_data(response, dump=JSON_DUMP)
             ),
         )
     del response
@@ -256,13 +256,13 @@ def handle_get_states(
     serialized = []
     for state in states:
         try:
-            serialized.append(const.JSON_DUMP(state))
+            serialized.append(JSON_DUMP(state))
         except (ValueError, TypeError):
             # Error is already logged above
             pass
 
     # We now have partially serialized states. Craft some JSON.
-    response2 = const.JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
+    response2 = JSON_DUMP(messages.result_message(msg["id"], ["TO_REPLACE"]))
     response2 = response2.replace('"TO_REPLACE"', ", ".join(serialized))
     connection.send_message(response2)
 
@@ -315,13 +315,13 @@ def handle_subscribe_entities(
     # to succeed for the UI to show.
     response = messages.event_message(msg["id"], data)
     try:
-        connection.send_message(const.JSON_DUMP(response))
+        connection.send_message(JSON_DUMP(response))
         return
     except (ValueError, TypeError):
         connection.logger.error(
             "Unable to serialize to JSON. Bad data found at %s",
             format_unserializable_data(
-                find_paths_unserializable_data(response, dump=const.JSON_DUMP)
+                find_paths_unserializable_data(response, dump=JSON_DUMP)
             ),
         )
     del response
@@ -330,14 +330,14 @@ def handle_subscribe_entities(
     cannot_serialize: list[str] = []
     for entity_id, state_dict in add_entities.items():
         try:
-            const.JSON_DUMP(state_dict)
+            JSON_DUMP(state_dict)
         except (ValueError, TypeError):
             cannot_serialize.append(entity_id)
 
     for entity_id in cannot_serialize:
         del add_entities[entity_id]
 
-    connection.send_message(const.JSON_DUMP(messages.event_message(msg["id"], data)))
+    connection.send_message(JSON_DUMP(messages.event_message(msg["id"], data)))
 
 
 @decorators.websocket_command({vol.Required("type"): "get_services"})

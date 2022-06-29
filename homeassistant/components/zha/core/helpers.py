@@ -15,16 +15,17 @@ import itertools
 import logging
 from random import uniform
 import re
-from typing import Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar
 
 import voluptuous as vol
 import zigpy.exceptions
 import zigpy.types
 import zigpy.util
+import zigpy.zcl
 import zigpy.zdo.types as zdo_types
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import State, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 
 from .const import (
@@ -35,7 +36,10 @@ from .const import (
     DATA_ZHA_GATEWAY,
 )
 from .registries import BINDABLE_CLUSTERS
-from .typing import ZhaDeviceType, ZigpyClusterType
+
+if TYPE_CHECKING:
+    from .device import ZHADevice
+    from .gateway import ZHAGateway
 
 _T = TypeVar("_T")
 
@@ -44,7 +48,7 @@ _T = TypeVar("_T")
 class BindingPair:
     """Information for binding."""
 
-    source_cluster: ZigpyClusterType
+    source_cluster: zigpy.zcl.Cluster
     target_ieee: zigpy.types.EUI64
     target_ep_id: int
 
@@ -78,7 +82,7 @@ async def safe_read(
 
 
 async def get_matched_clusters(
-    source_zha_device: ZhaDeviceType, target_zha_device: ZhaDeviceType
+    source_zha_device: ZHADevice, target_zha_device: ZHADevice
 ) -> list[BindingPair]:
     """Get matched input/output cluster pairs for 2 devices."""
     source_clusters = source_zha_device.async_get_std_clusters()
@@ -161,11 +165,13 @@ def async_cluster_exists(hass, cluster_id):
 
 
 @callback
-def async_get_zha_device(hass, device_id):
+def async_get_zha_device(hass: HomeAssistant, device_id: str) -> ZHADevice:
     """Get a ZHA device for the given device registry id."""
     device_registry = dr.async_get(hass)
     registry_device = device_registry.async_get(device_id)
-    zha_gateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    if not registry_device:
+        raise ValueError(f"Device id `{device_id}` not found in registry.")
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     ieee_address = list(list(registry_device.identifiers)[0])[1]
     ieee = zigpy.types.EUI64.convert(ieee_address)
     return zha_gateway.devices[ieee]

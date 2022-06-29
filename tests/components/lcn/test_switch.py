@@ -19,14 +19,19 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModuleConnection
 
+SWITCH_OUTPUT1 = "switch.switch_output1"
+SWITCH_OUTPUT2 = "switch.switch_output2"
+SWITCH_RELAY1 = "switch.switch_relay1"
+SWITCH_RELAY2 = "switch.switch_relay2"
+
 
 async def test_setup_lcn_switch(hass, lcn_connection):
     """Test the setup of switch."""
     for entity_id in (
-        "switch.switch_output1",
-        "switch.switch_output2",
-        "switch.switch_relay1",
-        "switch.switch_relay2",
+        SWITCH_OUTPUT1,
+        SWITCH_OUTPUT2,
+        SWITCH_RELAY1,
+        SWITCH_RELAY2,
     ):
         state = hass.states.get(entity_id)
         assert state is not None
@@ -37,13 +42,13 @@ async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
     entity_registry = er.async_get(hass)
 
-    entity_output = entity_registry.async_get("switch.switch_output1")
+    entity_output = entity_registry.async_get(SWITCH_OUTPUT1)
 
     assert entity_output
     assert entity_output.unique_id == f"{entry.entry_id}-m000007-output1"
     assert entity_output.original_name == "Switch_Output1"
 
-    entity_relay = entity_registry.async_get("switch.switch_relay1")
+    entity_relay = entity_registry.async_get(SWITCH_RELAY1)
 
     assert entity_relay
     assert entity_relay.unique_id == f"{entry.entry_id}-m000007-relay1"
@@ -59,13 +64,13 @@ async def test_output_turn_on(dim_output, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switch_output1"},
+        {ATTR_ENTITY_ID: SWITCH_OUTPUT1},
         blocking=True,
     )
     await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 100, 0)
 
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     assert state.state == STATE_OFF
 
     # command success
@@ -75,20 +80,20 @@ async def test_output_turn_on(dim_output, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switch_output1"},
+        {ATTR_ENTITY_ID: SWITCH_OUTPUT1},
         blocking=True,
     )
     await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 100, 0)
 
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     assert state.state == STATE_ON
 
 
 @patch.object(MockModuleConnection, "dim_output")
 async def test_output_turn_off(dim_output, hass, lcn_connection):
     """Test the output switch turns off."""
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     state.state = STATE_ON
 
     # command failed
@@ -97,13 +102,13 @@ async def test_output_turn_off(dim_output, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switch_output1"},
+        {ATTR_ENTITY_ID: SWITCH_OUTPUT1},
         blocking=True,
     )
     await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 0, 0)
 
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     assert state.state == STATE_ON
 
     # command success
@@ -113,13 +118,13 @@ async def test_output_turn_off(dim_output, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switch_output1"},
+        {ATTR_ENTITY_ID: SWITCH_OUTPUT1},
         blocking=True,
     )
     await hass.async_block_till_done()
     dim_output.assert_awaited_with(0, 0, 0)
 
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     assert state.state == STATE_OFF
 
 
@@ -135,13 +140,13 @@ async def test_relay_turn_on(control_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switch_relay1"},
+        {ATTR_ENTITY_ID: SWITCH_RELAY1},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     assert state.state == STATE_OFF
 
     # command success
@@ -151,13 +156,13 @@ async def test_relay_turn_on(control_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.switch_relay1"},
+        {ATTR_ENTITY_ID: SWITCH_RELAY1},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     assert state.state == STATE_ON
 
 
@@ -167,7 +172,7 @@ async def test_relay_turn_off(control_relays, hass, lcn_connection):
     states = [RelayStateModifier.NOCHANGE] * 8
     states[0] = RelayStateModifier.OFF
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     state.state = STATE_ON
 
     # command failed
@@ -176,13 +181,13 @@ async def test_relay_turn_off(control_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switch_relay1"},
+        {ATTR_ENTITY_ID: SWITCH_RELAY1},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     assert state.state == STATE_ON
 
     # command success
@@ -192,13 +197,13 @@ async def test_relay_turn_off(control_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_SWITCH,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.switch_relay1"},
+        {ATTR_ENTITY_ID: SWITCH_RELAY1},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_relays.assert_awaited_with(states)
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     assert state.state == STATE_OFF
 
 
@@ -212,7 +217,7 @@ async def test_pushed_output_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     assert state.state == STATE_ON
 
     # push status "off"
@@ -220,7 +225,7 @@ async def test_pushed_output_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.switch_output1")
+    state = hass.states.get(SWITCH_OUTPUT1)
     assert state.state == STATE_OFF
 
 
@@ -236,7 +241,7 @@ async def test_pushed_relay_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     assert state.state == STATE_ON
 
     # push status "off"
@@ -245,11 +250,11 @@ async def test_pushed_relay_status_change(hass, entry, lcn_connection):
     await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("switch.switch_relay1")
+    state = hass.states.get(SWITCH_RELAY1)
     assert state.state == STATE_OFF
 
 
 async def test_unload_config_entry(hass, entry, lcn_connection):
     """Test the switch is removed when the config entry is unloaded."""
     await hass.config_entries.async_unload(entry.entry_id)
-    assert hass.states.get("switch.switch_output1").state == STATE_UNAVAILABLE
+    assert hass.states.get(SWITCH_OUTPUT1).state == STATE_UNAVAILABLE

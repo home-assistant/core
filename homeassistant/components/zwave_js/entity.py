@@ -1,10 +1,8 @@
 """Generic Z-Wave Entity Class."""
 from __future__ import annotations
 
-import logging
-
-from zwave_js_server.client import Client as ZwaveClient
 from zwave_js_server.const import NodeStatus
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.value import Value as ZwaveValue, get_value_id
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,11 +10,9 @@ from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .discovery import ZwaveDiscoveryInfo
 from .helpers import get_device_id, get_unique_id
-
-LOGGER = logging.getLogger(__name__)
 
 EVENT_VALUE_UPDATED = "value updated"
 EVENT_VALUE_REMOVED = "value removed"
@@ -30,11 +26,11 @@ class ZWaveBaseEntity(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, info: ZwaveDiscoveryInfo
+        self, config_entry: ConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
-        self.client = client
+        self.driver = driver
         self.info = info
         # entities requiring additional values, can add extra ids to this list
         self.watched_value_ids = {self.info.primary_value.value_id}
@@ -46,16 +42,14 @@ class ZWaveBaseEntity(Entity):
 
         # Entity class attributes
         self._attr_name = self.generate_name()
-        self._attr_unique_id = get_unique_id(
-            self.client, self.info.primary_value.value_id
-        )
+        self._attr_unique_id = get_unique_id(driver, self.info.primary_value.value_id)
         self._attr_entity_registry_enabled_default = (
             self.info.entity_registry_enabled_default
         )
         self._attr_assumed_state = self.info.assumed_state
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(self.client, self.info.node)},
+            identifiers={get_device_id(driver, self.info.node)},
         )
 
     @callback
@@ -145,7 +139,10 @@ class ZWaveBaseEntity(Entity):
             if item:
                 name += f" - {item}"
         # append endpoint if > 1
-        if self.info.primary_value.endpoint > 1:
+        if (
+            self.info.primary_value.endpoint is not None
+            and self.info.primary_value.endpoint > 1
+        ):
             name += f" ({self.info.primary_value.endpoint})"
 
         return name
@@ -154,7 +151,7 @@ class ZWaveBaseEntity(Entity):
     def available(self) -> bool:
         """Return entity availability."""
         return (
-            self.client.connected
+            self.driver.client.connected
             and bool(self.info.node.ready)
             and self.info.node.status != NodeStatus.DEAD
         )

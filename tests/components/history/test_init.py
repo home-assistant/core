@@ -5,6 +5,7 @@ from http import HTTPStatus
 import json
 from unittest.mock import patch, sentinel
 
+from freezegun import freeze_time
 import pytest
 from pytest import approx
 
@@ -246,15 +247,11 @@ def test_get_significant_states_exclude(hass_history):
 def test_get_significant_states_exclude_include_entity(hass_history):
     """Test significant states when excluding domains and include entities.
 
-    We should not get back every thermostat and media player test changes.
+    We should not get back every thermostat change unless its specifically included
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test2"]
-    del states["media_player.test3"]
-    del states["thermostat.test"]
     del states["thermostat.test2"]
-    del states["script.can_cancel_this_one"]
 
     config = history.CONFIG_SCHEMA(
         {
@@ -340,14 +337,12 @@ def test_get_significant_states_include(hass_history):
 def test_get_significant_states_include_exclude_domain(hass_history):
     """Test if significant states when excluding and including domains.
 
-    We should not get back any changes since we include only the
-    media_player domain but also exclude it.
+    We should get back all the media_player domain changes
+    only since the include wins over the exclude but will
+    exclude everything else.
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test"]
-    del states["media_player.test2"]
-    del states["media_player.test3"]
     del states["thermostat.test"]
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
@@ -372,7 +367,6 @@ def test_get_significant_states_include_exclude_entity(hass_history):
     """
     hass = hass_history
     zero, four, states = record_states(hass)
-    del states["media_player.test"]
     del states["media_player.test2"]
     del states["media_player.test3"]
     del states["thermostat.test"]
@@ -394,12 +388,12 @@ def test_get_significant_states_include_exclude_entity(hass_history):
 def test_get_significant_states_include_exclude(hass_history):
     """Test if significant states when in/excluding domains and entities.
 
-    We should only get back changes of the media_player.test2 entity.
+    We should get back changes of the media_player.test2, media_player.test3,
+    and thermostat.test.
     """
     hass = hass_history
     zero, four, states = record_states(hass)
     del states["media_player.test"]
-    del states["thermostat.test"]
     del states["thermostat.test2"]
     del states["script.can_cancel_this_one"]
 
@@ -719,7 +713,7 @@ async def test_fetch_period_api_with_entity_glob_exclude(
         {
             "history": {
                 "exclude": {
-                    "entity_globs": ["light.k*"],
+                    "entity_globs": ["light.k*", "binary_sensor.*_?"],
                     "domains": "switch",
                     "entities": "media_player.test",
                 },
@@ -731,6 +725,9 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     hass.states.async_set("light.match", "on")
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
+    hass.states.async_set("binary_sensor.sensor_l", "on")
+    hass.states.async_set("binary_sensor.sensor_r", "on")
+    hass.states.async_set("binary_sensor.sensor", "on")
 
     await async_wait_recording_done(hass)
 
@@ -740,9 +737,10 @@ async def test_fetch_period_api_with_entity_glob_exclude(
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
-    assert len(response_json) == 2
-    assert response_json[0][0]["entity_id"] == "light.cow"
-    assert response_json[1][0]["entity_id"] == "light.match"
+    assert len(response_json) == 3
+    assert response_json[0][0]["entity_id"] == "binary_sensor.sensor"
+    assert response_json[1][0]["entity_id"] == "light.cow"
+    assert response_json[2][0]["entity_id"] == "light.match"
 
 
 async def test_fetch_period_api_with_entity_glob_include_and_exclude(
@@ -755,7 +753,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
         {
             "history": {
                 "exclude": {
-                    "entity_globs": ["light.many*"],
+                    "entity_globs": ["light.many*", "binary_sensor.*"],
                 },
                 "include": {
                     "entity_globs": ["light.m*"],
@@ -771,6 +769,7 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     hass.states.async_set("light.many_state_changes", "on")
     hass.states.async_set("switch.match", "on")
     hass.states.async_set("media_player.test", "on")
+    hass.states.async_set("binary_sensor.exclude", "on")
 
     await async_wait_recording_done(hass)
 
@@ -780,10 +779,11 @@ async def test_fetch_period_api_with_entity_glob_include_and_exclude(
     )
     assert response.status == HTTPStatus.OK
     response_json = await response.json()
-    assert len(response_json) == 3
-    assert response_json[0][0]["entity_id"] == "light.match"
-    assert response_json[1][0]["entity_id"] == "media_player.test"
-    assert response_json[2][0]["entity_id"] == "switch.match"
+    assert len(response_json) == 4
+    assert response_json[0][0]["entity_id"] == "light.many_state_changes"
+    assert response_json[1][0]["entity_id"] == "light.match"
+    assert response_json[2][0]["entity_id"] == "media_player.test"
+    assert response_json[3][0]["entity_id"] == "switch.match"
 
 
 async def test_entity_ids_limit_via_api(hass, hass_client, recorder_mock):
@@ -929,6 +929,141 @@ async def test_statistics_during_period(
             }
         ]
     }
+
+
+@pytest.mark.parametrize(
+    "units, attributes, state, value",
+    [
+        (IMPERIAL_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (METRIC_SYSTEM, POWER_SENSOR_ATTRIBUTES, 10, 10000),
+        (IMPERIAL_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 50),
+        (METRIC_SYSTEM, TEMPERATURE_SENSOR_ATTRIBUTES, 10, 10),
+        (IMPERIAL_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 14.503774389728312),
+        (METRIC_SYSTEM, PRESSURE_SENSOR_ATTRIBUTES, 1000, 100000),
+    ],
+)
+async def test_statistics_during_period_in_the_past(
+    hass, hass_ws_client, recorder_mock, units, attributes, state, value
+):
+    """Test statistics_during_period in the past."""
+    hass.config.set_time_zone("UTC")
+    now = dt_util.utcnow().replace()
+
+    hass.config.units = units
+    await async_setup_component(hass, "history", {})
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+
+    past = now - timedelta(days=3)
+
+    with freeze_time(past):
+        hass.states.async_set("sensor.test", state, attributes=attributes)
+        await async_wait_recording_done(hass)
+
+    sensor_state = hass.states.get("sensor.test")
+    assert sensor_state.last_updated == past
+
+    stats_top_of_hour = past.replace(minute=0, second=0, microsecond=0)
+    stats_start = past.replace(minute=55)
+    do_adhoc_statistics(hass, start=stats_start)
+    await async_wait_recording_done(hass)
+
+    client = await hass_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "end_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "hour",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
+
+    past = now - timedelta(days=3, hours=1)
+    await client.send_json(
+        {
+            "id": 3,
+            "type": "history/statistics_during_period",
+            "start_time": past.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": stats_start.isoformat(),
+                "end": (stats_start + timedelta(minutes=5)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    start_of_day = stats_top_of_hour.replace(hour=0, minute=0)
+    await client.send_json(
+        {
+            "id": 4,
+            "type": "history/statistics_during_period",
+            "start_time": stats_top_of_hour.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "day",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "sensor.test": [
+            {
+                "statistic_id": "sensor.test",
+                "start": start_of_day.isoformat(),
+                "end": (start_of_day + timedelta(days=1)).isoformat(),
+                "mean": approx(value),
+                "min": approx(value),
+                "max": approx(value),
+                "last_reset": None,
+                "state": None,
+                "sum": None,
+            }
+        ]
+    }
+
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "history/statistics_during_period",
+            "start_time": now.isoformat(),
+            "statistic_ids": ["sensor.test"],
+            "period": "5minute",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {}
 
 
 async def test_statistics_during_period_bad_start_time(

@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Automatyczne obej\u015bcie niskiego poziomu baterii"
+                },
+                "description": "Automatycznie pomijaj strefy, kt\u00f3re zg\u0142osz\u0105 niski poziom na\u0142adowania baterii.",
+                "title": "Opcje TotalConnect"
+            }
+        }
     }
 }

@@ -15,7 +15,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "De Sense-integratie moet uw account {email} opnieuw verifi\u00ebren.",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

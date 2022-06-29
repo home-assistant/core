@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bond_api import Action, BPUPSubscriptions, DeviceType
+from bond_async import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -13,11 +13,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import BPUP_SUBS, DOMAIN, HUB
+from .const import DOMAIN
 from .entity import BondEntity
+from .models import BondData
 from .utils import BondDevice, BondHub
 
 
@@ -37,17 +37,15 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Bond cover devices."""
-    data = hass.data[DOMAIN][entry.entry_id]
-    hub: BondHub = data[HUB]
-    bpup_subs: BPUPSubscriptions = data[BPUP_SUBS]
+    data: BondData = hass.data[DOMAIN][entry.entry_id]
+    hub = data.hub
+    bpup_subs = data.bpup_subs
 
-    covers: list[Entity] = [
+    async_add_entities(
         BondCover(hub, device, bpup_subs)
         for device in hub.devices
         if device.type == DeviceType.MOTORIZED_SHADES
-    ]
-
-    async_add_entities(covers, True)
+    )
 
 
 class BondCover(BondEntity, CoverEntity):
@@ -78,7 +76,8 @@ class BondCover(BondEntity, CoverEntity):
                 supported_features |= CoverEntityFeature.STOP_TILT
         self._attr_supported_features = supported_features
 
-    def _apply_state(self, state: dict) -> None:
+    def _apply_state(self) -> None:
+        state = self._device.state
         cover_open = state.get("open")
         self._attr_is_closed = None if cover_open is None else cover_open == 0
         if (bond_position := state.get("position")) is not None:

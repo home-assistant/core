@@ -33,7 +33,6 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hs_to_xy
@@ -93,58 +92,41 @@ async def async_setup_entry(
 
         async_add_entities([DeconzLight(light, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.lights.lights.subscribe(
-            gateway.evaluate_add_device(async_add_light),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_light,
+        gateway.api.lights.lights,
     )
-    for light_id in gateway.api.lights.lights:
-        async_add_light(EventType.ADDED, light_id)
 
-    config_entry.async_on_unload(
-        gateway.api.lights.fans.subscribe(
-            async_add_light,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_light,
+        gateway.api.lights.fans,
     )
-    for light_id in gateway.api.lights.fans:
-        async_add_light(EventType.ADDED, light_id)
 
     @callback
     def async_add_group(_: EventType, group_id: str) -> None:
-        """Add group from deCONZ."""
-        if (
-            not gateway.option_allow_deconz_groups
-            or (group := gateway.api.groups[group_id])
-            and not group.lights
-        ):
+        """Add group from deCONZ.
+
+        Update group states based on its sum of related lights.
+        """
+        if (group := gateway.api.groups[group_id]) and not group.lights:
             return
+
+        first = True
+        for light_id in group.lights:
+            if (
+                (light := gateway.api.lights.lights.get(light_id))
+                and light.ZHATYPE == Light.ZHATYPE
+                and light.reachable
+            ):
+                group.update_color_state(light, update_all_attributes=first)
+                first = False
 
         async_add_entities([DeconzGroup(group, gateway)])
 
-    config_entry.async_on_unload(
-        gateway.api.groups.subscribe(
-            async_add_group,
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_group,
+        gateway.api.groups,
     )
-
-    @callback
-    def async_load_groups() -> None:
-        """Load deCONZ groups."""
-        for group_id in gateway.api.groups:
-            async_add_group(EventType.ADDED, group_id)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_reload_groups,
-            async_load_groups,
-        )
-    )
-
-    async_load_groups()
 
 
 class DeconzBaseLight(Generic[_L], DeconzDevice, LightEntity):
@@ -296,6 +278,16 @@ class DeconzLight(DeconzBaseLight[Light]):
     def min_mireds(self) -> int:
         """Return the coldest color_temp that this light supports."""
         return self._device.min_color_temp or super().min_mireds
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Light state will also reflect in relevant groups."""
+        super().async_update_callback()
+
+        if self._device.reachable and "attr" not in self._device.changed_keys:
+            for group in self.gateway.api.groups.values():
+                if self._device.resource_id in group.lights:
+                    group.update_color_state(self._device)
 
 
 class DeconzGroup(DeconzBaseLight[Group]):

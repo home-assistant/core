@@ -11,9 +11,12 @@ from unittest.mock import Mock, patch
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import logbook
+from homeassistant.components import logbook, recorder
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook.models import LazyEventPartialState
+from homeassistant.components.logbook.processor import EventProcessor
+from homeassistant.components.logbook.queries.common import PSUEDO_EVENT_STATE_CHANGED
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -95,15 +98,12 @@ async def test_service_call_create_logbook_entry(hass_):
     # Our service call will unblock when the event listeners have been
     # scheduled. This means that they may not have been processed yet.
     await async_wait_recording_done(hass_)
-    ent_reg = er.async_get(hass_)
+    event_processor = EventProcessor(hass_, (EVENT_LOGBOOK_ENTRY,))
 
     events = list(
-        logbook._get_events(
-            hass_,
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 2
@@ -137,15 +137,11 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(hass, recorde
         },
     )
     await async_wait_recording_done(hass)
-    ent_reg = er.async_get(hass)
-
+    event_processor = EventProcessor(hass, (EVENT_LOGBOOK_ENTRY,))
     events = list(
-        logbook._get_events(
-            hass,
+        event_processor.get_events(
             dt_util.utcnow() - timedelta(hours=1),
             dt_util.utcnow() + timedelta(hours=1),
-            (EVENT_LOGBOOK_ENTRY,),
-            ent_reg,
         )
     )
     assert len(events) == 1
@@ -335,7 +331,7 @@ def create_state_changed_event_from_old_new(
         ],
     )
 
-    row.event_type = logbook.PSUEDO_EVENT_STATE_CHANGED
+    row.event_type = PSUEDO_EVENT_STATE_CHANGED
     row.event_data = "{}"
     row.shared_data = "{}"
     row.attributes = attributes_json
@@ -353,7 +349,7 @@ def create_state_changed_event_from_old_new(
     row.context_parent_id = None
     row.old_state_id = old_state and 1
     row.state_id = new_state and 1
-    return logbook.LazyEventPartialState(row, {})
+    return LazyEventPartialState(row, {})
 
 
 async def test_logbook_view(hass, hass_client, recorder_mock):
@@ -514,7 +510,7 @@ async def test_exclude_described_event(hass, hass_client, recorder_mock):
         return {
             "name": "Test Name",
             "message": "tested a message",
-            "entity_id": event.data.get(ATTR_ENTITY_ID),
+            "entity_id": event.data[ATTR_ENTITY_ID],
         }
 
     def async_describe_events(hass, async_describe_event):
@@ -749,6 +745,12 @@ async def test_filter_continuous_sensor_values(
     entity_id_third = "light.bla"
     hass.states.async_set(entity_id_third, STATE_OFF, {"unit_of_measurement": "foo"})
     hass.states.async_set(entity_id_third, STATE_ON, {"unit_of_measurement": "foo"})
+    entity_id_proximity = "proximity.bla"
+    hass.states.async_set(entity_id_proximity, STATE_OFF)
+    hass.states.async_set(entity_id_proximity, STATE_ON)
+    entity_id_counter = "counter.bla"
+    hass.states.async_set(entity_id_counter, STATE_OFF)
+    hass.states.async_set(entity_id_counter, STATE_ON)
 
     await async_wait_recording_done(hass)
 
@@ -2007,13 +2009,12 @@ async def test_include_events_domain_glob(hass, hass_client, recorder_mock):
     )
     await async_recorder_block_till_done(hass)
 
-    # Should get excluded by domain
     hass.bus.async_fire(
         logbook.EVENT_LOGBOOK_ENTRY,
         {
             logbook.ATTR_NAME: "Alarm",
             logbook.ATTR_MESSAGE: "is triggered",
-            logbook.ATTR_DOMAIN: "switch",
+            logbook.ATTR_ENTITY_ID: "switch.any",
         },
     )
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -2042,7 +2043,7 @@ async def test_include_events_domain_glob(hass, hass_client, recorder_mock):
     _assert_entry(entries[3], name="included", entity_id=entity_id3)
 
 
-async def test_include_exclude_events(hass, hass_client, recorder_mock):
+async def test_include_exclude_events_no_globs(hass, hass_client, recorder_mock):
     """Test if events are filtered if include and exclude is configured."""
     entity_id = "switch.bla"
     entity_id2 = "sensor.blu"
@@ -2087,13 +2088,15 @@ async def test_include_exclude_events(hass, hass_client, recorder_mock):
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 4
+    assert len(entries) == 6
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
-    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
-    _assert_entry(entries[3], name="keep", entity_id=entity_id4, state="10")
+    _assert_entry(entries[1], name="bla", entity_id=entity_id, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[3], name="bla", entity_id=entity_id, state="20")
+    _assert_entry(entries[4], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[5], name="keep", entity_id=entity_id4, state="10")
 
 
 async def test_include_exclude_events_with_glob_filters(
@@ -2150,13 +2153,16 @@ async def test_include_exclude_events_with_glob_filters(
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 4
+    assert len(entries) == 7
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
-    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
-    _assert_entry(entries[3], name="included", entity_id=entity_id4, state="30")
+    _assert_entry(entries[1], name="bla", entity_id=entity_id, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[3], name="bla", entity_id=entity_id, state="20")
+    _assert_entry(entries[4], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[5], name="included", entity_id=entity_id4, state="30")
+    _assert_entry(entries[6], name="included", entity_id=entity_id5, state="30")
 
 
 async def test_empty_config(hass, hass_client, recorder_mock):
@@ -2801,3 +2807,39 @@ async def test_get_events_with_context_state(hass, hass_ws_client, recorder_mock
     assert results[3]["context_state"] == "off"
     assert results[3]["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
     assert "context_event_type" not in results[3]
+
+
+async def test_logbook_with_empty_config(hass, recorder_mock):
+    """Test we handle a empty configuration."""
+    assert await async_setup_component(
+        hass,
+        logbook.DOMAIN,
+        {
+            logbook.DOMAIN: {},
+            recorder.DOMAIN: {},
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_logbook_with_non_iterable_entity_filter(hass, recorder_mock):
+    """Test we handle a non-iterable entity filter."""
+    assert await async_setup_component(
+        hass,
+        logbook.DOMAIN,
+        {
+            logbook.DOMAIN: {
+                CONF_EXCLUDE: {
+                    CONF_ENTITIES: ["light.additional_excluded"],
+                }
+            },
+            recorder.DOMAIN: {
+                CONF_EXCLUDE: {
+                    CONF_ENTITIES: None,
+                    CONF_DOMAINS: None,
+                    CONF_ENTITY_GLOBS: None,
+                }
+            },
+        },
+    )
+    await hass.async_block_till_done()

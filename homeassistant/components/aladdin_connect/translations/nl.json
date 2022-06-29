@@ -14,7 +14,7 @@
                     "password": "Wachtwoord"
                 },
                 "description": "De Aladdin Connect-integratie moet uw account opnieuw verifi\u00ebren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             },
             "user": {
                 "data": {

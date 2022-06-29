@@ -3,7 +3,7 @@
   "name": "IntesisHome",
   "documentation": "https://www.home-assistant.io/integrations/intesishome",
   "codeowners": ["@jnimmo"],
-  "requirements": ["pyintesishome==1.7.6"],
+  "requirements": ["pyintesishome==1.8.0"],
   "iot_class": "cloud_push",
   "loggers": ["pyintesishome"]
 }

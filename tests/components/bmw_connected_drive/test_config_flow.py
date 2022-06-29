@@ -1,34 +1,32 @@
 """Test the for the BMW Connected Drive config flow."""
 from unittest.mock import patch
 
+from bimmer_connected.api.authentication import MyBMWAuthentication
+from httpx import HTTPError
+
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.bmw_connected_drive.config_flow import DOMAIN
-from homeassistant.components.bmw_connected_drive.const import CONF_READ_ONLY
-from homeassistant.const import CONF_PASSWORD, CONF_REGION, CONF_USERNAME
+from homeassistant.components.bmw_connected_drive.const import (
+    CONF_READ_ONLY,
+    CONF_REFRESH_TOKEN,
+)
+from homeassistant.const import CONF_USERNAME
+
+from . import FIXTURE_CONFIG_ENTRY, FIXTURE_USER_INPUT
 
 from tests.common import MockConfigEntry
 
-FIXTURE_USER_INPUT = {
-    CONF_USERNAME: "user@domain.com",
-    CONF_PASSWORD: "p4ssw0rd",
-    CONF_REGION: "rest_of_world",
+FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
+FIXTURE_COMPLETE_ENTRY = {
+    **FIXTURE_USER_INPUT,
+    CONF_REFRESH_TOKEN: FIXTURE_REFRESH_TOKEN,
 }
-FIXTURE_COMPLETE_ENTRY = FIXTURE_USER_INPUT.copy()
-FIXTURE_IMPORT_ENTRY = FIXTURE_USER_INPUT.copy()
+FIXTURE_IMPORT_ENTRY = {**FIXTURE_USER_INPUT, CONF_REFRESH_TOKEN: None}
 
-FIXTURE_CONFIG_ENTRY = {
-    "entry_id": "1",
-    "domain": DOMAIN,
-    "title": FIXTURE_USER_INPUT[CONF_USERNAME],
-    "data": {
-        CONF_USERNAME: FIXTURE_USER_INPUT[CONF_USERNAME],
-        CONF_PASSWORD: FIXTURE_USER_INPUT[CONF_PASSWORD],
-        CONF_REGION: FIXTURE_USER_INPUT[CONF_REGION],
-    },
-    "options": {CONF_READ_ONLY: False},
-    "source": config_entries.SOURCE_USER,
-    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
-}
+
+def login_sideeffect(self: MyBMWAuthentication):
+    """Mock logging in and setting a refresh token."""
+    self.refresh_token = FIXTURE_REFRESH_TOKEN
 
 
 async def test_show_form(hass):
@@ -48,8 +46,8 @@ async def test_connection_error(hass):
         pass
 
     with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_oauth_token",
-        side_effect=OSError,
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=HTTPError("login failure"),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -65,8 +63,9 @@ async def test_connection_error(hass):
 async def test_full_user_flow_implementation(hass):
     """Test registering an integration and finishing flow works."""
     with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles",
-        return_value=[],
+        "bimmer_connected.api.authentication.MyBMWAuthentication.login",
+        side_effect=login_sideeffect,
+        autospec=True,
     ), patch(
         "homeassistant.components.bmw_connected_drive.async_setup_entry",
         return_value=True,
@@ -86,7 +85,7 @@ async def test_full_user_flow_implementation(hass):
 async def test_options_flow_implementation(hass):
     """Test config flow options."""
     with patch(
-        "bimmer_connected.account.ConnectedDriveAccount._get_vehicles",
+        "bimmer_connected.account.MyBMWAccount.get_vehicles",
         return_value=[],
     ), patch(
         "homeassistant.components.bmw_connected_drive.async_setup_entry",
@@ -104,13 +103,13 @@ async def test_options_flow_implementation(hass):
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={CONF_READ_ONLY: False},
+            user_input={CONF_READ_ONLY: True},
         )
         await hass.async_block_till_done()
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
         assert result["data"] == {
-            CONF_READ_ONLY: False,
+            CONF_READ_ONLY: True,
         }
 
         assert len(mock_setup_entry.mock_calls) == 1

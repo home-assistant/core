@@ -1,6 +1,7 @@
 """Adds config flow for Sensibo integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pysensibo.exceptions import AuthenticationError
@@ -28,9 +29,7 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     entry: config_entries.ConfigEntry | None
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle re-authentication with Sensibo."""
 
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
@@ -75,7 +74,9 @@ class SensiboConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
 
         errors: dict[str, str] = {}

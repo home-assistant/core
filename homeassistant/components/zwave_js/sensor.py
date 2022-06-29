@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-import logging
 from typing import cast
 
 import voluptuous as vol
@@ -12,6 +11,7 @@ from zwave_js_server.const.command_class.meter import (
     RESET_METER_OPTION_TARGET_VALUE,
     RESET_METER_OPTION_TYPE,
 )
+from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.value import ConfigurationValue
 from zwave_js_server.util.command_class.meter import get_meter_type
@@ -25,6 +25,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
@@ -53,6 +54,7 @@ from .const import (
     ENTITY_DESC_KEY_TEMPERATURE,
     ENTITY_DESC_KEY_TOTAL_INCREASING,
     ENTITY_DESC_KEY_VOLTAGE,
+    LOGGER,
     SERVICE_RESET_METER,
 )
 from .discovery import ZwaveDiscoveryInfo
@@ -64,8 +66,6 @@ from .entity import ZWaveBaseEntity
 from .helpers import get_device_id, get_valueless_base_unique_id
 
 PARALLEL_UPDATES = 0
-
-LOGGER = logging.getLogger(__name__)
 
 STATUS_ICON: dict[NodeStatus, str] = {
     NodeStatus.ALIVE: "mdi:heart-pulse",
@@ -179,6 +179,8 @@ async def async_setup_entry(
     @callback
     def async_add_sensor(info: ZwaveDiscoveryInfo) -> None:
         """Add Z-Wave Sensor."""
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
         entities: list[ZWaveBaseEntity] = []
 
         if info.platform_data:
@@ -191,13 +193,13 @@ async def async_setup_entry(
 
         if info.platform_hint == "string_sensor":
             entities.append(
-                ZWaveStringSensor(config_entry, client, info, entity_description)
+                ZWaveStringSensor(config_entry, driver, info, entity_description)
             )
         elif info.platform_hint == "numeric_sensor":
             entities.append(
                 ZWaveNumericSensor(
                     config_entry,
-                    client,
+                    driver,
                     info,
                     entity_description,
                     data.unit_of_measurement,
@@ -205,23 +207,23 @@ async def async_setup_entry(
             )
         elif info.platform_hint == "list_sensor":
             entities.append(
-                ZWaveListSensor(config_entry, client, info, entity_description)
+                ZWaveListSensor(config_entry, driver, info, entity_description)
             )
         elif info.platform_hint == "config_parameter":
             entities.append(
                 ZWaveConfigParameterSensor(
-                    config_entry, client, info, entity_description
+                    config_entry, driver, info, entity_description
                 )
             )
         elif info.platform_hint == "meter":
             entities.append(
-                ZWaveMeterSensor(config_entry, client, info, entity_description)
+                ZWaveMeterSensor(config_entry, driver, info, entity_description)
             )
         else:
             LOGGER.warning(
                 "Sensor not implemented for %s/%s",
                 info.platform_hint,
-                info.primary_value.propertyname,
+                info.primary_value.property_name,
             )
             return
 
@@ -230,7 +232,9 @@ async def async_setup_entry(
     @callback
     def async_add_node_status_sensor(node: ZwaveNode) -> None:
         """Add node status sensor."""
-        async_add_entities([ZWaveNodeStatusSensor(config_entry, client, node)])
+        driver = client.driver
+        assert driver is not None  # Driver is ready before platforms are loaded.
+        async_add_entities([ZWaveNodeStatusSensor(config_entry, driver, node)])
 
     config_entry.async_on_unload(
         async_dispatcher_connect(
@@ -265,13 +269,13 @@ class ZwaveSensorBase(ZWaveBaseEntity, SensorEntity):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize a ZWaveSensorBase entity."""
-        super().__init__(config_entry, client, info)
+        super().__init__(config_entry, driver, info)
         self.entity_description = entity_description
         self._attr_native_unit_of_measurement = unit_of_measurement
 
@@ -347,13 +351,15 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
         """Reset meter(s) on device."""
         node = self.info.node
         primary_value = self.info.primary_value
+        if (endpoint := primary_value.endpoint) is None:
+            raise HomeAssistantError("Missing endpoint on device.")
         options = {}
         if meter_type is not None:
             options[RESET_METER_OPTION_TYPE] = meter_type
         if value is not None:
             options[RESET_METER_OPTION_TARGET_VALUE] = value
         args = [options] if options else []
-        await node.endpoints[primary_value.endpoint].async_invoke_cc_api(
+        await node.endpoints[endpoint].async_invoke_cc_api(
             CommandClass.METER, "reset", *args, wait_for_result=False
         )
         LOGGER.debug(
@@ -370,21 +376,22 @@ class ZWaveListSensor(ZwaveSensorBase):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize a ZWaveListSensor entity."""
         super().__init__(
-            config_entry, client, info, entity_description, unit_of_measurement
+            config_entry, driver, info, entity_description, unit_of_measurement
         )
 
+        property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
         self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[self.info.primary_value.property_key_name],
+            additional_info=[property_key_name] if property_key_name else None,
         )
 
     @property
@@ -404,8 +411,10 @@ class ZWaveListSensor(ZwaveSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
+        if (value := self.info.primary_value.value) is None:
+            return None
         # add the value's int value as property for multi-value (list) items
-        return {ATTR_VALUE: self.info.primary_value.value}
+        return {ATTR_VALUE: value}
 
 
 class ZWaveConfigParameterSensor(ZwaveSensorBase):
@@ -414,22 +423,23 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
     def __init__(
         self,
         config_entry: ConfigEntry,
-        client: ZwaveClient,
+        driver: Driver,
         info: ZwaveDiscoveryInfo,
         entity_description: SensorEntityDescription,
         unit_of_measurement: str | None = None,
     ) -> None:
         """Initialize a ZWaveConfigParameterSensor entity."""
         super().__init__(
-            config_entry, client, info, entity_description, unit_of_measurement
+            config_entry, driver, info, entity_description, unit_of_measurement
         )
         self._primary_value = cast(ConfigurationValue, self.info.primary_value)
 
+        property_key_name = self.info.primary_value.property_key_name
         # Entity class attributes
         self._attr_name = self.generate_name(
             include_value_name=True,
             alternate_value_name=self.info.primary_value.property_name,
-            additional_info=[self.info.primary_value.property_key_name],
+            additional_info=[property_key_name] if property_key_name else None,
             name_suffix="Config Parameter",
         )
 
@@ -453,10 +463,13 @@ class ZWaveConfigParameterSensor(ZwaveSensorBase):
     @property
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device specific state attributes."""
-        if self._primary_value.configuration_value_type == ConfigurationValueType.RANGE:
+        if (
+            self._primary_value.configuration_value_type == ConfigurationValueType.RANGE
+            or (value := self.info.primary_value.value) is None
+        ):
             return None
         # add the value's int value as property for multi-value (list) items
-        return {ATTR_VALUE: self.info.primary_value.value}
+        return {ATTR_VALUE: value}
 
 
 class ZWaveNodeStatusSensor(SensorEntity):
@@ -466,11 +479,10 @@ class ZWaveNodeStatusSensor(SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
-        self, config_entry: ConfigEntry, client: ZwaveClient, node: ZwaveNode
+        self, config_entry: ConfigEntry, driver: Driver, node: ZwaveNode
     ) -> None:
         """Initialize a generic Z-Wave device entity."""
         self.config_entry = config_entry
-        self.client = client
         self.node = node
         name: str = (
             self.node.name
@@ -479,11 +491,11 @@ class ZWaveNodeStatusSensor(SensorEntity):
         )
         # Entity class attributes
         self._attr_name = f"{name}: Node Status"
-        self._base_unique_id = get_valueless_base_unique_id(client, node)
+        self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.node_status"
         # device is precreated in main handler
         self._attr_device_info = DeviceInfo(
-            identifiers={get_device_id(self.client, self.node)},
+            identifiers={get_device_id(driver, self.node)},
         )
         self._attr_native_value: str = node.status.name.lower()
 

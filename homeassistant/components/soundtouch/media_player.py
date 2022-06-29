@@ -357,7 +357,9 @@ class SoundTouchDevice(MediaPlayerEntity):
     async def async_play_media(self, media_type, media_id, **kwargs):
         """Play a piece of media."""
         if media_source.is_media_source_id(media_id):
-            play_item = await media_source.async_resolve_media(self.hass, media_id)
+            play_item = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = async_process_play_media_url(self.hass, play_item.url)
 
         await self.hass.async_add_executor_job(
@@ -521,7 +523,7 @@ class SoundTouchDevice(MediaPlayerEntity):
 
         for slave in zone_slaves:
             slave_instance = self._get_instance_by_ip(slave.device_ip)
-            if slave_instance:
+            if slave_instance and slave_instance.entity_id != master:
                 slaves.append(slave_instance.entity_id)
 
         attributes = {

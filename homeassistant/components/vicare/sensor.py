@@ -30,6 +30,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import ViCareRequiredKeysMixin
@@ -74,6 +75,22 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         name="Boiler Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         value_getter=lambda api: api.getBoilerTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="boiler_supply_temperature",
+        name="Boiler Supply Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getBoilerCommonSupplyTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="hotwater_out_temperature",
+        name="Hot Water Out Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        value_getter=lambda api: api.getDomesticHotWaterOutletTemperature(),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -581,15 +598,15 @@ class ViCareSensor(SensorEntity):
         self._state = None
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return device info for this device."""
-        return {
-            "identifiers": {(DOMAIN, self._device_config.getConfig().serial)},
-            "name": self._device_config.getModel(),
-            "manufacturer": "Viessmann",
-            "model": (DOMAIN, self._device_config.getModel()),
-            "configuration_url": "https://developer.viessmann.com/",
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._device_config.getConfig().serial)},
+            name=self._device_config.getModel(),
+            manufacturer="Viessmann",
+            model=self._device_config.getModel(),
+            configuration_url="https://developer.viessmann.com/",
+        )
 
     @property
     def available(self):
@@ -597,7 +614,7 @@ class ViCareSensor(SensorEntity):
         return self._state is not None
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID for this device."""
         tmp_id = (
             f"{self._device_config.getConfig().serial}-{self.entity_description.key}"

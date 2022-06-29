@@ -168,7 +168,9 @@ class VlcDevice(MediaPlayerEntity):
         """Play media from a URL or file."""
         # Handle media_source
         if media_source.is_media_source_id(media_id):
-            sourced_media = await media_source.async_resolve_media(self.hass, media_id)
+            sourced_media = await media_source.async_resolve_media(
+                self.hass, media_id, self.entity_id
+            )
             media_id = sourced_media.url
 
         elif media_type != MEDIA_TYPE_MUSIC:

@@ -32,22 +32,13 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    TEMP_CELSIUS,
-    TEMP_FAHRENHEIT,
 )
-from homeassistant.core import (
-    CALLBACK_TYPE,
-    Context,
-    Event,
-    HomeAssistant,
-    callback,
-    split_entity_id,
-)
+from homeassistant.core import CALLBACK_TYPE, Context, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
 from homeassistant.loader import bind_hass
 from homeassistant.util import dt as dt_util, ensure_unique_string, slugify
 
-from . import entity_registry as er
+from . import device_registry as dr, entity_registry as er
 from .device_registry import DeviceEntryType
 from .entity_platform import EntityPlatform
 from .event import async_track_entity_registry_updated_event
@@ -230,6 +221,7 @@ class EntityDescription:
     entity_registry_visible_default: bool = True
     force_update: bool = False
     icon: str | None = None
+    has_entity_name: bool = False
     name: str | None = None
     unit_of_measurement: str | None = None
 
@@ -259,9 +251,6 @@ class Entity(ABC):
     # If we reported this entity is updated while disabled
     _disabled_reported = False
 
-    # If we reported this entity is relying on deprecated temperature conversion
-    _temperature_reported = False
-
     # Protect for multiple updates
     _update_staged = False
 
@@ -289,6 +278,7 @@ class Entity(ABC):
     _attr_device_class: str | None
     _attr_device_info: DeviceInfo | None = None
     _attr_entity_category: EntityCategory | None
+    _attr_has_entity_name: bool
     _attr_entity_picture: str | None = None
     _attr_entity_registry_enabled_default: bool
     _attr_entity_registry_visible_default: bool
@@ -314,6 +304,15 @@ class Entity(ABC):
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._attr_unique_id
+
+    @property
+    def has_entity_name(self) -> bool:
+        """Return if the name of the entity is describing only the entity itself."""
+        if hasattr(self, "_attr_has_entity_name"):
+            return self._attr_has_entity_name
+        if hasattr(self, "entity_description"):
+            return self.entity_description.has_entity_name
+        return False
 
     @property
     def name(self) -> str | None:
@@ -595,7 +594,26 @@ class Entity(ABC):
         if (icon := (entry and entry.icon) or self.icon) is not None:
             attr[ATTR_ICON] = icon
 
-        if (name := (entry and entry.name) or self.name) is not None:
+        def friendly_name() -> str | None:
+            """Return the friendly name.
+
+            If has_entity_name is False, this returns self.name
+            If has_entity_name is True, this returns device.name + self.name
+            """
+            if not self.has_entity_name or not self.registry_entry:
+                return self.name
+
+            device_registry = dr.async_get(self.hass)
+            if not (device_id := self.registry_entry.device_id) or not (
+                device_entry := device_registry.async_get(device_id)
+            ):
+                return self.name
+
+            if not self.name:
+                return device_entry.name_by_user or device_entry.name
+            return f"{device_entry.name_by_user or device_entry.name} {self.name}"
+
+        if (name := (entry and entry.name) or friendly_name()) is not None:
             attr[ATTR_FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
@@ -617,58 +635,6 @@ class Entity(ABC):
         # Overwrite properties that have been set in the config file.
         if DATA_CUSTOMIZE in self.hass.data:
             attr.update(self.hass.data[DATA_CUSTOMIZE].get(self.entity_id))
-
-        def _convert_temperature(state: str, attr: dict[str, Any]) -> str:
-            # Convert temperature if we detect one
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components.sensor import SensorEntity
-
-            unit_of_measure = attr.get(ATTR_UNIT_OF_MEASUREMENT)
-            units = self.hass.config.units
-            if unit_of_measure == units.temperature_unit or unit_of_measure not in (
-                TEMP_CELSIUS,
-                TEMP_FAHRENHEIT,
-            ):
-                return state
-
-            domain = split_entity_id(self.entity_id)[0]
-            if domain != "sensor":
-                if not self._temperature_reported:
-                    self._temperature_reported = True
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        "Entity %s (%s) relies on automatic temperature conversion, this will "
-                        "be unsupported in Home Assistant Core 2022.7. Please %s",
-                        self.entity_id,
-                        type(self),
-                        report_issue,
-                    )
-            elif not isinstance(self, SensorEntity):
-                if not self._temperature_reported:
-                    self._temperature_reported = True
-                    report_issue = self._suggest_report_issue()
-                    _LOGGER.warning(
-                        "Temperature sensor %s (%s) does not inherit SensorEntity, "
-                        "this will be unsupported in Home Assistant Core 2022.7."
-                        "Please %s",
-                        self.entity_id,
-                        type(self),
-                        report_issue,
-                    )
-            else:
-                return state
-
-            try:
-                prec = len(state) - state.index(".") - 1 if "." in state else 0
-                temp = units.temperature(float(state), unit_of_measure)
-                state = str(round(temp) if prec == 0 else round(temp, prec))
-                attr[ATTR_UNIT_OF_MEASUREMENT] = units.temperature_unit
-            except ValueError:
-                # Could not convert state to float
-                pass
-            return state
-
-        state = _convert_temperature(state, attr)
 
         if (
             self._context_set is not None
@@ -1025,15 +991,20 @@ class ToggleEntity(Entity):
         """Turn the entity off."""
         await self.hass.async_add_executor_job(ft.partial(self.turn_off, **kwargs))
 
+    @final
     def toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
-        if self.is_on:
-            self.turn_off(**kwargs)
-        else:
-            self.turn_on(**kwargs)
+        """Toggle the entity.
+
+        This method will never be called by Home Assistant and should not be implemented
+        by integrations.
+        """
 
     async def async_toggle(self, **kwargs: Any) -> None:
-        """Toggle the entity."""
+        """Toggle the entity.
+
+        This method should typically not be implemented by integrations, it's enough to
+        implement async_turn_on + async_turn_off or turn_on + turn_off.
+        """
         if self.is_on:
             await self.async_turn_off(**kwargs)
         else:

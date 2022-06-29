@@ -7,10 +7,7 @@ from homeassistant.components.automation import (
     AutomationActionType,
     AutomationTriggerInfo,
 )
-from homeassistant.components.device_automation import (
-    DEVICE_TRIGGER_BASE_SCHEMA,
-    GetAutomationsResult,
-)
+from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -101,7 +98,7 @@ async def async_validate_trigger_config(
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> GetAutomationsResult:
+) -> list[dict[str, str]]:
     """List device triggers for Netatmo devices."""
     registry = entity_registry.async_get(hass)
     device_registry = dr.async_get(hass)

@@ -10,10 +10,27 @@ from typing import Any, TypedDict
 
 import voluptuous as vol
 
+from .backports.enum import StrEnum
 from .core import HomeAssistant, callback
 from .exceptions import HomeAssistantError
+from .helpers.frame import report
 from .util import uuid as uuid_util
 
+
+class FlowResultType(StrEnum):
+    """Result type for a data entry flow."""
+
+    FORM = "form"
+    CREATE_ENTRY = "create_entry"
+    ABORT = "abort"
+    EXTERNAL_STEP = "external"
+    EXTERNAL_STEP_DONE = "external_done"
+    SHOW_PROGRESS = "progress"
+    SHOW_PROGRESS_DONE = "progress_done"
+    MENU = "menu"
+
+
+# RESULT_TYPE_* is deprecated, to be removed in 2022.9
 RESULT_TYPE_FORM = "form"
 RESULT_TYPE_CREATE_ENTRY = "create_entry"
 RESULT_TYPE_ABORT = "abort"
@@ -52,7 +69,7 @@ class AbortFlow(FlowError):
     """Exception to indicate a flow needs to be aborted."""
 
     def __init__(
-        self, reason: str, description_placeholders: dict | None = None
+        self, reason: str, description_placeholders: Mapping[str, str] | None = None
     ) -> None:
         """Initialize an abort flow exception."""
         super().__init__(f"Flow aborted: {reason}")
@@ -64,7 +81,7 @@ class FlowResult(TypedDict, total=False):
     """Typed result dict."""
 
     version: int
-    type: str
+    type: FlowResultType
     flow_id: str
     handler: str
     title: str
@@ -75,7 +92,7 @@ class FlowResult(TypedDict, total=False):
     required: bool
     errors: dict[str, str] | None
     description: str | None
-    description_placeholders: dict[str, Any] | None
+    description_placeholders: Mapping[str, str | None] | None
     progress_action: str
     url: str
     reason: str
@@ -92,12 +109,12 @@ def _async_flow_handler_to_flow_result(
 ) -> list[FlowResult]:
     """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
     return [
-        {
-            "flow_id": flow.flow_id,
-            "handler": flow.handler,
-            "context": flow.context,
-            "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
-        }
+        FlowResult(
+            flow_id=flow.flow_id,
+            handler=flow.handler,
+            context=flow.context,
+            step_id=flow.cur_step["step_id"] if flow.cur_step else None,
+        )
         for flow in flows
         if include_uninitialized or flow.cur_step is not None
     ]
@@ -207,7 +224,7 @@ class FlowManager(abc.ABC):
             self._initialize_tasks[handler].remove(task)
             self._initializing[handler].remove(init_done)
 
-        if result["type"] != RESULT_TYPE_ABORT:
+        if result["type"] != FlowResultType.ABORT:
             await self.async_post_init(flow, result)
 
         return result
@@ -252,7 +269,7 @@ class FlowManager(abc.ABC):
             user_input = cur_step["data_schema"](user_input)
 
         # Handle a menu navigation choice
-        if cur_step["type"] == RESULT_TYPE_MENU and user_input:
+        if cur_step["type"] == FlowResultType.MENU and user_input:
             result = await self._async_handle_step(
                 flow, user_input["next_step_id"], None
             )
@@ -261,18 +278,25 @@ class FlowManager(abc.ABC):
                 flow, cur_step["step_id"], user_input
             )
 
-        if cur_step["type"] in (RESULT_TYPE_EXTERNAL_STEP, RESULT_TYPE_SHOW_PROGRESS):
-            if cur_step["type"] == RESULT_TYPE_EXTERNAL_STEP and result["type"] not in (
-                RESULT_TYPE_EXTERNAL_STEP,
-                RESULT_TYPE_EXTERNAL_STEP_DONE,
+        if cur_step["type"] in (
+            FlowResultType.EXTERNAL_STEP,
+            FlowResultType.SHOW_PROGRESS,
+        ):
+            if cur_step["type"] == FlowResultType.EXTERNAL_STEP and result[
+                "type"
+            ] not in (
+                FlowResultType.EXTERNAL_STEP,
+                FlowResultType.EXTERNAL_STEP_DONE,
             ):
                 raise ValueError(
                     "External step can only transition to "
                     "external step or external step done."
                 )
-            if cur_step["type"] == RESULT_TYPE_SHOW_PROGRESS and result["type"] not in (
-                RESULT_TYPE_SHOW_PROGRESS,
-                RESULT_TYPE_SHOW_PROGRESS_DONE,
+            if cur_step["type"] == FlowResultType.SHOW_PROGRESS and result[
+                "type"
+            ] not in (
+                FlowResultType.SHOW_PROGRESS,
+                FlowResultType.SHOW_PROGRESS_DONE,
             ):
                 raise ValueError(
                     "Show progress can only transition to show progress or show progress done."
@@ -282,7 +306,7 @@ class FlowManager(abc.ABC):
             # the frontend.
             if (
                 cur_step["step_id"] != result.get("step_id")
-                or result["type"] == RESULT_TYPE_SHOW_PROGRESS
+                or result["type"] == FlowResultType.SHOW_PROGRESS
             ):
                 # Tell frontend to reload the flow state.
                 self.hass.bus.async_fire(
@@ -345,25 +369,21 @@ class FlowManager(abc.ABC):
         if step_done:
             step_done.set_result(None)
 
-        if result["type"] not in (
-            RESULT_TYPE_FORM,
-            RESULT_TYPE_EXTERNAL_STEP,
-            RESULT_TYPE_CREATE_ENTRY,
-            RESULT_TYPE_ABORT,
-            RESULT_TYPE_EXTERNAL_STEP_DONE,
-            RESULT_TYPE_SHOW_PROGRESS,
-            RESULT_TYPE_SHOW_PROGRESS_DONE,
-            RESULT_TYPE_MENU,
-        ):
-            raise ValueError(f"Handler returned incorrect type: {result['type']}")
+        if not isinstance(result["type"], FlowResultType):
+            result["type"] = FlowResultType(result["type"])  # type: ignore[unreachable]
+            report(
+                "does not use FlowResultType enum for data entry flow result type. "
+                "This is deprecated and will stop working in Home Assistant 2022.9",
+                error_if_core=False,
+            )
 
         if result["type"] in (
-            RESULT_TYPE_FORM,
-            RESULT_TYPE_EXTERNAL_STEP,
-            RESULT_TYPE_EXTERNAL_STEP_DONE,
-            RESULT_TYPE_SHOW_PROGRESS,
-            RESULT_TYPE_SHOW_PROGRESS_DONE,
-            RESULT_TYPE_MENU,
+            FlowResultType.FORM,
+            FlowResultType.EXTERNAL_STEP,
+            FlowResultType.EXTERNAL_STEP_DONE,
+            FlowResultType.SHOW_PROGRESS,
+            FlowResultType.SHOW_PROGRESS_DONE,
+            FlowResultType.MENU,
         ):
             flow.cur_step = result
             return result
@@ -372,7 +392,7 @@ class FlowManager(abc.ABC):
         result = await self.async_finish_flow(flow, result.copy())
 
         # _async_finish_flow may change result type, check it again
-        if result["type"] == RESULT_TYPE_FORM:
+        if result["type"] == FlowResultType.FORM:
             flow.cur_step = result
             return result
 
@@ -422,20 +442,20 @@ class FlowHandler:
         step_id: str,
         data_schema: vol.Schema | None = None,
         errors: dict[str, str] | None = None,
-        description_placeholders: dict[str, Any] | None = None,
+        description_placeholders: Mapping[str, str | None] | None = None,
         last_step: bool | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
-        return {
-            "type": RESULT_TYPE_FORM,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "data_schema": data_schema,
-            "errors": errors,
-            "description_placeholders": description_placeholders,
-            "last_step": last_step,  # Display next or submit button in frontend
-        }
+        return FlowResult(
+            type=FlowResultType.FORM,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+            last_step=last_step,  # Display next or submit button in frontend
+        )
 
     @callback
     def async_create_entry(
@@ -444,23 +464,26 @@ class FlowHandler:
         title: str,
         data: Mapping[str, Any],
         description: str | None = None,
-        description_placeholders: dict | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return {
-            "version": self.VERSION,
-            "type": RESULT_TYPE_CREATE_ENTRY,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "title": title,
-            "data": data,
-            "description": description,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            version=self.VERSION,
+            type=FlowResultType.CREATE_ENTRY,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+        )
 
     @callback
     def async_abort(
-        self, *, reason: str, description_placeholders: dict | None = None
+        self,
+        *,
+        reason: str,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Abort the config flow."""
         return _create_abort_data(
@@ -469,27 +492,31 @@ class FlowHandler:
 
     @callback
     def async_external_step(
-        self, *, step_id: str, url: str, description_placeholders: dict | None = None
+        self,
+        *,
+        step_id: str,
+        url: str,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Return the definition of an external step for the user to take."""
-        return {
-            "type": RESULT_TYPE_EXTERNAL_STEP,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "url": url,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            type=FlowResultType.EXTERNAL_STEP,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            url=url,
+            description_placeholders=description_placeholders,
+        )
 
     @callback
     def async_external_step_done(self, *, next_step_id: str) -> FlowResult:
         """Return the definition of an external step for the user to take."""
-        return {
-            "type": RESULT_TYPE_EXTERNAL_STEP_DONE,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": next_step_id,
-        }
+        return FlowResult(
+            type=FlowResultType.EXTERNAL_STEP_DONE,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=next_step_id,
+        )
 
     @callback
     def async_show_progress(
@@ -497,27 +524,27 @@ class FlowHandler:
         *,
         step_id: str,
         progress_action: str,
-        description_placeholders: dict | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
-        return {
-            "type": RESULT_TYPE_SHOW_PROGRESS,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "progress_action": progress_action,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            type=FlowResultType.SHOW_PROGRESS,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            progress_action=progress_action,
+            description_placeholders=description_placeholders,
+        )
 
     @callback
     def async_show_progress_done(self, *, next_step_id: str) -> FlowResult:
         """Mark the progress done."""
-        return {
-            "type": RESULT_TYPE_SHOW_PROGRESS_DONE,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": next_step_id,
-        }
+        return FlowResult(
+            type=FlowResultType.SHOW_PROGRESS_DONE,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=next_step_id,
+        )
 
     @callback
     def async_show_menu(
@@ -525,21 +552,21 @@ class FlowHandler:
         *,
         step_id: str,
         menu_options: list[str] | dict[str, str],
-        description_placeholders: dict | None = None,
+        description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a navigation menu to the user.
 
         Options dict maps step_id => i18n label
         """
-        return {
-            "type": RESULT_TYPE_MENU,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "data_schema": vol.Schema({"next_step_id": vol.In(menu_options)}),
-            "menu_options": menu_options,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            type=FlowResultType.MENU,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            data_schema=vol.Schema({"next_step_id": vol.In(menu_options)}),
+            menu_options=menu_options,
+            description_placeholders=description_placeholders,
+        )
 
 
 @callback
@@ -547,13 +574,13 @@ def _create_abort_data(
     flow_id: str,
     handler: str,
     reason: str,
-    description_placeholders: dict | None = None,
+    description_placeholders: Mapping[str, str] | None = None,
 ) -> FlowResult:
     """Return the definition of an external step for the user to take."""
-    return {
-        "type": RESULT_TYPE_ABORT,
-        "flow_id": flow_id,
-        "handler": handler,
-        "reason": reason,
-        "description_placeholders": description_placeholders,
-    }
+    return FlowResult(
+        type=FlowResultType.ABORT,
+        flow_id=flow_id,
+        handler=handler,
+        reason=reason,
+        description_placeholders=description_placeholders,
+    )

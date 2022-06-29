@@ -79,7 +79,9 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> AEHOptionsFlowHandler:
         """Get the options flow for this handler."""
         return AEHOptionsFlowHandler(config_entry)
 
@@ -170,7 +172,7 @@ class AEHConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class AEHOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle azure event hub options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize AEH options flow."""
         self.config_entry = config_entry
         self.options = deepcopy(dict(config_entry.options))

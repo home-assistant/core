@@ -1,6 +1,7 @@
 """Config flow for Steam integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 import steam
@@ -125,7 +126,7 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(self, user_input: dict[str, str]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
@@ -174,11 +175,14 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
             }
             await self.hass.config_entries.async_reload(self.entry.entry_id)
             return self.async_create_entry(title="", data=channel_data)
+        error = None
         try:
             users = {
                 name["steamid"]: name["personaname"]
                 for name in await self.hass.async_add_executor_job(self.get_accounts)
             }
+            if not users:
+                error = {"base": "unauthorized"}
 
         except steam.api.HTTPTimeoutError:
             users = self.options[CONF_ACCOUNTS]
@@ -191,12 +195,17 @@ class SteamOptionsFlowHandler(config_entries.OptionsFlow):
         }
         self.options[CONF_ACCOUNTS] = users | self.options[CONF_ACCOUNTS]
 
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))
+        return self.async_show_form(
+            step_id="init", data_schema=vol.Schema(options), errors=error
+        )
 
     def get_accounts(self) -> list[dict[str, str | int]]:
         """Get accounts."""
         interface = steam.api.interface("ISteamUser")
-        friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
-        _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        try:
+            friends = interface.GetFriendList(steamid=self.entry.data[CONF_ACCOUNT])
+            _users_str = [user["steamid"] for user in friends["friendslist"]["friends"]]
+        except steam.api.HTTPError:
+            return []
         names = interface.GetPlayerSummaries(steamids=_users_str)
         return names["response"]["players"]["player"]
