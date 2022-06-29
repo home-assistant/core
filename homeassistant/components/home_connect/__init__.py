@@ -37,8 +37,6 @@ from .const import (
     BSH_PAUSE,
     BSH_RESUME,
     DOMAIN,
-    OAUTH2_AUTHORIZE,
-    OAUTH2_TOKEN,
     SERVICE_OPTION_ACTIVE,
     SERVICE_OPTION_SELECTED,
     SERVICE_PAUSE_PROGRAM,
@@ -107,12 +105,12 @@ def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
 ) -> api.HomeConnectDevice | None:
     """Return a Home Connect appliance instance given an device_id."""
-    for hc in hass.data[DOMAIN].values():
-        for dev_dict in hc.devices:
+    for hc_api in hass.data[DOMAIN].values():
+        for dev_dict in hc_api.devices:
             device = dev_dict[CONF_DEVICE]
             if device.device_id == device_id:
                 return device.appliance
-    _LOGGER.error("Appliance for device id %s not found.", device_id)
+    _LOGGER.error("Appliance for device id %s not found", device_id)
     return None
 
 
