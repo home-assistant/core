@@ -70,7 +70,7 @@ async def async_setup_entry(
     """Set up the fans."""
     coordinator: IntellifireDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if coordinator.read_api.data.has_fan:
+    if coordinator.data.has_fan:
         async_add_entities(
             IntellifireFan(coordinator=coordinator, description=description)
             for description in INTELLIFIRE_FANS
