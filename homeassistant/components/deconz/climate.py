@@ -23,8 +23,8 @@ from homeassistant.components.climate.const import (
     PRESET_COMFORT,
     PRESET_ECO,
     ClimateEntityFeature,
-    HVACMode,
     HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS
@@ -197,9 +197,6 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
         Need to be one of HVACAction.*.
         """
-        if self._device.mode is None and self._device.state_on is None:
-            return None
-
         if self._device.mode == ThermostatMode.OFF:
             return HVACAction.OFF
 

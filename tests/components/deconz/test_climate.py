@@ -25,8 +25,8 @@ from homeassistant.components.climate.const import (
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
-    HVACMode,
     HVACAction,
+    HVACMode,
 )
 from homeassistant.components.deconz.climate import (
     DECONZ_FAN_SMART,
@@ -445,7 +445,8 @@ async def test_climate_device_with_cooling_support(
 
     assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.COOLING
+        hass.states.get("climate.zen_01").attributes["hvac_action"]
+        == HVACAction.COOLING
     )
 
     # Verify service calls
@@ -548,7 +549,8 @@ async def test_climate_device_with_fan_support(
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.HEATING
+        hass.states.get("climate.zen_01").attributes["hvac_action"]
+        == HVACAction.HEATING
     )
 
     # Event signals unsupported fan mode
@@ -565,7 +567,8 @@ async def test_climate_device_with_fan_support(
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.HEATING
+        hass.states.get("climate.zen_01").attributes["hvac_action"]
+        == HVACAction.HEATING
     )
 
     # Verify service calls
@@ -892,43 +895,36 @@ async def test_not_allow_clip_thermostat(hass, aioclient_mock):
     assert len(hass.states.async_all()) == 0
 
 
-async def test_no_mode_no_state(hass, aioclient_mock):
+async def test_no_mode_no_state(hass, aioclient_mock, mock_deconz_websocket):
     """Test that a climate device without mode and state works."""
     data = {
         "sensors": {
             "0": {
                 "config": {
-                    "battery": 59,
-                    "displayflipped": None,
-                    "heatsetpoint": 2100,
-                    "locked": True,
-                    "mountingmode": None,
+                    "battery": 25,
+                    "heatsetpoint": 2222,
+                    "mode": None,
                     "preset": "auto",
                     "offset": 0,
                     "on": True,
                     "reachable": True,
                 },
                 "ep": 1,
-                "etag": "6130553ac247174809bae47144ee23f8",
-                "lastseen": "2020-11-29T19:31Z",
-                "manufacturername": "Danfoss",
-                "modelid": "eTRV0100",
-                "name": "thermostat",
-                "state": {
-                    "errorcode": None,
-                    "lastupdated": None,
-                    "mountingmodeactive": False,
-                    "on": None,
-                    "temperature": 2102,
-                    "valve": 24,
-                    "windowopen": "Closed",
-                },
-                "swversion": "01.02.0008 01.02",
+                "etag": "074549903686a77a12ef0f06c499b1ef",
+                "lastseen": "2020-11-27T13:45Z",
+                "manufacturername": "Zen Within",
+                "modelid": "Zen-01",
+                "name": "Zen-01",
+                "state": {"lastupdated": "none", "on": None, "temperature": 2290},
                 "type": "ZHAThermostat",
-                "uniqueid": "14:b4:57:ff:fe:d5:4e:77-01-0201",
+                "uniqueid": "00:24:46:00:00:11:6f:56-01-0201",
             }
         }
     }
-    assert (
-        hass.states.get("climate.thermostat").attributes["hvac_action"] is None
-    )
+    assert len(hass.states.async_all()) == 2
+
+    climate_thermostat = hass.states.get("climate.zen_01")
+
+    assert climate_thermostat.state is STATE_OFF
+    assert climate_thermostat.attributes["preset_mode"] is DECONZ_PRESET_AUTO
+    assert climate_thermostat.attributes["hvac_action"] is HVACAction.IDLE
