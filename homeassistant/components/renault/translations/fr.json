@@ -6,7 +6,7 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_credentials": "Authentification invalide"
+            "invalid_credentials": "Authentification non valide"
         },
         "step": {
             "kamereon": {
@@ -26,7 +26,7 @@
                 "data": {
                     "locale": "Lieu",
                     "password": "Mot de passe",
-                    "username": "Email"
+                    "username": "Courriel"
                 },
                 "title": "D\u00e9finir les informations d'identification de Renault"
             }

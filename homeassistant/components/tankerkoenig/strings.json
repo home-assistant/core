@@ -1,0 +1,47 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "name": "Region name",
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "fuel_types": "Fuel types",
+          "location": "[%key:common::config_flow::data::location%]",
+          "stations": "Additional fuel stations",
+          "radius": "Search radius"
+        }
+      },
+      "reauth_confirm": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "select_station": {
+        "title": "Select stations to add",
+        "description": "found {stations_count} stations in radius",
+        "data": {
+          "stations": "Stations"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
+    "error": {
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_stations": "Could not find any station in range."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Tankerkoenig options",
+        "data": {
+          "stations": "Stations",
+          "show_on_map": "Show stations on map"
+        }
+      }
+    }
+  }
+}

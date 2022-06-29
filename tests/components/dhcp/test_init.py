@@ -3,7 +3,6 @@ import datetime
 import threading
 from unittest.mock import MagicMock, patch
 
-import pytest
 from scapy import arch  # pylint: disable=unused-import  # noqa: F401
 from scapy.error import Scapy_Exception
 from scapy.layers.dhcp import DHCP
@@ -16,6 +15,7 @@ from homeassistant.components.device_tracker.const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    CONNECTED_DEVICE_REGISTERED,
     SOURCE_TYPE_ROUTER,
 )
 from homeassistant.components.dhcp.const import DOMAIN
@@ -26,6 +26,7 @@ from homeassistant.const import (
     STATE_NOT_HOME,
 )
 import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
@@ -630,6 +631,59 @@ async def test_device_tracker_hostname_and_macaddress_exists_before_start(hass):
     )
 
 
+async def test_device_tracker_registered(hass):
+    """Test matching based on hostname and macaddress when registered."""
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        async_dispatcher_send(
+            hass,
+            CONNECTED_DEVICE_REGISTERED,
+            {"ip": "192.168.210.56", "mac": "b8b7f16db533", "host_name": "connect"},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 1
+    assert mock_init.mock_calls[0][1][0] == "mock-domain"
+    assert mock_init.mock_calls[0][2]["context"] == {
+        "source": config_entries.SOURCE_DHCP
+    }
+    assert mock_init.mock_calls[0][2]["data"] == dhcp.DhcpServiceInfo(
+        ip="192.168.210.56",
+        hostname="connect",
+        macaddress="b8b7f16db533",
+    )
+    await device_tracker_watcher.async_stop()
+    await hass.async_block_till_done()
+
+
+async def test_device_tracker_registered_hostname_none(hass):
+    """Test handle None hostname."""
+    with patch.object(hass.config_entries.flow, "async_init") as mock_init:
+        device_tracker_watcher = dhcp.DeviceTrackerRegisteredWatcher(
+            hass,
+            {},
+            [{"domain": "mock-domain", "hostname": "connect", "macaddress": "B8B7F1*"}],
+        )
+        await device_tracker_watcher.async_start()
+        await hass.async_block_till_done()
+        async_dispatcher_send(
+            hass,
+            CONNECTED_DEVICE_REGISTERED,
+            {"ip": "192.168.210.56", "mac": "b8b7f16db533", "host_name": None},
+        )
+        await hass.async_block_till_done()
+
+    assert len(mock_init.mock_calls) == 0
+    await device_tracker_watcher.async_stop()
+    await hass.async_block_till_done()
+
+
 async def test_device_tracker_hostname_and_macaddress_after_start(hass):
     """Test matching based on hostname and macaddress after start."""
 
@@ -918,27 +972,3 @@ async def test_aiodiscover_finds_new_hosts_after_interval(hass):
         hostname="connect",
         macaddress="b8b7f16db533",
     )
-
-
-@pytest.mark.usefixtures("mock_integration_frame")
-async def test_service_info_compatibility(hass, caplog):
-    """Test compatibility with old-style dict.
-
-    To be removed in 2022.6
-    """
-    discovery_info = dhcp.DhcpServiceInfo(
-        ip="192.168.210.56",
-        hostname="connect",
-        macaddress="b8b7f16db533",
-    )
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info["ip"] == "192.168.210.56"
-    assert "Detected integration that accessed discovery_info['ip']" in caplog.text
-
-    with patch("homeassistant.helpers.frame._REPORTED_INTEGRATIONS", set()):
-        assert discovery_info.get("ip") == "192.168.210.56"
-    assert "Detected integration that accessed discovery_info.get('ip')" in caplog.text
-
-    assert discovery_info.get("ip", "fallback_host") == "192.168.210.56"
-    assert discovery_info.get("invalid_key", "fallback_host") == "fallback_host"

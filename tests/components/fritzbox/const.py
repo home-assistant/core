@@ -6,7 +6,7 @@ MOCK_CONFIG = {
     DOMAIN: {
         CONF_DEVICES: [
             {
-                CONF_HOST: "fake_host",
+                CONF_HOST: "10.0.0.1",
                 CONF_PASSWORD: "fake_pass",
                 CONF_USERNAME: "fake_user",
             }

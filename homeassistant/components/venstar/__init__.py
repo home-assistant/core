@@ -126,10 +126,8 @@ class VenstarDataUpdateCoordinator(update_coordinator.DataUpdateCoordinator):
         return None
 
 
-class VenstarEntity(CoordinatorEntity):
+class VenstarEntity(CoordinatorEntity[VenstarDataUpdateCoordinator]):
     """Representation of a Venstar entity."""
-
-    coordinator: VenstarDataUpdateCoordinator
 
     def __init__(
         self,

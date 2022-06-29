@@ -61,13 +61,7 @@
           "key": 7,
           "label": "Motor Control Class C"
         },
-        "mandatorySupportedCCs": [
-          32,
-          38,
-          37,
-          114,
-          134
-        ],
+        "mandatorySupportedCCs": [32, 38, 37, 114, 134],
         "mandatoryControlledCCs": []
       }
     }
@@ -85,9 +79,7 @@
         "readable": true,
         "writeable": true,
         "label": "Target value",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 99
       },
@@ -176,9 +168,7 @@
         "readable": true,
         "writeable": true,
         "label": "Scene ID",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 1,
         "max": 255
       }
@@ -354,9 +344,7 @@
         "writeable": false,
         "label": "Z-Wave chip firmware versions"
       },
-      "value": [
-        "3.1"
-      ]
+      "value": ["3.1"]
     },
     {
       "endpoint": 0,
@@ -375,10 +363,7 @@
   ],
   "isFrequentListening": false,
   "maxDataRate": 100000,
-  "supportedDataRates": [
-    40000,
-    100000
-  ],
+  "supportedDataRates": [40000, 100000],
   "protocolVersion": 3,
   "supportsBeaming": true,
   "supportsSecurity": false,
@@ -398,13 +383,7 @@
       "key": 7,
       "label": "Motor Control Class C"
     },
-    "mandatorySupportedCCs": [
-      32,
-      38,
-      37,
-      114,
-      134
-    ],
+    "mandatorySupportedCCs": [32, 38, 37, 114, 134],
     "mandatoryControlledCCs": []
   },
   "commandClasses": [
@@ -494,5 +473,6 @@
     }
   ],
   "interviewStage": "Complete",
-  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0003:0x008d:3.1"
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0371:0x0003:0x008d:3.1",
+  "isControllerNode": false
 }

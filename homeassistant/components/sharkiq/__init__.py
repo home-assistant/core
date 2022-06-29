@@ -3,7 +3,7 @@ import asyncio
 from contextlib import suppress
 
 import async_timeout
-from sharkiqpy import (
+from sharkiq import (
     AylaApi,
     SharkIqAuthError,
     SharkIqAuthExpiringError,

@@ -337,7 +337,7 @@ TEST_DATA = [
             "state": "5.0",
             "entity_category": None,
             "device_class": SensorDeviceClass.ILLUMINANCE,
-            "state_class": None,
+            "state_class": SensorStateClass.MEASUREMENT,
             "attributes": {
                 "on": True,
                 "dark": True,
@@ -345,6 +345,7 @@ TEST_DATA = [
                 "unit_of_measurement": "lx",
                 "device_class": "illuminance",
                 "friendly_name": "Motion sensor 4",
+                "state_class": "measurement",
             },
             "websocket_event": {"state": {"lightlevel": 1000}},
             "next_state": "1.3",
@@ -783,6 +784,36 @@ async def test_add_new_sensor(hass, aioclient_mock, mock_deconz_websocket):
 
     assert len(hass.states.async_all()) == 2
     assert hass.states.get("sensor.light_level_sensor").state == "999.8"
+
+
+BAD_SENSOR_DATA = [
+    ("ZHAConsumption", "consumption"),
+    ("ZHAHumidity", "humidity"),
+    ("ZHALightLevel", "lightlevel"),
+    ("ZHATemperature", "temperature"),
+]
+
+
+@pytest.mark.parametrize("sensor_type, sensor_property", BAD_SENSOR_DATA)
+async def test_dont_add_sensor_if_state_is_none(
+    hass, aioclient_mock, sensor_type, sensor_property
+):
+    """Test sensor with scaled data is not created if state is None."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "Sensor 1",
+                "type": sensor_type,
+                "state": {sensor_property: None},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            }
+        }
+    }
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(hass, aioclient_mock)
+
+    assert len(hass.states.async_all()) == 0
 
 
 async def test_add_battery_later(hass, aioclient_mock, mock_deconz_websocket):

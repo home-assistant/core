@@ -3,10 +3,11 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from enum import Enum
 import logging
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, Union
 
-from pyunifiprotect.data import ProtectDeviceModel
+from pyunifiprotect.data import NVR, ProtectAdoptableDeviceModel
 
 from homeassistant.helpers.entity import EntityDescription
 
@@ -14,17 +15,25 @@ from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
 
-T = TypeVar("T", bound=ProtectDeviceModel)
+T = TypeVar("T", bound=Union[ProtectAdoptableDeviceModel, NVR])
+
+
+class PermRequired(int, Enum):
+    """Type of permission level required for entity."""
+
+    NO_WRITE = 1
+    WRITE = 2
 
 
 @dataclass
-class ProtectRequiredKeysMixin(Generic[T]):
+class ProtectRequiredKeysMixin(EntityDescription, Generic[T]):
     """Mixin for required keys."""
 
     ufp_required_field: str | None = None
     ufp_value: str | None = None
     ufp_value_fn: Callable[[T], Any] | None = None
     ufp_enabled: str | None = None
+    ufp_perm: PermRequired | None = None
 
     def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
@@ -46,7 +55,7 @@ class ProtectRequiredKeysMixin(Generic[T]):
 
 
 @dataclass
-class ProtectSetableKeysMixin(ProtectRequiredKeysMixin, Generic[T]):
+class ProtectSetableKeysMixin(ProtectRequiredKeysMixin[T]):
     """Mixin for settable values."""
 
     ufp_set_method: str | None = None
@@ -54,8 +63,7 @@ class ProtectSetableKeysMixin(ProtectRequiredKeysMixin, Generic[T]):
 
     async def ufp_set(self, obj: T, value: Any) -> None:
         """Set value for UniFi Protect device."""
-        assert isinstance(self, EntityDescription)
-        _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.name)
+        _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.display_name)
         if self.ufp_set_method is not None:
             await getattr(obj, self.ufp_set_method)(value)
         elif self.ufp_set_method_fn is not None:

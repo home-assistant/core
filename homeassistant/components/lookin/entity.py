@@ -18,7 +18,7 @@ from .models import LookinData
 LOGGER = logging.getLogger(__name__)
 
 
-def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
+def _lookin_device_to_device_info(lookin_device: Device, host: str) -> DeviceInfo:
     """Convert a lookin device into DeviceInfo."""
     return DeviceInfo(
         identifiers={(DOMAIN, lookin_device.id)},
@@ -26,17 +26,19 @@ def _lookin_device_to_device_info(lookin_device: Device) -> DeviceInfo:
         manufacturer="LOOKin",
         model=MODEL_NAMES[lookin_device.model],
         sw_version=lookin_device.firmware,
+        configuration_url=f"http://{host}/device",
     )
 
 
 def _lookin_controlled_device_to_device_info(
-    lookin_device: Device, uuid: str, device: Climate | Remote
+    lookin_device: Device, uuid: str, device: Climate | Remote, host: str
 ) -> DeviceInfo:
     return DeviceInfo(
         identifiers={(DOMAIN, uuid)},
         name=device.name,
         model=device.device_type,
         via_device=(DOMAIN, lookin_device.id),
+        configuration_url=f"http://{host}/data/{uuid}",
     )
 
 
@@ -50,10 +52,10 @@ class LookinDeviceMixIn:
         self._lookin_udp_subs = lookin_data.lookin_udp_subs
 
 
-class LookinDeviceCoordinatorEntity(LookinDeviceMixIn, CoordinatorEntity):
+class LookinDeviceCoordinatorEntity(
+    LookinDeviceMixIn, CoordinatorEntity[LookinDataUpdateCoordinator]
+):
     """A lookin device entity on the device itself that uses the coordinator."""
-
-    coordinator: LookinDataUpdateCoordinator
 
     _attr_should_poll = False
 
@@ -62,7 +64,7 @@ class LookinDeviceCoordinatorEntity(LookinDeviceMixIn, CoordinatorEntity):
         super().__init__(lookin_data.meteo_coordinator)
         self._set_lookin_device_attrs(lookin_data)
         self._attr_device_info = _lookin_device_to_device_info(
-            lookin_data.lookin_device
+            lookin_data.lookin_device, lookin_data.host
         )
 
 
@@ -82,10 +84,10 @@ class LookinEntityMixIn:
         self._function_names = {function.name for function in self._device.functions}
 
 
-class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity):
+class LookinCoordinatorEntity(
+    LookinDeviceMixIn, LookinEntityMixIn, CoordinatorEntity[LookinDataUpdateCoordinator]
+):
     """A lookin device entity for an external device that uses the coordinator."""
-
-    coordinator: LookinDataUpdateCoordinator
 
     _attr_should_poll = False
     _attr_assumed_state = True
@@ -102,7 +104,7 @@ class LookinCoordinatorEntity(LookinDeviceMixIn, LookinEntityMixIn, CoordinatorE
         self._set_lookin_device_attrs(lookin_data)
         self._set_lookin_entity_attrs(uuid, device, lookin_data)
         self._attr_device_info = _lookin_controlled_device_to_device_info(
-            self._lookin_device, uuid, device
+            self._lookin_device, uuid, device, lookin_data.host
         )
         self._attr_unique_id = uuid
         self._attr_name = device.name

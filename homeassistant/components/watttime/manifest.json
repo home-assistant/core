@@ -3,12 +3,8 @@
   "name": "WattTime",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/watttime",
-  "requirements": [
-    "aiowatttime==0.1.1"
-  ],
-  "codeowners": [
-    "@bachya"
-  ],
+  "requirements": ["aiowatttime==0.1.1"],
+  "codeowners": ["@bachya"],
   "iot_class": "cloud_polling",
   "loggers": ["aiowatttime"]
 }

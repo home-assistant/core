@@ -109,13 +109,18 @@
             "small": "Kecil"
         },
         "tuya__vacuum_mode": {
+            "bow": "Zig Zag",
             "chargego": "Kembali ke dock",
+            "left_bow": "Zig Zag Kiri",
             "left_spiral": "Spiral Kiri",
             "mop": "Pel",
             "part": "Bagian",
+            "partial_bow": "Zig Zag Sebagian",
             "pick_zone": "Pilih Zona",
             "point": "Titik",
+            "pose": "Area",
             "random": "Acak",
+            "right_bow": "Bungkuk Kanan",
             "right_spiral": "Spiral Kanan",
             "single": "Tunggal",
             "smart": "Cerdas",

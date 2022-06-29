@@ -61,16 +61,7 @@
           "key": 8,
           "label": "Fan Switch"
         },
-        "mandatorySupportedCCs": [
-          32,
-          38,
-          133,
-          89,
-          114,
-          115,
-          134,
-          94
-        ],
+        "mandatorySupportedCCs": [32, 38, 133, 89, 114, 115, 134, 94],
         "mandatoryControlledCCs": []
       }
     }
@@ -88,9 +79,7 @@
         "readable": true,
         "writeable": true,
         "label": "Target value",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 99
       },
@@ -177,9 +166,7 @@
         "readable": true,
         "writeable": true,
         "label": "Scene ID",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 1,
         "max": 255
       }
@@ -212,9 +199,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (1)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -249,9 +234,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (2)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -286,9 +269,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (3)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -323,9 +304,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (4)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -360,9 +339,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (5)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -397,9 +374,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (6)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -434,9 +409,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (7)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -471,9 +444,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (8)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -508,9 +479,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (9)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -545,9 +514,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (10)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -582,9 +549,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (11)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -619,9 +584,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (12)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -656,9 +619,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (13)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -693,9 +654,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (14)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -730,9 +689,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (15)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -767,9 +724,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (16)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -804,9 +759,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (17)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -841,9 +794,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (18)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -878,9 +829,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (19)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -915,9 +864,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (20)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -952,9 +899,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (21)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -989,9 +934,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (22)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1026,9 +969,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (23)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1063,9 +1004,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (24)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1100,9 +1039,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (25)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1137,9 +1074,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (26)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1174,9 +1109,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (27)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1211,9 +1144,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (28)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1248,9 +1179,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (29)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1285,9 +1214,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (30)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1322,9 +1249,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (31)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1359,9 +1284,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (32)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1396,9 +1319,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (33)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1433,9 +1354,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (34)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1470,9 +1389,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (35)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1507,9 +1424,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (36)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1544,9 +1459,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (37)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1581,9 +1494,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (38)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1618,9 +1529,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (39)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1655,9 +1564,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (40)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1692,9 +1599,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (41)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1729,9 +1634,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (42)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1766,9 +1669,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (43)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1803,9 +1704,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (44)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1840,9 +1739,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (45)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1877,9 +1774,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (46)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1914,9 +1809,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (47)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1951,9 +1844,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (48)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -1988,9 +1879,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (49)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2025,9 +1914,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (50)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2062,9 +1949,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (51)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2099,9 +1984,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (52)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2136,9 +2019,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (53)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2173,9 +2054,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (54)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2210,9 +2089,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (55)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2247,9 +2124,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (56)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2284,9 +2159,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (57)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2321,9 +2194,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (58)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2358,9 +2229,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (59)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2395,9 +2264,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (60)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2432,9 +2299,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (61)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2469,9 +2334,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (62)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2506,9 +2369,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (63)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2543,9 +2404,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (64)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2580,9 +2439,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (65)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2617,9 +2474,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (66)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2654,9 +2509,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (67)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2691,9 +2544,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (68)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2728,9 +2579,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (69)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2765,9 +2614,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (70)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2802,9 +2649,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (71)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2839,9 +2684,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (72)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2876,9 +2719,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (73)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2913,9 +2754,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (74)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2950,9 +2789,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (75)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -2987,9 +2824,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (76)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3024,9 +2859,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (77)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3061,9 +2894,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (78)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3098,9 +2929,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (79)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3135,9 +2964,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (80)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3172,9 +2999,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (81)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3209,9 +3034,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (82)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3246,9 +3069,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (83)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3283,9 +3104,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (84)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3320,9 +3139,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (85)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3357,9 +3174,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (86)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3394,9 +3209,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (87)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3431,9 +3244,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (88)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3468,9 +3279,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (89)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3505,9 +3314,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (90)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3542,9 +3349,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (91)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3579,9 +3384,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (92)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3616,9 +3419,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (93)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3653,9 +3454,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (94)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3690,9 +3489,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (95)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3727,9 +3524,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (96)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3764,9 +3559,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (97)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3801,9 +3594,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (98)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3838,9 +3629,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (99)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3875,9 +3664,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (100)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3912,9 +3699,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (101)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3949,9 +3734,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (102)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -3986,9 +3769,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (103)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4023,9 +3804,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (104)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4060,9 +3839,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (105)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4097,9 +3874,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (106)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4134,9 +3909,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (107)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4171,9 +3944,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (108)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4208,9 +3979,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (109)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4245,9 +4014,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (110)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4282,9 +4049,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (111)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4319,9 +4084,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (112)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4356,9 +4119,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (113)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4393,9 +4154,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (114)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4430,9 +4189,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (115)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4467,9 +4224,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (116)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4504,9 +4259,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (117)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4541,9 +4294,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (118)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4578,9 +4329,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (119)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4615,9 +4364,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (120)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4652,9 +4399,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (121)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4689,9 +4434,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (122)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4726,9 +4469,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (123)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4763,9 +4504,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (124)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4800,9 +4539,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (125)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4837,9 +4574,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (126)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4874,9 +4609,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (127)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4911,9 +4644,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (128)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4948,9 +4679,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (129)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -4985,9 +4714,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (130)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5022,9 +4749,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (131)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5059,9 +4784,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (132)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5096,9 +4819,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (133)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5133,9 +4854,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (134)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5170,9 +4889,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (135)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5207,9 +4924,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (136)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5244,9 +4959,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (137)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5281,9 +4994,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (138)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5318,9 +5029,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (139)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5355,9 +5064,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (140)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5392,9 +5099,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (141)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5429,9 +5134,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (142)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5466,9 +5169,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (143)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5503,9 +5204,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (144)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5540,9 +5239,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (145)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5577,9 +5274,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (146)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5614,9 +5309,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (147)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5651,9 +5344,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (148)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5688,9 +5379,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (149)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5725,9 +5414,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (150)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5762,9 +5449,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (151)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5799,9 +5484,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (152)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5836,9 +5519,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (153)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5873,9 +5554,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (154)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5910,9 +5589,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (155)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5947,9 +5624,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (156)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -5984,9 +5659,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (157)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6021,9 +5694,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (158)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6058,9 +5729,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (159)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6095,9 +5764,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (160)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6132,9 +5799,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (161)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6169,9 +5834,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (162)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6206,9 +5869,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (163)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6243,9 +5904,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (164)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6280,9 +5939,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (165)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6317,9 +5974,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (166)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6354,9 +6009,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (167)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6391,9 +6044,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (168)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6428,9 +6079,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (169)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6465,9 +6114,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (170)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6502,9 +6149,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (171)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6539,9 +6184,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (172)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6576,9 +6219,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (173)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6613,9 +6254,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (174)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6650,9 +6289,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (175)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6687,9 +6324,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (176)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6724,9 +6359,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (177)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6761,9 +6394,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (178)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6798,9 +6429,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (179)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6835,9 +6464,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (180)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6872,9 +6499,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (181)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6909,9 +6534,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (182)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6946,9 +6569,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (183)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -6983,9 +6604,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (184)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7020,9 +6639,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (185)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7057,9 +6674,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (186)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7094,9 +6709,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (187)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7131,9 +6744,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (188)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7168,9 +6779,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (189)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7205,9 +6814,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (190)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7242,9 +6849,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (191)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7279,9 +6884,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (192)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7316,9 +6919,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (193)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7353,9 +6954,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (194)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7390,9 +6989,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (195)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7427,9 +7024,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (196)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7464,9 +7059,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (197)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7501,9 +7094,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (198)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7538,9 +7129,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (199)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7575,9 +7164,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (200)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7612,9 +7199,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (201)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7649,9 +7234,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (202)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7686,9 +7269,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (203)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7723,9 +7304,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (204)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7760,9 +7339,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (205)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7797,9 +7374,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (206)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7834,9 +7409,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (207)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7871,9 +7444,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (208)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7908,9 +7479,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (209)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7945,9 +7514,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (210)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -7982,9 +7549,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (211)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8019,9 +7584,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (212)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8056,9 +7619,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (213)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8093,9 +7654,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (214)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8130,9 +7689,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (215)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8167,9 +7724,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (216)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8204,9 +7759,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (217)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8241,9 +7794,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (218)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8278,9 +7829,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (219)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8315,9 +7864,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (220)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8352,9 +7899,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (221)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8389,9 +7934,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (222)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8426,9 +7969,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (223)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8463,9 +8004,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (224)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8500,9 +8039,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (225)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8537,9 +8074,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (226)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8574,9 +8109,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (227)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8611,9 +8144,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (228)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8648,9 +8179,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (229)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8685,9 +8214,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (230)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8722,9 +8249,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (231)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8759,9 +8284,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (232)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8796,9 +8319,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (233)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8833,9 +8354,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (234)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8870,9 +8389,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (235)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8907,9 +8424,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (236)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8944,9 +8459,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (237)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -8981,9 +8494,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (238)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9018,9 +8529,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (239)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9055,9 +8564,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (240)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9092,9 +8599,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (241)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9129,9 +8634,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (242)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9166,9 +8669,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (243)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9203,9 +8704,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (244)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9240,9 +8739,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (245)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9277,9 +8774,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (246)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9314,9 +8809,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (247)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9351,9 +8844,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (248)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9388,9 +8879,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (249)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9425,9 +8914,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (250)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9462,9 +8949,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (251)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9499,9 +8984,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (252)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9536,9 +9019,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (253)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9573,9 +9054,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (254)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -9610,9 +9089,7 @@
         "readable": true,
         "writeable": true,
         "label": "Level (255)",
-        "valueChangeOptions": [
-          "transitionDuration"
-        ],
+        "valueChangeOptions": ["transitionDuration"],
         "min": 0,
         "max": 255
       }
@@ -10204,9 +9681,7 @@
         "writeable": false,
         "label": "Z-Wave chip firmware versions"
       },
-      "value": [
-        "50.5"
-      ]
+      "value": ["50.5"]
     },
     {
       "endpoint": 0,
@@ -10361,10 +9836,7 @@
   ],
   "isFrequentListening": false,
   "maxDataRate": 100000,
-  "supportedDataRates": [
-    40000,
-    100000
-  ],
+  "supportedDataRates": [40000, 100000],
   "protocolVersion": 3,
   "supportsBeaming": true,
   "supportsSecurity": false,
@@ -10384,16 +9856,7 @@
       "key": 8,
       "label": "Fan Switch"
     },
-    "mandatorySupportedCCs": [
-      32,
-      38,
-      133,
-      89,
-      114,
-      115,
-      134,
-      94
-    ],
+    "mandatorySupportedCCs": [32, 38, 133, 89, 114, 115, 134, 94],
     "mandatoryControlledCCs": []
   },
   "commandClasses": [
@@ -10502,5 +9965,6 @@
     "commandsDroppedRX": 0,
     "commandsDroppedTX": 0,
     "timeoutResponse": 2
-  }
+  },
+  "isControllerNode": false
 }

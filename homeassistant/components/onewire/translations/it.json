@@ -4,22 +4,43 @@
             "already_configured": "Il dispositivo \u00e8 gi\u00e0 configurato"
         },
         "error": {
-            "cannot_connect": "Impossibile connettersi",
-            "invalid_path": "Directory non trovata."
+            "cannot_connect": "Impossibile connettersi"
         },
         "step": {
-            "owserver": {
+            "user": {
                 "data": {
                     "host": "Host",
                     "port": "Porta"
                 },
-                "title": "Imposta i dettagli dell'owserver"
-            },
-            "user": {
+                "title": "Imposta i dettagli del server"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Seleziona i dispositivi da configurare"
+        },
+        "step": {
+            "ack_no_options": {
                 "data": {
-                    "type": "Tipo di connessione"
+                    "one": "Vuoto",
+                    "other": "Vuoti"
+                }
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Precisione del sensore"
                 },
-                "title": "Configurazione 1-Wire"
+                "description": "Seleziona la precisione del sensore per {sensor_id}",
+                "title": "Precisione del sensore OneWire"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Cancella tutte le configurazioni del dispositivo",
+                    "device_selection": "Seleziona i dispositivi da configurare"
+                },
+                "description": "Seleziona quali passaggi di configurazione elaborare",
+                "title": "Opzioni del dispositivo OneWire"
             }
         }
     }

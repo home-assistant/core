@@ -174,22 +174,6 @@ class MJPEGFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Handle a flow initialized by importing a config."""
-        self._async_abort_entries_match({CONF_MJPEG_URL: config[CONF_MJPEG_URL]})
-        return self.async_create_entry(
-            title=config[CONF_NAME],
-            data={},
-            options={
-                CONF_AUTHENTICATION: config[CONF_AUTHENTICATION],
-                CONF_MJPEG_URL: config[CONF_MJPEG_URL],
-                CONF_PASSWORD: config[CONF_PASSWORD],
-                CONF_STILL_IMAGE_URL: config.get(CONF_STILL_IMAGE_URL),
-                CONF_USERNAME: config.get(CONF_USERNAME),
-                CONF_VERIFY_SSL: config[CONF_VERIFY_SSL],
-            },
-        )
-
 
 class MJPEGOptionsFlowHandler(OptionsFlow):
     """Handle MJPEG IP Camera options."""

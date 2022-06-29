@@ -1,0 +1,16 @@
+{
+  "PM1": 9.23,
+  "PM25": 13.71,
+  "PM10": 18.58,
+  "PRESSURE": 1000.87,
+  "HUMIDITY": 92.84,
+  "TEMPERATURE": 14.23,
+  "PM25_LIMIT": 25.0,
+  "PM25_PERCENT": 54.84,
+  "PM10_LIMIT": 50.0,
+  "PM10_PERCENT": 37.17,
+  "CAQI": 22.85,
+  "LEVEL": "very low",
+  "DESCRIPTION": "Great air here today!",
+  "ADVICE": "Great air!"
+}

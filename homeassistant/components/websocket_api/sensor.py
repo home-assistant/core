@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -35,13 +36,13 @@ class APICount(SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Added to hass."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_WEBSOCKET_CONNECTED, self._update_count
+            async_dispatcher_connect(
+                self.hass, SIGNAL_WEBSOCKET_CONNECTED, self._update_count
             )
         )
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count
+            async_dispatcher_connect(
+                self.hass, SIGNAL_WEBSOCKET_DISCONNECTED, self._update_count
             )
         )
 

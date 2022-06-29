@@ -9,13 +9,13 @@ from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import update_coordinator
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CO2SignalCoordinator, CO2SignalResponse
+from . import CO2SignalCoordinator
 from .const import ATTRIBUTION, DOMAIN
 
 SCAN_INTERVAL = timedelta(minutes=3)
@@ -55,7 +55,7 @@ async def async_setup_entry(
     async_add_entities(CO2Sensor(coordinator, description) for description in SENSORS)
 
 
-class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorEntity):
+class CO2Sensor(CoordinatorEntity[CO2SignalCoordinator], SensorEntity):
     """Implementation of the CO2Signal sensor."""
 
     _attr_state_class = SensorStateClass.MEASUREMENT
@@ -92,14 +92,15 @@ class CO2Sensor(update_coordinator.CoordinatorEntity[CO2SignalResponse], SensorE
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
-            super().available
-            and self.coordinator.data["data"].get(self._description.key) is not None
+            super().available and self._description.key in self.coordinator.data["data"]
         )
 
     @property
     def native_value(self) -> StateType:
         """Return sensor state."""
-        return round(self.coordinator.data["data"][self._description.key], 2)  # type: ignore[misc]
+        if (value := self.coordinator.data["data"][self._description.key]) is None:  # type: ignore[literal-required]
+            return None
+        return round(value, 2)
 
     @property
     def native_unit_of_measurement(self) -> str | None:

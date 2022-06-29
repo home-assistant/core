@@ -98,6 +98,44 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             name="Switch",
         ),
     ),
+    # Wake Up Light II
+    # Not documented
+    "hxd": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_1,
+            name="Radio",
+            icon="mdi:radio",
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_2,
+            name="Alarm 1",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_3,
+            name="Alarm 2",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_4,
+            name="Alarm 3",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_5,
+            name="Alarm 4",
+            icon="mdi:alarm",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_6,
+            name="Sleep Aid",
+            icon="mdi:power-sleep",
+        ),
+    ),
     # Switch
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
     "kg": (
@@ -135,6 +173,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
         SwitchEntityDescription(
             key=DPCode.SWITCH_6,
             name="Switch 6",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_7,
+            name="Switch 7",
+            device_class=SwitchDeviceClass.OUTLET,
+        ),
+        SwitchEntityDescription(
+            key=DPCode.SWITCH_8,
+            name="Switch 8",
             device_class=SwitchDeviceClass.OUTLET,
         ),
         SwitchEntityDescription(
@@ -218,6 +266,16 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             key=DPCode.LOCK,
             name="Child Lock",
             icon="mdi:account-lock",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        SwitchEntityDescription(
+            key=DPCode.SWITCH,
+            name="Switch",
+            icon="mdi:pot-steam",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

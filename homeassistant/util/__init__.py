@@ -15,8 +15,8 @@ import slugify as unicode_slug
 
 from .dt import as_local, utcnow
 
-T = TypeVar("T")
-U = TypeVar("U")  # pylint: disable=invalid-name
+_T = TypeVar("_T")
+_U = TypeVar("_U")
 
 RE_SANITIZE_FILENAME = re.compile(r"(~|\.\.|/|\\)")
 RE_SANITIZE_PATH = re.compile(r"(~|\.(\.)+)")
@@ -63,8 +63,8 @@ def repr_helper(inp: Any) -> str:
 
 
 def convert(
-    value: T | None, to_type: Callable[[T], U], default: U | None = None
-) -> U | None:
+    value: _T | None, to_type: Callable[[_T], _U], default: _U | None = None
+) -> _U | None:
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)

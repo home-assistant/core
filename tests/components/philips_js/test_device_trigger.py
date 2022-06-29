@@ -28,6 +28,7 @@ async def test_get_triggers(hass, mock_device):
             "domain": DOMAIN,
             "type": "turn_on",
             "device_id": mock_device.id,
+            "metadata": {},
         },
     ]
     triggers = await async_get_device_automations(

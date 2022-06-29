@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
-import logging
 from typing import Any, Final, cast
 
 import aioshelly
@@ -47,6 +46,7 @@ from .const import (
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
     INPUTS_EVENTS_DICT,
+    LOGGER,
     MODELS_SUPPORTING_LIGHT_EFFECTS,
     POLLING_TIMEOUT_SEC,
     REST,
@@ -86,11 +86,12 @@ BLOCK_SLEEPING_PLATFORMS: Final = [
 RPC_PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.COVER,
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
-_LOGGER: Final = logging.getLogger(__name__)
+
 
 COAP_SCHEMA: Final = vol.Schema(
     {
@@ -118,7 +119,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # error. The config entry data for this custom component doesn't contain host
     # value, so if host isn't present, config entry will not be configured.
     if not entry.data.get(CONF_HOST):
-        _LOGGER.warning(
+        LOGGER.warning(
             "The config entry %s probably comes from a custom integration, please remove it if you want to use core Shelly integration",
             entry.title,
         )
@@ -172,7 +173,7 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
 
     @callback
     def _async_device_online(_: Any) -> None:
-        _LOGGER.debug("Device %s is online, resuming setup", entry.title)
+        LOGGER.debug("Device %s is online, resuming setup", entry.title)
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = None
 
         if sleep_period is None:
@@ -181,11 +182,11 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
             data["model"] = device.settings["device"]["type"]
             hass.config_entries.async_update_entry(entry, data=data)
 
-        hass.async_create_task(async_block_device_setup(hass, entry, device))
+        async_block_device_setup(hass, entry, device)
 
     if sleep_period == 0:
         # Not a sleeping device, finish setup
-        _LOGGER.debug("Setting up online block device %s", entry.title)
+        LOGGER.debug("Setting up online block device %s", entry.title)
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await device.initialize()
@@ -196,23 +197,24 @@ async def async_setup_block_entry(hass: HomeAssistant, entry: ConfigEntry) -> bo
         except OSError as err:
             raise ConfigEntryNotReady(str(err) or "Error during device setup") from err
 
-        await async_block_device_setup(hass, entry, device)
+        async_block_device_setup(hass, entry, device)
     elif sleep_period is None or device_entry is None:
         # Need to get sleep info or first time sleeping device setup, wait for device
         hass.data[DOMAIN][DATA_CONFIG_ENTRY][entry.entry_id][DEVICE] = device
-        _LOGGER.debug(
+        LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )
         device.subscribe_updates(_async_device_online)
     else:
         # Restore sensors for sleeping device
-        _LOGGER.debug("Setting up offline block device %s", entry.title)
-        await async_block_device_setup(hass, entry, device)
+        LOGGER.debug("Setting up offline block device %s", entry.title)
+        async_block_device_setup(hass, entry, device)
 
     return True
 
 
-async def async_block_device_setup(
+@callback
+def async_block_device_setup(
     hass: HomeAssistant, entry: ConfigEntry, device: BlockDevice
 ) -> None:
     """Set up a block based device that is online."""
@@ -240,7 +242,7 @@ async def async_setup_rpc_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool
         entry.data.get(CONF_PASSWORD),
     )
 
-    _LOGGER.debug("Setting up online RPC device %s", entry.title)
+    LOGGER.debug("Setting up online RPC device %s", entry.title)
     try:
         async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
             device = await RpcDevice.create(
@@ -286,7 +288,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         )
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=device_name,
             update_interval=timedelta(seconds=update_interval),
         )
@@ -296,7 +298,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         self._debounced_reload = Debouncer(
             hass,
-            _LOGGER,
+            LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
             immediate=False,
             function=self._async_reload_entry,
@@ -317,7 +319,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
-        _LOGGER.debug("Reloading entry %s", self.name)
+        LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     @callback
@@ -388,14 +390,14 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                     },
                 )
             else:
-                _LOGGER.warning(
+                LOGGER.warning(
                     "Shelly input event %s for device %s is not supported, please open issue",
                     event_type,
                     self.name,
                 )
 
         if self._last_cfg_changed is not None and cfg_changed > self._last_cfg_changed:
-            _LOGGER.info(
+            LOGGER.info(
                 "Config for %s changed, reloading entry in %s seconds",
                 self.name,
                 ENTRY_RELOAD_COOLDOWN,
@@ -411,7 +413,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 f"Sleeping device did not update within {sleep_period} seconds interval"
             )
 
-        _LOGGER.debug("Polling Shelly Block Device - %s", self.name)
+        LOGGER.debug("Polling Shelly Block Device - %s", self.name)
         try:
             async with async_timeout.timeout(POLLING_TIMEOUT_SEC):
                 await self.device.update()
@@ -453,26 +455,26 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     async def async_trigger_ota_update(self, beta: bool = False) -> None:
         """Trigger or schedule an ota update."""
         update_data = self.device.status["update"]
-        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+        LOGGER.debug("OTA update service - update_data: %s", update_data)
 
         if not update_data["has_update"] and not beta:
-            _LOGGER.warning("No OTA update available for device %s", self.name)
+            LOGGER.warning("No OTA update available for device %s", self.name)
             return
 
         if beta and not update_data.get("beta_version"):
-            _LOGGER.warning(
+            LOGGER.warning(
                 "No OTA update on beta channel available for device %s", self.name
             )
             return
 
         if update_data["status"] == "updating":
-            _LOGGER.warning("OTA update already in progress for %s", self.name)
+            LOGGER.warning("OTA update already in progress for %s", self.name)
             return
 
         new_version = update_data["new_version"]
         if beta:
             new_version = update_data["beta_version"]
-        _LOGGER.info(
+        LOGGER.info(
             "Start OTA update of device %s from '%s' to '%s'",
             self.name,
             self.device.firmware_version,
@@ -482,8 +484,8 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 result = await self.device.trigger_ota_update(beta=beta)
         except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.exception("Error while perform ota update: %s", err)
-        _LOGGER.debug("Result of OTA update call: %s", result)
+            LOGGER.exception("Error while perform ota update: %s", err)
+        LOGGER.debug("Result of OTA update call: %s", result)
 
     def shutdown(self) -> None:
         """Shutdown the wrapper."""
@@ -492,7 +494,7 @@ class BlockDeviceWrapper(update_coordinator.DataUpdateCoordinator):
     @callback
     def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
-        _LOGGER.debug("Stopping BlockDeviceWrapper for %s", self.name)
+        LOGGER.debug("Stopping BlockDeviceWrapper for %s", self.name)
         self.shutdown()
 
 
@@ -515,7 +517,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=get_block_device_name(device),
             update_interval=timedelta(seconds=update_interval),
         )
@@ -526,7 +528,7 @@ class ShellyDeviceRestWrapper(update_coordinator.DataUpdateCoordinator):
         """Fetch data."""
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                _LOGGER.debug("REST update for %s", self.name)
+                LOGGER.debug("REST update for %s", self.name)
                 await self.device.update_status()
 
                 if self.device.status["uptime"] > 2 * REST_SENSORS_UPDATE_INTERVAL:
@@ -627,7 +629,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         device_name = get_rpc_device_name(device) if device.initialized else entry.title
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=device_name,
             update_interval=timedelta(seconds=RPC_RECONNECT_INTERVAL),
         )
@@ -636,7 +638,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
         self._debounced_reload = Debouncer(
             hass,
-            _LOGGER,
+            LOGGER,
             cooldown=ENTRY_RELOAD_COOLDOWN,
             immediate=False,
             function=self._async_reload_entry,
@@ -654,7 +656,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _async_reload_entry(self) -> None:
         """Reload entry."""
-        _LOGGER.debug("Reloading entry %s", self.name)
+        LOGGER.debug("Reloading entry %s", self.name)
         await self.hass.config_entries.async_reload(self.entry.entry_id)
 
     @callback
@@ -675,25 +677,23 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
                 continue
 
             if event_type == "config_changed":
-                _LOGGER.info(
+                LOGGER.info(
                     "Config for %s changed, reloading entry in %s seconds",
                     self.name,
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self.hass.async_create_task(self._debounced_reload.async_call())
-            elif event_type not in RPC_INPUTS_EVENTS_TYPES:
-                continue
-
-            self.hass.bus.async_fire(
-                EVENT_SHELLY_CLICK,
-                {
-                    ATTR_DEVICE_ID: self.device_id,
-                    ATTR_DEVICE: self.device.hostname,
-                    ATTR_CHANNEL: event["id"] + 1,
-                    ATTR_CLICK_TYPE: event["event"],
-                    ATTR_GENERATION: 2,
-                },
-            )
+            elif event_type in RPC_INPUTS_EVENTS_TYPES:
+                self.hass.bus.async_fire(
+                    EVENT_SHELLY_CLICK,
+                    {
+                        ATTR_DEVICE_ID: self.device_id,
+                        ATTR_DEVICE: self.device.hostname,
+                        ATTR_CHANNEL: event["id"] + 1,
+                        ATTR_CLICK_TYPE: event["event"],
+                        ATTR_GENERATION: 2,
+                    },
+                )
 
     async def _async_update_data(self) -> None:
         """Fetch data."""
@@ -701,7 +701,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             return
 
         try:
-            _LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
+            LOGGER.debug("Reconnecting to Shelly RPC Device - %s", self.name)
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await self.device.initialize()
                 device_update_info(self.hass, self.device, self.entry)
@@ -743,14 +743,14 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
         """Trigger an ota update."""
 
         update_data = self.device.status["sys"]["available_updates"]
-        _LOGGER.debug("OTA update service - update_data: %s", update_data)
+        LOGGER.debug("OTA update service - update_data: %s", update_data)
 
         if not bool(update_data) or (not update_data.get("stable") and not beta):
-            _LOGGER.warning("No OTA update available for device %s", self.name)
+            LOGGER.warning("No OTA update available for device %s", self.name)
             return
 
         if beta and not update_data.get(ATTR_BETA):
-            _LOGGER.warning(
+            LOGGER.warning(
                 "No OTA update on beta channel available for device %s", self.name
             )
             return
@@ -760,20 +760,19 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
             new_version = update_data.get(ATTR_BETA, {"version": ""})["version"]
 
         assert self.device.shelly
-        _LOGGER.info(
+        LOGGER.info(
             "Start OTA update of device %s from '%s' to '%s'",
             self.name,
             self.device.firmware_version,
             new_version,
         )
-        result = None
         try:
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
-                result = await self.device.trigger_ota_update(beta=beta)
+                await self.device.trigger_ota_update(beta=beta)
         except (asyncio.TimeoutError, OSError) as err:
-            _LOGGER.exception("Error while perform ota update: %s", err)
+            LOGGER.exception("Error while perform ota update: %s", err)
 
-        _LOGGER.debug("Result of OTA update call: %s", result)
+        LOGGER.debug("OTA update call successful")
 
     async def shutdown(self) -> None:
         """Shutdown the wrapper."""
@@ -781,7 +780,7 @@ class RpcDeviceWrapper(update_coordinator.DataUpdateCoordinator):
 
     async def _handle_ha_stop(self, _event: Event) -> None:
         """Handle Home Assistant stopping."""
-        _LOGGER.debug("Stopping RpcDeviceWrapper for %s", self.name)
+        LOGGER.debug("Stopping RpcDeviceWrapper for %s", self.name)
         await self.shutdown()
 
 
@@ -797,7 +796,7 @@ class RpcPollingWrapper(update_coordinator.DataUpdateCoordinator):
         device_name = get_rpc_device_name(device) if device.initialized else entry.title
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name=device_name,
             update_interval=timedelta(seconds=RPC_SENSORS_POLLING_INTERVAL),
         )
@@ -810,10 +809,10 @@ class RpcPollingWrapper(update_coordinator.DataUpdateCoordinator):
             raise update_coordinator.UpdateFailed("Device disconnected")
 
         try:
-            _LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
+            LOGGER.debug("Polling Shelly RPC Device - %s", self.name)
             async with async_timeout.timeout(AIOSHELLY_DEVICE_TIMEOUT_SEC):
                 await self.device.update_status()
-        except OSError as err:
+        except (OSError, aioshelly.exceptions.RPCTimeout) as err:
             raise update_coordinator.UpdateFailed("Device disconnected") from err
 
     @property

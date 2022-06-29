@@ -4,7 +4,6 @@
             "already_configured": "El dispositiu ja est\u00e0 configurat",
             "alternative_integration": "El dispositiu t\u00e9 millor compatibilitat amb una altra integraci\u00f3",
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "could_not_connect": "No s'ha pogut connectar amb el dispositiu DLNA",
             "discovery_error": "No s'ha pogut descobrir cap dispositiu DLNA coincident",
             "incomplete_config": "Falta una variable obligat\u00f2ria a la configuraci\u00f3",
             "non_unique_id": "S'han trobat diversos dispositius amb el mateix identificador \u00fanic",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "Ha fallat la connexi\u00f3",
-            "could_not_connect": "No s'ha pogut connectar amb el dispositiu DLNA",
             "not_dmr": "El dispositiu no \u00e9s un renderitzador de mitjans digitals compatible"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Amfitri\u00f3",
-                    "url": "URL"
+                    "host": "Amfitri\u00f3"
                 },
                 "description": "Tria un dispositiu a configurar o deixeu-ho en blanc per introduir un URL",
                 "title": "Dispositius descoberts DLNA DMR"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Mostra fitxers multim\u00e8dia incompatibles mentre navegui",
                     "callback_url_override": "URL de crida de l'oient d'esdeveniments",
                     "listen_port": "Port de l'oient d'esdeveniments (aleatori si no es defineix)",
                     "poll_availability": "Sondeja per saber la disponibilitat del dispositiu"

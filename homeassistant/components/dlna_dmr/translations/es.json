@@ -4,7 +4,6 @@
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "alternative_integration": "Dispositivo compatible con otra integraci\u00f3n",
             "cannot_connect": "No se pudo conectar",
-            "could_not_connect": "No se pudo conectar al dispositivo DLNA",
             "discovery_error": "No se ha podido descubrir un dispositivo DLNA coincidente",
             "incomplete_config": "A la configuraci\u00f3n le falta una variable necesaria",
             "non_unique_id": "Se han encontrado varios dispositivos con el mismo ID \u00fanico",
@@ -12,7 +11,6 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
-            "could_not_connect": "No se pudo conectar al dispositivo DLNA",
             "not_dmr": "El dispositivo no es un procesador de medios digitales compatible"
         },
         "flow_title": "{name}",
@@ -32,8 +30,7 @@
             },
             "user": {
                 "data": {
-                    "host": "Host",
-                    "url": "URL"
+                    "host": "Host"
                 },
                 "description": "Elija un dispositivo para configurar o d\u00e9jelo en blanco para introducir una URL",
                 "title": "Dispositivos DLNA DMR descubiertos"
@@ -47,6 +44,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Muestra archivos multimedia incompatibles mientras navega",
                     "callback_url_override": "URL de devoluci\u00f3n de llamada del detector de eventos",
                     "listen_port": "Puerto de escucha de eventos (aleatorio si no se establece)",
                     "poll_availability": "Sondeo para la disponibilidad del dispositivo"

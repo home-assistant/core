@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} \u00e8 in buffering",
             "is_idle": "{entity_name} \u00e8 inattivo",
             "is_off": "{entity_name} \u00e8 spento",
             "is_on": "{entity_name} \u00e8 acceso",
@@ -8,6 +9,7 @@
             "is_playing": "{entity_name} \u00e8 in esecuzione"
         },
         "trigger_type": {
+            "buffering": "{entity_name} avvia il buffering",
             "changed_states": "{entity_name} ha cambiato stato",
             "idle": "{entity_name} diventa inattivo",
             "paused": "{entity_name} \u00e8 in pausa",
@@ -18,6 +20,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Riempimento buffer",
             "idle": "Inattivo",
             "off": "Spento",
             "on": "Acceso",

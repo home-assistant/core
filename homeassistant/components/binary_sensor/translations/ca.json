@@ -59,8 +59,6 @@
             "connected": "{entity_name} est\u00e0 connectat",
             "gas": "{entity_name} ha comen\u00e7at a detectar gas",
             "hot": "{entity_name} es torna calent",
-            "is_not_tampered": "{entity_name} ha deixat de detectar manipulaci\u00f3",
-            "is_tampered": "{entity_name} ha comen\u00e7at a detectar manipulaci\u00f3",
             "light": "{entity_name} ha comen\u00e7at a detectar llum",
             "locked": "{entity_name} est\u00e0 bloquejat",
             "moist": "{entity_name} es torna humit",
@@ -83,7 +81,7 @@
             "not_moist": "{entity_name} es torna sec",
             "not_moving": "{entity_name} ha parat de moure's",
             "not_occupied": "{entity_name} es desocupa",
-            "not_opened": "{entity_name} es tanca",
+            "not_opened": "{entity_name} tancat/tancada",
             "not_plugged_in": "{entity_name} desendollat",
             "not_powered": "{entity_name} no est\u00e0 alimentat",
             "not_present": "{entity_name} no est\u00e0 present",
@@ -134,7 +132,7 @@
             "off": "No carregant",
             "on": "Carregant"
         },
-        "co": {
+        "carbon_monoxide": {
             "off": "Lliure",
             "on": "Detectat"
         },

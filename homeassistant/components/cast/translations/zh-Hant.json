@@ -11,7 +11,7 @@
                 "data": {
                     "known_hosts": "\u5df2\u77e5\u4e3b\u6a5f"
                 },
-                "description": "\u5df2\u77e5\u4e3b\u6a5f - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31 hostnames \u6216 IP \u4f4d\u5740\u3001\u5047\u5982 mDNS \u63a2\u7d22\u5931\u6548\u7684\u72c0\u6cc1\u3002",
+                "description": "\u5df2\u77e5\u4e3b\u6a5f - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31 hostnames \u6216 IP \u4f4d\u5740\u3001\u5047\u5982 mDNS \u641c\u7d22\u5931\u6548\u7684\u72c0\u6cc1\u3002",
                 "title": "Google Cast \u8a2d\u5b9a"
             },
             "confirm": {
@@ -36,7 +36,7 @@
                 "data": {
                     "known_hosts": "\u5df2\u77e5\u4e3b\u6a5f"
                 },
-                "description": "\u5df2\u77e5\u4e3b\u6a5f - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31 hostnames \u6216 IP \u4f4d\u5740\u3001\u5047\u5982 mDNS \u63a2\u7d22\u5931\u6548\u7684\u72c0\u6cc1\u3002",
+                "description": "\u5df2\u77e5\u4e3b\u6a5f - \u4ee5\u9017\u865f\u5206\u9694\u7684 Chromecast \u88dd\u7f6e\u4e3b\u6a5f\u540d\u7a31 hostnames \u6216 IP \u4f4d\u5740\u3001\u5047\u5982 mDNS \u641c\u7d22\u5931\u6548\u7684\u72c0\u6cc1\u3002",
                 "title": "Google Cast \u8a2d\u5b9a"
             }
         }

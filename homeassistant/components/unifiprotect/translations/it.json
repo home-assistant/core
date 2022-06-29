@@ -7,18 +7,16 @@
         "error": {
             "cannot_connect": "Impossibile connettersi",
             "invalid_auth": "Autenticazione non valida",
-            "protect_version": "La versione minima richiesta \u00e8 v1.20.0. Aggiorna UniFi Protect e riprova.",
-            "unknown": "Errore imprevisto"
+            "protect_version": "La versione minima richiesta \u00e8 v1.20.0. Aggiorna UniFi Protect e riprova."
         },
         "flow_title": "{name} ({ip_address})",
         "step": {
             "discovery_confirm": {
                 "data": {
                     "password": "Password",
-                    "username": "Nome utente",
-                    "verify_ssl": "Verifica il certificato SSL"
+                    "username": "Nome utente"
                 },
-                "description": "Vuoi configurare {name} ( {ip_address} )? Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
+                "description": "Vuoi configurare {name} ({ip_address})? Avrai bisogno di un utente locale creato nella tua console UniFi OS con cui accedere. Gli utenti Ubiquiti Cloud non funzioneranno. Per ulteriori informazioni: {local_user_documentation_url}",
                 "title": "Rilevato UniFi Protect"
             },
             "reauth_confirm": {

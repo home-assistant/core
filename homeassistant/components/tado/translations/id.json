@@ -23,9 +23,9 @@
         "step": {
             "init": {
                 "data": {
-                    "fallback": "Aktifkan mode alternatif."
+                    "fallback": "Pilih mode alternatif"
                 },
-                "description": "Mode fallback akan beralih ke Smart Schedule pada pergantian jadwal berikutnya setelah menyesuaikan zona secara manual.",
+                "description": "Mode alternatif memungkinkan Anda memilih kapan harus berubah ke Smart Schedule dari overlay zona manual Anda. (NEXT_TIME_BLOCK:= Ubah pada perubahan Smart Schedule berikutnya; MANUAL:= Jangan ubah sampai Anda membatalkan; TADO_DEFAULT:= Ubah berdasarkan pengaturan Anda di Aplikasi Tado).",
                 "title": "Sesuaikan opsi Tado."
             }
         }

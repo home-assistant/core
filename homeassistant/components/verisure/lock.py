@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 from verisure import Error as VerisureError
 
@@ -55,10 +56,8 @@ async def async_setup_entry(
     )
 
 
-class VerisureDoorlock(CoordinatorEntity, LockEntity):
+class VerisureDoorlock(CoordinatorEntity[VerisureDataUpdateCoordinator], LockEntity):
     """Representation of a Verisure doorlock."""
-
-    coordinator: VerisureDataUpdateCoordinator
 
     def __init__(
         self, coordinator: VerisureDataUpdateCoordinator, serial_number: str
@@ -102,6 +101,11 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
         return self.coordinator.data["locks"][self.serial_number].get("userString")
 
     @property
+    def changed_method(self) -> str:
+        """Last change method."""
+        return self.coordinator.data["locks"][self.serial_number]["method"]
+
+    @property
     def code_format(self) -> str:
         """Return the required six digit code."""
         return "^\\d{%s}$" % self._digits
@@ -114,7 +118,12 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
             == "LOCKED"
         )
 
-    async def async_unlock(self, **kwargs) -> None:
+    @property
+    def extra_state_attributes(self) -> dict[str, str]:
+        """Return the state attributes."""
+        return {"method": self.changed_method}
+
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Send unlock command."""
         code = kwargs.get(
             ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)
@@ -125,7 +134,7 @@ class VerisureDoorlock(CoordinatorEntity, LockEntity):
 
         await self.async_set_lock_state(code, STATE_UNLOCKED)
 
-    async def async_lock(self, **kwargs) -> None:
+    async def async_lock(self, **kwargs: Any) -> None:
         """Send lock command."""
         code = kwargs.get(
             ATTR_CODE, self.coordinator.entry.options.get(CONF_LOCK_DEFAULT_CODE)

@@ -10,11 +10,12 @@ from homeassistant.const import (
 from homeassistant.helpers import entity_registry as er
 
 from tests.components.sleepiq.conftest import (
-    BED_ID,
     BED_NAME,
     BED_NAME_LOWER,
+    SLEEPER_L_ID,
     SLEEPER_L_NAME,
     SLEEPER_L_NAME_LOWER,
+    SLEEPER_R_ID,
     SLEEPER_R_NAME,
     SLEEPER_R_NAME_LOWER,
     setup_platform,
@@ -41,7 +42,7 @@ async def test_binary_sensors(hass, mock_asyncsleepiq):
         f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_L_NAME_LOWER}_is_in_bed"
     )
     assert entity
-    assert entity.unique_id == f"{BED_ID}_{SLEEPER_L_NAME}_is_in_bed"
+    assert entity.unique_id == f"{SLEEPER_L_ID}_is_in_bed"
 
     state = hass.states.get(
         f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_is_in_bed"
@@ -58,4 +59,4 @@ async def test_binary_sensors(hass, mock_asyncsleepiq):
         f"binary_sensor.sleepnumber_{BED_NAME_LOWER}_{SLEEPER_R_NAME_LOWER}_is_in_bed"
     )
     assert entity
-    assert entity.unique_id == f"{BED_ID}_{SLEEPER_R_NAME}_is_in_bed"
+    assert entity.unique_id == f"{SLEEPER_R_ID}_is_in_bed"

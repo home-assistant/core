@@ -1,6 +1,7 @@
 """Config flow for Enphase Envoy integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import contextlib
 import logging
 from typing import Any
@@ -16,6 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.network import is_ipv4_address
 
 from .const import DOMAIN
 
@@ -86,6 +88,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle a flow initialized by zeroconf discovery."""
+        if not is_ipv4_address(discovery_info.host):
+            return self.async_abort(reason="not_ipv4_address")
         serial = discovery_info.properties["serialnum"]
         await self.async_set_unique_id(serial)
         self.ip_address = discovery_info.host
@@ -107,7 +111,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
-    async def async_step_reauth(self, user_input):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

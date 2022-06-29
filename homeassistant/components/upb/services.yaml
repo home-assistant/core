@@ -20,7 +20,7 @@ light_fade_start:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
     rate:
       name: Rate
       description: Rate for light to transition to new brightness
@@ -89,7 +89,7 @@ link_goto:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
     rate:
       name: Rate
       description: Amount of time for scene to transition to new brightness
@@ -122,7 +122,7 @@ link_fade_start:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '%'
+          unit_of_measurement: "%"
     rate:
       name: Rate
       description: Amount of time for scene to transition to new brightness

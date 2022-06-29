@@ -16,6 +16,7 @@ from homeassistant.components.mqtt.models import ReceiveMessage
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -33,7 +34,6 @@ from homeassistant.setup import async_when_setup
 from .const import (
     ATTR_MANUFACTURER,
     CONF_EVENTS,
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_EVENTS,
@@ -274,7 +274,9 @@ class AxisNetworkDevice:
         )
 
 
-async def get_device(hass, host, port, username, password):
+async def get_device(
+    hass: HomeAssistant, host: str, port: int, username: str, password: str
+) -> axis.AxisDevice:
     """Create a Axis device."""
     session = get_async_client(hass, verify_ssl=False)
 

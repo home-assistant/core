@@ -128,10 +128,9 @@ class FiveMEntityDescription(EntityDescription):
     extra_attrs: list[str] | None = None
 
 
-class FiveMEntity(CoordinatorEntity):
+class FiveMEntity(CoordinatorEntity[FiveMDataUpdateCoordinator]):
     """Representation of a FiveM base entity."""
 
-    coordinator: FiveMDataUpdateCoordinator
     entity_description: FiveMEntityDescription
 
     def __init__(

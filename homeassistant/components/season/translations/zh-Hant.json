@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u670d\u52d9\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "type": "\u5b63\u7bc0\u985e\u5225\u5b9a\u7fa9"
+                }
+            }
+        }
+    }
+}

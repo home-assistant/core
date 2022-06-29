@@ -116,7 +116,5 @@ class AtenSwitch(SwitchEntity):
         status = await self._device.displayOutletStatus(self._outlet)
         if status == "on":
             self._attr_is_on = True
-            self._attr_current_power_w = await self._device.outletPower(self._outlet)
         elif status == "off":
             self._attr_is_on = False
-            self._attr_current_power_w = 0.0

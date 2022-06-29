@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "PIN-kood peaks olema 4-kohaline",
+            "bad_validation_code_format": "Kinnituskood peaks olema 6 kohaline",
             "cannot_connect": "\u00dchendamine nurjus",
             "incorrect_pin": "Vale PIN-kood",
-            "invalid_auth": "Vigane autentimine"
+            "incorrect_validation_code": "Vale kinnituskood",
+            "invalid_auth": "Vigane autentimine",
+            "two_factor_request_failed": "2FA koodi taotlus nurjus, proovi uuesti"
         },
         "step": {
             "pin": {
@@ -17,6 +20,20 @@
                 },
                 "description": "Sisesta oma MySubaru PIN-kood\n M\u00c4RKUS. K\u00f5igil kontol olevatel s\u00f5idukitel peab olema sama PIN-kood",
                 "title": "Subaru Starlinki konfiguratsioon"
+            },
+            "two_factor": {
+                "data": {
+                    "contact_method": "Vali kontaktimeetod"
+                },
+                "description": "N\u00f5utav on kaheastmeline autentimine",
+                "title": "Subaru Starlink s\u00e4tted"
+            },
+            "two_factor_validate": {
+                "data": {
+                    "validation_code": "Kinnituskood"
+                },
+                "description": "Sisesta saadud kinnituskood",
+                "title": "Subaru Starlink s\u00e4tted"
             },
             "user": {
                 "data": {

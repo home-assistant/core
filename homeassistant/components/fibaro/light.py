@@ -2,56 +2,65 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import suppress
 from functools import partial
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_HS_COLOR,
-    ATTR_WHITE_VALUE,
-    DOMAIN,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_WHITE_VALUE,
+    ATTR_RGB_COLOR,
+    ATTR_RGBW_COLOR,
+    ENTITY_ID_FORMAT,
+    ColorMode,
     LightEntity,
+    brightness_supported,
+    color_supported,
 )
-from homeassistant.const import CONF_WHITE_VALUE
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.color as color_util
 
-from . import CONF_COLOR, CONF_DIMMING, CONF_RESET_COLOR, FIBARO_DEVICES, FibaroDevice
+from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
+
+PARALLEL_UPDATES = 2
 
 
-def scaleto255(value):
+def scaleto255(value: int | None) -> int:
     """Scale the input value from 0-100 to 0-255."""
+    if value is None:
+        return 0
     # Fibaro has a funny way of storing brightness either 0-100 or 0-99
     # depending on device type (e.g. dimmer vs led)
     if value > 98:
         value = 100
-    return max(0, min(255, ((value * 255.0) / 100.0)))
+    return round(value * 2.55)
 
 
-def scaleto100(value):
-    """Scale the input value from 0-255 to 0-100."""
+def scaleto99(value: int | None) -> int:
+    """Scale the input value from 0-255 to 0-99."""
+    if value is None:
+        return 0
     # Make sure a low but non-zero value is not rounded down to zero
     if 0 < value < 3:
         return 1
-    return max(0, min(100, ((value * 100.0) / 255.0)))
+    return min(round(value / 2.55), 99)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
     async_add_entities(
-        [FibaroLight(device) for device in hass.data[FIBARO_DEVICES]["light"]], True
+        [
+            FibaroLight(device)
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.LIGHT
+            ]
+        ],
+        True,
     )
 
 
@@ -60,15 +69,8 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def __init__(self, fibaro_device):
         """Initialize the light."""
-        self._brightness = None
-        self._color = (0, 0)
-        self._last_brightness = 0
-        self._supported_flags = 0
         self._update_lock = asyncio.Lock()
-        self._white = 0
 
-        devconf = fibaro_device.device_config
-        self._reset_color = devconf.get(CONF_RESET_COLOR, False)
         supports_color = (
             "color" in fibaro_device.properties
             or "colorComponents" in fibaro_device.properties
@@ -86,40 +88,24 @@ class FibaroLight(FibaroDevice, LightEntity):
         )
         supports_dimming = (
             "levelChange" in fibaro_device.interfaces
-            or supports_color
-            or supports_white_v
+            and "setValue" in fibaro_device.actions
         )
 
-        # Configuration can override default capability detection
-        if devconf.get(CONF_DIMMING, supports_dimming):
-            self._supported_flags |= SUPPORT_BRIGHTNESS
-        if devconf.get(CONF_COLOR, supports_color):
-            self._supported_flags |= SUPPORT_COLOR
-        if devconf.get(CONF_WHITE_VALUE, supports_white_v):
-            self._supported_flags |= SUPPORT_WHITE_VALUE
+        if supports_color and supports_white_v:
+            self._attr_supported_color_modes = {ColorMode.RGBW}
+            self._attr_color_mode = ColorMode.RGBW
+        elif supports_color:
+            self._attr_supported_color_modes = {ColorMode.RGB}
+            self._attr_color_mode = ColorMode.RGB
+        elif supports_dimming:
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_supported_color_modes = {ColorMode.ONOFF}
+            self._attr_color_mode = ColorMode.ONOFF
 
         super().__init__(fibaro_device)
-        self.entity_id = f"{DOMAIN}.{self.ha_id}"
-
-    @property
-    def brightness(self):
-        """Return the brightness of the light."""
-        return scaleto255(self._brightness)
-
-    @property
-    def hs_color(self):
-        """Return the color of the light."""
-        return self._color
-
-    @property
-    def white_value(self):
-        """Return the white value of this light between 0..255."""
-        return self._white
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return self._supported_flags
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
@@ -128,49 +114,21 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def _turn_on(self, **kwargs):
         """Really turn the light on."""
-        if self._supported_flags & SUPPORT_BRIGHTNESS:
-            target_brightness = kwargs.get(ATTR_BRIGHTNESS)
-
-            # No brightness specified, so we either restore it to
-            # last brightness or switch it on at maximum level
-            if target_brightness is None:
-                if self._brightness == 0:
-                    if self._last_brightness:
-                        self._brightness = self._last_brightness
-                    else:
-                        self._brightness = 100
-            else:
-                # We set it to the target brightness and turn it on
-                self._brightness = scaleto100(target_brightness)
-
-        if self._supported_flags & SUPPORT_COLOR and (
-            kwargs.get(ATTR_WHITE_VALUE) is not None
-            or kwargs.get(ATTR_HS_COLOR) is not None
-        ):
-            if self._reset_color:
-                self._color = (100, 0)
-
-            # Update based on parameters
-            self._white = kwargs.get(ATTR_WHITE_VALUE, self._white)
-            self._color = kwargs.get(ATTR_HS_COLOR, self._color)
-            rgb = color_util.color_hs_to_RGB(*self._color)
-            self.call_set_color(
-                round(rgb[0]),
-                round(rgb[1]),
-                round(rgb[2]),
-                round(self._white),
-            )
-
-            if self.state == "off":
-                self.set_level(min(int(self._brightness), 99))
+        if ATTR_BRIGHTNESS in kwargs:
+            self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
+            self.set_level(scaleto99(self._attr_brightness))
             return
 
-        if self._reset_color:
-            bri255 = scaleto255(self._brightness)
-            self.call_set_color(bri255, bri255, bri255, bri255)
+        if ATTR_RGB_COLOR in kwargs:
+            # Update based on parameters
+            self._attr_rgb_color = kwargs[ATTR_RGB_COLOR]
+            self.call_set_color(*self._attr_rgb_color, 0)
+            return
 
-        if self._supported_flags & SUPPORT_BRIGHTNESS:
-            self.set_level(min(int(self._brightness), 99))
+        if ATTR_RGBW_COLOR in kwargs:
+            # Update based on parameters
+            self._attr_rgbw_color = kwargs[ATTR_RGBW_COLOR]
+            self.call_set_color(*self._attr_rgbw_color)
             return
 
         # The simplest case is left for last. No dimming, just switch on
@@ -183,20 +141,31 @@ class FibaroLight(FibaroDevice, LightEntity):
 
     def _turn_off(self, **kwargs):
         """Really turn the light off."""
-        # Let's save the last brightness level before we switch it off
-        if (
-            (self._supported_flags & SUPPORT_BRIGHTNESS)
-            and self._brightness
-            and self._brightness > 0
-        ):
-            self._last_brightness = self._brightness
-        self._brightness = 0
         self.call_turn_off()
 
     @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self.current_binary_state
+    def is_on(self) -> bool | None:
+        """Return true if device is on.
+
+        Dimmable and RGB lights can be on based on different
+        properties, so we need to check here several values.
+
+        JSON for HC2 uses always string, HC3 uses int for integers.
+        """
+        props = self.fibaro_device.properties
+        if self.current_binary_state:
+            return True
+        with suppress(ValueError, TypeError):
+            if "brightness" in props and int(props.brightness) != 0:
+                return True
+        with suppress(ValueError, TypeError):
+            if "currentProgram" in props and int(props.currentProgram) != 0:
+                return True
+        with suppress(ValueError, TypeError):
+            if "currentProgramID" in props and int(props.currentProgramID) != 0:
+                return True
+
+        return False
 
     async def async_update(self):
         """Update the state."""
@@ -206,15 +175,12 @@ class FibaroLight(FibaroDevice, LightEntity):
     def _update(self):
         """Really update the state."""
         # Brightness handling
-        if self._supported_flags & SUPPORT_BRIGHTNESS:
-            self._brightness = float(self.fibaro_device.properties.value)
-            # Fibaro might report 0-99 or 0-100 for brightness,
-            # based on device type, so we round up here
-            if self._brightness > 99:
-                self._brightness = 100
+        if brightness_supported(self.supported_color_modes):
+            self._attr_brightness = scaleto255(int(self.fibaro_device.properties.value))
+
         # Color handling
         if (
-            self._supported_flags & SUPPORT_COLOR
+            color_supported(self.supported_color_modes)
             and "color" in self.fibaro_device.properties
             and "," in self.fibaro_device.properties.color
         ):
@@ -223,7 +189,8 @@ class FibaroLight(FibaroDevice, LightEntity):
             if rgbw_s == "0,0,0,0" and "lastColorSet" in self.fibaro_device.properties:
                 rgbw_s = self.fibaro_device.properties.lastColorSet
             rgbw_list = [int(i) for i in rgbw_s.split(",")][:4]
-            if rgbw_list[0] or rgbw_list[1] or rgbw_list[2]:
-                self._color = color_util.color_RGB_to_hs(*rgbw_list[:3])
-            if (self._supported_flags & SUPPORT_WHITE_VALUE) and self.brightness != 0:
-                self._white = min(255, max(0, rgbw_list[3]))
+
+            if self._attr_color_mode == ColorMode.RGB:
+                self._attr_rgb_color = tuple(rgbw_list[:3])
+            else:
+                self._attr_rgbw_color = tuple(rgbw_list)

@@ -9,10 +9,8 @@ from . import RokuDataUpdateCoordinator
 from .const import DOMAIN
 
 
-class RokuEntity(CoordinatorEntity):
+class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
     """Defines a base Roku entity."""
-
-    coordinator: RokuDataUpdateCoordinator
 
     def __init__(
         self,

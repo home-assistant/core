@@ -1,0 +1,57 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "A conta j\u00e1 foi configurada"
+        },
+        "error": {
+            "db_url_invalid": "URL do banco de dados inv\u00e1lida",
+            "query_invalid": "Consulta SQL inv\u00e1lida"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "column": "Coluna",
+                    "db_url": "URL do banco de dados",
+                    "name": "Nome",
+                    "query": "Selecionar consulta",
+                    "unit_of_measurement": "Unidade de medida",
+                    "value_template": "Modelo do valor"
+                },
+                "data_description": {
+                    "column": "Coluna para a consulta retornada para apresentar como estado",
+                    "db_url": "URL do banco de dados, deixe em branco para usar o banco de dados padr\u00e3o",
+                    "name": "Nome que ser\u00e1 usado para entrada de configura\u00e7\u00e3o e tamb\u00e9m para o Sensor",
+                    "query": "Consulte para ser executada, precisa come\u00e7ar com 'SELECT'",
+                    "unit_of_measurement": "Unidade de medida (opcional)",
+                    "value_template": "Modelo do valor (opcional)"
+                }
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "db_url_invalid": "URL do banco de dados inv\u00e1lida",
+            "query_invalid": "Consulta SQL inv\u00e1lida"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "column": "Coluna",
+                    "db_url": "URL do banco de dados",
+                    "name": "Nome",
+                    "query": "Selecionar consulta",
+                    "unit_of_measurement": "Unidade de medida",
+                    "value_template": "Modelo do valor"
+                },
+                "data_description": {
+                    "column": "Coluna para a consulta retornada para apresentar como estado",
+                    "db_url": "URL do banco de dados, deixe em branco para usar o banco de dados padr\u00e3o",
+                    "name": "Nome que ser\u00e1 usado para entrada de configura\u00e7\u00e3o e tamb\u00e9m para o Sensor",
+                    "query": "Consulte para ser executada, precisa come\u00e7ar com 'SELECT'",
+                    "unit_of_measurement": "Unidade de medida (opcional)",
+                    "value_template": "Modelo do valor (opcional)"
+                }
+            }
+        }
+    }
+}

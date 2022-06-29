@@ -3,26 +3,25 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.climate import ClimateEntity
+from homeassistant.components.climate import ENTITY_ID_FORMAT, ClimateEntity
 from homeassistant.components.climate.const import (
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import FIBARO_DEVICES, FibaroDevice
+from .const import DOMAIN
 
 PRESET_RESUME = "resume"
 PRESET_MOIST = "moist"
@@ -71,45 +70,46 @@ OPMODES_PRESET = {
 HA_OPMODES_PRESET = {v: k for k, v in OPMODES_PRESET.items()}
 
 OPMODES_HVAC = {
-    0: HVAC_MODE_OFF,
-    1: HVAC_MODE_HEAT,
-    2: HVAC_MODE_COOL,
-    3: HVAC_MODE_AUTO,
-    4: HVAC_MODE_HEAT,
-    5: HVAC_MODE_AUTO,
-    6: HVAC_MODE_FAN_ONLY,
-    7: HVAC_MODE_HEAT,
-    8: HVAC_MODE_DRY,
-    9: HVAC_MODE_DRY,
-    10: HVAC_MODE_AUTO,
-    11: HVAC_MODE_HEAT,
-    12: HVAC_MODE_COOL,
-    13: HVAC_MODE_AUTO,
-    15: HVAC_MODE_AUTO,
-    31: HVAC_MODE_HEAT,
+    0: HVACMode.OFF,
+    1: HVACMode.HEAT,
+    2: HVACMode.COOL,
+    3: HVACMode.AUTO,
+    4: HVACMode.HEAT,
+    5: HVACMode.AUTO,
+    6: HVACMode.FAN_ONLY,
+    7: HVACMode.HEAT,
+    8: HVACMode.DRY,
+    9: HVACMode.DRY,
+    10: HVACMode.AUTO,
+    11: HVACMode.HEAT,
+    12: HVACMode.COOL,
+    13: HVACMode.AUTO,
+    15: HVACMode.AUTO,
+    31: HVACMode.HEAT,
 }
 
 HA_OPMODES_HVAC = {
-    HVAC_MODE_OFF: 0,
-    HVAC_MODE_HEAT: 1,
-    HVAC_MODE_COOL: 2,
-    HVAC_MODE_AUTO: 3,
-    HVAC_MODE_FAN_ONLY: 6,
+    HVACMode.OFF: 0,
+    HVACMode.HEAT: 1,
+    HVACMode.COOL: 2,
+    HVACMode.AUTO: 3,
+    HVACMode.FAN_ONLY: 6,
 }
 
 
-def setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Fibaro controller devices."""
-    if discovery_info is None:
-        return
-
-    add_entities(
-        [FibaroThermostat(device) for device in hass.data[FIBARO_DEVICES]["climate"]],
+    async_add_entities(
+        [
+            FibaroThermostat(device)
+            for device in hass.data[DOMAIN][entry.entry_id][FIBARO_DEVICES][
+                Platform.CLIMATE
+            ]
+        ],
         True,
     )
 
@@ -125,7 +125,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         self._op_mode_device = None
         self._fan_mode_device = None
         self._support_flags = 0
-        self.entity_id = f"climate.{self.ha_id}"
+        self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
         self._hvac_support = []
         self._preset_support = []
         self._fan_support = []
@@ -157,16 +157,16 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
                 or "setHeatingThermostatSetpoint" in device.actions
             ):
                 self._target_temp_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_TARGET_TEMPERATURE
+                self._support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE
                 tempunit = device.properties.unit
 
             if "setMode" in device.actions or "setOperatingMode" in device.actions:
                 self._op_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_PRESET_MODE
+                self._support_flags |= ClimateEntityFeature.PRESET_MODE
 
             if "setFanMode" in device.actions:
                 self._fan_mode_device = FibaroDevice(device)
-                self._support_flags |= SUPPORT_FAN_MODE
+                self._support_flags |= ClimateEntityFeature.FAN_MODE
 
         if tempunit == "F":
             self._unit_of_temp = TEMP_FAHRENHEIT
@@ -267,7 +267,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def hvac_modes(self):
         """Return the list of available operation modes."""
         if not self._op_mode_device:
-            return [HVAC_MODE_AUTO]  # Default to this
+            return [HVACMode.AUTO]  # Default to this
         return self._hvac_support
 
     def set_hvac_mode(self, hvac_mode):
@@ -286,7 +286,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def preset_mode(self):
         """Return the current preset mode, e.g., home, away, temp.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         if not self._op_mode_device:
             return None
@@ -304,7 +304,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
     def preset_modes(self):
         """Return a list of available preset modes.
 
-        Requires SUPPORT_PRESET_MODE.
+        Requires ClimateEntityFeature.PRESET_MODE.
         """
         if not self._op_mode_device:
             return None

@@ -5,6 +5,7 @@ from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -34,10 +35,9 @@ async def async_setup_entry(
     )
 
 
-class OctoprintButton(CoordinatorEntity, ButtonEntity):
+class OctoprintButton(CoordinatorEntity[OctoprintDataUpdateCoordinator], ButtonEntity):
     """Represent an OctoPrint binary sensor."""
 
-    coordinator: OctoprintDataUpdateCoordinator
     client: OctoprintClient
 
     def __init__(
@@ -55,7 +55,7 @@ class OctoprintButton(CoordinatorEntity, ButtonEntity):
         self._attr_unique_id = f"{button_type}-{device_id}"
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Device info."""
         return self.coordinator.device_info
 

@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_ID, EVENT_COMPONENT_LOADED
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import ATTR_COMPONENT
@@ -29,7 +29,6 @@ SECTIONS = (
     "script",
     "scene",
 )
-ON_DEMAND = ("zwave",)
 ACTION_CREATE_UPDATE = "create_update"
 ACTION_DELETE = "delete"
 
@@ -53,20 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             key = f"{DOMAIN}.{panel_name}"
             hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: key})
 
-    @callback
-    def component_loaded(event):
-        """Respond to components being loaded."""
-        panel_name = event.data.get(ATTR_COMPONENT)
-        if panel_name in ON_DEMAND:
-            hass.async_create_task(setup_panel(panel_name))
-
-    hass.bus.async_listen(EVENT_COMPONENT_LOADED, component_loaded)
-
     tasks = [asyncio.create_task(setup_panel(panel_name)) for panel_name in SECTIONS]
-
-    for panel_name in ON_DEMAND:
-        if panel_name in hass.config.components:
-            tasks.append(asyncio.create_task(setup_panel(panel_name)))
 
     if tasks:
         await asyncio.wait(tasks)

@@ -1,7 +1,13 @@
 """Helper methods to search for Plex media."""
+from __future__ import annotations
+
 import logging
 
+from plexapi.base import PlexObject
 from plexapi.exceptions import BadRequest, NotFound
+from plexapi.library import LibrarySection
+
+from .errors import MediaNotFound
 
 LEGACY_PARAM_MAPPING = {
     "show_name": "show.title",
@@ -28,13 +34,19 @@ PREFERRED_LIBTYPE_ORDER = (
 _LOGGER = logging.getLogger(__name__)
 
 
-def search_media(media_type, library_section, allow_multiple=False, **kwargs):
+def search_media(
+    media_type: str,
+    library_section: LibrarySection,
+    allow_multiple: bool = False,
+    **kwargs,
+) -> PlexObject | list[PlexObject]:
     """Search for specified Plex media in the provided library section.
 
-    Returns a single media item or None.
+    Returns a media item or a list of items if `allow_multiple` is set.
 
-    If `allow_multiple` is `True`, return a list of matching items.
+    Raises MediaNotFound if the search was unsuccessful.
     """
+    original_query = kwargs.copy()
     search_query = {}
     libtype = kwargs.pop("libtype", None)
 
@@ -61,11 +73,12 @@ def search_media(media_type, library_section, allow_multiple=False, **kwargs):
     try:
         results = library_section.search(**search_query)
     except (BadRequest, NotFound) as exc:
-        _LOGGER.error("Problem in query %s: %s", search_query, exc)
-        return None
+        raise MediaNotFound(f"Problem in query {original_query}: {exc}") from exc
 
     if not results:
-        return None
+        raise MediaNotFound(
+            f"No {media_type} results in '{library_section.title}' for {original_query}"
+        )
 
     if len(results) > 1:
         if allow_multiple:
@@ -75,10 +88,8 @@ def search_media(media_type, library_section, allow_multiple=False, **kwargs):
             exact_matches = [x for x in results if x.title.lower() == title.lower()]
             if len(exact_matches) == 1:
                 return exact_matches[0]
-        _LOGGER.warning(
-            "Multiple matches, make content_id more specific or use `allow_multiple`: %s",
-            results,
+        raise MediaNotFound(
+            f"Multiple matches, make content_id more specific or use `allow_multiple`: {results}"
         )
-        return None
 
     return results[0]

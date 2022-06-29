@@ -38,19 +38,17 @@ async def async_setup_entry(
     """Set up the UptimeRobot sensors."""
     coordinator: UptimeRobotDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        [
-            UptimeRobotSensor(
-                coordinator,
-                SensorEntityDescription(
-                    key=str(monitor.id),
-                    name=monitor.friendly_name,
-                    entity_category=EntityCategory.DIAGNOSTIC,
-                    device_class="uptimerobot__monitor_status",
-                ),
-                monitor=monitor,
-            )
-            for monitor in coordinator.data
-        ],
+        UptimeRobotSensor(
+            coordinator,
+            SensorEntityDescription(
+                key=str(monitor.id),
+                name=monitor.friendly_name,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                device_class="uptimerobot__monitor_status",
+            ),
+            monitor=monitor,
+        )
+        for monitor in coordinator.data
     )
 
 

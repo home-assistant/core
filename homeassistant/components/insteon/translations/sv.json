@@ -1,0 +1,23 @@
+{
+    "config": {
+        "abort": {
+            "not_insteon_device": "Uppt\u00e4ckt enhet \u00e4r inte en Insteon-enhet"
+        },
+        "step": {
+            "hubv2": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "change_hub_config": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            }
+        }
+    }
+}

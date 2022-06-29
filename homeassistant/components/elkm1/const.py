@@ -9,7 +9,7 @@ from homeassistant.const import ATTR_CODE, CONF_ZONE
 
 DOMAIN = "elkm1"
 
-LOGIN_TIMEOUT = 15
+LOGIN_TIMEOUT = 20
 
 CONF_AUTO_CONFIGURE = "auto_configure"
 CONF_AREA = "area"
@@ -43,6 +43,7 @@ EVENT_ELKM1_KEYPAD_KEY_PRESSED = "elkm1.keypad_key_pressed"
 ATTR_KEYPAD_ID = "keypad_id"
 ATTR_KEY = "key"
 ATTR_KEY_NAME = "key_name"
+ATTR_KEYPAD_NAME = "keypad_name"
 ATTR_CHANGED_BY_KEYPAD = "changed_by_keypad"
 ATTR_CHANGED_BY_ID = "changed_by_id"
 ATTR_CHANGED_BY_TIME = "changed_by_time"

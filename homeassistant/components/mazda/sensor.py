@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -35,7 +36,7 @@ class MazdaSensorRequiredKeysMixin:
     name_suffix: str
 
     # Function to determine the value for this sensor, given the coordinator data and the configured unit system
-    value: Callable[[dict, UnitSystem], StateType]
+    value: Callable[[dict[str, Any], UnitSystem], StateType]
 
 
 @dataclass
@@ -45,7 +46,7 @@ class MazdaSensorEntityDescription(
     """Describes a Mazda sensor entity."""
 
     # Function to determine whether the vehicle supports this sensor, given the coordinator data
-    is_supported: Callable[[dict], bool] = lambda data: True
+    is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
     # Function to determine the unit of measurement for this sensor, given the configured unit system
     # Falls back to description.native_unit_of_measurement if it is not provided
@@ -187,6 +188,7 @@ SENSOR_ENTITIES = [
         key="front_left_tire_pressure",
         name_suffix="Front Left Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_front_left_tire_pressure_supported,
@@ -196,6 +198,7 @@ SENSOR_ENTITIES = [
         key="front_right_tire_pressure",
         name_suffix="Front Right Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_front_right_tire_pressure_supported,
@@ -205,6 +208,7 @@ SENSOR_ENTITIES = [
         key="rear_left_tire_pressure",
         name_suffix="Rear Left Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_rear_left_tire_pressure_supported,
@@ -214,6 +218,7 @@ SENSOR_ENTITIES = [
         key="rear_right_tire_pressure",
         name_suffix="Rear Right Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
         state_class=SensorStateClass.MEASUREMENT,
         is_supported=_rear_right_tire_pressure_supported,

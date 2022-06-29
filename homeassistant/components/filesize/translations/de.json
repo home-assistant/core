@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Der Dienst ist bereits konfiguriert"
+        },
+        "error": {
+            "not_allowed": "Pfad nicht erlaubt",
+            "not_valid": "Pfad ung\u00fcltig"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "file_path": "Pfad zur Datei"
+                }
+            }
+        }
+    },
+    "title": "Dateigr\u00f6\u00dfe"
+}

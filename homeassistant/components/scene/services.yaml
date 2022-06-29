@@ -9,8 +9,7 @@ turn_on:
   fields:
     transition:
       name: Transition
-      description:
-        Transition duration it takes to bring devices to the state
+      description: Transition duration it takes to bring devices to the state
         defined in the scene.
       selector:
         number:
@@ -39,8 +38,7 @@ apply:
         object:
     transition:
       name: Transition
-      description:
-        Transition duration it takes to bring devices to the state
+      description: Transition duration it takes to bring devices to the state
         defined in the scene.
       selector:
         number:

@@ -1,4 +1,6 @@
 """The tests for Lutron Caséta device triggers."""
+from unittest.mock import MagicMock
+
 import pytest
 
 from homeassistant.components import automation
@@ -15,12 +17,12 @@ from homeassistant.components.lutron_caseta import (
     ATTR_TYPE,
 )
 from homeassistant.components.lutron_caseta.const import (
-    BUTTON_DEVICES,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
     MANUFACTURER,
 )
 from homeassistant.components.lutron_caseta.device_trigger import CONF_SUBTYPE
+from homeassistant.components.lutron_caseta.models import LutronCasetaData
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
 from homeassistant.helpers import device_registry
 from homeassistant.setup import async_setup_component
@@ -83,15 +85,17 @@ async def _async_setup_lutron_with_picos(hass, device_reg):
         )
         dr_button_devices[dr_device.id] = device
 
-    hass.data[DOMAIN][config_entry.entry_id] = {BUTTON_DEVICES: dr_button_devices}
-
+    hass.data[DOMAIN][config_entry.entry_id] = LutronCasetaData(
+        MagicMock(), MagicMock(), dr_button_devices
+    )
     return config_entry.entry_id
 
 
 async def test_get_triggers(hass, device_reg):
     """Test we get the expected triggers from a lutron pico."""
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
-    dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
+    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    dr_button_devices = data.button_devices
     device_id = list(dr_button_devices)[0]
 
     expected_triggers = [
@@ -99,72 +103,22 @@ async def test_get_triggers(hass, device_reg):
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "on",
+            CONF_SUBTYPE: subtype,
             CONF_TYPE: "press",
-        },
+            "metadata": {},
+        }
+        for subtype in ["on", "stop", "off", "raise", "lower"]
+    ]
+    expected_triggers += [
         {
             CONF_DEVICE_ID: device_id,
             CONF_DOMAIN: DOMAIN,
             CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "stop",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "off",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "raise",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "lower",
-            CONF_TYPE: "press",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "on",
+            CONF_SUBTYPE: subtype,
             CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "stop",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "off",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "raise",
-            CONF_TYPE: "release",
-        },
-        {
-            CONF_DEVICE_ID: device_id,
-            CONF_DOMAIN: DOMAIN,
-            CONF_PLATFORM: "device",
-            CONF_SUBTYPE: "lower",
-            CONF_TYPE: "release",
-        },
+            "metadata": {},
+        }
+        for subtype in ["on", "stop", "off", "raise", "lower"]
     ]
 
     triggers = await async_get_device_automations(
@@ -192,7 +146,8 @@ async def test_if_fires_on_button_event(hass, calls, device_reg):
     """Test for press trigger firing."""
 
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
-    dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
+    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    dr_button_devices = data.button_devices
     device_id = list(dr_button_devices)[0]
     device = dr_button_devices[device_id]
     assert await async_setup_component(
@@ -274,7 +229,8 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
     """Test for no press with an unknown device."""
 
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
-    dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
+    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    dr_button_devices = data.button_devices
     device_id = list(dr_button_devices)[0]
     device = dr_button_devices[device_id]
     device["type"] = "unknown"
@@ -317,7 +273,8 @@ async def test_validate_trigger_config_unknown_device(hass, calls, device_reg):
 async def test_validate_trigger_invalid_triggers(hass, device_reg):
     """Test for click_event with invalid triggers."""
     config_entry_id = await _async_setup_lutron_with_picos(hass, device_reg)
-    dr_button_devices = hass.data[DOMAIN][config_entry_id][BUTTON_DEVICES]
+    data: LutronCasetaData = hass.data[DOMAIN][config_entry_id]
+    dr_button_devices = data.button_devices
     device_id = list(dr_button_devices)[0]
     assert await async_setup_component(
         hass,

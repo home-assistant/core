@@ -1,6 +1,7 @@
 """AVM FRITZ!Box connectivity sensor."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -14,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .common import AvmWrapper, FritzBoxBaseEntity
-from .const import DOMAIN, MeshRoles
+from .common import AvmWrapper, ConnectionInfo, FritzBoxBaseEntity
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class FritzBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Fritz sensor entity."""
 
-    exclude_mesh_role: MeshRoles = MeshRoles.SLAVE
+    is_suitable: Callable[[ConnectionInfo], bool] = lambda info: info.wan_enabled
 
 
 SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
@@ -41,11 +42,13 @@ SENSOR_TYPES: tuple[FritzBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     FritzBinarySensorEntityDescription(
+        # Deprecated, scheduled to be removed in 2022.7 (#70096)
+        entity_registry_enabled_default=False,
         key="firmware_update",
         name="Firmware Update",
         device_class=BinarySensorDeviceClass.UPDATE,
         entity_category=EntityCategory.DIAGNOSTIC,
-        exclude_mesh_role=MeshRoles.NONE,
+        is_suitable=lambda info: True,
     ),
 )
 
@@ -57,10 +60,12 @@ async def async_setup_entry(
     _LOGGER.debug("Setting up FRITZ!Box binary sensors")
     avm_wrapper: AvmWrapper = hass.data[DOMAIN][entry.entry_id]
 
+    connection_info = await avm_wrapper.async_get_connection_info()
+
     entities = [
         FritzBoxBinarySensor(avm_wrapper, entry.title, description)
         for description in SENSOR_TYPES
-        if (description.exclude_mesh_role != avm_wrapper.mesh_role)
+        if description.is_suitable(connection_info)
     ]
 
     async_add_entities(entities, True)

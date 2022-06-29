@@ -6,13 +6,12 @@
             "reauth_successful": "La r\u00e9-authentification a r\u00e9ussi"
         },
         "error": {
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "usercode": "Code d'utilisateur non valide pour cet utilisateur \u00e0 cet emplacement"
         },
         "step": {
             "locations": {
                 "data": {
-                    "location": "Emplacement",
                     "usercode": "Code d'utilisateur"
                 },
                 "description": "Entrez le code utilisateur pour cet utilisateur \u00e0 l'emplacement {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Mot de passe",
                     "username": "Nom d'utilisateur"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Contournement automatique en cas de batterie faible"
                 },
-                "title": "Total Connect"
+                "description": "Contourner automatiquement les zones d\u00e8s qu'elles signalent une batterie faible.",
+                "title": "Options TotalConnect"
             }
         }
     }

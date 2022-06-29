@@ -1,5 +1,4 @@
 """deCONZ climate platform tests."""
-
 from unittest.mock import patch
 
 import pytest
@@ -17,23 +16,17 @@ from homeassistant.components.climate.const import (
     ATTR_PRESET_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
     FAN_ON,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_BOOST,
     PRESET_COMFORT,
     PRESET_ECO,
+    HVACMode,
+    HVACAction,
 )
 from homeassistant.components.deconz.climate import (
     DECONZ_FAN_SMART,
@@ -107,16 +100,16 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
 
     assert len(hass.states.async_all()) == 2
     climate_thermostat = hass.states.get("climate.thermostat")
-    assert climate_thermostat.state == HVAC_MODE_HEAT
+    assert climate_thermostat.state == HVACMode.HEAT
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
+        HVACMode.HEAT,
+        HVACMode.OFF,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 21.0
     assert climate_thermostat.attributes["temperature"] == 21.0
     assert climate_thermostat.attributes["locked"] is True
     assert hass.states.get("sensor.thermostat_battery").state == "59"
-    assert climate_thermostat.attributes["hvac_action"] == CURRENT_HVAC_HEAT
+    assert climate_thermostat.attributes["hvac_action"] == HVACAction.HEATING
 
     # Event signals thermostat configured off
 
@@ -133,7 +126,7 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_IDLE
+        == HVACAction.IDLE
     )
 
     # Event signals thermostat state on
@@ -148,10 +141,10 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.thermostat").state == HVAC_MODE_HEAT
+    assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
     )
 
     # Verify service calls
@@ -163,7 +156,7 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"on": True}
@@ -173,7 +166,7 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"on": False}
@@ -184,7 +177,7 @@ async def test_simple_climate_device(hass, aioclient_mock, mock_deconz_websocket
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.AUTO},
             blocking=True,
         )
 
@@ -215,11 +208,11 @@ async def test_climate_device_without_cooling_support(
 
     assert len(hass.states.async_all()) == 2
     climate_thermostat = hass.states.get("climate.thermostat")
-    assert climate_thermostat.state == HVAC_MODE_AUTO
+    assert climate_thermostat.state == HVACMode.AUTO
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_AUTO,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
+        HVACMode.HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 22.6
     assert climate_thermostat.attributes["temperature"] == 22.0
@@ -229,7 +222,7 @@ async def test_climate_device_without_cooling_support(
     assert hass.states.get("climate.clip_thermostat") is None
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
     )
 
     # Event signals thermostat configured off
@@ -247,7 +240,7 @@ async def test_climate_device_without_cooling_support(
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_OFF
+        == HVACAction.OFF
     )
 
     # Event signals thermostat state on
@@ -263,10 +256,10 @@ async def test_climate_device_without_cooling_support(
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.thermostat").state == HVAC_MODE_HEAT
+    assert hass.states.get("climate.thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
     )
 
     # Event signals thermostat state off
@@ -284,7 +277,7 @@ async def test_climate_device_without_cooling_support(
     assert hass.states.get("climate.thermostat").state == STATE_OFF
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_IDLE
+        == HVACAction.IDLE
     )
 
     # Verify service calls
@@ -296,7 +289,7 @@ async def test_climate_device_without_cooling_support(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_AUTO},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.AUTO},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == {"mode": "auto"}
@@ -306,7 +299,7 @@ async def test_climate_device_without_cooling_support(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_HEAT},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.HEAT},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[2][2] == {"mode": "heat"}
@@ -316,7 +309,7 @@ async def test_climate_device_without_cooling_support(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_OFF},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
     assert aioclient_mock.mock_calls[3][2] == {"mode": "off"}
@@ -327,7 +320,7 @@ async def test_climate_device_without_cooling_support(
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_HVAC_MODE,
-            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVAC_MODE_COOL},
+            {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.COOL},
             blocking=True,
         )
 
@@ -405,18 +398,18 @@ async def test_climate_device_with_cooling_support(
 
     assert len(hass.states.async_all()) == 2
     climate_thermostat = hass.states.get("climate.zen_01")
-    assert climate_thermostat.state == HVAC_MODE_HEAT
+    assert climate_thermostat.state == HVACMode.HEAT
     assert climate_thermostat.attributes["hvac_modes"] == [
-        HVAC_MODE_AUTO,
-        HVAC_MODE_COOL,
-        HVAC_MODE_HEAT,
-        HVAC_MODE_OFF,
+        HVACMode.HEAT,
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
     ]
     assert climate_thermostat.attributes["current_temperature"] == 23.2
     assert climate_thermostat.attributes["temperature"] == 22.2
     assert hass.states.get("sensor.zen_01_battery").state == "25"
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_IDLE
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
     )
 
     # Event signals thermostat mode cool
@@ -432,10 +425,10 @@ async def test_climate_device_with_cooling_support(
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.zen_01").state == HVAC_MODE_COOL
+    assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert hass.states.get("climate.zen_01").attributes["temperature"] == 11.1
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_IDLE
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
     )
 
     # Event signals thermostat state on
@@ -450,9 +443,9 @@ async def test_climate_device_with_cooling_support(
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.zen_01").state == HVAC_MODE_COOL
+    assert hass.states.get("climate.zen_01").state == HVACMode.COOL
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_COOL
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.COOLING
     )
 
     # Verify service calls
@@ -508,7 +501,7 @@ async def test_climate_device_with_fan_support(
 
     assert len(hass.states.async_all()) == 2
     climate_thermostat = hass.states.get("climate.zen_01")
-    assert climate_thermostat.state == HVAC_MODE_HEAT
+    assert climate_thermostat.state == HVACMode.HEAT
     assert climate_thermostat.attributes["fan_mode"] == FAN_AUTO
     assert climate_thermostat.attributes["fan_modes"] == [
         DECONZ_FAN_SMART,
@@ -520,7 +513,7 @@ async def test_climate_device_with_fan_support(
         FAN_OFF,
     ]
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_IDLE
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
     )
 
     # Event signals fan mode defaults to off
@@ -537,7 +530,7 @@ async def test_climate_device_with_fan_support(
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_OFF
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_IDLE
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
     )
 
     # Event signals unsupported fan mode
@@ -555,7 +548,7 @@ async def test_climate_device_with_fan_support(
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_HEAT
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.HEATING
     )
 
     # Event signals unsupported fan mode
@@ -572,7 +565,7 @@ async def test_climate_device_with_fan_support(
 
     assert hass.states.get("climate.zen_01").attributes["fan_mode"] == FAN_ON
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_HEAT
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.HEATING
     )
 
     # Verify service calls
@@ -648,7 +641,7 @@ async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_webs
     assert len(hass.states.async_all()) == 2
 
     climate_zen_01 = hass.states.get("climate.zen_01")
-    assert climate_zen_01.state == HVAC_MODE_HEAT
+    assert climate_zen_01.state == HVACMode.HEAT
     assert climate_zen_01.attributes["current_temperature"] == 23.2
     assert climate_zen_01.attributes["temperature"] == 22.2
     assert climate_zen_01.attributes["preset_mode"] == DECONZ_PRESET_AUTO
@@ -662,7 +655,7 @@ async def test_climate_device_with_preset(hass, aioclient_mock, mock_deconz_webs
         DECONZ_PRESET_MANUAL,
     ]
     assert (
-        hass.states.get("climate.zen_01").attributes["hvac_action"] == CURRENT_HVAC_IDLE
+        hass.states.get("climate.zen_01").attributes["hvac_action"] == HVACAction.IDLE
     )
 
     # Event signals deCONZ preset
@@ -763,10 +756,10 @@ async def test_clip_climate_device(hass, aioclient_mock):
         )
 
     assert len(hass.states.async_all()) == 3
-    assert hass.states.get("climate.clip_thermostat").state == HVAC_MODE_HEAT
+    assert hass.states.get("climate.clip_thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.clip_thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
     )
 
     # Disallow clip sensors
@@ -787,10 +780,10 @@ async def test_clip_climate_device(hass, aioclient_mock):
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 3
-    assert hass.states.get("climate.clip_thermostat").state == HVAC_MODE_HEAT
+    assert hass.states.get("climate.clip_thermostat").state == HVACMode.HEAT
     assert (
         hass.states.get("climate.clip_thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
     )
 
 
@@ -816,10 +809,10 @@ async def test_verify_state_update(hass, aioclient_mock, mock_deconz_websocket):
     with patch.dict(DECONZ_WEB_REQUEST, data):
         await setup_deconz_integration(hass, aioclient_mock)
 
-    assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
+    assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
     )
 
     event_changed_sensor = {
@@ -832,10 +825,10 @@ async def test_verify_state_update(hass, aioclient_mock, mock_deconz_websocket):
     await mock_deconz_websocket(data=event_changed_sensor)
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
+    assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_IDLE
+        == HVACAction.IDLE
     )
 
 
@@ -869,9 +862,73 @@ async def test_add_new_climate_device(hass, aioclient_mock, mock_deconz_websocke
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 2
-    assert hass.states.get("climate.thermostat").state == HVAC_MODE_AUTO
+    assert hass.states.get("climate.thermostat").state == HVACMode.AUTO
     assert hass.states.get("sensor.thermostat_battery").state == "100"
     assert (
         hass.states.get("climate.thermostat").attributes["hvac_action"]
-        == CURRENT_HVAC_HEAT
+        == HVACAction.HEATING
+    )
+
+
+async def test_not_allow_clip_thermostat(hass, aioclient_mock):
+    """Test that CLIP thermostats are not allowed."""
+    data = {
+        "sensors": {
+            "1": {
+                "name": "CLIP thermostat sensor",
+                "type": "CLIPThermostat",
+                "state": {},
+                "config": {},
+                "uniqueid": "00:00:00:00:00:00:00:00-00",
+            },
+        }
+    }
+
+    with patch.dict(DECONZ_WEB_REQUEST, data):
+        await setup_deconz_integration(
+            hass, aioclient_mock, options={CONF_ALLOW_CLIP_SENSOR: False}
+        )
+
+    assert len(hass.states.async_all()) == 0
+
+
+async def test_no_mode_no_state(hass, aioclient_mock):
+    """Test that a climate device without mode and state works."""
+    data = {
+        "sensors": {
+            "0": {
+                "config": {
+                    "battery": 59,
+                    "displayflipped": None,
+                    "heatsetpoint": 2100,
+                    "locked": True,
+                    "mountingmode": None,
+                    "preset": "auto",
+                    "offset": 0,
+                    "on": True,
+                    "reachable": True,
+                },
+                "ep": 1,
+                "etag": "6130553ac247174809bae47144ee23f8",
+                "lastseen": "2020-11-29T19:31Z",
+                "manufacturername": "Danfoss",
+                "modelid": "eTRV0100",
+                "name": "thermostat",
+                "state": {
+                    "errorcode": None,
+                    "lastupdated": None,
+                    "mountingmodeactive": False,
+                    "on": None,
+                    "temperature": 2102,
+                    "valve": 24,
+                    "windowopen": "Closed",
+                },
+                "swversion": "01.02.0008 01.02",
+                "type": "ZHAThermostat",
+                "uniqueid": "14:b4:57:ff:fe:d5:4e:77-01-0201",
+            }
+        }
+    }
+    assert (
+        hass.states.get("climate.thermostat").attributes["hvac_action"] is None
     )

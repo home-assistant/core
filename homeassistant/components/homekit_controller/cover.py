@@ -9,15 +9,9 @@ from aiohomekit.model.services import Service, ServicesTypes
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_GARAGE,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
+    CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPEN, STATE_OPENING
@@ -64,7 +58,8 @@ async def async_setup_entry(
 class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
     """Representation of a HomeKit Garage Door."""
 
-    _attr_device_class = DEVICE_CLASS_GARAGE
+    _attr_device_class = CoverDeviceClass.GARAGE
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
@@ -73,11 +68,6 @@ class HomeKitGarageDoorCover(HomeKitEntity, CoverEntity):
             CharacteristicsTypes.DOOR_STATE_TARGET,
             CharacteristicsTypes.OBSTRUCTION_DETECTED,
         ]
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return SUPPORT_OPEN | SUPPORT_CLOSE
 
     @property
     def _state(self) -> str:
@@ -143,10 +133,14 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        features = SUPPORT_OPEN | SUPPORT_CLOSE | SUPPORT_SET_POSITION
+        features = (
+            CoverEntityFeature.OPEN
+            | CoverEntityFeature.CLOSE
+            | CoverEntityFeature.SET_POSITION
+        )
 
         if self.service.has(CharacteristicsTypes.POSITION_HOLD):
-            features |= SUPPORT_STOP
+            features |= CoverEntityFeature.STOP
 
         supports_tilt = any(
             (
@@ -157,7 +151,9 @@ class HomeKitWindowCover(HomeKitEntity, CoverEntity):
 
         if supports_tilt:
             features |= (
-                SUPPORT_OPEN_TILT | SUPPORT_CLOSE_TILT | SUPPORT_SET_TILT_POSITION
+                CoverEntityFeature.OPEN_TILT
+                | CoverEntityFeature.CLOSE_TILT
+                | CoverEntityFeature.SET_TILT_POSITION
             )
 
         return features

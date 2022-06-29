@@ -13,6 +13,7 @@ from aiolookin import (
     LookInHttpProtocol,
     LookinUDPSubscriptions,
     MeteoSensor,
+    NoUsableService,
     Remote,
     start_lookin_udp,
 )
@@ -22,6 +23,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, PLATFORMS, TYPE_TO_PLATFORM
@@ -94,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     try:
         lookin_device = await lookin_protocol.get_info()
         devices = await lookin_protocol.get_devices()
-    except (asyncio.TimeoutError, aiohttp.ClientError) as ex:
+    except (asyncio.TimeoutError, aiohttp.ClientError, NoUsableService) as ex:
         raise ConfigEntryNotReady from ex
 
     push_coordinator = LookinPushCoordinator(entry.title)
@@ -153,6 +155,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     hass.data[DOMAIN][entry.entry_id] = LookinData(
+        host=host,
         lookin_udp_subs=lookin_udp_subs,
         lookin_device=lookin_device,
         meteo_coordinator=meteo_coordinator,
@@ -180,3 +183,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manager: LookinUDPManager = hass.data[DOMAIN][UDP_MANAGER]
         await manager.async_stop()
     return unload_ok
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove lookin config entry from a device."""
+    data: LookinData = hass.data[DOMAIN][entry.entry_id]
+    all_identifiers: set[tuple[str, str]] = {
+        (DOMAIN, data.lookin_device.id),
+        *((DOMAIN, remote["UUID"]) for remote in data.devices),
+    }
+    return not any(
+        identifier
+        for identifier in device_entry.identifiers
+        if identifier in all_identifiers
+    )

@@ -33,11 +33,18 @@ from homeassistant.helpers.update_coordinator import (
     UpdateFailed,
 )
 
-from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN, SERVICES
+from .const import DATA_CLIENT, DATA_COORDINATOR, DATA_VEHICLES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.LOCK, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.DEVICE_TRACKER,
+    Platform.LOCK,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def with_timeout(task, timeout_seconds=10):
@@ -104,13 +111,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         api_method = getattr(api_client, service_call.service)
         try:
-            if service_call.service == "send_poi":
-                latitude = service_call.data["latitude"]
-                longitude = service_call.data["longitude"]
-                poi_name = service_call.data["poi_name"]
-                await api_method(vehicle_id, latitude, longitude, poi_name)
-            else:
-                await api_method(vehicle_id)
+            latitude = service_call.data["latitude"]
+            longitude = service_call.data["longitude"]
+            poi_name = service_call.data["poi_name"]
+            await api_method(vehicle_id, latitude, longitude, poi_name)
         except Exception as ex:
             raise HomeAssistantError(ex) from ex
 
@@ -131,12 +135,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return device_id
 
-    service_schema = vol.Schema(
-        {vol.Required("device_id"): vol.All(cv.string, validate_mazda_device_id)}
-    )
-
-    service_schema_send_poi = service_schema.extend(
+    service_schema_send_poi = vol.Schema(
         {
+            vol.Required("device_id"): vol.All(cv.string, validate_mazda_device_id),
             vol.Required("latitude"): cv.latitude,
             vol.Required("longitude"): cv.longitude,
             vol.Required("poi_name"): cv.string,
@@ -194,18 +195,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     # Register services
-    for service in SERVICES:
-        if service == "send_poi":
-            hass.services.async_register(
-                DOMAIN,
-                service,
-                async_handle_service_call,
-                schema=service_schema_send_poi,
-            )
-        else:
-            hass.services.async_register(
-                DOMAIN, service, async_handle_service_call, schema=service_schema
-            )
+    hass.services.async_register(
+        DOMAIN,
+        "send_poi",
+        async_handle_service_call,
+        schema=service_schema_send_poi,
+    )
 
     return True
 
@@ -216,8 +211,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Only remove services if it is the last config entry
     if len(hass.data[DOMAIN]) == 1:
-        for service in SERVICES:
-            hass.services.async_remove(DOMAIN, service)
+        hass.services.async_remove(DOMAIN, "send_poi")
 
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)

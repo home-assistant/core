@@ -34,12 +34,12 @@ class ExtendedMediaPlayer(mp.MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return (
-            mp.const.SUPPORT_VOLUME_SET
-            | mp.const.SUPPORT_VOLUME_STEP
-            | mp.const.SUPPORT_PLAY
-            | mp.const.SUPPORT_PAUSE
-            | mp.const.SUPPORT_TURN_OFF
-            | mp.const.SUPPORT_TURN_ON
+            mp.const.MediaPlayerEntityFeature.VOLUME_SET
+            | mp.const.MediaPlayerEntityFeature.VOLUME_STEP
+            | mp.const.MediaPlayerEntityFeature.PLAY
+            | mp.const.MediaPlayerEntityFeature.PAUSE
+            | mp.const.MediaPlayerEntityFeature.TURN_OFF
+            | mp.const.MediaPlayerEntityFeature.TURN_ON
         )
 
     def set_volume_level(self, volume):
@@ -110,12 +110,12 @@ class SimpleMediaPlayer(mp.MediaPlayerEntity):
     def supported_features(self):
         """Flag media player features that are supported."""
         return (
-            mp.const.SUPPORT_VOLUME_SET
-            | mp.const.SUPPORT_VOLUME_STEP
-            | mp.const.SUPPORT_PLAY
-            | mp.const.SUPPORT_PAUSE
-            | mp.const.SUPPORT_TURN_OFF
-            | mp.const.SUPPORT_TURN_ON
+            mp.const.MediaPlayerEntityFeature.VOLUME_SET
+            | mp.const.MediaPlayerEntityFeature.VOLUME_STEP
+            | mp.const.MediaPlayerEntityFeature.PLAY
+            | mp.const.MediaPlayerEntityFeature.PAUSE
+            | mp.const.MediaPlayerEntityFeature.TURN_OFF
+            | mp.const.MediaPlayerEntityFeature.TURN_ON
         )
 
     def set_volume_level(self, volume):

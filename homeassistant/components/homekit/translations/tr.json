@@ -27,7 +27,6 @@
             },
             "advanced": {
                 "data": {
-                    "auto_start": "Otomatik ba\u015flatma (homekit.start hizmetini manuel olarak ar\u0131yorsan\u0131z devre d\u0131\u015f\u0131 b\u0131rak\u0131n)",
                     "devices": "Cihazlar (Tetikleyiciler)"
                 },
                 "description": "Se\u00e7ilen her cihaz i\u00e7in programlanabilir anahtarlar olu\u015fturulur. Bir cihaz tetikleyicisi tetiklendi\u011finde, HomeKit bir otomasyon veya sahne \u00e7al\u0131\u015ft\u0131racak \u015fekilde yap\u0131land\u0131r\u0131labilir.",
@@ -55,18 +54,9 @@
                 "description": "Belirli varl\u0131klar se\u00e7ilmedi\u011fi s\u00fcrece t\u00fcm \u201c {domains} \u201d varl\u0131klar\u0131 dahil edilecektir.",
                 "title": "Dahil edilecek varl\u0131klar\u0131 se\u00e7in"
             },
-            "include_exclude": {
-                "data": {
-                    "entities": "Varl\u0131klar",
-                    "mode": "Mod"
-                },
-                "description": "Dahil edilecek varl\u0131klar\u0131 se\u00e7in. Aksesuar modunda yaln\u0131zca tek bir varl\u0131k dahil edilir. K\u00f6pr\u00fc dahil modunda, belirli varl\u0131klar se\u00e7ilmedi\u011fi s\u00fcrece etki alan\u0131ndaki t\u00fcm varl\u0131klar dahil edilecektir. K\u00f6pr\u00fc hari\u00e7 tutma modunda, hari\u00e7 tutulan varl\u0131klar d\u0131\u015f\u0131nda etki alan\u0131ndaki t\u00fcm varl\u0131klar dahil edilecektir. En iyi performans i\u00e7in, her TV medya oynat\u0131c\u0131, aktivite tabanl\u0131 uzaktan kumanda, kilit ve kamera i\u00e7in ayr\u0131 bir HomeKit aksesuar\u0131 olu\u015fturulacakt\u0131r.",
-                "title": "Dahil edilecek varl\u0131klar\u0131 se\u00e7in"
-            },
             "init": {
                 "data": {
                     "domains": "\u0130\u00e7erecek etki alanlar\u0131",
-                    "include_domains": "\u0130\u00e7erecek etki alanlar\u0131",
                     "include_exclude_mode": "Ekleme Modu",
                     "mode": "HomeKit Modu"
                 },

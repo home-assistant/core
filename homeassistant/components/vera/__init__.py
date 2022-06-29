@@ -28,7 +28,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import convert, slugify
+from homeassistant.util import slugify
 from homeassistant.util.dt import utc_from_timestamp
 
 from .common import (
@@ -39,29 +39,25 @@ from .common import (
     set_controller_data,
 )
 from .config_flow import fix_device_id_list, new_options
-from .const import (
-    ATTR_CURRENT_ENERGY_KWH,
-    ATTR_CURRENT_POWER_W,
-    CONF_CONTROLLER,
-    CONF_LEGACY_UNIQUE_ID,
-    DOMAIN,
-    VERA_ID_FORMAT,
-)
+from .const import CONF_CONTROLLER, CONF_LEGACY_UNIQUE_ID, DOMAIN, VERA_ID_FORMAT
 
 _LOGGER = logging.getLogger(__name__)
 
 VERA_ID_LIST_SCHEMA = vol.Schema([int])
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CONTROLLER): cv.url,
-                vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
-                vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CONTROLLER): cv.url,
+                    vol.Optional(CONF_EXCLUDE, default=[]): VERA_ID_LIST_SCHEMA,
+                    vol.Optional(CONF_LIGHTS, default=[]): VERA_ID_LIST_SCHEMA,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -214,14 +210,14 @@ def map_vera_device(
     )
 
 
-DeviceType = TypeVar("DeviceType", bound=veraApi.VeraDevice)
+_DeviceTypeT = TypeVar("_DeviceTypeT", bound=veraApi.VeraDevice)
 
 
-class VeraDevice(Generic[DeviceType], Entity):
+class VeraDevice(Generic[_DeviceTypeT], Entity):
     """Representation of a Vera device entity."""
 
     def __init__(
-        self, vera_device: DeviceType, controller_data: ControllerData
+        self, vera_device: _DeviceTypeT, controller_data: ControllerData
     ) -> None:
         """Initialize the device."""
         self.vera_device = vera_device
@@ -242,7 +238,7 @@ class VeraDevice(Generic[DeviceType], Entity):
         """Subscribe to updates."""
         self.controller.register(self.vera_device, self._update_callback)
 
-    def _update_callback(self, _device: DeviceType) -> None:
+    def _update_callback(self, _device: _DeviceTypeT) -> None:
         """Update the state."""
         self.schedule_update_ha_state(True)
 
@@ -278,12 +274,6 @@ class VeraDevice(Generic[DeviceType], Entity):
                 attr[ATTR_LAST_TRIP_TIME] = None
             tripped = self.vera_device.is_tripped
             attr[ATTR_TRIPPED] = "True" if tripped else "False"
-
-        if power := self.vera_device.power:
-            attr[ATTR_CURRENT_POWER_W] = convert(power, float, 0.0)
-
-        if energy := self.vera_device.energy:
-            attr[ATTR_CURRENT_ENERGY_KWH] = convert(energy, float, 0.0)
 
         attr["Vera Device Id"] = self.vera_device.vera_device_id
 

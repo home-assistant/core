@@ -7,17 +7,15 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.fronius.const import DOMAIN
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import CONF_HOST, CONF_RESOURCE
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
     RESULT_TYPE_CREATE_ENTRY,
     RESULT_TYPE_FORM,
 )
-from homeassistant.setup import async_setup_component
 
-from . import MOCK_HOST, mock_responses
+from . import mock_responses
 
 from tests.common import MockConfigEntry
 
@@ -256,32 +254,6 @@ async def test_form_updates_host(hass, aioclient_mock):
     assert len(entries) == 1
     assert entries[0].data == {
         "host": new_host,
-        "is_logger": True,
-    }
-
-
-async def test_import(hass, aioclient_mock):
-    """Test import step."""
-    mock_responses(aioclient_mock)
-    assert await async_setup_component(
-        hass,
-        SENSOR_DOMAIN,
-        {
-            SENSOR_DOMAIN: {
-                "platform": DOMAIN,
-                CONF_RESOURCE: MOCK_HOST,
-            }
-        },
-    )
-    await hass.async_block_till_done()
-
-    fronius_entries = hass.config_entries.async_entries(DOMAIN)
-    assert len(fronius_entries) == 1
-
-    test_entry = fronius_entries[0]
-    assert test_entry.unique_id == "123.4567890"  # has to match mocked logger unique_id
-    assert test_entry.data == {
-        "host": MOCK_HOST,
         "is_logger": True,
     }
 

@@ -11,24 +11,13 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_HEAT_COOL,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_BOOST,
     PRESET_ECO,
     PRESET_NONE,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, CONF_NAME, TEMP_CELSIUS
@@ -53,27 +42,27 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 HA_STATE_TO_DAIKIN = {
-    HVAC_MODE_FAN_ONLY: "fan",
-    HVAC_MODE_DRY: "dry",
-    HVAC_MODE_COOL: "cool",
-    HVAC_MODE_HEAT: "hot",
-    HVAC_MODE_HEAT_COOL: "auto",
-    HVAC_MODE_OFF: "off",
+    HVACMode.FAN_ONLY: "fan",
+    HVACMode.DRY: "dry",
+    HVACMode.COOL: "cool",
+    HVACMode.HEAT: "hot",
+    HVACMode.HEAT_COOL: "auto",
+    HVACMode.OFF: "off",
 }
 
 DAIKIN_TO_HA_STATE = {
-    "fan": HVAC_MODE_FAN_ONLY,
-    "dry": HVAC_MODE_DRY,
-    "cool": HVAC_MODE_COOL,
-    "hot": HVAC_MODE_HEAT,
-    "auto": HVAC_MODE_HEAT_COOL,
-    "off": HVAC_MODE_OFF,
+    "fan": HVACMode.FAN_ONLY,
+    "dry": HVACMode.DRY,
+    "cool": HVACMode.COOL,
+    "hot": HVACMode.HEAT,
+    "auto": HVACMode.HEAT_COOL,
+    "off": HVACMode.OFF,
 }
 
 HA_STATE_TO_CURRENT_HVAC = {
-    HVAC_MODE_COOL: CURRENT_HVAC_COOL,
-    HVAC_MODE_HEAT: CURRENT_HVAC_HEAT,
-    HVAC_MODE_OFF: CURRENT_HVAC_OFF,
+    HVACMode.COOL: HVACAction.COOLING,
+    HVACMode.HEAT: HVACAction.HEATING,
+    HVACMode.OFF: HVACAction.OFF,
 }
 
 HA_PRESET_TO_DAIKIN = {
@@ -117,6 +106,11 @@ async def async_setup_entry(
     async_add_entities([DaikinClimate(daikin_api)], update_before_add=True)
 
 
+def format_target_temperature(target_temperature):
+    """Format target temperature to be sent to the Daikin unit, rounding to nearest half degree."""
+    return str(round(float(target_temperature) * 2, 0) / 2).rstrip("0").rstrip(".")
+
+
 class DaikinClimate(ClimateEntity):
     """Representation of a Daikin HVAC."""
 
@@ -130,19 +124,19 @@ class DaikinClimate(ClimateEntity):
             ATTR_SWING_MODE: self._api.device.swing_modes,
         }
 
-        self._supported_features = SUPPORT_TARGET_TEMPERATURE
+        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
 
         if (
             self._api.device.support_away_mode
             or self._api.device.support_advanced_modes
         ):
-            self._supported_features |= SUPPORT_PRESET_MODE
+            self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
 
         if self._api.device.support_fan_rate:
-            self._supported_features |= SUPPORT_FAN_MODE
+            self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
         if self._api.device.support_swing_mode:
-            self._supported_features |= SUPPORT_SWING_MODE
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
     async def _set(self, settings):
         """Set device settings using API."""
@@ -163,17 +157,14 @@ class DaikinClimate(ClimateEntity):
             # temperature
             elif attr == ATTR_TEMPERATURE:
                 try:
-                    values[HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]] = str(int(value))
+                    values[
+                        HA_ATTR_TO_DAIKIN[ATTR_TARGET_TEMPERATURE]
+                    ] = format_target_temperature(value)
                 except ValueError:
                     _LOGGER.error("Invalid temperature %s", value)
 
         if values:
             await self._api.device.set(values)
-
-    @property
-    def supported_features(self):
-        """Return the list of supported features."""
-        return self._supported_features
 
     @property
     def name(self):
@@ -210,29 +201,29 @@ class DaikinClimate(ClimateEntity):
         await self._set(kwargs)
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction | None:
         """Return the current state."""
         ret = HA_STATE_TO_CURRENT_HVAC.get(self.hvac_mode)
         if (
-            ret in (CURRENT_HVAC_COOL, CURRENT_HVAC_HEAT)
+            ret in (HVACAction.COOLING, HVACAction.HEATING)
             and self._api.device.support_compressor_frequency
             and self._api.device.compressor_frequency == 0
         ):
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
         return ret
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return current operation ie. heat, cool, idle."""
         daikin_mode = self._api.device.represent(HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE])[1]
-        return DAIKIN_TO_HA_STATE.get(daikin_mode, HVAC_MODE_HEAT_COOL)
+        return DAIKIN_TO_HA_STATE.get(daikin_mode, HVACMode.HEAT_COOL)
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
         return self._list.get(ATTR_HVAC_MODE)
 
-    async def async_set_hvac_mode(self, hvac_mode):
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         await self._set({ATTR_HVAC_MODE: hvac_mode})
 
@@ -329,7 +320,7 @@ class DaikinClimate(ClimateEntity):
     async def async_turn_off(self):
         """Turn device off."""
         await self._api.device.set(
-            {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVAC_MODE_OFF]}
+            {HA_ATTR_TO_DAIKIN[ATTR_HVAC_MODE]: HA_STATE_TO_DAIKIN[HVACMode.OFF]}
         )
 
     @property

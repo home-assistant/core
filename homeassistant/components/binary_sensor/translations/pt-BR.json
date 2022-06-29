@@ -59,8 +59,6 @@
             "connected": "{entity_name} conectado",
             "gas": "{entity_name} come\u00e7ou a detectar g\u00e1s",
             "hot": "{entity_name} tornou-se quente",
-            "is_not_tampered": "{entity_name} parar de detectar adultera\u00e7\u00e3o",
-            "is_tampered": "{entity_name} come\u00e7ar a detectar adultera\u00e7\u00e3o",
             "light": "{entity_name} come\u00e7ou a detectar luz",
             "locked": "{entity_name} bloqueado",
             "moist": "{entity_name} ficar \u00famido",
@@ -134,8 +132,8 @@
             "off": "N\u00e3o est\u00e1 carregando",
             "on": "Carregando"
         },
-        "co": {
-            "off": "Limpo",
+        "carbon_monoxide": {
+            "off": "Normal",
             "on": "Detectado"
         },
         "cold": {
@@ -175,7 +173,7 @@
             "on": "Molhado"
         },
         "motion": {
-            "off": "Sem movimento",
+            "off": "N\u00e3o detectado",
             "on": "Detectado"
         },
         "moving": {

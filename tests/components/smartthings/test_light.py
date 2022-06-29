@@ -16,7 +16,7 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
@@ -82,7 +82,7 @@ async def test_entity_state(hass, light_devices):
     assert state.state == "on"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+        == SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
     )
     assert isinstance(state.attributes[ATTR_BRIGHTNESS], int)
     assert state.attributes[ATTR_BRIGHTNESS] == 255
@@ -92,7 +92,7 @@ async def test_entity_state(hass, light_devices):
     assert state.state == "off"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_COLOR
+        == SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION | SUPPORT_COLOR
     )
 
     # Color Dimmer 2
@@ -100,7 +100,10 @@ async def test_entity_state(hass, light_devices):
     assert state.state == "on"
     assert (
         state.attributes[ATTR_SUPPORTED_FEATURES]
-        == SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_COLOR | SUPPORT_COLOR_TEMP
+        == SUPPORT_BRIGHTNESS
+        | LightEntityFeature.TRANSITION
+        | SUPPORT_COLOR
+        | SUPPORT_COLOR_TEMP
     )
     assert state.attributes[ATTR_BRIGHTNESS] == 255
     assert state.attributes[ATTR_HS_COLOR] == (273.6, 55.0)

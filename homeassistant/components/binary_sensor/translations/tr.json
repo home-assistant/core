@@ -59,8 +59,6 @@
             "connected": "{entity_name} ba\u011fland\u0131",
             "gas": "{entity_name} gaz alg\u0131lamaya ba\u015flad\u0131",
             "hot": "{entity_name} \u0131s\u0131nd\u0131",
-            "is_not_tampered": "{entity_name} kurcalamay\u0131 alg\u0131lamay\u0131 durdurdu",
-            "is_tampered": "{entity_name} , kurcalamay\u0131 alg\u0131lamaya ba\u015flad\u0131",
             "light": "{entity_name} \u0131\u015f\u0131\u011f\u0131 alg\u0131lamaya ba\u015flad\u0131",
             "locked": "{entity_name} kilitlendi",
             "moist": "{entity_name} nemli oldu",
@@ -134,7 +132,7 @@
             "off": "\u015earj olmuyor",
             "on": "\u015earj Oluyor"
         },
-        "co": {
+        "carbon_monoxide": {
             "off": "Temiz",
             "on": "Alg\u0131land\u0131"
         },

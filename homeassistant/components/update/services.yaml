@@ -1,0 +1,34 @@
+install:
+  name: Install update
+  description: Install an update for this device or service
+  target:
+    entity:
+      domain: update
+  fields:
+    version:
+      name: Version
+      description: Version to install, if omitted, the latest version will be installed.
+      required: false
+      example: "1.0.0"
+      selector:
+        text:
+    backup:
+      name: Backup
+      description: Backup before installing the update, if supported by the integration.
+      required: false
+      selector:
+        boolean:
+
+skip:
+  name: Skip update
+  description: Mark currently available update as skipped.
+  target:
+    entity:
+      domain: update
+
+clear_skipped:
+  name: Clear skipped update
+  description: Removes the skipped version marker from an update.
+  target:
+    entity:
+      domain: update

@@ -106,9 +106,8 @@ def handle_get(
 ):
     """List all possible diagnostic handlers."""
     domain = msg["domain"]
-    info = hass.data[DOMAIN].get(domain)
 
-    if info is None:
+    if (info := hass.data[DOMAIN].get(domain)) is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -181,7 +180,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
     extra_urls = ["/api/diagnostics/{d_type}/{d_id}/{sub_type}/{sub_id}"]
     name = "api:diagnostics"
 
-    async def get(  # pylint: disable=no-self-use
+    async def get(
         self,
         request: web.Request,
         d_type: str,
@@ -197,14 +196,11 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
         hass = request.app["hass"]
-        config_entry = hass.config_entries.async_get_entry(d_id)
 
-        if config_entry is None:
+        if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        info = hass.data[DOMAIN].get(config_entry.domain)
-
-        if info is None:
+        if (info := hass.data[DOMAIN].get(config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
@@ -226,9 +222,8 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
 
         dev_reg = async_get(hass)
         assert sub_id
-        device = dev_reg.async_get(sub_id)
 
-        if device is None:
+        if (device := dev_reg.async_get(sub_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename += f"-{device.name}-{device.id}"

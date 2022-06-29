@@ -83,7 +83,9 @@ def setup_platform(
     add_entities(entities)
 
 
-class StationPriceSensor(CoordinatorEntity, SensorEntity):
+class StationPriceSensor(
+    CoordinatorEntity[DataUpdateCoordinator[StationPriceData]], SensorEntity
+):
     """Implementation of a sensor that reports the fuel price for a station."""
 
     def __init__(

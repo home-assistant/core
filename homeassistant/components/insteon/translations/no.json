@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "Tilkobling mislyktes",
+            "not_insteon_device": "Oppdaget enhet, ikke en Insteon-enhet",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
             "cannot_connect": "Tilkobling mislyktes",
             "select_single": "Velg ett alternativ."
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "Vil du konfigurere {name}?"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP adresse",
@@ -38,8 +43,7 @@
                 "data": {
                     "modem_type": "Modemtype."
                 },
-                "description": "Velg Insteon modemtype.",
-                "title": ""
+                "description": "Velg Insteon modemtype."
             }
         }
     },
@@ -56,8 +60,7 @@
                     "cat": "Enhetskategori (dvs. 0x10)",
                     "subcat": "Underkategori for enhet (dvs. 0x0a)"
                 },
-                "description": "Legg til en enhetsoverstyring.",
-                "title": ""
+                "description": "Legg til en enhetsoverstyring."
             },
             "add_x10": {
                 "data": {
@@ -66,8 +69,7 @@
                     "steps": "Dimmer trinn (kun for lette enheter, standard 22)",
                     "unitcode": "Enhetskode (1 - 16)"
                 },
-                "description": "Endre insteon hub-passordet.",
-                "title": ""
+                "description": "Endre insteon hub-passordet."
             },
             "change_hub_config": {
                 "data": {
@@ -76,8 +78,7 @@
                     "port": "Port",
                     "username": "Brukernavn"
                 },
-                "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen.",
-                "title": ""
+                "description": "Endre Insteon Hub-tilkoblingsinformasjonen. Du m\u00e5 starte Home Assistant p\u00e5 nytt n\u00e5r du har gjort denne endringen. Dette endrer ikke konfigurasjonen av selve huben. For \u00e5 endre konfigurasjonen i huben bruker du hub-appen."
             },
             "init": {
                 "data": {
@@ -86,23 +87,19 @@
                     "change_hub_config": "Endre hub-konfigurasjonen.",
                     "remove_override": "Fjern en enhet overstyring.",
                     "remove_x10": "Fjern en X10-enhet."
-                },
-                "description": "Velg et alternativ for \u00e5 konfigurere.",
-                "title": ""
+                }
             },
             "remove_override": {
                 "data": {
                     "address": "Velg en enhetsadresse du vil fjerne"
                 },
-                "description": "Fjerne en enhetsoverstyring",
-                "title": ""
+                "description": "Fjerne en enhetsoverstyring"
             },
             "remove_x10": {
                 "data": {
                     "address": "Velg en enhetsadresse du vil fjerne"
                 },
-                "description": "Fjern en X10-enhet",
-                "title": ""
+                "description": "Fjern en X10-enhet"
             }
         }
     }

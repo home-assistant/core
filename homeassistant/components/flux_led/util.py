@@ -4,11 +4,7 @@ from __future__ import annotations
 from flux_led.aio import AIOWifiLedBulb
 from flux_led.const import COLOR_MODE_DIM as FLUX_COLOR_MODE_DIM, MultiColorEffects
 
-from homeassistant.components.light import (
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_WHITE,
-)
+from homeassistant.components.light import ColorMode
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
 from .const import FLUX_COLOR_MODE_TO_HASS, MIN_RGB_BRIGHTNESS
@@ -28,17 +24,29 @@ def _human_readable_option(const_option: str) -> str:
     return const_option.replace("_", " ").title()
 
 
+def mac_matches_by_one(formatted_mac_1: str, formatted_mac_2: str) -> bool:
+    """Check if a mac address is only one digit off.
+
+    Some of the devices have two mac addresses which are
+    one off from each other. We need to treat them as the same
+    since its the same device.
+    """
+    mac_int_1 = int(formatted_mac_1.replace(":", ""), 16)
+    mac_int_2 = int(formatted_mac_2.replace(":", ""), 16)
+    return abs(mac_int_1 - mac_int_2) < 2
+
+
 def _flux_color_mode_to_hass(
     flux_color_mode: str | None, flux_color_modes: set[str]
-) -> str:
+) -> ColorMode:
     """Map the flux color mode to Home Assistant color mode."""
     if flux_color_mode is None:
-        return COLOR_MODE_ONOFF
+        return ColorMode.ONOFF
     if flux_color_mode == FLUX_COLOR_MODE_DIM:
         if len(flux_color_modes) > 1:
-            return COLOR_MODE_WHITE
-        return COLOR_MODE_BRIGHTNESS
-    return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, COLOR_MODE_ONOFF)
+            return ColorMode.WHITE
+        return ColorMode.BRIGHTNESS
+    return FLUX_COLOR_MODE_TO_HASS.get(flux_color_mode, ColorMode.ONOFF)
 
 
 def _effect_brightness(brightness: int) -> int:

@@ -9,7 +9,7 @@ from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import DeviceInfo, Entity
 
 from .const import DOMAIN, PLATFORMS, ZWaveMePlatform
 
@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 ZWAVE_ME_PLATFORMS = [platform.value for platform in ZWaveMePlatform]
 
 
-async def async_setup_entry(hass, entry):
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Z-Wave-Me from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     controller = hass.data[DOMAIN][entry.entry_id] = ZWaveMeController(hass, entry)
@@ -27,7 +27,7 @@ async def async_setup_entry(hass, entry):
     raise ConfigEntryNotReady()
 
 
-async def async_unload_entry(hass, entry):
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
@@ -104,8 +104,21 @@ class ZWaveMeEntity(Entity):
         self.controller = controller
         self.device = device
         self._attr_name = device.title
-        self._attr_unique_id = f"{self.controller.config.unique_id}-{self.device.id}"
+        self._attr_unique_id: str = (
+            f"{self.controller.config.unique_id}-{self.device.id}"
+        )
         self._attr_should_poll = False
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return device specific attributes."""
+        return DeviceInfo(
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=self._attr_name,
+            manufacturer=self.device.manufacturer,
+            sw_version=self.device.firmware,
+            suggested_area=self.device.locationName,
+        )
 
     async def async_added_to_hass(self) -> None:
         """Connect to an updater."""

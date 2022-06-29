@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_system_id": "\u7121\u6548\u7684 Airzone \u7cfb\u7d71 ID"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                },
+                "description": "\u8a2d\u5b9a Airzone \u6574\u5408\u3002"
+            }
+        }
+    }
+}

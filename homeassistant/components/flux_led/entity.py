@@ -15,6 +15,7 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
+    CONF_MODEL,
     CONF_NAME,
 )
 from homeassistant.core import callback
@@ -23,7 +24,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_MINOR_VERSION, CONF_MODEL, DOMAIN, SIGNAL_STATE_UPDATED
+from .const import CONF_MINOR_VERSION, DOMAIN, SIGNAL_STATE_UPDATED
 from .coordinator import FluxLedUpdateCoordinator
 
 
@@ -66,10 +67,8 @@ class FluxBaseEntity(Entity):
         self._attr_device_info = _async_device_info(self._device, entry)
 
 
-class FluxEntity(CoordinatorEntity):
+class FluxEntity(CoordinatorEntity[FluxLedUpdateCoordinator]):
     """Representation of a Flux entity with a coordinator."""
-
-    coordinator: FluxLedUpdateCoordinator
 
     def __init__(
         self,

@@ -24,13 +24,12 @@ from homeassistant.const import (
     POWER_WATT,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.dt import utcnow
 
@@ -329,9 +328,9 @@ class EDL21:
                     self._registered_obis.add((electricity_id, obis))
                 elif obis not in self._OBIS_BLACKLIST:
                     _LOGGER.warning(
-                        "Unhandled sensor %s detected. Please report at "
-                        'https://github.com/home-assistant/core/issues?q=is%%3Aissue+label%%3A"integration%%3A+edl21"+',
+                        "Unhandled sensor %s detected. Please report at %s",
                         obis,
+                        "https://github.com/home-assistant/core/issues?q=is%3Aopen+is%3Aissue+label%3A%22integration%3A+edl21%22",
                     )
                     self._OBIS_BLACKLIST.add(obis)
 
@@ -340,7 +339,7 @@ class EDL21:
 
     async def add_entities(self, new_entities) -> None:
         """Migrate old unique IDs, then add entities to hass."""
-        registry = await async_get_registry(self._hass)
+        registry = er.async_get(self._hass)
 
         for entity in new_entities:
             old_entity_id = registry.async_get_entity_id(
@@ -450,9 +449,7 @@ class EDL21Entity(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         """Return the unit of measurement."""
-        unit = self._telegram.get("unit")
-
-        if unit is None:
+        if (unit := self._telegram.get("unit")) is None:
             return None
 
         return SENSOR_UNIT_MAPPING[unit]

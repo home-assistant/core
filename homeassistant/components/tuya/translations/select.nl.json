@@ -77,7 +77,7 @@
         },
         "tuya__light_mode": {
             "none": "Uit",
-            "pos": "Plaats van schakelaar aangeven",
+            "pos": "Schakelpositie aangeven",
             "relay": "Aan/uit-toestand aangeven"
         },
         "tuya__motion_sensitivity": {
@@ -90,8 +90,8 @@
             "2": "Continu opnemen"
         },
         "tuya__relay_status": {
-            "last": "Onthoud laatste staat",
-            "memory": "Onthoud laatste staat",
+            "last": "Laatste status onthouden",
+            "memory": "Laatste status onthouden",
             "off": "Uit",
             "on": "Aan",
             "power_off": "Uit",
@@ -116,7 +116,7 @@
             "mop": "Dweil",
             "part": "Deel",
             "partial_bow": "Boog gedeeltelijk",
-            "pick_zone": "Kies zone",
+            "pick_zone": "Zone kiezen",
             "point": "Punt",
             "pose": "Houding",
             "random": "Willekeurig",

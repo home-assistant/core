@@ -7,8 +7,8 @@
     "type": "HOT_WATER",
     "power": "ON",
     "temperature": {
-      "celsius": 55.00,
-      "fahrenheit": 131.00
+      "celsius": 55.0,
+      "fahrenheit": 131.0
     }
   },
   "overlayType": "MANUAL",
@@ -18,8 +18,8 @@
       "type": "HOT_WATER",
       "power": "ON",
       "temperature": {
-        "celsius": 55.00,
-        "fahrenheit": 131.00
+        "celsius": 55.0,
+        "fahrenheit": 131.0
       }
     },
     "termination": {

@@ -13,8 +13,7 @@
         "flow_title": "{name}",
         "step": {
             "confirm": {
-                "description": "Konfirmasikan penambahan Receiver",
-                "title": "Network Receiver Denon AVR"
+                "description": "Konfirmasikan penambahan Receiver"
             },
             "select": {
                 "data": {
@@ -27,8 +26,9 @@
                 "data": {
                     "host": "Alamat IP"
                 },
-                "description": "Hubungkan ke Receiver Anda. Jika alamat IP tidak ditentukan, penemuan otomatis akan digunakan",
-                "title": "Network Receiver Denon AVR"
+                "data_description": {
+                    "host": "Kosongkan untuk menggunakan penemuan otomatis"
+                }
             }
         }
     },
@@ -41,8 +41,7 @@
                     "zone2": "Siapkan Zona 2",
                     "zone3": "Siapkan Zona 3"
                 },
-                "description": "Tentukan pengaturan opsional",
-                "title": "Network Receiver Denon AVR"
+                "description": "Tentukan pengaturan opsional"
             }
         }
     }

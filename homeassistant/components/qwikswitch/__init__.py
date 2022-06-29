@@ -21,6 +21,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import load_platform
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 
@@ -96,9 +100,7 @@ class QSEntity(Entity):
     async def async_added_to_hass(self):
         """Listen for updates from QSUSb via dispatcher."""
         self.async_on_remove(
-            self.hass.helpers.dispatcher.async_dispatcher_connect(
-                self.qsid, self.update_packet
-            )
+            async_dispatcher_connect(self.hass, self.qsid, self.update_packet)
         )
 
 
@@ -151,7 +153,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def callback_value_changed(_qsd, qsid, _val):
         """Update entity values based on device change."""
         _LOGGER.debug("Dispatch %s (update from devices)", qsid)
-        hass.helpers.dispatcher.async_dispatcher_send(qsid, None)
+        async_dispatcher_send(hass, qsid, None)
 
     session = async_get_clientsession(hass)
     qsusb = QSUsb(
@@ -222,7 +224,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
             if qspacket[QS_ID] in sensor_ids:
                 _LOGGER.debug("Dispatch %s ((%s))", qspacket[QS_ID], qspacket)
-                hass.helpers.dispatcher.async_dispatcher_send(qspacket[QS_ID], qspacket)
+                async_dispatcher_send(hass, qspacket[QS_ID], qspacket)
 
         # Update all ha_objects
         hass.async_add_job(qsusb.update_from_devices)

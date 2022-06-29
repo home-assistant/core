@@ -1,4 +1,6 @@
 """Support for Android IP Webcam."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 
@@ -10,7 +12,6 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PLATFORM,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CONF_SENSORS,
@@ -194,9 +195,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def async_setup_ipcamera(cam_config):
         """Set up an IP camera."""
         host = cam_config[CONF_HOST]
-        username = cam_config.get(CONF_USERNAME)
-        password = cam_config.get(CONF_PASSWORD)
-        name = cam_config[CONF_NAME]
+        username: str | None = cam_config.get(CONF_USERNAME)
+        password: str | None = cam_config.get(CONF_PASSWORD)
+        name: str = cam_config[CONF_NAME]
         interval = cam_config[CONF_SCAN_INTERVAL]
         switches = cam_config.get(CONF_SWITCHES)
         sensors = cam_config.get(CONF_SENSORS)
@@ -204,13 +205,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         # Init ip webcam
         cam = PyDroidIPCam(
-            hass.loop,
             websession,
             host,
             cam_config[CONF_PORT],
             username=username,
             password=password,
             timeout=cam_config[CONF_TIMEOUT],
+            ssl=False,
         )
 
         if switches is None:
@@ -238,17 +239,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         webcams[host] = cam
 
         mjpeg_camera = {
-            CONF_PLATFORM: "mjpeg",
             CONF_MJPEG_URL: cam.mjpeg_url,
             CONF_STILL_IMAGE_URL: cam.image_url,
-            CONF_NAME: name,
         }
         if username and password:
             mjpeg_camera.update({CONF_USERNAME: username, CONF_PASSWORD: password})
 
+        # Remove incorrect config entry setup via mjpeg platform discovery.
+        mjpeg_config_entry = next(
+            (
+                config_entry
+                for config_entry in hass.config_entries.async_entries("mjpeg")
+                if all(
+                    config_entry.options.get(key) == val
+                    for key, val in mjpeg_camera.items()
+                )
+            ),
+            None,
+        )
+        if mjpeg_config_entry:
+            await hass.config_entries.async_remove(mjpeg_config_entry.entry_id)
+
+        mjpeg_camera[CONF_NAME] = name
+
         hass.async_create_task(
             discovery.async_load_platform(
-                hass, Platform.CAMERA, "mjpeg", mjpeg_camera, config
+                hass, Platform.CAMERA, DOMAIN, mjpeg_camera, config
             )
         )
 

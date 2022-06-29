@@ -1,30 +1,21 @@
 """Support for deCONZ covers."""
-
 from __future__ import annotations
 
-from collections.abc import ValuesView
 from typing import Any, cast
 
-from pydeconz.light import Cover
+from pydeconz.models.event import EventType
+from pydeconz.models.light.cover import Cover
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .deconz_device import DeconzDevice
@@ -47,31 +38,15 @@ async def async_setup_entry(
     gateway.entities[DOMAIN] = set()
 
     @callback
-    def async_add_cover(
-        lights: list[Cover] | ValuesView[Cover] = gateway.api.lights.values(),
-    ) -> None:
+    def async_add_cover(_: EventType, cover_id: str) -> None:
         """Add cover from deCONZ."""
-        entities = []
+        cover = gateway.api.lights.covers[cover_id]
+        async_add_entities([DeconzCover(cover, gateway)])
 
-        for light in lights:
-            if (
-                isinstance(light, Cover)
-                and light.unique_id not in gateway.entities[DOMAIN]
-            ):
-                entities.append(DeconzCover(light, gateway))
-
-        if entities:
-            async_add_entities(entities)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_new_light,
-            async_add_cover,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_cover,
+        gateway.api.lights.covers,
     )
-
-    async_add_cover()
 
 
 class DeconzCover(DeconzDevice, CoverEntity):
@@ -84,23 +59,23 @@ class DeconzCover(DeconzDevice, CoverEntity):
         """Set up cover device."""
         super().__init__(device, gateway)
 
-        self._attr_supported_features = SUPPORT_OPEN
-        self._attr_supported_features |= SUPPORT_CLOSE
-        self._attr_supported_features |= SUPPORT_STOP
-        self._attr_supported_features |= SUPPORT_SET_POSITION
+        self._attr_supported_features = CoverEntityFeature.OPEN
+        self._attr_supported_features |= CoverEntityFeature.CLOSE
+        self._attr_supported_features |= CoverEntityFeature.STOP
+        self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         if self._device.tilt is not None:
-            self._attr_supported_features |= SUPPORT_OPEN_TILT
-            self._attr_supported_features |= SUPPORT_CLOSE_TILT
-            self._attr_supported_features |= SUPPORT_STOP_TILT
-            self._attr_supported_features |= SUPPORT_SET_TILT_POSITION
+            self._attr_supported_features |= CoverEntityFeature.OPEN_TILT
+            self._attr_supported_features |= CoverEntityFeature.CLOSE_TILT
+            self._attr_supported_features |= CoverEntityFeature.STOP_TILT
+            self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
         self._attr_device_class = DEVICE_CLASS.get(self._device.type)
 
     @property
     def current_cover_position(self) -> int:
         """Return the current position of the cover."""
-        return 100 - self._device.lift  # type: ignore[no-any-return]
+        return 100 - self._device.lift
 
     @property
     def is_closed(self) -> bool:
@@ -128,7 +103,7 @@ class DeconzCover(DeconzDevice, CoverEntity):
     def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt position of the cover."""
         if self._device.tilt is not None:
-            return 100 - self._device.tilt  # type: ignore[no-any-return]
+            return 100 - self._device.tilt
         return None
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:

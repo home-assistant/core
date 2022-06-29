@@ -211,8 +211,8 @@ async def test_on_node_added_not_ready(
     client.driver.receive_event(event)
     await hass.async_block_till_done()
 
-    # the only entity is the node status sensor
-    assert len(hass.states.async_all()) == 1
+    # the only entities are the node status sensor and ping button
+    assert len(hass.states.async_all()) == 2
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -254,8 +254,8 @@ async def test_existing_node_not_ready(hass, zp3111_not_ready, client, integrati
     assert not device.model
     assert not device.sw_version
 
-    # the only entity is the node status sensor
-    assert len(hass.states.async_all()) == 1
+    # the only entities are the node status sensor and ping button
+    assert len(hass.states.async_all()) == 2
 
     device = dev_reg.async_get_device(identifiers={(DOMAIN, device_id)})
     assert device
@@ -800,8 +800,10 @@ async def test_removed_device(
     hass, client, climate_radio_thermostat_ct100_plus, lock_schlage_be469, integration
 ):
     """Test that the device registry gets updated when a device gets removed."""
+    driver = client.driver
+    assert driver
     # Verify how many nodes are available
-    assert len(client.driver.controller.nodes) == 2
+    assert len(driver.controller.nodes) == 2
 
     # Make sure there are the same number of devices
     dev_reg = dr.async_get(hass)
@@ -811,10 +813,10 @@ async def test_removed_device(
     # Check how many entities there are
     ent_reg = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
-    assert len(entity_entries) == 28
+    assert len(entity_entries) == 29
 
     # Remove a node and reload the entry
-    old_node = client.driver.controller.nodes.pop(13)
+    old_node = driver.controller.nodes.pop(13)
     await hass.config_entries.async_reload(integration.entry_id)
     await hass.async_block_till_done()
 
@@ -824,7 +826,7 @@ async def test_removed_device(
     assert len(device_entries) == 1
     entity_entries = er.async_entries_for_config_entry(ent_reg, integration.entry_id)
     assert len(entity_entries) == 17
-    assert dev_reg.async_get_device({get_device_id(client, old_node)}) is None
+    assert dev_reg.async_get_device({get_device_id(driver, old_node)}) is None
 
 
 async def test_suggested_area(hass, client, eaton_rf9640_dimmer):
@@ -934,6 +936,7 @@ async def test_replace_same_node(
                     "commandsDroppedTX": 0,
                     "timeoutResponse": 0,
                 },
+                "isControllerNode": False,
             },
             "result": {},
         },
@@ -1052,6 +1055,7 @@ async def test_replace_different_node(
                     "commandsDroppedTX": 0,
                     "timeoutResponse": 0,
                 },
+                "isControllerNode": False,
             },
             "result": {},
         },

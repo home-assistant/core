@@ -16,7 +16,7 @@ set_room_temperature:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     comfort_temp:
       name: Comfort temperature
       description: Comfort temp.
@@ -24,7 +24,7 @@ set_room_temperature:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"
     sleep_temp:
       name: Sleep temperature
       description: Sleep temp.
@@ -32,4 +32,4 @@ set_room_temperature:
         number:
           min: 0
           max: 100
-          unit_of_measurement: '°'
+          unit_of_measurement: "°"

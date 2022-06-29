@@ -24,7 +24,8 @@ SSDP = {
     ],
     "deconz": [
         {
-            "manufacturer": "Royal Philips Electronics"
+            "manufacturer": "Royal Philips Electronics",
+            "manufacturerURL": "http://www.dresden-elektronik.de"
         }
     ],
     "denonavr": [
@@ -97,6 +98,24 @@ SSDP = {
             "st": "urn:schemas-upnp-org:device:MediaRenderer:3"
         }
     ],
+    "dlna_dms": [
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:1",
+            "st": "urn:schemas-upnp-org:device:MediaServer:1"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:2",
+            "st": "urn:schemas-upnp-org:device:MediaServer:2"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:3",
+            "st": "urn:schemas-upnp-org:device:MediaServer:3"
+        },
+        {
+            "deviceType": "urn:schemas-upnp-org:device:MediaServer:4",
+            "st": "urn:schemas-upnp-org:device:MediaServer:4"
+        }
+    ],
     "fritz": [
         {
             "st": "urn:schemas-upnp-org:device:fritzbox:1"
@@ -150,6 +169,12 @@ SSDP = {
             "manufacturer": "Universal Devices Inc."
         }
     ],
+    "kaleidescape": [
+        {
+            "deviceType": "schemas-upnp-org:device:Basic:1",
+            "manufacturer": "Kaleidescape, Inc."
+        }
+    ],
     "keenetic_ndms2": [
         {
             "deviceType": "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
@@ -201,6 +226,17 @@ SSDP = {
     "samsungtv": [
         {
             "st": "urn:samsung.com:device:RemoteControlReceiver:1"
+        },
+        {
+            "st": "urn:samsung.com:service:MainTVAgent2:1"
+        },
+        {
+            "manufacturer": "Samsung",
+            "st": "urn:schemas-upnp-org:service:RenderingControl:1"
+        },
+        {
+            "manufacturer": "Samsung Electronics",
+            "st": "urn:schemas-upnp-org:service:RenderingControl:1"
         }
     ],
     "songpal": [

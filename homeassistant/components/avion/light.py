@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import (
@@ -24,8 +24,6 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
-SUPPORT_AVION_LED = SUPPORT_BRIGHTNESS
 
 DEVICE_SCHEMA = vol.Schema(
     {
@@ -75,7 +73,8 @@ def setup_platform(
 class AvionLight(LightEntity):
     """Representation of an Avion light."""
 
-    _attr_supported_features = SUPPORT_AVION_LED
+    _attr_support_color_mode = ColorMode.BRIGHTNESS
+    _attr_support_color_modes = {ColorMode.BRIGHTNESS}
     _attr_should_poll = False
     _attr_assumed_state = True
     _attr_is_on = True

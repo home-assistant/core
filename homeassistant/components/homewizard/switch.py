@@ -22,7 +22,7 @@ async def async_setup_entry(
     """Set up switches."""
     coordinator: HWEnergyDeviceUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
 
-    if coordinator.api.state:
+    if coordinator.data["state"]:
         async_add_entities(
             [
                 HWEnergyMainSwitchEntity(coordinator, entry),
@@ -31,10 +31,10 @@ async def async_setup_entry(
         )
 
 
-class HWEnergySwitchEntity(CoordinatorEntity, SwitchEntity):
+class HWEnergySwitchEntity(
+    CoordinatorEntity[HWEnergyDeviceUpdateCoordinator], SwitchEntity
+):
     """Representation switchable entity."""
-
-    coordinator: HWEnergyDeviceUpdateCoordinator
 
     def __init__(
         self,
@@ -70,12 +70,12 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api.state.set(power_on=True)
+        await self.coordinator.api.state_set(power_on=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api.state.set(power_on=False)
+        await self.coordinator.api.state_set(power_on=False)
         await self.coordinator.async_refresh()
 
     @property
@@ -85,12 +85,12 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
 
         This switch becomes unavailable when switch_lock is enabled.
         """
-        return super().available and not self.coordinator.api.state.switch_lock
+        return super().available and not self.coordinator.data["state"].switch_lock
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return bool(self.coordinator.api.state.power_on)
+        return bool(self.coordinator.data["state"].power_on)
 
 
 class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
@@ -115,15 +115,15 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
-        await self.coordinator.api.state.set(switch_lock=True)
+        await self.coordinator.api.state_set(switch_lock=True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch-lock off."""
-        await self.coordinator.api.state.set(switch_lock=False)
+        await self.coordinator.api.state_set(switch_lock=False)
         await self.coordinator.async_refresh()
 
     @property
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return bool(self.coordinator.api.state.switch_lock)
+        return bool(self.coordinator.data["state"].switch_lock)

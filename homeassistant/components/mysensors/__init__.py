@@ -7,31 +7,18 @@ from functools import partial
 import logging
 
 from mysensors import BaseAsyncGateway
-import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.mqtt import valid_publish_topic, valid_subscribe_topic
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_OPTIMISTIC, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DEVICES,
-    CONF_BAUD_RATE,
-    CONF_DEVICE,
-    CONF_GATEWAYS,
-    CONF_NODES,
-    CONF_PERSISTENCE,
-    CONF_PERSISTENCE_FILE,
-    CONF_RETAIN,
-    CONF_TCP_PORT,
-    CONF_TOPIC_IN_PREFIX,
-    CONF_TOPIC_OUT_PREFIX,
-    CONF_VERSION,
     DOMAIN,
     MYSENSORS_DISCOVERY,
     MYSENSORS_GATEWAYS,
@@ -42,148 +29,21 @@ from .const import (
     SensorType,
 )
 from .device import MySensorsDevice, get_mysensors_devices
-from .gateway import finish_setup, get_mysensors_gateway, gw_stop, setup_gateway
+from .gateway import finish_setup, gw_stop, setup_gateway
 from .helpers import on_unload
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_DEBUG = "debug"
-CONF_NODE_NAME = "name"
-
 DATA_HASS_CONFIG = "hass_config"
 
-DEFAULT_BAUD_RATE = 115200
-DEFAULT_TCP_PORT = 5003
-DEFAULT_VERSION = "1.4"
 
-
-def set_default_persistence_file(value: dict) -> dict:
-    """Set default persistence file."""
-    for idx, gateway in enumerate(value):
-        if gateway.get(CONF_PERSISTENCE_FILE) is not None:
-            continue
-        new_name = f"mysensors{idx + 1}.pickle"
-        gateway[CONF_PERSISTENCE_FILE] = new_name
-
-    return value
-
-
-def has_all_unique_files(value: list[dict]) -> list[dict]:
-    """Validate that all persistence files are unique and set if any is set."""
-    persistence_files = [gateway[CONF_PERSISTENCE_FILE] for gateway in value]
-    schema = vol.Schema(vol.Unique())
-    schema(persistence_files)
-    return value
-
-
-def is_persistence_file(value: str) -> str:
-    """Validate that persistence file path ends in either .pickle or .json."""
-    if value.endswith((".json", ".pickle")):
-        return value
-    raise vol.Invalid(f"{value} does not end in either `.json` or `.pickle`")
-
-
-def deprecated(key: str) -> Callable[[dict], dict]:
-    """Mark key as deprecated in configuration."""
-
-    def validator(config: dict) -> dict:
-        """Check if key is in config, log warning and remove key."""
-        if key not in config:
-            return config
-        _LOGGER.warning(
-            "%s option for %s is deprecated. Please remove %s from your "
-            "configuration file",
-            key,
-            DOMAIN,
-            key,
-        )
-        config.pop(key)
-        return config
-
-    return validator
-
-
-NODE_SCHEMA = vol.Schema({cv.positive_int: {vol.Required(CONF_NODE_NAME): cv.string}})
-
-GATEWAY_SCHEMA = vol.Schema(
-    vol.All(
-        deprecated(CONF_NODES),
-        {
-            vol.Required(CONF_DEVICE): cv.string,
-            vol.Optional(CONF_PERSISTENCE_FILE): vol.All(
-                cv.string, is_persistence_file
-            ),
-            vol.Optional(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): cv.positive_int,
-            vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
-            vol.Optional(CONF_TOPIC_IN_PREFIX): valid_subscribe_topic,
-            vol.Optional(CONF_TOPIC_OUT_PREFIX): valid_publish_topic,
-            vol.Optional(CONF_NODES, default={}): NODE_SCHEMA,
-        },
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            vol.All(
-                deprecated(CONF_DEBUG),
-                deprecated(CONF_OPTIMISTIC),
-                deprecated(CONF_PERSISTENCE),
-                {
-                    vol.Required(CONF_GATEWAYS): vol.All(
-                        cv.ensure_list,
-                        set_default_persistence_file,
-                        has_all_unique_files,
-                        [GATEWAY_SCHEMA],
-                    ),
-                    vol.Optional(CONF_RETAIN, default=True): cv.boolean,
-                    vol.Optional(CONF_VERSION, default=DEFAULT_VERSION): cv.string,
-                    vol.Optional(CONF_OPTIMISTIC, default=False): cv.boolean,
-                    vol.Optional(CONF_PERSISTENCE, default=True): cv.boolean,
-                },
-            )
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the MySensors component."""
+    # This is needed to set up the notify platform via discovery.
     hass.data[DOMAIN] = {DATA_HASS_CONFIG: config}
-
-    if DOMAIN not in config or bool(hass.config_entries.async_entries(DOMAIN)):
-        return True
-
-    config = config[DOMAIN]
-    user_inputs = [
-        {
-            CONF_DEVICE: gw[CONF_DEVICE],
-            CONF_BAUD_RATE: gw[CONF_BAUD_RATE],
-            CONF_TCP_PORT: gw[CONF_TCP_PORT],
-            CONF_TOPIC_OUT_PREFIX: gw.get(CONF_TOPIC_OUT_PREFIX, ""),
-            CONF_TOPIC_IN_PREFIX: gw.get(CONF_TOPIC_IN_PREFIX, ""),
-            CONF_RETAIN: config[CONF_RETAIN],
-            CONF_VERSION: config[CONF_VERSION],
-            CONF_PERSISTENCE_FILE: gw[CONF_PERSISTENCE_FILE]
-            # nodes config ignored at this time. renaming nodes can now be done from the frontend.
-        }
-        for gw in config[CONF_GATEWAYS]
-    ]
-    user_inputs = [
-        {k: v for k, v in userinput.items() if v is not None}
-        for userinput in user_inputs
-    ]
-
-    # there is an actual configuration in configuration.yaml, so we have to process it
-    for user_input in user_inputs:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=user_input,
-            )
-        )
 
     return True
 
@@ -243,7 +103,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Remove an instance of the MySensors integration."""
 
-    gateway = get_mysensors_gateway(hass, entry.entry_id)
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry, PLATFORMS_WITH_ENTRY_SUPPORT
@@ -261,6 +121,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     del hass.data[DOMAIN][MYSENSORS_GATEWAYS][entry.entry_id]
 
     await gw_stop(hass, entry, gateway)
+    return True
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+) -> bool:
+    """Remove a MySensors config entry from a device."""
+    gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][
+        config_entry.entry_id
+    ]
+    device_id = next(
+        device_id for domain, device_id in device_entry.identifiers if domain == DOMAIN
+    )
+    node_id = int(device_id.partition("-")[2])
+    gateway.sensors.pop(node_id, None)
+    gateway.tasks.persistence.need_save = True
+
     return True
 
 
@@ -296,10 +173,7 @@ def setup_mysensors_platform(
             )
             continue
         gateway_id, node_id, child_id, value_type = dev_id
-        gateway: BaseAsyncGateway | None = get_mysensors_gateway(hass, gateway_id)
-        if not gateway:
-            _LOGGER.warning("Skipping setup of %s, no gateway found", dev_id)
-            continue
+        gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
 
         if isinstance(device_class, dict):
             child = gateway.sensors[node_id].children[child_id]

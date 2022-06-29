@@ -6,16 +6,15 @@ detect_location_info and elevation are mocked by default during tests.
 from __future__ import annotations
 
 import asyncio
-import collections
 import math
-from typing import Any
+from typing import Any, NamedTuple
 
 import aiohttp
 
 from homeassistant.const import __version__ as HA_VERSION
 
-WHOAMI_URL = "https://whoami.home-assistant.io/v1"
-WHOAMI_URL_DEV = "https://whoami-v1-dev.home-assistant.workers.dev/v1"
+WHOAMI_URL = "https://services.home-assistant.io/whoami/v1"
+WHOAMI_URL_DEV = "https://services-dev.home-assistant.workers.dev/whoami/v1"
 
 # Constants from https://github.com/maurycyp/vincenty
 # Earth ellipsoid according to WGS 84
@@ -30,22 +29,21 @@ MILES_PER_KILOMETER = 0.621371
 MAX_ITERATIONS = 200
 CONVERGENCE_THRESHOLD = 1e-12
 
-LocationInfo = collections.namedtuple(
-    "LocationInfo",
-    [
-        "ip",
-        "country_code",
-        "currency",
-        "region_code",
-        "region_name",
-        "city",
-        "zip_code",
-        "time_zone",
-        "latitude",
-        "longitude",
-        "use_metric",
-    ],
-)
+
+class LocationInfo(NamedTuple):
+    """Tuple with location information."""
+
+    ip: str
+    country_code: str
+    currency: str
+    region_code: str
+    region_name: str
+    city: str
+    zip_code: str
+    time_zone: str
+    latitude: float
+    longitude: float
+    use_metric: bool
 
 
 async def async_detect_location_info(

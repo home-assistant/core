@@ -1,11 +1,9 @@
 """Config flow for Neato Botvac."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
-from types import MappingProxyType
 from typing import Any
-
-import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.data_entry_flow import FlowResult
@@ -37,7 +35,7 @@ class OAuth2FlowHandler(
 
         return await super().async_step_user(user_input=user_input)
 
-    async def async_step_reauth(self, data: MappingProxyType[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon migration of old entries."""
         return await self.async_step_reauth_confirm()
 
@@ -46,9 +44,7 @@ class OAuth2FlowHandler(
     ) -> FlowResult:
         """Confirm reauth upon migration of old entries."""
         if user_input is None:
-            return self.async_show_form(
-                step_id="reauth_confirm", data_schema=vol.Schema({})
-            )
+            return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> FlowResult:

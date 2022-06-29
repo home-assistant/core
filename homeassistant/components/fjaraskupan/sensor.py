@@ -1,7 +1,7 @@
 """Support for sensors."""
 from __future__ import annotations
 
-from fjaraskupan import Device, State
+from fjaraskupan import Device
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,12 +14,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DeviceState, async_setup_entry_platform
+from . import Coordinator, async_setup_entry_platform
 
 
 async def async_setup_entry(
@@ -29,22 +26,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors dynamically through discovery."""
 
-    def _constructor(device_state: DeviceState) -> list[Entity]:
-        return [
-            RssiSensor(
-                device_state.coordinator, device_state.device, device_state.device_info
-            )
-        ]
+    def _constructor(coordinator: Coordinator) -> list[Entity]:
+        return [RssiSensor(coordinator, coordinator.device, coordinator.device_info)]
 
     async_setup_entry_platform(hass, config_entry, async_add_entities, _constructor)
 
 
-class RssiSensor(CoordinatorEntity[State], SensorEntity):
+class RssiSensor(CoordinatorEntity[Coordinator], SensorEntity):
     """Sensor device."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[State],
+        coordinator: Coordinator,
         device: Device,
         device_info: DeviceInfo,
     ) -> None:

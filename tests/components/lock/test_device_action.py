@@ -3,8 +3,10 @@ import pytest
 
 import homeassistant.components.automation as automation
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.components.lock import DOMAIN, SUPPORT_OPEN
+from homeassistant.components.lock import DOMAIN, LockEntityFeature
 from homeassistant.helpers import device_registry
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -34,9 +36,9 @@ def entity_reg(hass):
     "set_state,features_reg,features_state,expected_action_types",
     [
         (False, 0, 0, []),
-        (False, SUPPORT_OPEN, 0, ["open"]),
+        (False, LockEntityFeature.OPEN, 0, ["open"]),
         (True, 0, 0, []),
-        (True, 0, SUPPORT_OPEN, ["open"]),
+        (True, 0, LockEntityFeature.OPEN, ["open"]),
     ],
 )
 async def test_get_actions(
@@ -74,6 +76,7 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in basic_action_types
     ]
@@ -83,8 +86,58 @@ async def test_get_actions(
             "type": action,
             "device_id": device_entry.id,
             "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": False},
         }
         for action in expected_action_types
+    ]
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device_entry.id
+    )
+    assert_lists_same(actions, expected_actions)
+
+
+@pytest.mark.parametrize(
+    "hidden_by,entity_category",
+    (
+        (RegistryEntryHider.INTEGRATION, None),
+        (RegistryEntryHider.USER, None),
+        (None, EntityCategory.CONFIG),
+        (None, EntityCategory.DIAGNOSTIC),
+    ),
+)
+async def test_get_actions_hidden_auxiliary(
+    hass,
+    device_reg,
+    entity_reg,
+    hidden_by,
+    entity_category,
+):
+    """Test we get the expected actions from a hidden or auxiliary entity."""
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    device_entry = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(device_registry.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_reg.async_get_or_create(
+        DOMAIN,
+        "test",
+        "5678",
+        device_id=device_entry.id,
+        entity_category=entity_category,
+        hidden_by=hidden_by,
+        supported_features=0,
+    )
+    expected_actions = []
+    expected_actions += [
+        {
+            "domain": DOMAIN,
+            "type": action,
+            "device_id": device_entry.id,
+            "entity_id": f"{DOMAIN}.test_5678",
+            "metadata": {"secondary": True},
+        }
+        for action in ["lock", "unlock"]
     ]
     actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, device_entry.id

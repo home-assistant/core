@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
     PLATFORM_SCHEMA,
     BinarySensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
@@ -19,10 +20,12 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +35,6 @@ ATTR_POSITION = "position"
 ATTR_SENSOR_VALUE = "sensor_value"
 ATTR_TYPE = "type"
 ATTR_UPPER = "upper"
-
-CONF_HYSTERESIS = "hysteresis"
-CONF_LOWER = "lower"
-CONF_UPPER = "upper"
 
 DEFAULT_NAME = "Threshold"
 DEFAULT_HYSTERESIS = 0.0
@@ -61,6 +60,32 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 )
 
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Initialize threshold config entry."""
+    registry = er.async_get(hass)
+    device_class = None
+    entity_id = er.async_validate_entity_id(
+        registry, config_entry.options[CONF_ENTITY_ID]
+    )
+    hysteresis = config_entry.options[CONF_HYSTERESIS]
+    lower = config_entry.options[CONF_LOWER]
+    name = config_entry.title
+    unique_id = config_entry.entry_id
+    upper = config_entry.options[CONF_UPPER]
+
+    async_add_entities(
+        [
+            ThresholdSensor(
+                hass, entity_id, name, lower, upper, hysteresis, device_class, unique_id
+            )
+        ]
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -78,7 +103,7 @@ async def async_setup_platform(
     async_add_entities(
         [
             ThresholdSensor(
-                hass, entity_id, name, lower, upper, hysteresis, device_class
+                hass, entity_id, name, lower, upper, hysteresis, device_class, None
             )
         ],
     )
@@ -87,9 +112,11 @@ async def async_setup_platform(
 class ThresholdSensor(BinarySensorEntity):
     """Representation of a Threshold sensor."""
 
-    def __init__(self, hass, entity_id, name, lower, upper, hysteresis, device_class):
+    def __init__(
+        self, hass, entity_id, name, lower, upper, hysteresis, device_class, unique_id
+    ):
         """Initialize the Threshold sensor."""
-        self._hass = hass
+        self._attr_unique_id = unique_id
         self._entity_id = entity_id
         self._name = name
         self._threshold_lower = lower
@@ -101,10 +128,9 @@ class ThresholdSensor(BinarySensorEntity):
         self._state = None
         self.sensor_value = None
 
-        @callback
-        def async_threshold_sensor_state_listener(event):
+        def _update_sensor_state():
             """Handle sensor state changes."""
-            if (new_state := event.data.get("new_state")) is None:
+            if (new_state := hass.states.get(self._entity_id)) is None:
                 return
 
             try:
@@ -118,11 +144,19 @@ class ThresholdSensor(BinarySensorEntity):
                 _LOGGER.warning("State is not numerical")
 
             self._update_state()
+
+        @callback
+        def async_threshold_sensor_state_listener(event):
+            """Handle sensor state changes."""
+            _update_sensor_state()
             self.async_write_ha_state()
 
-        async_track_state_change_event(
-            hass, [entity_id], async_threshold_sensor_state_listener
+        self.async_on_remove(
+            async_track_state_change_event(
+                hass, [entity_id], async_threshold_sensor_state_listener
+            )
         )
+        _update_sensor_state()
 
     @property
     def name(self):

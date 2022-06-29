@@ -115,4 +115,3 @@ stop:
     entity:
       integration: bond
       domain: light
-

@@ -167,10 +167,8 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(ex) from ex
 
 
-class ScreenlogicEntity(CoordinatorEntity):
+class ScreenlogicEntity(CoordinatorEntity[ScreenlogicDataUpdateCoordinator]):
     """Base class for all ScreenLogic entities."""
-
-    coordinator: ScreenlogicDataUpdateCoordinator
 
     def __init__(self, coordinator, data_key, enabled=True):
         """Initialize of the entity."""

@@ -93,6 +93,12 @@ class EnvisalinkBinarySensor(EnvisalinkDevice, BinarySensorEntity):
             last_trip_time = None
 
         attr[ATTR_LAST_TRIP_TIME] = last_trip_time
+
+        # Expose the zone number as an attribute to allow
+        # for easier entity to zone mapping (e.g. to bypass
+        # the zone).
+        attr["zone"] = self._zone_number
+
         return attr
 
     @property

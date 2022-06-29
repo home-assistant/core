@@ -20,8 +20,10 @@ def patch_cluster(cluster):
             value = cluster.PLUGGED_ATTR_READS.get(attr_id)
             if value is None:
                 # try converting attr_id to attr_name and lookup the plugs again
-                attr_name = cluster.attributes.get(attr_id)
-                value = attr_name and cluster.PLUGGED_ATTR_READS.get(attr_name[0])
+                attr = cluster.attributes.get(attr_id)
+
+                if attr is not None:
+                    value = cluster.PLUGGED_ATTR_READS.get(attr.name)
             if value is not None:
                 result.append(
                     zcl_f.ReadAttributeRecord(
@@ -58,14 +60,23 @@ def patch_cluster(cluster):
 
 def update_attribute_cache(cluster):
     """Update attribute cache based on plugged attributes."""
-    if cluster.PLUGGED_ATTR_READS:
-        attrs = [
-            make_attribute(cluster.attridx.get(attr, attr), value)
-            for attr, value in cluster.PLUGGED_ATTR_READS.items()
-        ]
-        hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
-        hdr.frame_control.disable_default_response = True
-        cluster.handle_message(hdr, [attrs])
+    if not cluster.PLUGGED_ATTR_READS:
+        return
+
+    attrs = []
+    for attrid, value in cluster.PLUGGED_ATTR_READS.items():
+        if isinstance(attrid, str):
+            attrid = cluster.attributes_by_name[attrid].id
+        else:
+            attrid = zigpy.types.uint16_t(attrid)
+        attrs.append(make_attribute(attrid, value))
+
+    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    hdr.frame_control.disable_default_response = True
+    msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
+        attribute_reports=attrs
+    )
+    cluster.handle_message(hdr, msg)
 
 
 def get_zha_gateway(hass):
@@ -96,13 +107,23 @@ async def send_attributes_report(hass, cluster: zigpy.zcl.Cluster, attributes: d
     This is to simulate the normal device communication that happens when a
     device is paired to the zigbee network.
     """
-    attrs = [
-        make_attribute(cluster.attridx.get(attr, attr), value)
-        for attr, value in attributes.items()
-    ]
-    hdr = make_zcl_header(zcl_f.Command.Report_Attributes)
+    attrs = []
+
+    for attrid, value in attributes.items():
+        if isinstance(attrid, str):
+            attrid = cluster.attributes_by_name[attrid].id
+        else:
+            attrid = zigpy.types.uint16_t(attrid)
+
+        attrs.append(make_attribute(attrid, value))
+
+    msg = zcl_f.GENERAL_COMMANDS[zcl_f.GeneralCommand.Report_Attributes].schema(
+        attribute_reports=attrs
+    )
+
+    hdr = make_zcl_header(zcl_f.GeneralCommand.Report_Attributes)
     hdr.frame_control.disable_default_response = True
-    cluster.handle_message(hdr, [attrs])
+    cluster.handle_message(hdr, msg)
     await hass.async_block_till_done()
 
 

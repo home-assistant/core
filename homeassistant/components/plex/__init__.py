@@ -14,7 +14,7 @@ from plexwebsocket import (
 import requests.exceptions
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, BrowseError
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -25,10 +25,12 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CLIENT_SCAN_INTERVAL,
     CONF_SERVER,
     CONF_SERVER_IDENTIFIER,
     DISPATCHERS,
@@ -48,6 +50,7 @@ from .errors import ShouldUpdateConfigEntry
 from .media_browser import browse_media
 from .server import PlexServer
 from .services import async_setup_services
+from .view import PlexImageView
 
 _LOGGER = logging.getLogger(__package__)
 
@@ -66,7 +69,7 @@ async def async_browse_media(hass, media_content_type, media_content_id, platfor
     return await hass.async_add_executor_job(
         partial(
             browse_media,
-            plex_server,
+            hass,
             is_internal,
             media_content_type,
             media_content_id,
@@ -83,6 +86,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     await async_setup_services(hass)
+
+    hass.http.register_view(PlexImageView())
 
     gdm = hass.data[PLEX_DOMAIN][GDM_SCANNER] = GDM()
 
@@ -134,12 +139,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, PLEX_SERVER_CONFIG: new_server_data}
         )
     except requests.exceptions.ConnectionError as error:
-        if entry.state is not ConfigEntryState.SETUP_RETRY:
-            _LOGGER.error(
-                "Plex server (%s) could not be reached: [%s]",
-                server_config[CONF_URL],
-                error,
-            )
         raise ConfigEntryNotReady from error
     except plexapi.exceptions.Unauthorized as ex:
         raise ConfigEntryAuthFailed(
@@ -154,7 +153,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_SERVER],
             error,
         )
-        return False
+        # Retry as setups behind a proxy can return transient 404 or 502 errors
+        raise ConfigEntryNotReady from error
 
     _LOGGER.debug(
         "Connected to: %s (%s)", plex_server.friendly_name, plex_server.url_in_use
@@ -244,6 +244,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.async_add_executor_job(get_plex_account, plex_server)
 
+    @callback
+    def scheduled_client_scan(_):
+        _LOGGER.debug("Scheduled scan for new clients on %s", plex_server.friendly_name)
+        async_dispatcher_send(hass, PLEX_UPDATE_PLATFORMS_SIGNAL.format(server_id))
+
+    entry.async_on_unload(
+        async_track_time_interval(
+            hass,
+            scheduled_client_scan,
+            CLIENT_SCAN_INTERVAL,
+        )
+    )
+
     return True
 
 
@@ -280,14 +293,14 @@ def async_cleanup_plex_devices(hass, entry):
     device_registry = dev_reg.async_get(hass)
     entity_registry = ent_reg.async_get(hass)
 
-    device_entries = hass.helpers.device_registry.async_entries_for_config_entry(
+    device_entries = dev_reg.async_entries_for_config_entry(
         device_registry, entry.entry_id
     )
 
     for device_entry in device_entries:
         if (
             len(
-                hass.helpers.entity_registry.async_entries_for_device(
+                ent_reg.async_entries_for_device(
                     entity_registry, device_entry.id, include_disabled_entities=True
                 )
             )

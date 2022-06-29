@@ -41,17 +41,17 @@ set_mode:
       selector:
         select:
           options:
-            - '-'
-            - '+'
+            - "-"
+            - "+"
     bass_extension:
       name: Base extension
       description: Bass extension.
       selector:
         select:
           options:
-            - 'Less'
-            - 'Standard'
-            - 'Extra'
+            - "Less"
+            - "Standard"
+            - "Extra"
 
 set_desk_db:
   name: Set desk dB

@@ -7,6 +7,7 @@ from aiohttp import ClientError
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    TooManyAttemptsBannedException,
     TooManyRequestsException,
 )
 import pytest
@@ -86,6 +87,7 @@ async def test_form(hass: HomeAssistant) -> None:
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
         (MaintenanceException, "server_in_maintenance"),
+        (TooManyAttemptsBannedException, "too_many_attempts"),
         (Exception, "unknown"),
     ],
 )

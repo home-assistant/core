@@ -70,7 +70,7 @@ async def test_root_object(hass):
     )
     assert len(root) == 1
     item = root[0]
-    assert item.title == "Lovelace"
+    assert item.title == "Dashboards"
     assert item.media_class == lovelace_cast.MEDIA_CLASS_APP
     assert item.media_content_id == ""
     assert item.media_content_type == lovelace_cast.DOMAIN

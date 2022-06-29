@@ -3,6 +3,7 @@ from dynalite_devices_lib.cover import DynaliteTimeCoverWithTiltDevice
 import pytest
 
 from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
+from homeassistant.exceptions import HomeAssistantError
 
 from .common import (
     ATTR_ARGS,
@@ -65,9 +66,10 @@ async def test_cover_without_tilt(hass, mock_device):
     """Test a cover with no tilt."""
     mock_device.has_tilt = False
     await create_entity_from_device(hass, mock_device)
-    await hass.services.async_call(
-        "cover", "open_cover_tilt", {"entity_id": "cover.name"}, blocking=True
-    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "cover", "open_cover_tilt", {"entity_id": "cover.name"}, blocking=True
+        )
     await hass.async_block_till_done()
     mock_device.async_open_cover_tilt.assert_not_called()
 

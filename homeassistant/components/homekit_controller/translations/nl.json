@@ -3,7 +3,7 @@
         "abort": {
             "accessory_not_found_error": "Kan geen koppeling toevoegen omdat het apparaat niet langer kan worden gevonden.",
             "already_configured": "Accessoire is al geconfigureerd met deze controller.",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
+            "already_in_progress": "De configuratie is momenteel al bezig",
             "already_paired": "Dit accessoire is al gekoppeld aan een ander apparaat. Reset het accessoire en probeer het opnieuw.",
             "ignored_model": "HomeKit-ondersteuning voor dit model is geblokkeerd omdat er een meer functie volledige native integratie beschikbaar is.",
             "invalid_config_entry": "Dit apparaat geeft aan dat het gereed is om te koppelen, maar er is al een conflicterend configuratie-item voor in de Home Assistant dat eerst moet worden verwijderd.",

@@ -1,9 +1,12 @@
 {
     "config": {
+        "error": {
+            "invalid_auth": "Neplatn\u00e9 overenie"
+        },
         "step": {
             "user": {
                 "data": {
-                    "region": "Oblas\u0165"
+                    "country_code": "Krajina"
                 }
             }
         }

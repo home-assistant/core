@@ -39,9 +39,6 @@
             "usb_config": {
                 "description": "Seleccione el puerto serie del dongle USB Crownstone. \n\n Busque un dispositivo con VID 10C4 y PID EA60.",
                 "title": "Configuraci\u00f3n del dongle USB Crownstone"
-            },
-            "usb_config_option": {
-                "description": "Seleccione el puerto serie del dongle USB Crownstone. \n\n Busque un dispositivo con VID 10C4 y PID EA60."
             }
         }
     }

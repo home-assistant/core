@@ -2,26 +2,27 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
 from typing import Any
-from urllib.parse import quote
 
 import voluptuous as vol
 
 from homeassistant.components import frontend, websocket_api
-from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     CONTENT_AUTH_EXPIRY_TIME,
     BrowseError,
     BrowseMedia,
 )
+from homeassistant.components.media_player.browse_media import (
+    async_process_play_media_url,
+)
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.frame import report
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 from homeassistant.loader import bind_hass
 
 from . import local_source
@@ -80,15 +81,20 @@ async def _process_media_source_platform(
 
 @callback
 def _get_media_item(
-    hass: HomeAssistant, media_content_id: str | None
+    hass: HomeAssistant, media_content_id: str | None, target_media_player: str | None
 ) -> MediaSourceItem:
     """Return media item."""
     if media_content_id:
-        return MediaSourceItem.from_uri(hass, media_content_id)
+        item = MediaSourceItem.from_uri(hass, media_content_id, target_media_player)
+    else:
+        # We default to our own domain if its only one registered
+        domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
+        return MediaSourceItem(hass, domain, "", target_media_player)
 
-    # We default to our own domain if its only one registered
-    domain = None if len(hass.data[DOMAIN]) > 1 else DOMAIN
-    return MediaSourceItem(hass, domain, "")
+    if item.domain is not None and item.domain not in hass.data[DOMAIN]:
+        raise ValueError("Unknown media source")
+
+    return item
 
 
 @bind_hass
@@ -103,29 +109,39 @@ async def async_browse_media(
         raise BrowseError("Media Source not loaded")
 
     try:
-        item = await _get_media_item(hass, media_content_id).async_browse()
+        item = await _get_media_item(hass, media_content_id, None).async_browse()
     except ValueError as err:
-        raise BrowseError("Not a media source item") from err
+        raise BrowseError(str(err)) from err
 
     if content_filter is None or item.children is None:
         return item
 
+    old_count = len(item.children)
     item.children = [
         child for child in item.children if child.can_expand or content_filter(child)
     ]
+    item.not_shown += old_count - len(item.children)
     return item
 
 
 @bind_hass
-async def async_resolve_media(hass: HomeAssistant, media_content_id: str) -> PlayMedia:
+async def async_resolve_media(
+    hass: HomeAssistant,
+    media_content_id: str,
+    target_media_player: str | None | UndefinedType = UNDEFINED,
+) -> PlayMedia:
     """Get info to play media."""
     if DOMAIN not in hass.data:
         raise Unresolvable("Media Source not loaded")
 
+    if target_media_player is UNDEFINED:
+        report("calls media_source.async_resolve_media without passing an entity_id")
+        target_media_player = None
+
     try:
-        item = _get_media_item(hass, media_content_id)
+        item = _get_media_item(hass, media_content_id, target_media_player)
     except ValueError as err:
-        raise Unresolvable("Not a media source item") from err
+        raise Unresolvable(str(err)) from err
 
     return await item.async_resolve()
 
@@ -165,15 +181,16 @@ async def websocket_resolve_media(
     """Resolve media."""
     try:
         media = await async_resolve_media(hass, msg["media_content_id"])
-        url = media.url
     except Unresolvable as err:
         connection.send_error(msg["id"], "resolve_media_failed", str(err))
-    else:
-        if url[0] == "/":
-            url = async_sign_path(
-                hass,
-                quote(url),
-                timedelta(seconds=msg["expires"]),
-            )
+        return
 
-        connection.send_result(msg["id"], {"url": url, "mime_type": media.mime_type})
+    connection.send_result(
+        msg["id"],
+        {
+            "url": async_process_play_media_url(
+                hass, media.url, allow_relative_url=True
+            ),
+            "mime_type": media.mime_type,
+        },
+    )

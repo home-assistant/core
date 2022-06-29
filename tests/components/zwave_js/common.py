@@ -37,5 +37,7 @@ ID_LOCK_CONFIG_PARAMETER_SENSOR = (
 ZEN_31_ENTITY = "light.kitchen_under_cabinet_lights"
 METER_ENERGY_SENSOR = "sensor.smart_switch_6_electric_consumed_kwh"
 METER_VOLTAGE_SENSOR = "sensor.smart_switch_6_electric_consumed_v"
+HUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_humidifier"
+DEHUMIDIFIER_ADC_T3000_ENTITY = "humidifier.adc_t3000_dehumidifier"
 
 PROPERTY_ULTRAVIOLET = "Ultraviolet"

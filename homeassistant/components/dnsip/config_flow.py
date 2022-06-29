@@ -82,14 +82,6 @@ class DnsIPConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Return Option handler."""
         return DnsIPOptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, config: dict[str, Any]) -> FlowResult:
-        """Import a configuration from config.yaml."""
-
-        hostname = config.get(CONF_HOSTNAME, DEFAULT_HOSTNAME)
-        self._async_abort_entries_match({CONF_HOSTNAME: hostname})
-        config[CONF_HOSTNAME] = hostname
-        return await self.async_step_user(user_input=config)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:

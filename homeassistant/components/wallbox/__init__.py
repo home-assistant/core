@@ -20,21 +20,58 @@ from homeassistant.helpers.update_coordinator import (
 
 from ...helpers.entity import DeviceInfo
 from .const import (
-    CONF_CURRENT_VERSION_KEY,
-    CONF_DATA_KEY,
-    CONF_MAX_CHARGING_CURRENT_KEY,
-    CONF_NAME_KEY,
-    CONF_PART_NUMBER_KEY,
-    CONF_SERIAL_NUMBER_KEY,
-    CONF_SOFTWARE_KEY,
+    CHARGER_CURRENT_VERSION_KEY,
+    CHARGER_DATA_KEY,
+    CHARGER_LOCKED_UNLOCKED_KEY,
+    CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_NAME_KEY,
+    CHARGER_PART_NUMBER_KEY,
+    CHARGER_SERIAL_NUMBER_KEY,
+    CHARGER_SOFTWARE_KEY,
+    CHARGER_STATUS_DESCRIPTION_KEY,
+    CHARGER_STATUS_ID_KEY,
     CONF_STATION,
     DOMAIN,
+    ChargerStatus,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.NUMBER]
+PLATFORMS = [Platform.SENSOR, Platform.NUMBER, Platform.LOCK, Platform.SWITCH]
 UPDATE_INTERVAL = 30
+
+# Translation of StatusId based on Wallbox portal code:
+# https://my.wallbox.com/src/utilities/charger/chargerStatuses.js
+CHARGER_STATUS: dict[int, ChargerStatus] = {
+    0: ChargerStatus.DISCONNECTED,
+    14: ChargerStatus.ERROR,
+    15: ChargerStatus.ERROR,
+    161: ChargerStatus.READY,
+    162: ChargerStatus.READY,
+    163: ChargerStatus.DISCONNECTED,
+    164: ChargerStatus.WAITING,
+    165: ChargerStatus.LOCKED,
+    166: ChargerStatus.UPDATING,
+    177: ChargerStatus.SCHEDULED,
+    178: ChargerStatus.PAUSED,
+    179: ChargerStatus.SCHEDULED,
+    180: ChargerStatus.WAITING_FOR_CAR,
+    181: ChargerStatus.WAITING_FOR_CAR,
+    182: ChargerStatus.PAUSED,
+    183: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
+    184: ChargerStatus.WAITING_IN_QUEUE_POWER_SHARING,
+    185: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
+    186: ChargerStatus.WAITING_IN_QUEUE_POWER_BOOST,
+    187: ChargerStatus.WAITING_MID_FAILED,
+    188: ChargerStatus.WAITING_MID_SAFETY,
+    189: ChargerStatus.WAITING_IN_QUEUE_ECO_SMART,
+    193: ChargerStatus.CHARGING,
+    194: ChargerStatus.CHARGING,
+    195: ChargerStatus.CHARGING,
+    196: ChargerStatus.DISCHARGING,
+    209: ChargerStatus.LOCKED,
+    210: ChargerStatus.LOCKED_CAR_CONNECTED,
+}
 
 
 class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -70,19 +107,33 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 raise InvalidAuth from wallbox_connection_error
             raise ConnectionError from wallbox_connection_error
 
+    async def async_validate_input(self) -> None:
+        """Get new sensor data for Wallbox component."""
+        await self.hass.async_add_executor_job(self._validate)
+
     def _get_data(self) -> dict[str, Any]:
         """Get new sensor data for Wallbox component."""
         try:
             self._authenticate()
             data: dict[str, Any] = self._wallbox.getChargerStatus(self._station)
-            data[CONF_MAX_CHARGING_CURRENT_KEY] = data[CONF_DATA_KEY][
-                CONF_MAX_CHARGING_CURRENT_KEY
+            data[CHARGER_MAX_CHARGING_CURRENT_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_MAX_CHARGING_CURRENT_KEY
             ]
+            data[CHARGER_LOCKED_UNLOCKED_KEY] = data[CHARGER_DATA_KEY][
+                CHARGER_LOCKED_UNLOCKED_KEY
+            ]
+            data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
+                data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
+            )
 
             return data
 
         except requests.exceptions.HTTPError as wallbox_connection_error:
             raise ConnectionError from wallbox_connection_error
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Get new sensor data for Wallbox component."""
+        return await self.hass.async_add_executor_job(self._get_data)
 
     def _set_charging_current(self, charging_current: float) -> None:
         """Set maximum charging current for Wallbox."""
@@ -101,14 +152,41 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         await self.async_request_refresh()
 
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Get new sensor data for Wallbox component."""
-        data = await self.hass.async_add_executor_job(self._get_data)
-        return data
+    def _set_lock_unlock(self, lock: bool) -> None:
+        """Set wallbox to locked or unlocked."""
+        try:
+            self._authenticate()
+            if lock:
+                self._wallbox.lockCharger(self._station)
+            else:
+                self._wallbox.unlockCharger(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
 
-    async def async_validate_input(self) -> None:
-        """Get new sensor data for Wallbox component."""
-        await self.hass.async_add_executor_job(self._validate)
+    async def async_set_lock_unlock(self, lock: bool) -> None:
+        """Set wallbox to locked or unlocked."""
+        await self.hass.async_add_executor_job(self._set_lock_unlock, lock)
+        await self.async_request_refresh()
+
+    def _pause_charger(self, pause: bool) -> None:
+        """Set wallbox to pause or resume."""
+        try:
+            self._authenticate()
+            if pause:
+                self._wallbox.pauseChargingSession(self._station)
+            else:
+                self._wallbox.resumeChargingSession(self._station)
+        except requests.exceptions.HTTPError as wallbox_connection_error:
+            if wallbox_connection_error.response.status_code == 403:
+                raise InvalidAuth from wallbox_connection_error
+            raise ConnectionError from wallbox_connection_error
+
+    async def async_pause_charger(self, pause: bool) -> None:
+        """Set wallbox to pause or resume."""
+        await self.hass.async_add_executor_job(self._pause_charger, pause)
+        await self.async_request_refresh()
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -148,22 +226,23 @@ class InvalidAuth(HomeAssistantError):
     """Error to indicate there is invalid auth."""
 
 
-class WallboxEntity(CoordinatorEntity):
+class WallboxEntity(CoordinatorEntity[WallboxCoordinator]):
     """Defines a base Wallbox entity."""
-
-    coordinator: WallboxCoordinator
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return device information about this Wallbox device."""
         return DeviceInfo(
             identifiers={
-                (DOMAIN, self.coordinator.data[CONF_DATA_KEY][CONF_SERIAL_NUMBER_KEY])
+                (
+                    DOMAIN,
+                    self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY],
+                )
             },
-            name=f"Wallbox - {self.coordinator.data[CONF_NAME_KEY]}",
+            name=f"Wallbox - {self.coordinator.data[CHARGER_NAME_KEY]}",
             manufacturer="Wallbox",
-            model=self.coordinator.data[CONF_DATA_KEY][CONF_PART_NUMBER_KEY],
-            sw_version=self.coordinator.data[CONF_DATA_KEY][CONF_SOFTWARE_KEY][
-                CONF_CURRENT_VERSION_KEY
+            model=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY],
+            sw_version=self.coordinator.data[CHARGER_DATA_KEY][CHARGER_SOFTWARE_KEY][
+                CHARGER_CURRENT_VERSION_KEY
             ],
         )

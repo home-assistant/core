@@ -3,7 +3,12 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from aiounifi.controller import MESSAGE_CLIENT, MESSAGE_CLIENT_REMOVED, MESSAGE_DEVICE
+from aiounifi.controller import (
+    MESSAGE_CLIENT,
+    MESSAGE_CLIENT_REMOVED,
+    MESSAGE_DEVICE,
+    MESSAGE_EVENT,
+)
 from aiounifi.websocket import STATE_DISCONNECTED, STATE_RUNNING
 
 from homeassistant import config_entries
@@ -54,23 +59,6 @@ async def test_tracked_wireless_clients(
     assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
-    # State change signalling works without events
-
-    mock_unifi_websocket(
-        data={
-            "meta": {"message": MESSAGE_CLIENT},
-            "data": [client],
-        }
-    )
-    await hass.async_block_till_done()
-
-    client_state = hass.states.get("device_tracker.client")
-    assert client_state.state == STATE_NOT_HOME
-    assert client_state.attributes["ip"] == "10.0.0.1"
-    assert client_state.attributes["mac"] == "00:00:00:00:00:01"
-    assert client_state.attributes["hostname"] == "client"
-    assert client_state.attributes["host_name"] == "client"
-
     # Updated timestamp marks client as home
 
     client["last_seen"] = dt_util.as_timestamp(dt_util.utcnow())
@@ -93,7 +81,7 @@ async def test_tracked_wireless_clients(
 
     assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
 
-    # Same timestamp again means client is away
+    # Same timestamp doesn't explicitly mark client as away
 
     mock_unifi_websocket(
         data={
@@ -103,7 +91,7 @@ async def test_tracked_wireless_clients(
     )
     await hass.async_block_till_done()
 
-    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
 
 
 async def test_tracked_clients(
@@ -184,6 +172,140 @@ async def test_tracked_clients(
     await hass.async_block_till_done()
 
     assert hass.states.get("device_tracker.client_1").state == STATE_HOME
+
+
+async def test_tracked_wireless_clients_event_source(
+    hass, aioclient_mock, mock_unifi_websocket, mock_device_registry
+):
+    """Verify tracking of wireless clients based on event source."""
+    client = {
+        "ap_mac": "00:00:00:00:02:01",
+        "essid": "ssid",
+        "hostname": "client",
+        "ip": "10.0.0.1",
+        "is_wired": False,
+        "last_seen": 1562600145,
+        "mac": "00:00:00:00:00:01",
+    }
+    config_entry = await setup_unifi_integration(
+        hass, aioclient_mock, clients_response=[client]
+    )
+    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    assert len(hass.states.async_entity_ids(TRACKER_DOMAIN)) == 1
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+
+    # State change signalling works with events
+
+    # Connected event
+
+    event = {
+        "user": client["mac"],
+        "ssid": client["essid"],
+        "ap": client["ap_mac"],
+        "radio": "na",
+        "channel": "44",
+        "hostname": client["hostname"],
+        "key": "EVT_WU_Connected",
+        "subsystem": "wlan",
+        "site_id": "name",
+        "time": 1587753456179,
+        "datetime": "2020-04-24T18:37:36Z",
+        "msg": f'User{[client["mac"]]} has connected to AP[{client["ap_mac"]}] with SSID "{client["essid"]}" on "channel 44(na)"',
+        "_id": "5ea331fa30c49e00f90ddc1a",
+    }
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [event],
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
+
+    # Disconnected event
+
+    event = {
+        "user": client["mac"],
+        "ssid": client["essid"],
+        "hostname": client["hostname"],
+        "ap": client["ap_mac"],
+        "duration": 467,
+        "bytes": 459039,
+        "key": "EVT_WU_Disconnected",
+        "subsystem": "wlan",
+        "site_id": "name",
+        "time": 1587752927000,
+        "datetime": "2020-04-24T18:28:47Z",
+        "msg": f'User{[client["mac"]]} disconnected from "{client["essid"]}" (7m 47s connected, 448.28K bytes, last AP[{client["ap_mac"]}])',
+        "_id": "5ea32ff730c49e00f90dca1a",
+    }
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [event],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
+
+    # Change time to mark client as away
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client").state == STATE_NOT_HOME
+
+    # To limit false positives in client tracker
+    # data sources are prioritized when available
+    # once real data is received events will be ignored.
+
+    # New data
+
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_CLIENT},
+            "data": [client],
+        }
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
+
+    # Disconnection event will be ignored
+
+    event = {
+        "user": client["mac"],
+        "ssid": client["essid"],
+        "hostname": client["hostname"],
+        "ap": client["ap_mac"],
+        "duration": 467,
+        "bytes": 459039,
+        "key": "EVT_WU_Disconnected",
+        "subsystem": "wlan",
+        "site_id": "name",
+        "time": 1587752927000,
+        "datetime": "2020-04-24T18:28:47Z",
+        "msg": f'User{[client["mac"]]} disconnected from "{client["essid"]}" (7m 47s connected, 448.28K bytes, last AP[{client["ap_mac"]}])',
+        "_id": "5ea32ff730c49e00f90dca1a",
+    }
+    mock_unifi_websocket(
+        data={
+            "meta": {"message": MESSAGE_EVENT},
+            "data": [event],
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
+
+    # Change time to mark client as away
+    new_time = dt_util.utcnow() + controller.option_detection_time
+    with patch("homeassistant.util.dt.utcnow", return_value=new_time):
+        async_fire_time_changed(hass, new_time)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("device_tracker.client").state == STATE_HOME
 
 
 async def test_tracked_devices(
@@ -516,6 +638,7 @@ async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
         "board_rev": 3,
         "device_id": "mock-id",
         "last_seen": 1562600145,
+        "ip": "10.0.1.1",
         "mac": "00:00:00:00:01:01",
         "model": "US16P150",
         "name": "Device",

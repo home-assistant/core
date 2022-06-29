@@ -48,42 +48,6 @@ NUMBER_ENTITIES: dict[str, NumberEntityDescription] = {
         icon="mdi:volume-high",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_COOL,
-        name="Home Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_HOME_TARGET_HEAT,
-        name="Home Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_COOL,
-        name="Sleep Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_SLEEP_TARGET_HEAT,
-        name="Sleep Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_COOL,
-        name="Away Cool Target",
-        icon="mdi:thermometer-minus",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT: NumberEntityDescription(
-        key=CharacteristicsTypes.VENDOR_ECOBEE_AWAY_TARGET_HEAT,
-        name="Away Heat Target",
-        icon="mdi:thermometer-plus",
-        entity_category=EntityCategory.CONFIG,
-    ),
 }
 
 
@@ -140,26 +104,26 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         return [self._char.type]
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._char.minStep or DEFAULT_STEP
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the characteristic to this value."""
         await self.async_put_characteristics(
             {
@@ -184,26 +148,26 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
         return f"{prefix} Fan Mode"
 
     @property
-    def min_value(self) -> float:
+    def native_min_value(self) -> float:
         """Return the minimum value."""
         return self._char.minValue or DEFAULT_MIN_VALUE
 
     @property
-    def max_value(self) -> float:
+    def native_max_value(self) -> float:
         """Return the maximum value."""
         return self._char.maxValue or DEFAULT_MAX_VALUE
 
     @property
-    def step(self) -> float:
+    def native_step(self) -> float:
         """Return the increment/decrement step."""
         return self._char.minStep or DEFAULT_STEP
 
     @property
-    def value(self) -> float:
+    def native_value(self) -> float:
         """Return the current characteristic value."""
         return self._char.value
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the characteristic to this value."""
 
         # Sending the fan mode request sometimes ends up getting ignored by ecobee

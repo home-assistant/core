@@ -3,11 +3,33 @@
   "name": "LIFX",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/lifx",
-  "requirements": ["aiolifx==0.7.0", "aiolifx_effects==0.2.2"],
+  "requirements": ["aiolifx==0.8.1", "aiolifx_effects==0.2.2"],
+  "dependencies": ["network"],
   "homekit": {
-    "models": ["LIFX"]
+    "models": [
+      "LIFX A19",
+      "LIFX Beam",
+      "LIFX BR30",
+      "LIFX Candle",
+      "LIFX Clean",
+      "LIFX Color",
+      "LIFX DLCOL",
+      "LIFX Dlight",
+      "LIFX DLWW",
+      "LIFX Downlight",
+      "LIFX Filament",
+      "LIFX GU10",
+      "LIFX Lightstrip",
+      "LIFX Mini",
+      "LIFX Nightvision",
+      "LIFX Pls",
+      "LIFX Plus",
+      "LIFX Tile",
+      "LIFX White",
+      "LIFX Z"
+    ]
   },
-  "codeowners": [],
+  "codeowners": ["@Djelibeybi"],
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]
 }

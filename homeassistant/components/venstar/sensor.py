@@ -12,7 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PERCENTAGE, TEMP_CELSIUS, TEMP_FAHRENHEIT, TIME_MINUTES
+from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
+    PERCENTAGE,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+    TIME_MINUTES,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -58,7 +64,7 @@ class VenstarSensorTypeMixin:
 
     value_fn: Callable[[Any, Any], Any]
     name_fn: Callable[[Any, Any], str]
-    uom_fn: Callable[[Any], str]
+    uom_fn: Callable[[Any], str | None]
 
 
 @dataclass
@@ -75,8 +81,7 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[Entity] = []
 
-    sensors = coordinator.client.get_sensor_list()
-    if not sensors:
+    if not (sensors := coordinator.client.get_sensor_list()):
         return
 
     for sensor_name in sensors:
@@ -141,7 +146,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator, self.sensor_name)
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         return self.entity_description.uom_fn(self.coordinator)
 
@@ -151,7 +156,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="hum",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda coordinator: PERCENTAGE,
+        uom_fn=lambda _: PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "hum"
         ),
@@ -168,10 +173,30 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name.replace(' Temp', '')} Temperature",
     ),
     VenstarSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        state_class=SensorStateClass.MEASUREMENT,
+        uom_fn=lambda _: CONCENTRATION_PARTS_PER_MILLION,
+        value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
+            sensor_name, "co2"
+        ),
+        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name} CO2",
+    ),
+    VenstarSensorEntityDescription(
+        key="iaq",
+        device_class=SensorDeviceClass.AQI,
+        state_class=SensorStateClass.MEASUREMENT,
+        uom_fn=lambda _: None,
+        value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
+            sensor_name, "iaq"
+        ),
+        name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {sensor_name} IAQ",
+    ),
+    VenstarSensorEntityDescription(
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda coordinator: PERCENTAGE,
+        uom_fn=lambda _: PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "battery"
         ),
@@ -182,7 +207,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
 RUNTIME_ENTITY = VenstarSensorEntityDescription(
     key="runtime",
     state_class=SensorStateClass.MEASUREMENT,
-    uom_fn=lambda coordinator: TIME_MINUTES,
+    uom_fn=lambda _: TIME_MINUTES,
     value_fn=lambda coordinator, sensor_name: coordinator.runtimes[-1][sensor_name],
     name_fn=lambda coordinator, sensor_name: f"{coordinator.client.name} {RUNTIME_ATTRIBUTES[sensor_name]} Runtime",
 )

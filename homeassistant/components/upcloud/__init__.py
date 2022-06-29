@@ -21,16 +21,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
 )
 
-from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL
+from .const import CONFIG_ENTRY_UPDATE_SIGNAL_TEMPLATE, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -172,12 +174,12 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     return unload_ok
 
 
-class UpCloudServerEntity(CoordinatorEntity):
+class UpCloudServerEntity(CoordinatorEntity[UpCloudDataUpdateCoordinator]):
     """Entity class for UpCloud servers."""
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[dict[str, upcloud_api.Server]],
+        coordinator: UpCloudDataUpdateCoordinator,
         uuid: str,
     ) -> None:
         """Initialize the UpCloud server entity."""
@@ -235,3 +237,17 @@ class UpCloudServerEntity(CoordinatorEntity):
                 ATTR_MEMORY_AMOUNT,
             )
         }
+
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return info for device registry."""
+        assert self.coordinator.config_entry is not None
+        return DeviceInfo(
+            configuration_url="https://hub.upcloud.com",
+            default_model="Control Panel",
+            entry_type=DeviceEntryType.SERVICE,
+            identifiers={
+                (DOMAIN, f"{self.coordinator.config_entry.data[CONF_USERNAME]}@hub")
+            },
+            manufacturer="UpCloud Ltd",
+        )

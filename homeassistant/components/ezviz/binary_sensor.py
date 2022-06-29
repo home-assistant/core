@@ -54,8 +54,6 @@ async def async_setup_entry(
 class EzvizBinarySensor(EzvizEntity, BinarySensorEntity):
     """Representation of a Ezviz sensor."""
 
-    coordinator: EzvizDataUpdateCoordinator
-
     def __init__(
         self,
         coordinator: EzvizDataUpdateCoordinator,

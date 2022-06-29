@@ -11,8 +11,7 @@
                     "device": "Percorso o URL",
                     "id": "ID",
                     "name": "Nome"
-                },
-                "title": "OpenTherm Gateway"
+                }
             }
         }
     },
@@ -24,8 +23,7 @@
                     "read_precision": "Leggi la precisione",
                     "set_precision": "Imposta la precisione",
                     "temporary_override_mode": "Modalit\u00e0 di esclusione temporanea del setpoint"
-                },
-                "description": "Opzioni per OpenTherm Gateway"
+                }
             }
         }
     }

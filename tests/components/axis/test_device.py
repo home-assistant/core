@@ -9,15 +9,12 @@ import pytest
 import respx
 
 from homeassistant.components import axis, zeroconf
-from homeassistant.components.axis.const import (
-    CONF_EVENTS,
-    CONF_MODEL,
-    DOMAIN as AXIS_DOMAIN,
-)
+from homeassistant.components.axis.const import CONF_EVENTS, DOMAIN as AXIS_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.config_entries import SOURCE_ZEROCONF
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,

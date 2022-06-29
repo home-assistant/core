@@ -1,1 +1,1 @@
-"""The twitch component."""
+"""The Twitch component."""

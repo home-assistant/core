@@ -30,6 +30,7 @@ from .const import (
     DOMAIN,
     SWITCH_TYPE_DEFLECTION,
     SWITCH_TYPE_PORTFORWARD,
+    SWITCH_TYPE_PROFILE,
     SWITCH_TYPE_WIFINETWORK,
     WIFI_STANDARD,
     MeshRoles,
@@ -60,9 +61,7 @@ def deflection_entities_list(
         _LOGGER.debug("The FRITZ!Box has no %s options", SWITCH_TYPE_DEFLECTION)
         return []
 
-    deflection_list = avm_wrapper.get_ontel_deflections()
-
-    if not deflection_list:
+    if not (deflection_list := avm_wrapper.get_ontel_deflections()):
         return []
 
     items = xmltodict.parse(deflection_list["NewDeflectionList"])["List"]["Item"]
@@ -170,7 +169,16 @@ def wifi_entities_list(
             }
     for i, network in networks.copy().items():
         networks[i]["switch_name"] = network["ssid"]
-        if len([j for j, n in networks.items() if n["ssid"] == network["ssid"]]) > 1:
+        if (
+            len(
+                [
+                    j
+                    for j, n in networks.items()
+                    if slugify(n["ssid"]) == slugify(network["ssid"])
+                ]
+            )
+            > 1
+        ):
             networks[i]["switch_name"] += f" ({WIFI_STANDARD[i]})"
 
     _LOGGER.debug("WiFi networks list: %s", networks)
@@ -187,6 +195,7 @@ def profile_entities_list(
     data_fritz: FritzData,
 ) -> list[FritzBoxProfileSwitch]:
     """Add new tracker entities from the AVM device."""
+    _LOGGER.debug("Setting up %s switches", SWITCH_TYPE_PROFILE)
 
     new_profiles: list[FritzBoxProfileSwitch] = []
 
@@ -200,11 +209,15 @@ def profile_entities_list(
         if device_filter_out_from_trackers(
             mac, device, data_fritz.profile_switches.values()
         ):
+            _LOGGER.debug(
+                "Skipping profile switch creation for device %s", device.hostname
+            )
             continue
 
         new_profiles.append(FritzBoxProfileSwitch(avm_wrapper, device))
         data_fritz.profile_switches[avm_wrapper.unique_id].add(mac)
 
+    _LOGGER.debug("Creating %s profile switches", len(new_profiles))
     return new_profiles
 
 
@@ -481,6 +494,17 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         self._name = f"{device.hostname} Internet Access"
         self._attr_unique_id = f"{self._mac}_internet_access"
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_device_info = DeviceInfo(
+            connections={(CONNECTION_NETWORK_MAC, self._mac)},
+            default_manufacturer="AVM",
+            default_model="FRITZ!Box Tracked device",
+            default_name=device.hostname,
+            identifiers={(DOMAIN, self._mac)},
+            via_device=(
+                DOMAIN,
+                avm_wrapper.unique_id,
+            ),
+        )
 
     @property
     def is_on(self) -> bool | None:
@@ -493,21 +517,6 @@ class FritzBoxProfileSwitch(FritzDeviceBase, SwitchEntity):
         if self._avm_wrapper.devices[self._mac].wan_access is None:
             return False
         return super().available
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device information."""
-        return DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, self._mac)},
-            default_manufacturer="AVM",
-            default_model="FRITZ!Box Tracked device",
-            default_name=self.name,
-            identifiers={(DOMAIN, self._mac)},
-            via_device=(
-                DOMAIN,
-                self._avm_wrapper.unique_id,
-            ),
-        )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""

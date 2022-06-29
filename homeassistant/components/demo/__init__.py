@@ -5,6 +5,7 @@ from random import random
 
 from homeassistant import config_entries, setup
 from homeassistant.components import persistent_notification
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     get_last_statistics,
@@ -17,6 +18,7 @@ from homeassistant.const import (
 )
 import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
@@ -40,6 +42,7 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
     "sensor",
     "siren",
     "switch",
+    "update",
     "vacuum",
     "water_heater",
 ]
@@ -69,9 +72,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     # Set up demo platforms
     for platform in COMPONENTS_WITH_DEMO_PLATFORM:
-        hass.async_create_task(
-            hass.helpers.discovery.async_load_platform(platform, DOMAIN, {}, config)
-        )
+        hass.async_create_task(async_load_platform(hass, platform, DOMAIN, {}, config))
 
     config.setdefault(ha.DOMAIN, {})
     config.setdefault(DOMAIN, {})
@@ -244,7 +245,7 @@ async def _insert_statistics(hass):
     }
     statistic_id = f"{DOMAIN}:energy_consumption"
     sum_ = 0
-    last_stats = await hass.async_add_executor_job(
+    last_stats = await get_instance(hass).async_add_executor_job(
         get_last_statistics, hass, 1, statistic_id, True
     )
     if "domain:energy_consumption" in last_stats:

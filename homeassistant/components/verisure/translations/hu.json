@@ -17,14 +17,14 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "description": "Hiteles\u00edts \u00fajra a Verisure My Pages fi\u00f3koddal.",
+                    "description": "Hiteles\u00edtsen \u00fajra a Verisure My Pages fi\u00f3kj\u00e1val.",
                     "email": "E-mail",
                     "password": "Jelsz\u00f3"
                 }
             },
             "user": {
                 "data": {
-                    "description": "Jelentkezz be a Verisure My Pages fi\u00f3koddal.",
+                    "description": "Jelentkezzen be a Verisure My Pages fi\u00f3kj\u00e1val.",
                     "email": "E-mail",
                     "password": "Jelsz\u00f3"
                 }

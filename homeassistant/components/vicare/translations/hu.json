@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API kulcs",
                     "heating_type": "F\u0171t\u00e9s t\u00edpusa",
-                    "name": "N\u00e9v",
                     "password": "Jelsz\u00f3",
-                    "scan_interval": "Beolvas\u00e1si id\u0151k\u00f6z (m\u00e1sodperc)",
                     "username": "E-mail"
                 },
-                "description": "A ViCare integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa. Az API-kulcs gener\u00e1l\u00e1s\u00e1hoz keresse fel a https://developer.viessmann.com webhelyet.",
-                "title": "{name}"
+                "description": "A ViCare integr\u00e1ci\u00f3 be\u00e1ll\u00edt\u00e1sa. Az API-kulcs gener\u00e1l\u00e1s\u00e1hoz keresse fel a https://developer.viessmann.com webhelyet."
             }
         }
     }

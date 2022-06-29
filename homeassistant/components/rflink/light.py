@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_DEVICES, CONF_NAME, CONF_TYPE
@@ -173,10 +173,15 @@ async def async_setup_platform(
 class RflinkLight(SwitchableRflinkDevice, LightEntity):
     """Representation of a Rflink light."""
 
+    _attr_color_mode = ColorMode.ONOFF
+    _attr_supported_color_modes = {ColorMode.ONOFF}
+
 
 class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
     """Rflink light device that support dimming."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 255
 
     async def async_added_to_hass(self):
@@ -221,13 +226,8 @@ class DimmableRflinkLight(SwitchableRflinkDevice, LightEntity):
         """Return the brightness of this light between 0..255."""
         return self._brightness
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
 
-
-class HybridRflinkLight(DimmableRflinkLight, LightEntity):
+class HybridRflinkLight(DimmableRflinkLight):
     """Rflink light device that sends out both dim and on/off commands.
 
     Used for protocols which support lights that are not exclusively on/off
@@ -251,7 +251,7 @@ class HybridRflinkLight(DimmableRflinkLight, LightEntity):
             await self._async_handle_command("turn_on")
 
 
-class ToggleRflinkLight(SwitchableRflinkDevice, LightEntity):
+class ToggleRflinkLight(RflinkLight):
     """Rflink light device which sends out only 'on' commands.
 
     Some switches like for example Livolo light switches use the

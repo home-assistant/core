@@ -8,10 +8,10 @@ from homeassistant.components.sensor import DOMAIN as PLATFORM, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ATTRIBUTION, ATTR_NAME, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -43,7 +43,7 @@ async def async_setup_entry(
 
     # Due to the change of the attribute name of one sensor, it is necessary to migrate
     # the unique_id to the new name.
-    entity_registry = await async_get_registry(hass)
+    entity_registry = er.async_get(hass)
     old_unique_id = f"{coordinator.gios.station_id}-pm2.5"
     if entity_id := entity_registry.async_get_entity_id(
         PLATFORM, DOMAIN, old_unique_id
@@ -69,10 +69,9 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class GiosSensor(CoordinatorEntity, SensorEntity):
+class GiosSensor(CoordinatorEntity[GiosDataUpdateCoordinator], SensorEntity):
     """Define an GIOS sensor."""
 
-    coordinator: GiosDataUpdateCoordinator
     entity_description: GiosSensorEntityDescription
 
     def __init__(

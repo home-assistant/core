@@ -8,6 +8,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from . import init_integration
 
@@ -32,7 +33,7 @@ async def test_download_switch(hass, nzbget_api) -> None:
     # test download paused
     instance.status.return_value["DownloadPaused"] = True
 
-    await hass.helpers.entity_component.async_update_entity(entity_id)
+    await async_update_entity(hass, entity_id)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)

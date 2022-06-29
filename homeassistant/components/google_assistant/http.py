@@ -126,7 +126,10 @@ class GoogleConfig(AbstractConfig):
         entity_registry = er.async_get(self.hass)
         registry_entry = entity_registry.async_get(state.entity_id)
         if registry_entry:
-            auxiliary_entity = registry_entry.entity_category is not None
+            auxiliary_entity = (
+                registry_entry.entity_category is not None
+                or registry_entry.hidden_by is not None
+            )
         else:
             auxiliary_entity = False
 

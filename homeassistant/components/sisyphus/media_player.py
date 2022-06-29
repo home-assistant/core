@@ -4,17 +4,9 @@ from __future__ import annotations
 import aiohttp
 from sisyphus_control import Track
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SHUFFLE_SET,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -31,18 +23,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import DATA_SISYPHUS
 
 MEDIA_TYPE_TRACK = "sisyphus_track"
-
-SUPPORTED_FEATURES = (
-    SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_PAUSE
-    | SUPPORT_SHUFFLE_SET
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PLAY
-)
 
 
 async def async_setup_platform(
@@ -66,6 +46,18 @@ async def async_setup_platform(
 
 class SisyphusPlayer(MediaPlayerEntity):
     """Representation of a Sisyphus table as a media player device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, name, host, table):
         """Initialize the Sisyphus media device."""
@@ -162,11 +154,6 @@ class SisyphusPlayer(MediaPlayerEntity):
     def media_position_updated_at(self):
         """Return the last time we got a position update."""
         return self._table.active_track_remaining_time_as_of
-
-    @property
-    def supported_features(self):
-        """Return the features supported by this table."""
-        return SUPPORTED_FEATURES
 
     @property
     def media_image_url(self):

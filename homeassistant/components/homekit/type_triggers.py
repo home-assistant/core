@@ -1,8 +1,12 @@
 """Class to hold all sensor accessories."""
+from __future__ import annotations
+
 import logging
+from typing import Any
 
 from pyhap.const import CATEGORY_SENSOR
 
+from homeassistant.core import CALLBACK_TYPE, Context
 from homeassistant.helpers.trigger import async_initialize_triggers
 
 from .accessories import TYPES, HomeAccessory
@@ -22,14 +26,21 @@ _LOGGER = logging.getLogger(__name__)
 class DeviceTriggerAccessory(HomeAccessory):
     """Generate a Programmable switch."""
 
-    def __init__(self, *args, device_triggers=None, device_id=None):
+    def __init__(
+        self,
+        *args: Any,
+        device_triggers: list[dict[str, Any]] | None = None,
+        device_id: str | None = None,
+    ) -> None:
         """Initialize a Programmable switch accessory object."""
         super().__init__(*args, category=CATEGORY_SENSOR, device_id=device_id)
+        assert device_triggers is not None
         self._device_triggers = device_triggers
-        self._remove_triggers = None
+        self._remove_triggers: CALLBACK_TYPE | None = None
         self.triggers = []
+        assert device_triggers is not None
         for idx, trigger in enumerate(device_triggers):
-            type_ = trigger.get("type")
+            type_ = trigger["type"]
             subtype = trigger.get("subtype")
             trigger_name = (
                 f"{type_.title()} {subtype.title()}" if subtype else type_.title()
@@ -53,7 +64,12 @@ class DeviceTriggerAccessory(HomeAccessory):
             serv_service_label.configure_char(CHAR_SERVICE_LABEL_NAMESPACE, value=1)
             serv_stateless_switch.add_linked_service(serv_service_label)
 
-    async def async_trigger(self, run_variables, context=None, skip_condition=False):
+    async def async_trigger(
+        self,
+        run_variables: dict,
+        context: Context | None = None,
+        skip_condition: bool = False,
+    ) -> None:
         """Trigger button press.
 
         This method is a coroutine.
@@ -67,7 +83,7 @@ class DeviceTriggerAccessory(HomeAccessory):
 
     # Attach the trigger using the helper in async run
     # and detach it in async stop
-    async def run(self):
+    async def run(self) -> None:
         """Handle accessory driver started event."""
         self._remove_triggers = await async_initialize_triggers(
             self.hass,
@@ -78,12 +94,12 @@ class DeviceTriggerAccessory(HomeAccessory):
             _LOGGER.log,
         )
 
-    async def stop(self):
+    async def stop(self) -> None:
         """Handle accessory driver stop event."""
         if self._remove_triggers:
             self._remove_triggers()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return available."""
         return True

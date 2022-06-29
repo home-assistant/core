@@ -20,9 +20,7 @@ def async_get_device_entry_by_device_id(
     Raises ValueError if device ID is invalid.
     """
     device_reg = dr.async_get(hass)
-    device = device_reg.async_get(device_id)
-
-    if device is None:
+    if (device := device_reg.async_get(device_id)) is None:
         raise ValueError(f"Device {device_id} is not a valid {DOMAIN} device.")
 
     return device

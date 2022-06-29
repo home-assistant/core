@@ -6,10 +6,10 @@ from homeassistant.components import dhcp
 from homeassistant.components.twinkly.const import (
     CONF_HOST,
     CONF_ID,
-    CONF_MODEL,
     CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
+from homeassistant.const import CONF_MODEL
 
 from . import TEST_MODEL, ClientMock
 

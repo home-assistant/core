@@ -5,6 +5,7 @@ from homeassistant.components.forecast_solar.const import (
     CONF_AZIMUTH,
     CONF_DAMPING,
     CONF_DECLINATION,
+    CONF_INVERTER_SIZE,
     CONF_MODULES_POWER,
     DOMAIN,
 )
@@ -81,6 +82,7 @@ async def test_options_flow(
             CONF_AZIMUTH: 22,
             CONF_MODULES_POWER: 2122,
             CONF_DAMPING: 0.25,
+            CONF_INVERTER_SIZE: 2000,
         },
     )
 
@@ -91,4 +93,5 @@ async def test_options_flow(
         CONF_AZIMUTH: 22,
         CONF_MODULES_POWER: 2122,
         CONF_DAMPING: 0.25,
+        CONF_INVERTER_SIZE: 2000,
     }

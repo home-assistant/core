@@ -34,7 +34,7 @@ call_query:
       name: Command
       description: Command to pass to Logitech Media Server (p0 in the CLI documentation).
       required: true
-      example: 'albums'
+      example: "albums"
       selector:
         text:
     parameters:

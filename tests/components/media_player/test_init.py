@@ -4,7 +4,11 @@ import base64
 from http import HTTPStatus
 from unittest.mock import patch
 
+import pytest
+import voluptuous as vol
+
 from homeassistant.components import media_player
+from homeassistant.components.media_player.browse_media import BrowseMedia
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.setup import async_setup_component
@@ -163,10 +167,17 @@ async def test_media_browse(hass, hass_ws_client):
 
     with patch(
         "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
-        media_player.SUPPORT_BROWSE_MEDIA,
+        media_player.MediaPlayerEntityFeature.BROWSE_MEDIA,
     ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
-        return_value={"bla": "yo"},
+        return_value=BrowseMedia(
+            media_class=media_player.MEDIA_CLASS_DIRECTORY,
+            media_content_id="mock-id",
+            media_content_type="mock-type",
+            title="Mock Title",
+            can_play=False,
+            can_expand=True,
+        ),
     ) as mock_browse_media:
         await client.send_json(
             {
@@ -183,12 +194,23 @@ async def test_media_browse(hass, hass_ws_client):
     assert msg["id"] == 5
     assert msg["type"] == TYPE_RESULT
     assert msg["success"]
-    assert msg["result"] == {"bla": "yo"}
+    assert msg["result"] == {
+        "title": "Mock Title",
+        "media_class": "directory",
+        "media_content_type": "mock-type",
+        "media_content_id": "mock-id",
+        "can_play": False,
+        "can_expand": True,
+        "children_media_class": None,
+        "thumbnail": None,
+        "not_shown": 0,
+        "children": [],
+    }
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(
         "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
-        media_player.SUPPORT_BROWSE_MEDIA,
+        media_player.MediaPlayerEntityFeature.BROWSE_MEDIA,
     ), patch(
         "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
         return_value={"bla": "yo"},
@@ -219,7 +241,8 @@ async def test_group_members_available_when_off(hass):
     # Fake group support for DemoYoutubePlayer
     with patch(
         "homeassistant.components.demo.media_player.YOUTUBE_PLAYER_SUPPORT",
-        media_player.SUPPORT_GROUPING | media_player.SUPPORT_TURN_OFF,
+        media_player.MediaPlayerEntityFeature.GROUPING
+        | media_player.MediaPlayerEntityFeature.TURN_OFF,
     ):
         await hass.services.async_call(
             "media_player",
@@ -231,3 +254,63 @@ async def test_group_members_available_when_off(hass):
     state = hass.states.get("media_player.bedroom")
     assert state.state == STATE_OFF
     assert "group_members" in state.attributes
+
+
+@pytest.mark.parametrize(
+    "input,expected",
+    (
+        (True, media_player.MediaPlayerEnqueue.ADD),
+        (False, media_player.MediaPlayerEnqueue.PLAY),
+        ("play", media_player.MediaPlayerEnqueue.PLAY),
+        ("next", media_player.MediaPlayerEnqueue.NEXT),
+        ("add", media_player.MediaPlayerEnqueue.ADD),
+        ("replace", media_player.MediaPlayerEnqueue.REPLACE),
+    ),
+)
+async def test_enqueue_rewrite(hass, input, expected):
+    """Test that group_members are still available when media_player is off."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    # Fake group support for DemoYoutubePlayer
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.play_media",
+    ) as mock_play_media:
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media_content_type": "music",
+                "media_content_id": "1234",
+                "enqueue": input,
+            },
+            blocking=True,
+        )
+
+    assert len(mock_play_media.mock_calls) == 1
+    assert mock_play_media.mock_calls[0][2]["enqueue"] == expected
+
+
+async def test_enqueue_alert_exclusive(hass):
+    """Test that alert and enqueue cannot be used together."""
+    await async_setup_component(
+        hass, "media_player", {"media_player": {"platform": "demo"}}
+    )
+    await hass.async_block_till_done()
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            "media_player",
+            "play_media",
+            {
+                "entity_id": "media_player.bedroom",
+                "media_content_type": "music",
+                "media_content_id": "1234",
+                "enqueue": "play",
+                "announce": True,
+            },
+            blocking=True,
+        )

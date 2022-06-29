@@ -14,12 +14,6 @@ from homeassistant.setup import async_setup_component
 from . import mock_storage
 
 from tests.common import CLIENT_ID, CLIENT_REDIRECT_URI, register_auth_provider
-from tests.components.met.conftest import mock_weather  # noqa: F401
-
-
-@pytest.fixture(autouse=True)
-def always_mock_weather(mock_weather):  # noqa: F811
-    """Mock the Met weather provider."""
 
 
 @pytest.fixture(autouse=True)
@@ -63,7 +57,7 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
     """Mock supervisor."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    with patch.dict(os.environ, {"HASSIO": "127.0.0.1"}), patch(
+    with patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}), patch(
         "homeassistant.components.hassio.HassIO.is_connected",
         return_value=True,
     ), patch(
@@ -85,7 +79,22 @@ async def mock_supervisor_fixture(hass, aioclient_mock):
         "homeassistant.components.hassio.HassIO.get_ingress_panels",
         return_value={"panels": {}},
     ), patch.dict(
-        os.environ, {"HASSIO_TOKEN": "123456"}
+        os.environ, {"SUPERVISOR_TOKEN": "123456"}
+    ):
+        yield
+
+
+@pytest.fixture
+def mock_default_integrations():
+    """Mock the default integrations set up during onboarding."""
+    with patch(
+        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
+    ), patch(
+        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
+    ), patch(
+        "homeassistant.components.met.async_setup_entry", return_value=True
+    ), patch(
+        "homeassistant.components.radio_browser.async_setup_entry", return_value=True
     ):
         yield
 
@@ -364,8 +373,46 @@ async def test_onboarding_integration_requires_auth(
     assert resp.status == 401
 
 
-async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
+async def test_onboarding_core_sets_up_met(
+    hass, hass_storage, hass_client, mock_default_integrations
+):
     """Test finishing the core step."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("met")) == 1
+
+
+async def test_onboarding_core_sets_up_radio_browser(
+    hass, hass_storage, hass_client, mock_default_integrations
+):
+    """Test finishing the core step set up the radio browser."""
+    mock_storage(hass_storage, {"done": [const.STEP_USER]})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.post("/api/onboarding/core_config")
+
+    assert resp.status == 200
+
+    await hass.async_block_till_done()
+    assert len(hass.config_entries.async_entries("radio_browser")) == 1
+
+
+async def test_onboarding_core_sets_up_rpi_power(
+    hass, hass_storage, hass_client, aioclient_mock, rpi, mock_default_integrations
+):
+    """Test that the core step sets up rpi_power on RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
 
     assert await async_setup_component(hass, "onboarding", {})
@@ -378,35 +425,13 @@ async def test_onboarding_core_sets_up_met(hass, hass_storage, hass_client):
     assert resp.status == 200
 
     await hass.async_block_till_done()
-    assert len(hass.states.async_entity_ids("weather")) == 1
-
-
-async def test_onboarding_core_sets_up_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, rpi
-):
-    """Test that the core step sets up rpi_power on RPi."""
-    mock_storage(hass_storage, {"done": [const.STEP_USER]})
-
-    assert await async_setup_component(hass, "onboarding", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"):
-        resp = await client.post("/api/onboarding/core_config")
-
-        assert resp.status == 200
-
-        await hass.async_block_till_done()
 
     rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
     assert rpi_power_state
 
 
 async def test_onboarding_core_no_rpi_power(
-    hass, hass_storage, hass_client, aioclient_mock, no_rpi
+    hass, hass_storage, hass_client, aioclient_mock, no_rpi, mock_default_integrations
 ):
     """Test that the core step do not set up rpi_power on non RPi."""
     mock_storage(hass_storage, {"done": [const.STEP_USER]})
@@ -416,14 +441,11 @@ async def test_onboarding_core_no_rpi_power(
 
     client = await hass_client()
 
-    with patch(
-        "homeassistant.components.rpi_power.config_flow.new_under_voltage"
-    ), patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"):
-        resp = await client.post("/api/onboarding/core_config")
+    resp = await client.post("/api/onboarding/core_config")
 
-        assert resp.status == 200
+    assert resp.status == 200
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
     assert not rpi_power_state

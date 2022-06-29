@@ -1,5 +1,5 @@
 """Test the WiZ Platform config flow."""
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from pywizlight.exceptions import WizLightConnectionError, WizLightTimeOutError
@@ -21,8 +21,10 @@ from . import (
     FAKE_SOCKET,
     TEST_CONNECTION,
     TEST_SYSTEM_INFO,
+    _mocked_wizlight,
     _patch_discovery,
     _patch_wizlight,
+    async_setup_integration,
 )
 
 from tests.common import MockConfigEntry
@@ -309,6 +311,35 @@ async def test_discovered_by_dhcp_or_integration_discovery_updates_host(
     assert entry.data[CONF_HOST] == FAKE_IP
 
 
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
+    ],
+)
+async def test_discovered_by_dhcp_or_integration_discovery_avoid_waiting_for_retry(
+    hass, source, data
+):
+    """Test dhcp or discovery kicks off setup when in retry."""
+    bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
+    bulb.getMac = AsyncMock(side_effect=OSError)
+    _, entry = await async_setup_integration(hass, wizlight=bulb)
+    assert entry.data[CONF_HOST] == FAKE_IP
+    assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
+    bulb.getMac = AsyncMock(return_value=FAKE_MAC)
+
+    with _patch_wizlight():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
 async def test_setup_via_discovery(hass):
     """Test setting up via discovery."""
     result = await hass.config_entries.flow.async_init(
@@ -471,6 +502,37 @@ async def test_discovery_with_firmware_update(hass):
     assert result2["type"] == "create_entry"
     assert result2["title"] == "WiZ RGBWW Tunable ABCABC"
     assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+    }
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, INTEGRATION_DISCOVERY),
+    ],
+)
+async def test_discovered_during_onboarding(hass, source, data):
+    """Test dhcp or discovery during onboarding creates the config entry."""
+    with _patch_wizlight(), patch(
+        "homeassistant.components.wiz.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry, patch(
+        "homeassistant.components.wiz.async_setup", return_value=True
+    ) as mock_setup, patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "WiZ Dimmable White ABCABC"
+    assert result["data"] == {
         CONF_HOST: "1.1.1.1",
     }
     assert len(mock_setup.mock_calls) == 1

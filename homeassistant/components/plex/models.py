@@ -7,6 +7,7 @@ from homeassistant.components.media_player.const import (
     MEDIA_TYPE_TVSHOW,
     MEDIA_TYPE_VIDEO,
 )
+from homeassistant.helpers.template import result_as_boolean
 from homeassistant.util import dt as dt_util
 
 LIVE_TV_SECTION = "Live TV"
@@ -141,3 +142,35 @@ class PlexSession:
             thumb_url = media.url(media.art)
 
         return thumb_url
+
+
+class PlexMediaSearchResult:
+    """Represents results from a Plex media media_content_id search.
+
+    Results are used by media_player.play_media implementations.
+    """
+
+    def __init__(self, media, params=None) -> None:
+        """Initialize the result."""
+        self.media = media
+        self._params = params or {}
+
+    @property
+    def offset(self) -> int:
+        """Provide the appropriate offset based on payload contents."""
+        if offset := self._params.get("offset", 0):
+            return offset * 1000
+        resume = self._params.get("resume", False)
+        if isinstance(resume, str):
+            resume = result_as_boolean(resume)
+        if resume:
+            return self.media.viewOffset
+        return 0
+
+    @property
+    def shuffle(self) -> bool:
+        """Return value of shuffle parameter."""
+        shuffle = self._params.get("shuffle", False)
+        if isinstance(shuffle, str):
+            shuffle = result_as_boolean(shuffle)
+        return shuffle

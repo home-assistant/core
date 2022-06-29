@@ -70,10 +70,8 @@ async def async_setup_entry(
     async_add_entities(entities, False)
 
 
-class AirNowSensor(CoordinatorEntity, SensorEntity):
+class AirNowSensor(CoordinatorEntity[AirNowDataUpdateCoordinator], SensorEntity):
     """Define an AirNow sensor."""
-
-    coordinator: AirNowDataUpdateCoordinator
 
     def __init__(
         self,

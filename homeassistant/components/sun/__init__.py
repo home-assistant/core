@@ -2,6 +2,7 @@
 from datetime import timedelta
 import logging
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_ELEVATION,
     EVENT_CORE_CONFIG_UPDATE,
@@ -11,6 +12,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.integration_platform import (
+    async_process_integration_platform_for_component,
+)
 from homeassistant.helpers.sun import (
     get_astral_location,
     get_location_astral_event_next,
@@ -18,11 +22,11 @@ from homeassistant.helpers.sun import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
+from .const import DOMAIN
+
 # mypy: allow-untyped-calls, allow-untyped-defs, no-check-untyped-defs
 
 _LOGGER = logging.getLogger(__name__)
-
-DOMAIN = "sun"
 
 ENTITY_ID = "sun.sun"
 
@@ -80,7 +84,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             "Elevation is now configured in Home Assistant core. "
             "See https://www.home-assistant.io/docs/configuration/basic/"
         )
-    Sun(hass)
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
+        )
+    )
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Set up from a config entry."""
+    # Process integration platforms right away since
+    # we will create entities before firing EVENT_COMPONENT_LOADED
+    await async_process_integration_platform_for_component(hass, DOMAIN)
+    hass.data[DOMAIN] = Sun(hass)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    sun = hass.data.pop(DOMAIN)
+    sun.remove_listeners()
+    hass.states.async_remove(sun.entity_id)
     return True
 
 
@@ -100,17 +127,35 @@ class Sun(Entity):
         self.solar_elevation = self.solar_azimuth = None
         self.rising = self.phase = None
         self._next_change = None
+        self._config_listener = None
+        self._update_events_listener = None
+        self._update_sun_position_listener = None
+        self._config_listener = self.hass.bus.async_listen(
+            EVENT_CORE_CONFIG_UPDATE, self.update_location
+        )
+        self.update_location()
 
-        def update_location(_event):
-            location, elevation = get_astral_location(self.hass)
-            if location == self.location:
-                return
-            self.location = location
-            self.elevation = elevation
-            self.update_events()
+    @callback
+    def update_location(self, *_):
+        """Update location."""
+        location, elevation = get_astral_location(self.hass)
+        if location == self.location:
+            return
+        self.location = location
+        self.elevation = elevation
+        if self._update_events_listener:
+            self._update_events_listener()
+        self.update_events()
 
-        update_location(None)
-        self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_location)
+    @callback
+    def remove_listeners(self):
+        """Remove listeners."""
+        if self._config_listener:
+            self._config_listener()
+        if self._update_events_listener:
+            self._update_events_listener()
+        if self._update_sun_position_listener:
+            self._update_sun_position_listener()
 
     @property
     def name(self):
@@ -210,10 +255,12 @@ class Sun(Entity):
         _LOGGER.debug(
             "sun phase_update@%s: phase=%s", utc_point_in_time.isoformat(), self.phase
         )
+        if self._update_sun_position_listener:
+            self._update_sun_position_listener()
         self.update_sun_position()
 
         # Set timer for the next solar event
-        event.async_track_point_in_utc_time(
+        self._update_events_listener = event.async_track_point_in_utc_time(
             self.hass, self.update_events, self._next_change
         )
         _LOGGER.debug("next time: %s", self._next_change.isoformat())
@@ -243,7 +290,8 @@ class Sun(Entity):
         # if the next update is within 1.25 of the next
         # position update just drop it
         if utc_point_in_time + delta * 1.25 > self._next_change:
+            self._update_sun_position_listener = None
             return
-        event.async_track_point_in_utc_time(
+        self._update_sun_position_listener = event.async_track_point_in_utc_time(
             self.hass, self.update_sun_position, utc_point_in_time + delta
         )
