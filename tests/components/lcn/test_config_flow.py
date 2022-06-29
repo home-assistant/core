@@ -7,6 +7,8 @@ import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.lcn.const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DOMAIN
 from homeassistant.const import (
+    CONF_DEVICES,
+    CONF_ENTITIES,
     CONF_HOST,
     CONF_IP_ADDRESS,
     CONF_PASSWORD,
@@ -24,6 +26,8 @@ IMPORT_DATA = {
     CONF_PASSWORD: "lcn",
     CONF_SK_NUM_TRIES: 0,
     CONF_DIM_MODE: "STEPS200",
+    CONF_DEVICES: [],
+    CONF_ENTITIES: [],
 }
 
 

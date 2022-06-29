@@ -28,15 +28,9 @@ from epson_projector.const import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -50,16 +44,6 @@ from homeassistant.helpers.entity_registry import async_get as async_get_entity_
 from .const import ATTR_CMODE, DOMAIN, SERVICE_SELECT_CMODE
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_EPSON = (
-    SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_PREVIOUS_TRACK
-)
 
 
 async def async_setup_entry(
@@ -88,6 +72,16 @@ async def async_setup_entry(
 
 class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     """Representation of Epson Projector Device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    )
 
     def __init__(self, projector, name, unique_id, entry):
         """Initialize entity to control Epson projector."""
@@ -177,11 +171,6 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
     def available(self):
         """Return if projector is available."""
         return self._available
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_EPSON
 
     async def async_turn_on(self):
         """Turn on epson."""

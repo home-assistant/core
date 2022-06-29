@@ -1,7 +1,7 @@
 """Base entity for Sensibo integration."""
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import async_timeout
 from pysensibo.model import MotionSensor, SensiboDevice
@@ -57,7 +57,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         )
 
     async def async_send_command(
-        self, command: str, params: dict[str, Any]
+        self, command: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Send command to Sensibo api."""
         try:
@@ -72,16 +72,20 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         return result
 
     async def async_send_api_call(
-        self, command: str, params: dict[str, Any]
+        self, command: str, params: dict[str, Any] | None = None
     ) -> dict[str, Any]:
         """Send api call."""
         result: dict[str, Any] = {"status": None}
         if command == "set_calibration":
+            if TYPE_CHECKING:
+                assert params is not None
             result = await self._client.async_set_calibration(
                 self._device_id,
                 params["data"],
             )
         if command == "set_ac_state":
+            if TYPE_CHECKING:
+                assert params is not None
             result = await self._client.async_set_ac_state_property(
                 self._device_id,
                 params["name"],
@@ -89,6 +93,21 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
                 params["ac_states"],
                 params["assumed_state"],
             )
+        if command == "set_timer":
+            if TYPE_CHECKING:
+                assert params is not None
+            result = await self._client.async_set_timer(self._device_id, params)
+        if command == "del_timer":
+            result = await self._client.async_del_timer(self._device_id)
+        if command == "set_pure_boost":
+            if TYPE_CHECKING:
+                assert params is not None
+            result = await self._client.async_set_pureboost(
+                self._device_id,
+                params,
+            )
+        if command == "reset_filter":
+            result = await self._client.async_reset_filter(self._device_id)
         return result
 
 
@@ -119,6 +138,8 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         )
 
     @property
-    def sensor_data(self) -> MotionSensor:
+    def sensor_data(self) -> MotionSensor | None:
         """Return data for device."""
+        if TYPE_CHECKING:
+            assert self.device_data.motion_sensors
         return self.device_data.motion_sensors[self._sensor_id]

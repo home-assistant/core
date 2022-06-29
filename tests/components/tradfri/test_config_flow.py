@@ -57,7 +57,6 @@ async def test_user_connection_successful(hass, mock_auth, mock_entry_setup):
     assert result["result"].data == {
         "host": "123.123.123.123",
         "gateway_id": "bla",
-        "import_groups": False,
     }
 
 
@@ -126,7 +125,6 @@ async def test_discovery_connection(hass, mock_auth, mock_entry_setup):
     assert result["result"].data == {
         "host": "123.123.123.123",
         "gateway_id": "bla",
-        "import_groups": False,
     }
 
 

@@ -1,8 +1,5 @@
 {
     "config": {
-        "error": {
-            "no_devices": "Nisu prona\u0111eni ure\u0111aji na ra\u010dunu"
-        },
         "step": {
             "user": {
                 "data": {

@@ -33,17 +33,7 @@
                     "usb_path": "\u05e0\u05ea\u05d9\u05d1 \u05d4\u05ea\u05e7\u05df USB"
                 }
             },
-            "usb_config_option": {
-                "data": {
-                    "usb_path": "\u05e0\u05ea\u05d9\u05d1 \u05d4\u05ea\u05e7\u05df USB"
-                }
-            },
             "usb_manual_config": {
-                "data": {
-                    "usb_manual_path": "\u05e0\u05ea\u05d9\u05d1 \u05d4\u05ea\u05e7\u05df USB"
-                }
-            },
-            "usb_manual_config_option": {
                 "data": {
                     "usb_manual_path": "\u05e0\u05ea\u05d9\u05d1 \u05d4\u05ea\u05e7\u05df USB"
                 }

@@ -1,8 +1,6 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Den h\u00e4r enheten har redan konfigurerats",
-            "already_in_progress": "Den h\u00e4r enheten har redan konfigurerats",
             "not_huawei_lte": "Inte en Huawei LTE-enhet"
         },
         "error": {
@@ -29,8 +27,7 @@
             "init": {
                 "data": {
                     "name": "Namn p\u00e5 meddelandetj\u00e4nsten (\u00e4ndring kr\u00e4ver omstart)",
-                    "recipient": "Mottagare av SMS-meddelanden",
-                    "track_new_devices": "Sp\u00e5ra nya enheter"
+                    "recipient": "Mottagare av SMS-meddelanden"
                 }
             }
         }

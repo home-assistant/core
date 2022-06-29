@@ -40,6 +40,27 @@ def device():
     mock_device.name = "device1"
     mock_device.current_temperature = 20
     mock_device.mac_address = "macaddress1"
+    mock_device.outdoor_temperature = None
+    mock_device.outdoor_humidity = None
+    return mock_device
+
+
+@pytest.fixture
+def device_with_outdoor_sensor():
+    """Mock a somecomfort.Device."""
+    mock_device = create_autospec(somecomfort.Device, instance=True)
+    mock_device.deviceid = 1234567
+    mock_device._data = {
+        "canControlHumidification": False,
+        "hasFan": False,
+    }
+    mock_device.system_mode = "off"
+    mock_device.name = "device1"
+    mock_device.current_temperature = 20
+    mock_device.mac_address = "macaddress1"
+    mock_device.temperature_unit = "C"
+    mock_device.outdoor_temperature = 5
+    mock_device.outdoor_humidity = 25
     return mock_device
 
 
@@ -56,6 +77,8 @@ def another_device():
     mock_device.name = "device2"
     mock_device.current_temperature = 20
     mock_device.mac_address = "macaddress1"
+    mock_device.outdoor_temperature = None
+    mock_device.outdoor_humidity = None
     return mock_device
 
 

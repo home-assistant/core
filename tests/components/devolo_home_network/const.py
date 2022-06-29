@@ -62,6 +62,12 @@ NEIGHBOR_ACCESS_POINTS = {
 
 PLCNET = {
     "network": {
+        "devices": [
+            {
+                "mac_address": "AA:BB:CC:DD:EE:FF",
+                "attached_to_router": False,
+            }
+        ],
         "data_rates": [
             {
                 "mac_address_from": "AA:BB:CC:DD:EE:FF",
@@ -70,6 +76,17 @@ PLCNET = {
                 "tx_rate": 0.0,
             },
         ],
-        "devices": [],
+    }
+}
+
+PLCNET_ATTACHED = {
+    "network": {
+        "devices": [
+            {
+                "mac_address": "AA:BB:CC:DD:EE:FF",
+                "attached_to_router": True,
+            }
+        ],
+        "data_rates": [],
     }
 }

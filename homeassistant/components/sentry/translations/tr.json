@@ -10,10 +10,8 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
-                },
-                "description": "Sentry DSN'nizi girin",
-                "title": "Sentry"
+                    "dsn": "Sentry DSN"
+                }
             }
         }
     },

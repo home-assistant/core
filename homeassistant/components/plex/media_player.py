@@ -1,30 +1,26 @@
 """Support to interface with the Plex API."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
 import logging
+from typing import TypeVar
 
 import plexapi.exceptions
 import requests.exceptions
+from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -32,7 +28,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -51,17 +46,25 @@ from .const import (
 from .media_browser import browse_media
 from .services import process_plex_payload
 
+_PlexMediaPlayerT = TypeVar("_PlexMediaPlayerT", bound="PlexMediaPlayer")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
+
 _LOGGER = logging.getLogger(__name__)
 
 
-def needs_session(func):
+def needs_session(
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 
     @wraps(func)
-    def get_session_attribute(self, *args):
+    def get_session_attribute(
+        self: _PlexMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         if self.session is None:
             return None
-        return func(self, *args)
+        return func(self, *args, **kwargs)
 
     return get_session_attribute
 
@@ -73,7 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     @callback
     def async_new_media_players(new_entities):
@@ -389,19 +392,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_SEEK
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_VOLUME_MUTE
-                | SUPPORT_BROWSE_MEDIA
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.SEEK
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
             )
 
-        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
+        return (
+            MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+        )
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""

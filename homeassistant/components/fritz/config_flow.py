@@ -1,6 +1,7 @@
 """Config flow to configure the FRITZ!Box Tools integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import ipaddress
 import logging
 import socket
@@ -130,7 +131,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
         )
         self.context[CONF_HOST] = self._host
 
-        if ipaddress.ip_address(self._host).is_link_local:
+        if not self._host or ipaddress.ip_address(self._host).is_link_local:
             return self.async_abort(reason="ignore_ip6_link_local")
 
         if uuid := discovery_info.upnp.get(ssdp.ATTR_UPNP_UDN):
@@ -148,9 +149,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(entry, unique_id=uuid)
             return self.async_abort(reason="already_configured")
 
-        self.context["title_placeholders"] = {
-            "name": self._name.replace("FRITZ!Box ", "")
-        }
+        self.context.update(
+            {
+                "title_placeholders": {"name": self._name.replace("FRITZ!Box ", "")},
+                "configuration_url": f"http://{self._host}",
+            }
+        )
+
         return await self.async_step_confirm()
 
     async def async_step_confirm(
@@ -226,13 +231,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        self._host = data[CONF_HOST]
-        self._port = data[CONF_PORT]
-        self._username = data[CONF_USERNAME]
-        self._password = data[CONF_PASSWORD]
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(

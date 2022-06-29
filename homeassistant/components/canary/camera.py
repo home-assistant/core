@@ -5,8 +5,8 @@ from datetime import timedelta
 from typing import Final
 
 from aiohttp.web import Request, StreamResponse
-from canary.api import Device, Location
 from canary.live_stream_api import LiveStreamSession
+from canary.model import Device, Location
 from haffmpeg.camera import CameraMjpeg
 import voluptuous as vol
 
@@ -144,10 +144,11 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         if self._live_stream_session is None:
             return None
 
-        stream = CameraMjpeg(self._ffmpeg.binary)
-        await stream.open_camera(
-            self._live_stream_session.live_stream_url, extra_cmd=self._ffmpeg_arguments
+        live_stream_url = await self.hass.async_add_executor_job(
+            getattr, self._live_stream_session, "live_stream_url"
         )
+        stream = CameraMjpeg(self._ffmpeg.binary)
+        await stream.open_camera(live_stream_url, extra_cmd=self._ffmpeg_arguments)
 
         try:
             stream_reader = await stream.get_reader()

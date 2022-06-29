@@ -127,7 +127,10 @@ class SelectedEntities:
         if not parts:
             return
 
-        _LOGGER.warning("Unable to find referenced %s", ", ".join(parts))
+        _LOGGER.warning(
+            "Unable to find referenced %s or it is/they are currently not available",
+            ", ".join(parts),
+        )
 
 
 @bind_hass
@@ -777,7 +780,7 @@ def verify_domain_control(
                     user_id=call.context.user_id,
                 )
 
-            reg = await hass.helpers.entity_registry.async_get_registry()
+            reg = entity_registry.async_get(hass)
 
             authorized = False
 

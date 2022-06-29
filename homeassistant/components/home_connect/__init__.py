@@ -7,6 +7,10 @@ from typing import Optional
 from requests import HTTPError
 import voluptuous as vol
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
@@ -24,7 +28,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
-from . import api, config_flow
+from . import api
 from .const import (
     ATTR_KEY,
     ATTR_PROGRAM,
@@ -49,14 +53,17 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=1)
 
 CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_CLIENT_ID): cv.string,
-                vol.Required(CONF_CLIENT_SECRET): cv.string,
-            }
-        )
-    },
+    vol.All(
+        cv.deprecated(DOMAIN),
+        {
+            DOMAIN: vol.Schema(
+                {
+                    vol.Required(CONF_CLIENT_ID): cv.string,
+                    vol.Required(CONF_CLIENT_SECRET): cv.string,
+                }
+            )
+        },
+    ),
     extra=vol.ALLOW_EXTRA,
 )
 
@@ -116,16 +123,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     if DOMAIN not in config:
         return True
 
-    config_flow.OAuth2FlowHandler.async_register_implementation(
+    await async_import_client_credential(
         hass,
-        config_entry_oauth2_flow.LocalOAuth2Implementation(
-            hass,
-            DOMAIN,
+        DOMAIN,
+        ClientCredential(
             config[DOMAIN][CONF_CLIENT_ID],
             config[DOMAIN][CONF_CLIENT_SECRET],
-            OAUTH2_AUTHORIZE,
-            OAUTH2_TOKEN,
         ),
+    )
+    _LOGGER.warning(
+        "Configuration of Home Connect integration in YAML is deprecated and "
+        "will be removed in a future release; Your existing OAuth "
+        "Application Credentials have been imported into the UI "
+        "automatically and can be safely removed from your "
+        "configuration.yaml file"
     )
 
     async def _async_service_program(call, method):

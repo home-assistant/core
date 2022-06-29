@@ -63,7 +63,7 @@ async def test_setup_config_entry_with_error(hass, entry):
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_with_insecure_config_entry(hass, entry, setup_plex_server):
@@ -184,6 +184,7 @@ async def test_setup_when_certificate_changed(
     plextv_account,
     plextv_resources,
     plextv_shared_users,
+    mock_websocket,
 ):
     """Test setup component when the Plex certificate has changed."""
 

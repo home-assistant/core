@@ -7,7 +7,12 @@ from pyflick import FlickAPI, FlickPrice
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_FRIENDLY_NAME
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_FRIENDLY_NAME,
+    CURRENCY_CENT,
+    ENERGY_KILO_WATT_HOUR,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import utcnow
@@ -20,7 +25,6 @@ SCAN_INTERVAL = timedelta(minutes=5)
 
 ATTRIBUTION = "Data provided by Flick Electric"
 FRIENDLY_NAME = "Flick Power Price"
-UNIT_NAME = "cents"
 
 
 async def async_setup_entry(
@@ -35,7 +39,7 @@ async def async_setup_entry(
 class FlickPricingSensor(SensorEntity):
     """Entity object for Flick Electric sensor."""
 
-    _attr_native_unit_of_measurement = UNIT_NAME
+    _attr_native_unit_of_measurement = f"{CURRENCY_CENT}/{ENERGY_KILO_WATT_HOUR}"
 
     def __init__(self, api: FlickAPI) -> None:
         """Entity object for Flick Electric sensor."""

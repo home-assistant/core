@@ -3,7 +3,8 @@
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiohwenergy.errors import DisabledError
+from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.models import Data
 
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
@@ -36,13 +37,10 @@ async def test_sensor_entity_smr_version(
     """Test entity loads smr version."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "smr_version",
-    ]
-    api.data.smr_version = 50
+    api.data = AsyncMock(return_value=Data.from_dict({"smr_version": 50}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -77,13 +75,10 @@ async def test_sensor_entity_meter_model(
     """Test entity loads meter model."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "meter_model",
-    ]
-    api.data.meter_model = "Model X"
+    api.data = AsyncMock(return_value=Data.from_dict({"meter_model": "Model X"}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -118,13 +113,10 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
     """Test entity loads wifi ssid."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "wifi_ssid",
-    ]
-    api.data.wifi_ssid = "My Wifi"
+    api.data = AsyncMock(return_value=Data.from_dict({"wifi_ssid": "My Wifi"}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -159,13 +151,10 @@ async def test_sensor_entity_wifi_strength(
     """Test entity loads wifi strength."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "wifi_strength",
-    ]
-    api.data.wifi_strength = 42
+    api.data = AsyncMock(return_value=Data.from_dict({"wifi_strength": 42}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -189,13 +178,12 @@ async def test_sensor_entity_total_power_import_t1_kwh(
     """Test entity loads total power import t1."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t1_kwh",
-    ]
-    api.data.total_power_import_t1_kwh = 1234.123
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -232,13 +220,12 @@ async def test_sensor_entity_total_power_import_t2_kwh(
     """Test entity loads total power import t2."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t2_kwh",
-    ]
-    api.data.total_power_import_t2_kwh = 1234.123
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_import_t2_kwh": 1234.123})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -275,13 +262,12 @@ async def test_sensor_entity_total_power_export_t1_kwh(
     """Test entity loads total power export t1."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_export_t1_kwh",
-    ]
-    api.data.total_power_export_t1_kwh = 1234.123
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_export_t1_kwh": 1234.123})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -318,13 +304,12 @@ async def test_sensor_entity_total_power_export_t2_kwh(
     """Test entity loads total power export t2."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_export_t2_kwh",
-    ]
-    api.data.total_power_export_t2_kwh = 1234.123
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_export_t2_kwh": 1234.123})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -361,13 +346,10 @@ async def test_sensor_entity_active_power(
     """Test entity loads active power."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_w",
-    ]
-    api.data.active_power_w = 123.123
+    api.data = AsyncMock(return_value=Data.from_dict({"active_power_w": 123.123}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -402,13 +384,10 @@ async def test_sensor_entity_active_power_l1(
     """Test entity loads active power l1."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l1_w",
-    ]
-    api.data.active_power_l1_w = 123.123
+    api.data = AsyncMock(return_value=Data.from_dict({"active_power_l1_w": 123.123}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -445,13 +424,10 @@ async def test_sensor_entity_active_power_l2(
     """Test entity loads active power l2."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l2_w",
-    ]
-    api.data.active_power_l2_w = 456.456
+    api.data = AsyncMock(return_value=Data.from_dict({"active_power_l2_w": 456.456}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -488,13 +464,10 @@ async def test_sensor_entity_active_power_l3(
     """Test entity loads active power l3."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l3_w",
-    ]
-    api.data.active_power_l3_w = 789.789
+    api.data = AsyncMock(return_value=Data.from_dict({"active_power_l3_w": 789.789}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -529,13 +502,10 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
     """Test entity loads total gas."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_gas_m3",
-    ]
-    api.data.total_gas_m3 = 50
+    api.data = AsyncMock(return_value=Data.from_dict({"total_gas_m3": 50}))
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -570,17 +540,14 @@ async def test_sensor_entity_disabled_when_null(
     """Test sensor disables data with null by default."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "active_power_l2_w",
-        "active_power_l3_w",
-        "total_gas_m3",
-    ]
-    api.data.active_power_l2_w = None
-    api.data.active_power_l3_w = None
-    api.data.total_gas_m3 = None
+    api.data = AsyncMock(
+        return_value=Data.from_dict(
+            {"active_power_l2_w": None, "active_power_l3_w": None, "total_gas_m3": None}
+        )
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -612,15 +579,14 @@ async def test_sensor_entity_export_disabled_when_unused(
     """Test sensor disables export if value is 0."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_export_t1_kwh",
-        "total_power_export_t2_kwh",
-    ]
-    api.data.total_power_export_t1_kwh = 0
-    api.data.total_power_export_t2_kwh = 0
+    api.data = AsyncMock(
+        return_value=Data.from_dict(
+            {"total_power_export_t1_kwh": 0, "total_power_export_t2_kwh": 0}
+        )
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
         entry = mock_config_entry
@@ -649,17 +615,14 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
     """Test sensor handles api unreachable."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t1_kwh",
-    ]
-    api.data.total_power_import_t1_kwh = 1234.123
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
-        api.update = AsyncMock(return_value=True)
-
         entry = mock_config_entry
         entry.data = mock_config_entry_data
         entry.add_to_hass(hass)
@@ -675,7 +638,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
             == "1234.123"
         )
 
-        api.update = AsyncMock(return_value=False)
+        api.data.side_effect = RequestError
         async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
@@ -685,7 +648,7 @@ async def test_sensors_unreachable(hass, mock_config_entry_data, mock_config_ent
             == "unavailable"
         )
 
-        api.update = AsyncMock(return_value=True)
+        api.data.side_effect = None
         async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
         await hass.async_block_till_done()
         assert (
@@ -700,17 +663,14 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
     """Test sensor handles api unreachable."""
 
     api = get_mock_device()
-    api.data.available_datapoints = [
-        "total_power_import_t1_kwh",
-    ]
-    api.data.total_power_import_t1_kwh = 1234.123
+    api.data = AsyncMock(
+        return_value=Data.from_dict({"total_power_import_t1_kwh": 1234.123})
+    )
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
         return_value=api,
     ):
-        api.update = AsyncMock(return_value=True)
-
         entry = mock_config_entry
         entry.data = mock_config_entry_data
         entry.add_to_hass(hass)
@@ -726,7 +686,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
             == "1234.123"
         )
 
-        api.update = AsyncMock(side_effect=DisabledError)
+        api.data.side_effect = DisabledError
         async_fire_time_changed(hass, utcnow + timedelta(seconds=5))
         await hass.async_block_till_done()
         assert (
@@ -736,7 +696,7 @@ async def test_api_disabled(hass, mock_config_entry_data, mock_config_entry):
             == "unavailable"
         )
 
-        api.update = AsyncMock(return_value=True)
+        api.data.side_effect = None
         async_fire_time_changed(hass, utcnow + timedelta(seconds=10))
         await hass.async_block_till_done()
         assert (

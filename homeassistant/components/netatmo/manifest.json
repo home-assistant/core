@@ -4,7 +4,7 @@
   "documentation": "https://www.home-assistant.io/integrations/netatmo",
   "requirements": ["pyatmo==6.2.4"],
   "after_dependencies": ["cloud", "media_source"],
-  "dependencies": ["webhook"],
+  "dependencies": ["application_credentials", "webhook"],
   "codeowners": ["@cgtobi"],
   "config_flow": true,
   "homekit": {

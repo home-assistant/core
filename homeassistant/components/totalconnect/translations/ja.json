@@ -12,22 +12,31 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3",
                     "usercode": "\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9"
                 },
                 "description": "\u3053\u306e\u30e6\u30fc\u30b6\u30fc\u306e\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9\u3092\u5834\u6240 {location_id} \u306b\u5165\u529b\u3057\u307e\u3059",
                 "title": "\u30ed\u30b1\u30fc\u30b7\u30e7\u30f3\u30e6\u30fc\u30b6\u30fc\u30b3\u30fc\u30c9"
             },
             "reauth_confirm": {
-                "description": "Total Connect\u306f\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u518d\u8a8d\u8a3c\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059",
+                "description": "Total Connect\u3067\u306f\u3001\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u518d\u8a8d\u8a3c\u3059\u308b\u5fc5\u8981\u304c\u3042\u308a\u307e\u3059",
                 "title": "\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u518d\u8a8d\u8a3c"
             },
             "user": {
                 "data": {
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
                     "username": "\u30e6\u30fc\u30b6\u30fc\u540d"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "\u30d0\u30c3\u30c6\u30ea\u30fc\u6b8b\u91cf(\u4f4e)\u3067\u306e\u81ea\u52d5\u30d0\u30a4\u30d1\u30b9"
                 },
-                "title": "\u30c8\u30fc\u30bf\u30eb\u30b3\u30cd\u30af\u30c8"
+                "description": "\u30d0\u30c3\u30c6\u30ea\u30fc\u6b8b\u91cf\u304c\u5c11\u306a\u3044\u3068\u5831\u544a\u3055\u308c\u305f\u77ac\u9593\u306b\u3001\u81ea\u52d5\u7684\u306b\u30be\u30fc\u30f3\u3092\u30d0\u30a4\u30d1\u30b9\u3057\u307e\u3059\u3002",
+                "title": "TotalConnect\u30aa\u30d7\u30b7\u30e7\u30f3"
             }
         }
     }

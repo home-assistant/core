@@ -10,5 +10,10 @@
                 }
             }
         }
+    },
+    "options": {
+        "error": {
+            "currency_unavailable": "Jeden alebo viacero po\u017eadovan\u00fdch zostatkov mien nie s\u00fa poskytovan\u00e9 Va\u0161\u00edm Coinbase API."
+        }
     }
 }

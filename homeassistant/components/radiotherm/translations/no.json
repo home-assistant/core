@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Enheten er allerede konfigurert"
+        },
+        "error": {
+            "cannot_connect": "Tilkobling mislyktes",
+            "unknown": "Uventet feil"
+        },
+        "flow_title": "{name} {model} ( {host} )",
+        "step": {
+            "confirm": {
+                "description": "Vil du konfigurere {name} {model} ( {host} )?"
+            },
+            "user": {
+                "data": {
+                    "host": "Vert"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Still inn et permanent hold n\u00e5r du justerer temperaturen."
+                }
+            }
+        }
+    }
+}

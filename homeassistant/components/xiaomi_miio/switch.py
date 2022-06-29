@@ -369,10 +369,12 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
         # Gateway sub devices
         sub_devices = gateway.devices
-        coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
         for sub_device in sub_devices.values():
             if sub_device.device_type != "Switch":
                 continue
+            coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR][
+                sub_device.sid
+            ]
             switch_variables = set(sub_device.status) & set(GATEWAY_SWITCH_VARS)
             if switch_variables:
                 entities.extend(

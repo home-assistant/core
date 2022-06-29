@@ -1,0 +1,28 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "br": "Haube entfernt",
+            "ccc": "Reinigungszyklus abgeschlossen",
+            "ccp": "Reinigungszyklus l\u00e4uft",
+            "csf": "Katzensensor Fehler",
+            "csi": "Katzensensor unterbrochen",
+            "cst": "Katzensensor Timing",
+            "df1": "Schublade fast voll - 2 Zyklen \u00fcbrig",
+            "df2": "Schublade fast voll - 1 Zyklus \u00fcbrig",
+            "dfs": "Schublade voll",
+            "dhf": "Fehler in Leerungs- und Grundstellung",
+            "dpf": "Fehler in der Leerungsstellung",
+            "ec": "Leerungszyklus",
+            "hpf": "Fehler in der Grundstellung",
+            "off": "Aus",
+            "offline": "Offline",
+            "otf": "\u00dcberdrehungsfehler",
+            "p": "Pausiert",
+            "pd": "Einklemmen erkennen",
+            "rdy": "Bereit",
+            "scf": "Katzen-Sensorfehler beim Start",
+            "sdf": "Schublade voll beim Start",
+            "spf": "Einklemmerkennung beim Start"
+        }
+    }
+}

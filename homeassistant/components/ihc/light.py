@@ -3,11 +3,7 @@ from __future__ import annotations
 
 from ihcsdk.ihccontroller import IHCController
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -78,6 +74,12 @@ class IhcLight(IHCDevice, LightEntity):
         self._dimmable = dimmable
         self._state = False
 
+        if self._dimmable:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+        else:
+            self._attr_color_mode = ColorMode.ONOFF
+        self._attr_supported_color_modes = {self._attr_color_mode}
+
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
@@ -87,13 +89,6 @@ class IhcLight(IHCDevice, LightEntity):
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        if self._dimmable:
-            return SUPPORT_BRIGHTNESS
-        return 0
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""

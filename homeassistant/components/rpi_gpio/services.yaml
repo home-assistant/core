@@ -1,3 +1,0 @@
-reload:
-  name: Reload
-  description: Reload all rpi_gpio entities.

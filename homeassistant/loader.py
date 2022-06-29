@@ -11,7 +11,6 @@ from collections.abc import Callable
 from contextlib import suppress
 import functools as ft
 import importlib
-import json
 import logging
 import pathlib
 import sys
@@ -24,11 +23,13 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from .generated.application_credentials import APPLICATION_CREDENTIALS
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
@@ -210,6 +211,20 @@ async def async_get_config_flows(
     return flows
 
 
+async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
+    """Return cached list of application credentials."""
+    integrations = await async_get_custom_components(hass)
+
+    return [
+        *APPLICATION_CREDENTIALS,
+        *[
+            integration.domain
+            for integration in integrations.values()
+            if "application_credentials" in integration.dependencies
+        ],
+    ]
+
+
 def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
     """Handle backwards compat with zeroconf matchers."""
     entry_without_type: dict[str, Any] = entry.copy()
@@ -351,8 +366,8 @@ class Integration:
                 continue
 
             try:
-                manifest = json.loads(manifest_path.read_text())
-            except ValueError as err:
+                manifest = json_loads(manifest_path.read_text())
+            except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
                 )

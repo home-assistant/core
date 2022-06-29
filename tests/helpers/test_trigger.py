@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 import voluptuous as vol
 
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers.trigger import (
     _async_get_trigger_platform,
     async_validate_trigger_config,
@@ -66,3 +67,39 @@ async def test_if_fires_on_event(hass, calls):
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0].data["hello"] == "Paulus + test_event"
+
+
+async def test_if_disabled_trigger_not_firing(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test disabled triggers don't fire."""
+    assert await async_setup_component(
+        hass,
+        "automation",
+        {
+            "automation": {
+                "trigger": [
+                    {
+                        "platform": "event",
+                        "event_type": "enabled_trigger_event",
+                    },
+                    {
+                        "enabled": False,
+                        "platform": "event",
+                        "event_type": "disabled_trigger_event",
+                    },
+                ],
+                "action": {
+                    "service": "test.automation",
+                },
+            }
+        },
+    )
+
+    hass.bus.async_fire("disabled_trigger_event")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.bus.async_fire("enabled_trigger_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1

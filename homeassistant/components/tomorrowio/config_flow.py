@@ -27,7 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.selector import selector
+from homeassistant.helpers.selector import LocationSelector, LocationSelectorConfig
 
 from .const import (
     AUTO_MIGRATION_MESSAGE,
@@ -78,7 +78,7 @@ def _get_config_schema(
             vol.Required(
                 CONF_LOCATION,
                 default=default_location,
-            ): selector({"location": {"radius": False}}),
+            ): LocationSelector(LocationSelectorConfig(radius=False)),
         },
     )
 

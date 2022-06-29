@@ -1,0 +1,7 @@
+{
+    "config": {
+        "abort": {
+            "single_instance_allowed": "Ya configurado. S\u00f3lo es posible una sola configuraci\u00f3n."
+        }
+    }
+}

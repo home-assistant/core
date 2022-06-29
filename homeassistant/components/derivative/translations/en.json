@@ -13,15 +13,16 @@
                 "data_description": {
                     "round": "Controls the number of decimal digits in the output.",
                     "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
-                    "unit_prefix": "The derivative will be scaled according to the selected metric prefix and time unit of the derivative."
+                    "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative."
                 },
-                "title": "New Derivative sensor"
+                "description": "Create a sensor that estimates the derivative of a sensor.",
+                "title": "Add Derivative sensor"
             }
         }
     },
     "options": {
         "step": {
-            "options": {
+            "init": {
                 "data": {
                     "name": "Name",
                     "round": "Precision",
@@ -33,9 +34,10 @@
                 "data_description": {
                     "round": "Controls the number of decimal digits in the output.",
                     "time_window": "If set, the sensor's value is a time weighted moving average of derivatives within this window.",
-                    "unit_prefix": "The derivative will be scaled according to the selected metric prefix and time unit of the derivative.."
+                    "unit_prefix": "The output will be scaled according to the selected metric prefix and time unit of the derivative.."
                 }
             }
         }
-    }
+    },
+    "title": "Derivative sensor"
 }

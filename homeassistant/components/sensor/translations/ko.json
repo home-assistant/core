@@ -27,6 +27,7 @@
             "power": "{entity_name}\uc758 \uc18c\ube44 \uc804\ub825\uc774 \ubcc0\ud560 \ub54c",
             "power_factor": "{entity_name}\uc758 \uc5ed\ub960\uc774 \ubcc0\ud560 \ub54c",
             "pressure": "{entity_name}\uc758 \uc555\ub825\uc774 \ubcc0\ud560 \ub54c",
+            "reactive_power": "{entity_name} \ubb34\ud6a8 \uc804\ub825\uc774 \ubcc0\ud560 \ub54c",
             "signal_strength": "{entity_name}\uc758 \uc2e0\ud638 \uac15\ub3c4\uac00 \ubcc0\ud560 \ub54c",
             "temperature": "{entity_name}\uc758 \uc628\ub3c4\uac00 \ubcc0\ud560 \ub54c",
             "value": "{entity_name}\uc758 \uac12\uc774 \ubcc0\ud560 \ub54c",

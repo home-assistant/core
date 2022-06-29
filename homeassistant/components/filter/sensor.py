@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASSES as SENSOR_DEVICE_CLASSES,
     DOMAIN as SENSOR_DOMAIN,
     PLATFORM_SCHEMA,
+    STATE_CLASSES as SENSOR_STATE_CLASSES,
     SensorDeviceClass,
     SensorEntity,
 )
@@ -262,7 +263,10 @@ class SensorFilter(SensorEntity):
         ):
             self._device_class = new_state.attributes.get(ATTR_DEVICE_CLASS)
 
-        if self._attr_state_class is None:
+        if (
+            self._attr_state_class is None
+            and new_state.attributes.get(ATTR_STATE_CLASS) in SENSOR_STATE_CLASSES
+        ):
             self._attr_state_class = new_state.attributes.get(ATTR_STATE_CLASS)
 
         if self._unit_of_measurement is None:

@@ -27,7 +27,6 @@ async def test_full_flow(
         "neato",
         {
             "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 
@@ -99,7 +98,6 @@ async def test_reauth(
         "neato",
         {
             "neato": {"client_id": CLIENT_ID, "client_secret": CLIENT_SECRET},
-            "http": {"base_url": "https://example.com"},
         },
     )
 

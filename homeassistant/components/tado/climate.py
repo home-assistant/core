@@ -1,20 +1,18 @@
 """Support for Tado thermostats."""
+from __future__ import annotations
+
 import logging
 
 import voluptuous as vol
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
-    CURRENT_HVAC_OFF,
     FAN_AUTO,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
     PRESET_AWAY,
     PRESET_HOME,
-    SUPPORT_FAN_MODE,
-    SUPPORT_PRESET_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
+    HVACAction,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, TEMP_CELSIUS
@@ -128,7 +126,9 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
-    support_flags = SUPPORT_PRESET_MODE | SUPPORT_TARGET_TEMPERATURE
+    support_flags = (
+        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+    )
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
@@ -145,12 +145,12 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
             if capabilities[mode].get("swings"):
-                support_flags |= SUPPORT_SWING_MODE
+                support_flags |= ClimateEntityFeature.SWING_MODE
 
             if not capabilities[mode].get("fanSpeeds"):
                 continue
 
-            support_flags |= SUPPORT_FAN_MODE
+            support_flags |= ClimateEntityFeature.FAN_MODE
 
             if supported_fan_modes:
                 continue
@@ -162,7 +162,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
     else:
-        supported_hvac_modes.append(HVAC_MODE_HEAT)
+        supported_hvac_modes.append(HVACMode.HEAT)
 
     if CONST_MODE_HEAT in capabilities:
         heat_temperatures = capabilities[CONST_MODE_HEAT]["temperatures"]
@@ -262,7 +262,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
-        self._current_tado_hvac_action = CURRENT_HVAC_OFF
+        self._current_tado_hvac_action = HVACAction.OFF
         self._current_tado_swing_mode = TADO_SWING_OFF
 
         self._tado_zone_data = None
@@ -310,15 +310,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return self._tado_zone_data.current_temp
 
     @property
-    def hvac_mode(self):
+    def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode.
 
         Need to be one of HVAC_MODE_*.
         """
-        return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVAC_MODE_OFF)
+        return TADO_TO_HA_HVAC_MODE_MAP.get(self._current_tado_hvac_mode, HVACMode.OFF)
 
     @property
-    def hvac_modes(self):
+    def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes.
 
         Need to be a subset of HVAC_MODES.
@@ -326,13 +326,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         return self._supported_hvac_modes
 
     @property
-    def hvac_action(self):
+    def hvac_action(self) -> HVACAction:
         """Return the current running hvac operation if supported.
 
         Need to be one of CURRENT_HVAC_*.
         """
         return TADO_HVAC_ACTION_TO_HA_HVAC_ACTION.get(
-            self._tado_zone_data.current_hvac_action, CURRENT_HVAC_OFF
+            self._tado_zone_data.current_hvac_action, HVACAction.OFF
         )
 
     @property
@@ -425,7 +425,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         new_hvac_mode = CONST_MODE_COOL if self._ac_device else CONST_MODE_HEAT
         self._control_hvac(target_temp=temperature, hvac_mode=new_hvac_mode)
 
-    def set_hvac_mode(self, hvac_mode):
+    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
 
         self._control_hvac(hvac_mode=HA_TO_TADO_HVAC_MODE_MAP[hvac_mode])
@@ -469,7 +469,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_modes(self):
         """Swing modes for the device."""
-        if self._support_flags & SUPPORT_SWING_MODE:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
             return [TADO_SWING_ON, TADO_SWING_OFF]
         return None
 
@@ -621,10 +621,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             temperature_to_send = None
 
         fan_speed = None
-        if self._support_flags & SUPPORT_FAN_MODE:
+        if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
         swing = None
-        if self._support_flags & SUPPORT_SWING_MODE:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
             swing = self._current_tado_swing_mode
 
         self._tado.set_zone_overlay(

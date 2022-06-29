@@ -284,7 +284,7 @@ async def test_indexed_sensor_state_via_mqtt2(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()
@@ -333,7 +333,7 @@ async def test_indexed_sensor_state_via_mqtt3(hass, mqtt_mock, setup_tasmota):
     state = hass.states.get("sensor.tasmota_energy_total_1")
     assert state.state == "unavailable"
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
-    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL_INCREASING
+    assert state.attributes[ATTR_STATE_CLASS] is SensorStateClass.TOTAL
 
     async_fire_mqtt_message(hass, "tasmota_49A3BC/tele/LWT", "Online")
     await hass.async_block_till_done()

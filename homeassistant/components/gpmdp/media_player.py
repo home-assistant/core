@@ -11,16 +11,12 @@ import voluptuous as vol
 from websocket import _exceptions, create_connection
 
 from homeassistant.components import configurator
-from homeassistant.components.media_player import PLATFORM_SCHEMA, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    PLATFORM_SCHEMA,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -43,15 +39,6 @@ DEFAULT_NAME = "GPM Desktop Player"
 DEFAULT_PORT = 5672
 
 GPMDP_CONFIG_FILE = "gpmpd.conf"
-
-SUPPORT_GPMDP = (
-    SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_SEEK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PLAY
-)
 
 PLAYBACK_DICT = {"0": STATE_PAUSED, "1": STATE_PAUSED, "2": STATE_PLAYING}  # Stopped
 
@@ -178,6 +165,15 @@ def setup_platform(
 
 class GPMDP(MediaPlayerEntity):
     """Representation of a GPMDP."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.PLAY
+    )
 
     def __init__(self, name, url, code):
         """Initialize the media player."""
@@ -320,11 +316,6 @@ class GPMDP(MediaPlayerEntity):
     def name(self):
         """Return the name of the device."""
         return self._name
-
-    @property
-    def supported_features(self):
-        """Flag media player features that are supported."""
-        return SUPPORT_GPMDP
 
     def media_next_track(self):
         """Send media_next command to media player."""

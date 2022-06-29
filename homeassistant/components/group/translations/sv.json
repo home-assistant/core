@@ -9,60 +9,19 @@
                 },
                 "title": "Ny grupp"
             },
-            "cover": {
-                "data": {
-                    "title": "Ny grupp"
-                }
-            },
-            "fan": {
-                "data": {
-                    "title": "Ny grupp"
-                }
-            },
             "light": {
-                "data": {
-                    "title": "Ny grupp"
-                }
-            },
-            "media_player": {
-                "data": {
-                    "title": "Ny grupp"
-                }
+                "title": "L\u00e4gg till grupp"
             },
             "user": {
-                "data": {
-                    "group_type": "Grupptyp"
-                },
-                "title": "Ny grupp"
+                "title": "L\u00e4gg till grupp"
             }
         }
     },
     "options": {
         "step": {
-            "binary_sensor_options": {
+            "binary_sensor": {
                 "data": {
-                    "all": "Alla entiteter",
-                    "entities": "Medlemmar"
-                }
-            },
-            "cover_options": {
-                "data": {
-                    "entities": "Medlemmar"
-                }
-            },
-            "fan_options": {
-                "data": {
-                    "entities": "Medlemmar"
-                }
-            },
-            "light_options": {
-                "data": {
-                    "entities": "Medlemmar"
-                }
-            },
-            "media_player_options": {
-                "data": {
-                    "entities": "Medlemmar"
+                    "all": "Alla entiteter"
                 }
             }
         }

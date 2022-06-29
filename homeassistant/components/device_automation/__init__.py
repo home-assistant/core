@@ -13,15 +13,20 @@ import voluptuous as vol
 import voluptuous_serialize
 
 from homeassistant.components import websocket_api
-from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM
-from homeassistant.core import HomeAssistant
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_DOMAIN,
+    CONF_PLATFORM,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import IntegrationNotFound, bind_hass
+from homeassistant.loader import IntegrationNotFound
 from homeassistant.requirements import async_get_integration_with_requirements
 
 from .exceptions import DeviceNotFound, InvalidDeviceAutomationConfig
@@ -39,7 +44,6 @@ if TYPE_CHECKING:
     ]
 
 # mypy: allow-untyped-calls, allow-untyped-defs
-
 DOMAIN = "device_automation"
 
 DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
@@ -47,6 +51,7 @@ DEVICE_TRIGGER_BASE_SCHEMA = cv.TRIGGER_BASE_SCHEMA.extend(
         vol.Required(CONF_PLATFORM): "device",
         vol.Required(CONF_DOMAIN): str,
         vol.Required(CONF_DEVICE_ID): str,
+        vol.Remove("metadata"): dict,
     }
 )
 
@@ -166,20 +171,42 @@ async def async_get_device_automation_platform(
     return platform
 
 
+@callback
+def _async_set_entity_device_automation_metadata(
+    hass: HomeAssistant, automation: dict[str, Any]
+) -> None:
+    """Set device automation metadata based on entity registry entry data."""
+    if "metadata" not in automation:
+        automation["metadata"] = {}
+    if ATTR_ENTITY_ID not in automation or "secondary" in automation["metadata"]:
+        return
+
+    entity_registry = er.async_get(hass)
+    # Guard against the entry being removed before this is called
+    if not (entry := entity_registry.async_get(automation[ATTR_ENTITY_ID])):
+        return
+
+    automation["metadata"]["secondary"] = bool(entry.entity_category or entry.hidden_by)
+
+
 async def _async_get_device_automations_from_domain(
-    hass, domain, automation_type, device_ids, return_exceptions
-):
+    hass: HomeAssistant,
+    domain: str,
+    automation_type: DeviceAutomationType,
+    device_ids: Iterable[str],
+    return_exceptions: bool,
+) -> list[list[dict[str, Any]] | Exception]:
     """List device automations."""
     try:
         platform = await async_get_device_automation_platform(
             hass, domain, automation_type
         )
     except InvalidDeviceAutomationConfig:
-        return {}
+        return []
 
     function_name = automation_type.value.get_automations_func
 
-    return await asyncio.gather(
+    return await asyncio.gather(  # type: ignore[no-any-return]
         *(
             getattr(platform, function_name)(hass, device_id)
             for device_id in device_ids
@@ -188,7 +215,6 @@ async def _async_get_device_automations_from_domain(
     )
 
 
-@bind_hass
 async def async_get_device_automations(
     hass: HomeAssistant,
     automation_type: DeviceAutomationType,
@@ -242,6 +268,7 @@ async def async_get_device_automations(
                 )
                 continue
             for automation in device_results:
+                _async_set_entity_device_automation_metadata(hass, automation)
                 combined_results[automation["device_id"]].append(automation)
 
     return combined_results

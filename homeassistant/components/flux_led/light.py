@@ -19,9 +19,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -192,7 +191,7 @@ class FluxLight(
 ):
     """Representation of a Flux light."""
 
-    _attr_supported_features = SUPPORT_TRANSITION | SUPPORT_EFFECT
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     def __init__(
         self,

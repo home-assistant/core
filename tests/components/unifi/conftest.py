@@ -34,7 +34,7 @@ def mock_unifi_websocket():
 def mock_discovery():
     """No real network traffic allowed."""
     with patch(
-        "homeassistant.components.unifi.config_flow.async_discover_unifi",
+        "homeassistant.components.unifi.config_flow._async_discover_unifi",
         return_value=None,
     ) as mock:
         yield mock

@@ -62,7 +62,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             device.protocol in (Protocol.RTS, Protocol.INTERNAL) for device in devices
         )
         self.executions: dict[str, dict[str, str]] = {}
-        self.areas = self._places_to_area(places)
+        self.areas = self._places_to_area(places) if places else None
         self.config_entry_id = config_entry_id
 
     async def _async_update_data(self) -> dict[str, Device]:

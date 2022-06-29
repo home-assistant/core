@@ -10,12 +10,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN,
     SERVICE_SELECT_SOURCE,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -218,7 +213,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
     def __init__(self, *args):
         """Initialize a Television Media Player accessory object."""
         super().__init__(
-            SUPPORT_SELECT_SOURCE,
+            MediaPlayerEntityFeature.SELECT_SOURCE,
             ATTR_INPUT_SOURCE,
             ATTR_INPUT_SOURCE_LIST,
             *args,
@@ -228,12 +223,17 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
 
         self.chars_speaker = []
 
-        self._supports_play_pause = features & (SUPPORT_PLAY | SUPPORT_PAUSE)
-        if features & SUPPORT_VOLUME_MUTE or features & SUPPORT_VOLUME_STEP:
+        self._supports_play_pause = features & (
+            MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
+        )
+        if (
+            features & MediaPlayerEntityFeature.VOLUME_MUTE
+            or features & MediaPlayerEntityFeature.VOLUME_STEP
+        ):
             self.chars_speaker.extend(
                 (CHAR_NAME, CHAR_ACTIVE, CHAR_VOLUME_CONTROL_TYPE, CHAR_VOLUME_SELECTOR)
             )
-            if features & SUPPORT_VOLUME_SET:
+            if features & MediaPlayerEntityFeature.VOLUME_SET:
                 self.chars_speaker.append(CHAR_VOLUME)
 
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:

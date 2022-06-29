@@ -26,7 +26,7 @@ class DownloadBackupView(HomeAssistantView):
     url = "/api/backup/download/{slug}"
     name = "api:backup:download"
 
-    async def get(  # pylint: disable=no-self-use
+    async def get(
         self,
         request: Request,
         slug: str,

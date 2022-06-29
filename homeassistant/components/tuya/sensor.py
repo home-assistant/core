@@ -18,6 +18,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     POWER_KILO_WATT,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -82,6 +83,84 @@ BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
 # end up being a sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.GAS_SENSOR_VALUE,
+            name="Gas",
+            icon="mdi:gas-cylinder",
+            device_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CH4_SENSOR_VALUE,
+            name="Methane",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.VOC_VALUE,
+            name="Volatile Organic Compound",
+            device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PM25_VALUE,
+            name="Particulate Matter 2.5 µm",
+            device_class=SensorDeviceClass.PM25,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CO_VALUE,
+            name="Carbon Monoxide",
+            icon="mdi:molecule-co",
+            device_class=SensorDeviceClass.CO,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CO2_VALUE,
+            name="Carbon Dioxide",
+            icon="mdi:molecule-co2",
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.CH2O_VALUE,
+            name="Formaldehyde",
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BRIGHT_STATE,
+            name="Luminosity",
+            icon="mdi:brightness-6",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.BRIGHT_VALUE,
+            name="Luminosity",
+            icon="mdi:brightness-6",
+            device_class=SensorDeviceClass.ILLUMINANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_VALUE,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_VALUE,
+            name="Smoke Amount",
+            icon="mdi:smoke-detector",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=SensorStateClass.MEASUREMENT,
+        ),
+        *BATTERY_SENSORS,
+    ),
     # Smart Kettle
     # https://developer.tuya.com/en/docs/iot/fbh?id=K9gf484m21yq7
     "bh": (
@@ -301,6 +380,27 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Current Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.STATUS,
+            name="Status",
+            device_class=TuyaDeviceClass.STATUS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.REMAIN_TIME,
+            name="Remaining Time",
+            native_unit_of_measurement=TIME_MINUTES,
+            icon="mdi:timer",
+        ),
+    ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,

@@ -4,16 +4,18 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+from homeassistant.helpers.entity import EntityCategory
+
 
 @dataclass
 class DeviceInfo:
     """Represent device information."""
 
-    manufacturer: str = None
-    model: str = None
-    fw_version: str = None
-    serial_number: str = None
-    mac: str = None
+    manufacturer: str | None = None
+    model: str | None = None
+    fw_version: str | None = None
+    serial_number: str | None = None
+    mac: str | None = None
 
 
 @dataclass
@@ -39,7 +41,7 @@ class PTZ:
     continuous: bool
     relative: bool
     absolute: bool
-    presets: list[str] = None
+    presets: list[str] | None = None
 
 
 @dataclass
@@ -50,7 +52,7 @@ class Profile:
     token: str
     name: str
     video: Video
-    ptz: PTZ = None
+    ptz: PTZ | None = None
 
 
 @dataclass
@@ -69,7 +71,8 @@ class Event:
     uid: str
     name: str
     platform: str
-    device_class: str = None
-    unit_of_measurement: str = None
+    device_class: str | None = None
+    unit_of_measurement: str | None = None
     value: Any = None
+    entity_category: EntityCategory | None = None
     entity_enabled: bool = True

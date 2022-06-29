@@ -82,9 +82,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
@@ -194,6 +192,8 @@ async def async_setup_platform(
 
 class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
     """A virtual binary sensor that triggers from another sensor."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -331,6 +331,7 @@ class TriggerBinarySensorEntity(TriggerEntity, BinarySensorEntity, RestoreEntity
             and self._state is None
         ):
             self._state = last_state.state == STATE_ON
+            self.restore_attributes(last_state)
 
             if CONF_AUTO_OFF not in self._config:
                 return

@@ -3,7 +3,7 @@
   "name": "VeSync",
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "codeowners": ["@markperdue", "@webdjoe", "@thegardenmonkey"],
-  "requirements": ["pyvesync==1.4.2"],
+  "requirements": ["pyvesync==2.0.3"],
   "config_flow": true,
   "iot_class": "cloud_polling",
   "loggers": ["pyvesync"]

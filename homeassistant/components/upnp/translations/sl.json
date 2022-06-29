@@ -14,11 +14,6 @@
         "step": {
             "ssdp_confirm": {
                 "description": "Ali \u017eelite nastaviti to UPnP/IGD napravo?"
-            },
-            "user": {
-                "data": {
-                    "usn": "Naprava"
-                }
             }
         }
     }

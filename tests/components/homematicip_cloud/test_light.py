@@ -4,10 +4,14 @@ from homematicip.base.enums import RGBColorState
 from homeassistant.components.homematicip_cloud import DOMAIN as HMIPC_DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_NAME,
+    ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
+    ColorMode,
+    LightEntityFeature,
 )
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, STATE_OFF, STATE_ON
 from homeassistant.setup import async_setup_component
 
 from .helper import async_manipulate_test_data, get_and_check_entity_basics
@@ -35,6 +39,9 @@ async def test_hmip_light(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     service_call_counter = len(hmip_device.mock_calls)
     await hass.services.async_call(
@@ -47,6 +54,9 @@ async def test_hmip_light(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "on", False)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_OFF
+    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     await hass.services.async_call(
         "light", "turn_on", {"entity_id": entity_id}, blocking=True
@@ -74,6 +84,9 @@ async def test_hmip_notification_light(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_OFF
+    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
     service_call_counter = len(hmip_device.mock_calls)
 
     # Send all color via service call.
@@ -128,6 +141,9 @@ async def test_hmip_notification_light(hass, default_mock_hap_factory):
     assert ha_state.state == STATE_ON
     assert ha_state.attributes[ATTR_COLOR_NAME] == RGBColorState.PURPLE
     assert ha_state.attributes[ATTR_BRIGHTNESS] == 255
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.HS]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == LightEntityFeature.TRANSITION
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": entity_id, "transition": 100}, blocking=True
@@ -165,6 +181,9 @@ async def test_hmip_dimmer(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_OFF
+    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
 
     await hass.services.async_call(
@@ -186,6 +205,9 @@ async def test_hmip_dimmer(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
     assert ha_state.attributes[ATTR_BRIGHTNESS] == 255
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": entity_id}, blocking=True
@@ -217,6 +239,9 @@ async def test_hmip_light_measuring(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_OFF
+    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
 
     await hass.services.async_call(
@@ -229,6 +254,9 @@ async def test_hmip_light_measuring(hass, default_mock_hap_factory):
     await async_manipulate_test_data(hass, hmip_device, "currentPowerConsumption", 50)
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": entity_id}, blocking=True
@@ -255,6 +283,9 @@ async def test_hmip_wired_multi_dimmer(hass, default_mock_hap_factory):
     )
 
     assert ha_state.state == STATE_OFF
+    assert ATTR_COLOR_MODE not in ha_state.attributes
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
     service_call_counter = len(hmip_device.mock_calls)
 
     await hass.services.async_call(
@@ -276,6 +307,9 @@ async def test_hmip_wired_multi_dimmer(hass, default_mock_hap_factory):
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
     assert ha_state.attributes[ATTR_BRIGHTNESS] == 255
+    assert ha_state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert ha_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert ha_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
 
     await hass.services.async_call(
         "light", "turn_off", {"entity_id": entity_id}, blocking=True

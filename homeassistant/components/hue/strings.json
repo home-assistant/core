@@ -30,7 +30,8 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "not_hue_bridge": "Not a Hue bridge"
+      "not_hue_bridge": "Not a Hue bridge",
+      "invalid_host": "Invalid host"
     }
   },
   "device_automation": {

@@ -2,13 +2,14 @@
     "config": {
         "abort": {
             "already_configured": "Account is al geconfigureerd",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "reauth_wrong_account": "U kunt deze invoer alleen opnieuw verifi\u00ebren met hetzelfde Overkiz account en hub"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
             "invalid_auth": "Ongeldige authenticatie",
             "server_in_maintenance": "Server is offline wegens onderhoud",
+            "too_many_attempts": "Te veel pogingen met een ongeldig token, tijdelijk verbannen",
             "too_many_requests": "Te veel verzoeken, probeer het later opnieuw.",
             "unknown": "Onverwachte fout"
         },

@@ -65,7 +65,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
             )
 
         except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError("Failed to turn on switch {self._name}") from err
+            raise PyEzvizError(f"Failed to turn on switch {self._name}") from err
 
         if update_ok:
             await self.coordinator.async_request_refresh()

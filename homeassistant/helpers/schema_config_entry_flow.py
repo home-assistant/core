@@ -42,7 +42,7 @@ class SchemaFlowFormStep:
     # The next_step function is called if the schema validates successfully or if no
     # schema is defined. The next_step function is passed the union of config entry
     # options and user input from previous steps.
-    # If next_step returns None, the flow is ended with RESULT_TYPE_CREATE_ENTRY.
+    # If next_step returns None, the flow is ended with FlowResultType.CREATE_ENTRY.
     next_step: Callable[[dict[str, Any]], str | None] = lambda _: None
 
     # Optional function to allow amending a form schema.
@@ -371,16 +371,17 @@ def wrapped_entity_config_entry_title(
 @callback
 def entity_selector_without_own_entities(
     handler: SchemaOptionsFlowHandler,
-    entity_selector_config: dict[str, Any],
+    entity_selector_config: selector.EntitySelectorConfig,
 ) -> vol.Schema:
     """Return an entity selector which excludes own entities."""
     entity_registry = er.async_get(handler.hass)
     entities = er.async_entries_for_config_entry(
         entity_registry,
-        handler.config_entry.entry_id,  # pylint: disable=protected-access
+        handler.config_entry.entry_id,
     )
     entity_ids = [ent.entity_id for ent in entities]
 
-    return selector.selector(
-        {"entity": {**entity_selector_config, "exclude_entities": entity_ids}}
-    )
+    final_selector_config = entity_selector_config.copy()
+    final_selector_config["exclude_entities"] = entity_ids
+
+    return selector.EntitySelector(final_selector_config)

@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 from typing import Any
 
 from pytradfri import Gateway, RequestError
@@ -11,7 +10,7 @@ from pytradfri.command import Command
 from pytradfri.device import Device
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
@@ -23,28 +22,28 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
-    ATTR_TRADFRI_GATEWAY,
-    ATTR_TRADFRI_GATEWAY_MODEL,
-    ATTR_TRADFRI_MANUFACTURER,
     CONF_GATEWAY_ID,
     CONF_IDENTITY,
     CONF_KEY,
     COORDINATOR,
     COORDINATOR_LIST,
     DOMAIN,
+    FACTORY,
     KEY_API,
-    PLATFORMS,
-    SIGNAL_GW,
-    TIMEOUT_API,
+    LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
-FACTORY = "tradfri_factory"
-LISTENERS = "tradfri_listeners"
-
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+PLATFORMS = [
+    Platform.COVER,
+    Platform.FAN,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
+SIGNAL_GW = "tradfri.gw_status"
+TIMEOUT_API = 30
 
 
 async def async_setup_entry(
@@ -54,7 +53,6 @@ async def async_setup_entry(
     """Create a gateway."""
     tradfri_data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = tradfri_data
-    listeners = tradfri_data[LISTENERS] = []
 
     factory = await APIFactory.init(
         entry.data[CONF_HOST],
@@ -68,7 +66,9 @@ async def async_setup_entry(
         await factory.shutdown()
 
     # Setup listeners
-    listeners.append(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop))
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     api = factory.request
     gateway = Gateway()
@@ -84,15 +84,15 @@ async def async_setup_entry(
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
 
-    dev_reg = await hass.helpers.device_registry.async_get_registry()
+    dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections=set(),
         identifiers={(DOMAIN, entry.data[CONF_GATEWAY_ID])},
-        manufacturer=ATTR_TRADFRI_MANUFACTURER,
-        name=ATTR_TRADFRI_GATEWAY,
+        manufacturer="IKEA of Sweden",
+        name="Gateway",
         # They just have 1 gateway model. Type is not exposed yet.
-        model=ATTR_TRADFRI_GATEWAY_MODEL,
+        model="E1526",
         sw_version=gateway_info.firmware_version,
     )
 
@@ -126,12 +126,12 @@ async def async_setup_entry(
         try:
             await api(gateway.get_gateway_info())
         except RequestError:
-            _LOGGER.error("Keep-alive failed")
+            LOGGER.error("Keep-alive failed")
             gw_status = False
 
         async_dispatcher_send(hass, SIGNAL_GW, gw_status)
 
-    listeners.append(
+    entry.async_on_unload(
         async_track_time_interval(hass, async_keep_alive, timedelta(seconds=60))
     )
 
@@ -147,9 +147,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         tradfri_data = hass.data[DOMAIN].pop(entry.entry_id)
         factory = tradfri_data[FACTORY]
         await factory.shutdown()
-        # unsubscribe listeners
-        for listener in tradfri_data[LISTENERS]:
-            listener()
 
     return unload_ok
 

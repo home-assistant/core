@@ -12,7 +12,7 @@ from homeassistant.components.zha.core.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_BATTERY,
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
 )
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE, Platform
 import homeassistant.helpers.device_registry as dr
 import homeassistant.util.dt as dt_util
 
@@ -20,6 +20,22 @@ from .common import async_enable_traffic, make_zcl_header
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
+
+
+@pytest.fixture(autouse=True)
+def required_platforms_only():
+    """Only setup the required platform and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.SENSOR,
+            Platform.SELECT,
+            Platform.SWITCH,
+            Platform.BINARY_SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -106,7 +122,7 @@ def _send_time_changed(hass, seconds):
 
 @patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
-    new=mock.MagicMock(),
+    new=mock.AsyncMock(),
 )
 async def test_check_available_success(
     hass, device_with_basic_channel, zha_device_restored
@@ -160,7 +176,7 @@ async def test_check_available_success(
 
 @patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
-    new=mock.MagicMock(),
+    new=mock.AsyncMock(),
 )
 async def test_check_available_unsuccessful(
     hass, device_with_basic_channel, zha_device_restored
@@ -203,7 +219,7 @@ async def test_check_available_unsuccessful(
 
 @patch(
     "homeassistant.components.zha.core.channels.general.BasicChannel.async_initialize",
-    new=mock.MagicMock(),
+    new=mock.AsyncMock(),
 )
 async def test_check_available_no_basic_channel(
     hass, device_without_basic_channel, zha_device_restored, caplog

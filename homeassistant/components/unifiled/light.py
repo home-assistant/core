@@ -9,7 +9,7 @@ import voluptuous as vol
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -59,6 +59,9 @@ def setup_platform(
 class UnifiLedLight(LightEntity):
     """Representation of an unifiled Light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, light, api):
         """Init Unifi LED Light."""
 
@@ -69,7 +72,6 @@ class UnifiLedLight(LightEntity):
         self._state = light["status"]["output"]
         self._available = light["isOnline"]
         self._brightness = self._api.convertfrom100to255(light["status"]["led"])
-        self._features = SUPPORT_BRIGHTNESS
 
     @property
     def name(self):
@@ -95,11 +97,6 @@ class UnifiLedLight(LightEntity):
     def is_on(self):
         """Return true if light is on."""
         return self._state
-
-    @property
-    def supported_features(self):
-        """Return the supported features of this light."""
-        return self._features
 
     def turn_on(self, **kwargs):
         """Instruct the light to turn on."""

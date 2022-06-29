@@ -46,6 +46,79 @@ TAMPER_BINARY_SENSOR = TuyaBinarySensorEntityDescription(
 # end up being a binary sensor.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.GAS_SENSOR_STATE,
+            name="Gas",
+            icon="mdi:gas-cylinder",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH4_SENSOR_STATE,
+            name="Methane",
+            device_class=BinarySensorDeviceClass.GAS,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.VOC_STATE,
+            name="Volatile Organic Compound",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PM25_STATE,
+            name="Particulate Matter 2.5 µm",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO_STATE,
+            name="Carbon Monoxide",
+            icon="mdi:molecule-co",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CO2_STATE,
+            icon="mdi:molecule-co2",
+            name="Carbon Dioxide",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.CH2O_STATE,
+            name="Formaldehyde",
+            device_class=BinarySensorDeviceClass.SAFETY,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.DOORCONTACT_STATE,
+            name="Door",
+            device_class=BinarySensorDeviceClass.DOOR,
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.WATERSENSOR_STATE,
+            name="Water Leak",
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.PRESSURE_STATE,
+            name="Pressure",
+            on_value="alarm",
+        ),
+        TuyaBinarySensorEntityDescription(
+            key=DPCode.SMOKE_SENSOR_STATE,
+            name="Smoke",
+            icon="mdi:smoke-detector",
+            device_class=BinarySensorDeviceClass.SMOKE,
+            on_value="alarm",
+        ),
+        TAMPER_BINARY_SENSOR,
+    ),
     # CO2 Detector
     # https://developer.tuya.com/en/docs/iot/categoryco2bj?id=Kaiuz3wes7yuy
     "co2bj": (
