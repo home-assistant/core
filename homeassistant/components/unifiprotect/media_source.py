@@ -168,10 +168,15 @@ class ProtectMediaSource(MediaSource):
         except IndexError as err:
             return _bad_identifier_media(item.identifier, err)
 
-        try:
-            event = await data.api.get_event(parts[2])
-        except NvrError as err:
-            return _bad_identifier_media(item.identifier, err)
+        event = data.api.bootstrap.events.get(parts[2])
+        if event is None:
+            try:
+                event = await data.api.get_event(parts[2])
+            except NvrError as err:
+                return _bad_identifier_media(item.identifier, err)
+            else:
+                # cache the event for later
+                data.api.bootstrap.events[event.id] = event
 
         nvr = data.api.bootstrap.nvr
         if thumbnail_only:
