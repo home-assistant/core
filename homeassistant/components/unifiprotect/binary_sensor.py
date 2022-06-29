@@ -150,7 +150,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
-        key="motion",
+        key="motion_enabled",
         name="Detections: Motion",
         icon="mdi:run-fast",
         ufp_value="recording_settings.enable_motion_detection",
