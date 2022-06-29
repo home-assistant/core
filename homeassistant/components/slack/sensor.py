@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TIME_MINUTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
@@ -31,7 +30,6 @@ async def async_setup_entry(
                     key="do_not_disturb_timer",
                     name="Do Not Disturb Timer",
                     icon="mdi:clock",
-                    native_unit_of_measurement=TIME_MINUTES,
                     device_class=SensorDeviceClass.TIMESTAMP,
                 ),
                 entry,
