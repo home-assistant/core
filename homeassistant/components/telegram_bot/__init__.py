@@ -872,11 +872,17 @@ class TelegramNotificationService:
                 timeout=params[ATTR_TIMEOUT],
             )
 
-    def send_poll(self, question, options, target=None, **kwargs):
+    def send_poll(
+        self,
+        question,
+        options,
+        is_anonymous,
+        allows_multiple_answers,
+        target=None,
+        **kwargs,
+    ):
         """Send a poll."""
         params = self._get_msg_kwargs(kwargs)
-        isanonymous = kwargs.get(ATTR_IS_ANONYMOUS)
-        allowsmultiple = kwargs.get(ATTR_ALLOWS_MULTIPLE_ANSWERS)
         openperiod = kwargs.get(ATTR_OPEN_PERIOD)
         for chat_id in self._get_target_chat_ids(target):
             _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
@@ -887,8 +893,8 @@ class TelegramNotificationService:
                 chat_id=chat_id,
                 question=question,
                 options=options,
-                is_anonymous=isanonymous,
-                allows_multiple_answers=allowsmultiple,
+                is_anonymous=is_anonymous,
+                allows_multiple_answers=allows_multiple_answers,
                 open_period=openperiod,
                 disable_notification=params[ATTR_DISABLE_NOTIF],
                 timeout=params[ATTR_TIMEOUT],
