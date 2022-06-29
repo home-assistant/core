@@ -29,7 +29,13 @@ async def test_get_triggers_module_device(hass, entry, lcn_connection):
             CONF_DEVICE_ID: device.id,
             "metadata": {},
         }
-        for trigger in ["transmitter", "transponder", "fingerprint", "send_keys"]
+        for trigger in [
+            "transmitter",
+            "transponder",
+            "fingerprint",
+            "codelock",
+            "send_keys",
+        ]
     ]
 
     triggers = await async_get_device_automations(
@@ -143,6 +149,51 @@ async def test_if_fires_on_fingerprint_event(hass, calls, entry, lcn_connection)
     assert len(calls) == 1
     assert calls[0].data == {
         "test": "test_trigger_fingerprint",
+        "code": "aabbcc",
+    }
+
+
+async def test_if_fires_on_codelock_event(hass, calls, entry, lcn_connection):
+    """Test for codelock event triggers firing."""
+    address = (0, 7, False)
+    device = get_device(hass, entry, address)
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        CONF_PLATFORM: "device",
+                        CONF_DOMAIN: DOMAIN,
+                        CONF_DEVICE_ID: device.id,
+                        CONF_TYPE: "codelock",
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "test": "test_trigger_codelock",
+                            "code": "{{ trigger.event.data.code }}",
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    inp = ModStatusAccessControl(
+        LcnAddr(*address),
+        periphery=AccessControlPeriphery.CODELOCK,
+        code="aabbcc",
+    )
+
+    await lcn_connection.async_process_input(inp)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 1
+    assert calls[0].data == {
+        "test": "test_trigger_codelock",
         "code": "aabbcc",
     }
 

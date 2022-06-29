@@ -44,8 +44,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from . import media_browser
+from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -777,6 +778,27 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             await self.hass.async_add_executor_job(self.speaker.join, speakers)
 
     async def async_unjoin_player(self):
-        """Remove this player from any group."""
-        async with self.hass.data[DATA_SONOS].topology_condition:
-            await self.hass.async_add_executor_job(self.speaker.unjoin)
+        """Remove this player from any group.
+
+        Coalesces all calls within 0.5s to allow use of SonosSpeaker.unjoin_multi()
+        which optimizes the order in which speakers are removed from their groups.
+        Removing coordinators last better preserves playqueues on the speakers.
+        """
+        sonos_data = self.hass.data[DATA_SONOS]
+        household_id = self.speaker.household_id
+
+        async def async_process_unjoin(now: datetime.datetime) -> None:
+            """Process the unjoin with all remove requests within the coalescing period."""
+            unjoin_data = sonos_data.unjoin_data.pop(household_id)
+            await SonosSpeaker.unjoin_multi(self.hass, unjoin_data.speakers)
+            unjoin_data.event.set()
+
+        if unjoin_data := sonos_data.unjoin_data.get(household_id):
+            unjoin_data.speakers.append(self.speaker)
+        else:
+            unjoin_data = sonos_data.unjoin_data[household_id] = UnjoinData(
+                speakers=[self.speaker]
+            )
+            async_call_later(self.hass, 0.5, async_process_unjoin)
+
+        await unjoin_data.event.wait()
