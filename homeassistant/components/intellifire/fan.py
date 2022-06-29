@@ -83,6 +83,9 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     """This is Fan entity for the fireplace."""
 
     entity_description: IntellifireFanEntityDescription
+    _attr_supported_features: int = (
+        FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
+    )
 
     @property
     def is_on(self):
@@ -100,11 +103,6 @@ class IntellifireFan(IntellifireEntity, FanEntity):
             self.entity_description.value_fn(self.coordinator.read_api.data)
             * percent_step
         )
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
 
     @property
     def speed_count(self) -> int:
