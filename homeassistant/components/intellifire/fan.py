@@ -75,8 +75,8 @@ async def async_setup_entry(
             IntellifireFan(coordinator=coordinator, description=description)
             for description in INTELLIFIRE_FANS
         )
-    else:
-        LOGGER.info("Disabling Fan - IntelliFire device does not appear to have one")
+        return
+    LOGGER.info("Disabling Fan - IntelliFire device does not appear to have one")
 
 
 class IntellifireFan(IntellifireEntity, FanEntity):
