@@ -151,9 +151,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
                 if image:
                     self._image = image
                     _LOGGER.debug("Grabbed a live view image from %s", self.name)
-                await self.hass.async_add_executor_job(
-                    self._live_stream_session.stop_session
-                )
+                await self.hass.async_add_executor_job(live_stream_session.stop_session)
                 _LOGGER.debug("Stopped live session from %s", self.name)
 
         return self._image
