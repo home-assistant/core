@@ -123,7 +123,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         # Calculate percentage steps
-        LOGGER.info("--Setting Fan Speed %s", percentage)
+        LOGGER.debug("--Setting Fan Speed %s", percentage)
         percent_step = 100.0 / len(self.entity_description.named_speeds)
         int_value = int(math.ceil(float(percentage) / percent_step))
         await self.entity_description.set_fn(self.coordinator.control_api, int_value)
@@ -131,7 +131,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
             self.coordinator.read_api, self.entity_description.data_field, int_value
         )
         self.async_write_ha_state()
-        LOGGER.info(
+        LOGGER.debug(
             "Fan speed %s [%s%%] = %s: [%s]",
             int_value,
             int_value * 25,
