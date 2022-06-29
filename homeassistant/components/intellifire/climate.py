@@ -90,7 +90,7 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: str) -> None:
         """Set HVAC mode to normal or thermostat control."""
-        LOGGER.info(
+        LOGGER.debug(
             "Setting mode to [%s] - using last temp: %s", hvac_mode, self.last_temp
         )
 
