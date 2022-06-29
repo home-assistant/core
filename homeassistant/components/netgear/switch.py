@@ -168,13 +168,8 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         self.entity_description = entity_description
         self._name = f"{self.get_device_name()} {self.entity_description.name}"
         self._unique_id = f"{self._mac}-{self.entity_description.key}"
-        self._state = None
+        self._attr_is_on = None
         self.async_update_device()
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
@@ -192,9 +187,9 @@ class NetgearAllowBlock(NetgearDeviceEntity, SwitchEntity):
         self._device = self._router.devices[self._mac]
         self._active = self._device["active"]
         if self._device[self.entity_description.key] is None:
-            self._state = None
+            self._attr_is_on = None
         else:
-            self._state = self._device[self.entity_description.key] == "Allow"
+            self._attr_is_on = self._device[self.entity_description.key] == "Allow"
 
 
 class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
@@ -214,18 +209,8 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
         self._name = f"{router.device_name} {entity_description.name}"
         self._unique_id = f"{router.serial_number}-{entity_description.key}"
 
-        self._state = None
-        self._available = False
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
-
-    @property
-    def available(self):
-        """Return if the switch is available."""
-        return self._available
+        self._attr_is_on = None
+        self._attr_available = False
 
     async def async_added_to_hass(self):
         """Fetch state when entity is added."""
@@ -239,10 +224,10 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
                 self.entity_description.update(self._router)
             )
         if response is None:
-            self._available = False
+            self._attr_available = False
         else:
-            self._state = response
-            self._available = True
+            self._attr_is_on = response
+            self._attr_available = True
 
     async def async_turn_on(self, **kwargs):
         """Turn the switch on."""
