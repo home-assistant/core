@@ -2,12 +2,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
-from typing import cast
+from datetime import timedelta
+from typing import Any, cast
 
 from regenmaschine.controller import Controller
 
 from homeassistant.components.sensor import (
+    RestoreSensor,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -185,7 +186,7 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class TimeRemainingSensor(RainMachineEntity, SensorEntity):
+class TimeRemainingSensor(RainMachineEntity, RestoreSensor):
     """Define a sensor that shows the amount of time remaining for an activity."""
 
     entity_description: RainMachineSensorDescriptionUid
@@ -200,12 +201,24 @@ class TimeRemainingSensor(RainMachineEntity, SensorEntity):
         """Initialize."""
         super().__init__(entry, coordinator, controller, description)
 
-        self._running: bool = False
+        self._current_run_state: RunStates | None = None
+        self._previous_run_state: RunStates | None = None
+
+    @property
+    def activity_data(self) -> dict[str, Any]:
+        """Return the core data for this entity."""
+        return cast(dict[str, Any], self.coordinator.data[self.entity_description.uid])
 
     @property
     def status_key(self) -> str:
         """Return the data key that contains the activity status."""
         return "state"
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        if restored_data := await self.async_get_last_sensor_data():
+            self._attr_native_value = restored_data.native_value
+        await super().async_added_to_hass()
 
     def calculate_seconds_remaining(self) -> int:
         """Calculate the number of seconds remaining."""
@@ -214,38 +227,34 @@ class TimeRemainingSensor(RainMachineEntity, SensorEntity):
     @callback
     def update_from_latest_data(self) -> None:
         """Update the state."""
-        data = self.coordinator.data[self.entity_description.uid]
+        self._previous_run_state = self._current_run_state
+        self._current_run_state = RUN_STATE_MAP.get(self.activity_data[self.status_key])
+
         now = utcnow()
-        run_state = RUN_STATE_MAP.get(data[self.status_key])
 
-        if run_state == RunStates.NOT_RUNNING:
-            if self._running:
-                # If we go from anything to not running, update the state to be right
-                # now (i.e., the time the zone stopped running):
-                self._attr_native_value = now
-                self._running = False
-            return
+        if (
+            self._current_run_state == RunStates.NOT_RUNNING
+            and self._previous_run_state in (RunStates.QUEUED, RunStates.RUNNING)
+        ):
+            # If the activity goes from queued/running to not running, update the
+            # state to be right now (i.e., the time the zone stopped running):
+            self._attr_native_value = now
+        elif self._current_run_state == RunStates.RUNNING:
+            seconds_remaining = self.calculate_seconds_remaining()
+            new_timestamp = now + timedelta(seconds=seconds_remaining)
 
-        if run_state == RunStates.QUEUED:
-            # If the zone is queued, hold off on calcuating its completion time until
-            # it actually starts:
-            return
-
-        self._running = True
-
-        seconds_remaining = self.calculate_seconds_remaining()
-        new_timestamp = utcnow() + timedelta(seconds=seconds_remaining)
-
-        if self._attr_native_value:
             assert isinstance(self._attr_native_value, datetime)
+
             if (
-                new_timestamp - self._attr_native_value
-            ) < DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE:
-                # If the deviation between the previous and new timestamps is less than
-                # a "wobble tolerance," don't spam the state machine:
+                self._attr_native_value
+                and new_timestamp - self._attr_native_value
+                < DEFAULT_ZONE_COMPLETION_TIME_WOBBLE_TOLERANCE
+            ):
+                # If the deviation between the previous and new timestamps is less
+                # than a "wobble tolerance," don't spam the state machine:
                 return
 
-        self._attr_native_value = new_timestamp
+            self._attr_native_value = new_timestamp
 
 
 class ProgramTimeRemainingSensor(TimeRemainingSensor):
@@ -271,21 +280,10 @@ class ProgramTimeRemainingSensor(TimeRemainingSensor):
 
     def calculate_seconds_remaining(self) -> int:
         """Calculate the number of seconds remaining."""
-        program_data = self.coordinator.data[self.entity_description.uid]
-        duration = 0
-
-        for idx, zone in enumerate(
-            [z for z in program_data["wateringTimes"] if z["active"]]
-        ):
-            if program_data["delay_on"] and idx > 0:
-                # If the user has configured a manual delay between zones, add it to the
-                # total duration for every zone except the first (since running a
-                # one-zone program won't incur a delay):
-                duration += program_data["delay"]
-
-            duration += self._zone_coordinator.data[zone["id"]]["remaining"]
-
-        return duration
+        return sum(
+            self._zone_coordinator.data[zone["id"]]["remaining"]
+            for zone in [z for z in self.activity_data["wateringTimes"] if z["active"]]
+        )
 
 
 class ProvisionSettingsSensor(RainMachineEntity, SensorEntity):
