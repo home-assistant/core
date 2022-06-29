@@ -832,3 +832,43 @@ def test_invalid_long_tuple(
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
+
+def test_invalid_device_class(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Ensure invalid hints are rejected for entity device_class."""
+    # Set bypass option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, prop_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+    class CoverEntity(Entity):
+        pass
+    class MyCover( #@
+        CoverEntity
+    ):
+        @property
+        def device_class( #@
+            self
+        ):
+            pass
+    """,
+        "homeassistant.components.pylint_test.cover",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=prop_node,
+            args=(["CoverDeviceClass", "str", None], "device_class"),
+            line=12,
+            col_offset=4,
+            end_line=12,
+            end_col_offset=20,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
