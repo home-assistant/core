@@ -29,7 +29,7 @@ async def async_setup_entry(
     gateway = sms_data[GATEWAY]
     unique_id = str(await gateway.get_imei_async())
     entities = []
-    for _, description in SIGNAL_SENSORS.items():
+    for description in SIGNAL_SENSORS.values():
         entities.append(
             DeviceSensor(
                 signal_coordinator,
@@ -37,7 +37,7 @@ async def async_setup_entry(
                 unique_id,
             )
         )
-    for _, description in NETWORK_SENSORS.items():
+    for description in NETWORK_SENSORS.values():
         entities.append(
             DeviceSensor(
                 network_coordinator,
