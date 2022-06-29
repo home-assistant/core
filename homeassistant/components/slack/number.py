@@ -40,5 +40,5 @@ class SlackNumberEntity(SlackEntity, NumberEntity):
     _attr_native_value = 60
 
     async def async_set_native_value(self, value: float) -> None:
-        """Select lamp mode."""
+        """Update the current value."""
         await self._client.dnd_setSnooze(num_minutes=value)
