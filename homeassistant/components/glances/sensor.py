@@ -12,24 +12,6 @@ from . import GlancesData
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
 
 
-@callback
-def _migrate_old_unique_ids(
-    hass: HomeAssistant, entry_id: str, old_unique_id: str, new_key: str
-) -> None:
-    """Migrate unique IDs to the new format."""
-    ent_reg = entity_registry.async_get(hass)
-
-    if entity := ent_reg.async_get_or_create(Platform.SENSOR, DOMAIN, old_unique_id):
-
-        # skip if unique_id has the new format
-        if entity.unique_id.startswith(entry_id):
-            return
-
-        ent_reg.async_update_entity(
-            entity.entity_id, new_unique_id=f"{entry_id}-{new_key}"
-        )
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -41,13 +23,27 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
     dev = []
 
+    @callback
+    def _migrate_old_unique_ids(
+        hass: HomeAssistant, old_unique_id: str, new_key: str
+    ) -> None:
+        """Migrate unique IDs to the new format."""
+        ent_reg = entity_registry.async_get(hass)
+
+        if entity_id := ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, old_unique_id
+        ):
+
+            ent_reg.async_update_entity(
+                entity_id, new_unique_id=f"{config_entry.entry_id}-{new_key}"
+            )
+
     for description in SENSOR_TYPES:
         if description.type == "fs":
             # fs will provide a list of disks attached
             for disk in client.api.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    config_entry.entry_id,
                     f"{client.host}-{name} {disk['mnt_point']} {description.name_suffix}",
                     f"{disk['mnt_point']}-{description.key}",
                 )
@@ -65,7 +61,6 @@ async def async_setup_entry(
                 if sensor["type"] == description.key:
                     _migrate_old_unique_ids(
                         hass,
-                        config_entry.entry_id,
                         f"{client.host}-{name} {sensor['label']} {description.name_suffix}",
                         f"{sensor['label']}-{description.key}",
                     )
@@ -81,7 +76,6 @@ async def async_setup_entry(
             for raid_device in client.api.data[description.type]:
                 _migrate_old_unique_ids(
                     hass,
-                    config_entry.entry_id,
                     f"{client.host}-{name} {raid_device} {description.name_suffix}",
                     f"{raid_device}-{description.key}",
                 )
@@ -89,8 +83,7 @@ async def async_setup_entry(
         elif client.api.data[description.type]:
             _migrate_old_unique_ids(
                 hass,
-                config_entry.entry_id,
-                f"{client.host}-{name} {description.name_suffix}",
+                f"{client.host}-{name}  {description.name_suffix}",
                 f"-{description.key}",
             )
             dev.append(
