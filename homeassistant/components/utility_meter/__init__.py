@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, Platform
+from homeassistant.const import ATTR_ENTITY_ID, CONF_NAME, CONF_UNIQUE_ID, Platform
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import discovery, entity_registry as er
 import homeassistant.helpers.config_validation as cv
@@ -78,6 +78,7 @@ METER_CONFIG_SCHEMA = vol.Schema(
         {
             vol.Required(CONF_SOURCE_SENSOR): cv.entity_id,
             vol.Optional(CONF_NAME): cv.string,
+            vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_METER_TYPE): vol.In(METER_TYPES),
             vol.Optional(CONF_METER_OFFSET, default=DEFAULT_OFFSET): vol.All(
                 cv.time_period, cv.positive_timedelta, max_28_days
@@ -106,27 +107,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def async_reset_meters(service_call):
         """Reset all sensors of a meter."""
-        entity_id = service_call.data["entity_id"]
+        meters = service_call.data["entity_id"]
 
-        domain = split_entity_id(entity_id)[0]
-        if domain == DOMAIN:
-            for entity in hass.data[DATA_LEGACY_COMPONENT].entities:
-                if entity_id == entity.entity_id:
-                    _LOGGER.debug(
-                        "forward reset meter from %s to %s",
-                        entity_id,
-                        entity.tracked_entity_id,
-                    )
-                    entity_id = entity.tracked_entity_id
-
-        _LOGGER.debug("reset meter %s", entity_id)
-        async_dispatcher_send(hass, SIGNAL_RESET_METER, entity_id)
+        for meter in meters:
+            _LOGGER.debug("resetting meter %s", meter)
+            domain, entity = split_entity_id(meter)
+            # backward compatibility up to 2022.07:
+            if domain == DOMAIN:
+                async_dispatcher_send(
+                    hass, SIGNAL_RESET_METER, f"{SELECT_DOMAIN}.{entity}"
+                )
+            else:
+                async_dispatcher_send(hass, SIGNAL_RESET_METER, meter)
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_RESET,
         async_reset_meters,
-        vol.Schema({ATTR_ENTITY_ID: cv.entity_id}),
+        vol.Schema({ATTR_ENTITY_ID: vol.All(cv.ensure_list, [cv.entity_id])}),
     )
 
     if DOMAIN not in config:
@@ -140,13 +138,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         if not conf[CONF_TARIFFS]:
             # only one entity is required
-            name = conf.get(CONF_NAME, meter)
             hass.async_create_task(
                 discovery.async_load_platform(
                     hass,
                     SENSOR_DOMAIN,
                     DOMAIN,
-                    {name: {CONF_METER: meter, CONF_NAME: name}},
+                    {meter: {CONF_METER: meter}},
                     config,
                 )
             )
@@ -172,7 +169,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 name = f"{meter} {tariff}"
                 tariff_confs[name] = {
                     CONF_METER: meter,
-                    CONF_NAME: name,
                     CONF_TARIFF: tariff,
                 }
 

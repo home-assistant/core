@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "Kunci API",
                     "heating_type": "Jenis pemanasan",
-                    "name": "Nama",
                     "password": "Kata Sandi",
-                    "scan_interval": "Interval Pindai (detik)",
                     "username": "Email"
                 },
-                "description": "Siapkan integrasi ViCare. Untuk menghasilkan kunci API, buka https://developer.viessmann.com",
-                "title": "{name}"
+                "description": "Siapkan integrasi ViCare. Untuk menghasilkan kunci API, buka https://developer.viessmann.com"
             }
         }
     }

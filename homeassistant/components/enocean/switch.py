@@ -1,6 +1,7 @@
 """Support for EnOcean switches."""
 from __future__ import annotations
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
@@ -48,6 +49,7 @@ class EnOceanSwitch(EnOceanEntity, SwitchEntity):
         self._on_state = False
         self._on_state2 = False
         self.channel = channel
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
 
     @property
     def is_on(self):

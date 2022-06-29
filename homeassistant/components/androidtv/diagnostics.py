@@ -5,7 +5,7 @@ from typing import Any
 
 import attr
 
-from homeassistant.components.diagnostics import REDACTED, async_redact_data
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
@@ -14,7 +14,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .const import ANDROID_DEV, DOMAIN, PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC
 
 TO_REDACT = {CONF_UNIQUE_ID}  # UniqueID contain MAC Address
-TO_REDACT_DEV = {PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC}
+TO_REDACT_DEV = {ATTR_CONNECTIONS, ATTR_IDENTIFIERS}
+TO_REDACT_DEV_PROP = {PROP_ETHMAC, PROP_SERIALNO, PROP_WIFIMAC}
 
 
 async def async_get_config_entry_diagnostics(
@@ -26,13 +27,10 @@ async def async_get_config_entry_diagnostics(
 
     # Get information from AndroidTV library
     aftv = hass_data[ANDROID_DEV]
-    data_dev = {"device_class": aftv.DEVICE_CLASS}
-    for prop, value in aftv.device_properties.items():
-        if prop in TO_REDACT_DEV and value:
-            data_dev[prop] = REDACTED
-        else:
-            data_dev[prop] = value
-    data["device_properties"] = data_dev
+    data["device_properties"] = {
+        **async_redact_data(aftv.device_properties, TO_REDACT_DEV_PROP),
+        "device_class": aftv.DEVICE_CLASS,
+    }
 
     # Gather information how this AndroidTV device is represented in Home Assistant
     device_registry = dr.async_get(hass)
@@ -44,12 +42,9 @@ async def async_get_config_entry_diagnostics(
         return data
 
     data["device"] = {
-        **attr.asdict(hass_device),
+        **async_redact_data(attr.asdict(hass_device), TO_REDACT_DEV),
         "entities": {},
     }
-    data["device"][ATTR_IDENTIFIERS] = REDACTED
-    if ATTR_CONNECTIONS in data["device"]:
-        data["device"][ATTR_CONNECTIONS] = REDACTED
 
     hass_entities = er.async_entries_for_device(
         entity_registry,
@@ -67,15 +62,14 @@ async def async_get_config_entry_diagnostics(
             # The context doesn't provide useful information in this case.
             state_dict.pop("context", None)
 
-        entity_dict = async_redact_data(
-            {
-                **attr.asdict(
+        data["device"]["entities"][entity_entry.entity_id] = {
+            **async_redact_data(
+                attr.asdict(
                     entity_entry, filter=lambda attr, value: attr.name != "entity_id"
                 ),
-                "state": state_dict,
-            },
-            TO_REDACT,
-        )
-        data["device"]["entities"][entity_entry.entity_id] = entity_dict
+                TO_REDACT,
+            ),
+            "state": state_dict,
+        }
 
     return data

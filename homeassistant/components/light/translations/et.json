@@ -14,7 +14,6 @@
         },
         "trigger_type": {
             "changed_states": "{entity_name} l\u00fclitus sisse v\u00f5i v\u00e4lja",
-            "toggled": "{entity_name} l\u00fclitus sisse v\u00f5i v\u00e4lja",
             "turned_off": "{entity_name} l\u00fclitus v\u00e4lja",
             "turned_on": "{entity_name} l\u00fclitus sisse"
         }

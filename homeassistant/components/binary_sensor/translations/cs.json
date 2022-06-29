@@ -53,8 +53,6 @@
             "connected": "{entity_name} p\u0159ipojeno",
             "gas": "{entity_name} za\u010dalo detekovat plyn",
             "hot": "{entity_name} se zah\u0159\u00e1l",
-            "is_not_tampered": "{entity_name} p\u0159estalo detekovat neopr\u00e1vn\u011bnou manipulaci",
-            "is_tampered": "{entity_name} za\u010dalo detekovat neopr\u00e1vn\u011bnou manipulaci",
             "light": "{entity_name} za\u010dalo detekovat sv\u011btlo",
             "locked": "{entity_name} zam\u010deno",
             "moist": "{entity_name} zvlhnul",
@@ -111,6 +109,10 @@
         "battery_charging": {
             "off": "Nenab\u00edj\u00ed se",
             "on": "Nab\u00edjen\u00ed"
+        },
+        "carbon_monoxide": {
+            "off": "\u017d\u00e1dn\u00fd plyn",
+            "on": "Zji\u0161t\u011bn plyn"
         },
         "cold": {
             "off": "Norm\u00e1ln\u00ed",

@@ -13,7 +13,7 @@ async def test_get_actions(hass, push_registration):
 
     assert await async_get_device_automations(
         hass, device_automation.DeviceAutomationType.ACTION, device_id
-    ) == [{"domain": DOMAIN, "device_id": device_id, "type": "notify"}]
+    ) == [{"domain": DOMAIN, "device_id": device_id, "metadata": {}, "type": "notify"}]
 
     capabilitites = await device_automation._async_get_device_automation_capabilities(
         hass,

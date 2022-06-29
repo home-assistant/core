@@ -3,8 +3,8 @@
         "abort": {
             "all_configured": "Alle gekoppelde servers zijn al geconfigureerd",
             "already_configured": "Deze Plex-server is al geconfigureerd",
-            "already_in_progress": "De configuratiestroom is al aan de gang",
-            "reauth_successful": "Herauthenticatie was succesvol",
+            "already_in_progress": "De configuratie is momenteel al bezig",
+            "reauth_successful": "Herauthenticatie geslaagd",
             "token_request_timeout": "Time-out verkrijgen van token",
             "unknown": "Onverwachte fout"
         },
@@ -23,7 +23,7 @@
                     "port": "Poort",
                     "ssl": "Maakt gebruik van een SSL-certificaat",
                     "token": "Token (optioneel)",
-                    "verify_ssl": "Controleer het SSL-certificaat"
+                    "verify_ssl": "SSL-certificaat verifi\u00ebren"
                 },
                 "title": "Handmatige Plex-configuratie"
             },
@@ -35,14 +35,12 @@
                 "title": "Selecteer Plex server"
             },
             "user": {
-                "description": "Ga verder naar [plex.tv] (https://plex.tv) om een Plex-server te koppelen.",
-                "title": "Plex Media Server"
+                "description": "Ga verder naar [plex.tv] (https://plex.tv) om een Plex-server te koppelen."
             },
             "user_advanced": {
                 "data": {
                     "setup_method": "Installatiemethode"
-                },
-                "title": "Plex Media Server"
+                }
             }
         }
     },
@@ -52,7 +50,7 @@
                 "data": {
                     "ignore_new_shared_users": "Negeer nieuwe beheerde/gedeelde gebruikers",
                     "ignore_plex_web_clients": "Negeer Plex-webclients",
-                    "monitored_users": "Gecontroleerde gebruikers",
+                    "monitored_users": "Gemonitorde gebruikers",
                     "use_episode_art": "Gebruik aflevering kunst"
                 },
                 "description": "Opties voor Plex-mediaspelers"

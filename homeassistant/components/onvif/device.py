@@ -165,17 +165,13 @@ class ONVIFDevice:
                 )
                 return
 
+            tzone = dt_util.DEFAULT_TIME_ZONE
+            cdate = device_time.LocalDateTime
             if device_time.UTCDateTime:
                 tzone = dt_util.UTC
                 cdate = device_time.UTCDateTime
-            else:
-                tzone = (
-                    dt_util.get_time_zone(
-                        device_time.TimeZone or str(dt_util.DEFAULT_TIME_ZONE)
-                    )
-                    or dt_util.DEFAULT_TIME_ZONE
-                )
-                cdate = device_time.LocalDateTime
+            elif device_time.TimeZone:
+                tzone = dt_util.get_time_zone(device_time.TimeZone.TZ) or tzone
 
             if cdate is None:
                 LOGGER.warning("Could not retrieve date/time on this camera")
@@ -204,9 +200,10 @@ class ONVIFDevice:
 
                 if self._dt_diff_seconds > 5:
                     LOGGER.warning(
-                        "The date/time on the device (UTC) is '%s', "
+                        "The date/time on %s (UTC) is '%s', "
                         "which is different from the system '%s', "
                         "this could lead to authentication issues",
+                        self.name,
                         cam_date_utc,
                         system_date,
                     )

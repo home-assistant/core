@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Baud sebess\u00e9g",
                     "device": "Eszk\u00f6z"
                 },
                 "title": "Csatlakoz\u00e1s a modemhez"

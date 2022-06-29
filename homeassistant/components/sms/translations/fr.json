@@ -11,6 +11,7 @@
         "step": {
             "user": {
                 "data": {
+                    "baud_speed": "Vitesse en bauds",
                     "device": "Appareil"
                 },
                 "title": "Se connecter au modem"

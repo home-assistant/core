@@ -5,28 +5,70 @@
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
-            "cannot_connect": "Tilkobling mislyktes"
+            "cannot_connect": "Tilkobling mislyktes",
+            "file_not_found": "Den angitte `.knxkeys`-filen ble ikke funnet i banen config/.storage/knx/",
+            "invalid_individual_address": "Verdien samsvarer ikke med m\u00f8nsteret for individuelle KNX-adresser.\n 'area.line.device'",
+            "invalid_ip_address": "Ugyldig IPv4-adresse.",
+            "invalid_signature": "Passordet for \u00e5 dekryptere `.knxkeys`-filen er feil."
         },
         "step": {
             "manual_tunnel": {
                 "data": {
                     "host": "Vert",
-                    "individual_address": "Individuell adresse for tilkoblingen",
-                    "local_ip": "Lokal IP for Home Assistant (la st\u00e5 tomt for automatisk gjenkjenning)",
+                    "local_ip": "Lokal IP for hjemmeassistent",
                     "port": "Port",
-                    "route_back": "Rute tilbake / NAT-modus",
                     "tunneling_type": "KNX tunneltype"
+                },
+                "data_description": {
+                    "host": "IP-adressen til KNX/IP-tunnelenheten.",
+                    "local_ip": "La st\u00e5 tomt for \u00e5 bruke automatisk oppdagelse.",
+                    "port": "Port p\u00e5 KNX/IP-tunnelenheten."
                 },
                 "description": "Vennligst skriv inn tilkoblingsinformasjonen til tunnelenheten din."
             },
             "routing": {
                 "data": {
-                    "individual_address": "Individuell adresse for ruteforbindelsen",
-                    "local_ip": "Lokal IP for Home Assistant (la st\u00e5 tomt for automatisk gjenkjenning)",
-                    "multicast_group": "Multicast-gruppen som brukes til ruting",
-                    "multicast_port": "Multicast-porten som brukes til ruting"
+                    "individual_address": "Individuell adresse",
+                    "local_ip": "Lokal IP for hjemmeassistent",
+                    "multicast_group": "Multicast gruppe",
+                    "multicast_port": "Multicast port"
+                },
+                "data_description": {
+                    "individual_address": "KNX-adresse som skal brukes av Home Assistant, f.eks. `0.0.4`",
+                    "local_ip": "La st\u00e5 tomt for \u00e5 bruke automatisk oppdagelse."
                 },
                 "description": "Vennligst konfigurer rutealternativene."
+            },
+            "secure_knxkeys": {
+                "data": {
+                    "knxkeys_filename": "Filnavnet til `.knxkeys`-filen (inkludert utvidelse)",
+                    "knxkeys_password": "Passordet for \u00e5 dekryptere `.knxkeys`-filen"
+                },
+                "data_description": {
+                    "knxkeys_filename": "Filen forventes \u00e5 bli funnet i konfigurasjonskatalogen din i `.storage/knx/`.\n I Home Assistant OS vil dette v\u00e6re `/config/.storage/knx/`\n Eksempel: `mitt_prosjekt.knxkeys`",
+                    "knxkeys_password": "Dette ble satt ved eksport av filen fra ETS."
+                },
+                "description": "Vennligst skriv inn informasjonen for `.knxkeys`-filen."
+            },
+            "secure_manual": {
+                "data": {
+                    "device_authentication": "Passord for enhetsgodkjenning",
+                    "user_id": "bruker-ID",
+                    "user_password": "Brukerpassord"
+                },
+                "data_description": {
+                    "device_authentication": "Dette settes i 'IP'-panelet til grensesnittet i ETS.",
+                    "user_id": "Dette er ofte tunnelnummer +1. S\u00e5 'Tunnel 2' ville ha bruker-ID '3'.",
+                    "user_password": "Passord for den spesifikke tunnelforbindelsen satt i 'Egenskaper'-panelet i tunnelen i ETS."
+                },
+                "description": "Vennligst skriv inn din sikre IP-informasjon."
+            },
+            "secure_tunneling": {
+                "description": "Velg hvordan du vil konfigurere KNX/IP Secure.",
+                "menu_options": {
+                    "secure_knxkeys": "Bruk en `.knxkeys`-fil som inneholder IP-sikre n\u00f8kler",
+                    "secure_manual": "Konfigurer IP-sikre n\u00f8kler manuelt"
+                }
             },
             "tunnel": {
                 "data": {
@@ -48,20 +90,30 @@
                 "data": {
                     "connection_type": "KNX tilkoblingstype",
                     "individual_address": "Standard individuell adresse",
-                    "local_ip": "Lokal IP for Home Assistant (bruk 0.0.0.0 for automatisk deteksjon)",
-                    "multicast_group": "Multicast-gruppe brukt til ruting og oppdagelse",
-                    "multicast_port": "Multicast-port som brukes til ruting og oppdagelse",
-                    "rate_limit": "Maksimalt utg\u00e5ende telegrammer per sekund",
-                    "state_updater": "Aktiver lesetilstander globalt fra KNX-bussen"
+                    "local_ip": "Lokal IP for hjemmeassistent",
+                    "multicast_group": "Multicast gruppe",
+                    "multicast_port": "Multicast port",
+                    "rate_limit": "Satsgrense",
+                    "state_updater": "Statens oppdatering"
+                },
+                "data_description": {
+                    "individual_address": "KNX-adresse som skal brukes av Home Assistant, f.eks. `0.0.4`",
+                    "local_ip": "Bruk `0.0.0.0` for automatisk oppdagelse.",
+                    "multicast_group": "Brukes til ruting og oppdagelse. Standard: `224.0.23.12`",
+                    "multicast_port": "Brukes til ruting og oppdagelse. Standard: `3671`",
+                    "rate_limit": "Maksimalt utg\u00e5ende telegrammer per sekund.\n Anbefalt: 20 til 40",
+                    "state_updater": "Sett standard for lesing av tilstander fra KNX-bussen. N\u00e5r den er deaktivert, vil ikke Home Assistant aktivt hente enhetstilstander fra KNX-bussen. Kan overstyres av entitetsalternativer for \"sync_state\"."
                 }
             },
             "tunnel": {
                 "data": {
                     "host": "Vert",
-                    "local_ip": "Lokal IP (la st\u00e5 tomt hvis du er usikker)",
                     "port": "Port",
-                    "route_back": "Rute tilbake / NAT-modus",
                     "tunneling_type": "KNX tunneltype"
+                },
+                "data_description": {
+                    "host": "IP-adressen til KNX/IP-tunnelenheten.",
+                    "port": "Port p\u00e5 KNX/IP-tunnelenheten."
                 }
             }
         }

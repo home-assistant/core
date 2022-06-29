@@ -24,12 +24,10 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util.dt import as_utc, get_time_zone
+from homeassistant.util.dt import as_utc
 
 from .const import ATTRIBUTION, CONF_STATION, DOMAIN, NONE_IS_ZERO_SENSORS
 from .coordinator import TVDataUpdateCoordinator
-
-STOCKHOLM_TIMEZONE = get_time_zone("Europe/Stockholm")
 
 
 @dataclass
@@ -156,8 +154,8 @@ async def async_setup_entry(
 
 def _to_datetime(measuretime: str) -> datetime:
     """Return isoformatted utc time."""
-    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S")
-    return as_utc(time_obj.replace(tzinfo=STOCKHOLM_TIMEZONE))
+    time_obj = datetime.strptime(measuretime, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return as_utc(time_obj)
 
 
 class TrafikverketWeatherStation(
@@ -184,7 +182,7 @@ class TrafikverketWeatherStation(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
             manufacturer="Trafikverket",
-            model="v1.2",
+            model="v2.0",
             name=sensor_station,
             configuration_url="https://api.trafikinfo.trafikverket.se/",
         )

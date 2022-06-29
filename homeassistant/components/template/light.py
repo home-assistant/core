@@ -16,10 +16,9 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     SUPPORT_WHITE_VALUE,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -49,53 +48,58 @@ from .template_entity import (
 _LOGGER = logging.getLogger(__name__)
 _VALID_STATES = [STATE_ON, STATE_OFF, "true", "false"]
 
-CONF_ON_ACTION = "turn_on"
-CONF_OFF_ACTION = "turn_off"
-CONF_LEVEL_ACTION = "set_level"
-CONF_LEVEL_TEMPLATE = "level_template"
-CONF_TEMPERATURE_TEMPLATE = "temperature_template"
-CONF_TEMPERATURE_ACTION = "set_temperature"
-CONF_COLOR_TEMPLATE = "color_template"
 CONF_COLOR_ACTION = "set_color"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
-CONF_WHITE_VALUE_ACTION = "set_white_value"
+CONF_COLOR_TEMPLATE = "color_template"
 CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST_TEMPLATE = "effect_list_template"
 CONF_EFFECT_TEMPLATE = "effect_template"
+CONF_LEVEL_ACTION = "set_level"
+CONF_LEVEL_TEMPLATE = "level_template"
 CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
 CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
+CONF_OFF_ACTION = "turn_off"
+CONF_ON_ACTION = "turn_on"
 CONF_SUPPORTS_TRANSITION = "supports_transition_template"
+CONF_TEMPERATURE_ACTION = "set_temperature"
+CONF_TEMPERATURE_TEMPLATE = "temperature_template"
+CONF_WHITE_VALUE_ACTION = "set_white_value"
+CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 LIGHT_SCHEMA = vol.All(
     cv.deprecated(CONF_ENTITY_ID),
     vol.Schema(
         {
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
             vol.Optional(CONF_COLOR_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
-            vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_COLOR_TEMPLATE): cv.template,
+            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
             vol.Inclusive(CONF_EFFECT_LIST_TEMPLATE, "effect"): cv.template,
             vol.Inclusive(CONF_EFFECT_TEMPLATE, "effect"): cv.template,
-            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
+            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
+            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS_TEMPLATE): cv.template,
             vol.Optional(CONF_MIN_MIREDS_TEMPLATE): cv.template,
+            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
+            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
+            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
+            vol.Optional(CONF_WHITE_VALUE_ACTION): cv.SCRIPT_SCHEMA,
+            vol.Optional(CONF_WHITE_VALUE_TEMPLATE): cv.template,
         }
     ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
 )
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_SCHEMA)}
+PLATFORM_SCHEMA = vol.All(
+    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
+    cv.deprecated(CONF_WHITE_VALUE_ACTION),
+    cv.deprecated(CONF_WHITE_VALUE_TEMPLATE),
+    PLATFORM_SCHEMA.extend(
+        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_SCHEMA)}
+    ),
 )
 
 
@@ -131,6 +135,8 @@ async def async_setup_platform(
 
 class LightTemplate(TemplateEntity, LightEntity):
     """Representation of a templated Light, including dimmable."""
+
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -249,9 +255,9 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._white_value_script is not None:
             supported_features |= SUPPORT_WHITE_VALUE
         if self._effect_script is not None:
-            supported_features |= SUPPORT_EFFECT
+            supported_features |= LightEntityFeature.EFFECT
         if self._supports_transition is True:
-            supported_features |= SUPPORT_TRANSITION
+            supported_features |= LightEntityFeature.TRANSITION
         return supported_features
 
     @property
@@ -348,25 +354,37 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         if self._level_template is None and ATTR_BRIGHTNESS in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting brightness to %s", kwargs[ATTR_BRIGHTNESS]
             )
             self._brightness = kwargs[ATTR_BRIGHTNESS]
             optimistic_set = True
 
         if self._white_value_template is None and ATTR_WHITE_VALUE in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting white value to %s", kwargs[ATTR_WHITE_VALUE]
             )
             self._white_value = kwargs[ATTR_WHITE_VALUE]
             optimistic_set = True
 
         if self._temperature_template is None and ATTR_COLOR_TEMP in kwargs:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Optimistically setting color temperature to %s",
                 kwargs[ATTR_COLOR_TEMP],
             )
             self._temperature = kwargs[ATTR_COLOR_TEMP]
+            if self._color_template is None:
+                self._color = None
+            optimistic_set = True
+
+        if self._color_template is None and ATTR_HS_COLOR in kwargs:
+            _LOGGER.debug(
+                "Optimistically setting color to %s",
+                kwargs[ATTR_HS_COLOR],
+            )
+            self._color = kwargs[ATTR_HS_COLOR]
+            if self._temperature_template is None:
+                self._temperature = None
             optimistic_set = True
 
         common_params = {}
@@ -380,42 +398,52 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_COLOR_TEMP in kwargs and self._temperature_script:
             common_params["color_temp"] = kwargs[ATTR_COLOR_TEMP]
 
-            await self._temperature_script.async_run(
-                common_params, context=self._context
+            await self.async_run_script(
+                self._temperature_script,
+                run_variables=common_params,
+                context=self._context,
             )
         elif ATTR_WHITE_VALUE in kwargs and self._white_value_script:
             common_params["white_value"] = kwargs[ATTR_WHITE_VALUE]
 
-            await self._white_value_script.async_run(
-                common_params, context=self._context
+            await self.async_run_script(
+                self._white_value_script,
+                run_variables=common_params,
+                context=self._context,
             )
         elif ATTR_EFFECT in kwargs and self._effect_script:
             effect = kwargs[ATTR_EFFECT]
             if effect not in self._effect_list:
                 _LOGGER.error(
-                    "Received invalid effect: %s. Expected one of: %s",
+                    "Received invalid effect: %s for entity %s. Expected one of: %s",
                     effect,
+                    self.entity_id,
                     self._effect_list,
                     exc_info=True,
                 )
 
             common_params["effect"] = effect
 
-            await self._effect_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._effect_script, run_variables=common_params, context=self._context
+            )
         elif ATTR_HS_COLOR in kwargs and self._color_script:
             hs_value = kwargs[ATTR_HS_COLOR]
             common_params["hs"] = hs_value
             common_params["h"] = int(hs_value[0])
             common_params["s"] = int(hs_value[1])
 
-            await self._color_script.async_run(
-                common_params,
-                context=self._context,
+            await self.async_run_script(
+                self._color_script, run_variables=common_params, context=self._context
             )
         elif ATTR_BRIGHTNESS in kwargs and self._level_script:
-            await self._level_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._level_script, run_variables=common_params, context=self._context
+            )
         else:
-            await self._on_script.async_run(common_params, context=self._context)
+            await self.async_run_script(
+                self._on_script, run_variables=common_params, context=self._context
+            )
 
         if optimistic_set:
             self.async_write_ha_state()
@@ -423,11 +451,13 @@ class LightTemplate(TemplateEntity, LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
-            await self._off_script.async_run(
-                {"transition": kwargs[ATTR_TRANSITION]}, context=self._context
+            await self.async_run_script(
+                self._off_script,
+                run_variables={"transition": kwargs[ATTR_TRANSITION]},
+                context=self._context,
             )
         else:
-            await self._off_script.async_run(context=self._context)
+            await self.async_run_script(self._off_script, context=self._context)
         if self._template is None:
             self._state = False
             self.async_write_ha_state()
@@ -443,7 +473,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._brightness = int(brightness)
             else:
                 _LOGGER.error(
-                    "Received invalid brightness : %s. Expected: 0-255", brightness
+                    "Received invalid brightness : %s for entity %s. Expected: 0-255",
+                    brightness,
+                    self.entity_id,
                 )
                 self._brightness = None
         except ValueError:
@@ -464,7 +496,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._white_value = int(white_value)
             else:
                 _LOGGER.error(
-                    "Received invalid white value: %s. Expected: 0-255", white_value
+                    "Received invalid white value: %s for entity %s. Expected: 0-255",
+                    white_value,
+                    self.entity_id,
                 )
                 self._white_value = None
         except ValueError:
@@ -483,8 +517,9 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if not isinstance(effect_list, list):
             _LOGGER.error(
-                "Received invalid effect list: %s. Expected list of strings",
+                "Received invalid effect list: %s for entity %s. Expected list of strings",
                 effect_list,
+                self.entity_id,
             )
             self._effect_list = None
             return
@@ -504,8 +539,9 @@ class LightTemplate(TemplateEntity, LightEntity):
 
         if effect not in self._effect_list:
             _LOGGER.error(
-                "Received invalid effect: %s. Expected one of: %s",
+                "Received invalid effect: %s for entity %s. Expected one of: %s",
                 effect,
+                self.entity_id,
                 self._effect_list,
             )
             self._effect = None
@@ -533,8 +569,9 @@ class LightTemplate(TemplateEntity, LightEntity):
             return
 
         _LOGGER.error(
-            "Received invalid light is_on state: %s. Expected: %s",
+            "Received invalid light is_on state: %s for entity %s. Expected: %s",
             state,
+            self.entity_id,
             ", ".join(_VALID_STATES),
         )
         self._state = None
@@ -551,8 +588,9 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = temperature
             else:
                 _LOGGER.error(
-                    "Received invalid color temperature : %s. Expected: %s-%s",
+                    "Received invalid color temperature : %s for entity %s. Expected: %s-%s",
                     temperature,
+                    self.entity_id,
                     self.min_mireds,
                     self.max_mireds,
                 )
@@ -591,13 +629,16 @@ class LightTemplate(TemplateEntity, LightEntity):
             self._color = (h_str, s_str)
         elif h_str is not None and s_str is not None:
             _LOGGER.error(
-                "Received invalid hs_color : (%s, %s). Expected: (0-360, 0-100)",
+                "Received invalid hs_color : (%s, %s) for entity %s. Expected: (0-360, 0-100)",
                 h_str,
                 s_str,
+                self.entity_id,
             )
             self._color = None
         else:
-            _LOGGER.error("Received invalid hs_color : (%s)", render)
+            _LOGGER.error(
+                "Received invalid hs_color : (%s) for entity %s", render, self.entity_id
+            )
             self._color = None
 
     @callback

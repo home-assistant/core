@@ -5,7 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/neato",
   "requirements": ["pybotvac==0.0.23"],
   "codeowners": ["@dshokouhi", "@Santobert"],
-  "dependencies": ["http"],
+  "dependencies": ["application_credentials"],
   "iot_class": "cloud_polling",
   "loggers": ["pybotvac"]
 }

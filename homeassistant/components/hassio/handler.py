@@ -13,8 +13,6 @@ from homeassistant.components.http import (
 )
 from homeassistant.const import SERVER_PORT
 
-from .const import X_HASSIO
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -168,6 +166,14 @@ class HassIO:
         """
         return self.send_command("/homeassistant/stop")
 
+    @_api_bool
+    def refresh_updates(self):
+        """Refresh available updates.
+
+        This method return a coroutine.
+        """
+        return self.send_command("/refresh_updates", timeout=None)
+
     @api_data
     def retrieve_discovery_messages(self):
         """Return all discovery data from Hass.io API.
@@ -238,7 +244,9 @@ class HassIO:
                 method,
                 f"http://{self._ip}{command}",
                 json=payload,
-                headers={X_HASSIO: os.environ.get("HASSIO_TOKEN", "")},
+                headers={
+                    aiohttp.hdrs.AUTHORIZATION: f"Bearer {os.environ.get('SUPERVISOR_TOKEN', '')}"
+                },
                 timeout=aiohttp.ClientTimeout(total=timeout),
             )
 

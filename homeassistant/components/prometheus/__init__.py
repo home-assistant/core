@@ -14,7 +14,7 @@ from homeassistant.components.climate.const import (
     ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
-    CURRENT_HVAC_ACTIONS,
+    HVACAction,
 )
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier.const import (
@@ -438,8 +438,8 @@ class PrometheusMetrics:
                 "HVAC action",
                 ["action"],
             )
-            for action in CURRENT_HVAC_ACTIONS:
-                metric.labels(**dict(self._labels(state), action=action)).set(
+            for action in HVACAction:
+                metric.labels(**dict(self._labels(state), action=action.value)).set(
                     float(action == current_action)
                 )
 

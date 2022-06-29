@@ -5,7 +5,8 @@ Test setup of rflink sensor component/platform. Verify manual and
 automatic sensor creation.
 """
 from datetime import timedelta
-from unittest.mock import patch
+
+from freezegun import freeze_time
 
 from homeassistant.components.rflink import CONF_RECONNECT_INTERVAL
 from homeassistant.const import (
@@ -123,7 +124,7 @@ async def test_entity_availability(hass, monkeypatch):
     assert hass.states.get("binary_sensor.test").state == STATE_ON
 
 
-async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
+async def test_off_delay(hass, monkeypatch):
     """Test off_delay option."""
     # setup mocking rflink module
     event_callback, create, _, _ = await mock_rflink(hass, CONFIG, DOMAIN, monkeypatch)
@@ -145,7 +146,7 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
     now = dt_util.utcnow()
     # fake time and turn on sensor
     future = now + timedelta(seconds=0)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         event_callback(on_event)
         await hass.async_block_till_done()
@@ -156,7 +157,7 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
 
     # fake time and turn on sensor again
     future = now + timedelta(seconds=15)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         event_callback(on_event)
         await hass.async_block_till_done()
@@ -167,7 +168,7 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
 
     # fake time and verify sensor still on (de-bounce)
     future = now + timedelta(seconds=35)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
@@ -177,7 +178,7 @@ async def test_off_delay(hass, legacy_patchable_time, monkeypatch):
 
     # fake time and verify sensor is off
     future = now + timedelta(seconds=45)
-    with patch(("homeassistant.helpers.event.dt_util.utcnow"), return_value=future):
+    with freeze_time(future):
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
         await hass.async_block_till_done()

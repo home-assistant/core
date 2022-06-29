@@ -15,20 +15,11 @@ from homeassistant.components.light import (
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
     ATTR_WHITE,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_COLOR_TEMP,
-    COLOR_MODE_ONOFF,
-    COLOR_MODE_RGB,
-    COLOR_MODE_RGBW,
-    COLOR_MODE_RGBWW,
-    COLOR_MODE_UNKNOWN,
-    COLOR_MODE_WHITE,
     FLASH_LONG,
     FLASH_SHORT,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -55,15 +46,15 @@ async def async_setup_entry(
 
 
 _COLOR_MODE_MAPPING = {
-    COLOR_MODE_ONOFF: [
+    ColorMode.ONOFF: [
         LightColorCapability.ON_OFF,
     ],
-    COLOR_MODE_BRIGHTNESS: [
+    ColorMode.BRIGHTNESS: [
         LightColorCapability.ON_OFF | LightColorCapability.BRIGHTNESS,
         # for compatibility with older clients (2021.8.x)
         LightColorCapability.BRIGHTNESS,
     ],
-    COLOR_MODE_COLOR_TEMP: [
+    ColorMode.COLOR_TEMP: [
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.COLOR_TEMPERATURE,
@@ -71,18 +62,18 @@ _COLOR_MODE_MAPPING = {
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.COLD_WARM_WHITE,
     ],
-    COLOR_MODE_RGB: [
+    ColorMode.RGB: [
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.RGB,
     ],
-    COLOR_MODE_RGBW: [
+    ColorMode.RGBW: [
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.RGB
         | LightColorCapability.WHITE,
     ],
-    COLOR_MODE_RGBWW: [
+    ColorMode.RGBWW: [
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.RGB
@@ -93,7 +84,7 @@ _COLOR_MODE_MAPPING = {
         | LightColorCapability.RGB
         | LightColorCapability.COLD_WARM_WHITE,
     ],
-    COLOR_MODE_WHITE: [
+    ColorMode.WHITE: [
         LightColorCapability.ON_OFF
         | LightColorCapability.BRIGHTNESS
         | LightColorCapability.WHITE
@@ -117,7 +108,7 @@ def _color_mode_to_ha(mode: int) -> str:
                 candidates.append((ha_mode, caps))
 
     if not candidates:
-        return COLOR_MODE_UNKNOWN
+        return ColorMode.UNKNOWN
 
     # choose the color mode with the most bits set
     candidates.sort(key=lambda key: bin(key[1]).count("1"))
@@ -354,26 +345,26 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        flags = SUPPORT_FLASH
+        flags: int = LightEntityFeature.FLASH
 
         # All color modes except UNKNOWN,ON_OFF support transition
         modes = self._native_supported_color_modes
         if any(m not in (0, LightColorCapability.ON_OFF) for m in modes):
-            flags |= SUPPORT_TRANSITION
+            flags |= LightEntityFeature.TRANSITION
         if self._static_info.effects:
-            flags |= SUPPORT_EFFECT
+            flags |= LightEntityFeature.EFFECT
         return flags
 
     @property
     def supported_color_modes(self) -> set[str] | None:
         """Flag supported color modes."""
         supported = set(map(_color_mode_to_ha, self._native_supported_color_modes))
-        if COLOR_MODE_ONOFF in supported and len(supported) > 1:
-            supported.remove(COLOR_MODE_ONOFF)
-        if COLOR_MODE_BRIGHTNESS in supported and len(supported) > 1:
-            supported.remove(COLOR_MODE_BRIGHTNESS)
-        if COLOR_MODE_WHITE in supported and len(supported) == 1:
-            supported.remove(COLOR_MODE_WHITE)
+        if ColorMode.ONOFF in supported and len(supported) > 1:
+            supported.remove(ColorMode.ONOFF)
+        if ColorMode.BRIGHTNESS in supported and len(supported) > 1:
+            supported.remove(ColorMode.BRIGHTNESS)
+        if ColorMode.WHITE in supported and len(supported) == 1:
+            supported.remove(ColorMode.WHITE)
         return supported
 
     @property

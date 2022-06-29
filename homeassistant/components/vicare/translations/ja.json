@@ -13,13 +13,10 @@
                 "data": {
                     "client_id": "API\u30ad\u30fc",
                     "heating_type": "\u6696\u623f(\u52a0\u71b1)\u30bf\u30a4\u30d7",
-                    "name": "\u540d\u524d",
                     "password": "\u30d1\u30b9\u30ef\u30fc\u30c9",
-                    "scan_interval": "\u30b9\u30ad\u30e3\u30f3\u30a4\u30f3\u30bf\u30fc\u30d0\u30eb(\u79d2)",
                     "username": "E\u30e1\u30fc\u30eb"
                 },
-                "description": "ViCare\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u3002 API\u30ad\u30fc\u3092\u751f\u6210\u3059\u308b\u306b\u306f\u3001https://developer.viessmann.com \u306b\u30a2\u30af\u30bb\u30b9\u3057\u3066\u304f\u3060\u3055\u3044",
-                "title": "{name}"
+                "description": "ViCare\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u3002 API\u30ad\u30fc\u3092\u751f\u6210\u3059\u308b\u306b\u306f\u3001https://developer.viessmann.com \u306b\u30a2\u30af\u30bb\u30b9\u3057\u3066\u304f\u3060\u3055\u3044"
             }
         }
     }

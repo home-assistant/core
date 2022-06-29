@@ -1,7 +1,7 @@
 """Class for Braava devices."""
 import logging
 
-from homeassistant.components.vacuum import SUPPORT_FAN_SPEED
+from homeassistant.components.vacuum import VacuumEntityFeature
 
 from .irobot_base import SUPPORT_IROBOT, IRobotVacuum
 
@@ -23,7 +23,7 @@ BRAAVA_MOP_BEHAVIORS = [MOP_STANDARD, MOP_DEEP, MOP_EXTENDED]
 BRAAVA_SPRAY_AMOUNT = [1, 2, 3]
 
 # Braava Jets can set mopping behavior through fanspeed
-SUPPORT_BRAAVA = SUPPORT_IROBOT | SUPPORT_FAN_SPEED
+SUPPORT_BRAAVA = SUPPORT_IROBOT | VacuumEntityFeature.FAN_SPEED
 
 
 class BraavaJet(IRobotVacuum):

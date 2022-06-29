@@ -12,6 +12,7 @@ from uuid import UUID
 
 from aiohttp import web
 from pyhap.const import STANDALONE_AID
+from pyhap.loader import get_loader
 import voluptuous as vol
 from zeroconf.asyncio import AsyncZeroconf
 
@@ -45,7 +46,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import device_registry, entity_registry
+from homeassistant.helpers import device_registry, entity_registry, instance_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entityfilter import (
     BASE_FILTER_SCHEMA,
@@ -53,7 +54,10 @@ from homeassistant.helpers.entityfilter import (
     EntityFilter,
 )
 from homeassistant.helpers.reload import async_integration_yaml_config
-from homeassistant.helpers.service import async_extract_referenced_entity_ids
+from homeassistant.helpers.service import (
+    async_extract_referenced_entity_ids,
+    async_register_admin_service,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import IntegrationNotFound, async_get_integration
 
@@ -203,6 +207,11 @@ def _async_get_entries_by_name(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
     hass.data.setdefault(DOMAIN, {})[PERSIST_LOCK] = asyncio.Lock()
+
+    # Initialize the loader before loading entries to ensure
+    # there is no race where multiple entries try to load it
+    # at the same time.
+    await hass.async_add_executor_job(get_loader)
 
     _async_register_events_and_services(hass)
 
@@ -455,7 +464,8 @@ def _async_register_events_and_services(hass: HomeAssistant) -> None:
 
         await asyncio.gather(*reload_tasks)
 
-    hass.helpers.service.async_register_admin_service(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SERVICE_RELOAD,
         _handle_homekit_reload,
@@ -516,6 +526,7 @@ class HomeKit:
             advertised_address=self._advertise_ip,
             async_zeroconf_instance=async_zeroconf_instance,
             zeroconf_server=f"{uuid}-hap.local.",
+            loader=get_loader(),
         )
 
         # If we do not load the mac address will be wrong
@@ -715,7 +726,7 @@ class HomeKit:
             return
         self.status = STATUS_WAIT
         async_zc_instance = await zeroconf.async_get_async_instance(self.hass)
-        uuid = await self.hass.helpers.instance_id.async_get()
+        uuid = await instance_id.async_get(self.hass)
         await self.hass.async_add_executor_job(self.setup, async_zc_instance, uuid)
         self.aid_storage = AccessoryAidStorage(self.hass, self._entry_id)
         await self.aid_storage.async_initialize()
@@ -997,7 +1008,6 @@ class HomeKitPairingQRView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Retrieve the pairing QRCode image."""
-        # pylint: disable=no-self-use
         if not request.query_string:
             raise Unauthorized()
         entry_id, secret = request.query_string.split("-")

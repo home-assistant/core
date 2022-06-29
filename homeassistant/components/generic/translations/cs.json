@@ -1,0 +1,33 @@
+{
+    "config": {
+        "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Typ obsahu"
+                }
+            },
+            "user": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "content_type": {
+                "data": {
+                    "content_type": "Typ obsahu"
+                }
+            },
+            "init": {
+                "data": {
+                    "password": "Heslo",
+                    "username": "U\u017eivatelsk\u00e9 jm\u00e9no",
+                    "verify_ssl": "Ov\u011b\u0159it certifik\u00e1t SSL"
+                }
+            }
+        }
+    }
+}

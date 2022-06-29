@@ -1,0 +1,9 @@
+{
+    "state": {
+        "litterrobot__status_code": {
+            "off": "Vypnuto",
+            "offline": "Offline",
+            "p": "Pozastaveno"
+        }
+    }
+}

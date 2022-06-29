@@ -8,16 +8,9 @@
             "unknown": "Kesalahan yang tidak diharapkan"
         },
         "step": {
-            "resources": {
-                "data": {
-                    "resources": "Sumber Daya"
-                },
-                "title": "Pilih Sumber Daya untuk Dipantau"
-            },
             "ups": {
                 "data": {
-                    "alias": "Alias",
-                    "resources": "Sumber Daya"
+                    "alias": "Alias"
                 },
                 "title": "Pilih UPS untuk Dipantau"
             },
@@ -33,17 +26,11 @@
         }
     },
     "options": {
-        "error": {
-            "cannot_connect": "Gagal terhubung",
-            "unknown": "Kesalahan yang tidak diharapkan"
-        },
         "step": {
             "init": {
                 "data": {
-                    "resources": "Sumber Daya",
                     "scan_interval": "Interval Pindai (detik)"
-                },
-                "description": "Pilih Sumber Daya Sensor."
+                }
             }
         }
     }

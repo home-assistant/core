@@ -6,8 +6,10 @@
         },
         "error": {
             "cannot_connect": "Failed to connect",
-            "file_not_found": "The specified knxkeys file was not found in the path config/.storage/knx/",
-            "invalid_signature": "The password to decrypt the knxkeys file is wrong."
+            "file_not_found": "The specified `.knxkeys` file was not found in the path config/.storage/knx/",
+            "invalid_individual_address": "Value does not match pattern for KNX individual address.\n'area.line.device'",
+            "invalid_ip_address": "Invalid IPv4 address.",
+            "invalid_signature": "The password to decrypt the `.knxkeys` file is wrong."
         },
         "step": {
             "manual_tunnel": {
@@ -28,8 +30,8 @@
                 "data": {
                     "individual_address": "Individual address",
                     "local_ip": "Local IP of Home Assistant",
-                    "multicast_group": "Multicast group used for routing",
-                    "multicast_port": "Multicast port used for routing"
+                    "multicast_group": "Multicast group",
+                    "multicast_port": "Multicast port"
                 },
                 "data_description": {
                     "individual_address": "KNX address to be used by Home Assistant, e.g. `0.0.4`",
@@ -100,7 +102,7 @@
                     "multicast_group": "Used for routing and discovery. Default: `224.0.23.12`",
                     "multicast_port": "Used for routing and discovery. Default: `3671`",
                     "rate_limit": "Maximum outgoing telegrams per second.\nRecommended: 20 to 40",
-                    "state_updater": "Globally enable or disable reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve states from the KNX Bus, `sync_state` entity options will have no effect."
+                    "state_updater": "Set default for reading states from the KNX Bus. When disabled, Home Assistant will not actively retrieve entity states from the KNX Bus. Can be overridden by `sync_state` entity options."
                 }
             },
             "tunnel": {

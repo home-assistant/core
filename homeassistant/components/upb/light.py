@@ -3,10 +3,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_FLASH,
     ATTR_TRANSITION,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,11 +55,23 @@ class UpbLight(UpbAttachedEntity, LightEntity):
         self._brightness = self._element.status
 
     @property
-    def supported_features(self):
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self._element.dimmable:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str]:
+        """Flag supported color modes."""
+        return {self.color_mode}
+
+    @property
+    def supported_features(self) -> int:
         """Flag supported features."""
         if self._element.dimmable:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION | SUPPORT_FLASH
-        return SUPPORT_FLASH
+            return LightEntityFeature.TRANSITION | LightEntityFeature.FLASH
+        return LightEntityFeature.FLASH
 
     @property
     def brightness(self):

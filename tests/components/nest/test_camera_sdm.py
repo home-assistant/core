@@ -14,12 +14,7 @@ from google_nest_sdm.event import EventMessage
 import pytest
 
 from homeassistant.components import camera
-from homeassistant.components.camera import (
-    STATE_IDLE,
-    STATE_STREAMING,
-    STREAM_TYPE_HLS,
-    STREAM_TYPE_WEB_RTC,
-)
+from homeassistant.components.camera import STATE_IDLE, STATE_STREAMING, StreamType
 from homeassistant.components.nest.const import DOMAIN
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.core import HomeAssistant
@@ -163,6 +158,7 @@ async def mock_create_stream(hass) -> Mock:
         )
         mock_stream.return_value.async_get_image = AsyncMock()
         mock_stream.return_value.async_get_image.return_value = IMAGE_BYTES_FROM_STREAM
+        mock_stream.return_value.start = AsyncMock()
         yield mock_stream
 
 
@@ -243,7 +239,7 @@ async def test_camera_stream(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
-    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
+    assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")
     assert stream_source == "rtsp://some/url?auth=g.0.streamingToken"
@@ -267,7 +263,7 @@ async def test_camera_ws_stream(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
-    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
+    assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -375,6 +371,7 @@ async def test_refresh_expired_stream_token(
     # Request a stream for the camera entity to exercise nest cam + camera interaction
     # and shutdown on url expiration
     with patch("homeassistant.components.camera.create_stream") as create_stream:
+        create_stream.return_value.start = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
         assert create_stream.called
@@ -541,7 +538,8 @@ async def test_refresh_expired_stream_failure(
 
     # Request an HLS stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
-
+        create_stream.return_value.start = AsyncMock()
+        create_stream.return_value.stop = AsyncMock()
         hls_url = await camera.async_request_stream(hass, "camera.my_camera", fmt="hls")
         assert hls_url.startswith("/api/hls/")  # Includes access token
         assert create_stream.called
@@ -560,6 +558,7 @@ async def test_refresh_expired_stream_failure(
 
     # Requesting an HLS stream will create an entirely new stream
     with patch("homeassistant.components.camera.create_stream") as create_stream:
+        create_stream.return_value.start = AsyncMock()
         # The HLS stream endpoint was invalidated, with a new auth token
         hls_url2 = await camera.async_request_stream(
             hass, "camera.my_camera", fmt="hls"
@@ -591,7 +590,7 @@ async def test_camera_web_rtc(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
-    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_WEB_RTC
+    assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -624,7 +623,7 @@ async def test_camera_web_rtc_unsupported(
     cam = hass.states.get("camera.my_camera")
     assert cam is not None
     assert cam.state == STATE_STREAMING
-    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_HLS
+    assert cam.attributes["frontend_stream_type"] == StreamType.HLS
 
     client = await hass_ws_client(hass)
     await client.send_json(
@@ -718,7 +717,7 @@ async def test_camera_multiple_streams(
     assert cam is not None
     assert cam.state == STATE_STREAMING
     # Prefer WebRTC over RTSP/HLS
-    assert cam.attributes["frontend_stream_type"] == STREAM_TYPE_WEB_RTC
+    assert cam.attributes["frontend_stream_type"] == StreamType.WEB_RTC
 
     # RTSP stream
     stream_source = await camera.async_get_stream_source(hass, "camera.my_camera")

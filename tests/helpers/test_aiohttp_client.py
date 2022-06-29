@@ -5,26 +5,42 @@ from unittest.mock import Mock, patch
 import aiohttp
 import pytest
 
+from homeassistant.components.mjpeg.const import (
+    CONF_MJPEG_URL,
+    CONF_STILL_IMAGE_URL,
+    DOMAIN as MJPEG_DOMAIN,
+)
+from homeassistant.const import (
+    CONF_AUTHENTICATION,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    HTTP_BASIC_AUTHENTICATION,
+)
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
-from homeassistant.setup import async_setup_component
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(name="camera_client")
 def camera_client_fixture(hass, hass_client):
     """Fixture to fetch camera streams."""
-    assert hass.loop.run_until_complete(
-        async_setup_component(
-            hass,
-            "camera",
-            {
-                "camera": {
-                    "name": "config_test",
-                    "platform": "mjpeg",
-                    "mjpeg_url": "http://example.com/mjpeg_stream",
-                }
-            },
-        )
+    mock_config_entry = MockConfigEntry(
+        title="MJPEG Camera",
+        domain=MJPEG_DOMAIN,
+        options={
+            CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
+            CONF_MJPEG_URL: "http://example.com/mjpeg_stream",
+            CONF_PASSWORD: None,
+            CONF_STILL_IMAGE_URL: None,
+            CONF_USERNAME: None,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+    mock_config_entry.add_to_hass(hass)
+    hass.loop.run_until_complete(
+        hass.config_entries.async_setup(mock_config_entry.entry_id)
     )
     hass.loop.run_until_complete(hass.async_block_till_done())
 
@@ -175,7 +191,7 @@ async def test_async_aiohttp_proxy_stream(aioclient_mock, camera_client):
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", content=b"Frame1Frame2Frame3")
 
-    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
 
     assert resp.status == 200
     assert aioclient_mock.call_count == 1
@@ -187,7 +203,7 @@ async def test_async_aiohttp_proxy_stream_timeout(aioclient_mock, camera_client)
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=asyncio.TimeoutError())
 
-    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 504
 
 
@@ -195,7 +211,7 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
     """Test that it fetches the given url."""
     aioclient_mock.get("http://example.com/mjpeg_stream", exc=aiohttp.ClientError())
 
-    resp = await camera_client.get("/api/camera_proxy_stream/camera.config_test")
+    resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 502
 
 

@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from homeassistant.components.cover import SUPPORT_CLOSE, SUPPORT_OPEN, CoverEntity
+from homeassistant.components.cover import CoverEntity, CoverEntityFeature
 from homeassistant.const import (
     CONF_COVERS,
     CONF_NAME,
@@ -59,6 +59,8 @@ async def async_setup_platform(
 class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
+    _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
+
     def __init__(
         self,
         hub: ModbusHub,
@@ -73,7 +75,6 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
         self._status_register = config.get(CONF_STATUS_REGISTER)
         self._status_register_type = config[CONF_STATUS_REGISTER_TYPE]
 
-        self._attr_supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
         self._attr_is_closed = False
 
         # If we read cover status from coil, and not from optional status register,

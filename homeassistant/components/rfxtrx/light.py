@@ -5,11 +5,7 @@ import logging
 
 import RFXtrx as rfxtrxmod
 
-from homeassistant.components.light import (
-    ATTR_BRIGHTNESS,
-    SUPPORT_BRIGHTNESS,
-    LightEntity,
-)
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
@@ -19,8 +15,6 @@ from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
 from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_RFXTRX = SUPPORT_BRIGHTNESS
 
 
 def supported(event: rfxtrxmod.RFXtrxEvent):
@@ -60,6 +54,8 @@ async def async_setup_entry(
 class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     """Representation of a RFXtrx light."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _brightness = 0
     _device: rfxtrxmod.LightingDevice
 
@@ -77,11 +73,6 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
     def brightness(self):
         """Return the brightness of this light between 0..255."""
         return self._brightness
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_RFXTRX
 
     @property
     def is_on(self):

@@ -2,13 +2,14 @@
 from unittest.mock import call, patch
 
 import pytest
-import zigpy.profiles.zha
-import zigpy.types
+from zigpy.exceptions import ZigbeeException
+from zigpy.profiles import zha
 import zigpy.zcl.clusters.general as general
 import zigpy.zcl.foundation as zcl_f
 
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import ENTITY_CATEGORY_CONFIG, STATE_UNAVAILABLE, Platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -18,9 +19,26 @@ from .common import (
     send_attributes_report,
     update_attribute_cache,
 )
-from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
+from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import mock_coro
+
+
+@pytest.fixture(autouse=True)
+def number_platform_only():
+    """Only setup the number and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BUTTON,
+            Platform.DEVICE_TRACKER,
+            Platform.LIGHT,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -29,12 +47,36 @@ def zigpy_analog_output_device(zigpy_device_mock):
 
     endpoints = {
         1: {
-            SIG_EP_TYPE: zigpy.profiles.zha.DeviceType.LEVEL_CONTROL_SWITCH,
+            SIG_EP_TYPE: zha.DeviceType.LEVEL_CONTROL_SWITCH,
             SIG_EP_INPUT: [general.AnalogOutput.cluster_id, general.Basic.cluster_id],
             SIG_EP_OUTPUT: [],
         }
     }
     return zigpy_device_mock(endpoints)
+
+
+@pytest.fixture
+async def light(zigpy_device_mock):
+    """Siren fixture."""
+
+    zigpy_device = zigpy_device_mock(
+        {
+            1: {
+                SIG_EP_PROFILE: zha.PROFILE_ID,
+                SIG_EP_TYPE: zha.DeviceType.ON_OFF_LIGHT,
+                SIG_EP_INPUT: [
+                    general.Basic.cluster_id,
+                    general.Identify.cluster_id,
+                    general.OnOff.cluster_id,
+                    general.LevelControl.cluster_id,
+                ],
+                SIG_EP_OUTPUT: [general.Ota.cluster_id],
+            }
+        },
+        node_descriptor=b"\x02@\x84_\x11\x7fd\x00\x00,d\x00\x00",
+    )
+
+    return zigpy_device
 
 
 async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_device):
@@ -139,3 +181,143 @@ async def test_number(hass, zha_device_joined_restored, zigpy_analog_output_devi
     assert hass.states.get(entity_id).state == "40.0"
     assert cluster.read_attributes.call_count == 10
     assert "present_value" in cluster.read_attributes.call_args[0][0]
+
+
+@pytest.mark.parametrize(
+    "attr, initial_value, new_value",
+    (
+        ("on_off_transition_time", 20, 5),
+        ("on_level", 255, 50),
+        ("on_transition_time", 5, 1),
+        ("off_transition_time", 5, 1),
+        ("default_move_rate", 1, 5),
+        ("start_up_current_level", 254, 125),
+    ),
+)
+async def test_level_control_number(
+    hass, light, zha_device_joined, attr, initial_value, new_value
+):
+    """Test zha level control number entities - new join."""
+
+    entity_registry = er.async_get(hass)
+    level_control_cluster = light.endpoints[1].level
+    level_control_cluster.PLUGGED_ATTR_READS = {
+        attr: initial_value,
+    }
+    zha_device = await zha_device_joined(light)
+
+    entity_id = await find_entity_id(
+        Platform.NUMBER,
+        zha_device,
+        hass,
+        qualifier=attr,
+    )
+    assert entity_id is not None
+
+    assert level_control_cluster.read_attributes.call_count == 3
+    assert (
+        call(
+            [
+                "on_off_transition_time",
+                "on_level",
+                "on_transition_time",
+                "off_transition_time",
+                "default_move_rate",
+            ],
+            allow_cache=True,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in level_control_cluster.read_attributes.call_args_list
+    )
+
+    assert (
+        call(
+            ["start_up_current_level"],
+            allow_cache=True,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in level_control_cluster.read_attributes.call_args_list
+    )
+
+    assert (
+        call(
+            [
+                "current_level",
+            ],
+            allow_cache=False,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in level_control_cluster.read_attributes.call_args_list
+    )
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == str(initial_value)
+
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry
+    assert entity_entry.entity_category == ENTITY_CATEGORY_CONFIG
+
+    # Test number set_value
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": new_value,
+        },
+        blocking=True,
+    )
+
+    assert level_control_cluster.write_attributes.call_count == 1
+    assert level_control_cluster.write_attributes.call_args[0][0] == {
+        attr: new_value,
+    }
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == str(new_value)
+
+    level_control_cluster.read_attributes.reset_mock()
+    await async_setup_component(hass, "homeassistant", {})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant", "update_entity", {"entity_id": entity_id}, blocking=True
+    )
+    # the mocking doesn't update the attr cache so this flips back to initial value
+    assert hass.states.get(entity_id).state == str(initial_value)
+    assert level_control_cluster.read_attributes.call_count == 1
+    assert (
+        call(
+            [
+                attr,
+            ],
+            allow_cache=False,
+            only_cache=False,
+            manufacturer=None,
+        )
+        in level_control_cluster.read_attributes.call_args_list
+    )
+
+    level_control_cluster.write_attributes.reset_mock()
+    level_control_cluster.write_attributes.side_effect = ZigbeeException
+
+    await hass.services.async_call(
+        "number",
+        "set_value",
+        {
+            "entity_id": entity_id,
+            "value": new_value,
+        },
+        blocking=True,
+    )
+
+    assert level_control_cluster.write_attributes.call_count == 1
+    assert level_control_cluster.write_attributes.call_args[0][0] == {
+        attr: new_value,
+    }
+    assert hass.states.get(entity_id).state == str(initial_value)

@@ -7,17 +7,14 @@ from typing import Any, cast
 
 import nextcord
 from nextcord.abc import Messageable
-import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_TARGET,
-    PLATFORM_SCHEMA,
     BaseNotificationService,
 )
-from homeassistant.const import CONF_API_TOKEN, CONF_TOKEN
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,11 +27,9 @@ ATTR_EMBED_FIELDS = "fields"
 ATTR_EMBED_FOOTER = "footer"
 ATTR_EMBED_TITLE = "title"
 ATTR_EMBED_THUMBNAIL = "thumbnail"
+ATTR_EMBED_IMAGE = "image"
 ATTR_EMBED_URL = "url"
 ATTR_IMAGES = "images"
-
-# Deprecated in Home Assistant 2022.4
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_TOKEN): cv.string})
 
 
 async def async_get_service(
@@ -100,6 +95,8 @@ class DiscordNotificationService(BaseNotificationService):
                     embed.set_author(**embedding[ATTR_EMBED_AUTHOR])
                 if ATTR_EMBED_THUMBNAIL in embedding:
                     embed.set_thumbnail(**embedding[ATTR_EMBED_THUMBNAIL])
+                if ATTR_EMBED_IMAGE in embedding:
+                    embed.set_image(**embedding[ATTR_EMBED_IMAGE])
                 embeds.append(embed)
 
         if ATTR_IMAGES in data:

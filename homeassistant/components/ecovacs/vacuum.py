@@ -5,19 +5,7 @@ import logging
 
 import sucks
 
-from homeassistant.components.vacuum import (
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_SEND_COMMAND,
-    SUPPORT_STATUS,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    VacuumEntity,
-)
+from homeassistant.components.vacuum import VacuumEntity, VacuumEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
@@ -26,19 +14,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import ECOVACS_DEVICES
 
 _LOGGER = logging.getLogger(__name__)
-
-SUPPORT_ECOVACS = (
-    SUPPORT_BATTERY
-    | SUPPORT_RETURN_HOME
-    | SUPPORT_CLEAN_SPOT
-    | SUPPORT_STOP
-    | SUPPORT_TURN_OFF
-    | SUPPORT_TURN_ON
-    | SUPPORT_LOCATE
-    | SUPPORT_STATUS
-    | SUPPORT_SEND_COMMAND
-    | SUPPORT_FAN_SPEED
-)
 
 ATTR_ERROR = "error"
 ATTR_COMPONENT_PREFIX = "component_"
@@ -61,17 +36,31 @@ def setup_platform(
 class EcovacsVacuum(VacuumEntity):
     """Ecovacs Vacuums such as Deebot."""
 
-    def __init__(self, device):
+    _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
+    _attr_should_poll = False
+    _attr_supported_features = (
+        VacuumEntityFeature.BATTERY
+        | VacuumEntityFeature.RETURN_HOME
+        | VacuumEntityFeature.CLEAN_SPOT
+        | VacuumEntityFeature.STOP
+        | VacuumEntityFeature.TURN_OFF
+        | VacuumEntityFeature.TURN_ON
+        | VacuumEntityFeature.LOCATE
+        | VacuumEntityFeature.STATUS
+        | VacuumEntityFeature.SEND_COMMAND
+        | VacuumEntityFeature.FAN_SPEED
+    )
+
+    def __init__(self, device: sucks.VacBot) -> None:
         """Initialize the Ecovacs Vacuum."""
         self.device = device
         self.device.connect_and_wait_until_ready()
         if self.device.vacuum.get("nick") is not None:
-            self._name = str(self.device.vacuum["nick"])
+            self._attr_name = str(self.device.vacuum["nick"])
         else:
             # In case there is no nickname defined, use the device id
-            self._name = str(format(self.device.vacuum["did"]))
+            self._attr_name = str(format(self.device.vacuum["did"]))
 
-        self._fan_speed = None
         self._error = None
         _LOGGER.debug("Vacuum initialized: %s", self.name)
 
@@ -99,11 +88,6 @@ class EcovacsVacuum(VacuumEntity):
         self.schedule_update_ha_state()
 
     @property
-    def should_poll(self) -> bool:
-        """Return True if entity has to be polled for state."""
-        return False
-
-    @property
     def unique_id(self) -> str:
         """Return an unique ID."""
         return self.device.vacuum.get("did")
@@ -119,16 +103,6 @@ class EcovacsVacuum(VacuumEntity):
         return self.device.is_charging
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
-    def supported_features(self):
-        """Flag vacuum cleaner robot features that are supported."""
-        return SUPPORT_ECOVACS
-
-    @property
     def status(self):
         """Return the status of the vacuum cleaner."""
         return self.device.vacuum_status
@@ -139,14 +113,14 @@ class EcovacsVacuum(VacuumEntity):
         self.device.run(sucks.Charge())
 
     @property
-    def battery_icon(self):
+    def battery_icon(self) -> str:
         """Return the battery icon for the vacuum cleaner."""
         return icon_for_battery_level(
             battery_level=self.battery_level, charging=self.is_charging
         )
 
     @property
-    def battery_level(self):
+    def battery_level(self) -> int | None:
         """Return the battery level of the vacuum cleaner."""
         if self.device.battery_status is not None:
             return self.device.battery_status * 100
@@ -154,15 +128,9 @@ class EcovacsVacuum(VacuumEntity):
         return super().battery_level
 
     @property
-    def fan_speed(self):
+    def fan_speed(self) -> str | None:
         """Return the fan speed of the vacuum cleaner."""
         return self.device.fan_speed
-
-    @property
-    def fan_speed_list(self):
-        """Get the list of available fan speed steps of the vacuum cleaner."""
-
-        return [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
 
     def turn_on(self, **kwargs):
         """Turn the vacuum on and start cleaning."""

@@ -4,13 +4,7 @@ from typing import Any
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
 
-from homeassistant.components.siren import (
-    ATTR_TONE,
-    SUPPORT_TONES,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SirenEntity,
-)
+from homeassistant.components.siren import ATTR_TONE, SirenEntity, SirenEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -43,6 +37,12 @@ async def async_setup_entry(
 class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
     """Representation of a cover device within devolo Home Control."""
 
+    _attr_supported_features = (
+        SirenEntityFeature.TURN_OFF
+        | SirenEntityFeature.TURN_ON
+        | SirenEntityFeature.TONES
+    )
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -54,13 +54,10 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
         )
         self._attr_available_tones = [
             *range(
-                self._multi_level_switch_property.min,
-                self._multi_level_switch_property.max + 1,
+                int(self._multi_level_switch_property.min),
+                int(self._multi_level_switch_property.max) + 1,
             )
         ]
-        self._attr_supported_features = (
-            SUPPORT_TURN_OFF | SUPPORT_TURN_ON | SUPPORT_TONES
-        )
         self._default_tone = device_instance.settings_property["tone"].tone
 
     @property

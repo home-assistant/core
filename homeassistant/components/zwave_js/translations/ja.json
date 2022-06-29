@@ -26,14 +26,13 @@
         "step": {
             "configure_addon": {
                 "data": {
-                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af\u30ad\u30fc",
                     "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",
                     "s2_access_control_key": "S2\u30a2\u30af\u30bb\u30b9\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30ad\u30fc",
                     "s2_authenticated_key": "S2\u8a8d\u8a3c\u6e08\u307f\u306a\u30ad\u30fc",
                     "s2_unauthenticated_key": "S2\u8a8d\u8a3c\u3055\u308c\u3066\u3044\u306a\u3044\u30ad\u30fc",
                     "usb_path": "USB\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
                 },
-                "description": "\u3053\u308c\u3089\u306e\u30d5\u30a3\u30fc\u30eb\u30c9\u304c\u7a7a\u306e\u307e\u307e\u306e\u5834\u5408\u3001\u30a2\u30c9\u30aa\u30f3\u306f\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30ad\u30fc\u3092\u751f\u6210\u3057\u307e\u3059\u3002",
+                "description": "\u3053\u308c\u3089\u306e\u30d5\u30a3\u30fc\u30eb\u30c9\u304c\u7a7a\u767d\u306e\u307e\u307e\u306e\u5834\u5408\u3001\u30a2\u30c9\u30aa\u30f3\u306f\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30ad\u30fc\u3092\u751f\u6210\u3057\u307e\u3059\u3002",
                 "title": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u306e\u8a2d\u5b9a\u3092\u5165\u529b"
             },
             "hassio_confirm": {
@@ -59,6 +58,10 @@
             },
             "usb_confirm": {
                 "description": "Z-Wave JS\u30a2\u30c9\u30aa\u30f3\u3067 {name} \u3092\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f"
+            },
+            "zeroconf_confirm": {
+                "description": "{url} \u306b\u3042\u308b\u30db\u30fc\u30e0ID {home_id} \u306eZ-Wave JS\u30b5\u30fc\u30d0\u30fc\u3092Home Assistant\u306b\u8ffd\u52a0\u3057\u307e\u3059\u304b\uff1f",
+                "title": "Z-Wave JS\u30b5\u30fc\u30d0\u30fc\u3092\u767a\u898b"
             }
         }
     },
@@ -85,7 +88,7 @@
             "event.value_notification.scene_activation": "{subtype} \u3067\u306e\u30b7\u30fc\u30f3\u306e\u30a2\u30af\u30c6\u30a3\u30d6\u5316",
             "state.node_status": "\u30ce\u30fc\u30c9\u30b9\u30c6\u30fc\u30bf\u30b9\u304c\u5909\u5316\u3057\u307e\u3057\u305f",
             "zwave_js.value_updated.config_parameter": "\u30b3\u30f3\u30d5\u30a3\u30b0\u30d1\u30e9\u30e1\u30fc\u30bf {subtype} \u306e\u5024\u306e\u5909\u66f4",
-            "zwave_js.value_updated.value": "Z-Wave JS\u5024\u306e\u5024\u306e\u5909\u66f4"
+            "zwave_js.value_updated.value": "Z-Wave JS\u5024\u306e\u5024\u3092\u5909\u66f4"
         }
     },
     "options": {
@@ -113,14 +116,13 @@
                 "data": {
                     "emulate_hardware": "\u30cf\u30fc\u30c9\u30a6\u30a7\u30a2\u306e\u30a8\u30df\u30e5\u30ec\u30fc\u30b7\u30e7\u30f3",
                     "log_level": "\u30ed\u30b0\u30ec\u30d9\u30eb",
-                    "network_key": "\u30cd\u30c3\u30c8\u30ef\u30fc\u30af",
                     "s0_legacy_key": "S0\u30ad\u30fc (\u30ec\u30ac\u30b7\u30fc)",
                     "s2_access_control_key": "S2\u30a2\u30af\u30bb\u30b9\u30b3\u30f3\u30c8\u30ed\u30fc\u30eb\u30ad\u30fc",
                     "s2_authenticated_key": "S2\u8a8d\u8a3c\u6e08\u307f\u306a\u30ad\u30fc",
                     "s2_unauthenticated_key": "S2\u8a8d\u8a3c\u3055\u308c\u3066\u3044\u306a\u3044\u30ad\u30fc",
                     "usb_path": "USB\u30c7\u30d0\u30a4\u30b9\u306e\u30d1\u30b9"
                 },
-                "description": "\u3053\u308c\u3089\u306e\u30d5\u30a3\u30fc\u30eb\u30c9\u304c\u7a7a\u306e\u307e\u307e\u306e\u5834\u5408\u3001\u30a2\u30c9\u30aa\u30f3\u306f\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30ad\u30fc\u3092\u751f\u6210\u3057\u307e\u3059\u3002",
+                "description": "\u3053\u308c\u3089\u306e\u30d5\u30a3\u30fc\u30eb\u30c9\u304c\u7a7a\u767d\u306e\u307e\u307e\u306e\u5834\u5408\u3001\u30a2\u30c9\u30aa\u30f3\u306f\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30ad\u30fc\u3092\u751f\u6210\u3057\u307e\u3059\u3002",
                 "title": "Z-Wave JS\u306e\u30a2\u30c9\u30aa\u30f3\u304c\u59cb\u307e\u308a\u307e\u3059\u3002"
             },
             "install_addon": {
@@ -142,6 +144,5 @@
                 "title": "Z-Wave JS \u30a2\u30c9\u30aa\u30f3\u304c\u8d77\u52d5\u3057\u3066\u3044\u307e\u3059\u3002"
             }
         }
-    },
-    "title": "Z-Wave JS"
+    }
 }

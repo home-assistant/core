@@ -24,7 +24,7 @@ from homeassistant.components.sensor import DOMAIN as SENSOR
 from homeassistant.components.switch import DOMAIN as SWITCH
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     _LOGGER,
@@ -44,6 +44,7 @@ from .const import (
     NODE_FILTERS,
     PLATFORMS,
     PROGRAM_PLATFORMS,
+    SENSOR_AUX,
     SUBNODE_CLIMATE_COOL,
     SUBNODE_CLIMATE_HEAT,
     SUBNODE_EZIO2X4_SENSORS,
@@ -295,6 +296,10 @@ def _categorize_nodes(
             hass_isy_data[ISY994_NODES][ISY_GROUP_PLATFORM].append(node)
             continue
 
+        if getattr(node, "protocol", None) == PROTO_INSTEON:
+            for control in node.aux_properties:
+                hass_isy_data[ISY994_NODES][SENSOR_AUX].append((node, control))
+
         if sensor_identifier in path or sensor_identifier in node.name:
             # User has specified to treat this as a sensor. First we need to
             # determine if it should be a binary_sensor.
@@ -378,7 +383,7 @@ async def migrate_old_unique_ids(
     hass: HomeAssistant, platform: str, entities: Sequence[ISYEntity]
 ) -> None:
     """Migrate to new controller-specific unique ids."""
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     for entity in entities:
         if entity.old_unique_id is None or entity.unique_id is None:

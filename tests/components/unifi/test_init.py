@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 from homeassistant.components import unifi
 from homeassistant.components.unifi import async_flatten_entry_data
 from homeassistant.components.unifi.const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN
-from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
+from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from .test_controller import (
@@ -53,9 +53,10 @@ async def test_controller_mac(hass):
 
     assert len(mock_controller.mock_calls) == 2
 
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, connections={(CONNECTION_NETWORK_MAC, "mac1")}
+        config_entry_id=entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "mac1")},
     )
     assert device.configuration_url == "https://123:443"
     assert device.manufacturer == "Ubiquiti Networks"

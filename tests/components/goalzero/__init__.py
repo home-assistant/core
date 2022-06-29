@@ -7,7 +7,6 @@ from homeassistant.components.goalzero.const import DEFAULT_NAME
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -77,19 +76,5 @@ async def async_init_integration(
     if not skip_setup:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
-
-    return entry
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
-    platform: str,
-):
-    """Set up the platform."""
-    entry = await async_init_integration(hass, aioclient_mock)
-
-    with patch("homeassistant.components.goalzero.PLATFORMS", [platform]):
-        assert await async_setup_component(hass, DOMAIN, {})
 
     return entry

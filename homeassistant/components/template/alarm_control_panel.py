@@ -8,15 +8,10 @@ import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
-    FORMAT_NUMBER,
-    FORMAT_TEXT,
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
-)
-from homeassistant.components.alarm_control_panel.const import (
-    SUPPORT_ALARM_ARM_AWAY,
-    SUPPORT_ALARM_ARM_HOME,
-    SUPPORT_ALARM_ARM_NIGHT,
+    AlarmControlPanelEntityFeature,
+    CodeFormat,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -64,12 +59,12 @@ CONF_CODE_ARM_REQUIRED = "code_arm_required"
 CONF_CODE_FORMAT = "code_format"
 
 
-class CodeFormat(Enum):
+class TemplateCodeFormat(Enum):
     """Class to represent different code formats."""
 
     no_code = None
-    number = FORMAT_NUMBER
-    text = FORMAT_TEXT
+    number = CodeFormat.NUMBER
+    text = CodeFormat.TEXT
 
 
 ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
@@ -80,8 +75,8 @@ ALARM_CONTROL_PANEL_SCHEMA = vol.Schema(
         vol.Optional(CONF_ARM_HOME_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_ARM_NIGHT_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_CODE_ARM_REQUIRED, default=True): cv.boolean,
-        vol.Optional(CONF_CODE_FORMAT, default=CodeFormat.number.name): cv.enum(
-            CodeFormat
+        vol.Optional(CONF_CODE_FORMAT, default=TemplateCodeFormat.number.name): cv.enum(
+            TemplateCodeFormat
         ),
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
@@ -130,6 +125,8 @@ async def async_setup_platform(
 class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
     """Representation of a templated Alarm Control Panel."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -147,8 +144,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._disarm_script = None
-        self._code_arm_required = config[CONF_CODE_ARM_REQUIRED]
-        self._code_format = config[CONF_CODE_FORMAT]
+        self._code_arm_required: bool = config[CONF_CODE_ARM_REQUIRED]
+        self._code_format: TemplateCodeFormat = config[CONF_CODE_FORMAT]
         if (disarm_action := config.get(CONF_DISARM_ACTION)) is not None:
             self._disarm_script = Script(hass, disarm_action, name, DOMAIN)
         self._arm_away_script = None
@@ -161,10 +158,10 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         if (arm_night_action := config.get(CONF_ARM_NIGHT_ACTION)) is not None:
             self._arm_night_script = Script(hass, arm_night_action, name, DOMAIN)
 
-        self._state = None
+        self._state: str | None = None
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the state of the device."""
         return self._state
 
@@ -173,23 +170,29 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
         """Return the list of supported features."""
         supported_features = 0
         if self._arm_night_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_NIGHT
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_NIGHT
+            )
 
         if self._arm_home_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_HOME
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_HOME
+            )
 
         if self._arm_away_script is not None:
-            supported_features = supported_features | SUPPORT_ALARM_ARM_AWAY
+            supported_features = (
+                supported_features | AlarmControlPanelEntityFeature.ARM_AWAY
+            )
 
         return supported_features
 
     @property
-    def code_format(self):
+    def code_format(self) -> CodeFormat | None:
         """Regex for code format or None if no code is required."""
         return self._code_format.value
 
     @property
-    def code_arm_required(self):
+    def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
         return self._code_arm_required
 
@@ -206,13 +209,14 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             return
 
         _LOGGER.error(
-            "Received invalid alarm panel state: %s. Expected: %s",
+            "Received invalid alarm panel state: %s for entity %s. Expected: %s",
             result,
+            self.entity_id,
             ", ".join(_VALID_STATES),
         )
         self._state = None
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template:
             self.add_template_attribute(
@@ -228,30 +232,32 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity):
             self._state = state
             optimistic_set = True
 
-        await script.async_run({ATTR_CODE: code}, context=self._context)
+        await self.async_run_script(
+            script, run_variables={ATTR_CODE: code}, context=self._context
+        )
 
         if optimistic_set:
             self.async_write_ha_state()
 
-    async def async_alarm_arm_away(self, code=None):
+    async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Arm the panel to Away."""
         await self._async_alarm_arm(
             STATE_ALARM_ARMED_AWAY, script=self._arm_away_script, code=code
         )
 
-    async def async_alarm_arm_home(self, code=None):
+    async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Arm the panel to Home."""
         await self._async_alarm_arm(
             STATE_ALARM_ARMED_HOME, script=self._arm_home_script, code=code
         )
 
-    async def async_alarm_arm_night(self, code=None):
+    async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Arm the panel to Night."""
         await self._async_alarm_arm(
             STATE_ALARM_ARMED_NIGHT, script=self._arm_night_script, code=code
         )
 
-    async def async_alarm_disarm(self, code=None):
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm the panel."""
         await self._async_alarm_arm(
             STATE_ALARM_DISARMED, script=self._disarm_script, code=code

@@ -122,6 +122,7 @@ class HomeConnectDevice:
         """Initialize the device class."""
         self.hass = hass
         self.appliance = appliance
+        self.entities = []
 
     def initialize(self):
         """Fetch the info needed to initialize the device."""
@@ -390,7 +391,6 @@ class Dishwasher(
     }
 
     PROGRAMS = [
-        {"name": "Dishcare.Dishwasher.Program.PreRinse"},
         {"name": "Dishcare.Dishwasher.Program.Auto1"},
         {"name": "Dishcare.Dishwasher.Program.Auto2"},
         {"name": "Dishcare.Dishwasher.Program.Auto3"},

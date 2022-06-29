@@ -9,7 +9,7 @@ import pykulersky
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
-    COLOR_MODE_RGBW,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -67,8 +67,8 @@ class KulerskyLight(LightEntity):
         """Initialize a Kuler Sky light."""
         self._light = light
         self._available = False
-        self._attr_supported_color_modes = {COLOR_MODE_RGBW}
-        self._attr_color_mode = COLOR_MODE_RGBW
+        self._attr_supported_color_modes = {ColorMode.RGBW}
+        self._attr_color_mode = ColorMode.RGBW
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
