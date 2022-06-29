@@ -5,11 +5,12 @@ from __future__ import annotations
 import asyncio
 from datetime import date, datetime, timedelta, timezone
 from enum import Enum
-from typing import cast
+from typing import Any, cast
 
 import pytz
-from pyunifiprotect.data import Event, EventType
+from pyunifiprotect.data import Event, EventType, SmartDetectObjectType
 from pyunifiprotect.exceptions import NvrError
+from pyunifiprotect.utils import from_js_time
 
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
@@ -172,8 +173,9 @@ class ProtectMediaSource(MediaSource):
         except NvrError as err:
             return _bad_identifier_media(item.identifier, err)
 
+        nvr = data.api.bootstrap.nvr
         if thumbnail_only:
-            PlayMedia(async_generate_thumbnail_url(event), "image/jpeg")
+            PlayMedia(async_generate_thumbnail_url(event.id, nvr.id), "image/jpeg")
         return PlayMedia(async_generate_event_video_url(event), "video/mp4")
 
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
@@ -276,45 +278,63 @@ class ProtectMediaSource(MediaSource):
         return await self._build_event(data, event, thumbnail_only)
 
     async def _build_event(
-        self, data: ProtectData, event: Event, thumbnail_only: bool = False
+        self,
+        data: ProtectData,
+        event: dict[str, Any] | Event,
+        thumbnail_only: bool = False,
     ) -> BrowseMediaSource:
         """Build media source for event."""
 
-        assert event.start is not None
-        assert event.end is not None
+        if isinstance(event, Event):
+            event_id = event.id
+            event_type = event.type
+            start = event.start
+            end = event.end
+        else:
+            event_id = event["id"]
+            event_type = event["type"]
+            start = from_js_time(event["start"])
+            end = from_js_time(event["end"])
 
-        title = event.start.astimezone(_timezone(self.hass)).strftime("%x %X")
-        duration = event.end - event.start
+        assert end is not None
+
+        title = start.astimezone(_timezone(self.hass)).strftime("%x %X")
+        duration = end - start
         title += f" {_format_duration(duration)}"
-        if event.type == EventType.RING:
-            event_type = "Ring Event"
-        elif event.type == EventType.MOTION:
-            event_type = "Motion Event"
-        elif event.type == EventType.SMART_DETECT:
-            event_type = f"Smart Detection - {event.smart_detect_types[0].name.title()}"
-        title += f" {event_type}"
+        if event_type == EventType.RING.value:
+            event_text = "Ring Event"
+        elif event_type == EventType.MOTION.value:
+            event_text = "Motion Event"
+        elif event_type == EventType.SMART_DETECT.value:
+            if isinstance(event, Event):
+                smart_type = event.smart_detect_types[0]
+            else:
+                smart_type = SmartDetectObjectType(event["smartDetectTypes"][0])
+            event_text = f"Smart Detection - {smart_type.name.title()}"
+        title += f" {event_text}"
 
+        nvr = data.api.bootstrap.nvr
         if thumbnail_only:
             return BrowseMediaSource(
                 domain=DOMAIN,
-                identifier=f"{data.api.bootstrap.nvr.id}:eventthumb:{event.id}",
+                identifier=f"{nvr.id}:eventthumb:{event_id}",
                 media_class=MEDIA_CLASS_IMAGE,
                 media_content_type="image/jpeg",
                 title=title,
                 can_play=True,
                 can_expand=False,
-                thumbnail=async_generate_thumbnail_url(event, 185, 185),
+                thumbnail=async_generate_thumbnail_url(event_id, nvr.id, 185, 185),
             )
 
         return BrowseMediaSource(
             domain=DOMAIN,
-            identifier=f"{data.api.bootstrap.nvr.id}:event:{event.id}",
+            identifier=f"{nvr.id}:event:{event_id}",
             media_class=MEDIA_CLASS_VIDEO,
             media_content_type="video/mp4",
             title=title,
             can_play=True,
             can_expand=False,
-            thumbnail=async_generate_thumbnail_url(event, 185, 185),
+            thumbnail=async_generate_thumbnail_url(event_id, nvr.id, 185, 185),
         )
 
     async def _build_events(
@@ -338,18 +358,21 @@ class ProtectMediaSource(MediaSource):
             types = [event_type]
 
         sources: list[BrowseMediaSource] = []
-        events = await data.api.get_events(start=start, end=end, types=types)
-        events = sorted(events, key=lambda e: e.start, reverse=reserve)
+        events = await data.api.get_events_raw(start=start, end=end, types=types)
+        events = sorted(events, key=lambda e: cast(int, e["start"]), reverse=reserve)
         for event in events:
             # do not process ongoing events
-            if event.start is None or event.end is None:
+            if event.get("start") is None or event.get("end") is None:
                 continue
 
-            if camera_id is not None and event.camera_id != camera_id:
+            if camera_id is not None and event.get("camera") != camera_id:
                 continue
 
             # smart detect events have a paired motion event
-            if event.type == EventType.MOTION and len(event.smart_detect_events) > 0:
+            if (
+                event.get("type") == EventType.MOTION.value
+                and len(event.get("smartDetectTypes", [])) > 0
+            ):
                 continue
 
             sources.append(await self._build_event(data, event))
