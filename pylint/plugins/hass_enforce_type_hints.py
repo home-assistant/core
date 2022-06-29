@@ -16,7 +16,6 @@ class _Special(Enum):
     """Sentinel values"""
 
     UNDEFINED = 1
-    DEVICE_CLASS = 2
 
 
 _PLATFORMS: set[str] = {platform.value for platform in Platform}
@@ -466,7 +465,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
+_BASE_DEVICE_CLASS = TypeHintMatch(
+    function_name="device_class",
+    return_type=["str", None],
+    check_return_type_inheritance=True,
+)
 _ENTITY_MATCH: list[TypeHintMatch] = [
+    _BASE_DEVICE_CLASS,
     TypeHintMatch(
         function_name="should_poll",
         return_type="bool",
@@ -502,11 +507,6 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_info",
         return_type=["DeviceInfo", None],
-    ),
-    TypeHintMatch(
-        function_name="device_class",
-        return_type=[_Special.DEVICE_CLASS, "str", None],
-        check_return_type_inheritance=True,
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -1417,14 +1417,6 @@ def _is_valid_type(
     if expected_type is _Special.UNDEFINED:
         return True
 
-    if expected_type is _Special.DEVICE_CLASS and in_return:
-        return (
-            isinstance(node, nodes.Name)
-            and node.name.endswith("DeviceClass")
-            or isinstance(node, nodes.Attribute)
-            and node.attrname.endswith("DeviceClass")
-        )
-
     if isinstance(expected_type, list):
         for expected_type_item in expected_type:
             if _is_valid_type(expected_type_item, node, in_return):
@@ -1636,10 +1628,20 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
+        matches: list[TypeHintMatch] = []
         for ancestor in node.ancestors():
             for class_matches in self._class_matchers:
                 if ancestor.name == class_matches.base_class:
-                    self._visit_class_functions(node, class_matches.matches)
+                    matches.extend(class_matches.matches)
+
+        # Remove duplicate `device_class` when it is overridden
+        if (
+            _BASE_DEVICE_CLASS in matches
+            and sum(1 for m in matches if m.function_name == "device_class") > 1
+        ):
+            matches.remove(_BASE_DEVICE_CLASS)
+
+        self._visit_class_functions(node, matches)
 
     def _visit_class_functions(
         self, node: nodes.ClassDef, matches: list[TypeHintMatch]
