@@ -1,0 +1,169 @@
+start_program:
+  name: Start program
+  description: Selects a program and starts it.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    program:
+      name: Program
+      description: Program to select
+      example: "Dishcare.Dishwasher.Program.Auto2"
+      required: true
+      selector:
+        text:
+    key:
+      name: Option key
+      description: Key of the option.
+      example: "BSH.Common.Option.StartInRelative"
+      selector:
+        text:
+    value:
+      name: Option value
+      description: Value of the option.
+      example: 1800
+      selector:
+        object:
+    unit:
+      name: Option unit
+      description: Unit for the option.
+      example: "seconds"
+      selector:
+        text:
+select_program:
+  name: Select program
+  description: Selects a program without starting it.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    program:
+      name: Program
+      description: Program to select
+      example: "Dishcare.Dishwasher.Program.Auto2"
+      required: true
+      selector:
+        text:
+    key:
+      name: Option key
+      description: Key of the option.
+      example: "BSH.Common.Option.StartInRelative"
+      selector:
+        text:
+    value:
+      name: Option value
+      description: Value of the option.
+      example: 1800
+      selector:
+        object:
+    unit:
+      name: Option unit
+      description: Unit for the option.
+      example: "seconds"
+      selector:
+        text:
+pause_program:
+  name: Pause program
+  description: Pauses the current running program.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+resume_program:
+  name: Resume program
+  description: Resumes a paused program.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+set_option_active:
+  name: Set active program option
+  description: Sets an option for the active program.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    key:
+      name: Key
+      description: Key of the option.
+      example: "LaundryCare.Dryer.Option.DryingTarget"
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: Value of the option.
+      example: "LaundryCare.Dryer.EnumType.DryingTarget.IronDry"
+      required: true
+      selector:
+        object:
+set_option_selected:
+  name: Set selected program option
+  description: Sets an option for the selected program.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    key:
+      name: Key
+      description: Key of the option.
+      example: "LaundryCare.Dryer.Option.DryingTarget"
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: Value of the option.
+      example: "LaundryCare.Dryer.EnumType.DryingTarget.IronDry"
+      required: true
+      selector:
+        object:
+change_setting:
+  name: Change setting
+  description: Changes a setting.
+  fields:
+    device_id:
+      name: Device ID
+      description: Id of the device.
+      required: true
+      selector:
+        device:
+          integration: home_connect
+    key:
+      name: Key
+      description: Key of the setting.
+      example: "BSH.Common.Setting.ChildLock"
+      required: true
+      selector:
+        text:
+    value:
+      name: Value
+      description: Value of the setting.
+      example: "true"
+      required: true
+      selector:
+        object:
