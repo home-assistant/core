@@ -319,6 +319,7 @@ class RflinkDevice(Entity):
     platform = None
     _state: bool | None = None
     _available = True
+    _attr_should_poll = False
 
     def __init__(
         self,
@@ -370,11 +371,6 @@ class RflinkDevice(Entity):
     def _handle_event(self, event):
         """Platform specific event handler."""
         raise NotImplementedError()
-
-    @property
-    def should_poll(self):
-        """No polling needed."""
-        return False
 
     @property
     def name(self):

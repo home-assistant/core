@@ -142,11 +142,6 @@ class RflinkCover(RflinkCommand, CoverEntity, RestoreEntity):
             self._state = False
 
     @property
-    def should_poll(self) -> bool:
-        """No polling available in RFlink cover."""
-        return False
-
-    @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         return not self._state
