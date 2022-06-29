@@ -3,7 +3,7 @@
   "config_flow": true,
   "name": "LG Soundbars",
   "documentation": "https://www.home-assistant.io/integrations/lg_soundbar",
-  "requirements": ["temescal==0.3"],
+  "requirements": ["temescal==0.4"],
   "codeowners": [],
   "iot_class": "local_polling",
   "loggers": ["temescal"]

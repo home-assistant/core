@@ -35,10 +35,10 @@ def test_connect(host, port):
         connection.get_info()
         details = {"name": name_q.get(timeout=10), "uuid": uuid_q.get(timeout=10)}
         return details
-    except socket.gaierror as err:
-        raise ConnectionError(f"Cannot resolve hostname: {host}") from err
     except socket.timeout as err:
         raise ConnectionError(f"Connection timeout with server: {host}:{port}") from err
+    except OSError as err:
+        raise ConnectionError(f"Cannot resolve hostname: {host}") from err
 
 
 class LGSoundbarConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
