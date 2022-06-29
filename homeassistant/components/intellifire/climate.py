@@ -119,9 +119,4 @@ class IntellifireClimate(IntellifireEntity, ClimateEntity):
     @property
     def entity_registry_enabled_default(self) -> bool:
         """Enable entity if it exists."""
-        enabled = bool(self.coordinator.data.has_thermostat)
-        if not enabled:
-            LOGGER.info(
-                "Disabling climate entity - IntelliFire device does not appear to have one"
-            )
-        return enabled
+        return bool(self.coordinator.data.has_thermostat)
