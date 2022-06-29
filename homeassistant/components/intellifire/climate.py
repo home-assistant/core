@@ -1,8 +1,6 @@
 """Intellifire Climate Entities."""
 from __future__ import annotations
 
-from dataclasses import dataclass
-
 from homeassistant.components.climate import (
     HVAC_MODE_HEAT,
     HVAC_MODE_OFF,
@@ -19,14 +17,8 @@ from . import IntellifireDataUpdateCoordinator
 from .const import DOMAIN, LOGGER
 from .entity import IntellifireEntity
 
-
-@dataclass
-class IntellifireClimateEntityDescription(ClimateEntityDescription):
-    """Describes a fan entity."""
-
-
-INTELLIFIRE_CLIMATES: tuple[IntellifireClimateEntityDescription, ...] = (
-    IntellifireClimateEntityDescription(key="climate", name="climate"),
+INTELLIFIRE_CLIMATES: tuple[ClimateEntityDescription, ...] = (
+    ClimateEntityDescription(key="climate", name="climate"),
 )
 
 
@@ -50,7 +42,7 @@ async def async_setup_entry(
 class IntellifireClimate(IntellifireEntity, ClimateEntity):
     """Intellifire climate entity."""
 
-    entity_description: IntellifireClimateEntityDescription
+    entity_description: ClimateEntityDescription
 
     _attr_hvac_modes = [HVAC_MODE_HEAT, HVAC_MODE_OFF]
     _attr_min_temp = 0
