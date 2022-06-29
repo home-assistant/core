@@ -119,6 +119,7 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
+    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
@@ -262,7 +263,7 @@ class BaseLight(LogMixin, light.LightEntity):
             # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
             # After that, we set it to the desired color/temperature with no transition.
             result = await self._level_channel.move_to_level_with_on_off(
-                DEFAULT_MIN_BRIGHTNESS, DEFAULT_TRANSITION
+                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_COLOR_FROM_OFF_TRANSITION
             )
             t_log["move_to_level_with_on_off"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
@@ -615,6 +616,17 @@ class ForceOnLight(Light):
     """Representation of a light which does not respect move_to_level_with_on_off."""
 
     _FORCE_ON = True
+
+
+@STRICT_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    manufacturers={"Sengled"},
+)
+class SengledLight(Light):
+    """Representation of a Sengled light which does not react to move_to_color_temp with 0 as a transition."""
+
+    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 1
 
 
 @GROUP_MATCH()
