@@ -1,10 +1,9 @@
 {
     "config": {
-        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
-                    "host": "\u0425\u043e\u0441\u0442"
+                    "name": "Naam"
                 }
             }
         }
