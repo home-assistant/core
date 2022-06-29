@@ -512,6 +512,7 @@ omit =
     homeassistant/components/hunterdouglas_powerview/cover.py
     homeassistant/components/hunterdouglas_powerview/diagnostics.py
     homeassistant/components/hunterdouglas_powerview/entity.py
+    homeassistant/components/hunterdouglas_powerview/model.py
     homeassistant/components/hunterdouglas_powerview/scene.py
     homeassistant/components/hunterdouglas_powerview/sensor.py
     homeassistant/components/hunterdouglas_powerview/shade_data.py
@@ -632,11 +633,9 @@ omit =
     homeassistant/components/launch_library/const.py
     homeassistant/components/launch_library/diagnostics.py
     homeassistant/components/launch_library/sensor.py
-    homeassistant/components/lcn/binary_sensor.py
     homeassistant/components/lcn/climate.py
     homeassistant/components/lcn/helpers.py
     homeassistant/components/lcn/scene.py
-    homeassistant/components/lcn/sensor.py
     homeassistant/components/lcn/services.py
     homeassistant/components/lg_netcast/media_player.py
     homeassistant/components/lg_soundbar/media_player.py
@@ -679,6 +678,7 @@ omit =
     homeassistant/components/lutron_caseta/light.py
     homeassistant/components/lutron_caseta/scene.py
     homeassistant/components/lutron_caseta/switch.py
+    homeassistant/components/lutron_caseta/util.py
     homeassistant/components/lw12wifi/light.py
     homeassistant/components/lyric/__init__.py
     homeassistant/components/lyric/api.py
@@ -1063,6 +1063,7 @@ omit =
     homeassistant/components/shelly/sensor.py
     homeassistant/components/shelly/utils.py
     homeassistant/components/sigfox/sensor.py
+    homeassistant/components/simplepush/__init__.py
     homeassistant/components/simplepush/notify.py
     homeassistant/components/simplisafe/__init__.py
     homeassistant/components/simplisafe/alarm_control_panel.py
@@ -1121,12 +1122,6 @@ omit =
     homeassistant/components/soma/cover.py
     homeassistant/components/soma/sensor.py
     homeassistant/components/soma/utils.py
-    homeassistant/components/somfy/__init__.py
-    homeassistant/components/somfy/api.py
-    homeassistant/components/somfy/climate.py
-    homeassistant/components/somfy/cover.py
-    homeassistant/components/somfy/sensor.py
-    homeassistant/components/somfy/switch.py
     homeassistant/components/somfy_mylink/__init__.py
     homeassistant/components/somfy_mylink/cover.py
     homeassistant/components/sonos/__init__.py
@@ -1306,9 +1301,6 @@ omit =
     homeassistant/components/tradfri/light.py
     homeassistant/components/tradfri/sensor.py
     homeassistant/components/tradfri/switch.py
-    homeassistant/components/trafikverket_ferry/__init__.py
-    homeassistant/components/trafikverket_ferry/coordinator.py
-    homeassistant/components/trafikverket_ferry/sensor.py
     homeassistant/components/trafikverket_train/__init__.py
     homeassistant/components/trafikverket_train/sensor.py
     homeassistant/components/trafikverket_weatherstation/__init__.py
@@ -1367,6 +1359,7 @@ omit =
     homeassistant/components/vasttrafik/sensor.py
     homeassistant/components/velbus/__init__.py
     homeassistant/components/velbus/binary_sensor.py
+    homeassistant/components/velbus/button.py
     homeassistant/components/velbus/climate.py
     homeassistant/components/velbus/const.py
     homeassistant/components/velbus/cover.py
@@ -1524,7 +1517,6 @@ omit =
     homeassistant/components/zha/core/gateway.py
     homeassistant/components/zha/core/helpers.py
     homeassistant/components/zha/core/registries.py
-    homeassistant/components/zha/core/typing.py
     homeassistant/components/zha/entity.py
     homeassistant/components/zha/light.py
     homeassistant/components/zha/sensor.py

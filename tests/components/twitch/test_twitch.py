@@ -28,6 +28,7 @@ USER_OBJECT = {
     "id": 123,
     "display_name": "channel123",
     "offline_image_url": "logo.png",
+    "profile_image_url": "logo.png",
     "view_count": 42,
 }
 STREAM_OBJECT_ONLINE = {

@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "Kontoen er allerede konfigurert",
             "already_in_progress": "Konfigurasjonsflyten p\u00e5g\u00e5r allerede",
+            "cannot_connect": "Tilkobling mislyktes",
             "code_expired": "Autentiseringskoden er utl\u00f8pt eller p\u00e5loggingsoppsettet er ugyldig. Pr\u00f8v p\u00e5 nytt.",
             "invalid_access_token": "Ugyldig tilgangstoken",
             "missing_configuration": "Komponenten er ikke konfigurert, vennligst f\u00f8lg dokumentasjonen",

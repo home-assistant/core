@@ -36,6 +36,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.json import JSON_ENCODE_EXCEPTIONS
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 import homeassistant.util.dt as dt_util
 
@@ -754,11 +755,12 @@ class Recorder(threading.Thread):
             return
 
         try:
-            shared_data = EventData.shared_data_from_event(event)
-        except (TypeError, ValueError) as ex:
+            shared_data_bytes = EventData.shared_data_bytes_from_event(event)
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning("Event is not JSON serializable: %s: %s", event, ex)
             return
 
+        shared_data = shared_data_bytes.decode("utf-8")
         # Matching attributes found in the pending commit
         if pending_event_data := self._pending_event_data.get(shared_data):
             dbevent.event_data_rel = pending_event_data
@@ -766,7 +768,7 @@ class Recorder(threading.Thread):
         elif data_id := self._event_data_ids.get(shared_data):
             dbevent.data_id = data_id
         else:
-            data_hash = EventData.hash_shared_data(shared_data)
+            data_hash = EventData.hash_shared_data_bytes(shared_data_bytes)
             # Matching attributes found in the database
             if data_id := self._find_shared_data_in_db(data_hash, shared_data):
                 self._event_data_ids[shared_data] = dbevent.data_id = data_id
@@ -785,10 +787,10 @@ class Recorder(threading.Thread):
         assert self.event_session is not None
         try:
             dbstate = States.from_event(event)
-            shared_attrs = StateAttributes.shared_attrs_from_event(
+            shared_attrs_bytes = StateAttributes.shared_attrs_bytes_from_event(
                 event, self._exclude_attributes_by_domain
             )
-        except (TypeError, ValueError) as ex:
+        except JSON_ENCODE_EXCEPTIONS as ex:
             _LOGGER.warning(
                 "State is not JSON serializable: %s: %s",
                 event.data.get("new_state"),
@@ -796,6 +798,7 @@ class Recorder(threading.Thread):
             )
             return
 
+        shared_attrs = shared_attrs_bytes.decode("utf-8")
         dbstate.attributes = None
         # Matching attributes found in the pending commit
         if pending_attributes := self._pending_state_attributes.get(shared_attrs):
@@ -804,7 +807,7 @@ class Recorder(threading.Thread):
         elif attributes_id := self._state_attributes_ids.get(shared_attrs):
             dbstate.attributes_id = attributes_id
         else:
-            attr_hash = StateAttributes.hash_shared_attrs(shared_attrs)
+            attr_hash = StateAttributes.hash_shared_attrs_bytes(shared_attrs_bytes)
             # Matching attributes found in the database
             if attributes_id := self._find_shared_attr_in_db(attr_hash, shared_attrs):
                 dbstate.attributes_id = attributes_id

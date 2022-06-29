@@ -1,5 +1,8 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Tj\u00e4nsten \u00e4r redan konfigurerad"
+        },
         "error": {
             "invalid_zip_code": "Ogiltigt postnummer"
         },

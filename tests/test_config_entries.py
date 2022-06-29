@@ -3260,3 +3260,15 @@ async def test_unique_id_update_while_setup_in_progress(
     assert len(async_reload.mock_calls) == 0
     await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+async def test_disallow_entry_reload_with_setup_in_progresss(hass, manager):
+    """Test we do not allow reload while the config entry is still setting up."""
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.SETUP_IN_PROGRESS
+    )
+    entry.add_to_hass(hass)
+
+    with pytest.raises(config_entries.OperationNotAllowed):
+        assert await manager.async_reload(entry.entry_id)
+    assert entry.state is config_entries.ConfigEntryState.SETUP_IN_PROGRESS

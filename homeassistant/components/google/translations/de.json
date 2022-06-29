@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "Konto wurde bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "cannot_connect": "Verbindung fehlgeschlagen",
             "code_expired": "Der Authentifizierungscode ist abgelaufen oder die Anmeldedaten sind ung\u00fcltig, bitte versuche es erneut.",
             "invalid_access_token": "Ung\u00fcltiger Zugriffs-Token",
             "missing_configuration": "Die Komponente ist nicht konfiguriert. Bitte der Dokumentation folgen.",
