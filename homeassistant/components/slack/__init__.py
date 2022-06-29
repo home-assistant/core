@@ -43,13 +43,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         res = await slack.auth_test()
-        slack.url = res["url"]
-        slack.user_id = res["user_id"]
     except (SlackApiError, ClientError) as ex:
         if isinstance(ex, SlackApiError) and ex.response["error"] == "invalid_auth":
             _LOGGER.error("Invalid API key")
             return False
         raise ConfigEntryNotReady("Error while setting up integration") from ex
+    slack.url = res["url"]
+    slack.user_id = res["user_id"]
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data | {DATA_CLIENT: slack}
 
