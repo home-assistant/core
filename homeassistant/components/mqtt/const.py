@@ -64,7 +64,6 @@ DOMAIN = "mqtt"
 
 MQTT_CONNECTED = "mqtt_connected"
 MQTT_DISCONNECTED = "mqtt_disconnected"
-MQTT_RELOADED = "mqtt_reloaded"
 
 PAYLOAD_EMPTY_JSON = "{}"
 PAYLOAD_NONE = "None"
@@ -105,8 +104,8 @@ RELOADABLE_PLATFORMS = [
     Platform.LIGHT,
     Platform.LOCK,
     Platform.NUMBER,
-    Platform.SELECT,
     Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,
