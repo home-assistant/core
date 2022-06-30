@@ -10,6 +10,7 @@ from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
     STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMED_NIGHT,
+    STATE_ALARM_ARMED_VACATION,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_PENDING,
@@ -56,6 +57,11 @@ OPTIMISTIC_TEMPLATE_ALARM_CONFIG = {
         "entity_id": "alarm_control_panel.test",
         "data": {"code": "{{ this.entity_id }}"},
     },
+    "arm_vacation": {
+        "service": "alarm_control_panel.alarm_arm_vacation",
+        "entity_id": "alarm_control_panel.test",
+        "data": {"code": "{{ this.entity_id }}"},
+    },
     "disarm": {
         "service": "alarm_control_panel.alarm_disarm",
         "entity_id": "alarm_control_panel.test",
@@ -89,6 +95,7 @@ async def test_template_state_text(hass, start_ha):
         STATE_ALARM_ARMED_HOME,
         STATE_ALARM_ARMED_AWAY,
         STATE_ALARM_ARMED_NIGHT,
+        STATE_ALARM_ARMED_VACATION,
         STATE_ALARM_ARMING,
         STATE_ALARM_DISARMED,
         STATE_ALARM_PENDING,
@@ -128,6 +135,7 @@ async def test_optimistic_states(hass, start_ha):
         ("alarm_arm_away", STATE_ALARM_ARMED_AWAY),
         ("alarm_arm_home", STATE_ALARM_ARMED_HOME),
         ("alarm_arm_night", STATE_ALARM_ARMED_NIGHT),
+        ("alarm_arm_vacation", STATE_ALARM_ARMED_VACATION),
         ("alarm_disarm", STATE_ALARM_DISARMED),
     ]:
         await hass.services.async_call(
@@ -250,6 +258,7 @@ async def test_name(hass, start_ha):
         "alarm_arm_home",
         "alarm_arm_away",
         "alarm_arm_night",
+        "alarm_arm_vacation",
         "alarm_disarm",
     ],
 )
