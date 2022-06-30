@@ -865,10 +865,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             base_class="ClimateEntity",
             matches=[
                 TypeHintMatch(
-                    function_name="state",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="precision",
                     return_type="float",
                 ),
