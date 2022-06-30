@@ -1,6 +1,7 @@
 """Base entity for Sensibo integration."""
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any
 
 import async_timeout
@@ -13,6 +14,40 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
+
+
+def api_call(
+    function: Callable[
+        [Any, SensiboDevice, float, float], Coroutine[Any, Any, dict[str, Any]]
+    ]
+) -> Callable:
+    """Decorate api calls."""
+
+    async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
+        """Wrap services for api calls."""
+        result: dict[str, Any] = {"status": None}
+        print(args)
+        print(kwargs)
+        try:
+            async with async_timeout.timeout(TIMEOUT):
+                result = await function(
+                    args[0], kwargs["device_data"], kwargs["key"], kwargs["value"]
+                )
+        except SENSIBO_ERRORS as err:
+            raise HomeAssistantError from err
+
+        LOGGER.debug("Result: %s", result)
+        if (
+            result.get("status") != "success"
+            and result.get("result", {}).get("status") != "Success"
+        ):
+            raise HomeAssistantError(
+                f"Could not execute service for {args[0]}: {result['status']}"
+            )
+        setattr(kwargs["device_data"], kwargs["key"], kwargs["value"])
+        args[0].async_write_ha_state()
+
+    return wrap_api_call
 
 
 class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
@@ -109,28 +144,6 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
         if command == "reset_filter":
             result = await self._client.async_reset_filter(self._device_id)
         return result
-
-    async def api_call(self, function) -> None:
-        """Decorator for api calls."""
-
-        async def wrap_api_call(device_data, key, value) -> None:
-            """Wrap services for api calls."""
-            result: dict[str, Any] = {"status": None}
-            try:
-                async with async_timeout.timeout(TIMEOUT):
-                    result = function(device_data, key, value)
-            except SENSIBO_ERRORS as err:
-                raise HomeAssistantError from err
-
-            LOGGER.debug("Result: %s", result)
-            if result["status"] != "success":
-                raise HomeAssistantError(
-                    f"Could not execute service: {result['status']}"
-                )
-            setattr(device_data, key, value)
-            self.async_write_ha_state()
-
-        return wrap_api_call
 
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
