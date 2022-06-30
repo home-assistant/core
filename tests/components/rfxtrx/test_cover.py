@@ -143,6 +143,9 @@ async def test_rfy_cover(hass, rfxtrx):
     """Test Rfy venetian blind covers."""
     entry_data = create_rfx_test_cfg(
         devices={
+            "071a000001020301": {
+                "venetian_blind_mode": "Unknown",
+            },
             "0c1a0000010203010000000000": {
                 "venetian_blind_mode": "Unknown",
             },
