@@ -348,7 +348,7 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     }
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
     with patch("homeassistant.util.dt.now", return_value=now):
-        config_entry = await setup_unifi_integration(
+        await setup_unifi_integration(
             hass,
             aioclient_mock,
             devices_response=[device],
@@ -376,25 +376,3 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.device_cpu_utilization").state == "3.21"
     assert hass.states.get("sensor.device_memory_utilization").state == "51.0"
     assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:01:00+00:00"
-
-    # Disable option
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_TRACK_DEVICES: False},
-    )
-    await hass.async_block_till_done()
-
-    assert not hass.states.get("sensor.device_cpu_utilization")
-    assert not hass.states.get("sensor.device_memory_utilization")
-    assert not hass.states.get("sensor.device_uptime")
-
-    # Enable option
-    hass.config_entries.async_update_entry(
-        config_entry,
-        options={CONF_TRACK_DEVICES: True},
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get("sensor.device_cpu_utilization")
-    assert hass.states.get("sensor.device_memory_utilization")
-    assert hass.states.get("sensor.device_uptime")
