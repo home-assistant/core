@@ -151,11 +151,6 @@ async def async_setup_entry(  # noqa: C901
     )
 
     @callback
-    def async_on_state(state: EntityState) -> None:
-        """Send dispatcher updates when a new state is received."""
-        entry_data.async_update_state(hass, state)
-
-    @callback
     def async_on_service_call(service: HomeassistantServiceCall) -> None:
         """Call service when user automation in ESPHome config is triggered."""
         domain, service_name = service.service.split(".", 1)
@@ -288,7 +283,7 @@ async def async_setup_entry(  # noqa: C901
             entity_infos, services = await cli.list_entities_services()
             await entry_data.async_update_static_infos(hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)
-            await cli.subscribe_states(async_on_state)
+            await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
 
@@ -714,13 +709,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         )
 
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                (
-                    f"esphome_{self._entry_id}"
-                    f"_update_{self._component_key}_{self._key}"
-                ),
-                self._on_state_update,
+            self._entry_data.async_subscribe_state_update(
+                self._component_key, self._key, self._on_state_update
             )
         )
 

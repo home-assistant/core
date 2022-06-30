@@ -81,6 +81,9 @@ class RuntimeEntryData:
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
+    state_subscriptions: dict[tuple[str, int], Callable[[], None]] = field(
+        default_factory=dict
+    )
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
@@ -125,18 +128,29 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
-    def async_update_state(self, hass: HomeAssistant, state: EntityState) -> None:
+    def async_subscribe_state_update(
+        self, component_key: str, state_key: int, entity_callback: Callable[[], None]
+    ) -> Callable[[], None]:
+        """Subscribe to state updates."""
+
+        def _unsubscribe() -> None:
+            self.state_subscriptions.pop((component_key, state_key))
+
+        self.state_subscriptions[(component_key, state_key)] = entity_callback
+        return _unsubscribe
+
+    @callback
+    def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
         component_key = self.key_to_component[state.key]
         self.state[component_key][state.key] = state
-        signal = f"esphome_{self.entry_id}_update_{component_key}_{state.key}"
         _LOGGER.debug(
             "Dispatching update for component %s with state key %s: %s",
             component_key,
             state.key,
             state,
         )
-        async_dispatcher_send(hass, signal)
+        self.state_subscriptions[(component_key, state.key)]()
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:
