@@ -79,7 +79,7 @@ jobs:
           # Defaults
           integrations_glob=""
           test_full_suite="true"
-          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+          test_groups="[1, 2, 3, 4, 5, 6]"
           test_group_count=24
           tests="[]"
           tests_glob=""
@@ -123,7 +123,7 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
-            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+            test_groups="[1, 2, 3, 4, 5, 6]"
             test_group_count=24
             test_full_suite="true"
           fi
