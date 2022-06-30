@@ -124,10 +124,13 @@ class RuntimeEntryData:
         """Distribute an update of state information to the target."""
         component_key = self.key_to_component[state.key]
         self.state[component_key][state.key] = state
-        _LOGGER.warning(
-            "Component=%s for state key %s -> %s", component_key, state.key, state
-        )
         signal = f"esphome_{self.entry_id}_update_{component_key}_{state.key}"
+        _LOGGER.debug(
+            "Dispatching update for component %s with state key %s: %s",
+            component_key,
+            state.key,
+            state,
+        )
         async_dispatcher_send(hass, signal)
 
     @callback
