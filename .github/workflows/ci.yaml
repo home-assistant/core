@@ -79,8 +79,8 @@ jobs:
           # Defaults
           integrations_glob=""
           test_full_suite="true"
-          test_groups="[1, 2, 3, 4, 5, 6]"
-          test_group_count=6
+          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]"
+          test_group_count=12
           tests="[]"
           tests_glob=""
 
@@ -553,7 +553,7 @@ jobs:
     timeout-minutes: 60
     strategy:
       matrix:
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.9"]
     outputs:
       python-key: ${{ steps.generate-python-key.outputs.key }}
     container: homeassistant/ci-azure:${{ matrix.python-version }}
@@ -750,7 +750,7 @@ jobs:
       fail-fast: false
       matrix:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
-        python-version: ["3.9", "3.10"]
+        python-version: ["3.9"]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
