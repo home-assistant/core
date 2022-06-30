@@ -742,6 +742,120 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    "camera": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="Camera",
+            matches=[
+                TypeHintMatch(
+                    function_name="entity_picture",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="is_recording",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="is_streaming",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="brand",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="motion_detection_enabled",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="model",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="frame_interval",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="frontend_stream_type",
+                    return_type=["StreamType", None],
+                ),
+                TypeHintMatch(
+                    function_name="available",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="async_create_stream",
+                    return_type=["Stream", None],
+                ),
+                TypeHintMatch(
+                    function_name="stream_source",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_handle_web_rtc_offer",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="camera_image",
+                    named_arg_types={
+                        "width": "int | None",
+                        "height": "int | None",
+                    },
+                    return_type=["bytes", None],
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="handle_async_still_stream",
+                    arg_types={
+                        1: "Request",
+                        2: "float",
+                    },
+                    return_type="StreamResponse",
+                ),
+                TypeHintMatch(
+                    function_name="handle_async_mjpeg_stream",
+                    arg_types={
+                        1: "Request",
+                    },
+                    return_type=["StreamResponse", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="turn_off",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="enable_motion_detection",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="disable_motion_detection",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "cover": [
         ClassTypeHintMatch(
             base_class="Entity",
