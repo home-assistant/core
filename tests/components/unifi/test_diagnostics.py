@@ -230,7 +230,9 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                     },
                 ],
                 "state": 1,
+                "system-stats": {"cpu": "1.23", "mem": "50.0"},
                 "type": "usw",
+                "uptime": 0,
                 "version": "4.0.42.10433",
             }
         },
