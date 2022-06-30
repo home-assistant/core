@@ -312,7 +312,7 @@ async def test_option_flow(hass, mqtt_mock_entry_no_yaml_config, mock_try_connec
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] is None
+    assert result["data"] == {}
     assert config_entry.data == {
         mqtt.CONF_BROKER: "another-broker",
         mqtt.CONF_PORT: 2345,
@@ -387,7 +387,7 @@ async def test_disable_birth_will(
         },
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"] is None
+    assert result["data"] == {}
     assert config_entry.data == {
         mqtt.CONF_BROKER: "another-broker",
         mqtt.CONF_PORT: 2345,
