@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import (
     DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -291,12 +292,12 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         return self._state
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of this sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
     @property
-    def force_update(self):
+    def force_update(self) -> bool:
         """Force update."""
         return self._config[CONF_FORCE_UPDATE]
 
