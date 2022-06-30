@@ -658,13 +658,16 @@ async def test_report_climate_state(hass):
         "Alexa.TemperatureSensor", "temperature", {"value": 34.0, "scale": "CELSIUS"}
     )
 
-    hass.states.async_set(
-        "climate.unavailable",
-        "unavailable",
-        {"friendly_name": "Climate Unavailable", "supported_features": 91},
-    )
-    properties = await reported_properties(hass, "climate.unavailable")
-    properties.assert_not_has_property("Alexa.ThermostatController", "thermostatMode")
+    for state in "unavailable", "unknown":
+        hass.states.async_set(
+            f"climate.{state}",
+            state,
+            {"friendly_name": f"Climate {state}", "supported_features": 91},
+        )
+        properties = await reported_properties(hass, f"climate.{state}")
+        properties.assert_not_has_property(
+            "Alexa.ThermostatController", "thermostatMode"
+        )
 
     hass.states.async_set(
         "climate.unsupported",
