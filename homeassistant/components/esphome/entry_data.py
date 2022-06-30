@@ -69,6 +69,12 @@ class RuntimeEntryData:
     store: Store
     state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
+    entity_state_type_name_to_component_key: dict[str, str] = field(
+        default_factory=dict
+    )
+    entity_state_type_to_component_key: dict[type[EntityState], str] = field(
+        default_factory=dict
+    )
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
@@ -124,28 +130,65 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
+    def register_state_type(
+        self, state_type: type[EntityState], component_key: str
+    ) -> None:
+        """Register a state type."""
+        self.entity_state_type_to_component_key[state_type] = component_key
+        self.entity_state_type_name_to_component_key[
+            state_type.__name__
+        ] = component_key
+
+    @callback
+    def component_key_for_state(self, state: EntityState) -> str:
+        """Return the component key for a state."""
+        state_class_name = state.__class__.__name__
+
+        # We try to avoid doing a linear search for the
+        # the component key by looking up the class name
+        # in the mapping. If it's not there, we fall back
+        # to a linear search for the component key by doing
+        # an instance search over entity_state_type_to_component_key.
+        if state_class_name in self.entity_state_type_name_to_component_key:
+            return self.entity_state_type_name_to_component_key[state_class_name]
+
+        for (
+            state_type,
+            component_key,
+        ) in self.entity_state_type_to_component_key.items():
+            if isinstance(state, state_type):
+                return component_key
+
+        raise ValueError(f"{state} is not a registered state_type")
+
+    @callback
     def async_subscribe_state_update(
-        self, state_type: str, state_key: int, entity_callback: Callable[[], None]
+        self,
+        component_key: str,
+        state_key: int,
+        entity_callback: Callable[[], None],
     ) -> Callable[[], None]:
         """Subscribe to state updates."""
 
         def _unsubscribe() -> None:
-            self.state_subscriptions.pop((state_type, state_key))
+            self.state_subscriptions.pop((component_key, state_key))
 
-        self.state_subscriptions[(state_type, state_key)] = entity_callback
+        self.state_subscriptions[(component_key, state_key)] = entity_callback
         return _unsubscribe
 
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        state_type = state.__class__.__name__
+        component_key = self.component_key_for_state(state)
+        subscription_key = (component_key, state.key)
+        self.state[component_key][state.key] = state
         _LOGGER.debug(
-            "Dispatching update for component %s with state key %s: %s",
-            state_type,
-            state.key,
+            "Dispatching update with key %s: %s",
+            subscription_key,
             state,
         )
-        self.state_subscriptions[(state_type, state.key)]()
+        if subscription_key in self.state_subscriptions:
+            self.state_subscriptions[subscription_key]()
 
     @callback
     def async_update_device_state(self, hass: HomeAssistant) -> None:

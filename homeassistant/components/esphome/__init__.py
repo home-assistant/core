@@ -557,6 +557,7 @@ async def platform_async_setup_entry(
     entry_data.info[component_key] = {}
     entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
+    entry_data.register_state_type(state_type, component_key)
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
@@ -710,7 +711,7 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
 
         self.async_on_remove(
             self._entry_data.async_subscribe_state_update(
-                self._state_type.__class__.__name__, self._key, self._on_state_update
+                self._component_key, self._key, self._on_state_update
             )
         )
 
