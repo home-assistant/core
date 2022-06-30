@@ -24,6 +24,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -90,7 +91,7 @@ async def async_setup_platform(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config,
+            data={k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL},
         )
     )
 
