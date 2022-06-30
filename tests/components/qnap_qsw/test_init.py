@@ -20,6 +20,9 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.check_firmware",
+        return_value=None,
+    ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.validate",
         return_value=None,
     ), patch(
