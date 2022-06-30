@@ -56,14 +56,18 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return MQTTOptionsFlowHandler(config_entry)
 
-    async def async_step_user(self, user_input=None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle a flow initialized by the user."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
         return await self.async_step_broker()
 
-    async def async_step_broker(self, user_input=None) -> FlowResult:
+    async def async_step_broker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm the setup."""
         errors = {}
 
@@ -103,7 +107,9 @@ class FlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_hassio_confirm()
 
-    async def async_step_hassio_confirm(self, user_input=None) -> FlowResult:
+    async def async_step_hassio_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Confirm a Hass.io discovery."""
         errors = {}
         assert self._hassio_discovery
@@ -150,11 +156,13 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
         self.broker_config: dict[str, str | int] = {}
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None) -> FlowResult:
+    async def async_step_init(self, user_input: None = None) -> FlowResult:
         """Manage the MQTT options."""
         return await self.async_step_broker()
 
-    async def async_step_broker(self, user_input=None) -> FlowResult:
+    async def async_step_broker(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the MQTT broker configuration."""
         errors = {}
         current_config = self.config_entry.data
@@ -202,7 +210,9 @@ class MQTTOptionsFlowHandler(config_entries.OptionsFlow):
             last_step=False,
         )
 
-    async def async_step_options(self, user_input=None) -> FlowResult:
+    async def async_step_options(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Manage the MQTT options."""
         errors = {}
         current_config = self.config_entry.data
