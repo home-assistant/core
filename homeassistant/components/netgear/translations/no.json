@@ -15,7 +15,7 @@
                     "ssl": "Bruker et SSL-sertifikat",
                     "username": "Brukernavn (Valgfritt)"
                 },
-                "description": "Standard vert: {host}\nStandardport: {port}\nStandard brukernavn: {username}",
+                "description": "Standard vert: {host}\n Standard brukernavn: {username}",
                 "title": "Netgear"
             }
         }

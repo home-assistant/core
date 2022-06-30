@@ -8,8 +8,12 @@ import pytest
 
 from homeassistant import config_entries, data_entry_flow, loader
 from homeassistant.components.hassio import HassioServiceInfo
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, callback
+from homeassistant.const import (
+    EVENT_COMPONENT_LOADED,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import CoreState, Event, callback
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -57,8 +61,6 @@ def mock_handlers():
 def manager(hass):
     """Fixture of a loaded config manager."""
     manager = config_entries.ConfigEntries(hass, {})
-    manager._entries = {}
-    manager._store._async_ensure_stop_listener = lambda: None
     hass.config_entries = manager
     return manager
 
@@ -2299,6 +2301,72 @@ async def test_async_setup_init_entry(hass):
         assert entries[0].state is config_entries.ConfigEntryState.LOADED
 
 
+async def test_async_setup_init_entry_completes_before_loaded_event_fires(hass):
+    """Test a config entry being initialized during integration setup before the loaded event fires."""
+    load_events: list[Event] = []
+
+    @callback
+    def _record_load(event: Event) -> None:
+        nonlocal load_events
+        load_events.append(event)
+
+    listener = hass.bus.async_listen(EVENT_COMPONENT_LOADED, _record_load)
+
+    async def mock_async_setup(hass, config):
+        """Mock setup."""
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                "comp",
+                context={"source": config_entries.SOURCE_IMPORT},
+                data={},
+            )
+        )
+        return True
+
+    async_setup_entry = AsyncMock(return_value=True)
+    mock_integration(
+        hass,
+        MockModule(
+            "comp", async_setup=mock_async_setup, async_setup_entry=async_setup_entry
+        ),
+    )
+    mock_entity_platform(hass, "config_flow.comp", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        VERSION = 1
+
+        async def async_step_three(self, user_input=None):
+            """Test import step creating entry."""
+            return self.async_create_entry(title="title", data={})
+
+        async def async_step_two(self, user_input=None):
+            """Test import step creating entry."""
+            return await self.async_step_three()
+
+        async def async_step_one(self, user_input=None):
+            """Test import step creating entry."""
+            return await self.async_step_two()
+
+        async def async_step_import(self, user_input=None):
+            """Test import step creating entry."""
+            return await self.async_step_one()
+
+    # This test must not use hass.async_block_till_done()
+    # as its explicitly testing what happens without it
+    with patch.dict(config_entries.HANDLERS, {"comp": TestFlow}):
+        assert await async_setup_component(hass, "comp", {})
+        assert len(async_setup_entry.mock_calls) == 1
+        assert load_events[0].event_type == EVENT_COMPONENT_LOADED
+        assert load_events[0].data == {"component": "comp"}
+        entries = hass.config_entries.async_entries("comp")
+        assert len(entries) == 1
+        assert entries[0].state is config_entries.ConfigEntryState.LOADED
+
+    listener()
+
+
 async def test_async_setup_update_entry(hass):
     """Test a config entry being updated during integration setup."""
     entry = MockConfigEntry(domain="comp", data={"value": "initial"})
@@ -2739,6 +2807,7 @@ async def test_setup_raise_auth_failed(hass, caplog):
     assert len(flows) == 1
     assert flows[0]["context"]["entry_id"] == entry.entry_id
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+    assert flows[0]["context"]["title_placeholders"] == {"name": "test_title"}
 
     caplog.clear()
     entry.state = config_entries.ConfigEntryState.NOT_LOADED
@@ -2892,12 +2961,23 @@ async def test_setup_retrying_during_shutdown(hass):
     [
         ({}, "already_configured"),
         ({"host": "3.3.3.3"}, "no_match"),
+        ({"vendor": "no_match"}, "no_match"),
         ({"host": "3.4.5.6"}, "already_configured"),
         ({"host": "3.4.5.6", "ip": "3.4.5.6"}, "no_match"),
         ({"host": "3.4.5.6", "ip": "1.2.3.4"}, "already_configured"),
         ({"host": "3.4.5.6", "ip": "1.2.3.4", "port": 23}, "already_configured"),
+        (
+            {"host": "9.9.9.9", "ip": "6.6.6.6", "port": 12, "vendor": "zoo"},
+            "already_configured",
+        ),
+        ({"vendor": "zoo"}, "already_configured"),
         ({"ip": "9.9.9.9"}, "already_configured"),
         ({"ip": "7.7.7.7"}, "no_match"),  # ignored
+        ({"vendor": "data"}, "no_match"),
+        (
+            {"vendor": "options"},
+            "already_configured",
+        ),  # ensure options takes precedence over data
     ],
 )
 async def test__async_abort_entries_match(hass, manager, matchers, reason):
@@ -2915,6 +2995,16 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         domain="comp",
         source=config_entries.SOURCE_IGNORE,
         data={"ip": "7.7.7.7", "host": "4.5.6.7", "port": 23},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"ip": "6.6.6.6", "host": "9.9.9.9", "port": 12},
+        options={"vendor": "zoo"},
+    ).add_to_hass(hass)
+    MockConfigEntry(
+        domain="comp",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
     ).add_to_hass(hass)
 
     mock_setup_entry = AsyncMock(return_value=True)

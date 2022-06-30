@@ -28,7 +28,7 @@ NEST_EVENT = "nest_event"
 EVENT_SESSION_ID = "CjY5Y3VKaTZwR3o4Y19YbTVfMF..."
 EVENT_ID = "FWWVQVUdGNUlTU2V4MGV2aTNXV..."
 
-EVENT_KEYS = {"device_id", "type", "timestamp"}
+EVENT_KEYS = {"device_id", "type", "timestamp", "zones"}
 
 
 def event_view(d: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -514,3 +514,37 @@ async def test_structure_update_event(hass):
     assert registry.async_get("camera.front")
     # Currently need a manual reload to detect the new entity
     assert not registry.async_get("camera.back")
+
+
+async def test_event_zones(hass):
+    """Test events published with zone information."""
+    events = async_capture_events(hass, NEST_EVENT)
+    subscriber = await async_setup_devices(
+        hass,
+        "sdm.devices.types.DOORBELL",
+        create_device_traits(["sdm.devices.traits.CameraMotion"]),
+    )
+    registry = er.async_get(hass)
+    entry = registry.async_get("camera.front")
+    assert entry is not None
+
+    event_map = {
+        "sdm.devices.events.CameraMotion.Motion": {
+            "eventSessionId": EVENT_SESSION_ID,
+            "eventId": EVENT_ID,
+            "zones": ["Zone 1"],
+        },
+    }
+
+    timestamp = utcnow()
+    await subscriber.async_receive_event(create_events(event_map, timestamp=timestamp))
+    await hass.async_block_till_done()
+
+    event_time = timestamp.replace(microsecond=0)
+    assert len(events) == 1
+    assert event_view(events[0].data) == {
+        "device_id": entry.device_id,
+        "type": "camera_motion",
+        "timestamp": event_time,
+        "zones": ["Zone 1"],
+    }

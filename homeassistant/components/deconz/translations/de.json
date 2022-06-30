@@ -9,6 +9,7 @@
             "updated_instance": "deCONZ-Instanz mit neuer Host-Adresse aktualisiert"
         },
         "error": {
+            "linking_not_possible": "Es konnte keine Verbindung mit dem Gateway hergestellt werden",
             "no_key": "Es konnte kein API-Schl\u00fcssel abgerufen werden"
         },
         "flow_title": "{host}",

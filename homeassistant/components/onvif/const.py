@@ -5,10 +5,7 @@ LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "onvif"
 
-DEFAULT_NAME = "ONVIF Camera"
-DEFAULT_PORT = 5000
-DEFAULT_USERNAME = "admin"
-DEFAULT_PASSWORD = "888888"
+DEFAULT_PORT = 80
 DEFAULT_ARGUMENTS = "-pred 1"
 
 CONF_DEVICE_ID = "deviceid"

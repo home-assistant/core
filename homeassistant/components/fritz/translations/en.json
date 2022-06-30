@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Device is already configured",
             "already_in_progress": "Configuration flow is already in progress",
+            "ignore_ip6_link_local": "IPv6 link local address is not supported.",
             "reauth_successful": "Re-authentication was successful"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Configuration flow is already in progress",
             "cannot_connect": "Failed to connect",
             "connection_error": "Failed to connect",
-            "invalid_auth": "Invalid authentication"
+            "invalid_auth": "Invalid authentication",
+            "upnp_not_configured": "Missing UPnP settings on device."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Seconds to consider a device at 'home'"
+                    "consider_home": "Seconds to consider a device at 'home'",
+                    "old_discovery": "Enable old discovery method"
                 }
             }
         }

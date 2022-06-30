@@ -11,6 +11,7 @@ from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import (
     CONF_HOST,
     CONF_MAC,
+    CONF_MODEL,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -22,7 +23,6 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.network import is_link_local
 
 from .const import (
-    CONF_MODEL,
     CONF_STREAM_PROFILE,
     CONF_VIDEO_SOURCE,
     DEFAULT_STREAM_PROFILE,
@@ -205,10 +205,15 @@ class AxisFlowHandler(config_entries.ConfigFlow, domain=AXIS_DOMAIN):
             }
         )
 
-        self.context["title_placeholders"] = {
-            CONF_NAME: device[CONF_NAME],
-            CONF_HOST: device[CONF_HOST],
-        }
+        self.context.update(
+            {
+                "title_placeholders": {
+                    CONF_NAME: device[CONF_NAME],
+                    CONF_HOST: device[CONF_HOST],
+                },
+                "configuration_url": f"http://{device[CONF_HOST]}:{device[CONF_PORT]}",
+            }
+        )
 
         self.discovery_schema = {
             vol.Required(CONF_HOST, default=device[CONF_HOST]): str,

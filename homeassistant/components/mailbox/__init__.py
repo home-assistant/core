@@ -11,6 +11,7 @@ from aiohttp import web
 from aiohttp.web_exceptions import HTTPNotFound
 import async_timeout
 
+from homeassistant.components import frontend
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -36,9 +37,7 @@ SCAN_INTERVAL = timedelta(seconds=30)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for mailboxes."""
     mailboxes: list[Mailbox] = []
-    hass.components.frontend.async_register_built_in_panel(
-        "mailbox", "mailbox", "mdi:mailbox"
-    )
+    frontend.async_register_built_in_panel(hass, "mailbox", "mailbox", "mdi:mailbox")
     hass.http.register_view(MailboxPlatformsView(mailboxes))
     hass.http.register_view(MailboxMessageView(mailboxes))
     hass.http.register_view(MailboxMediaView(mailboxes))

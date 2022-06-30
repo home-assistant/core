@@ -25,7 +25,6 @@ from .const import (
     HEATING_TYPE_TO_CREATOR_METHOD,
     PLATFORMS,
     VICARE_API,
-    VICARE_CIRCUITS,
     VICARE_DEVICE_CONFIG,
     HeatingType,
 )
@@ -127,9 +126,6 @@ def setup_vicare_api(hass, entry):
         device,
         HEATING_TYPE_TO_CREATOR_METHOD[HeatingType(entry.data[CONF_HEATING_TYPE])],
     )()
-    hass.data[DOMAIN][entry.entry_id][VICARE_CIRCUITS] = hass.data[DOMAIN][
-        entry.entry_id
-    ][VICARE_API].circuits
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

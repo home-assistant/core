@@ -12,6 +12,12 @@
         },
         "flow_title": "Powerwall de Tesla ({ip_address})",
         "step": {
+            "reauth_confim": {
+                "data": {
+                    "password": "Contrase\u00f1a"
+                },
+                "title": "Reautorizar la powerwall"
+            },
             "user": {
                 "data": {
                     "ip_address": "Direcci\u00f3n IP",

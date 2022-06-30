@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.components.calendar import (
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    CalendarEventDevice,
-    calculate_offset,
-    get_date,
+    CalendarEntity,
+    CalendarEvent,
+    extract_offset,
     is_offset_reached,
 )
 from homeassistant.const import (
@@ -104,7 +104,7 @@ def setup_platform(
             device_id = f"{cust_calendar[CONF_CALENDAR]} {cust_calendar[CONF_NAME]}"
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
-                WebDavCalendarEventDevice(
+                WebDavCalendarEntity(
                     name, calendar, entity_id, days, True, cust_calendar[CONF_SEARCH]
                 )
             )
@@ -115,24 +115,24 @@ def setup_platform(
             device_id = calendar.name
             entity_id = generate_entity_id(ENTITY_ID_FORMAT, device_id, hass=hass)
             calendar_devices.append(
-                WebDavCalendarEventDevice(name, calendar, entity_id, days)
+                WebDavCalendarEntity(name, calendar, entity_id, days)
             )
 
     add_entities(calendar_devices, True)
 
 
-class WebDavCalendarEventDevice(CalendarEventDevice):
+class WebDavCalendarEntity(CalendarEntity):
     """A device for getting the next Task from a WebDav Calendar."""
 
     def __init__(self, name, calendar, entity_id, days, all_day=False, search=None):
         """Create the WebDav Calendar Event Device."""
         self.data = WebDavCalendarData(calendar, days, all_day, search)
         self.entity_id = entity_id
-        self._event = None
+        self._event: CalendarEvent | None = None
         self._attr_name = name
 
     @property
-    def event(self):
+    def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
 
@@ -147,9 +147,12 @@ class WebDavCalendarEventDevice(CalendarEventDevice):
         if event is None:
             self._event = event
             return
-        event = calculate_offset(event, OFFSET)
+        (summary, offset) = extract_offset(event.summary, OFFSET)
+        event.summary = summary
         self._event = event
-        self._attr_extra_state_attributes = {"offset_reached": is_offset_reached(event)}
+        self._attr_extra_state_attributes = {
+            "offset_reached": is_offset_reached(event.start_datetime_local, offset)
+        }
 
 
 class WebDavCalendarData:
@@ -163,7 +166,9 @@ class WebDavCalendarData:
         self.search = search
         self.event = None
 
-    async def async_get_events(self, hass, start_date, end_date):
+    async def async_get_events(
+        self, hass: HomeAssistant, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         # Get event list from the current calendar
         vevent_list = await hass.async_add_executor_job(
@@ -177,22 +182,15 @@ class WebDavCalendarData:
             vevent = event.instance.vevent
             if not self.is_matching(vevent, self.search):
                 continue
-            uid = None
-            if hasattr(vevent, "uid"):
-                uid = vevent.uid.value
-            data = {
-                "uid": uid,
-                "summary": vevent.summary.value,
-                "start": self.get_hass_date(vevent.dtstart.value),
-                "end": self.get_hass_date(self.get_end_date(vevent)),
-                "location": self.get_attr_value(vevent, "location"),
-                "description": self.get_attr_value(vevent, "description"),
-            }
-
-            data["start"] = get_date(data["start"]).isoformat()
-            data["end"] = get_date(data["end"]).isoformat()
-
-            event_list.append(data)
+            event_list.append(
+                CalendarEvent(
+                    summary=vevent.summary.value,
+                    start=vevent.dtstart.value,
+                    end=self.get_end_date(vevent),
+                    location=self.get_attr_value(vevent, "location"),
+                    description=self.get_attr_value(vevent, "description"),
+                )
+            )
 
         return event_list
 
@@ -232,7 +230,11 @@ class WebDavCalendarData:
                     new_events.append(new_event)
                 elif _start_of_tomorrow <= start_dt:
                     break
-        vevents = [event.instance.vevent for event in results + new_events]
+        vevents = [
+            event.instance.vevent
+            for event in results + new_events
+            if hasattr(event.instance, "vevent")
+        ]
 
         # dtstart can be a date or datetime depending if the event lasts a
         # whole day. Convert everything to datetime to be able to sort it
@@ -262,13 +264,13 @@ class WebDavCalendarData:
             return
 
         # Populate the entity attributes with the event values
-        self.event = {
-            "summary": vevent.summary.value,
-            "start": self.get_hass_date(vevent.dtstart.value),
-            "end": self.get_hass_date(self.get_end_date(vevent)),
-            "location": self.get_attr_value(vevent, "location"),
-            "description": self.get_attr_value(vevent, "description"),
-        }
+        self.event = CalendarEvent(
+            summary=vevent.summary.value,
+            start=vevent.dtstart.value,
+            end=self.get_end_date(vevent),
+            location=self.get_attr_value(vevent, "location"),
+            description=self.get_attr_value(vevent, "description"),
+        )
 
     @staticmethod
     def is_matching(vevent, search):
@@ -297,14 +299,6 @@ class WebDavCalendarData:
         return dt.now() >= WebDavCalendarData.to_datetime(
             WebDavCalendarData.get_end_date(vevent)
         )
-
-    @staticmethod
-    def get_hass_date(obj):
-        """Return if the event matches."""
-        if isinstance(obj, datetime):
-            return {"dateTime": obj.isoformat()}
-
-        return {"date": obj.isoformat()}
 
     @staticmethod
     def to_datetime(obj):

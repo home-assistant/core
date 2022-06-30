@@ -31,7 +31,7 @@
                     "host": "Host",
                     "password": "Wachtwoord"
                 },
-                "description": "Selecteer verbindingstype. Lokaal vereist verwarming met bluetooth"
+                "description": "Selecteer verbindingstype. Lokaal vereist verwarming met Bluetooth."
             }
         }
     }

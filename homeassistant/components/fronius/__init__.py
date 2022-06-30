@@ -30,7 +30,7 @@ from .coordinator import (
 _LOGGER: Final = logging.getLogger(__name__)
 PLATFORMS: Final = [Platform.SENSOR]
 
-FroniusCoordinatorType = TypeVar("FroniusCoordinatorType", bound=FroniusCoordinatorBase)
+_FroniusCoordinatorT = TypeVar("_FroniusCoordinatorT", bound=FroniusCoordinatorBase)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -199,8 +199,8 @@ class FroniusSolarNet:
 
     @staticmethod
     async def _init_optional_coordinator(
-        coordinator: FroniusCoordinatorType,
-    ) -> FroniusCoordinatorType | None:
+        coordinator: _FroniusCoordinatorT,
+    ) -> _FroniusCoordinatorT | None:
         """Initialize an update coordinator and return it if devices are found."""
         try:
             await coordinator.async_config_entry_first_refresh()

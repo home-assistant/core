@@ -12,10 +12,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Host (oder IP-Adresse) deines twinkly-Ger\u00e4ts"
-                },
-                "description": "Einrichten deiner Twinkly-Led-Kette",
-                "title": "Twinkly"
+                    "host": "Host"
+                }
             }
         }
     }

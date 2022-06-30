@@ -17,33 +17,30 @@ from denonavr.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.components.media_player import MediaPlayerEntity
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
+)
 from homeassistant.components.media_player.const import (
     MEDIA_TYPE_CHANNEL,
     MEDIA_TYPE_MUSIC,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOUND_MODE,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
 )
-from homeassistant.const import ATTR_COMMAND, CONF_HOST, STATE_PAUSED, STATE_PLAYING
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_COMMAND,
+    CONF_HOST,
+    CONF_MODEL,
+    STATE_PAUSED,
+    STATE_PLAYING,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import CONF_RECEIVER
 from .config_flow import (
     CONF_MANUFACTURER,
-    CONF_MODEL,
     CONF_SERIAL_NUMBER,
     CONF_TYPE,
     CONF_UPDATE_AUDYSSEY,
@@ -57,21 +54,21 @@ ATTR_SOUND_MODE_RAW = "sound_mode_raw"
 ATTR_DYNAMIC_EQ = "dynamic_eq"
 
 SUPPORT_DENON = (
-    SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_VOLUME_SET
+    MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
+    | MediaPlayerEntityFeature.TURN_ON
+    | MediaPlayerEntityFeature.TURN_OFF
+    | MediaPlayerEntityFeature.SELECT_SOURCE
+    | MediaPlayerEntityFeature.VOLUME_SET
 )
 
 SUPPORT_MEDIA_MODES = (
-    SUPPORT_PLAY_MEDIA
-    | SUPPORT_PAUSE
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_VOLUME_SET
-    | SUPPORT_PLAY
+    MediaPlayerEntityFeature.PLAY_MEDIA
+    | MediaPlayerEntityFeature.PAUSE
+    | MediaPlayerEntityFeature.PREVIOUS_TRACK
+    | MediaPlayerEntityFeature.NEXT_TRACK
+    | MediaPlayerEntityFeature.VOLUME_SET
+    | MediaPlayerEntityFeature.PLAY
 )
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -85,9 +82,9 @@ SERVICE_UPDATE_AUDYSSEY = "update_audyssey"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
-    async_add_entities: entity_platform.EntityPlatform.async_add_entities,
-):
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up the DenonAVR receiver from a config entry."""
     entities = []
     data = hass.data[DOMAIN][config_entry.entry_id]
@@ -141,7 +138,7 @@ class DenonDevice(MediaPlayerEntity):
         self,
         receiver: DenonAVR,
         unique_id: str,
-        config_entry: config_entries.ConfigEntry,
+        config_entry: ConfigEntry,
         update_audyssey: bool,
     ) -> None:
         """Initialize the device."""
@@ -161,7 +158,8 @@ class DenonDevice(MediaPlayerEntity):
 
         self._supported_features_base = SUPPORT_DENON
         self._supported_features_base |= (
-            self._receiver.support_sound_mode and SUPPORT_SELECT_SOUND_MODE
+            self._receiver.support_sound_mode
+            and MediaPlayerEntityFeature.SELECT_SOUND_MODE
         )
         self._available = True
 

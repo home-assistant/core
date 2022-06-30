@@ -35,7 +35,6 @@ from .hub import SIAHub
 
 _LOGGER = logging.getLogger(__name__)
 
-
 HUB_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PORT): int,

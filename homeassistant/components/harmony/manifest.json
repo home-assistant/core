@@ -18,5 +18,6 @@
   ],
   "dependencies": ["remote", "switch"],
   "config_flow": true,
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["aioharmony", "slixmpp"]
 }

@@ -134,6 +134,10 @@
             "off": "L\u00e4dt nicht",
             "on": "L\u00e4dt"
         },
+        "carbon_monoxide": {
+            "off": "Normal",
+            "on": "Erkannt"
+        },
         "co": {
             "off": "Normal",
             "on": "Erkannt"

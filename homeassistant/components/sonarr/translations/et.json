@@ -12,7 +12,7 @@
         "flow_title": "{name}",
         "step": {
             "reauth_confirm": {
-                "description": "Sonarr-i sidumine tuleb k\u00e4sitsi taastuvastada Sonarr API abil: {host}",
+                "description": "Sonarr-i sidumine tuleb k\u00e4sitsi taastuvastada Sonarr API abil: {url}",
                 "title": "Autendi Sonarriga uuesti"
             },
             "user": {
@@ -22,6 +22,7 @@
                     "host": "",
                     "port": "",
                     "ssl": "Kasutab SSL serti",
+                    "url": "URL",
                     "verify_ssl": "Kontrolli SSL sertifikaati"
                 }
             }

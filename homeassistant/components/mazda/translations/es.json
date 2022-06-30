@@ -17,10 +17,8 @@
                     "password": "Contrase\u00f1a",
                     "region": "Regi\u00f3n"
                 },
-                "description": "Introduce la direcci\u00f3n de correo electr\u00f3nico y la contrase\u00f1a que utilizas para iniciar sesi\u00f3n en la aplicaci\u00f3n m\u00f3vil MyMazda.",
-                "title": "Servicios Conectados de Mazda - A\u00f1adir cuenta"
+                "description": "Introduce la direcci\u00f3n de correo electr\u00f3nico y la contrase\u00f1a que utilizas para iniciar sesi\u00f3n en la aplicaci\u00f3n m\u00f3vil MyMazda."
             }
         }
-    },
-    "title": "Servicios Conectados de Mazda"
+    }
 }

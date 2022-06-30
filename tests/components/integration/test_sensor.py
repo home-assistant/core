@@ -3,7 +3,15 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import ENERGY_KILO_WATT_HOUR, POWER_WATT, TIME_SECONDS
+from homeassistant.const import (
+    ATTR_UNIT_OF_MEASUREMENT,
+    ENERGY_KILO_WATT_HOUR,
+    ENERGY_WATT_HOUR,
+    POWER_KILO_WATT,
+    POWER_WATT,
+    STATE_UNKNOWN,
+    TIME_SECONDS,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -18,7 +26,6 @@ async def test_state(hass) -> None:
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -28,7 +35,7 @@ async def test_state(hass) -> None:
         assert await async_setup_component(hass, "sensor", config)
 
         entity_id = config["sensor"]["source"]
-        hass.states.async_set(entity_id, 1, {})
+        hass.states.async_set(entity_id, 1, {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT})
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
@@ -39,7 +46,13 @@ async def test_state(hass) -> None:
     future_now = dt_util.utcnow() + timedelta(seconds=3600)
     with patch("homeassistant.util.dt.utcnow", return_value=future_now):
         hass.states.async_set(
-            entity_id, 1, {"device_class": SensorDeviceClass.POWER}, force_update=True
+            entity_id,
+            1,
+            {
+                "device_class": SensorDeviceClass.POWER,
+                ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT,
+            },
+            force_update=True,
         )
         await hass.async_block_till_done()
 
@@ -131,7 +144,6 @@ async def test_trapezoidal(hass):
             "platform": "integration",
             "name": "integration",
             "source": "sensor.power",
-            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -146,7 +158,12 @@ async def test_trapezoidal(hass):
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT},
+                force_update=True,
+            )
             await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
@@ -165,7 +182,6 @@ async def test_left(hass):
             "name": "integration",
             "method": "left",
             "source": "sensor.power",
-            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -173,14 +189,19 @@ async def test_left(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 0, {})
+    hass.states.async_set(entity_id, 0, {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT})
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT},
+                force_update=True,
+            )
             await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
@@ -199,7 +220,6 @@ async def test_right(hass):
             "name": "integration",
             "method": "right",
             "source": "sensor.power",
-            "unit": ENERGY_KILO_WATT_HOUR,
             "round": 2,
         }
     }
@@ -207,14 +227,19 @@ async def test_right(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 0, {})
+    hass.states.async_set(entity_id, 0, {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT})
     await hass.async_block_till_done()
 
     # Testing a power sensor with non-monotonic intervals and values
     for time, value in [(20, 10), (30, 30), (40, 5), (50, 0)]:
         now = dt_util.utcnow() + timedelta(minutes=time)
         with patch("homeassistant.util.dt.utcnow", return_value=now):
-            hass.states.async_set(entity_id, value, {}, force_update=True)
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT},
+                force_update=True,
+            )
             await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
@@ -274,12 +299,17 @@ async def test_suffix(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 1000, {})
+    hass.states.async_set(entity_id, 1000, {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT})
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
     with patch("homeassistant.util.dt.utcnow", return_value=now):
-        hass.states.async_set(entity_id, 1000, {}, force_update=True)
+        hass.states.async_set(
+            entity_id,
+            1000,
+            {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT},
+            force_update=True,
+        )
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.integration")
@@ -287,3 +317,116 @@ async def test_suffix(hass):
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes
     assert round(float(state.state)) == 10
+
+
+async def test_units(hass):
+    """Test integration sensor units using a power source."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, 100, {"unit_of_measurement": None})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, 200, {"unit_of_measurement": None})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, 300, {"unit_of_measurement": POWER_WATT})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    # Testing the sensor ignored the source sensor's units until
+    # they became valid
+    assert state.attributes.get("unit_of_measurement") == ENERGY_WATT_HOUR
+
+
+async def test_device_class(hass):
+    """Test integration sensor units using a power source."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    # This replicates the current sequence when HA starts up in a real runtime
+    # by updating the base sensor state before the base sensor's units
+    # or state have been correctly populated.  Those interim updates
+    # include states of None and Unknown
+    hass.states.async_set(entity_id, STATE_UNKNOWN, {})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, 100, {"device_class": None})
+    await hass.async_block_till_done()
+    hass.states.async_set(entity_id, 200, {"device_class": None})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert "device_class" not in state.attributes
+
+    hass.states.async_set(
+        entity_id, 300, {"device_class": SensorDeviceClass.POWER}, force_update=True
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+    # Testing the sensor ignored the source sensor's device class until
+    # it became valid
+    assert state.attributes.get("device_class") == SensorDeviceClass.ENERGY
+
+
+async def test_calc_errors(hass):
+    """Test integration sensor units using a power source."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.power",
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+
+    hass.states.async_set(entity_id, None, {})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    # With the source sensor in a None state, the Reimann sensor should be
+    # unknown
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # Moving from an unknown state to a value is a calc error and should
+    # not change the value of the Reimann sensor.
+    hass.states.async_set(entity_id, 0, {"device_class": None})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    # With the source sensor updated successfully, the Reimann sensor
+    # should have a zero (known) value.
+    hass.states.async_set(entity_id, 1, {"device_class": None})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+    assert round(float(state.state)) == 0

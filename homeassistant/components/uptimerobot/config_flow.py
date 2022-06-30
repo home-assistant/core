@@ -1,6 +1,8 @@
 """Config flow for UptimeRobot integration."""
 from __future__ import annotations
 
+from typing import Any
+
 from pyuptimerobot import (
     UptimeRobot,
     UptimeRobotAccount,
@@ -15,7 +17,6 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
 
 from .const import API_ATTR_OK, DOMAIN, LOGGER
 
@@ -28,14 +29,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     async def _validate_input(
-        self, data: ConfigType
+        self, data: dict[str, Any]
     ) -> tuple[dict[str, str], UptimeRobotAccount | None]:
         """Validate the user input allows us to connect."""
         errors: dict[str, str] = {}
         response: UptimeRobotApiResponse | UptimeRobotApiError | None = None
-        uptime_robot_api = UptimeRobot(
-            data[CONF_API_KEY], async_get_clientsession(self.hass)
-        )
+        key: str = data[CONF_API_KEY]
+        if key.startswith("ur") or key.startswith("m"):
+            LOGGER.error("Wrong API key type detected, use the 'main' API key")
+            errors["base"] = "not_main_key"
+            return errors, None
+        uptime_robot_api = UptimeRobot(key, async_get_clientsession(self.hass))
 
         try:
             response = await uptime_robot_api.async_get_account_details()
@@ -61,7 +65,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return errors, account
 
-    async def async_step_user(self, user_input: ConfigType | None = None) -> FlowResult:
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Handle the initial step."""
         if user_input is None:
             return self.async_show_form(
@@ -79,13 +85,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Return the reauth confirm step."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
-        self, user_input: ConfigType | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Dialog that informs the user that reauth is required."""
         if user_input is None:

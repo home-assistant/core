@@ -22,6 +22,8 @@ from .const import (
     API_RESOURCE_TYPE,
     API_TYPE_VAULT,
     CONF_CURRENCIES,
+    CONF_EXCHANGE_PRECISION,
+    CONF_EXCHANGE_PRECISION_DEFAULT,
     CONF_EXCHANGE_RATES,
     DOMAIN,
 )
@@ -66,6 +68,10 @@ async def async_setup_entry(
 
     exchange_base_currency = instance.exchange_rates[API_ACCOUNT_CURRENCY]
 
+    exchange_precision = config_entry.options.get(
+        CONF_EXCHANGE_PRECISION, CONF_EXCHANGE_PRECISION_DEFAULT
+    )
+
     for currency in desired_currencies:
         if currency not in provided_currencies:
             _LOGGER.warning(
@@ -80,9 +86,7 @@ async def async_setup_entry(
         for rate in config_entry.options[CONF_EXCHANGE_RATES]:
             entities.append(
                 ExchangeRateSensor(
-                    instance,
-                    rate,
-                    exchange_base_currency,
+                    instance, rate, exchange_base_currency, exchange_precision
                 )
             )
 
@@ -178,14 +182,16 @@ class AccountSensor(SensorEntity):
 class ExchangeRateSensor(SensorEntity):
     """Representation of a Coinbase.com sensor."""
 
-    def __init__(self, coinbase_data, exchange_currency, exchange_base):
+    def __init__(self, coinbase_data, exchange_currency, exchange_base, precision):
         """Initialize the sensor."""
         self._coinbase_data = coinbase_data
         self.currency = exchange_currency
         self._name = f"{exchange_currency} Exchange Rate"
         self._id = f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
+        self._precision = precision
         self._state = round(
-            1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]), 2
+            1 / float(self._coinbase_data.exchange_rates[API_RATES][self.currency]),
+            self._precision,
         )
         self._unit_of_measurement = exchange_base
         self._attr_state_class = SensorStateClass.MEASUREMENT
@@ -231,5 +237,6 @@ class ExchangeRateSensor(SensorEntity):
         """Get the latest state of the sensor."""
         self._coinbase_data.update()
         self._state = round(
-            1 / float(self._coinbase_data.exchange_rates.rates[self.currency]), 2
+            1 / float(self._coinbase_data.exchange_rates.rates[self.currency]),
+            self._precision,
         )

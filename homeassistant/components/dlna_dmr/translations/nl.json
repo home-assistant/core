@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Incompatibele media weergeven tijdens browsen",
                     "callback_url_override": "Event listener callback URL",
                     "listen_port": "Poort om naar gebeurtenissen te luisteren (willekeurige poort indien niet ingesteld)",
                     "poll_availability": "Pollen voor apparaat beschikbaarheid"

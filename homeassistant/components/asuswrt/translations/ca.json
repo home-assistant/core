@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "No s'ha pogut determinar cap identificador \u00fanic v\u00e0lid del dispositiu",
+            "no_unique_id": "Ja s'ha configurat un dispositiu sense un identificador \u00fanic v\u00e0lid. La configuraci\u00f3 de diverses inst\u00e0ncies no \u00e9s possible",
+            "not_unique_id_exist": "Ja s'ha configurat un dispositiu sense un identificador \u00fanic v\u00e0lid. La configuraci\u00f3 de diverses inst\u00e0ncies no \u00e9s possible",
             "single_instance_allowed": "Ja configurat. Nom\u00e9s \u00e9s possible una sola configuraci\u00f3."
         },
         "error": {
@@ -18,7 +21,7 @@
                     "mode": "Mode",
                     "name": "Nom",
                     "password": "Contrasenya",
-                    "port": "Port",
+                    "port": "Port (deixa-ho buit pel predeterminat del protocol)",
                     "protocol": "Protocol de comunicacions a utilitzar",
                     "ssh_key": "Ruta al fitxer de claus SSH (en lloc de la contrasenya)",
                     "username": "Nom d'usuari"
@@ -36,7 +39,7 @@
                     "dnsmasq": "La ubicaci\u00f3 dins el router dels fitxers dnsmasq.leases",
                     "interface": "La interf\u00edcie de la qual obtenir les estad\u00edstiques (per exemple, eth0, eth1, etc.)",
                     "require_ip": "Els dispositius han de tenir una IP (per al mode de punt d'acc\u00e9s)",
-                    "track_unknown": "Segueix dispositius desconeguts/sense nom"
+                    "track_unknown": "Segueix dispositius desconeguts / sense nom"
                 },
                 "title": "Opcions d'AsusWRT"
             }

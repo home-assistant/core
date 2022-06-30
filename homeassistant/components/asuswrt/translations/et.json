@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Seadme kehtivat kordumatut ID-d on v\u00f5imatu m\u00e4\u00e4rata",
+            "no_unique_id": "Seade, millel puudub kehtiv kordumatu ID, on juba seadistatud. Mitme eksemplari seadistamine pole v\u00f5imalik",
+            "not_unique_id_exist": "Seade, millel puudub kehtiv kordumatu ID, on juba seadistatud. Mitme eksemplari seadistamine pole v\u00f5imalik",
             "single_instance_allowed": "Juba seadistatud. V\u00f5imalik on ainult \u00fcks seadistamine."
         },
         "error": {
@@ -18,7 +21,7 @@
                     "mode": "Re\u017eiim",
                     "name": "Nimi",
                     "password": "Salas\u00f5na",
-                    "port": "Port",
+                    "port": "Port (vaikepordi kasutamiseks j\u00e4ta t\u00fchjaks)",
                     "protocol": "Kasutatav sideprotokoll",
                     "ssh_key": "Rada SSH v\u00f5tmefailini (parooli asemel)",
                     "username": "Kasutajanimi"
@@ -36,7 +39,7 @@
                     "dnsmasq": "Dnsmasq.leases failide asukoht ruuteris",
                     "interface": "Liides kust soovite statistikat (n\u00e4iteks eth0, eth1 jne.)",
                     "require_ip": "Seadmetel peab olema IP (p\u00e4\u00e4supunkti re\u017eiimi jaoks)",
-                    "track_unknown": "J\u00e4lgi tundmatuid / nimetamata seadmeid"
+                    "track_unknown": "J\u00e4lgi tundmatuid / nimetuid seadmeid"
                 },
                 "title": "AsusWRT valikud"
             }

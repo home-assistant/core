@@ -1,7 +1,6 @@
 """Support for numbers which integrates with other components."""
 from __future__ import annotations
 
-import contextlib
 import logging
 from typing import Any
 
@@ -18,11 +17,11 @@ from homeassistant.components.number.const import (
     DOMAIN as NUMBER_DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
-from homeassistant.core import Config, HomeAssistant
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
-from homeassistant.helpers.template import TemplateError
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator
 from .const import DOMAIN
@@ -73,9 +72,9 @@ async def _async_create_entities(
 
 async def async_setup_platform(
     hass: HomeAssistant,
-    config: Config,
+    config: ConfigType,
     async_add_entities: AddEntitiesCallback,
-    discovery_info: dict[str, Any] | None = None,
+    discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template number."""
     if discovery_info is None:
@@ -108,12 +107,8 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         unique_id: str | None,
     ) -> None:
         """Initialize the number."""
-        super().__init__(config=config)
-        self._attr_name = DEFAULT_NAME
-        self._name_template = name_template = config[CONF_NAME]
-        name_template.hass = hass
-        with contextlib.suppress(TemplateError):
-            self._attr_name = name_template.async_render(parse_result=False)
+        super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
             hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
@@ -122,7 +117,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[ATTR_MIN]
         self._max_value_template = config[ATTR_MAX]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_unique_id = unique_id
         self._attr_value = None
         self._attr_step = None
         self._attr_min_value = None
@@ -130,8 +124,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        if self._name_template and not self._name_template.is_static:
-            self.add_template_attribute("_attr_name", self._name_template, cv.string)
         self.add_template_attribute(
             "_attr_value",
             self._value_template,

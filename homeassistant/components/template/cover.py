@@ -11,15 +11,8 @@ from homeassistant.components.cover import (
     DEVICE_CLASSES_SCHEMA,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_SET_POSITION,
-    SUPPORT_SET_TILT_POSITION,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.const import (
     CONF_COVERS,
@@ -71,10 +64,10 @@ CONF_TILT_OPTIMISTIC = "tilt_optimistic"
 CONF_OPEN_AND_CLOSE = "open_or_close"
 
 TILT_FEATURES = (
-    SUPPORT_OPEN_TILT
-    | SUPPORT_CLOSE_TILT
-    | SUPPORT_STOP_TILT
-    | SUPPORT_SET_TILT_POSITION
+    CoverEntityFeature.OPEN_TILT
+    | CoverEntityFeature.CLOSE_TILT
+    | CoverEntityFeature.STOP_TILT
+    | CoverEntityFeature.SET_TILT_POSITION
 )
 
 COVER_SCHEMA = vol.All(
@@ -148,11 +141,13 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         unique_id,
     ):
         """Initialize the Template cover."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(CONF_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._position_template = config.get(CONF_POSITION_TEMPLATE)
         self._tilt_template = config.get(CONF_TILT_TEMPLATE)
@@ -182,7 +177,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._is_opening = False
         self._is_closing = False
         self._tilt_value = None
-        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
@@ -228,8 +222,9 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             self._is_closing = state == STATE_CLOSING
         else:
             _LOGGER.error(
-                "Received invalid cover is_on state: %s. Expected: %s",
+                "Received invalid cover is_on state: %s for entity %s. Expected: %s",
                 state,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             if not self._position_template:
@@ -247,7 +242,7 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         if state < 0 or state > 100:
             self._position = None
             _LOGGER.error(
-                "Cover position value must be" " between 0 and 100." " Value was: %.2f",
+                "Cover position value must be between 0 and 100. Value was: %.2f",
                 state,
             )
         else:
@@ -270,16 +265,6 @@ class CoverTemplate(TemplateEntity, CoverEntity):
             )
         else:
             self._tilt_value = state
-
-    @property
-    def name(self):
-        """Return the name of the cover."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this cover."""
-        return self._unique_id
 
     @property
     def is_closed(self):
@@ -322,13 +307,13 @@ class CoverTemplate(TemplateEntity, CoverEntity):
     @property
     def supported_features(self):
         """Flag supported features."""
-        supported_features = SUPPORT_OPEN | SUPPORT_CLOSE
+        supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
         if self._stop_script is not None:
-            supported_features |= SUPPORT_STOP
+            supported_features |= CoverEntityFeature.STOP
 
         if self._position_script is not None:
-            supported_features |= SUPPORT_SET_POSITION
+            supported_features |= CoverEntityFeature.SET_POSITION
 
         if self._tilt_script is not None:
             supported_features |= TILT_FEATURES

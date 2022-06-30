@@ -13,6 +13,7 @@
             "is_on": "{entity_name} est\u00e1 activado"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} activado o desactivado",
             "target_humidity_changed": "La humedad objetivo ha cambiado en {entity_name}",
             "toggled": "{entity_name} activado o desactivado",
             "turned_off": "{entity_name} desactivado",

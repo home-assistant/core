@@ -17,9 +17,37 @@
             },
             "user": {
                 "data": {
+                    "host": "H\u00f4te",
+                    "port": "Port",
                     "type": "Type de connexion"
                 },
-                "title": "Configurer 1-Wire"
+                "title": "Renseigner les informations du serveur"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "S\u00e9lectionnez les appareils \u00e0 configurer"
+        },
+        "step": {
+            "ack_no_options": {
+                "description": "Il n'y a pas d'option pour l'impl\u00e9mentation de SysBus",
+                "title": "Options de bus syst\u00e8me OneWire"
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Pr\u00e9cision du capteur"
+                },
+                "description": "S\u00e9lectionnez la pr\u00e9cision du capteur pour {sensor_id}",
+                "title": "Pr\u00e9cision du capteur OneWire"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Effacer toutes les configurations de l'appareil",
+                    "device_selection": "S\u00e9lectionnez les appareils \u00e0 configurer"
+                },
+                "description": "S\u00e9lectionnez les \u00e9tapes de configuration \u00e0 traiter",
+                "title": "Options de l'appareil OneWire"
             }
         }
     }

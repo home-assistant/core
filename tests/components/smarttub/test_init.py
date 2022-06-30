@@ -43,6 +43,7 @@ async def test_setup_auth_failed(setup_component, hass, config_entry, smarttub_a
                 "source": SOURCE_REAUTH,
                 "entry_id": config_entry.entry_id,
                 "unique_id": config_entry.unique_id,
+                "title_placeholders": {"name": config_entry.title},
             },
             data=config_entry.data,
         )

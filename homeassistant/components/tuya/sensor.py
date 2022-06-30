@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import cast
 
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 from tuya_iot.device import TuyaDeviceStatusRange
@@ -33,6 +32,7 @@ from .const import (
     DOMAIN,
     TUYA_DISCOVERY_NEW,
     DPCode,
+    DPType,
     TuyaDeviceClass,
     UnitOfMeasurement,
 )
@@ -295,6 +295,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Door and Window Controller
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r5zjsy9
+    "mc": BATTERY_SENSORS,
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
@@ -447,6 +450,9 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
         ),
         *BATTERY_SENSORS,
     ),
+    # Thermostatic Radiator Valve
+    # Not documented
+    "wkf": BATTERY_SENSORS,
     # Temperature and Humidity Sensor
     # https://developer.tuya.com/en/docs/iot/categorywsdcg?id=Kaiuz3hinij34
     "wsdcg": (
@@ -729,6 +735,115 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
+    # Curtain
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qy7wkre
+    "cl": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TIME_TOTAL,
+            name="Last Operation Duration",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:progress-clock",
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48qwjz0i3
+    "jsq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY_CURRENT,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT_F,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LEVEL_CURRENT,
+            name="Water Level",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:waves-arrow-up",
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r41mn81
+    "kj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.FILTER,
+            name="Filter Utilization",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            icon="mdi:ticket-percent-outline",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.PM25,
+            name="Particulate Matter 2.5 µm",
+            device_class=SensorDeviceClass.PM25,
+            state_class=SensorStateClass.MEASUREMENT,
+            icon="mdi:molecule",
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.HUMIDITY,
+            name="Humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TVOC,
+            name="Total Volatile Organic Compound",
+            device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.ECO2,
+            name="Concentration of Carbon Dioxide",
+            device_class=SensorDeviceClass.CO2,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_TIME,
+            name="Total Operating Time",
+            icon="mdi:history",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.TOTAL_PM,
+            name="Total Absorption of Particles",
+            icon="mdi:texture-box",
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.AIR_QUALITY,
+            name="Air quality",
+            icon="mdi:air-filter",
+            device_class=TuyaDeviceClass.AIR_QUALITY,
+        ),
+    ),
+    # Fan
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48quojr54
+    "fs": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
 }
 
 # Socket (duplicate of `kg`)
@@ -776,6 +891,7 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     entity_description: TuyaSensorEntityDescription
 
     _status_range: TuyaDeviceStatusRange | None = None
+    _type: DPType | None = None
     _type_data: IntegerTypeData | EnumTypeData | None = None
     _uom: UnitOfMeasurement | None = None
 
@@ -792,19 +908,18 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             f"{super().unique_id}{description.key}{description.subkey or ''}"
         )
 
-        if status_range := device.status_range.get(description.key):
-            self._status_range = cast(TuyaDeviceStatusRange, status_range)
-
-            # Extract type data from integer status range,
-            # and determine unit of measurement
-            if self._status_range.type == "Integer":
-                self._type_data = IntegerTypeData.from_json(self._status_range.values)
-                if description.native_unit_of_measurement is None:
-                    self._attr_native_unit_of_measurement = self._type_data.unit
-
-            # Extract type data from enum status range
-            elif self._status_range.type == "Enum":
-                self._type_data = EnumTypeData.from_json(self._status_range.values)
+        if int_type := self.find_dpcode(description.key, dptype=DPType.INTEGER):
+            self._type_data = int_type
+            self._type = DPType.INTEGER
+            if description.native_unit_of_measurement is None:
+                self._attr_native_unit_of_measurement = int_type.unit
+        elif enum_type := self.find_dpcode(
+            description.key, dptype=DPType.ENUM, prefer_function=True
+        ):
+            self._type_data = enum_type
+            self._type = DPType.ENUM
+        else:
+            self._type = self.get_dptype(DPCode(description.key))
 
         # Logic to ensure the set device class and API received Unit Of Measurement
         # match Home Assistants requirements.
@@ -832,6 +947,10 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
                 self._attr_device_class = None
                 return
 
+            # If we still have a device class, we should not use an icon
+            if self.device_class:
+                self._attr_icon = None
+
             # Found unit of measurement, use the standardized Unit
             # Use the target conversion unit (if set)
             self._attr_native_unit_of_measurement = (
@@ -841,13 +960,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        # Unknown or unsupported data type
-        if self._status_range is None or self._status_range.type not in (
-            "Integer",
-            "String",
-            "Enum",
-            "Json",
-            "Raw",
+        # Only continue if data type is known
+        if self._type not in (
+            DPType.INTEGER,
+            DPType.STRING,
+            DPType.ENUM,
+            DPType.JSON,
+            DPType.RAW,
         ):
             return None
 
@@ -871,13 +990,13 @@ class TuyaSensorEntity(TuyaEntity, SensorEntity):
             return None
 
         # Get subkey value from Json string.
-        if self._status_range.type == "Json":
+        if self._type is DPType.JSON:
             if self.entity_description.subkey is None:
                 return None
             values = ElectricityTypeData.from_json(value)
             return getattr(values, self.entity_description.subkey)
 
-        if self._status_range.type == "Raw":
+        if self._type is DPType.RAW:
             if self.entity_description.subkey is None:
                 return None
             values = ElectricityTypeData.from_raw(value)

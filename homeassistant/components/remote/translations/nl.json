@@ -10,6 +10,8 @@
             "is_on": "{entity_name} staat aan"
         },
         "trigger_type": {
+            "changed_states": "{entity_name} in- of uitgeschakeld",
+            "toggled": "{entity_name} in- of uitgeschakeld",
             "turned_off": "{entity_name} uitgeschakeld",
             "turned_on": "{entity_name} ingeschakeld"
         }

@@ -392,6 +392,7 @@ async def test_websocket_status(
         "logged_in": True,
         "email": "hello@home-assistant.io",
         "cloud": "connected",
+        "cloud_last_disconnect_reason": None,
         "prefs": {
             "alexa_enabled": True,
             "cloudhooks": {},
@@ -401,7 +402,7 @@ async def test_websocket_status(
             "google_default_expose": None,
             "alexa_default_expose": None,
             "alexa_entity_configs": {},
-            "alexa_report_state": False,
+            "alexa_report_state": True,
             "google_report_state": True,
             "remote_enabled": False,
             "tts_default_voice": ["en-US", "female"],
@@ -424,9 +425,12 @@ async def test_websocket_status(
             "exclude_entities": [],
         },
         "google_registered": False,
+        "google_local_connected": False,
         "remote_domain": None,
         "remote_connected": False,
         "remote_certificate": None,
+        "http_use_ssl": False,
+        "active_subscription": False,
     }
 
 
@@ -435,7 +439,11 @@ async def test_websocket_status_not_logged_in(hass, hass_ws_client):
     client = await hass_ws_client(hass)
     await client.send_json({"id": 5, "type": "cloud/status"})
     response = await client.receive_json()
-    assert response["result"] == {"logged_in": False, "cloud": "disconnected"}
+    assert response["result"] == {
+        "logged_in": False,
+        "cloud": "disconnected",
+        "http_use_ssl": False,
+    }
 
 
 async def test_websocket_subscription_info(
@@ -517,10 +525,10 @@ async def test_websocket_update_preferences_alexa_report_state(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_get_access_token",
     ), patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig.set_authorized"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
     ) as set_authorized_mock:
         set_authorized_mock.assert_not_called()
         await client.send_json(
@@ -539,11 +547,11 @@ async def test_websocket_update_preferences_require_relink(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_get_access_token",
         side_effect=alexa_errors.RequireRelink,
     ), patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig.set_authorized"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
     ) as set_authorized_mock:
         set_authorized_mock.assert_not_called()
         await client.send_json(
@@ -563,11 +571,11 @@ async def test_websocket_update_preferences_no_token(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_get_access_token",
         side_effect=alexa_errors.NoTokenAvailable,
     ), patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig.set_authorized"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig.set_authorized"
     ) as set_authorized_mock:
         set_authorized_mock.assert_not_called()
         await client.send_json(
@@ -769,7 +777,7 @@ async def test_sync_alexa_entities_timeout(
     """Test that timeout syncing Alexa entities."""
     client = await hass_ws_client(hass)
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_sync_entities",
         side_effect=asyncio.TimeoutError,
     ):
@@ -786,7 +794,7 @@ async def test_sync_alexa_entities_no_token(
     """Test sync Alexa entities when we have no token."""
     client = await hass_ws_client(hass)
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_sync_entities",
         side_effect=alexa_errors.NoTokenAvailable,
     ):
@@ -803,7 +811,7 @@ async def test_enable_alexa_state_report_fail(
     """Test enable Alexa entities state reporting when no token available."""
     client = await hass_ws_client(hass)
     with patch(
-        "homeassistant.components.cloud.alexa_config.AlexaConfig"
+        "homeassistant.components.cloud.alexa_config.CloudAlexaConfig"
         ".async_sync_entities",
         side_effect=alexa_errors.NoTokenAvailable,
     ):

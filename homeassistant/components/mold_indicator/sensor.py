@@ -205,9 +205,8 @@ class MoldIndicator(SensorEntity):
             return None
 
         unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
-        temp = util.convert(state.state, float)
 
-        if temp is None:
+        if (temp := util.convert(state.state, float)) is None:
             _LOGGER.error(
                 "Unable to parse temperature sensor %s with state: %s",
                 state.entity_id,

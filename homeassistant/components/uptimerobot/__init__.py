@@ -26,9 +26,12 @@ from .const import API_ATTR_OK, COORDINATOR_UPDATE_INTERVAL, DOMAIN, LOGGER, PLA
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up UptimeRobot from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    uptime_robot_api = UptimeRobot(
-        entry.data[CONF_API_KEY], async_get_clientsession(hass)
-    )
+    key: str = entry.data[CONF_API_KEY]
+    if key.startswith("ur") or key.startswith("m"):
+        raise ConfigEntryAuthFailed(
+            "Wrong API key type detected, use the 'main' API key"
+        )
+    uptime_robot_api = UptimeRobot(key, async_get_clientsession(hass))
     dev_reg = await async_get_registry(hass)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator = UptimeRobotDataUpdateCoordinator(
@@ -57,6 +60,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
     """Data update coordinator for UptimeRobot."""
 
+    data: list[UptimeRobotMonitor]
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -69,17 +75,16 @@ class UptimeRobotDataUpdateCoordinator(DataUpdateCoordinator):
             hass,
             LOGGER,
             name=DOMAIN,
-            update_method=self._async_update_data,
             update_interval=COORDINATOR_UPDATE_INTERVAL,
         )
         self._config_entry_id = config_entry_id
         self._device_registry = dev_reg
-        self._api = api
+        self.api = api
 
     async def _async_update_data(self) -> list[UptimeRobotMonitor] | None:
         """Update data."""
         try:
-            response = await self._api.async_get_monitors()
+            response = await self.api.async_get_monitors()
         except UptimeRobotAuthenticationException as exception:
             raise ConfigEntryAuthFailed(exception) from exception
         except UptimeRobotException as exception:

@@ -8,8 +8,8 @@
         "step": {
             "user": {
                 "data": {
-                    "show_on_map": "Mutasd a t\u00e9rk\u00e9pen",
-                    "station_id": "Luftdaten \u00e9rz\u00e9kel\u0151 ID"
+                    "show_on_map": "Megjelen\u00edt\u00e9s a t\u00e9rk\u00e9pen",
+                    "station_id": "\u00c9rz\u00e9kel\u0151 azonos\u00edt\u00f3"
                 },
                 "title": "Luftdaten be\u00e1ll\u00edt\u00e1sa"
             }

@@ -35,10 +35,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             discovery_info.ip, discovery_info.macaddress
         )
 
-    async def async_step_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
-        """Handle discovery."""
+        """Handle integration discovery."""
         return await self._async_handle_discovery(
             discovery_info[CONF_HOST], discovery_info[CONF_MAC]
         )

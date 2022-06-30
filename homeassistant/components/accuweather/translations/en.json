@@ -3,6 +3,9 @@
         "abort": {
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
+        "create_entry": {
+            "default": "Some sensors are not enabled by default. You can enable them in the entity registry after the integration configuration.\nWeather forecast is not enabled by default. You can enable it in the integration options."
+        },
         "error": {
             "cannot_connect": "Failed to connect",
             "invalid_api_key": "Invalid API key",

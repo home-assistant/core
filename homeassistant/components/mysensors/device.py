@@ -65,10 +65,6 @@ class MySensorsDevice:
         """
         return self.gateway_id, self.node_id, self.child_id, self.value_type
 
-    @property
-    def _logger(self) -> logging.Logger:
-        return logging.getLogger(f"{__name__}.{self.name}")
-
     async def async_will_remove_from_hass(self) -> None:
         """Remove this entity from home assistant."""
         for platform in PLATFORM_TYPES:
@@ -77,9 +73,7 @@ class MySensorsDevice:
                 platform_dict = self.hass.data[DOMAIN][platform_str]
                 if self.dev_id in platform_dict:
                     del platform_dict[self.dev_id]
-                    self._logger.debug(
-                        "deleted %s from platform %s", self.dev_id, platform
-                    )
+                    _LOGGER.debug("Deleted %s from platform %s", self.dev_id, platform)
 
     @property
     def _node(self) -> Sensor:

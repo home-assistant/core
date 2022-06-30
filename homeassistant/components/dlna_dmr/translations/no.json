@@ -47,6 +47,7 @@
         "step": {
             "init": {
                 "data": {
+                    "browse_unfiltered": "Vis inkompatible medier n\u00e5r du surfer",
                     "callback_url_override": "URL for tilbakeringing av hendelseslytter",
                     "listen_port": "Hendelseslytterport (tilfeldig hvis den ikke er angitt)",
                     "poll_availability": "Avstemning for tilgjengelighet av enheter"

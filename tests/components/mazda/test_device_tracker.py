@@ -9,7 +9,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers import entity_registry as er
 
-from tests.components.mazda import init_integration
+from . import init_integration
 
 
 async def test_device_tracker(hass):

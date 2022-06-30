@@ -3,8 +3,14 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_UNIT_SYSTEM_IMPERIAL,
@@ -30,7 +36,7 @@ class MazdaSensorRequiredKeysMixin:
     name_suffix: str
 
     # Function to determine the value for this sensor, given the coordinator data and the configured unit system
-    value: Callable[[dict, UnitSystem], StateType]
+    value: Callable[[dict[str, Any], UnitSystem], StateType]
 
 
 @dataclass
@@ -40,7 +46,7 @@ class MazdaSensorEntityDescription(
     """Describes a Mazda sensor entity."""
 
     # Function to determine whether the vehicle supports this sensor, given the coordinator data
-    is_supported: Callable[[dict], bool] = lambda data: True
+    is_supported: Callable[[dict[str, Any]], bool] = lambda data: True
 
     # Function to determine the unit of measurement for this sensor, given the configured unit system
     # Falls back to description.native_unit_of_measurement if it is not provided
@@ -52,6 +58,20 @@ def _get_distance_unit(unit_system):
     if unit_system.name == CONF_UNIT_SYSTEM_IMPERIAL:
         return LENGTH_MILES
     return LENGTH_KILOMETERS
+
+
+def _fuel_remaining_percentage_supported(data):
+    """Determine if fuel remaining percentage is supported."""
+    return (not data["isElectric"]) and (
+        data["status"]["fuelRemainingPercent"] is not None
+    )
+
+
+def _fuel_distance_remaining_supported(data):
+    """Determine if fuel distance remaining is supported."""
+    return (not data["isElectric"]) and (
+        data["status"]["fuelDistanceRemainingKm"] is not None
+    )
 
 
 def _front_left_tire_pressure_supported(data):
@@ -72,6 +92,22 @@ def _rear_left_tire_pressure_supported(data):
 def _rear_right_tire_pressure_supported(data):
     """Determine if rear right tire pressure is supported."""
     return data["status"]["tirePressure"]["rearRightTirePressurePsi"] is not None
+
+
+def _ev_charge_level_supported(data):
+    """Determine if charge level is supported."""
+    return (
+        data["isElectric"]
+        and data["evStatus"]["chargeInfo"]["batteryLevelPercentage"] is not None
+    )
+
+
+def _ev_remaining_range_supported(data):
+    """Determine if remaining range is supported."""
+    return (
+        data["isElectric"]
+        and data["evStatus"]["chargeInfo"]["drivingRangeKm"] is not None
+    )
 
 
 def _fuel_distance_remaining_value(data, unit_system):
@@ -106,13 +142,28 @@ def _rear_right_tire_pressure_value(data, unit_system):
     return round(data["status"]["tirePressure"]["rearRightTirePressurePsi"])
 
 
+def _ev_charge_level_value(data, unit_system):
+    """Get the charge level value."""
+    return round(data["evStatus"]["chargeInfo"]["batteryLevelPercentage"])
+
+
+def _ev_remaining_range_value(data, unit_system):
+    """Get the remaining range value."""
+    return round(
+        unit_system.length(
+            data["evStatus"]["chargeInfo"]["drivingRangeKm"], LENGTH_KILOMETERS
+        )
+    )
+
+
 SENSOR_ENTITIES = [
     MazdaSensorEntityDescription(
         key="fuel_remaining_percentage",
         name_suffix="Fuel Remaining Percentage",
         icon="mdi:gas-station",
         native_unit_of_measurement=PERCENTAGE,
-        is_supported=lambda data: data["status"]["fuelRemainingPercent"] is not None,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_fuel_remaining_percentage_supported,
         value=lambda data, unit_system: data["status"]["fuelRemainingPercent"],
     ),
     MazdaSensorEntityDescription(
@@ -120,7 +171,8 @@ SENSOR_ENTITIES = [
         name_suffix="Fuel Distance Remaining",
         icon="mdi:gas-station",
         unit=_get_distance_unit,
-        is_supported=lambda data: data["status"]["fuelDistanceRemainingKm"] is not None,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_fuel_distance_remaining_supported,
         value=_fuel_distance_remaining_value,
     ),
     MazdaSensorEntityDescription(
@@ -128,6 +180,7 @@ SENSOR_ENTITIES = [
         name_suffix="Odometer",
         icon="mdi:speedometer",
         unit=_get_distance_unit,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         is_supported=lambda data: data["status"]["odometerKm"] is not None,
         value=_odometer_value,
     ),
@@ -135,7 +188,9 @@ SENSOR_ENTITIES = [
         key="front_left_tire_pressure",
         name_suffix="Front Left Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
+        state_class=SensorStateClass.MEASUREMENT,
         is_supported=_front_left_tire_pressure_supported,
         value=_front_left_tire_pressure_value,
     ),
@@ -143,7 +198,9 @@ SENSOR_ENTITIES = [
         key="front_right_tire_pressure",
         name_suffix="Front Right Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
+        state_class=SensorStateClass.MEASUREMENT,
         is_supported=_front_right_tire_pressure_supported,
         value=_front_right_tire_pressure_value,
     ),
@@ -151,7 +208,9 @@ SENSOR_ENTITIES = [
         key="rear_left_tire_pressure",
         name_suffix="Rear Left Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
+        state_class=SensorStateClass.MEASUREMENT,
         is_supported=_rear_left_tire_pressure_supported,
         value=_rear_left_tire_pressure_value,
     ),
@@ -159,9 +218,29 @@ SENSOR_ENTITIES = [
         key="rear_right_tire_pressure",
         name_suffix="Rear Right Tire Pressure",
         icon="mdi:car-tire-alert",
+        device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=PRESSURE_PSI,
+        state_class=SensorStateClass.MEASUREMENT,
         is_supported=_rear_right_tire_pressure_supported,
         value=_rear_right_tire_pressure_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="ev_charge_level",
+        name_suffix="Charge Level",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_ev_charge_level_supported,
+        value=_ev_charge_level_value,
+    ),
+    MazdaSensorEntityDescription(
+        key="ev_remaining_range",
+        name_suffix="Remaining Range",
+        icon="mdi:ev-station",
+        unit=_get_distance_unit,
+        state_class=SensorStateClass.MEASUREMENT,
+        is_supported=_ev_remaining_range_supported,
+        value=_ev_remaining_range_value,
     ),
 ]
 

@@ -16,14 +16,9 @@ from songpal import (
 )
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, EVENT_HOMEASSISTANT_STOP, STATE_OFF, STATE_ON
@@ -44,15 +39,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARAM_NAME = "name"
 PARAM_VALUE = "value"
-
-SUPPORT_SONGPAL = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_SELECT_SOURCE
-    | SUPPORT_TURN_ON
-    | SUPPORT_TURN_OFF
-)
 
 INITIAL_RETRY_DELAY = 10
 
@@ -102,6 +88,15 @@ async def async_setup_entry(
 
 class SongpalEntity(MediaPlayerEntity):
     """Class representing a Songpal device."""
+
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.TURN_OFF
+    )
 
     def __init__(self, name, device):
         """Init."""
@@ -212,13 +207,18 @@ class SongpalEntity(MediaPlayerEntity):
     @property
     def unique_id(self):
         """Return a unique ID."""
-        return self._sysinfo.macAddr
+        return self._sysinfo.macAddr or self._sysinfo.wirelessMacAddr
 
     @property
     def device_info(self) -> DeviceInfo:
         """Return the device info."""
+        connections = set()
+        if self._sysinfo.macAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr))
+        if self._sysinfo.wirelessMacAddr:
+            connections.add((dr.CONNECTION_NETWORK_MAC, self._sysinfo.wirelessMacAddr))
         return DeviceInfo(
-            connections={(dr.CONNECTION_NETWORK_MAC, self._sysinfo.macAddr)},
+            connections=connections,
             identifiers={(DOMAIN, self.unique_id)},
             manufacturer="Sony Corporation",
             model=self._model,
@@ -349,8 +349,3 @@ class SongpalEntity(MediaPlayerEntity):
     def is_volume_muted(self):
         """Return whether the device is muted."""
         return self._is_muted
-
-    @property
-    def supported_features(self):
-        """Return supported features."""
-        return SUPPORT_SONGPAL

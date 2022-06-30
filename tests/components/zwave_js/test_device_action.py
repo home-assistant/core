@@ -12,6 +12,7 @@ from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.zwave_js import DOMAIN, device_action
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, device_registry
@@ -37,28 +38,40 @@ async def test_get_actions(
             "type": "clear_lock_usercode",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "set_lock_usercode",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
+        },
+        {
+            "domain": DOMAIN,
+            "type": "refresh_value",
+            "device_id": device.id,
+            "entity_id": "binary_sensor.touchscreen_deadbolt_low_battery_level",
+            "metadata": {"secondary": True},
         },
         {
             "domain": DOMAIN,
             "type": "refresh_value",
             "device_id": device.id,
             "entity_id": "lock.touchscreen_deadbolt",
+            "metadata": {"secondary": False},
         },
         {
             "domain": DOMAIN,
             "type": "set_value",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "domain": DOMAIN,
             "type": "ping",
             "device_id": device.id,
+            "metadata": {},
         },
         {
             "domain": DOMAIN,
@@ -66,7 +79,8 @@ async def test_get_actions(
             "device_id": device.id,
             "parameter": 3,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-3 (Beeper)",
+            "subtype": "3 (Beeper)",
+            "metadata": {},
         },
     ]
     actions = await async_get_device_automations(
@@ -160,7 +174,7 @@ async def test_actions(
                         "device_id": device.id,
                         "parameter": 1,
                         "bitmask": None,
-                        "subtype": "2-112-0-3 (Beeper)",
+                        "subtype": "3 (Beeper)",
                         "value": 1,
                     },
                 },
@@ -168,6 +182,15 @@ async def test_actions(
         },
     )
 
+    with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+        hass.bus.async_fire("test_event_refresh_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 1
+        assert args[0].value_id == "13-64-1-mode"
+
+    # Call action a second time to confirm that it works (this was previously a bug)
     with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
         hass.bus.async_fire("test_event_refresh_value")
         await hass.async_block_till_done()
@@ -203,6 +226,51 @@ async def test_actions(
         assert args[0].node_id == 13
         assert args[1] == 1
         assert args[2] == 1
+
+
+async def test_actions_multiple_calls(
+    hass: HomeAssistant,
+    client: Client,
+    climate_radio_thermostat_ct100_plus: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test actions can be called multiple times and still work."""
+    node = climate_radio_thermostat_ct100_plus
+    device_id = get_device_id(client, node)
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({device_id})
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_refresh_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "refresh_value",
+                        "device_id": device.id,
+                        "entity_id": "climate.z_wave_thermostat",
+                    },
+                },
+            ]
+        },
+    )
+
+    # Trigger automation multiple times to confirm that it works each time
+    for _ in range(5):
+        with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+            hass.bus.async_fire("test_event_refresh_value")
+            await hass.async_block_till_done()
+            mock_call.assert_called_once()
+            args = mock_call.call_args_list[0][0]
+            assert len(args) == 1
+            assert args[0].value_id == "13-64-1-mode"
 
 
 async def test_lock_actions(
@@ -327,7 +395,6 @@ async def test_get_action_capabilities(
     integration: ConfigEntry,
 ):
     """Test we get the expected action capabilities."""
-    node = climate_radio_thermostat_ct100_plus
     dev_reg = device_registry.async_get(hass)
     device = device_registry.async_entries_for_config_entry(
         dev_reg, integration.entry_id
@@ -422,7 +489,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 1,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-1 (Temperature Reporting Threshold)",
+            "subtype": "1 (Temperature Reporting Threshold)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -454,7 +521,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 10,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-10 (Temperature Reporting Filter)",
+            "subtype": "10 (Temperature Reporting Filter)",
         },
     )
     assert capabilities and "extra_fields" in capabilities
@@ -481,7 +548,7 @@ async def test_get_action_capabilities(
             "type": "set_config_parameter",
             "parameter": 2,
             "bitmask": None,
-            "subtype": f"{node.node_id}-112-0-2 (HVAC Settings)",
+            "subtype": "2 (HVAC Settings)",
         },
     )
     assert not capabilities
@@ -587,4 +654,26 @@ async def test_failure_scenarios(
             hass, {"type": "failed.test", "device_id": device.id}
         )
         == {}
+    )
+
+
+async def test_unavailable_entity_actions(
+    hass: HomeAssistant,
+    client: Client,
+    lock_schlage_be469: Node,
+    integration: ConfigEntry,
+) -> None:
+    """Test unavailable entities are not included in actions list."""
+    entity_id_unavailable = "binary_sensor.touchscreen_deadbolt_home_security_intrusion"
+    hass.states.async_set(entity_id_unavailable, STATE_UNAVAILABLE, force_update=True)
+    await hass.async_block_till_done()
+    node = lock_schlage_be469
+    dev_reg = device_registry.async_get(hass)
+    device = dev_reg.async_get_device({get_device_id(client, node)})
+    assert device
+    actions = await async_get_device_automations(
+        hass, DeviceAutomationType.ACTION, device.id
+    )
+    assert not any(
+        action.get("entity_id") == entity_id_unavailable for action in actions
     )

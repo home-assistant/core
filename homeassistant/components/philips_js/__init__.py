@@ -148,9 +148,12 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @property
     def unique_id(self) -> str:
         """Return the system descriptor."""
-        assert self.config_entry
-        assert self.config_entry.unique_id
-        return self.config_entry.unique_id
+        entry: ConfigEntry = self.config_entry
+        assert entry
+        if entry.unique_id:
+            return entry.unique_id
+        assert entry.entry_id
+        return entry.entry_id
 
     @property
     def _notify_wanted(self):

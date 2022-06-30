@@ -11,7 +11,8 @@
             "reauth_confirm": {
                 "data": {
                     "api_key": "API sleutel"
-                }
+                },
+                "description": "Om opnieuw te verifi\u00ebren met PVOutput, moet u de API-sleutel op {account_url} ophalen."
             },
             "user": {
                 "data": {

@@ -19,21 +19,14 @@ from homeassistant.components import (
 )
 from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
-    SUPPORT_TARGET_TEMPERATURE,
+    ClimateEntityFeature,
 )
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
-    SUPPORT_SET_POSITION,
+    CoverEntityFeature,
 )
-from homeassistant.components.fan import (
-    ATTR_SPEED,
-    SPEED_HIGH,
-    SPEED_LOW,
-    SPEED_MEDIUM,
-    SPEED_OFF,
-    SUPPORT_SET_SPEED,
-)
+from homeassistant.components.fan import ATTR_PERCENTAGE, FanEntityFeature
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.humidifier.const import (
     ATTR_HUMIDITY,
@@ -45,11 +38,11 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
-    SUPPORT_TRANSITION,
+    LightEntityFeature,
 )
 from homeassistant.components.media_player.const import (
     ATTR_MEDIA_VOLUME_LEVEL,
-    SUPPORT_VOLUME_SET,
+    MediaPlayerEntityFeature,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -80,7 +73,7 @@ STATE_COLORMODE = "colormode"
 STATE_HUE = "hue"
 STATE_SATURATION = "sat"
 STATE_COLOR_TEMP = "ct"
-STATE_TRANSITON = "tt"
+STATE_TRANSITION = "tt"
 STATE_XY = "xy"
 
 # Hue API states, defined separately in case they change
@@ -358,7 +351,7 @@ class HueOneLightChangeView(HomeAssistantView):
             STATE_SATURATION: None,
             STATE_COLOR_TEMP: None,
             STATE_XY: None,
-            STATE_TRANSITON: None,
+            STATE_TRANSITION: None,
         }
 
         if HUE_API_STATE_ON in request_json:
@@ -374,7 +367,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (HUE_API_STATE_HUE, STATE_HUE),
             (HUE_API_STATE_SAT, STATE_SATURATION),
             (HUE_API_STATE_CT, STATE_COLOR_TEMP),
-            (HUE_API_STATE_TRANSITION, STATE_TRANSITON),
+            (HUE_API_STATE_TRANSITION, STATE_TRANSITION),
         ):
             if key in request_json:
                 try:
@@ -468,10 +461,10 @@ class HueOneLightChangeView(HomeAssistantView):
                     data[ATTR_COLOR_TEMP] = parsed[STATE_COLOR_TEMP]
 
                 if (
-                    entity_features & SUPPORT_TRANSITION
-                    and parsed[STATE_TRANSITON] is not None
+                    entity_features & LightEntityFeature.TRANSITION
+                    and parsed[STATE_TRANSITION] is not None
                 ):
-                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITON] / 10
+                    data[ATTR_TRANSITION] = parsed[STATE_TRANSITION] / 10
 
         # If the requested entity is a script, add some variables
         elif entity.domain == script.DOMAIN:
@@ -489,7 +482,7 @@ class HueOneLightChangeView(HomeAssistantView):
             service = None
 
             if (
-                entity_features & SUPPORT_TARGET_TEMPERATURE
+                entity_features & ClimateEntityFeature.TARGET_TEMPERATURE
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
@@ -507,7 +500,7 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a media player, convert to volume
         elif entity.domain == media_player.DOMAIN:
             if (
-                entity_features & SUPPORT_VOLUME_SET
+                entity_features & MediaPlayerEntityFeature.VOLUME_SET
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 turn_on_needed = True
@@ -525,7 +518,7 @@ class HueOneLightChangeView(HomeAssistantView):
                 service = SERVICE_CLOSE_COVER
 
             if (
-                entity_features & SUPPORT_SET_POSITION
+                entity_features & CoverEntityFeature.SET_POSITION
                 and parsed[STATE_BRIGHTNESS] is not None
             ):
                 domain = entity.domain
@@ -535,19 +528,12 @@ class HueOneLightChangeView(HomeAssistantView):
         # If the requested entity is a fan, convert to speed
         elif (
             entity.domain == fan.DOMAIN
-            and entity_features & SUPPORT_SET_SPEED
+            and entity_features & FanEntityFeature.SET_SPEED
             and parsed[STATE_BRIGHTNESS] is not None
         ):
             domain = entity.domain
             # Convert 0-100 to a fan speed
-            if (brightness := parsed[STATE_BRIGHTNESS]) == 0:
-                data[ATTR_SPEED] = SPEED_OFF
-            elif 0 < brightness <= 33.3:
-                data[ATTR_SPEED] = SPEED_LOW
-            elif 33.3 < brightness <= 66.6:
-                data[ATTR_SPEED] = SPEED_MEDIUM
-            elif 66.6 < brightness <= 100:
-                data[ATTR_SPEED] = SPEED_HIGH
+            data[ATTR_PERCENTAGE] = parsed[STATE_BRIGHTNESS]
 
         # Map the off command to on
         if entity.domain in config.off_maps_to_on_domains:
@@ -590,7 +576,7 @@ class HueOneLightChangeView(HomeAssistantView):
             (STATE_SATURATION, HUE_API_STATE_SAT),
             (STATE_COLOR_TEMP, HUE_API_STATE_CT),
             (STATE_XY, HUE_API_STATE_XY),
-            (STATE_TRANSITON, HUE_API_STATE_TRANSITION),
+            (STATE_TRANSITION, HUE_API_STATE_TRANSITION),
         ):
             if parsed[key] is not None:
                 json_response.append(
@@ -679,15 +665,9 @@ def get_entity_state(config, entity):
             # Convert 0.0-1.0 to 0-254
             data[STATE_BRIGHTNESS] = round(min(1.0, level) * HUE_API_STATE_BRI_MAX)
         elif entity.domain == fan.DOMAIN:
-            speed = entity.attributes.get(ATTR_SPEED, 0)
-            # Convert 0.0-1.0 to 0-254
-            data[STATE_BRIGHTNESS] = 0
-            if speed == SPEED_LOW:
-                data[STATE_BRIGHTNESS] = 85
-            elif speed == SPEED_MEDIUM:
-                data[STATE_BRIGHTNESS] = 170
-            elif speed == SPEED_HIGH:
-                data[STATE_BRIGHTNESS] = HUE_API_STATE_BRI_MAX
+            percentage = entity.attributes.get(ATTR_PERCENTAGE) or 0
+            # Convert 0-100 to 0-254
+            data[STATE_BRIGHTNESS] = round(percentage * HUE_API_STATE_BRI_MAX / 100)
         elif entity.domain == cover.DOMAIN:
             level = entity.attributes.get(ATTR_CURRENT_POSITION, 0)
             data[STATE_BRIGHTNESS] = round(level / 100 * HUE_API_STATE_BRI_MAX)
@@ -786,10 +766,10 @@ def entity_to_json(config, entity):
             }
         )
     elif entity_features & (
-        SUPPORT_SET_POSITION
-        | SUPPORT_SET_SPEED
-        | SUPPORT_VOLUME_SET
-        | SUPPORT_TARGET_TEMPERATURE
+        CoverEntityFeature.SET_POSITION
+        | FanEntityFeature.SET_SPEED
+        | MediaPlayerEntityFeature.VOLUME_SET
+        | ClimateEntityFeature.TARGET_TEMPERATURE
     ) or light.brightness_supported(color_modes):
         # Dimmable light (Zigbee Device ID: 0x0100)
         # Supports groups, scenes, on/off and dimming

@@ -19,6 +19,15 @@
                 "description": "Chcete nastavit {device}? Pokud jste Home Assistant doposud nikdy nep\u0159ipojili, m\u011bla by se v\u00e1m na televizi zobrazit \u017e\u00e1dost o povolen\u00ed.",
                 "title": "Samsung TV"
             },
+            "encrypted_pairing": {
+                "description": "Zadejte pros\u00edm PIN zobrazen\u00fd na {device}."
+            },
+            "pairing": {
+                "description": "Chcete nastavit {device}? Pokud jste Home Assistant doposud nikdy nep\u0159ipojili, m\u011bla by se v\u00e1m na televizi zobrazit \u017e\u00e1dost o povolen\u00ed."
+            },
+            "reauth_confirm_encrypted": {
+                "description": "Zadejte pros\u00edm PIN zobrazen\u00fd na {device}."
+            },
             "user": {
                 "data": {
                     "host": "Hostitel",

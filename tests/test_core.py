@@ -13,8 +13,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
-    ATTR_NOW,
-    ATTR_SECONDS,
     CONF_UNIT_SYSTEM,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -26,8 +24,6 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
-    EVENT_TIMER_OUT_OF_SYNC,
     MATCH_ALL,
     __version__,
 )
@@ -39,6 +35,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 import homeassistant.util.dt as dt_util
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_capture_events, async_mock_service
@@ -48,7 +45,17 @@ PST = dt_util.get_time_zone("America/Los_Angeles")
 
 def test_split_entity_id():
     """Test split_entity_id."""
-    assert ha.split_entity_id("domain.object_id") == ["domain", "object_id"]
+    assert ha.split_entity_id("domain.object_id") == ("domain", "object_id")
+    with pytest.raises(ValueError):
+        ha.split_entity_id("")
+    with pytest.raises(ValueError):
+        ha.split_entity_id(".")
+    with pytest.raises(ValueError):
+        ha.split_entity_id("just_domain")
+    with pytest.raises(ValueError):
+        ha.split_entity_id("empty_object_id.")
+    with pytest.raises(ValueError):
+        ha.split_entity_id(".empty_domain")
 
 
 def test_async_add_hass_job_schedule_callback():
@@ -377,10 +384,14 @@ def test_state_as_dict():
         "last_updated": last_time.isoformat(),
         "state": "on",
     }
-    assert state.as_dict() == expected
+    as_dict_1 = state.as_dict()
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+    assert as_dict_1 == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected
-    assert state.as_dict() is state.as_dict()
+    assert state.as_dict() is as_dict_1
 
 
 async def test_eventbus_add_remove_listener(hass):
@@ -426,6 +437,24 @@ async def test_eventbus_filtered_listener(hass):
     hass.bus.async_fire("test", {"filtered": False})
     await hass.async_block_till_done()
 
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_eventbus_run_immediately(hass):
+    """Test we can call events immediately."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
     assert len(calls) == 1
 
     unsub()
@@ -1046,129 +1075,6 @@ async def test_bad_timezone_raises_value_error(hass):
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-@patch("homeassistant.core.monotonic")
-def test_create_timer(mock_monotonic, loop):
-    """Test create timer."""
-    hass = MagicMock()
-    funcs = []
-    orig_callback = ha.callback
-
-    def mock_callback(func):
-        funcs.append(func)
-        return orig_callback(func)
-
-    mock_monotonic.side_effect = 10.2, 10.8, 11.3
-
-    with patch.object(ha, "callback", mock_callback), patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 5, 333333),
-    ):
-        ha._async_create_timer(hass)
-
-    assert len(funcs) == 2
-    fire_time_event, stop_timer = funcs
-
-    assert len(hass.loop.call_later.mock_calls) == 1
-    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
-    assert abs(delay - 0.666667) < 0.001
-    assert callback is fire_time_event
-    assert abs(target - 10.866667) < 0.001
-
-    with patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 6, 100000),
-    ):
-        callback(target)
-
-    assert len(hass.bus.async_listen_once.mock_calls) == 1
-    assert len(hass.bus.async_fire.mock_calls) == 1
-    assert len(hass.loop.call_later.mock_calls) == 2
-
-    event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
-    assert event_type == EVENT_HOMEASSISTANT_STOP
-    assert callback is stop_timer
-
-    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
-    assert abs(delay - 0.9) < 0.001
-    assert callback is fire_time_event
-    assert abs(target - 12.2) < 0.001
-
-    event_type, event_data = hass.bus.async_fire.mock_calls[0][1]
-    assert event_type == EVENT_TIME_CHANGED
-    assert event_data[ATTR_NOW] == datetime(2018, 12, 31, 3, 4, 6, 100000)
-
-
-@patch("homeassistant.core.monotonic")
-def test_timer_out_of_sync(mock_monotonic, loop):
-    """Test create timer."""
-    hass = MagicMock()
-    funcs = []
-    orig_callback = ha.callback
-
-    def mock_callback(func):
-        funcs.append(func)
-        return orig_callback(func)
-
-    mock_monotonic.side_effect = 10.2, 13.3, 13.4
-
-    with patch.object(ha, "callback", mock_callback), patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 5, 333333),
-    ):
-        ha._async_create_timer(hass)
-
-    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
-
-    with patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 8, 200000),
-    ):
-        callback(target)
-
-        _, event_0_args, event_0_kwargs = hass.bus.async_fire.mock_calls[0]
-        event_context_0 = event_0_kwargs["context"]
-
-        event_type_0, _ = event_0_args
-        assert event_type_0 == EVENT_TIME_CHANGED
-
-        _, event_1_args, event_1_kwargs = hass.bus.async_fire.mock_calls[1]
-        event_type_1, event_data_1 = event_1_args
-        event_context_1 = event_1_kwargs["context"]
-
-        assert event_type_1 == EVENT_TIMER_OUT_OF_SYNC
-        assert abs(event_data_1[ATTR_SECONDS] - 2.433333) < 0.001
-
-        assert event_context_0 == event_context_1
-
-        assert len(funcs) == 2
-        fire_time_event, _ = funcs
-
-    assert len(hass.loop.call_later.mock_calls) == 2
-
-    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
-    assert abs(delay - 0.8) < 0.001
-    assert callback is fire_time_event
-    assert abs(target - 14.2) < 0.001
-
-
-async def test_hass_start_starts_the_timer(loop):
-    """Test when hass starts, it starts the timer."""
-    hass = ha.HomeAssistant()
-
-    try:
-        with patch("homeassistant.core._async_create_timer") as mock_timer:
-            await hass.async_start()
-
-        assert hass.state == ha.CoreState.running
-        assert not hass._track_task
-        assert len(mock_timer.mock_calls) == 1
-        assert mock_timer.mock_calls[0][1][0] is hass
-
-    finally:
-        await hass.async_stop()
-        assert hass.state == ha.CoreState.stopped
-
-
 async def test_start_taking_too_long(loop, caplog):
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant()
@@ -1177,12 +1083,10 @@ async def test_start_taking_too_long(loop, caplog):
     try:
         with patch.object(
             hass, "async_block_till_done", side_effect=asyncio.TimeoutError
-        ), patch("homeassistant.core._async_create_timer") as mock_timer:
+        ):
             await hass.async_start()
 
         assert hass.state == ha.CoreState.running
-        assert len(mock_timer.mock_calls) == 1
-        assert mock_timer.mock_calls[0][1][0] is hass
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:

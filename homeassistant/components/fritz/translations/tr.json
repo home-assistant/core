@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
+            "ignore_ip6_link_local": "IPv6 ba\u011flant\u0131 yerel adresi desteklenmiyor.",
             "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Yap\u0131land\u0131rma ak\u0131\u015f\u0131 zaten devam ediyor",
             "cannot_connect": "Ba\u011flanma hatas\u0131",
             "connection_error": "Ba\u011flanma hatas\u0131",
-            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama"
+            "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
+            "upnp_not_configured": "Cihazda UPnP ayarlar\u0131 eksik."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Bir cihaz\u0131 'evde' varsaymak i\u00e7in saniye"
+                    "consider_home": "Bir cihaz\u0131 'evde' varsaymak i\u00e7in saniye",
+                    "old_discovery": "Eski ke\u015fif y\u00f6ntemini etkinle\u015ftir"
                 }
             }
         }

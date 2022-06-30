@@ -64,7 +64,7 @@ class AzureEventHubClientSAS(AzureEventHubClient):
         return EventHubProducerClient(
             fully_qualified_namespace=f"{self.event_hub_namespace}.servicebus.windows.net",
             eventhub_name=self.event_hub_instance_name,
-            credential=EventHubSharedKeyCredential(  # type: ignore
+            credential=EventHubSharedKeyCredential(  # type: ignore[arg-type]
                 policy=self.event_hub_sas_policy, key=self.event_hub_sas_key
             ),
             **ADDITIONAL_ARGS,

@@ -4,20 +4,11 @@ from __future__ import annotations
 from openwebif.api import CreateDevice
 import voluptuous as vol
 
-from homeassistant.components.media_player import MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_TVSHOW,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SELECT_SOURCE,
-    SUPPORT_STOP,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
-    SUPPORT_VOLUME_STEP,
+from homeassistant.components.media_player import (
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_TVSHOW
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -54,19 +45,6 @@ DEFAULT_PASSWORD = "dreambox"
 DEFAULT_DEEP_STANDBY = False
 DEFAULT_MAC_ADDRESS = ""
 DEFAULT_SOURCE_BOUQUET = ""
-
-SUPPORTED_ENIGMA2 = (
-    SUPPORT_VOLUME_SET
-    | SUPPORT_VOLUME_MUTE
-    | SUPPORT_TURN_OFF
-    | SUPPORT_NEXT_TRACK
-    | SUPPORT_STOP
-    | SUPPORT_PREVIOUS_TRACK
-    | SUPPORT_VOLUME_STEP
-    | SUPPORT_TURN_ON
-    | SUPPORT_PAUSE
-    | SUPPORT_SELECT_SOURCE
-)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -126,6 +104,19 @@ def setup_platform(
 class Enigma2Device(MediaPlayerEntity):
     """Representation of an Enigma2 box."""
 
+    _attr_supported_features = (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        | MediaPlayerEntityFeature.TURN_OFF
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.STOP
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.VOLUME_STEP
+        | MediaPlayerEntityFeature.TURN_ON
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.SELECT_SOURCE
+    )
+
     def __init__(self, name, device):
         """Initialize the Enigma2 device."""
         self._name = name
@@ -152,11 +143,6 @@ class Enigma2Device(MediaPlayerEntity):
     def available(self):
         """Return True if the device is available."""
         return not self.e2_box.is_offline
-
-    @property
-    def supported_features(self):
-        """Flag of media commands that are supported."""
-        return SUPPORTED_ENIGMA2
 
     def turn_off(self):
         """Turn off media player."""

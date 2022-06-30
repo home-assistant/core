@@ -1,9 +1,10 @@
-"""Tests for 1-Wire devices connected on OWServer."""
+"""Tests for 1-Wire switches."""
 import logging
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -34,7 +35,7 @@ def override_platforms():
         yield
 
 
-async def test_owserver_switch(
+async def test_switches(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     owproxy: MagicMock,
@@ -83,7 +84,7 @@ async def test_owserver_switch(
             expected_entity[ATTR_STATE] = STATE_ON
 
         await hass.services.async_call(
-            Platform.SWITCH,
+            SWITCH_DOMAIN,
             SERVICE_TOGGLE,
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,

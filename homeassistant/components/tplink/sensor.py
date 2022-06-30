@@ -140,7 +140,6 @@ async def async_setup_entry(
 class SmartPlugSensor(CoordinatedTPLinkEntity, SensorEntity):
     """Representation of a TPLink Smart Plug energy sensor."""
 
-    coordinator: TPLinkDataUpdateCoordinator
     entity_description: TPLinkSensorEntityDescription
 
     def __init__(

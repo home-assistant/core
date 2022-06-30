@@ -15,9 +15,9 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_TRANSITION,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_TRANSITION,
+    ColorMode,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
@@ -96,18 +96,36 @@ class DecoraWifiLight(LightEntity):
     def __init__(self, switch):
         """Initialize the switch."""
         self._switch = switch
+        self._attr_unique_id = switch.serial
+
+    @property
+    def color_mode(self) -> str:
+        """Return the color mode of the light."""
+        if self._switch.canSetLevel:
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[str] | None:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     @property
     def supported_features(self):
         """Return supported features."""
         if self._switch.canSetLevel:
-            return SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+            return LightEntityFeature.TRANSITION
         return 0
 
     @property
     def name(self):
         """Return the display name of this switch."""
         return self._switch.name
+
+    @property
+    def unique_id(self):
+        """Return the ID of this light."""
+        return self._switch.serial
 
     @property
     def brightness(self):

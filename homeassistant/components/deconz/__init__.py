@@ -12,11 +12,14 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 import homeassistant.helpers.entity_registry as er
 
 from .config_flow import get_master_gateway
-from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN
-from .gateway import DeconzGateway
+from .const import CONF_GROUP_ID_BASE, CONF_MASTER_GATEWAY, DOMAIN, PLATFORMS
+from .deconz_event import async_setup_events, async_unload_events
+from .errors import AuthenticationRequired, CannotConnect
+from .gateway import DeconzGateway, get_deconz_session
 from .services import async_setup_services, async_unload_services
 
 
@@ -33,16 +36,27 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if not config_entry.options:
         await async_update_master_gateway(hass, config_entry)
 
-    gateway = DeconzGateway(hass, config_entry)
-    if not await gateway.async_setup():
-        return False
+    try:
+        api = await get_deconz_session(hass, config_entry.data)
+    except CannotConnect as err:
+        raise ConfigEntryNotReady from err
+    except AuthenticationRequired as err:
+        raise ConfigEntryAuthFailed from err
 
-    if not hass.data[DOMAIN]:
+    gateway = hass.data[DOMAIN][config_entry.entry_id] = DeconzGateway(
+        hass, config_entry, api
+    )
+
+    config_entry.add_update_listener(gateway.async_config_entry_updated)
+    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+
+    await async_setup_events(gateway)
+    await gateway.async_update_device_registry()
+
+    if len(hass.data[DOMAIN]) == 1:
         async_setup_services(hass)
 
-    hass.data[DOMAIN][config_entry.entry_id] = gateway
-
-    await gateway.async_update_device_registry()
+    api.start()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, gateway.shutdown)
@@ -53,7 +67,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload deCONZ config entry."""
-    gateway = hass.data[DOMAIN].pop(config_entry.entry_id)
+    gateway: DeconzGateway = hass.data[DOMAIN].pop(config_entry.entry_id)
+    async_unload_events(gateway)
 
     if not hass.data[DOMAIN]:
         async_unload_services(hass)
@@ -89,9 +104,10 @@ async def async_update_group_unique_id(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Update unique ID entities based on deCONZ groups."""
-    if not isinstance(old_unique_id := config_entry.data.get(CONF_GROUP_ID_BASE), str):
+    if not (group_id_base := config_entry.data.get(CONF_GROUP_ID_BASE)):
         return
 
+    old_unique_id = cast(str, group_id_base)
     new_unique_id = cast(str, config_entry.unique_id)
 
     @callback

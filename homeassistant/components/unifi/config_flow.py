@@ -238,6 +238,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
 
         if (port := MODEL_PORTS.get(model_description)) is not None:
             self.config[CONF_PORT] = port
+            self.context[
+                "configuration_url"
+            ] = f"https://{self.config[CONF_HOST]}:{port}"
 
         return await self.async_step_user()
 
@@ -253,6 +256,8 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Manage the UniFi Network options."""
+        if self.config_entry.entry_id not in self.hass.data[UNIFI_DOMAIN]:
+            return self.async_abort(reason="integration_not_setup")
         self.controller = self.hass.data[UNIFI_DOMAIN][self.config_entry.entry_id]
         self.options[CONF_BLOCK_CLIENT] = self.controller.option_block_clients
 
@@ -316,6 +321,10 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
         )
         ssid_filter = {ssid: ssid for ssid in sorted(ssids)}
 
+        selected_ssids_to_filter = [
+            ssid for ssid in self.controller.option_ssid_filter if ssid in ssid_filter
+        ]
+
         return self.async_show_form(
             step_id="device_tracker",
             data_schema=vol.Schema(
@@ -333,7 +342,7 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                         default=self.controller.option_track_devices,
                     ): bool,
                     vol.Optional(
-                        CONF_SSID_FILTER, default=self.controller.option_ssid_filter
+                        CONF_SSID_FILTER, default=selected_ssids_to_filter
                     ): cv.multi_select(ssid_filter),
                     vol.Optional(
                         CONF_DETECTION_TIME,
@@ -365,12 +374,18 @@ class UnifiOptionsFlowHandler(config_entries.OptionsFlow):
                 client.mac
             ] = f"{client.name or client.hostname} ({client.mac})"
 
+        selected_clients_to_block = [
+            client
+            for client in self.options.get(CONF_BLOCK_CLIENT, [])
+            if client in clients_to_block
+        ]
+
         return self.async_show_form(
             step_id="client_control",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
-                        CONF_BLOCK_CLIENT, default=self.options[CONF_BLOCK_CLIENT]
+                        CONF_BLOCK_CLIENT, default=selected_clients_to_block
                     ): cv.multi_select(clients_to_block),
                     vol.Optional(
                         CONF_POE_CLIENTS,

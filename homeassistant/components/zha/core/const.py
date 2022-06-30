@@ -6,6 +6,7 @@ import logging
 
 import bellows.zigbee.application
 import voluptuous as vol
+import zigpy.application
 from zigpy.config import CONF_DEVICE_PATH  # noqa: F401 # pylint: disable=unused-import
 import zigpy.types as t
 import zigpy_deconz.zigbee.application
@@ -15,8 +16,6 @@ import zigpy_znp.zigbee.application
 
 from homeassistant.const import Platform
 import homeassistant.helpers.config_validation as cv
-
-from .typing import CALLABLE_T
 
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
@@ -44,6 +43,7 @@ ATTR_NEIGHBORS = "neighbors"
 ATTR_NODE_DESCRIPTOR = "node_descriptor"
 ATTR_NWK = "nwk"
 ATTR_OUT_CLUSTERS = "out_clusters"
+ATTR_PARAMS = "params"
 ATTR_POWER_SOURCE = "power_source"
 ATTR_PROFILE_ID = "profile_id"
 ATTR_QUIRK_APPLIED = "quirk_applied"
@@ -70,6 +70,7 @@ CHANNEL_ATTRIBUTE = "attribute"
 CHANNEL_BASIC = "basic"
 CHANNEL_COLOR = "light_color"
 CHANNEL_COVER = "window_covering"
+CHANNEL_DEVICE_TEMPERATURE = "device_temperature"
 CHANNEL_DOORLOCK = "door_lock"
 CHANNEL_ELECTRICAL_MEASUREMENT = "electrical_measurement"
 CHANNEL_EVENT_RELAY = "event_relay"
@@ -223,6 +224,8 @@ ZHA_CONFIG_SCHEMAS = {
     ZHA_ALARM_OPTIONS: CONF_ZHA_ALARM_SCHEMA,
 }
 
+_ControllerClsType = type[zigpy.application.ControllerApplication]
+
 
 class RadioType(enum.Enum):
     """Possible options for radio type."""
@@ -261,13 +264,13 @@ class RadioType(enum.Enum):
                 return radio.name
         raise ValueError
 
-    def __init__(self, description: str, controller_cls: CALLABLE_T) -> None:
+    def __init__(self, description: str, controller_cls: _ControllerClsType) -> None:
         """Init instance."""
         self._desc = description
         self._ctrl_cls = controller_cls
 
     @property
-    def controller(self) -> CALLABLE_T:
+    def controller(self) -> _ControllerClsType:
         """Return controller class."""
         return self._ctrl_cls
 

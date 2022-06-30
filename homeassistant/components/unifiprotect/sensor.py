@@ -6,9 +6,14 @@ from datetime import datetime
 import logging
 from typing import Any
 
-from pyunifiprotect.data import NVR, Camera, Event
-from pyunifiprotect.data.base import ProtectAdoptableDeviceModel
-from pyunifiprotect.data.devices import Sensor
+from pyunifiprotect.data import (
+    NVR,
+    Camera,
+    Event,
+    ProtectAdoptableDeviceModel,
+    ProtectDeviceModel,
+    Sensor,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -40,7 +45,7 @@ from .entity import (
     ProtectNVREntity,
     async_all_device_entities,
 )
-from .models import ProtectRequiredKeysMixin
+from .models import ProtectRequiredKeysMixin, T
 
 _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
@@ -48,12 +53,14 @@ DEVICE_CLASS_DETECTION = "unifiprotect__detection"
 
 
 @dataclass
-class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescription):
+class ProtectSensorEntityDescription(
+    ProtectRequiredKeysMixin[T], SensorEntityDescription
+):
     """Describes UniFi Protect Sensor entity."""
 
     precision: int | None = None
 
-    def get_ufp_value(self, obj: ProtectAdoptableDeviceModel | NVR) -> Any:
+    def get_ufp_value(self, obj: T) -> Any:
         """Return value from UniFi Protect device."""
         value = super().get_ufp_value(obj)
 
@@ -62,7 +69,7 @@ class ProtectSensorEntityDescription(ProtectRequiredKeysMixin, SensorEntityDescr
         return value
 
 
-def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
+def _get_uptime(obj: ProtectDeviceModel) -> datetime | None:
     if obj.up_since is None:
         return None
 
@@ -71,26 +78,21 @@ def _get_uptime(obj: ProtectAdoptableDeviceModel | NVR) -> datetime | None:
     return obj.up_since.replace(second=0, microsecond=0)
 
 
-def _get_nvr_recording_capacity(obj: Any) -> int:
-    assert isinstance(obj, NVR)
-
+def _get_nvr_recording_capacity(obj: NVR) -> int:
     if obj.storage_stats.capacity is None:
         return 0
 
     return int(obj.storage_stats.capacity.total_seconds())
 
 
-def _get_nvr_memory(obj: Any) -> float | None:
-    assert isinstance(obj, NVR)
-
+def _get_nvr_memory(obj: NVR) -> float | None:
     memory = obj.system_info.memory
     if memory.available is None or memory.total is None:
         return None
     return (1 - memory.available / memory.total) * 100
 
 
-def _get_alarm_sound(obj: ProtectAdoptableDeviceModel | NVR) -> str:
-    assert isinstance(obj, Sensor)
+def _get_alarm_sound(obj: Sensor) -> str:
 
     alarm_type = OBJECT_TYPE_NONE
     if (
@@ -103,7 +105,7 @@ def _get_alarm_sound(obj: ProtectAdoptableDeviceModel | NVR) -> str:
 
 
 ALL_DEVICES_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -152,6 +154,7 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         name="Oldest Recording",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
         ufp_value="stats.video.recording_start",
     ),
     ProtectSensorEntityDescription(
@@ -183,6 +186,15 @@ CAMERA_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         # (i.e. is not G4 Doorbell or not on 1.20.1+)
         ufp_required_field="voltage",
         precision=2,
+    ),
+    ProtectSensorEntityDescription(
+        key="doorbell_last_trip_time",
+        name="Last Doorbell Ring",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        icon="mdi:doorbell-video",
+        ufp_required_field="feature_flags.has_chime",
+        ufp_value="last_ring",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -244,16 +256,49 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="stats.temperature.value",
         ufp_enabled="is_temperature_sensor_enabled",
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[Sensor](
         key="alarm_sound",
         name="Alarm Sound Detected",
         ufp_value_fn=_get_alarm_sound,
         ufp_enabled="is_alarm_sensor_enabled",
     ),
+    ProtectSensorEntityDescription(
+        key="door_last_trip_time",
+        name="Last Open",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="open_status_changed_at",
+        entity_registry_enabled_default=False,
+    ),
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Last Motion Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="motion_detected_at",
+        entity_registry_enabled_default=False,
+    ),
+    ProtectSensorEntityDescription(
+        key="tampering_last_trip_time",
+        name="Last Tampering Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="tampering_detected_at",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="battery_level",
+        name="Battery Level",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        ufp_value="battery_status.percentage",
+    ),
 )
 
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[ProtectDeviceModel](
         key="uptime",
         name="Uptime",
         icon="mdi:clock",
@@ -331,7 +376,7 @@ NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         ufp_value="storage_stats.storage_distribution.free.percentage",
         precision=2,
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[NVR](
         key="record_capacity",
         name="Recording Capacity",
         native_unit_of_measurement=TIME_SECONDS,
@@ -363,7 +408,7 @@ NVR_DISABLED_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         ufp_value="system_info.cpu.temperature",
     ),
-    ProtectSensorEntityDescription(
+    ProtectSensorEntityDescription[NVR](
         key="memory_utilization",
         name="Memory Utilization",
         native_unit_of_measurement=PERCENTAGE,
@@ -385,6 +430,27 @@ MOTION_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
 )
 
 
+LIGHT_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Last Motion Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="last_motion",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+MOTION_TRIP_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
+    ProtectSensorEntityDescription(
+        key="motion_last_trip_time",
+        name="Last Motion Detected",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        ufp_value="last_motion",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -398,6 +464,8 @@ async def async_setup_entry(
         all_descs=ALL_DEVICES_SENSORS,
         camera_descs=CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
         sense_descs=SENSE_SENSORS,
+        light_descs=LIGHT_SENSORS,
+        lock_descs=DOORLOCK_SENSORS,
     )
     entities += _async_motion_entities(data)
     entities += _async_nvr_entities(data)
@@ -411,6 +479,14 @@ def _async_motion_entities(
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
     for device in data.api.bootstrap.cameras.values():
+        for description in MOTION_TRIP_SENSORS:
+            entities.append(ProtectDeviceSensor(data, device, description))
+            _LOGGER.debug(
+                "Adding trip sensor entity %s for %s",
+                description.name,
+                device.name,
+            )
+
         if not device.feature_flags.has_smart_detect:
             continue
 

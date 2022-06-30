@@ -12,12 +12,7 @@ from pywilight.const import (
     WL_SPEED_MEDIUM,
 )
 
-from homeassistant.components.fan import (
-    DIRECTION_FORWARD,
-    SUPPORT_DIRECTION,
-    SUPPORT_SET_SPEED,
-    FanEntity,
-)
+from homeassistant.components.fan import DIRECTION_FORWARD, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -29,8 +24,6 @@ from homeassistant.util.percentage import (
 from . import DOMAIN, WiLightDevice
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
-
-SUPPORTED_FEATURES = SUPPORT_SET_SPEED | SUPPORT_DIRECTION
 
 
 async def async_setup_entry(
@@ -57,16 +50,13 @@ async def async_setup_entry(
 class WiLightFan(WiLightDevice, FanEntity):
     """Representation of a WiLights fan."""
 
+    _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
+
     def __init__(self, api_device, index, item_name):
         """Initialize the device."""
         super().__init__(api_device, index, item_name)
         # Initialize the WiLights fan.
         self._direction = WL_DIRECTION_FORWARD
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORTED_FEATURES
 
     @property
     def icon(self):
@@ -108,7 +98,6 @@ class WiLightFan(WiLightDevice, FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str = None,
         percentage: int = None,
         preset_mode: str = None,
         **kwargs,

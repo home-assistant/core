@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Unm\u00f6glich, eine g\u00fcltige eindeutige Kennung f\u00fcr das Ger\u00e4t zu ermitteln",
+            "no_unique_id": "Ein Ger\u00e4t ohne g\u00fcltige, eindeutige ID ist bereits konfiguriert. Die Konfiguration mehrerer Instanzen ist nicht m\u00f6glich",
+            "not_unique_id_exist": "Ein Ger\u00e4t ohne g\u00fcltige, eindeutige ID ist bereits konfiguriert. Die Konfiguration mehrerer Instanzen ist nicht m\u00f6glich",
             "single_instance_allowed": "Bereits konfiguriert. Nur eine einzige Konfiguration m\u00f6glich."
         },
         "error": {
@@ -18,7 +21,7 @@
                     "mode": "Modus",
                     "name": "Name",
                     "password": "Passwort",
-                    "port": "Port",
+                    "port": "Port (leer lassen f\u00fcr Protokollstandard)",
                     "protocol": "Zu verwendendes Kommunikationsprotokoll",
                     "ssh_key": "Pfad zu deiner SSH-Schl\u00fcsseldatei (anstelle des Passworts)",
                     "username": "Benutzername"
@@ -36,7 +39,7 @@
                     "dnsmasq": "Der Speicherort der dnsmasq.leases-Dateien im Router",
                     "interface": "Schnittstelle, von der du Statistiken haben m\u00f6chtest (z.B. eth0, eth1 usw.)",
                     "require_ip": "Ger\u00e4te m\u00fcssen IP haben (f\u00fcr Zugangspunkt-Modus)",
-                    "track_unknown": "Unbekannte / unbenannte Ger\u00e4te tracken"
+                    "track_unknown": "Unbekannte / unbenannte Ger\u00e4te verfolgen"
                 },
                 "title": "AsusWRT Optionen"
             }

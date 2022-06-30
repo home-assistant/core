@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sms",
   "requirements": ["python-gammu==3.2.3"],
   "codeowners": ["@ocalvo"],
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "loggers": ["gammu"]
 }

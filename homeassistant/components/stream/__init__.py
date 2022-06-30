@@ -23,7 +23,7 @@ import secrets
 import threading
 import time
 from types import MappingProxyType
-from typing import cast
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -51,6 +51,7 @@ from .const import (
     TARGET_SEGMENT_DURATION_NON_LL_HLS,
 )
 from .core import PROVIDERS, IdleTimer, KeyFrameConverter, StreamOutput, StreamSettings
+from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput, async_setup_hls
 
 _LOGGER = logging.getLogger(__name__)
@@ -97,19 +98,21 @@ def create_stream(
     return stream
 
 
+DOMAIN_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_LL_HLS, default=True): cv.boolean,
+        vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
+            cv.positive_float, vol.Range(min=2, max=10)
+        ),
+        vol.Optional(CONF_PART_DURATION, default=1): vol.All(
+            cv.positive_float, vol.Range(min=0.2, max=1.5)
+        ),
+    }
+)
+
 CONFIG_SCHEMA = vol.Schema(
     {
-        DOMAIN: vol.Schema(
-            {
-                vol.Optional(CONF_LL_HLS, default=False): cv.boolean,
-                vol.Optional(CONF_SEGMENT_DURATION, default=6): vol.All(
-                    cv.positive_float, vol.Range(min=2, max=10)
-                ),
-                vol.Optional(CONF_PART_DURATION, default=1): vol.All(
-                    cv.positive_float, vol.Range(min=0.2, max=1.5)
-                ),
-            }
-        )
+        DOMAIN: DOMAIN_SCHEMA,
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -118,10 +121,8 @@ CONFIG_SCHEMA = vol.Schema(
 def filter_libav_logging() -> None:
     """Filter libav logging to only log when the stream logger is at DEBUG."""
 
-    stream_debug_enabled = logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
-
     def libav_filter(record: logging.LogRecord) -> bool:
-        return stream_debug_enabled
+        return logging.getLogger(__name__).isEnabledFor(logging.DEBUG)
 
     for logging_namespace in (
         "libav.mp4",
@@ -154,7 +155,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][ATTR_ENDPOINTS] = {}
     hass.data[DOMAIN][ATTR_STREAMS] = []
-    if (conf := config.get(DOMAIN)) and conf[CONF_LL_HLS]:
+    conf = DOMAIN_SCHEMA(config.get(DOMAIN, {}))
+    if conf[CONF_LL_HLS]:
         assert isinstance(conf[CONF_SEGMENT_DURATION], float)
         assert isinstance(conf[CONF_PART_DURATION], float)
         hass.data[DOMAIN][ATTR_SETTINGS] = StreamSettings(
@@ -224,6 +226,7 @@ class Stream:
             if stream_label
             else _LOGGER
         )
+        self._diagnostics = Diagnostics()
 
     def endpoint_url(self, fmt: str) -> str:
         """Start the stream and returns a url for the output format."""
@@ -244,7 +247,7 @@ class Stream:
         self, fmt: str, timeout: int = OUTPUT_IDLE_TIMEOUT
     ) -> StreamOutput:
         """Add provider output stream."""
-        if not self._outputs.get(fmt):
+        if not (provider := self._outputs.get(fmt)):
 
             @callback
             def idle_callback() -> None:
@@ -258,7 +261,8 @@ class Stream:
                 self.hass, IdleTimer(self.hass, timeout, idle_callback)
             )
             self._outputs[fmt] = provider
-        return self._outputs[fmt]
+
+        return provider
 
     def remove_provider(self, provider: StreamOutput) -> None:
         """Remove provider output stream."""
@@ -309,7 +313,10 @@ class Stream:
 
     def update_source(self, new_source: str) -> None:
         """Restart the stream with a new stream source."""
-        self._logger.debug("Updating stream source %s", new_source)
+        self._diagnostics.increment("update_source")
+        self._logger.debug(
+            "Updating stream source %s", redact_credentials(str(new_source))
+        )
         self.source = new_source
         self._fast_restart_once = True
         self._thread_quit.set()
@@ -320,11 +327,13 @@ class Stream:
         # pylint: disable=import-outside-toplevel
         from .worker import StreamState, StreamWorkerError, stream_worker
 
-        stream_state = StreamState(self.hass, self.outputs)
+        stream_state = StreamState(self.hass, self.outputs, self._diagnostics)
         wait_timeout = 0
         while not self._thread_quit.wait(timeout=wait_timeout):
             start_time = time.time()
             self.hass.add_job(self._async_update_state, True)
+            self._diagnostics.set_value("keepalive", self.keepalive)
+            self._diagnostics.increment("start_worker")
             try:
                 stream_worker(
                     self.source,
@@ -334,13 +343,15 @@ class Stream:
                     self._thread_quit,
                 )
             except StreamWorkerError as err:
+                self._diagnostics.increment("worker_error")
                 self._logger.error("Error from stream worker: %s", str(err))
-                self._available = False
 
             stream_state.discontinuity()
-            if not self.keepalive or self._thread_quit.is_set():
+            if not _should_retry() or self._thread_quit.is_set():
                 if self._fast_restart_once:
-                    # The stream source is updated, restart without any delay.
+                    # The stream source is updated, restart without any delay and reset the retry
+                    # backoff for the new url.
+                    wait_timeout = 0
                     self._fast_restart_once = False
                     self._thread_quit.clear()
                     continue
@@ -354,22 +365,24 @@ class Stream:
             if time.time() - start_time > STREAM_RESTART_RESET_TIME:
                 wait_timeout = 0
             wait_timeout += STREAM_RESTART_INCREMENT
+            self._diagnostics.set_value("retry_timeout", wait_timeout)
             self._logger.debug(
                 "Restarting stream worker in %d seconds: %s",
                 wait_timeout,
-                self.source,
+                redact_credentials(str(self.source)),
             )
-        self._worker_finished()
-
-    def _worker_finished(self) -> None:
-        """Schedule cleanup of all outputs."""
 
         @callback
-        def remove_outputs() -> None:
+        def worker_finished() -> None:
+            # The worker is no checking availability of the stream and can no longer track
+            # availability so mark it as available, otherwise the frontend may not be able to
+            # interact with the stream.
+            if not self.available:
+                self._async_update_state(True)
             for provider in self.outputs().values():
                 self.remove_provider(provider)
 
-        self.hass.loop.call_soon_threadsafe(remove_outputs)
+        self.hass.loop.call_soon_threadsafe(worker_finished)
 
     def stop(self) -> None:
         """Remove outputs and access token."""
@@ -442,3 +455,12 @@ class Stream:
         return await self._keyframe_converter.async_get_image(
             width=width, height=height
         )
+
+    def get_diagnostics(self) -> dict[str, Any]:
+        """Return diagnostics information for the stream."""
+        return self._diagnostics.as_dict()
+
+
+def _should_retry() -> bool:
+    """Return true if worker failures should be retried, for disabling during tests."""
+    return True

@@ -10,7 +10,7 @@
         "step": {
             "user": {
                 "data": {
-                    "dsn": "DSN"
+                    "dsn": "Sentry DSN"
                 },
                 "description": "Voer uw Sentry DSN in",
                 "title": "Sentry"
@@ -26,9 +26,9 @@
                     "event_handled": "Stuur afgehandelde gebeurtenissen",
                     "event_third_party_packages": "Gebeurtenissen verzenden vanuit pakketten van derden",
                     "logging_event_level": "Het logniveau waarvoor Sentry een gebeurtenis registreert",
-                    "logging_level": "Het logniveau Sentry zal logs opnemen als broodkruimels voor",
+                    "logging_level": "Het logniveau hoe Sentry logs zal opnemen als \"breadcrums\" is",
                     "tracing": "Schakel prestatietracering in",
-                    "tracing_sample_rate": "Tracering van de steekproefsnelheid; tussen 0,0 en 1,0 (1,0 = 100%)"
+                    "tracing_sample_rate": "Steekproefsnelheid voor prestatietracering; tussen 0,0 en 1,0 (1,0 = 100%)"
                 }
             }
         }

@@ -98,16 +98,17 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
         unique_id,
     ):
         """Initialize the Template switch."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(ATTR_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._on_script = Script(hass, config[ON_ACTION], friendly_name, DOMAIN)
         self._off_script = Script(hass, config[OFF_ACTION], friendly_name, DOMAIN)
         self._state = False
-        self._unique_id = unique_id
 
     @callback
     def _update_state(self, result):
@@ -142,16 +143,6 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             )
 
         await super().async_added_to_hass()
-
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this switch."""
-        return self._unique_id
 
     @property
     def is_on(self):

@@ -135,7 +135,7 @@ async def test_power_meter_sensor(
         category=pv.CATEGORY_POWER_METER,
         class_property="power",
         assert_states=(("12", "12"), ("13", "13")),
-        assert_unit_of_measurement="watts",
+        assert_unit_of_measurement="W",
     )
 
 

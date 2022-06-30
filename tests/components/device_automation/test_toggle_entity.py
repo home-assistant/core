@@ -93,7 +93,7 @@ async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations)
                         "domain": "switch",
                         "device_id": "",
                         "entity_id": ent1.entity_id,
-                        "type": "toggled",
+                        "type": "changed_states",
                     },
                     "action": {
                         "service": "test.automation",
@@ -135,7 +135,7 @@ async def test_if_fires_on_state_change(hass, calls, enable_custom_integrations)
     }
 
 
-@pytest.mark.parametrize("trigger", ["turned_off", "toggled"])
+@pytest.mark.parametrize("trigger", ["turned_off", "changed_states"])
 async def test_if_fires_on_state_change_with_for(
     hass, calls, enable_custom_integrations, trigger
 ):

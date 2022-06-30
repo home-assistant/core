@@ -10,6 +10,7 @@
             "is_on": "{entity_name}\u70ba\u958b\u555f"
         },
         "trigger_type": {
+            "changed_states": "{entity_name}\u5df2\u958b\u555f\u6216\u95dc\u9589",
             "toggled": "{entity_name}\u5df2\u958b\u555f\u6216\u95dc\u9589",
             "turned_off": "{entity_name}\u5df2\u95dc\u9589",
             "turned_on": "{entity_name}\u5df2\u958b\u555f"
@@ -21,5 +22,5 @@
             "on": "\u958b\u5553"
         }
     },
-    "title": "\u9059\u63a7"
+    "title": "\u9059\u63a7\u5668"
 }

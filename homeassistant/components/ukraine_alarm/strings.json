@@ -1,0 +1,39 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"
+    },
+    "error": {
+      "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "timeout": "[%key:common::config_flow::error::timeout_connect%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "description": "Set up the Ukraine Alarm integration. To generate an API key go to {api_url}"
+      },
+      "state": {
+        "data": {
+          "region": "Region"
+        },
+        "description": "Choose state to monitor"
+      },
+      "district": {
+        "data": {
+          "region": "[%key:component::ukraine_alarm::config::step::state::data::region%]"
+        },
+        "description": "If you want to monitor not only state, choose its specific district"
+      },
+      "community": {
+        "data": {
+          "region": "[%key:component::ukraine_alarm::config::step::state::data::region%]"
+        },
+        "description": "If you want to monitor not only state and district, choose its specific community"
+      }
+    }
+  }
+}

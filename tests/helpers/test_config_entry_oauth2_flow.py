@@ -26,7 +26,7 @@ TOKEN_URL = "https://example.como/auth/token"
 @pytest.fixture
 async def local_impl(hass):
     """Local implementation."""
-    assert await setup.async_setup_component(hass, "http", {})
+    assert await setup.async_setup_component(hass, "auth", {})
     return config_entry_oauth2_flow.LocalOAuth2Implementation(
         hass, TEST_DOMAIN, CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
     )
@@ -537,11 +537,11 @@ async def test_implementation_provider(hass, local_impl):
         hass, mock_domain_with_impl
     ) == {TEST_DOMAIN: local_impl}
 
-    provider_source = {}
+    provider_source = []
 
     async def async_provide_implementation(hass, domain):
         """Mock implementation provider."""
-        return provider_source.get(domain)
+        return provider_source
 
     config_entry_oauth2_flow.async_add_implementation_provider(
         hass, "cloud", async_provide_implementation
@@ -551,15 +551,29 @@ async def test_implementation_provider(hass, local_impl):
         hass, mock_domain_with_impl
     ) == {TEST_DOMAIN: local_impl}
 
-    provider_source[
-        mock_domain_with_impl
-    ] = config_entry_oauth2_flow.LocalOAuth2Implementation(
-        hass, "cloud", CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+    provider_source.append(
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass, "cloud", CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+        )
     )
 
     assert await config_entry_oauth2_flow.async_get_implementations(
         hass, mock_domain_with_impl
-    ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[mock_domain_with_impl]}
+    ) == {TEST_DOMAIN: local_impl, "cloud": provider_source[0]}
+
+    provider_source.append(
+        config_entry_oauth2_flow.LocalOAuth2Implementation(
+            hass, "other", CLIENT_ID, CLIENT_SECRET, AUTHORIZE_URL, TOKEN_URL
+        )
+    )
+
+    assert await config_entry_oauth2_flow.async_get_implementations(
+        hass, mock_domain_with_impl
+    ) == {
+        TEST_DOMAIN: local_impl,
+        "cloud": provider_source[0],
+        "other": provider_source[1],
+    }
 
 
 async def test_oauth_session_refresh_failure(

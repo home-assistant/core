@@ -42,7 +42,6 @@ class WebsocketAPIView(HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.WebSocketResponse:
         """Handle an incoming websocket connection."""
-        # pylint: disable=no-self-use
         return await WebSocketHandler(request.app["hass"], request).async_handle()
 
 
@@ -73,9 +72,13 @@ class WebSocketHandler:
         # Exceptions if Socket disconnected or cancelled by connection handler
         with suppress(RuntimeError, ConnectionResetError, *CANCELLATION_ERRORS):
             while not self.wsock.closed:
-                if (message := await self._to_write.get()) is None:
+                if (process := await self._to_write.get()) is None:
                     break
 
+                if not isinstance(process, str):
+                    message: str = process()
+                else:
+                    message = process
                 self._logger.debug("Sending %s", message)
                 await self.wsock.send_str(message)
 
@@ -85,14 +88,14 @@ class WebSocketHandler:
             self._peak_checker_unsub = None
 
     @callback
-    def _send_message(self, message: str | dict[str, Any]) -> None:
+    def _send_message(self, message: str | dict[str, Any] | Callable[[], str]) -> None:
         """Send a message to the client.
 
         Closes connection if the client is not reading the messages.
 
         Async friendly.
         """
-        if not isinstance(message, str):
+        if isinstance(message, dict):
             message = message_to_json(message)
 
         try:

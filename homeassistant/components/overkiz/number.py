@@ -28,6 +28,8 @@ class OverkizNumberDescriptionMixin:
 class OverkizNumberDescription(NumberEntityDescription, OverkizNumberDescriptionMixin):
     """Class to describe an Overkiz number."""
 
+    inverted: bool = False
+
 
 NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
     # Cover: My Position (0 - 100)
@@ -48,7 +50,45 @@ NUMBER_DESCRIPTIONS: list[OverkizNumberDescription] = [
         max_value=4,
         entity_category=EntityCategory.CONFIG,
     ),
+    # SomfyHeatingTemperatureInterface
+    OverkizNumberDescription(
+        key=OverkizState.CORE_ECO_ROOM_TEMPERATURE,
+        name="Eco Room Temperature",
+        icon="mdi:thermometer",
+        command=OverkizCommand.SET_ECO_TEMPERATURE,
+        min_value=6,
+        max_value=29,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    OverkizNumberDescription(
+        key=OverkizState.CORE_COMFORT_ROOM_TEMPERATURE,
+        name="Comfort Room Temperature",
+        icon="mdi:home-thermometer-outline",
+        command=OverkizCommand.SET_COMFORT_TEMPERATURE,
+        min_value=7,
+        max_value=30,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    OverkizNumberDescription(
+        key=OverkizState.CORE_SECURED_POSITION_TEMPERATURE,
+        name="Freeze Protection Temperature",
+        icon="mdi:sun-thermometer-outline",
+        command=OverkizCommand.SET_SECURED_POSITION_TEMPERATURE,
+        min_value=5,
+        max_value=15,
+        entity_category=EntityCategory.CONFIG,
+    ),
+    # DimmerExteriorHeating (Somfy Terrace Heater) (0 - 100)
+    # Needs to be inverted since 100 = off, 0 = on
+    OverkizNumberDescription(
+        key=OverkizState.CORE_LEVEL,
+        icon="mdi:patio-heater",
+        command=OverkizCommand.SET_LEVEL,
+        inverted=True,
+    ),
 ]
+
+SUPPORTED_STATES = {description.key: description for description in NUMBER_DESCRIPTIONS}
 
 
 async def async_setup_entry(
@@ -60,10 +100,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizNumber] = []
 
-    key_supported_states = {
-        description.key: description for description in NUMBER_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -72,7 +108,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizNumber(
                         device.device_url,
@@ -93,12 +129,18 @@ class OverkizNumber(OverkizDescriptiveEntity, NumberEntity):
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if state := self.device.states.get(self.entity_description.key):
+            if self.entity_description.inverted:
+                return self._attr_max_value - cast(float, state.value)
+
             return cast(float, state.value)
 
         return None
 
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
+        if self.entity_description.inverted:
+            value = self._attr_max_value - value
+
         await self.executor.async_execute_command(
             self.entity_description.command, value
         )

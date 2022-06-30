@@ -168,7 +168,7 @@ class EnOceanPowerSensor(EnOceanSensor):
             # this packet reports the current value
             raw_val = packet.parsed["MR"]["raw_value"]
             divisor = packet.parsed["DIV"]["raw_value"]
-            self._attr_native_value = raw_val / (10 ** divisor)
+            self._attr_native_value = raw_val / (10**divisor)
             self.schedule_update_ha_state()
 
 

@@ -17,10 +17,8 @@
                     "password": "Salas\u00f5na",
                     "region": "Piirkond"
                 },
-                "description": "Sisesta e-posti aadress ja salas\u00f5na mida kasutad MyMazda mobiilirakendusse sisselogimiseks.",
-                "title": "Mazda Connected Services - lisa konto"
+                "description": "Sisesta e-posti aadress ja salas\u00f5na mida kasutad MyMazda mobiilirakendusse sisselogimiseks."
             }
         }
-    },
-    "title": "Mazda Connected Services"
+    }
 }

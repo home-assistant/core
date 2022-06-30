@@ -89,10 +89,9 @@ class HMCover(HMDevice, CoverEntity):
 
         None is unknown, 0 is closed, 100 is fully open.
         """
-        if "LEVEL_2" not in self._data:
+        if not (position := self._data.get("LEVEL_2", 0)):
             return None
-
-        return int(self._data.get("LEVEL_2", 0) * 100)
+        return int(position * 100)
 
     def set_cover_tilt_position(self, **kwargs):
         """Move the cover tilt to a specific position."""

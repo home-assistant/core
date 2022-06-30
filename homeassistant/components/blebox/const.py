@@ -14,7 +14,7 @@ from homeassistant.const import (
 DOMAIN = "blebox"
 PRODUCT = "product"
 
-DEFAULT_SETUP_TIMEOUT = 3
+DEFAULT_SETUP_TIMEOUT = 10
 
 # translation strings
 ADDRESS_ALREADY_CONFIGURED = "address_already_configured"

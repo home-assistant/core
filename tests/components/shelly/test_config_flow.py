@@ -19,6 +19,7 @@ MOCK_SETTINGS = {
 }
 DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     host="1.1.1.1",
+    addresses=["1.1.1.1"],
     hostname="mock_hostname",
     name="shelly1pm-12345",
     port=None,
@@ -134,8 +135,16 @@ async def test_title_without_name(hass):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_auth(hass):
+@pytest.mark.parametrize(
+    "test_data",
+    [
+        (1, {"username": "test user", "password": "test1 password"}, "test user"),
+        (2, {"password": "test2 password"}, "admin"),
+    ],
+)
+async def test_form_auth(hass, test_data):
     """Test manual configuration if auth is required."""
+    gen, user_input, username = test_data
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -144,7 +153,7 @@ async def test_form_auth(hass):
 
     with patch(
         "aioshelly.common.get_info",
-        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True},
+        return_value={"mac": "test-mac", "type": "SHSW-1", "auth": True, "gen": gen},
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -163,14 +172,22 @@ async def test_form_auth(hass):
             )
         ),
     ), patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(
+            return_value=Mock(
+                model="SHSW-1",
+                config=MOCK_CONFIG,
+                shutdown=AsyncMock(),
+            )
+        ),
+    ), patch(
         "homeassistant.components.shelly.async_setup", return_value=True
     ) as mock_setup, patch(
         "homeassistant.components.shelly.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
-            result2["flow_id"],
-            {"username": "test username", "password": "test password"},
+            result2["flow_id"], user_input
         )
         await hass.async_block_till_done()
 
@@ -180,9 +197,9 @@ async def test_form_auth(hass):
         "host": "1.1.1.1",
         "model": "SHSW-1",
         "sleep_period": 0,
-        "gen": 1,
-        "username": "test username",
-        "password": "test password",
+        "gen": gen,
+        "username": username,
+        "password": user_input["password"],
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -344,8 +361,8 @@ async def test_form_firmware_unsupported(hass):
         (ValueError, "unknown"),
     ],
 )
-async def test_form_auth_errors_test_connection(hass, error):
-    """Test we handle errors in authenticated devices."""
+async def test_form_auth_errors_test_connection_gen1(hass, error):
+    """Test we handle errors in Gen1 authenticated devices."""
     exc, base_error = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -367,6 +384,48 @@ async def test_form_auth_errors_test_connection(hass, error):
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {"username": "test username", "password": "test password"},
+        )
+    assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result3["errors"] == {"base": base_error}
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        (
+            aioshelly.exceptions.JSONRPCError(code=400),
+            "cannot_connect",
+        ),
+        (
+            aioshelly.exceptions.InvalidAuthError(code=401),
+            "invalid_auth",
+        ),
+        (asyncio.TimeoutError, "cannot_connect"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_form_auth_errors_test_connection_gen2(hass, error):
+    """Test we handle errors in Gen2 authenticated devices."""
+    exc, base_error = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "aioshelly.common.get_info",
+        return_value={"mac": "test-mac", "auth": True, "gen": 2},
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1"},
+        )
+
+    with patch(
+        "aioshelly.rpc_device.RpcDevice.create",
+        new=AsyncMock(side_effect=exc),
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result2["flow_id"], {"password": "test password"}
         )
     assert result3["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result3["errors"] == {"base": base_error}

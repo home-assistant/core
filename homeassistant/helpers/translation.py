@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -134,7 +135,7 @@ def _build_resources(
     translation_strings: dict[str, dict[str, Any]],
     components: set[str],
     category: str,
-) -> dict[str, dict[str, Any]]:
+) -> dict[str, dict[str, Any] | str]:
     """Build the resources response for the given components."""
     # Build response
     return {
@@ -251,6 +252,7 @@ class _TranslationCache:
         translation_strings: dict[str, dict[str, Any]],
     ) -> None:
         """Extract resources into the cache."""
+        resource: dict[str, Any] | str
         cached = self.cache.setdefault(language, {})
         categories: set[str] = set()
         for resource in translation_strings.values():
@@ -260,7 +262,8 @@ class _TranslationCache:
             resource_func = (
                 _merge_resources if category == "state" else _build_resources
             )
-            new_resources = resource_func(translation_strings, components, category)
+            new_resources: Mapping[str, dict[str, Any] | str]
+            new_resources = resource_func(translation_strings, components, category)  # type: ignore[assignment]
 
             for component, resource in new_resources.items():
                 category_cache: dict[str, Any] = cached.setdefault(

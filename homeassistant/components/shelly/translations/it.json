@@ -41,7 +41,7 @@
             "btn_up": "{subtype} pulsante in su",
             "double": "{subtype} premuto due volte",
             "double_push": "{subtype} doppia pressione",
-            "long": "{subtype} cliccato a lungo",
+            "long": "{subtype} premuto a lungo",
             "long_push": "{subtype} pressione prolungata",
             "long_single": "{subtype} premuto a lungo e poi singolarmente",
             "single": "{subtype} premuto singolarmente",

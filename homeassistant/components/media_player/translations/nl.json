@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} is aan het bufferen",
             "is_idle": "{entity_name} is niet actief",
             "is_off": "{entity_name} is uitgeschakeld",
             "is_on": "{entity_name} is ingeschakeld",
@@ -8,6 +9,8 @@
             "is_playing": "{entity_name} wordt afgespeeld"
         },
         "trigger_type": {
+            "buffering": "{entity_name} start met bufferen",
+            "changed_states": "{entity_name} veranderde van status",
             "idle": "{entity_name} wordt inactief",
             "paused": "{entity_name} is gepauzeerd",
             "playing": "{entity_name} begint te spelen",
@@ -17,6 +20,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Bufferen",
             "idle": "Inactief",
             "off": "Uit",
             "on": "Aan",

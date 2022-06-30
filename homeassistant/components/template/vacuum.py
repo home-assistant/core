@@ -21,16 +21,8 @@ from homeassistant.components.vacuum import (
     STATE_IDLE,
     STATE_PAUSED,
     STATE_RETURNING,
-    SUPPORT_BATTERY,
-    SUPPORT_CLEAN_SPOT,
-    SUPPORT_FAN_SPEED,
-    SUPPORT_LOCATE,
-    SUPPORT_PAUSE,
-    SUPPORT_RETURN_HOME,
-    SUPPORT_START,
-    SUPPORT_STATE,
-    SUPPORT_STOP,
     StateVacuumEntity,
+    VacuumEntityFeature,
 )
 from homeassistant.const import (
     CONF_ENTITY_ID,
@@ -142,103 +134,73 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         unique_id,
     ):
         """Initialize the vacuum."""
-        super().__init__(config=config)
+        super().__init__(
+            hass, config=config, fallback_name=object_id, unique_id=unique_id
+        )
         self.entity_id = async_generate_entity_id(
             ENTITY_ID_FORMAT, object_id, hass=hass
         )
-        self._name = friendly_name = config.get(CONF_FRIENDLY_NAME, object_id)
+        friendly_name = self._attr_name
 
         self._template = config.get(CONF_VALUE_TEMPLATE)
         self._battery_level_template = config.get(CONF_BATTERY_LEVEL_TEMPLATE)
         self._fan_speed_template = config.get(CONF_FAN_SPEED_TEMPLATE)
-        self._supported_features = SUPPORT_START
+        self._attr_supported_features = VacuumEntityFeature.START
 
         self._start_script = Script(hass, config[SERVICE_START], friendly_name, DOMAIN)
 
         self._pause_script = None
         if pause_action := config.get(SERVICE_PAUSE):
             self._pause_script = Script(hass, pause_action, friendly_name, DOMAIN)
-            self._supported_features |= SUPPORT_PAUSE
+            self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
         self._stop_script = None
         if stop_action := config.get(SERVICE_STOP):
             self._stop_script = Script(hass, stop_action, friendly_name, DOMAIN)
-            self._supported_features |= SUPPORT_STOP
+            self._attr_supported_features |= VacuumEntityFeature.STOP
 
         self._return_to_base_script = None
         if return_to_base_action := config.get(SERVICE_RETURN_TO_BASE):
             self._return_to_base_script = Script(
                 hass, return_to_base_action, friendly_name, DOMAIN
             )
-            self._supported_features |= SUPPORT_RETURN_HOME
+            self._attr_supported_features |= VacuumEntityFeature.RETURN_HOME
 
         self._clean_spot_script = None
         if clean_spot_action := config.get(SERVICE_CLEAN_SPOT):
             self._clean_spot_script = Script(
                 hass, clean_spot_action, friendly_name, DOMAIN
             )
-            self._supported_features |= SUPPORT_CLEAN_SPOT
+            self._attr_supported_features |= VacuumEntityFeature.CLEAN_SPOT
 
         self._locate_script = None
         if locate_action := config.get(SERVICE_LOCATE):
             self._locate_script = Script(hass, locate_action, friendly_name, DOMAIN)
-            self._supported_features |= SUPPORT_LOCATE
+            self._attr_supported_features |= VacuumEntityFeature.LOCATE
 
         self._set_fan_speed_script = None
         if set_fan_speed_action := config.get(SERVICE_SET_FAN_SPEED):
             self._set_fan_speed_script = Script(
                 hass, set_fan_speed_action, friendly_name, DOMAIN
             )
-            self._supported_features |= SUPPORT_FAN_SPEED
+            self._attr_supported_features |= VacuumEntityFeature.FAN_SPEED
 
         self._state = None
         self._battery_level = None
-        self._fan_speed = None
+        self._attr_fan_speed = None
 
         if self._template:
-            self._supported_features |= SUPPORT_STATE
+            self._attr_supported_features |= VacuumEntityFeature.STATE
         if self._battery_level_template:
-            self._supported_features |= SUPPORT_BATTERY
-
-        self._unique_id = unique_id
+            self._attr_supported_features |= VacuumEntityFeature.BATTERY
 
         # List of valid fan speeds
-        self._fan_speed_list = config[CONF_FAN_SPEED_LIST]
-
-    @property
-    def name(self):
-        """Return the display name of this vacuum."""
-        return self._name
-
-    @property
-    def unique_id(self):
-        """Return the unique id of this vacuum."""
-        return self._unique_id
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        return self._supported_features
+        self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
     @property
     def state(self):
         """Return the status of the vacuum cleaner."""
         return self._state
-
-    @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self._battery_level
-
-    @property
-    def fan_speed(self):
-        """Return the fan speed of the vacuum cleaner."""
-        return self._fan_speed
-
-    @property
-    def fan_speed_list(self) -> list:
-        """Get the list of available fan speeds."""
-        return self._fan_speed_list
 
     async def async_start(self):
         """Start or resume the cleaning task."""
@@ -284,16 +246,17 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         if self._set_fan_speed_script is None:
             return
 
-        if fan_speed in self._fan_speed_list:
-            self._fan_speed = fan_speed
+        if fan_speed in self._attr_fan_speed_list:
+            self._attr_fan_speed = fan_speed
             await self._set_fan_speed_script.async_run(
                 {ATTR_FAN_SPEED: fan_speed}, context=self._context
             )
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
-                self._fan_speed_list,
+                self.entity_id,
+                self._attr_fan_speed_list,
             )
 
     async def async_added_to_hass(self):
@@ -336,8 +299,9 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
             self._state = None
         else:
             _LOGGER.error(
-                "Received invalid vacuum state: %s. Expected: %s",
+                "Received invalid vacuum state: %s for entity %s. Expected: %s",
                 result,
+                self.entity_id,
                 ", ".join(_VALID_STATES),
             )
             self._state = None
@@ -350,29 +314,32 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 raise ValueError
         except ValueError:
             _LOGGER.error(
-                "Received invalid battery level: %s. Expected: 0-100", battery_level
+                "Received invalid battery level: %s for entity %s. Expected: 0-100",
+                battery_level,
+                self.entity_id,
             )
-            self._battery_level = None
+            self._attr_battery_level = None
             return
 
-        self._battery_level = battery_level_int
+        self._attr_battery_level = battery_level_int
 
     @callback
     def _update_fan_speed(self, fan_speed):
         if isinstance(fan_speed, TemplateError):
             # This is legacy behavior
-            self._fan_speed = None
+            self._attr_fan_speed = None
             self._state = None
             return
 
-        if fan_speed in self._fan_speed_list:
-            self._fan_speed = fan_speed
+        if fan_speed in self._attr_fan_speed_list:
+            self._attr_fan_speed = fan_speed
         elif fan_speed == STATE_UNKNOWN:
-            self._fan_speed = None
+            self._attr_fan_speed = None
         else:
             _LOGGER.error(
-                "Received invalid fan speed: %s. Expected: %s",
+                "Received invalid fan speed: %s for entity %s. Expected: %s",
                 fan_speed,
-                self._fan_speed_list,
+                self.entity_id,
+                self._attr_fan_speed_list,
             )
-            self._fan_speed = None
+            self._attr_fan_speed = None

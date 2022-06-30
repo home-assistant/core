@@ -7,7 +7,7 @@ import pytest
 import homeassistant.components.automation as automation
 from homeassistant.components.homeassistant.triggers import state as state_trigger
 from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
-from homeassistant.core import Context
+from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -21,7 +21,7 @@ from tests.common import (
 
 
 @pytest.fixture
-def calls(hass):
+def calls(hass: HomeAssistant) -> list[ServiceCall]:
     """Track calls to a mock service."""
     return async_mock_service(hass, "test", "automation")
 
@@ -164,6 +164,36 @@ async def test_if_fires_on_entity_change_with_from_filter(hass, calls):
     assert len(calls) == 1
 
 
+async def test_if_fires_on_entity_change_with_not_from_filter(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing on entity change inverse filter."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "not_from": "hello",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Do not fire from hello
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.states.async_set("test.entity", "universum")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
 async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
     """Test for firing on entity change with to filter."""
     assert await async_setup_component(
@@ -183,6 +213,36 @@ async def test_if_fires_on_entity_change_with_to_filter(hass, calls):
     await hass.async_block_till_done()
 
     hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+
+async def test_if_fires_on_entity_change_with_not_to_filter(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing on entity change with to filter."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "not_to": "world",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Do not fire to world
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    hass.states.async_set("test.entity", "universum")
     await hass.async_block_till_done()
     assert len(calls) == 1
 
@@ -281,6 +341,100 @@ async def test_if_fires_on_entity_change_with_both_filters(hass, calls):
     hass.states.async_set("test.entity", "world")
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+
+async def test_if_fires_on_entity_change_with_not_from_to(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing if not from doesn't match and to match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "not_from": ["hello", "galaxy"],
+                    "to": ["galaxy", "universe"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # We should not trigger from hello
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    # We should not trigger to != galaxy
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert not calls
+
+    # We should trigger to galaxy
+    hass.states.async_set("test.entity", "galaxy")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should not trigger from milky way
+    hass.states.async_set("test.entity", "milky_way")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should trigger to universe
+    hass.states.async_set("test.entity", "universe")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+async def test_if_fires_on_entity_change_with_from_not_to(
+    hass: HomeAssistant, calls: list[ServiceCall]
+) -> None:
+    """Test for firing if not from doesn't match and to match."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "state",
+                    "entity_id": "test.entity",
+                    "from": ["hello", "galaxy"],
+                    "not_to": ["galaxy", "universe"],
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    # We should trigger to world from hello
+    hass.states.async_set("test.entity", "world")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Reset back to hello, should not trigger
+    hass.states.async_set("test.entity", "hello")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should not trigger to galaxy
+    hass.states.async_set("test.entity", "galaxy")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # We should trigger form galaxy to milky way
+    hass.states.async_set("test.entity", "milky_way")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+    # We should not trigger to universe
+    hass.states.async_set("test.entity", "universe")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
 
 
 async def test_if_not_fires_if_to_filter_not_match(hass, calls):
@@ -846,7 +1000,7 @@ async def test_if_fails_setup_for_without_time(hass, calls):
                 automation.DOMAIN: {
                     "trigger": {"platform": "event", "event_type": "bla"},
                     "condition": {
-                        "platform": "state",
+                        "condition": "state",
                         "entity_id": "test.entity",
                         "state": "on",
                         "for": {},
@@ -865,9 +1019,9 @@ async def test_if_fails_setup_for_without_entity(hass, calls):
             automation.DOMAIN,
             {
                 automation.DOMAIN: {
-                    "trigger": {"event_type": "bla"},
+                    "trigger": {"platform": "event", "event_type": "bla"},
                     "condition": {
-                        "platform": "state",
+                        "condition": "state",
                         "state": "on",
                         "for": {"seconds": 5},
                     },

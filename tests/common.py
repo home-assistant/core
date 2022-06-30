@@ -2,9 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-import collections
 from collections import OrderedDict
-from collections.abc import Awaitable, Collection
+from collections.abc import Awaitable, Callable, Collection
 from contextlib import contextmanager
 from datetime import datetime, timedelta
 import functools as ft
@@ -40,11 +39,10 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant, State
+from homeassistant.core import BLOCK_LOG_TIMEOUT, HomeAssistant
 from homeassistant.helpers import (
     area_registry,
     device_registry,
@@ -55,8 +53,9 @@ from homeassistant.helpers import (
     restore_state,
     storage,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import setup_component
 from homeassistant.util.async_ import run_callback_threadsafe
 import homeassistant.util.dt as date_util
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -282,7 +281,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     hass.config.latitude = 32.87336
     hass.config.longitude = -117.22743
     hass.config.elevation = 0
-    hass.config.time_zone = "US/Pacific"
+    hass.config.set_time_zone("US/Pacific")
     hass.config.units = METRIC_SYSTEM
     hass.config.media_dirs = {"local": get_test_config_dir("media")}
     hass.config.skip_pip = True
@@ -293,8 +292,6 @@ async def async_test_home_assistant(loop, load_registries=True):
             "_": "Not empty or else some bad checks for hass config in discovery.py breaks"
         },
     )
-    hass.config_entries._entries = {}
-    hass.config_entries._store._async_ensure_stop_listener = lambda: None
 
     # Load the registries
     if load_registries:
@@ -313,9 +310,7 @@ async def async_test_home_assistant(loop, load_registries=True):
     async def mock_async_start():
         """Start the mocking."""
         # We only mock time during tests and we want to track tasks
-        with patch("homeassistant.core._async_create_timer"), patch.object(
-            hass, "async_stop_track_tasks"
-        ):
+        with patch.object(hass, "async_stop_track_tasks"):
             await orig_start()
 
     hass.async_start = mock_async_start
@@ -384,8 +379,6 @@ def async_fire_time_changed(
     """Fire a time changed event."""
     if datetime_ is None:
         datetime_ = date_util.utcnow()
-
-    hass.bus.async_fire(EVENT_TIME_CHANGED, {"now": date_util.as_utc(datetime_)})
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
@@ -583,6 +576,7 @@ class MockModule:
         async_migrate_entry=None,
         async_remove_entry=None,
         partial_manifest=None,
+        async_remove_config_entry_device=None,
     ):
         """Initialize the mock module."""
         self.__name__ = f"homeassistant.components.{domain}"
@@ -623,6 +617,9 @@ class MockModule:
 
         if async_remove_entry is not None:
             self.async_remove_entry = async_remove_entry
+
+        if async_remove_config_entry_device is not None:
+            self.async_remove_config_entry_device = async_remove_config_entry_device
 
     def mock_manifest(self):
         """Generate a mock manifest to represent this module."""
@@ -897,29 +894,26 @@ def assert_setup_component(count, domain=None):
     ), f"setup_component failed, expected {count} got {res_len}: {res}"
 
 
+SetupRecorderInstanceT = Callable[..., Awaitable[recorder.Recorder]]
+
+
 def init_recorder_component(hass, add_config=None):
     """Initialize the recorder."""
     config = dict(add_config) if add_config else {}
-    config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        if recorder.CONF_COMMIT_INTERVAL not in config:
+            config[recorder.CONF_COMMIT_INTERVAL] = 0
 
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "homeassistant.components.recorder.migration.migrate_schema"
+    ):
         assert setup_component(hass, recorder.DOMAIN, {recorder.DOMAIN: config})
         assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info("In-memory recorder successfully started")
-
-
-async def async_init_recorder_component(hass, add_config=None):
-    """Initialize the recorder asynchronously."""
-    config = add_config or {}
-    if recorder.CONF_DB_URL not in config:
-        config[recorder.CONF_DB_URL] = "sqlite://"
-
-    with patch("homeassistant.components.recorder.migration.migrate_schema"):
-        assert await async_setup_component(
-            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
-        )
-        assert recorder.DOMAIN in hass.config.components
-    _LOGGER.info("In-memory recorder successfully started")
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
 
 
 def mock_restore_cache(hass, states):
@@ -931,11 +925,39 @@ def mock_restore_cache(hass, states):
     last_states = {}
     for state in states:
         restored_state = state.as_dict()
-        restored_state["attributes"] = json.loads(
-            json.dumps(restored_state["attributes"], cls=JSONEncoder)
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "last_seen": now}
         )
-        last_states[state.entity_id] = restore_state.StoredState(
-            State.from_dict(restored_state), now
+    data.last_states = last_states
+    _LOGGER.debug("Restore cache: %s", data.last_states)
+    assert len(data.last_states) == len(states), f"Duplicate entity_id? {states}"
+
+    hass.data[key] = data
+
+
+def mock_restore_cache_with_extra_data(hass, states):
+    """Mock the DATA_RESTORE_CACHE."""
+    key = restore_state.DATA_RESTORE_STATE_TASK
+    data = restore_state.RestoreStateData(hass)
+    now = date_util.utcnow()
+
+    last_states = {}
+    for state, extra_data in states:
+        restored_state = state.as_dict()
+        restored_state = {
+            **restored_state,
+            "attributes": json.loads(
+                json.dumps(restored_state["attributes"], cls=JSONEncoder)
+            ),
+        }
+        last_states[state.entity_id] = restore_state.StoredState.from_dict(
+            {"state": restored_state, "extra_data": extra_data, "last_seen": now}
         )
     data.last_states = last_states
     _LOGGER.debug("Restore cache: %s", data.last_states)
@@ -983,6 +1005,11 @@ class MockEntity(entity.Entity):
     def entity_registry_enabled_default(self):
         """Return if the entity should be enabled when first added to the entity registry."""
         return self._handle("entity_registry_enabled_default")
+
+    @property
+    def entity_registry_visible_default(self):
+        """Return if the entity should be visible when first added to the entity registry."""
+        return self._handle("entity_registry_visible_default")
 
     @property
     def icon(self):
@@ -1176,77 +1203,22 @@ def async_mock_signal(hass, signal):
         """Mock service call."""
         calls.append(args)
 
-    hass.helpers.dispatcher.async_dispatcher_connect(signal, mock_signal_handler)
+    async_dispatcher_connect(hass, signal, mock_signal_handler)
 
     return calls
 
 
-class hashdict(dict):
-    """
-    hashable dict implementation, suitable for use as a key into other dicts.
-
-        >>> h1 = hashdict({"apples": 1, "bananas":2})
-        >>> h2 = hashdict({"bananas": 3, "mangoes": 5})
-        >>> h1+h2
-        hashdict(apples=1, bananas=3, mangoes=5)
-        >>> d1 = {}
-        >>> d1[h1] = "salad"
-        >>> d1[h1]
-        'salad'
-        >>> d1[h2]
-        Traceback (most recent call last):
-        ...
-        KeyError: hashdict(bananas=3, mangoes=5)
-
-    based on answers from
-       http://stackoverflow.com/questions/1151658/python-hashable-dicts
-
-    """
-
-    def __key(self):
-        return tuple(sorted(self.items()))
-
-    def __repr__(self):  # noqa: D105 no docstring
-        return ", ".join(f"{i[0]!s}={i[1]!r}" for i in self.__key())
-
-    def __hash__(self):  # noqa: D105 no docstring
-        return hash(self.__key())
-
-    def __setitem__(self, key, value):  # noqa: D105 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    def __delitem__(self, key):  # noqa: D105 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    def clear(self):  # noqa: D102 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    def pop(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    def popitem(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    def setdefault(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    def update(self, *args, **kwargs):  # noqa: D102 no docstring
-        raise TypeError(f"{self.__class__.__name__} does not support item assignment")
-
-    # update is not ok because it mutates the object
-    # __add__ is ok because it creates a new object
-    # while the new object is under construction, it's ok to mutate it
-    def __add__(self, right):  # noqa: D105 no docstring
-        result = hashdict(self)
-        dict.update(result, right)
-        return result
-
-
 def assert_lists_same(a, b):
-    """Compare two lists, ignoring order."""
-    assert collections.Counter([hashdict(i) for i in a]) == collections.Counter(
-        [hashdict(i) for i in b]
-    )
+    """Compare two lists, ignoring order.
+
+    Check both that all items in a are in b and that all items in b are in a,
+    otherwise assert_lists_same(["1", "1"], ["1", "2"]) could be True.
+    """
+    assert len(a) == len(b)
+    for i in a:
+        assert i in b
+    for i in b:
+        assert i in a
 
 
 def raise_contains_mocks(val):

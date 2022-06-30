@@ -1,0 +1,42 @@
+{
+    "config": {
+        "abort": {
+            "reauth_successful": "A reautentica\u00e7\u00e3o foi bem-sucedida",
+            "single_instance_allowed": "J\u00e1 configurado. Apenas uma configura\u00e7\u00e3o \u00e9 poss\u00edvel.",
+            "unknown": "Erro inesperado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "invalid_auth": "Autentica\u00e7\u00e3o inv\u00e1lida",
+            "invalid_zone": "Zona inv\u00e1lida"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_token": "Token da API",
+                    "description": "Re-autentique com sua conta Cloudflare."
+                }
+            },
+            "records": {
+                "data": {
+                    "records": "Registros"
+                },
+                "title": "Escolha os registros a serem atualizados"
+            },
+            "user": {
+                "data": {
+                    "api_token": "Token da API"
+                },
+                "description": "Essa integra\u00e7\u00e3o requer um token de API criado com as permiss\u00f5es Zone:Zone:Read e Zone:DNS:Edit para todas as zonas em sua conta.",
+                "title": "Conecte-se \u00e0 Cloudflare"
+            },
+            "zone": {
+                "data": {
+                    "zone": "Zona"
+                },
+                "title": "Escolha a Zona para Atualizar"
+            }
+        }
+    }
+}

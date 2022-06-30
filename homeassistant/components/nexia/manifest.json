@@ -11,5 +11,6 @@
       "macaddress": "000231*"
     }
   ],
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "loggers": ["nexia"]
 }

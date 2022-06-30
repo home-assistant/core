@@ -204,9 +204,10 @@ class ONVIFDevice:
 
                 if self._dt_diff_seconds > 5:
                     LOGGER.warning(
-                        "The date/time on the device (UTC) is '%s', "
+                        "The date/time on %s (UTC) is '%s', "
                         "which is different from the system '%s', "
                         "this could lead to authentication issues",
+                        self.name,
                         cam_date_utc,
                         system_date,
                     )

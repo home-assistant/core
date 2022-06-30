@@ -32,7 +32,9 @@ from google_nest_sdm.event_media import (
     ImageSession,
 )
 from google_nest_sdm.google_nest_subscriber import GoogleNestSubscriber
+from google_nest_sdm.transcoder import Transcoder
 
+from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
@@ -64,6 +66,7 @@ MEDIA_SOURCE_TITLE = "Nest"
 DEVICE_TITLE_FORMAT = "{device_name}: Recent Events"
 CLIP_TITLE_FORMAT = "{event_name} @ {event_time}"
 EVENT_MEDIA_API_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}"
+EVENT_THUMBNAIL_URL_FORMAT = "/api/nest/event_media/{device_id}/{event_token}/thumbnail"
 
 STORAGE_KEY = "nest.event_media"
 STORAGE_VERSION = 1
@@ -88,6 +91,13 @@ async def async_get_media_event_store(
     await hass.async_add_executor_job(mkdir)
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
+
+
+async def async_get_transcoder(hass: HomeAssistant) -> Transcoder:
+    """Get a nest clip transcoder."""
+    media_path = hass.config.path(MEDIA_PATH)
+    ffmpeg_manager = get_ffmpeg_manager(hass)
+    return Transcoder(ffmpeg_manager.binary, media_path)
 
 
 class NestEventMediaStore(EventMediaStore):
@@ -124,8 +134,7 @@ class NestEventMediaStore(EventMediaStore):
         """Load data."""
         if self._data is None:
             self._devices = await self._get_devices()
-            data = await self._store.async_load()
-            if data is None:
+            if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
             elif isinstance(data, dict):
@@ -174,6 +183,15 @@ class NestEventMediaStore(EventMediaStore):
         time_str = str(int(event.timestamp.timestamp()))
         event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
         return f"{device_id_str}/{time_str}-{event_type_str}.mp4"
+
+    def get_clip_preview_thumbnail_media_key(
+        self, device_id: str, event: ImageEventBase
+    ) -> str:
+        """Return the filename for clip preview thumbnail media for an event session."""
+        device_id_str = self._map_device_id(device_id)
+        time_str = str(int(event.timestamp.timestamp()))
+        event_type_str = EVENT_NAME_MAP.get(event.event_type, "event")
+        return f"{device_id_str}/{time_str}-{event_type_str}_thumb.gif"
 
     def get_media_filename(self, media_key: str) -> str:
         """Return the filename in storage for a media key."""
@@ -321,15 +339,21 @@ class NestMediaSource(MediaSource):
         media_id: MediaId | None = parse_media_id(item.identifier)
         if not media_id:
             raise Unresolvable("No identifier specified for MediaSourceItem")
-        if not media_id.event_token:
-            raise Unresolvable(
-                "Identifier missing an event_token: %s" % item.identifier
-            )
         devices = await self.devices()
         if not (device := devices.get(media_id.device_id)):
             raise Unresolvable(
                 "Unable to find device with identifier: %s" % item.identifier
             )
+        if not media_id.event_token:
+            # The device resolves to the most recent event if available
+            if not (
+                last_event_id := await _async_get_recent_event_id(media_id, device)
+            ):
+                raise Unresolvable(
+                    "Unable to resolve recent event for device: %s" % item.identifier
+                )
+            media_id = last_event_id
+
         # Infer content type from the device, since it only supports one
         # snapshot type (either jpg or mp4 clip)
         content_type = EventImageType.IMAGE.content_type
@@ -358,9 +382,16 @@ class NestMediaSource(MediaSource):
             browse_root = _browse_root()
             browse_root.children = []
             for device_id, child_device in devices.items():
-                browse_root.children.append(
-                    _browse_device(MediaId(device_id), child_device)
-                )
+                browse_device = _browse_device(MediaId(device_id), child_device)
+                if last_event_id := await _async_get_recent_event_id(
+                    MediaId(device_id), child_device
+                ):
+                    browse_device.thumbnail = EVENT_THUMBNAIL_URL_FORMAT.format(
+                        device_id=last_event_id.device_id,
+                        event_token=last_event_id.event_token,
+                    )
+                    browse_device.can_play = True
+                browse_root.children.append(browse_device)
             return browse_root
 
         # Browse either a device or events within a device
@@ -447,6 +478,21 @@ def _browse_root() -> BrowseMediaSource:
     )
 
 
+async def _async_get_recent_event_id(
+    device_id: MediaId, device: Device
+) -> MediaId | None:
+    """Return thumbnail for most recent device event."""
+    if CameraClipPreviewTrait.NAME in device.traits:
+        clips = await device.event_media_manager.async_clip_preview_sessions()
+        if not clips:
+            return None
+        return MediaId(device_id.device_id, next(iter(clips)).event_token)
+    images = await device.event_media_manager.async_image_sessions()
+    if not images:
+        return None
+    return MediaId(device_id.device_id, next(iter(images)).event_token)
+
+
 def _browse_device(device_id: MediaId, device: Device) -> BrowseMediaSource:
     """Return details for the specified device."""
     device_info = NestDeviceInfo(device)
@@ -482,7 +528,9 @@ def _browse_clip_preview(
         ),
         can_play=True,
         can_expand=False,
-        thumbnail=None,
+        thumbnail=EVENT_THUMBNAIL_URL_FORMAT.format(
+            device_id=event_id.device_id, event_token=event_id.event_token
+        ),
         children=[],
     )
 
@@ -502,6 +550,8 @@ def _browse_image_event(
         ),
         can_play=False,
         can_expand=False,
-        thumbnail=None,
+        thumbnail=EVENT_THUMBNAIL_URL_FORMAT.format(
+            device_id=event_id.device_id, event_token=event_id.event_token
+        ),
         children=[],
     )

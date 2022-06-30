@@ -1,0 +1,31 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "after": "On after",
+                    "after_time": "On time",
+                    "before": "Off after",
+                    "before_time": "Off time",
+                    "name": "Name"
+                },
+                "description": "Create a binary sensor that turns on or off depending on the time.",
+                "title": "Add Times of the Day Sensor"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "after": "On after",
+                    "after_time": "On time",
+                    "before": "Off after",
+                    "before_time": "Off time"
+                },
+                "description": "Create a binary sensor that turns on or off depending on the time."
+            }
+        }
+    },
+    "title": "Times of the Day Sensor"
+}

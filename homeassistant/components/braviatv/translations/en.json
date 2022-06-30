@@ -21,7 +21,7 @@
                 "data": {
                     "host": "Host"
                 },
-                "description": "Set up Sony Bravia TV integration. If you have problems with configuration go to: https://www.home-assistant.io/integrations/braviatv \n\nEnsure that your TV is turned on.",
+                "description": "Ensure that your TV is turned on before trying to set it up.",
                 "title": "Sony Bravia TV"
             }
         }

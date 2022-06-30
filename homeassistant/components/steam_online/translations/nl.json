@@ -1,0 +1,36 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Service is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie was succesvol"
+        },
+        "error": {
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_account": "Ongeldige account ID",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
+        },
+        "step": {
+            "reauth_confirm": {
+                "description": "De Steam integratie moet handmatig opnieuw geauthenticeerd worden\n\nU kunt uw sleutel hier vinden: {api_key_url}",
+                "title": "Verifieer de integratie opnieuw"
+            },
+            "user": {
+                "data": {
+                    "account": "Steam Account-ID",
+                    "api_key": "API-sleutel"
+                },
+                "description": "Gebruik {account_id_url} om uw Steam account ID te vinden"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "accounts": "Namen van de accounts die gemonitord moeten worden"
+                }
+            }
+        }
+    }
+}

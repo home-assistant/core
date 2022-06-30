@@ -1,0 +1,9 @@
+{
+    "system_health": {
+        "info": {
+            "current_recorder_run": "Waktu Mulai Jalankan Saat Ini",
+            "estimated_db_size": "Perkiraan Ukuran Basis Data (MiB)",
+            "oldest_recorder_run": "Waktu Mulai Lari Terlama"
+        }
+    }
+}

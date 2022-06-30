@@ -1,5 +1,4 @@
 """The tests for Shelly logbook."""
-from homeassistant.components import logbook
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
@@ -10,7 +9,7 @@ from homeassistant.components.shelly.const import (
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.setup import async_setup_component
 
-from tests.components.logbook.test_init import MockLazyEventPartialState
+from tests.components.logbook.common import MockRow, mock_humanify
 
 
 async def test_humanify_shelly_click_event_block_device(hass, coap_wrapper):
@@ -18,34 +17,29 @@ async def test_humanify_shelly_click_event_block_device(hass, coap_wrapper):
     assert coap_wrapper
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_SHELLY_CLICK,
-                    {
-                        ATTR_DEVICE_ID: coap_wrapper.device_id,
-                        ATTR_DEVICE: "shellyix3-12345678",
-                        ATTR_CLICK_TYPE: "single",
-                        ATTR_CHANNEL: 1,
-                    },
-                ),
-                MockLazyEventPartialState(
-                    EVENT_SHELLY_CLICK,
-                    {
-                        ATTR_DEVICE_ID: "no_device_id",
-                        ATTR_DEVICE: "shellyswitch25-12345678",
-                        ATTR_CLICK_TYPE: "long",
-                        ATTR_CHANNEL: 2,
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_SHELLY_CLICK,
+                {
+                    ATTR_DEVICE_ID: coap_wrapper.device_id,
+                    ATTR_DEVICE: "shellyix3-12345678",
+                    ATTR_CLICK_TYPE: "single",
+                    ATTR_CHANNEL: 1,
+                },
+            ),
+            MockRow(
+                EVENT_SHELLY_CLICK,
+                {
+                    ATTR_DEVICE_ID: "no_device_id",
+                    ATTR_DEVICE: "shellyswitch25-12345678",
+                    ATTR_CLICK_TYPE: "long",
+                    ATTR_CHANNEL: 2,
+                },
+            ),
+        ],
     )
 
     assert event1["name"] == "Shelly"
@@ -68,34 +62,29 @@ async def test_humanify_shelly_click_event_rpc_device(hass, rpc_wrapper):
     assert rpc_wrapper
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
-    entity_attr_cache = logbook.EntityAttributeCache(hass)
 
-    event1, event2 = list(
-        logbook.humanify(
-            hass,
-            [
-                MockLazyEventPartialState(
-                    EVENT_SHELLY_CLICK,
-                    {
-                        ATTR_DEVICE_ID: rpc_wrapper.device_id,
-                        ATTR_DEVICE: "shellyplus1pm-12345678",
-                        ATTR_CLICK_TYPE: "single_push",
-                        ATTR_CHANNEL: 1,
-                    },
-                ),
-                MockLazyEventPartialState(
-                    EVENT_SHELLY_CLICK,
-                    {
-                        ATTR_DEVICE_ID: "no_device_id",
-                        ATTR_DEVICE: "shellypro4pm-12345678",
-                        ATTR_CLICK_TYPE: "btn_down",
-                        ATTR_CHANNEL: 2,
-                    },
-                ),
-            ],
-            entity_attr_cache,
-            {},
-        )
+    event1, event2 = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_SHELLY_CLICK,
+                {
+                    ATTR_DEVICE_ID: rpc_wrapper.device_id,
+                    ATTR_DEVICE: "shellyplus1pm-12345678",
+                    ATTR_CLICK_TYPE: "single_push",
+                    ATTR_CHANNEL: 1,
+                },
+            ),
+            MockRow(
+                EVENT_SHELLY_CLICK,
+                {
+                    ATTR_DEVICE_ID: "no_device_id",
+                    ATTR_DEVICE: "shellypro4pm-12345678",
+                    ATTR_CLICK_TYPE: "btn_down",
+                    ATTR_CHANNEL: 2,
+                },
+            ),
+        ],
     )
 
     assert event1["name"] == "Shelly"

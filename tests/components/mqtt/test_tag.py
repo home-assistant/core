@@ -6,9 +6,12 @@ from unittest.mock import ANY, patch
 import pytest
 
 from homeassistant.components.device_automation import DeviceAutomationType
+from homeassistant.components.mqtt.const import DOMAIN as MQTT_DOMAIN
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    MockConfigEntry,
     async_fire_mqtt_message,
     async_get_device_automations,
     mock_device_registry,
@@ -355,11 +358,15 @@ async def test_not_fires_on_mqtt_message_after_remove_by_mqtt_without_device(
 
 async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     hass,
+    hass_ws_client,
     device_reg,
     mqtt_mock,
     tag_mock,
 ):
     """Test tag scanning after removal."""
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
     config = copy.deepcopy(DEFAULT_CONFIG_DEVICE)
 
     async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", json.dumps(config))
@@ -371,9 +378,18 @@ async def test_not_fires_on_mqtt_message_after_remove_from_registry(
     await hass.async_block_till_done()
     tag_mock.assert_called_once_with(ANY, DEFAULT_TAG_ID, device_entry.id)
 
-    # Remove the device
-    device_reg.async_remove_device(device_entry.id)
-    await hass.async_block_till_done()
+    # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
+            "device_id": device_entry.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     tag_mock.reset_mock()
 
     async_fire_mqtt_message(hass, "foobar/tag_scanned", DEFAULT_TAG_SCAN)
@@ -473,32 +489,80 @@ async def test_entity_device_info_update(hass, mqtt_mock):
     assert device.name == "Milk"
 
 
-async def test_cleanup_tag(hass, device_reg, entity_reg, mqtt_mock):
+async def test_cleanup_tag(hass, hass_ws_client, device_reg, entity_reg, mqtt_mock):
     """Test tag discovery topic is cleaned when device is removed from registry."""
-    config = {
+    assert await async_setup_component(hass, "config", {})
+    ws_client = await hass_ws_client(hass)
+
+    mqtt_entry = hass.config_entries.async_entries("mqtt")[0]
+
+    config_entry = MockConfigEntry(domain="test")
+    config_entry.add_to_hass(hass)
+
+    device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=set(),
+        identifiers={("mqtt", "helloworld")},
+    )
+
+    config1 = {
         "topic": "test-topic",
         "device": {"identifiers": ["helloworld"]},
     }
+    config2 = {
+        "topic": "test-topic",
+        "device": {"identifiers": ["hejhopp"]},
+    }
 
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, "homeassistant/tag/bla/config", data)
+    data1 = json.dumps(config1)
+    data2 = json.dumps(config2)
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla1/config", data1)
+    await hass.async_block_till_done()
+    async_fire_mqtt_message(hass, "homeassistant/tag/bla2/config", data2)
     await hass.async_block_till_done()
 
-    # Verify device registry entry is created
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
-    assert device_entry is not None
+    # Verify device registry entries are created
+    device_entry1 = device_reg.async_get_device({("mqtt", "helloworld")})
+    assert device_entry1 is not None
+    assert device_entry1.config_entries == {config_entry.entry_id, mqtt_entry.entry_id}
+    device_entry2 = device_reg.async_get_device({("mqtt", "hejhopp")})
+    assert device_entry2 is not None
 
-    device_reg.async_remove_device(device_entry.id)
+    # Remove other config entry from the device
+    device_reg.async_update_device(
+        device_entry1.id, remove_config_entry_id=config_entry.entry_id
+    )
+    device_entry1 = device_reg.async_get_device({("mqtt", "helloworld")})
+    assert device_entry1 is not None
+    assert device_entry1.config_entries == {mqtt_entry.entry_id}
+    device_entry2 = device_reg.async_get_device({("mqtt", "hejhopp")})
+    assert device_entry2 is not None
+    mqtt_mock.async_publish.assert_not_called()
+
+    # Remove MQTT from the device
+    mqtt_config_entry = hass.config_entries.async_entries(MQTT_DOMAIN)[0]
+    await ws_client.send_json(
+        {
+            "id": 6,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": mqtt_config_entry.entry_id,
+            "device_id": device_entry1.id,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
     # Verify device registry entry is cleared
-    device_entry = device_reg.async_get_device({("mqtt", "helloworld")})
-    assert device_entry is None
+    device_entry1 = device_reg.async_get_device({("mqtt", "helloworld")})
+    assert device_entry1 is None
+    device_entry2 = device_reg.async_get_device({("mqtt", "hejhopp")})
+    assert device_entry2 is not None
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/tag/bla/config", "", 0, True
+        "homeassistant/tag/bla1/config", "", 0, True
     )
 
 

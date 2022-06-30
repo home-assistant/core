@@ -487,3 +487,46 @@ async def test_abort_raises_unknown_flow_if_not_in_progress(manager):
     """Test abort raises UnknownFlow if the flow is not in progress."""
     with pytest.raises(data_entry_flow.UnknownFlow):
         await manager.async_abort("wrong_flow_id")
+
+
+@pytest.mark.parametrize(
+    "menu_options",
+    (["target1", "target2"], {"target1": "Target 1", "target2": "Target 2"}),
+)
+async def test_show_menu(hass, manager, menu_options):
+    """Test show menu."""
+    manager.hass = hass
+
+    @manager.mock_reg_handler("test")
+    class TestFlow(data_entry_flow.FlowHandler):
+        VERSION = 5
+        data = None
+        task_one_done = False
+
+        async def async_step_init(self, user_input=None):
+            return self.async_show_menu(
+                step_id="init",
+                menu_options=menu_options,
+                description_placeholders={"name": "Paulus"},
+            )
+
+        async def async_step_target1(self, user_input=None):
+            return self.async_show_form(step_id="target1")
+
+        async def async_step_target2(self, user_input=None):
+            return self.async_show_form(step_id="target2")
+
+    result = await manager.async_init("test")
+    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result["menu_options"] == menu_options
+    assert result["description_placeholders"] == {"name": "Paulus"}
+    assert len(manager.async_progress()) == 1
+    assert len(manager.async_progress_by_handler("test")) == 1
+    assert manager.async_get(result["flow_id"])["handler"] == "test"
+
+    # Mimic picking a step
+    result = await manager.async_configure(
+        result["flow_id"], {"next_step_id": "target1"}
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["step_id"] == "target1"

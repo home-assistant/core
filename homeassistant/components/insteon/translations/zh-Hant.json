@@ -2,13 +2,18 @@
     "config": {
         "abort": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
-            "single_instance_allowed": "\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
+            "not_insteon_device": "\u6240\u767c\u73fe\u7684\u88dd\u7f6e\u4e26\u975e Insteon \u88dd\u7f6e",
+            "single_instance_allowed": "\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210\u3001\u50c5\u80fd\u8a2d\u5b9a\u4e00\u7d44\u88dd\u7f6e\u3002"
         },
         "error": {
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "select_single": "\u9078\u64c7\u9078\u9805\u3002"
         },
+        "flow_title": "{name}",
         "step": {
+            "confirm_usb": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {name}\uff1f"
+            },
             "hubv1": {
                 "data": {
                     "host": "IP \u4f4d\u5740",
@@ -36,9 +41,9 @@
             },
             "user": {
                 "data": {
-                    "modem_type": "\u6578\u64da\u6a5f\u985e\u578b\u3002"
+                    "modem_type": "\u6578\u64da\u6a5f\u985e\u5225\u3002"
                 },
-                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u578b\u3002",
+                "description": "\u9078\u64c7 Insteon \u6578\u64da\u6a5f\u985e\u5225\u3002",
                 "title": "Insteon"
             }
         }

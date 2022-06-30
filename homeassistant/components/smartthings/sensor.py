@@ -35,10 +35,10 @@ from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
 
 Map = namedtuple(
-    "map", "attribute name default_unit device_class state_class entity_category"
+    "Map", "attribute name default_unit device_class state_class entity_category"
 )
 
-CAPABILITY_TO_SENSORS = {
+CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
     Capability.activity_lighting_mode: [
         Map(
             Attribute.lighting_mode,
@@ -555,18 +555,18 @@ async def async_setup_entry(
 ) -> None:
     """Add binary sensors for a config entry."""
     broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    sensors = []
+    entities: list[SensorEntity] = []
     for device in broker.devices.values():
         for capability in broker.get_assigned(device.device_id, "sensor"):
             if capability == Capability.three_axis:
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsThreeAxisSensor(device, index)
                         for index in range(len(THREE_AXIS_NAMES))
                     ]
                 )
             elif capability == Capability.power_consumption_report:
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsPowerConsumptionSensor(device, report_name)
                         for report_name in POWER_CONSUMPTION_REPORT_NAMES
@@ -574,7 +574,7 @@ async def async_setup_entry(
                 )
             else:
                 maps = CAPABILITY_TO_SENSORS[capability]
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsSensor(
                             device,
@@ -592,7 +592,7 @@ async def async_setup_entry(
         if broker.any_assigned(device.device_id, "switch"):
             for capability in (Capability.energy_meter, Capability.power_meter):
                 maps = CAPABILITY_TO_SENSORS[capability]
-                sensors.extend(
+                entities.extend(
                     [
                         SmartThingsSensor(
                             device,
@@ -607,7 +607,7 @@ async def async_setup_entry(
                     ]
                 )
 
-    async_add_entities(sensors)
+    async_add_entities(entities)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
@@ -628,7 +628,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         default_unit: str,
         device_class: str,
         state_class: str | None,
-        entity_category: str | None,
+        entity_category: EntityCategory | None,
     ) -> None:
         """Init the class."""
         super().__init__(device)

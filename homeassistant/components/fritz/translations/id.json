@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
+            "ignore_ip6_link_local": "Alamat lokal tautan IPv6 tidak didukung.",
             "reauth_successful": "Autentikasi ulang berhasil"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
             "connection_error": "Gagal terhubung",
-            "invalid_auth": "Autentikasi tidak valid"
+            "invalid_auth": "Autentikasi tidak valid",
+            "upnp_not_configured": "Pengaturan UPnP pada perangkat tidak ada."
         },
         "flow_title": "{name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Wakti dalam detik untuk mempertimbangkan perangkat sebagai 'di rumah'"
+                    "consider_home": "Wakti dalam detik untuk mempertimbangkan perangkat sebagai 'di rumah'",
+                    "old_discovery": "Aktifkan metode penemuan lawas"
                 }
             }
         }

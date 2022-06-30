@@ -1,9 +1,14 @@
 """Make sure that Mysa Living is enumerated properly."""
 
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.components.climate import SUPPORT_TARGET_TEMPERATURE
+from homeassistant.components.sensor import SensorStateClass
+from homeassistant.const import PERCENTAGE, TEMP_CELSIUS
 
 from tests.components.homekit_controller.common import (
-    Helper,
+    HUB_TEST_ACCESSORY_ID,
+    DeviceTestInfo,
+    EntityTestInfo,
+    assert_devices_and_entities_created,
     setup_accessories_from_file,
     setup_test_accessories,
 )
@@ -12,80 +17,56 @@ from tests.components.homekit_controller.common import (
 async def test_mysa_living_setup(hass):
     """Test that the accessory can be correctly setup in HA."""
     accessories = await setup_accessories_from_file(hass, "mysa_living.json")
-    config_entry, pairing = await setup_test_accessories(hass, accessories)
+    await setup_test_accessories(hass, accessories)
 
-    entity_registry = er.async_get(hass)
-    device_registry = dr.async_get(hass)
-
-    # Check that the switch entity is handled correctly
-
-    entry = entity_registry.async_get("sensor.mysa_85dda9_current_humidity")
-    assert entry.unique_id == "homekit-AAAAAAA000-aid:1-sid:20-cid:27"
-
-    helper = Helper(
+    await assert_devices_and_entities_created(
         hass,
-        "sensor.mysa_85dda9_current_humidity",
-        pairing,
-        accessories[0],
-        config_entry,
+        DeviceTestInfo(
+            unique_id=HUB_TEST_ACCESSORY_ID,
+            name="Mysa-85dda9",
+            model="v1",
+            manufacturer="Empowered Homes Inc.",
+            sw_version="2.8.1",
+            hw_version="",
+            serial_number="AAAAAAA000",
+            devices=[],
+            entities=[
+                EntityTestInfo(
+                    entity_id="climate.mysa_85dda9",
+                    friendly_name="Mysa-85dda9",
+                    unique_id="homekit-AAAAAAA000-20",
+                    supported_features=SUPPORT_TARGET_TEMPERATURE,
+                    capabilities={
+                        "hvac_modes": ["off", "heat", "cool", "heat_cool"],
+                        "max_temp": 35,
+                        "min_temp": 7,
+                    },
+                    state="off",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.mysa_85dda9_current_humidity",
+                    friendly_name="Mysa-85dda9 Current Humidity",
+                    unique_id="homekit-AAAAAAA000-aid:1-sid:20-cid:27",
+                    unit_of_measurement=PERCENTAGE,
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    state="40",
+                ),
+                EntityTestInfo(
+                    entity_id="sensor.mysa_85dda9_current_temperature",
+                    friendly_name="Mysa-85dda9 Current Temperature",
+                    unique_id="homekit-AAAAAAA000-aid:1-sid:20-cid:25",
+                    unit_of_measurement=TEMP_CELSIUS,
+                    capabilities={"state_class": SensorStateClass.MEASUREMENT},
+                    state="24.1",
+                ),
+                EntityTestInfo(
+                    entity_id="light.mysa_85dda9",
+                    friendly_name="Mysa-85dda9",
+                    unique_id="homekit-AAAAAAA000-40",
+                    supported_features=0,
+                    capabilities={"supported_color_modes": ["brightness"]},
+                    state="off",
+                ),
+            ],
+        ),
     )
-    state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "Mysa-85dda9 - Current Humidity"
-
-    device = device_registry.async_get(entry.device_id)
-    assert device.manufacturer == "Empowered Homes Inc."
-    assert device.name == "Mysa-85dda9"
-    assert device.model == "v1"
-    assert device.sw_version == "2.8.1"
-    assert device.via_device_id is None
-
-    # Assert the humidifier is detected
-    entry = entity_registry.async_get("sensor.mysa_85dda9_current_temperature")
-    assert entry.unique_id == "homekit-AAAAAAA000-aid:1-sid:20-cid:25"
-
-    helper = Helper(
-        hass,
-        "sensor.mysa_85dda9_current_temperature",
-        pairing,
-        accessories[0],
-        config_entry,
-    )
-    state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "Mysa-85dda9 - Current Temperature"
-
-    # The sensor should be part of the same device
-    assert entry.device_id == device.id
-
-    # Assert the light is detected
-    entry = entity_registry.async_get("light.mysa_85dda9")
-    assert entry.unique_id == "homekit-AAAAAAA000-40"
-
-    helper = Helper(
-        hass,
-        "light.mysa_85dda9",
-        pairing,
-        accessories[0],
-        config_entry,
-    )
-    state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "Mysa-85dda9"
-
-    # The light should be part of the same device
-    assert entry.device_id == device.id
-
-    # Assert the climate entity is detected
-    entry = entity_registry.async_get("climate.mysa_85dda9")
-    assert entry.unique_id == "homekit-AAAAAAA000-20"
-
-    helper = Helper(
-        hass,
-        "climate.mysa_85dda9",
-        pairing,
-        accessories[0],
-        config_entry,
-    )
-    state = await helper.poll_and_get_state()
-    assert state.attributes["friendly_name"] == "Mysa-85dda9"
-
-    # The light should be part of the same device
-    assert entry.device_id == device.id

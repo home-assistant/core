@@ -1,15 +1,25 @@
 """Support for Supla switch."""
+from __future__ import annotations
+
 import logging
 from pprint import pformat
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import DOMAIN, SUPLA_COORDINATORS, SUPLA_SERVERS, SuplaChannel
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(hass, config, async_add_entities, discovery_info=None):
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    async_add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     """Set up the Supla switches."""
     if discovery_info is None:
         return
@@ -17,7 +27,7 @@ async def async_setup_platform(hass, config, async_add_entities, discovery_info=
     _LOGGER.debug("Discovery: %s", pformat(discovery_info))
 
     entities = []
-    for device in discovery_info:
+    for device in discovery_info.values():
         server_name = device["server_name"]
 
         entities.append(

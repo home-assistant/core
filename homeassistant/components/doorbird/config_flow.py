@@ -12,7 +12,7 @@ from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.util.network import is_link_local
+from homeassistant.util.network import is_ipv4_address, is_link_local
 
 from .const import CONF_EVENTS, DOMAIN, DOORBIRD_OUI
 from .util import get_mac_address_from_doorstation_info
@@ -103,6 +103,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="not_doorbird_device")
         if is_link_local(ip_address(host)):
             return self.async_abort(reason="link_local_address")
+        if not is_ipv4_address(host):
+            return self.async_abort(reason="not_ipv4_address")
 
         await self.async_set_unique_id(macaddress)
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})

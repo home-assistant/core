@@ -4,6 +4,8 @@ import os
 from homeassistant.components import system_health
 from homeassistant.core import HomeAssistant, callback
 
+from . import get_host_info, get_info, get_os_info, get_supervisor_info
+
 SUPERVISOR_PING = f"http://{os.environ['HASSIO']}/supervisor/ping"
 OBSERVER_URL = f"http://{os.environ['HASSIO']}:4357"
 
@@ -13,14 +15,14 @@ def async_register(
     hass: HomeAssistant, register: system_health.SystemHealthRegistration
 ) -> None:
     """Register system health callbacks."""
-    register.async_register_info(system_health_info, "/hassio")
+    register.async_register_info(system_health_info)
 
 
 async def system_health_info(hass: HomeAssistant):
     """Get info for the info page."""
-    info = hass.components.hassio.get_info()
-    host_info = hass.components.hassio.get_host_info()
-    supervisor_info = hass.components.hassio.get_supervisor_info()
+    info = get_info(hass)
+    host_info = get_host_info(hass)
+    supervisor_info = get_supervisor_info(hass)
 
     if supervisor_info.get("healthy"):
         healthy = True
@@ -28,7 +30,6 @@ async def system_health_info(hass: HomeAssistant):
         healthy = {
             "type": "failed",
             "error": "Unhealthy",
-            "more_info": "/hassio/system",
         }
 
     if supervisor_info.get("supported"):
@@ -37,7 +38,6 @@ async def system_health_info(hass: HomeAssistant):
         supported = {
             "type": "failed",
             "error": "Unsupported",
-            "more_info": "/hassio/system",
         }
 
     information = {
@@ -52,7 +52,7 @@ async def system_health_info(hass: HomeAssistant):
     }
 
     if info.get("hassos") is not None:
-        os_info = hass.components.hassio.get_os_info()
+        os_info = get_os_info(hass)
         information["board"] = os_info.get("board")
 
     information["supervisor_api"] = system_health.async_check_can_reach_url(
@@ -61,7 +61,6 @@ async def system_health_info(hass: HomeAssistant):
     information["version_api"] = system_health.async_check_can_reach_url(
         hass,
         f"https://version.home-assistant.io/{info.get('channel')}.json",
-        "/hassio/system",
     )
 
     information["installed_addons"] = ", ".join(

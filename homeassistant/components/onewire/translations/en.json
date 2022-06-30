@@ -17,9 +17,37 @@
             },
             "user": {
                 "data": {
+                    "host": "Host",
+                    "port": "Port",
                     "type": "Connection type"
                 },
-                "title": "Set up 1-Wire"
+                "title": "Set server details"
+            }
+        }
+    },
+    "options": {
+        "error": {
+            "device_not_selected": "Select devices to configure"
+        },
+        "step": {
+            "ack_no_options": {
+                "description": "There are no options for the SysBus implementation",
+                "title": "OneWire SysBus Options"
+            },
+            "configure_device": {
+                "data": {
+                    "precision": "Sensor Precision"
+                },
+                "description": "Select sensor precision for {sensor_id}",
+                "title": "OneWire Sensor Precision"
+            },
+            "device_selection": {
+                "data": {
+                    "clear_device_options": "Clear all device configurations",
+                    "device_selection": "Select devices to configure"
+                },
+                "description": "Select what configuration steps to process",
+                "title": "OneWire Device Options"
             }
         }
     }

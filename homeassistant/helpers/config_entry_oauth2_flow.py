@@ -32,7 +32,6 @@ from .network import NoURLAvailableError
 _LOGGER = logging.getLogger(__name__)
 
 DATA_JWT_SECRET = "oauth2_jwt_secret"
-DATA_VIEW_REGISTERED = "oauth2_view_reg"
 DATA_IMPLEMENTATIONS = "oauth2_impl"
 DATA_PROVIDERS = "oauth2_providers"
 AUTH_CALLBACK_PATH = "/auth/external/callback"
@@ -217,7 +216,7 @@ class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
             )
 
         self.external_data: Any = None
-        self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore
+        self.flow_impl: AbstractOAuth2Implementation = None  # type: ignore[assignment]
 
     @property
     @abstractmethod
@@ -331,12 +330,6 @@ def async_register_implementation(
     hass: HomeAssistant, domain: str, implementation: AbstractOAuth2Implementation
 ) -> None:
     """Register an OAuth2 flow implementation for an integration."""
-    if isinstance(implementation, LocalOAuth2Implementation) and not hass.data.get(
-        DATA_VIEW_REGISTERED, False
-    ):
-        hass.http.register_view(OAuth2AuthorizeCallbackView())
-        hass.data[DATA_VIEW_REGISTERED] = True
-
     implementations = hass.data.setdefault(DATA_IMPLEMENTATIONS, {})
     implementations.setdefault(domain, {})[implementation.domain] = implementation
 
@@ -354,10 +347,9 @@ async def async_get_implementations(
         return registered
 
     registered = dict(registered)
-
-    for provider_domain, get_impl in hass.data[DATA_PROVIDERS].items():
-        if (implementation := await get_impl(hass, domain)) is not None:
-            registered[provider_domain] = implementation
+    for get_impl in list(hass.data[DATA_PROVIDERS].values()):
+        for impl in await get_impl(hass, domain):
+            registered[impl.domain] = impl
 
     return registered
 
@@ -380,7 +372,7 @@ def async_add_implementation_provider(
     hass: HomeAssistant,
     provider_domain: str,
     async_provide_implementation: Callable[
-        [HomeAssistant, str], Awaitable[AbstractOAuth2Implementation | None]
+        [HomeAssistant, str], Awaitable[list[AbstractOAuth2Implementation]]
     ],
 ) -> None:
     """Add an implementation provider.
@@ -401,7 +393,6 @@ class OAuth2AuthorizeCallbackView(http.HomeAssistantView):
 
     async def get(self, request: web.Request) -> web.Response:
         """Receive authorization code."""
-        # pylint: disable=no-self-use
         if "code" not in request.query or "state" not in request.query:
             return web.Response(
                 text=f"Missing code or state parameter in {request.url}"

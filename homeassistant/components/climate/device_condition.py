@@ -75,15 +75,19 @@ def async_condition_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> condition.ConditionCheckerType:
     """Create a function to test a device condition."""
-    if config[CONF_TYPE] == "is_hvac_mode":
-        attribute = const.ATTR_HVAC_MODE
-    else:
-        attribute = const.ATTR_PRESET_MODE
 
     def test_is_state(hass: HomeAssistant, variables: TemplateVarsType) -> bool:
         """Test if an entity is a certain state."""
-        state = hass.states.get(config[ATTR_ENTITY_ID])
-        return state.attributes.get(attribute) == config[attribute] if state else False
+        if (state := hass.states.get(config[ATTR_ENTITY_ID])) is None:
+            return False
+
+        if config[CONF_TYPE] == "is_hvac_mode":
+            return state.state == config[const.ATTR_HVAC_MODE]
+
+        return (
+            state.attributes.get(const.ATTR_PRESET_MODE)
+            == config[const.ATTR_PRESET_MODE]
+        )
 
     return test_is_state
 

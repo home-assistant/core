@@ -27,6 +27,9 @@
                 "data": {
                     "host": "Indirizzo IP"
                 },
+                "data_description": {
+                    "host": "Lascia vuoto per usare il rilevamento automatico"
+                },
                 "description": "Collega il ricevitore, se l'indirizzo IP non \u00e8 impostato, sar\u00e0 utilizzato il rilevamento automatico",
                 "title": "Ricevitori di rete Denon AVR"
             }

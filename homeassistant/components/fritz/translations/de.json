@@ -3,6 +3,7 @@
         "abort": {
             "already_configured": "Ger\u00e4t ist bereits konfiguriert",
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
+            "ignore_ip6_link_local": "IPv6 link local address wird nicht unterst\u00fctzt.",
             "reauth_successful": "Die erneute Authentifizierung war erfolgreich"
         },
         "error": {
@@ -10,7 +11,8 @@
             "already_in_progress": "Der Konfigurationsablauf wird bereits ausgef\u00fchrt",
             "cannot_connect": "Verbindung fehlgeschlagen",
             "connection_error": "Verbindung fehlgeschlagen",
-            "invalid_auth": "Ung\u00fcltige Authentifizierung"
+            "invalid_auth": "Ung\u00fcltige Authentifizierung",
+            "upnp_not_configured": "Fehlende UPnP-Einstellungen auf dem Ger\u00e4t."
         },
         "flow_title": "FRITZ!Box Tools: {name}",
         "step": {
@@ -56,7 +58,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Sekunden, um ein Ger\u00e4t als 'zu Hause' zu betrachten"
+                    "consider_home": "Sekunden, um ein Ger\u00e4t als 'zu Hause' zu betrachten",
+                    "old_discovery": "Alte Erkennungsmethode aktivieren"
                 }
             }
         }

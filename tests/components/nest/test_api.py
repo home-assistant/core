@@ -39,7 +39,7 @@ async def test_auth(hass, aioclient_mock):
     """Exercise authentication library creates valid credentials."""
 
     expiration_time = time.time() + 86400
-    create_config_entry(hass, expiration_time)
+    create_config_entry(expiration_time).add_to_hass(hass)
 
     # Prepare to capture credentials in API request.  Empty payloads just mean
     # no devices or structures are loaded.
@@ -88,7 +88,7 @@ async def test_auth_expired_token(hass, aioclient_mock):
     """Verify behavior of an expired token."""
 
     expiration_time = time.time() - 86400
-    create_config_entry(hass, expiration_time)
+    create_config_entry(expiration_time).add_to_hass(hass)
 
     # Prepare a token refresh response
     aioclient_mock.post(

@@ -6,7 +6,6 @@ from contextlib import suppress
 from datetime import timedelta
 import logging
 import re
-import sys
 from typing import Any
 
 from icmplib import NameLookupError, async_ping
@@ -75,6 +74,7 @@ async def async_setup_platform(
     count = config[CONF_PING_COUNT]
     name = config.get(CONF_NAME, f"{DEFAULT_NAME} {host}")
     privileged = hass.data[DOMAIN][PING_PRIVS]
+    ping_cls: type[PingDataSubProcess | PingDataICMPLib]
     if privileged is None:
         ping_cls = PingDataSubProcess
     else:
@@ -88,7 +88,7 @@ async def async_setup_platform(
 class PingBinarySensor(RestoreEntity, BinarySensorEntity):
     """Representation of a Ping Binary sensor."""
 
-    def __init__(self, name: str, ping) -> None:
+    def __init__(self, name: str, ping: PingDataSubProcess | PingDataICMPLib) -> None:
         """Initialize the Ping Binary sensor."""
         self._available = False
         self._name = name
@@ -100,7 +100,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         return self._name
 
     @property
-    def available(self) -> str:
+    def available(self) -> bool:
         """Return if we have done the first ping."""
         return self._available
 
@@ -115,15 +115,16 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
         return self._ping.is_alive
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the ICMP checo request."""
-        if self._ping.data is not False:
-            return {
-                ATTR_ROUND_TRIP_TIME_AVG: self._ping.data["avg"],
-                ATTR_ROUND_TRIP_TIME_MAX: self._ping.data["max"],
-                ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
-                ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
-            }
+        if self._ping.data is None:
+            return None
+        return {
+            ATTR_ROUND_TRIP_TIME_AVG: self._ping.data["avg"],
+            ATTR_ROUND_TRIP_TIME_MAX: self._ping.data["max"],
+            ATTR_ROUND_TRIP_TIME_MDEV: self._ping.data["mdev"],
+            ATTR_ROUND_TRIP_TIME_MIN: self._ping.data["min"],
+        }
 
     async def async_update(self) -> None:
         """Get the latest data."""
@@ -139,7 +140,7 @@ class PingBinarySensor(RestoreEntity, BinarySensorEntity):
             self._available = True
 
         if last_state is None or last_state.state != STATE_ON:
-            self._ping.data = False
+            self._ping.data = None
             return
 
         attributes = last_state.attributes
@@ -160,7 +161,7 @@ class PingData:
         self.hass = hass
         self._ip_address = host
         self._count = count
-        self.data = {}
+        self.data: dict[str, Any] | None = None
         self.is_alive = False
 
 
@@ -188,7 +189,7 @@ class PingDataICMPLib(PingData):
 
         self.is_alive = data.is_alive
         if not self.is_alive:
-            self.data = False
+            self.data = None
             return
 
         self.data = {
@@ -205,25 +206,15 @@ class PingDataSubProcess(PingData):
     def __init__(self, hass, host, count, privileged) -> None:
         """Initialize the data object."""
         super().__init__(hass, host, count)
-        if sys.platform == "win32":
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                str(self._count),
-                "-w",
-                "1000",
-                self._ip_address,
-            ]
-        else:
-            self._ping_cmd = [
-                "ping",
-                "-n",
-                "-q",
-                "-c",
-                str(self._count),
-                "-W1",
-                self._ip_address,
-            ]
+        self._ping_cmd = [
+            "ping",
+            "-n",
+            "-q",
+            "-c",
+            str(self._count),
+            "-W1",
+            self._ip_address,
+        ]
 
     async def async_ping(self):
         """Send ICMP echo request and return details if success."""
@@ -261,12 +252,6 @@ class PingDataSubProcess(PingData):
                     pinger.returncode,
                 )
 
-            if sys.platform == "win32":
-                match = WIN32_PING_MATCHER.search(
-                    str(out_data).rsplit("\n", maxsplit=1)[-1]
-                )
-                rtt_min, rtt_avg, rtt_max = match.groups()
-                return {"min": rtt_min, "avg": rtt_avg, "max": rtt_max, "mdev": ""}
             if "max/" not in str(out_data):
                 match = PING_MATCHER_BUSYBOX.search(
                     str(out_data).rsplit("\n", maxsplit=1)[-1]
@@ -287,11 +272,11 @@ class PingDataSubProcess(PingData):
                     await pinger.kill()
                 del pinger
 
-            return False
+            return None
         except AttributeError:
-            return False
+            return None
 
     async def async_update(self) -> None:
         """Retrieve the latest details from the host."""
         self.data = await self.async_ping()
-        self.is_alive = bool(self.data)
+        self.is_alive = self.data is not None

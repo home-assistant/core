@@ -26,7 +26,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
     assert config_entry.state == ConfigEntryState.LOADED
 
-    assert len(hass.states.async_all("sensor")) == 18
+    assert len(hass.states.async_all("sensor")) == 25
     assert hass.states.get("sensor.my_generator_latest_firmware").state == "2.0.6"
 
     assert hass.states.get("sensor.my_generator_engine_speed").state == "0"
@@ -37,18 +37,18 @@ async def test_sensors(hass: HomeAssistant) -> None:
         hass.states.get("sensor.my_generator_engine_coolant_temperature").state == "0"
     )
 
-    assert hass.states.get("sensor.my_generator_battery_voltage").state == "13.5"
+    assert hass.states.get("sensor.my_generator_battery_voltage").state == "13.4"
 
     assert hass.states.get("sensor.my_generator_lube_oil_temperature").state == "0"
 
     assert (
         hass.states.get("sensor.my_generator_generator_controller_temperature").state
-        == "38.0"
+        == "29.0"
     )
 
     assert (
         hass.states.get("sensor.my_generator_engine_compartment_temperature").state
-        == "29.0"
+        == "17.0"
     )
 
     assert (
@@ -77,7 +77,7 @@ async def test_sensors(hass: HomeAssistant) -> None:
         hass.states.get(
             "sensor.my_generator_generator_controller_total_operation_time"
         ).state
-        == "16482.0"
+        == "16770.8"
     )
 
     assert hass.states.get("sensor.my_generator_engine_total_run_time").state == "28.1"
@@ -91,4 +91,37 @@ async def test_sensors(hass: HomeAssistant) -> None:
     assert (
         hass.states.get("sensor.my_generator_connected_server_ip_address").state
         == "40.117.195.28"
+    )
+
+    assert hass.states.get("sensor.my_generator_engine_target_speed").state == "0"
+
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_run_time_loaded").state
+        == "5.5"
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_source1_voltage_average_line_to_line"
+        ).state
+        == "253.5"
+    )
+
+    assert (
+        hass.states.get(
+            "sensor.my_generator_source2_voltage_average_line_to_line"
+        ).state
+        == "0.0"
+    )
+
+    assert (
+        hass.states.get("sensor.my_generator_genset_total_energy").state
+        == "1.2022309E7"
+    )
+    assert (
+        hass.states.get("sensor.my_generator_engine_total_number_of_starts").state
+        == "101"
+    )
+    assert (
+        hass.states.get("sensor.my_generator_generator_current_average").state == "0.0"
     )

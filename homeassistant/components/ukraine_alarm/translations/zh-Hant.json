@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u5ea7\u6a19\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "invalid_api_key": "API \u91d1\u9470\u7121\u6548",
+            "timeout": "\u5efa\u7acb\u9023\u7dda\u903e\u6642",
+            "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u5047\u5982\u4f60\u4e0d\u53ea\u8981\u76e3\u770b\u72c0\u614b\u8207\u5340\u57df\u3001\u8acb\u9078\u64c7\u7279\u5b9a\u793e\u5340"
+            },
+            "district": {
+                "data": {
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u5047\u5982\u4f60\u4e0d\u53ea\u8981\u76e3\u770b\u72c0\u614b\u3001\u8acb\u9078\u64c7\u7279\u5b9a\u5340\u57df"
+            },
+            "state": {
+                "data": {
+                    "region": "\u5340\u57df"
+                },
+                "description": "\u9078\u64c7\u6240\u8981\u76e3\u8996\u7684\u72c0\u614b"
+            },
+            "user": {
+                "data": {
+                    "api_key": "API \u91d1\u9470"
+                },
+                "description": "\u8a2d\u5b9a\u70cf\u514b\u862d\u8b66\u5831\u6574\u5408\uff0c\u8acb\u9023\u7dda\u81f3 {api_url} \u4ee5\u53d6\u5f97 API \u91d1\u9470\u3002"
+            }
+        }
+    }
+}

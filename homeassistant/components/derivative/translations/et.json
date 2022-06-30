@@ -1,0 +1,59 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "name": "Nimi",
+                    "round": "T\u00e4psus",
+                    "source": "Sisendandur",
+                    "time_window": "Ajavahemik",
+                    "unit_prefix": "M\u00f5\u00f5diku eesliide",
+                    "unit_time": "Aja\u00fchik"
+                },
+                "data_description": {
+                    "round": "K\u00fcmnendkohtade arv v\u00e4ljundis.",
+                    "time_window": "Kui see on m\u00e4\u00e4ratud on anduri v\u00e4\u00e4rtus selle akna tuletisinstrumentide ajaga kaalutud liikuv keskmine.",
+                    "unit_prefix": "Tuletis skaleeritakse vastavalt valitud meetrilisele eesliitele ja tuletise aja\u00fchikule."
+                },
+                "description": "Loo andur mis hindab anduri tuletist.",
+                "title": "Lisa uus tuletisandur"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "name": "Nimi",
+                    "round": "T\u00e4psus",
+                    "source": "Sisendandur",
+                    "time_window": "Ajavahemik",
+                    "unit_prefix": "M\u00f5\u00f5diku eesliide",
+                    "unit_time": "Aja\u00fchik"
+                },
+                "data_description": {
+                    "round": "K\u00fcmnendkohtade arv v\u00e4ljundis.",
+                    "time_window": "Kui see on m\u00e4\u00e4ratud on anduri v\u00e4\u00e4rtus selle akna tuletisinstrumentide ajaga kaalutud liikuv keskmine.",
+                    "unit_prefix": "Tuletis skaleeritakse vastavalt valitud meetrilisele eesliitele ja tuletise aja\u00fchikule."
+                }
+            },
+            "options": {
+                "data": {
+                    "name": "Nimi",
+                    "round": "T\u00e4psus",
+                    "source": "Sisendandur",
+                    "time_window": "Ajavahemik",
+                    "unit_prefix": "M\u00f5\u00f5diku eesliide",
+                    "unit_time": "Aja\u00fchik"
+                },
+                "data_description": {
+                    "round": "K\u00fcmnendkohtade arv v\u00e4ljundis.",
+                    "time_window": "Kui see on m\u00e4\u00e4ratud, on anduri v\u00e4\u00e4rtus selle akna tuletisinstrumentide ajaga kaalutud liikuv keskmine.",
+                    "unit_prefix": "Tuletis skaleeritakse vastavalt valitud meetrilisele eesliitele ja tuletise aja\u00fchikule."
+                },
+                "description": "T\u00e4psus reguleerib k\u00fcmnendkohtade arvu v\u00e4ljundis.\n Kui ajaaken ei ole 0, on anduri v\u00e4\u00e4rtuseks aknas olevate tuletisinstrumentide ajaga kaalutud liikuv keskmine.\n Tuletist skaleeritakse vastavalt valitud meetrilise prefiksile ja tuletise aja\u00fchikule."
+            }
+        }
+    },
+    "title": "Tuletisandur"
+}

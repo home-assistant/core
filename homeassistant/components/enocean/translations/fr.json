@@ -1,7 +1,7 @@
 {
     "config": {
         "abort": {
-            "invalid_dongle_path": "Lien vers la cl\u00e9 USB invalide",
+            "invalid_dongle_path": "Chemin d'acc\u00e8s \u00e0 la cl\u00e9 non valide",
             "single_instance_allowed": "D\u00e9j\u00e0 configur\u00e9. Une seule configuration possible."
         },
         "error": {

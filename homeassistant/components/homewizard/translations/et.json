@@ -4,7 +4,7 @@
             "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
             "api_not_enabled": "API pole lubatud. Luba API HomeWizard Energy rakenduse seadete all",
             "device_not_supported": "Seda seadet ei toetata",
-            "invalid_discovery_parameters": "Toetuseta API versioon",
+            "invalid_discovery_parameters": "Leiti toetuseta API versioon",
             "unknown_error": "Ootamatu t\u00f5rge"
         },
         "step": {

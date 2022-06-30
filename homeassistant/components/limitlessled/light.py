@@ -27,10 +27,8 @@ from homeassistant.components.light import (
     SUPPORT_BRIGHTNESS,
     SUPPORT_COLOR,
     SUPPORT_COLOR_TEMP,
-    SUPPORT_EFFECT,
-    SUPPORT_FLASH,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -63,23 +61,26 @@ MIN_SATURATION = 10
 WHITE = [0, 0]
 
 SUPPORT_LIMITLESSLED_WHITE = (
-    SUPPORT_BRIGHTNESS | SUPPORT_COLOR_TEMP | SUPPORT_EFFECT | SUPPORT_TRANSITION
+    SUPPORT_BRIGHTNESS
+    | SUPPORT_COLOR_TEMP
+    | LightEntityFeature.EFFECT
+    | LightEntityFeature.TRANSITION
 )
-SUPPORT_LIMITLESSLED_DIMMER = SUPPORT_BRIGHTNESS | SUPPORT_TRANSITION
+SUPPORT_LIMITLESSLED_DIMMER = SUPPORT_BRIGHTNESS | LightEntityFeature.TRANSITION
 SUPPORT_LIMITLESSLED_RGB = (
     SUPPORT_BRIGHTNESS
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
+    | LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
     | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
+    | LightEntityFeature.TRANSITION
 )
 SUPPORT_LIMITLESSLED_RGBWW = (
     SUPPORT_BRIGHTNESS
     | SUPPORT_COLOR_TEMP
-    | SUPPORT_EFFECT
-    | SUPPORT_FLASH
+    | LightEntityFeature.EFFECT
+    | LightEntityFeature.FLASH
     | SUPPORT_COLOR
-    | SUPPORT_TRANSITION
+    | LightEntityFeature.TRANSITION
 )
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
@@ -369,7 +370,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
             pipeline.transition(transition_time, **args)
 
         # Flash.
-        if ATTR_FLASH in kwargs and self._supported & SUPPORT_FLASH:
+        if ATTR_FLASH in kwargs and self._supported & LightEntityFeature.FLASH:
             duration = 0
             if kwargs[ATTR_FLASH] == FLASH_LONG:
                 duration = 1

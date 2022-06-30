@@ -1,6 +1,9 @@
 {
     "config": {
         "abort": {
+            "invalid_unique_id": "Umulig \u00e5 bestemme en gyldig unik ID for enheten",
+            "no_unique_id": "En enhet uten en gyldig unik ID er allerede konfigurert. Konfigurasjon av flere forekomster er ikke mulig",
+            "not_unique_id_exist": "En enhet uten en gyldig unik ID er allerede konfigurert. Konfigurasjon av flere forekomster er ikke mulig",
             "single_instance_allowed": "Allerede konfigurert. Bare \u00e9n enkelt konfigurasjon er mulig."
         },
         "error": {
@@ -18,7 +21,7 @@
                     "mode": "Modus",
                     "name": "Navn",
                     "password": "Passord",
-                    "port": "Port",
+                    "port": "Port (la st\u00e5 tomt for protokollstandard)",
                     "protocol": "Kommunikasjonsprotokoll som skal brukes",
                     "ssh_key": "Bane til SSH-n\u00f8kkelfilen (i stedet for passord)",
                     "username": "Brukernavn"
@@ -36,7 +39,7 @@
                     "dnsmasq": "Plasseringen i ruteren til dnsmasq.leases-filene",
                     "interface": "Grensesnittet du vil ha statistikk fra (f.eks. Eth0, eth1 osv.)",
                     "require_ip": "Enheter m\u00e5 ha IP (for tilgangspunktmodus)",
-                    "track_unknown": "Spor ukjente / ikke-navngitte enheter"
+                    "track_unknown": "Spor ukjente/ikke navngitte enheter"
                 },
                 "title": "AsusWRT-alternativer"
             }

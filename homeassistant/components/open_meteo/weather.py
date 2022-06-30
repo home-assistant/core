@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from open_meteo import Forecast as OpenMeteoForecast
 
-from homeassistant.components.weather import WeatherEntity
+from homeassistant.components.weather import Forecast, WeatherEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
@@ -28,14 +28,18 @@ async def async_setup_entry(
     async_add_entities([OpenMeteoWeatherEntity(entry=entry, coordinator=coordinator)])
 
 
-class OpenMeteoWeatherEntity(CoordinatorEntity, WeatherEntity):
+class OpenMeteoWeatherEntity(
+    CoordinatorEntity[DataUpdateCoordinator[OpenMeteoForecast]], WeatherEntity
+):
     """Defines an Open-Meteo weather entity."""
 
     _attr_temperature_unit = TEMP_CELSIUS
-    coordinator: DataUpdateCoordinator[OpenMeteoForecast]
 
     def __init__(
-        self, *, entry: ConfigEntry, coordinator: DataUpdateCoordinator
+        self,
+        *,
+        entry: ConfigEntry,
+        coordinator: DataUpdateCoordinator[OpenMeteoForecast],
     ) -> None:
         """Initialize Open-Meteo weather entity."""
         super().__init__(coordinator=coordinator)
@@ -78,3 +82,41 @@ class OpenMeteoWeatherEntity(CoordinatorEntity, WeatherEntity):
         if not self.coordinator.data.current_weather:
             return None
         return self.coordinator.data.current_weather.wind_direction
+
+    @property
+    def forecast(self) -> list[Forecast] | None:
+        """Return the forecast in native units."""
+        if self.coordinator.data.daily is None:
+            return None
+
+        forecasts: list[Forecast] = []
+        daily = self.coordinator.data.daily
+        for index, time in enumerate(self.coordinator.data.daily.time):
+
+            forecast = Forecast(
+                datetime=time.isoformat(),
+            )
+
+            if daily.weathercode is not None:
+                forecast["condition"] = WMO_TO_HA_CONDITION_MAP.get(
+                    daily.weathercode[index]
+                )
+
+            if daily.precipitation_sum is not None:
+                forecast["precipitation"] = daily.precipitation_sum[index]
+
+            if daily.temperature_2m_max is not None:
+                forecast["temperature"] = daily.temperature_2m_max[index]
+
+            if daily.temperature_2m_min is not None:
+                forecast["templow"] = daily.temperature_2m_min[index]
+
+            if daily.wind_direction_10m_dominant is not None:
+                forecast["wind_bearing"] = daily.wind_direction_10m_dominant[index]
+
+            if daily.wind_speed_10m_max is not None:
+                forecast["wind_speed"] = daily.wind_speed_10m_max[index]
+
+            forecasts.append(forecast)
+
+        return forecasts

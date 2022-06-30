@@ -15,7 +15,7 @@
                     "longitude": "Lengtegraad",
                     "name": "Naam"
                 },
-                "description": "Airly-integratie van luchtkwaliteit instellen. Ga naar https://developer.airly.eu/register om de API-sleutel te genereren",
+                "description": "Om een API sleutel te genereren ga naar https://developer.airly.eu/register",
                 "title": "Airly"
             }
         }

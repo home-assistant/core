@@ -1,19 +1,25 @@
 """Test config flow for Insteon."""
+from __future__ import annotations
+
 import logging
 
 from pyinsteon import async_connect
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.components import dhcp, usb
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_DEVICE,
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -107,6 +113,10 @@ def _remove_x10(device, options):
 class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Insteon config flow handler."""
 
+    _device_path: str | None = None
+    _device_name: str | None = None
+    discovered_conf: dict[str, str] = {}
+
     @staticmethod
     @callback
     def async_get_options_flow(config_entry):
@@ -162,7 +172,7 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(title="", data=user_input)
             user_input.pop(CONF_HUB_VERSION)
             errors["base"] = "cannot_connect"
-        schema_defaults = user_input if user_input is not None else {}
+        schema_defaults = user_input if user_input is not None else self.discovered_conf
         data_schema = build_hub_schema(hub_version=hub_version, **schema_defaults)
         step_id = STEP_HUB_V2 if hub_version == 2 else STEP_HUB_V1
         return self.async_show_form(
@@ -176,6 +186,49 @@ class InsteonFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not await _async_connect(**import_info):
             return self.async_abort(reason="cannot_connect")
         return self.async_create_entry(title="", data=import_info)
+
+    async def async_step_usb(self, discovery_info: usb.UsbServiceInfo) -> FlowResult:
+        """Handle USB discovery."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        dev_path = await self.hass.async_add_executor_job(
+            usb.get_serial_by_id, discovery_info.device
+        )
+        self._device_path = dev_path
+        self._device_name = usb.human_readable_device_name(
+            dev_path,
+            discovery_info.serial_number,
+            discovery_info.manufacturer,
+            discovery_info.description,
+            discovery_info.vid,
+            discovery_info.pid,
+        )
+        self._set_confirm_only()
+        self.context["title_placeholders"] = {
+            CONF_NAME: f"Insteon PLM {self._device_name}"
+        }
+        await self.async_set_unique_id(config_entries.DEFAULT_DISCOVERY_UNIQUE_ID)
+        return await self.async_step_confirm_usb()
+
+    async def async_step_confirm_usb(self, user_input=None):
+        """Confirm a USB discovery."""
+        if user_input is not None:
+            return await self.async_step_plm({CONF_DEVICE: self._device_path})
+
+        return self.async_show_form(
+            step_id="confirm_usb",
+            description_placeholders={CONF_NAME: self._device_name},
+        )
+
+    async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
+        """Handle a DHCP discovery."""
+        self.discovered_conf = {CONF_HOST: discovery_info.ip}
+        self.context["title_placeholders"] = {
+            CONF_NAME: f"Insteon Hub {discovery_info.ip}"
+        }
+        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        return await self.async_step_user()
 
 
 class InsteonOptionsFlowHandler(config_entries.OptionsFlow):

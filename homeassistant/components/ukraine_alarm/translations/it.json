@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "La posizione \u00e8 gi\u00e0 configurata"
+        },
+        "error": {
+            "cannot_connect": "Impossibile connettersi",
+            "invalid_api_key": "Chiave API non valida",
+            "timeout": "Tempo scaduto per stabile la connessione.",
+            "unknown": "Errore imprevisto"
+        },
+        "step": {
+            "community": {
+                "data": {
+                    "region": "Regione"
+                },
+                "description": "Se vuoi monitorare non solo stato e distretto, scegli la sua comunit\u00e0 specifica"
+            },
+            "district": {
+                "data": {
+                    "region": "Regione"
+                },
+                "description": "Se vuoi monitorare non solo lo stato, scegli il suo distretto specifico"
+            },
+            "state": {
+                "data": {
+                    "region": "Regione"
+                },
+                "description": "Scegli lo stato da monitorare"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Chiave API"
+                },
+                "description": "Imposta l'integrazione di Ukraine Alarm. Per generare una chiave API vai su {api_url}"
+            }
+        }
+    }
+}

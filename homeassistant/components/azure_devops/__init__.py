@@ -94,10 +94,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class AzureDevOpsEntity(CoordinatorEntity):
+class AzureDevOpsEntity(CoordinatorEntity[DataUpdateCoordinator[list[DevOpsBuild]]]):
     """Defines a base Azure DevOps entity."""
 
-    coordinator: DataUpdateCoordinator[list[DevOpsBuild]]
     entity_description: AzureDevOpsEntityDescription
 
     def __init__(
@@ -123,7 +122,7 @@ class AzureDevOpsDeviceEntity(AzureDevOpsEntity):
         """Return device information about this Azure DevOps instance."""
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore
+            identifiers={(DOMAIN, self._organization, self._project_name)},  # type: ignore[arg-type]
             manufacturer=self._organization,
             name=self._project_name,
         )

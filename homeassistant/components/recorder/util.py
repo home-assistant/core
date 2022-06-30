@@ -3,12 +3,12 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from contextlib import contextmanager
-from datetime import timedelta
+from datetime import date, datetime, timedelta
 import functools
 import logging
 import os
 import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, TypeVar
 
 from awesomeversion import (
     AwesomeVersion,
@@ -16,27 +16,29 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 from sqlalchemy import text
+from sqlalchemy.engine.cursor import CursorFetchStrategy
 from sqlalchemy.exc import OperationalError, SQLAlchemyError
+from sqlalchemy.orm.query import Query
 from sqlalchemy.orm.session import Session
+from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.core import HomeAssistant
 import homeassistant.util.dt as dt_util
 
-from .const import DATA_INSTANCE, SQLITE_URL_PREFIX
+from .const import DATA_INSTANCE, SQLITE_URL_PREFIX, SupportedDialect
 from .models import (
-    ALL_TABLES,
     TABLE_RECORDER_RUNS,
     TABLE_SCHEMA_CHANGES,
-    TABLE_STATISTICS,
-    TABLE_STATISTICS_META,
-    TABLE_STATISTICS_RUNS,
-    TABLE_STATISTICS_SHORT_TERM,
+    TABLES_TO_CHECK,
     RecorderRuns,
     process_timestamp,
 )
 
 if TYPE_CHECKING:
     from . import Recorder
+
+_RecorderT = TypeVar("_RecorderT", bound="Recorder")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +64,10 @@ RETRYABLE_MYSQL_ERRORS = (1205, 1206, 1213)
 # 1205: Lock wait timeout exceeded; try restarting transaction
 # 1206: The total number of locks exceeds the lock table size
 # 1213: Deadlock found when trying to get lock; try restarting transaction
+
+FIRST_POSSIBLE_SUNDAY = 8
+SUNDAY_WEEKDAY = 6
+DAYS_IN_WEEK = 7
 
 
 @contextmanager
@@ -94,7 +100,7 @@ def session_scope(
         session.close()
 
 
-def commit(session, work):
+def commit(session: Session, work: Any) -> bool:
     """Commit & retry work: Either a model or in a function."""
     for _ in range(0, RETRIES):
         try:
@@ -111,12 +117,13 @@ def commit(session, work):
     return False
 
 
-def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
+def execute(
+    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
+) -> list:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
     """
-
     for tryno in range(0, RETRIES):
         try:
             timer_start = time.perf_counter()
@@ -130,7 +137,7 @@ def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
                     if row is not None
                 ]
             else:
-                result = list(qry)
+                result = qry.all()
 
             if _LOGGER.isEnabledFor(logging.DEBUG):
                 elapsed = time.perf_counter() - timer_start
@@ -155,7 +162,7 @@ def execute(qry, to_native=False, validate_entity_ids=True) -> list | None:
                 raise
             time.sleep(QUERY_RETRY_WAIT)
 
-    return None
+    assert False  # unreachable
 
 
 def validate_or_move_away_sqlite_database(dburl: str) -> bool:
@@ -173,12 +180,12 @@ def validate_or_move_away_sqlite_database(dburl: str) -> bool:
     return True
 
 
-def dburl_to_path(dburl):
+def dburl_to_path(dburl: str) -> str:
     """Convert the db url into a filesystem path."""
     return dburl[len(SQLITE_URL_PREFIX) :]
 
 
-def last_run_was_recently_clean(cursor):
+def last_run_was_recently_clean(cursor: CursorFetchStrategy) -> bool:
     """Verify the last recorder run was recently clean."""
 
     cursor.execute("SELECT end FROM recorder_runs ORDER BY start DESC LIMIT 1;")
@@ -188,6 +195,7 @@ def last_run_was_recently_clean(cursor):
         return False
 
     last_run_end_time = process_timestamp(dt_util.parse_datetime(end_time[0]))
+    assert last_run_end_time is not None
     now = dt_util.utcnow()
 
     _LOGGER.debug("The last run ended at: %s (now: %s)", last_run_end_time, now)
@@ -198,18 +206,10 @@ def last_run_was_recently_clean(cursor):
     return True
 
 
-def basic_sanity_check(cursor):
+def basic_sanity_check(cursor: CursorFetchStrategy) -> bool:
     """Check tables to make sure select does not fail."""
 
-    for table in ALL_TABLES:
-        # The statistics tables may not be present in old databases
-        if table in [
-            TABLE_STATISTICS,
-            TABLE_STATISTICS_META,
-            TABLE_STATISTICS_RUNS,
-            TABLE_STATISTICS_SHORT_TERM,
-        ]:
-            continue
+    for table in TABLES_TO_CHECK:
         if table in (TABLE_RECORDER_RUNS, TABLE_SCHEMA_CHANGES):
             cursor.execute(f"SELECT * FROM {table};")  # nosec # not injection
         else:
@@ -233,7 +233,7 @@ def validate_sqlite_database(dbpath: str) -> bool:
     return True
 
 
-def run_checks_on_open_db(dbpath, cursor):
+def run_checks_on_open_db(dbpath: str, cursor: CursorFetchStrategy) -> None:
     """Run checks that will generate a sqlite3 exception if there is corruption."""
     sanity_check_passed = basic_sanity_check(cursor)
     last_run_was_clean = last_run_was_recently_clean(cursor)
@@ -276,14 +276,14 @@ def move_away_broken_database(dbfile: str) -> None:
         os.rename(path, f"{path}{corrupt_postfix}")
 
 
-def execute_on_connection(dbapi_connection, statement):
+def execute_on_connection(dbapi_connection: Any, statement: str) -> None:
     """Execute a single statement with a dbapi connection."""
     cursor = dbapi_connection.cursor()
     cursor.execute(statement)
     cursor.close()
 
 
-def query_on_connection(dbapi_connection, statement):
+def query_on_connection(dbapi_connection: Any, statement: str) -> Any:
     """Execute a single statement with a dbapi connection and return the result."""
     cursor = dbapi_connection.cursor()
     cursor.execute(statement)
@@ -292,30 +292,34 @@ def query_on_connection(dbapi_connection, statement):
     return result
 
 
-def _warn_unsupported_dialect(dialect):
+def _warn_unsupported_dialect(dialect_name: str) -> None:
     """Warn about unsupported database version."""
     _LOGGER.warning(
         "Database %s is not supported; Home Assistant supports %s. "
         "Starting with Home Assistant 2022.2 this will prevent the recorder from "
         "starting. Please migrate your database to a supported software before then",
-        dialect,
+        dialect_name,
         "MariaDB ≥ 10.3, MySQL ≥ 8.0, PostgreSQL ≥ 12, SQLite ≥ 3.31.0",
     )
 
 
-def _warn_unsupported_version(server_version, dialect, minimum_version):
+def _warn_unsupported_version(
+    server_version: str, dialect_name: str, minimum_version: str
+) -> None:
     """Warn about unsupported database version."""
     _LOGGER.warning(
         "Version %s of %s is not supported; minimum supported version is %s. "
         "Starting with Home Assistant 2022.2 this will prevent the recorder from "
         "starting. Please upgrade your database software before then",
         server_version,
-        dialect,
+        dialect_name,
         minimum_version,
     )
 
 
-def _extract_version_from_server_response(server_response):
+def _extract_version_from_server_response(
+    server_response: str,
+) -> AwesomeVersion | None:
     """Attempt to extract version from server response."""
     try:
         return AwesomeVersion(
@@ -328,13 +332,16 @@ def _extract_version_from_server_response(server_response):
 
 
 def setup_connection_for_dialect(
-    instance, dialect_name, dbapi_connection, first_connection
-):
+    instance: Recorder,
+    dialect_name: str,
+    dbapi_connection: Any,
+    first_connection: bool,
+) -> None:
     """Execute statements needed for dialect connection."""
     # Returns False if the the connection needs to be setup
     # on the next connection, returns True if the connection
     # never needs to be setup again.
-    if dialect_name == "sqlite":
+    if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level
             dbapi_connection.isolation_level = None
@@ -362,7 +369,7 @@ def setup_connection_for_dialect(
         # enable support for foreign keys
         execute_on_connection(dbapi_connection, "PRAGMA foreign_keys=ON")
 
-    elif dialect_name == "mysql":
+    elif dialect_name == SupportedDialect.MYSQL:
         execute_on_connection(dbapi_connection, "SET session wait_timeout=28800")
         if first_connection:
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
@@ -389,7 +396,7 @@ def setup_connection_for_dialect(
                         version or version_string, "MySQL", MIN_VERSION_MYSQL
                     )
 
-    elif dialect_name == "postgresql":
+    elif dialect_name == SupportedDialect.POSTGRESQL:
         if first_connection:
             # server_version_num was added in 2006
             result = query_on_connection(dbapi_connection, "SHOW server_version")
@@ -404,7 +411,7 @@ def setup_connection_for_dialect(
         _warn_unsupported_dialect(dialect_name)
 
 
-def end_incomplete_runs(session, start_time):
+def end_incomplete_runs(session: Session, start_time: datetime) -> None:
     """End any incomplete recorder runs."""
     for run in session.query(RecorderRuns).filter_by(end=None):
         run.closed_incorrect = True
@@ -415,20 +422,28 @@ def end_incomplete_runs(session, start_time):
         session.add(run)
 
 
-def retryable_database_job(description: str) -> Callable:
+def retryable_database_job(
+    description: str,
+) -> Callable[
+    [Callable[Concatenate[_RecorderT, _P], bool]],
+    Callable[Concatenate[_RecorderT, _P], bool],
+]:
     """Try to execute a database job.
 
     The job should return True if it finished, and False if it needs to be rescheduled.
     """
 
-    def decorator(job: Callable) -> Callable:
+    def decorator(
+        job: Callable[Concatenate[_RecorderT, _P], bool]
+    ) -> Callable[Concatenate[_RecorderT, _P], bool]:
         @functools.wraps(job)
-        def wrapper(instance: Recorder, *args, **kwargs):
+        def wrapper(instance: _RecorderT, *args: _P.args, **kwargs: _P.kwargs) -> bool:
             try:
                 return job(instance, *args, **kwargs)
             except OperationalError as err:
+                assert instance.engine is not None
                 if (
-                    instance.engine.dialect.name == "mysql"
+                    instance.engine.dialect.name == SupportedDialect.MYSQL
                     and err.orig.args[0] in RETRYABLE_MYSQL_ERRORS
                 ):
                     _LOGGER.info(
@@ -448,13 +463,13 @@ def retryable_database_job(description: str) -> Callable:
     return decorator
 
 
-def perodic_db_cleanups(instance: Recorder):
-    """Run any database cleanups that need to happen perodiclly.
+def periodic_db_cleanups(instance: Recorder) -> None:
+    """Run any database cleanups that need to happen periodically.
 
     These cleanups will happen nightly or after any purge.
     """
-
-    if instance.engine.dialect.name == "sqlite":
+    assert instance.engine is not None
+    if instance.engine.dialect.name == SupportedDialect.SQLITE:
         # Execute sqlite to create a wal checkpoint and free up disk space
         _LOGGER.debug("WAL checkpoint")
         with instance.engine.connect() as connection:
@@ -462,9 +477,9 @@ def perodic_db_cleanups(instance: Recorder):
 
 
 @contextmanager
-def write_lock_db_sqlite(instance: Recorder):
+def write_lock_db_sqlite(instance: Recorder) -> Generator[None, None, None]:
     """Lock database for writes."""
-
+    assert instance.engine is not None
     with instance.engine.connect() as connection:
         # Execute sqlite to create a wal checkpoint
         # This is optional but makes sure the backup is going to be minimal
@@ -487,4 +502,21 @@ def async_migration_in_progress(hass: HomeAssistant) -> bool:
     """
     if DATA_INSTANCE not in hass.data:
         return False
-    return hass.data[DATA_INSTANCE].migration_in_progress
+    instance: Recorder = hass.data[DATA_INSTANCE]
+    return instance.migration_in_progress
+
+
+def second_sunday(year: int, month: int) -> date:
+    """Return the datetime.date for the second sunday of a month."""
+    second = date(year, month, FIRST_POSSIBLE_SUNDAY)
+    day_of_week = second.weekday()
+    if day_of_week == SUNDAY_WEEKDAY:
+        return second
+    return second.replace(
+        day=(FIRST_POSSIBLE_SUNDAY + (SUNDAY_WEEKDAY - day_of_week) % DAYS_IN_WEEK)
+    )
+
+
+def is_second_sunday(date_time: datetime) -> bool:
+    """Check if a time is the second sunday of the month."""
+    return bool(second_sunday(date_time.year, date_time.month).day == date_time.day)

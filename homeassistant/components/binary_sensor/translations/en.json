@@ -134,6 +134,10 @@
             "off": "Not charging",
             "on": "Charging"
         },
+        "carbon_monoxide": {
+            "off": "Clear",
+            "on": "Detected"
+        },
         "co": {
             "off": "Clear",
             "on": "Detected"

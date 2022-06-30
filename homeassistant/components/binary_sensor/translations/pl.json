@@ -134,6 +134,10 @@
             "off": "roz\u0142adowywanie",
             "on": "\u0142adowanie"
         },
+        "carbon_monoxide": {
+            "off": "brak",
+            "on": "wykryto"
+        },
         "co": {
             "off": "brak",
             "on": "wykryto"

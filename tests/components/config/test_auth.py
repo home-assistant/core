@@ -59,7 +59,7 @@ async def test_list(hass, hass_ws_client, hass_admin_user):
     result = await client.receive_json()
     assert result["success"], result
     data = result["result"]
-    assert len(data) == 4
+    assert len(data) == 5
     assert data[0] == {
         "id": hass_admin_user.id,
         "username": "admin",
@@ -151,7 +151,7 @@ async def test_delete(hass, hass_ws_client, hass_access_token):
     client = await hass_ws_client(hass, hass_access_token)
     test_user = MockUser(id="efg").add_to_hass(hass)
 
-    assert len(await hass.auth.async_get_users()) == 2
+    cur_users = len(await hass.auth.async_get_users())
 
     await client.send_json(
         {"id": 5, "type": auth_config.WS_TYPE_DELETE, "user_id": test_user.id}
@@ -159,20 +159,20 @@ async def test_delete(hass, hass_ws_client, hass_access_token):
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(await hass.auth.async_get_users()) == 1
+    assert len(await hass.auth.async_get_users()) == cur_users - 1
 
 
 async def test_create(hass, hass_ws_client, hass_access_token):
     """Test create command works."""
     client = await hass_ws_client(hass, hass_access_token)
 
-    assert len(await hass.auth.async_get_users()) == 1
+    cur_users = len(await hass.auth.async_get_users())
 
     await client.send_json({"id": 5, "type": "config/auth/create", "name": "Paulus"})
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(await hass.auth.async_get_users()) == 2
+    assert len(await hass.auth.async_get_users()) == cur_users + 1
     data_user = result["result"]["user"]
     user = await hass.auth.async_get_user(data_user["id"])
     assert user is not None
@@ -188,7 +188,7 @@ async def test_create_user_group(hass, hass_ws_client, hass_access_token):
     """Test create user with a group."""
     client = await hass_ws_client(hass, hass_access_token)
 
-    assert len(await hass.auth.async_get_users()) == 1
+    cur_users = len(await hass.auth.async_get_users())
 
     await client.send_json(
         {
@@ -201,7 +201,7 @@ async def test_create_user_group(hass, hass_ws_client, hass_access_token):
 
     result = await client.receive_json()
     assert result["success"], result
-    assert len(await hass.auth.async_get_users()) == 2
+    assert len(await hass.auth.async_get_users()) == cur_users + 1
     data_user = result["result"]["user"]
     user = await hass.auth.async_get_user(data_user["id"])
     assert user is not None

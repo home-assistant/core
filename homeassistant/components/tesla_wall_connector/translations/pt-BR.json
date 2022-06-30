@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "cannot_connect": "Falha ao conectar",
+            "unknown": "Erro inesperado"
+        },
+        "flow_title": "{serial_number} ( {host} )",
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                },
+                "title": "Configurar o conector de parede Tesla"
+            }
+        }
+    }
+}

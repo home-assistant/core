@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     @callback
     def async_add_geolocation(feed_manager, integration_id, external_id):
-        """Add gelocation entity from feed."""
+        """Add geolocation entity from feed."""
         new_entity = GdacsEvent(feed_manager, integration_id, external_id)
         _LOGGER.debug("Adding geolocation %s", new_entity)
         async_add_entities([new_entity], True)

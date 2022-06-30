@@ -1,4 +1,6 @@
 """Support for Nest Thermostat binary sensors."""
+# mypy: ignore-errors
+
 from itertools import chain
 import logging
 

@@ -122,10 +122,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             ) from err
 
 
-class ElmaxEntity(CoordinatorEntity):
+class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     """Wrapper for Elmax entities."""
-
-    coordinator: ElmaxCoordinator
 
     def __init__(
         self,

@@ -251,7 +251,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
 
         await self.async_notify(
             code,
-            notify_setting.notify_service,  # type: ignore
+            notify_setting.notify_service,  # type: ignore[arg-type]
             notify_setting.target,
         )
 

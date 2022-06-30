@@ -98,9 +98,7 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.client_id = None
         self._manual = False
 
-    async def async_step_user(
-        self, user_input=None, errors=None
-    ):  # pylint: disable=arguments-differ
+    async def async_step_user(self, user_input=None, errors=None):
         """Handle a flow initialized by the user."""
         if user_input is not None:
             return await self.async_step_plex_website_auth()
@@ -422,7 +420,6 @@ class PlexAuthorizationCallbackView(HomeAssistantView):
 
     async def get(self, request):
         """Receive authorization confirmation."""
-        # pylint: disable=no-self-use
         hass = request.app["hass"]
         await hass.config_entries.flow.async_configure(
             flow_id=request.query["flow_id"], user_input=None

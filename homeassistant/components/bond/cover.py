@@ -6,14 +6,9 @@ from typing import Any
 from bond_api import Action, BPUPSubscriptions, DeviceType
 
 from homeassistant.components.cover import (
-    SUPPORT_CLOSE,
-    SUPPORT_CLOSE_TILT,
-    SUPPORT_OPEN,
-    SUPPORT_OPEN_TILT,
-    SUPPORT_STOP,
-    SUPPORT_STOP_TILT,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -56,18 +51,18 @@ class BondCover(BondEntity, CoverEntity):
         super().__init__(hub, device, bpup_subs)
         supported_features = 0
         if self._device.supports_open():
-            supported_features |= SUPPORT_OPEN
+            supported_features |= CoverEntityFeature.OPEN
         if self._device.supports_close():
-            supported_features |= SUPPORT_CLOSE
+            supported_features |= CoverEntityFeature.CLOSE
         if self._device.supports_tilt_open():
-            supported_features |= SUPPORT_OPEN_TILT
+            supported_features |= CoverEntityFeature.OPEN_TILT
         if self._device.supports_tilt_close():
-            supported_features |= SUPPORT_CLOSE_TILT
+            supported_features |= CoverEntityFeature.CLOSE_TILT
         if self._device.supports_hold():
             if self._device.supports_open() or self._device.supports_close():
-                supported_features |= SUPPORT_STOP
+                supported_features |= CoverEntityFeature.STOP
             if self._device.supports_tilt_open() or self._device.supports_tilt_close():
-                supported_features |= SUPPORT_STOP_TILT
+                supported_features |= CoverEntityFeature.STOP_TILT
         self._attr_supported_features = supported_features
 
     def _apply_state(self, state: dict) -> None:

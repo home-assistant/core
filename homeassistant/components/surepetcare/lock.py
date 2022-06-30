@@ -46,8 +46,6 @@ async def async_setup_entry(
 class SurePetcareLock(SurePetcareEntity, LockEntity):
     """A lock implementation for Sure Petcare Entities."""
 
-    coordinator: SurePetcareDataCoordinator
-
     def __init__(
         self,
         surepetcare_id: int,

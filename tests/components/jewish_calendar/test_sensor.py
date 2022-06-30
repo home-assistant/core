@@ -4,6 +4,7 @@ from datetime import datetime as dt, timedelta
 import pytest
 
 from homeassistant.components import jewish_calendar
+from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
@@ -151,7 +152,6 @@ TEST_IDS = [
 )
 async def test_jewish_calendar_sensor(
     hass,
-    legacy_patchable_time,
     now,
     tzname,
     latitude,
@@ -165,7 +165,7 @@ async def test_jewish_calendar_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = tzname
+    hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -495,7 +495,6 @@ SHABBAT_TEST_IDS = [
 )
 async def test_shabbat_times_sensor(
     hass,
-    legacy_patchable_time,
     language,
     now,
     candle_lighting,
@@ -510,7 +509,7 @@ async def test_shabbat_times_sensor(
     time_zone = dt_util.get_time_zone(tzname)
     test_time = now.replace(tzinfo=time_zone)
 
-    hass.config.time_zone = tzname
+    hass.config.set_time_zone(tzname)
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
@@ -592,7 +591,7 @@ OMER_TEST_IDS = [
 
 
 @pytest.mark.parametrize(["test_time", "result"], OMER_PARAMS, ids=OMER_TEST_IDS)
-async def test_omer_sensor(hass, legacy_patchable_time, test_time, result):
+async def test_omer_sensor(hass, test_time, result):
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
@@ -626,7 +625,7 @@ DAFYOMI_TEST_IDS = [
 
 
 @pytest.mark.parametrize(["test_time", "result"], DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
-async def test_dafyomi_sensor(hass, legacy_patchable_time, test_time, result):
+async def test_dafyomi_sensor(hass, test_time, result):
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
@@ -641,3 +640,15 @@ async def test_dafyomi_sensor(hass, legacy_patchable_time, test_time, result):
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.test_daf_yomi").state == result
+
+
+async def test_no_discovery_info(hass, caplog):
+    """Test setup without discovery info."""
+    assert SENSOR_DOMAIN not in hass.config.components
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {SENSOR_DOMAIN: {"platform": jewish_calendar.DOMAIN}},
+    )
+    await hass.async_block_till_done()
+    assert SENSOR_DOMAIN in hass.config.components
