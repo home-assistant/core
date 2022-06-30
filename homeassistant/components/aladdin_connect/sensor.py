@@ -79,7 +79,7 @@ class AladdinConnectSensor(SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the state of the sensor."""
+        """Return the state of the Aladdin Connect sensor."""
         if self.entity_description.key == "battery_level":
             return cast(
                 float, self._acc.get_battery_status(self._device_id, self._number)
