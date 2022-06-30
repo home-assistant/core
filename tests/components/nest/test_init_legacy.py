@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
-from .common import TEST_CONFIG_LEGACY
+from .common import TEST_CONFIG_ENTRY_LEGACY, TEST_CONFIG_LEGACY
 
 DOMAIN = "nest"
 
@@ -33,6 +33,9 @@ def make_thermostat():
     return device
 
 
+@pytest.mark.parametrize(
+    "nest_test_config", [TEST_CONFIG_LEGACY, TEST_CONFIG_ENTRY_LEGACY]
+)
 async def test_thermostat(hass, setup_base_platform):
     """Test simple initialization for thermostat entities."""
 
