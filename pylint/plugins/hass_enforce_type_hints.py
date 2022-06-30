@@ -1268,7 +1268,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         (
             "ignore-missing-annotations",
             {
-                "default": True,
+                "default": False,
                 "type": "yn",
                 "metavar": "<y or n>",
                 "help": "Set to ``no`` if you wish to check functions that do not "
