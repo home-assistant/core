@@ -57,20 +57,6 @@
       "problemMatcher": []
     },
     {
-      "label": "Pylint (enforce_type_hint)",
-      "type": "shell",
-      "command": "pylint --disable=all --enable=hass_enforce_type_hints --ignore-missing-annotations=n homeassistant/components/${input:integrationName}",
-      "group": {
-        "kind": "test",
-        "isDefault": true
-      },
-      "presentation": {
-        "reveal": "always",
-        "panel": "new"
-      },
-      "problemMatcher": []
-    },
-    {
       "label": "Code Coverage",
       "detail": "Generate code coverage report for a given integration.",
       "type": "shell",

@@ -648,14 +648,14 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint homeassistant
+          pylint --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   mypy:
     name: Check mypy
