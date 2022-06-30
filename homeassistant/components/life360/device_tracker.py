@@ -78,13 +78,13 @@ async def async_setup_entry(
 
         new_entities = []
         for member_id, member in coordinator.data.members.items():
-            tracked_by_account = tracked_members.get(member_id)
-            if new_member := not tracked_by_account:
-                tracked_members[member_id] = entry.unique_id
-                LOGGER.debug("Member: %s", member.name)
+            tracked_by_entry = tracked_members.get(member_id)
+            if new_member := not tracked_by_entry:
+                tracked_members[member_id] = entry.entry_id
+                LOGGER.debug("Member: %s (%s)", member.name, entry.unique_id)
             if (
                 new_member
-                or tracked_by_account == entry.unique_id
+                or tracked_by_entry == entry.entry_id
                 and not new_members_only
             ):
                 new_entities.append(Life360DeviceTracker(coordinator, member_id))
