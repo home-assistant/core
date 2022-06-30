@@ -1,6 +1,7 @@
 """Support to set a numeric value from a slider or text box."""
 from __future__ import annotations
 
+from contextlib import suppress
 import logging
 
 import voluptuous as vol
@@ -281,8 +282,10 @@ class InputNumber(RestoreEntity):
         if self._current_value is not None:
             return
 
-        state = await self.async_get_last_state()
-        value = state and float(state.state)
+        value: float | None = None
+        if state := await self.async_get_last_state():
+            with suppress(ValueError):
+                value = float(state.state)
 
         # Check against None because value can be 0
         if value is not None and self._minimum <= value <= self._maximum:
