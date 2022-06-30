@@ -28,6 +28,8 @@ from homeassistant.helpers.json import JSONEncoder
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 
+from . import common
+
 from tests.common import (
     assert_setup_component,
     async_fire_time_changed,
@@ -35,7 +37,6 @@ from tests.common import (
     mock_restore_cache,
     patch_yaml_files,
 )
-from tests.components.device_tracker import common
 
 TEST_PLATFORM = {device_tracker.DOMAIN: {CONF_PLATFORM: "test"}}
 
@@ -94,7 +95,7 @@ async def test_reading_broken_yaml_config(hass):
         assert res[0].dev_id == "my_device"
 
 
-async def test_reading_yaml_config(hass, yaml_devices, enable_custom_integrations):
+async def test_reading_yaml_config(hass, enable_custom_integrations):
     """Test the rendering of the YAML configuration."""
     dev_id = "test"
     device = legacy.Device(
@@ -107,13 +108,17 @@ async def test_reading_yaml_config(hass, yaml_devices, enable_custom_integration
         picture="http://test.picture",
         icon="mdi:kettle",
     )
-    await hass.async_add_executor_job(
-        legacy.update_config, yaml_devices, dev_id, device
-    )
     assert await async_setup_component(hass, device_tracker.DOMAIN, TEST_PLATFORM)
-    config = (await legacy.async_load_config(yaml_devices, hass, device.consider_home))[
-        0
-    ]
+    known_devices = (
+        "test:\n  name: dev1\n  mac: AB:CD:EF:GH:IJ\n  "
+        + "icon: mdi:kettle\n  picture: http://test.picture\n  track: true\n"
+    )
+    with patch_yaml_files({legacy.YAML_DEVICES: known_devices}):
+        config = (
+            await legacy.async_load_config(
+                legacy.YAML_DEVICES, hass, device.consider_home
+            )
+        )[0]
     assert device.dev_id == config.dev_id
     assert device.track == config.track
     assert device.mac == config.mac
