@@ -7,7 +7,7 @@ import logging
 from typing import Any, TypeVar
 
 from aiohttp.web_exceptions import HTTPException
-from apyhiveapi import Hive
+from apyhiveapi import Auth, Hive
 from apyhiveapi.helper.hive_exceptions import HiveReauthRequired
 from typing_extensions import Concatenate, ParamSpec
 import voluptuous as vol
@@ -105,16 +105,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    hive = hass.data["hive"][entry.entry_id]
-    await hive.auth.forget_device(
-        entry.data["tokens"]["AuthenticationResult"]["AccessToken"],
-        entry.data["device_data"][1],
-    )
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Remove a config entry."""
+    hive = Auth(entry.data["username"], entry.data["password"])
+    await hive.forget_device(
+        entry.data["tokens"]["AuthenticationResult"]["AccessToken"],
+        entry.data["device_data"][1],
+    )
 
 
 def refresh_system(
