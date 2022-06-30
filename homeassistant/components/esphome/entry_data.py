@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass, field
+import logging
 from typing import Any, cast
 
 from aioesphomeapi import (
@@ -36,6 +37,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
 
 SAVE_DELAY = 120
+_LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
@@ -128,6 +130,12 @@ class RuntimeEntryData:
         component_key = self.key_to_component[state.key]
         self.state[component_key][state.key] = state
         signal = f"esphome_{self.entry_id}_update_{component_key}_{state.key}"
+        _LOGGER.debug(
+            "Dispatching update for component %s with state key %s: %s",
+            component_key,
+            state.key,
+            state,
+        )
         async_dispatcher_send(hass, signal)
 
     @callback

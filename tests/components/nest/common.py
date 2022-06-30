@@ -147,7 +147,17 @@ TEST_CONFIG_LEGACY = NestTestConfig(
             },
         },
     },
-    credential=None,
+)
+TEST_CONFIG_ENTRY_LEGACY = NestTestConfig(
+    config_entry_data={
+        "auth_implementation": "local",
+        "tokens": {
+            "expires_at": time.time() + 86400,
+            "access_token": {
+                "token": "some-token",
+            },
+        },
+    },
 )
 
 

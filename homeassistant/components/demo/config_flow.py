@@ -5,6 +5,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
 from . import DOMAIN
@@ -29,7 +30,7 @@ class DemoConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
-    async def async_step_import(self, import_info):
+    async def async_step_import(self, import_info) -> FlowResult:
         """Set the config entry up from yaml."""
         return self.async_create_entry(title="Demo", data={})
 
@@ -42,11 +43,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self.config_entry = config_entry
         self.options = dict(config_entry.options)
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(self, user_input=None) -> FlowResult:
         """Manage the options."""
         return await self.async_step_options_1()
 
-    async def async_step_options_1(self, user_input=None):
+    async def async_step_options_1(self, user_input=None) -> FlowResult:
         """Manage the options."""
         if user_input is not None:
             self.options.update(user_input)
@@ -69,7 +70,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             ),
         )
 
-    async def async_step_options_2(self, user_input=None):
+    async def async_step_options_2(self, user_input=None) -> FlowResult:
         """Manage the options 2."""
         if user_input is not None:
             self.options.update(user_input)

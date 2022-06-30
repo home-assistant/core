@@ -118,7 +118,7 @@ async def test_user_show_form(hass, life360_api):
         assert keys[keys.index(key)].default == vol.UNDEFINED
 
 
-async def test_user_config_flow_success(hass, life360_api, life360):
+async def test_user_config_flow_success(hass, life360_api):
     """Test a successful user config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -228,7 +228,7 @@ async def test_reauth_config_flow_success(hass, life360_api, caplog, state):
     assert config_entry.data == TEST_CONFIG_DATA_2
 
 
-async def test_reauth_config_flow_login_error(hass, life360_api, life360, caplog):
+async def test_reauth_config_flow_login_error(hass, life360_api, caplog):
     """Test a reauthorization config flow with a login error."""
     config_entry = create_config_entry(hass)
 
@@ -285,7 +285,7 @@ async def test_reauth_config_flow_login_error(hass, life360_api, life360, caplog
 # ========== Option flow Tests =========================================================
 
 
-async def test_options_flow(hass, life360):
+async def test_options_flow(hass):
     """Test an options flow."""
     config_entry = create_config_entry(hass)
 
