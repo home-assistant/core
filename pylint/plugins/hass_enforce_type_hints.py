@@ -1645,8 +1645,9 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def _visit_class_functions(
         self, node: nodes.ClassDef, matches: list[TypeHintMatch]
     ) -> None:
+        cached_methods: list[nodes.FunctionDef] = list(node.mymethods())
         for match in matches:
-            for function_node in node.mymethods():
+            for function_node in cached_methods:
                 if match.need_to_check_function(function_node):
                     self._check_function(function_node, match)
 
