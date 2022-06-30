@@ -50,16 +50,23 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
+_INNER_MATCH = r"(.*?]*)"
+_INNER_MATCH_POSSIBILITIES = [1, 2, 3, 4, 5]
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
-    # x_of_y matches items such as "Awaitable[None]"
-    "x_of_y": re.compile(r"^(\w+)\[(.*?]*)\]$"),
-    # x_of_y_comma_z matches items such as "Callable[..., Awaitable[None]]"
-    "x_of_y_comma_z": re.compile(r"^(\w+)\[(.*?]*), (.*?]*)\]$"),
     # x_of_y_of_z_comma_a matches items such as "list[dict[str, Any]]"
     "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
+_TYPE_HINT_MATCHERS.update(
+    {
+        f"x_of_y_{i}": re.compile(
+            rf"^(\w+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
+        )
+        for i in _INNER_MATCH_POSSIBILITIES
+    }
+)
+
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
@@ -1411,47 +1418,49 @@ def _is_valid_type(
             and _is_valid_type(match.group(2), node.right)
         )
 
-    # Special case for xxx[yyy[zzz, aaa]]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
-        return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
-            and isinstance(subnode := node.slice, nodes.Subscript)
-            and _is_valid_type(match.group(2), subnode.value)
-            and isinstance(subnode.slice, nodes.Tuple)
-            and _is_valid_type(match.group(3), subnode.slice.elts[0])
-            and _is_valid_type(match.group(4), subnode.slice.elts[1])
-        )
-
-    # Special case for xxx[yyy, zzz]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
-        # Handle special case of Mapping[xxx, Any]
-        if in_return and match.group(1) == "Mapping" and match.group(3) == "Any":
+    if isinstance(node, nodes.Subscript):
+        # Special case for xxx[yyy[zzz, aaa]]`
+        if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
             return (
-                isinstance(node, nodes.Subscript)
-                and isinstance(node.value, nodes.Name)
-                # We accept dict when Mapping is needed
-                and node.value.name in ("Mapping", "dict")
-                and isinstance(node.slice, nodes.Tuple)
-                and _is_valid_type(match.group(2), node.slice.elts[0])
-                # Ignore second item
-                # and _is_valid_type(match.group(3), node.slice.elts[1])
+                _is_valid_type(match.group(1), node.value)
+                and isinstance(subnode := node.slice, nodes.Subscript)
+                and _is_valid_type(match.group(2), subnode.value)
+                and isinstance(subnode.slice, nodes.Tuple)
+                and _is_valid_type(match.group(3), subnode.slice.elts[0])
+                and _is_valid_type(match.group(4), subnode.slice.elts[1])
             )
-        return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
-            and isinstance(node.slice, nodes.Tuple)
-            and _is_valid_type(match.group(2), node.slice.elts[0])
-            and _is_valid_type(match.group(3), node.slice.elts[1])
-        )
+        # Other cases of xxx[yyy, zzz, aaa, ...]`
+        for i in reversed(_INNER_MATCH_POSSIBILITIES):
+            if match := _TYPE_HINT_MATCHERS[f"x_of_y_{i}"].match(expected_type):
+                if i == 1:
+                    return _is_valid_type(
+                        match.group(1), node.value
+                    ) and _is_valid_type(match.group(2), node.slice)
 
-    # Special case for xxx[yyy]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y"].match(expected_type):
-        return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
-            and _is_valid_type(match.group(2), node.slice)
-        )
+                if (
+                    i == 2
+                    and in_return
+                    and match.group(1) == "Mapping"
+                    and match.group(3) == "Any"
+                ):
+                    return (
+                        isinstance(node.value, nodes.Name)
+                        # We accept dict when Mapping is needed
+                        and node.value.name in ("Mapping", "dict")
+                        and isinstance(node.slice, nodes.Tuple)
+                        and _is_valid_type(match.group(2), node.slice.elts[0])
+                        # Ignore second item
+                        # and _is_valid_type(match.group(3), node.slice.elts[1])
+                    )
+
+                return (
+                    _is_valid_type(match.group(1), node.value)
+                    and isinstance(node.slice, nodes.Tuple)
+                    and all(
+                        _is_valid_type(match.group(n + 2), node.slice.elts[n])
+                        for n in range(i - 1)
+                    )
+                )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:

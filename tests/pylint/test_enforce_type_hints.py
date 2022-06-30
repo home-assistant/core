@@ -40,53 +40,32 @@ def test_regex_get_module_platform(
 
 
 @pytest.mark.parametrize(
-    ("string", "expected_x", "expected_y", "expected_z", "expected_a"),
+    ("string", "expected_count", "expected_items"),
     [
-        ("list[dict[str, str]]", "list", "dict", "str", "str"),
-        ("list[dict[str, Any]]", "list", "dict", "str", "Any"),
-    ],
-)
-def test_regex_x_of_y_of_z_comma_a(
-    hass_enforce_type_hints: ModuleType,
-    string: str,
-    expected_x: str,
-    expected_y: str,
-    expected_z: str,
-    expected_a: str,
-) -> None:
-    """Test x_of_y_of_z_comma_a regexes."""
-    matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
-
-    assert (match := matchers["x_of_y_of_z_comma_a"].match(string))
-    assert match.group(0) == string
-    assert match.group(1) == expected_x
-    assert match.group(2) == expected_y
-    assert match.group(3) == expected_z
-    assert match.group(4) == expected_a
-
-
-@pytest.mark.parametrize(
-    ("string", "expected_x", "expected_y", "expected_z"),
-    [
-        ("Callable[..., None]", "Callable", "...", "None"),
-        ("Callable[..., Awaitable[None]]", "Callable", "...", "Awaitable[None]"),
+        ("Callable[..., None]", 2, ("Callable", "...", "None")),
+        ("Callable[..., Awaitable[None]]", 2, ("Callable", "...", "Awaitable[None]")),
+        ("tuple[int, int, int, int]", 4, ("tuple", "int", "int", "int", "int")),
+        (
+            "tuple[int, int, int, int, int]",
+            5,
+            ("tuple", "int", "int", "int", "int", "int"),
+        ),
+        ("Awaitable[None]", 1, ("Awaitable", "None")),
     ],
 )
 def test_regex_x_of_y_comma_z(
     hass_enforce_type_hints: ModuleType,
     string: str,
-    expected_x: str,
-    expected_y: str,
-    expected_z: str,
+    expected_count: int,
+    expected_items: tuple[str, ...],
 ) -> None:
     """Test x_of_y_comma_z regexes."""
     matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
 
-    assert (match := matchers["x_of_y_comma_z"].match(string))
+    assert (match := matchers[f"x_of_y_{expected_count}"].match(string))
     assert match.group(0) == string
-    assert match.group(1) == expected_x
-    assert match.group(2) == expected_y
-    assert match.group(3) == expected_z
+    for n in range(expected_count):
+        assert match.group(n + 1) == expected_items[n]
 
 
 @pytest.mark.parametrize(
