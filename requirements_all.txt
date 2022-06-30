@@ -1126,7 +1126,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.22.4
+numpy==1.23.0
 
 # homeassistant.components.oasa_telematics
 oasatelematics==0.3
