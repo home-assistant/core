@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DATA_MEGABYTES, PERCENTAGE
+from homeassistant.const import DATA_MEGABYTES, PERCENTAGE, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -108,7 +108,9 @@ def add_uptime_entities(controller, async_add_entities, clients):
 
 @callback
 def add_device_entities(
-    controller: UniFiController, async_add_entities: AddEntitiesCallback, devices: set
+    controller: UniFiController,
+    async_add_entities: AddEntitiesCallback,
+    devices: set[str],
 ) -> None:
     """Add new device sensor entities from the controller."""
     sensors = []
@@ -117,8 +119,10 @@ def add_device_entities(
         device = controller.api.devices[mac]
 
         for desc in DEVICE_SENSORS:
-            # Why is this needed?
             if mac in controller.entities[UniFiDeviceSensor.DOMAIN][desc.key]:
+                continue
+
+            if not desc.is_enabled(device):
                 continue
 
             sensors.append(UniFiDeviceSensor(device, controller, desc))
@@ -231,6 +235,7 @@ class UniFiUpTimeSensor(UniFiClient, SensorEntity):
 class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
     """Describes UniFi device sensor entities."""
 
+    enabled: str | None = None
     value_fn: Callable[[UniFiDevice], Any] | None = None
 
     def get_value(self, device: UniFiDevice) -> Any:
@@ -240,6 +245,13 @@ class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
 
         # pragma: no cover
         raise RuntimeError("`value_fn` is required")
+
+    def is_enabled(self, device: UniFiDevice) -> bool:
+        """Return whether the entity should be enabled."""
+        if self.enabled is None:
+            return True
+
+        return device.raw[self.enabled]
 
 
 DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
@@ -268,6 +280,16 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: dt_util.now() - timedelta(seconds=device.raw["uptime"]),
+    ),
+    UniFiDeviceSensorEntityDescription(
+        key="temperature",
+        name="Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        enabled="has_temperature",
+        value_fn=lambda device: device.raw["general_temperature"],
     ),
 )
 
