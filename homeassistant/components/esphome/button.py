@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from contextlib import suppress
-from typing import Any
 
 from aioesphomeapi import ButtonInfo, EntityState
 
@@ -46,6 +45,6 @@ class EsphomeButton(EsphomeEntity[ButtonInfo, EntityState], ButtonEntity):
         # never gets a state update.
         self._on_state_update()
 
-    async def async_press(self, **kwargs: Any) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         await self._client.button_command(self._static_info.key)

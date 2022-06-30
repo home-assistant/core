@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from enum import Enum
 import logging
 import re
 from types import MappingProxyType
@@ -481,7 +482,10 @@ class ElkEntity(Entity):
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the default attributes of the element."""
-        return {**self._element.as_dict(), **self.initial_attrs()}
+        dict_as_str = {}
+        for key, val in self._element.as_dict().items():
+            dict_as_str[key] = val.value if isinstance(val, Enum) else val
+        return {**dict_as_str, **self.initial_attrs()}
 
     @property
     def available(self) -> bool:

@@ -16,9 +16,7 @@ from homeassistant.core import HomeAssistant
 
 from . import redact_credentials
 from .const import (
-    ATTR_SETTINGS,
     AUDIO_CODECS,
-    DOMAIN,
     HLS_PROVIDER,
     MAX_MISSING_DTS,
     MAX_TIMESTAMP_GAP,
@@ -87,7 +85,7 @@ class StreamState:
         # simple to check for discontinuity at output time, and to determine
         # the discontinuity sequence number.
         self._stream_id += 1
-        # Call discontinuity to remove incomplete segment from the HLS output
+        # Call discontinuity to fix incomplete segment in HLS output
         if hls_output := self._outputs_callback().get(HLS_PROVIDER):
             cast(HlsStreamOutput, hls_output).discontinuity()
 
@@ -110,7 +108,9 @@ class StreamMuxer:
         hass: HomeAssistant,
         video_stream: av.video.VideoStream,
         audio_stream: av.audio.stream.AudioStream | None,
+        audio_bsf: av.BitStreamFilterContext | None,
         stream_state: StreamState,
+        stream_settings: StreamSettings,
     ) -> None:
         """Initialize StreamMuxer."""
         self._hass = hass
@@ -119,6 +119,7 @@ class StreamMuxer:
         self._av_output: av.container.OutputContainer = None
         self._input_video_stream: av.video.VideoStream = video_stream
         self._input_audio_stream: av.audio.stream.AudioStream | None = audio_stream
+        self._audio_bsf = audio_bsf
         self._output_video_stream: av.video.VideoStream = None
         self._output_audio_stream: av.audio.stream.AudioStream | None = None
         self._segment: Segment | None = None
@@ -126,7 +127,7 @@ class StreamMuxer:
         self._memory_file_pos: int = cast(int, None)
         self._part_start_dts: int = cast(int, None)
         self._part_has_keyframe = False
-        self._stream_settings: StreamSettings = hass.data[DOMAIN][ATTR_SETTINGS]
+        self._stream_settings = stream_settings
         self._stream_state = stream_state
         self._start_time = datetime.datetime.utcnow()
 
@@ -193,7 +194,9 @@ class StreamMuxer:
         # Check if audio is requested
         output_astream = None
         if input_astream:
-            output_astream = container.add_stream(template=input_astream)
+            output_astream = container.add_stream(
+                template=self._audio_bsf or input_astream
+            )
         return container, output_vstream, output_astream
 
     def reset(self, video_dts: int) -> None:
@@ -235,6 +238,12 @@ class StreamMuxer:
             self._part_has_keyframe |= packet.is_keyframe
 
         elif packet.stream == self._input_audio_stream:
+            if self._audio_bsf:
+                self._audio_bsf.send(packet)
+                while packet := self._audio_bsf.recv():
+                    packet.stream = self._output_audio_stream
+                    self._av_output.mux(packet)
+                return
             packet.stream = self._output_audio_stream
             self._av_output.mux(packet)
 
@@ -356,12 +365,6 @@ class PeekIterator(Iterator):
         """Return and consume the next item available."""
         return self._next()
 
-    def replace_underlying_iterator(self, new_iterator: Iterator) -> None:
-        """Replace the underlying iterator while preserving the buffer."""
-        self._iterator = new_iterator
-        if not self._buffer:
-            self._next = self._iterator.__next__
-
     def _pop_buffer(self) -> av.Packet:
         """Consume items from the buffer until exhausted."""
         if self._buffer:
@@ -423,10 +426,12 @@ def is_keyframe(packet: av.Packet) -> Any:
     return packet.is_keyframe
 
 
-def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
-    """Detect ADTS AAC, which is not supported by pyav."""
+def get_audio_bitstream_filter(
+    packets: Iterator[av.Packet], audio_stream: Any
+) -> av.BitStreamFilterContext | None:
+    """Return the aac_adtstoasc bitstream filter if ADTS AAC is detected."""
     if not audio_stream:
-        return False
+        return None
     for count, packet in enumerate(packets):
         if count >= PACKETS_TO_WAIT_FOR_AUDIO:
             # Some streams declare an audio stream and never send any packets
@@ -437,27 +442,33 @@ def unsupported_audio(packets: Iterator[av.Packet], audio_stream: Any) -> bool:
             if audio_stream.codec.name == "aac" and packet.size > 2:
                 with memoryview(packet) as packet_view:
                     if packet_view[0] == 0xFF and packet_view[1] & 0xF0 == 0xF0:
-                        _LOGGER.warning("ADTS AAC detected - disabling audio stream")
-                        return True
+                        _LOGGER.debug(
+                            "ADTS AAC detected. Adding aac_adtstoaac bitstream filter"
+                        )
+                        bsf = av.BitStreamFilter("aac_adtstoasc")
+                        bsf_context = bsf.create()
+                        bsf_context.set_input_stream(audio_stream)
+                        return bsf_context
             break
-    return False
+    return None
 
 
 def stream_worker(
     source: str,
-    options: dict[str, str],
+    pyav_options: dict[str, str],
+    stream_settings: StreamSettings,
     stream_state: StreamState,
     keyframe_converter: KeyFrameConverter,
     quit_event: Event,
 ) -> None:
     """Handle consuming streams."""
 
-    if av.library_versions["libavformat"][0] >= 59 and "stimeout" in options:
+    if av.library_versions["libavformat"][0] >= 59 and "stimeout" in pyav_options:
         # the stimeout option was renamed to timeout as of ffmpeg 5.0
-        options["timeout"] = options["stimeout"]
-        del options["stimeout"]
+        pyav_options["timeout"] = pyav_options["stimeout"]
+        del pyav_options["stimeout"]
     try:
-        container = av.open(source, options=options, timeout=SOURCE_TIMEOUT)
+        container = av.open(source, options=pyav_options, timeout=SOURCE_TIMEOUT)
     except av.AVError as err:
         raise StreamWorkerError(
             f"Error opening stream ({err.type}, {err.strerror}) {redact_credentials(str(source))}"
@@ -473,13 +484,12 @@ def stream_worker(
         audio_stream = None
     if audio_stream and audio_stream.name not in AUDIO_CODECS:
         audio_stream = None
-    # These formats need aac_adtstoasc bitstream filter, but auto_bsf not
-    # compatible with empty_moov and manual bitstream filters not in PyAV
-    if container.format.name in {"hls", "mpegts"}:
-        audio_stream = None
     # Some audio streams do not have a profile and throw errors when remuxing
     if audio_stream and audio_stream.profile is None:
         audio_stream = None
+    # Disable ll-hls for hls inputs
+    if container.format.name == "hls":
+        stream_settings.ll_hls = False
     stream_state.diagnostics.set_value("container_format", container.format.name)
     stream_state.diagnostics.set_value("video_codec", video_stream.name)
     if audio_stream:
@@ -501,12 +511,8 @@ def stream_worker(
     # Use a peeking iterator to peek into the start of the stream, ensuring
     # everything looks good, then go back to the start when muxing below.
     try:
-        if audio_stream and unsupported_audio(container_packets.peek(), audio_stream):
-            audio_stream = None
-            container_packets.replace_underlying_iterator(
-                filter(dts_validator.is_valid, container.demux(video_stream))
-            )
-
+        # Get the required bitstream filter
+        audio_bsf = get_audio_bitstream_filter(container_packets.peek(), audio_stream)
         # Advance to the first keyframe for muxing, then rewind so the muxing
         # loop below can consume.
         first_keyframe = next(
@@ -535,7 +541,14 @@ def stream_worker(
             "Error demuxing stream while finding first packet: %s" % str(ex)
         ) from ex
 
-    muxer = StreamMuxer(stream_state.hass, video_stream, audio_stream, stream_state)
+    muxer = StreamMuxer(
+        stream_state.hass,
+        video_stream,
+        audio_stream,
+        audio_bsf,
+        stream_state,
+        stream_settings,
+    )
     muxer.reset(start_dts)
 
     # Mux the first keyframe, then proceed through the rest of the packets

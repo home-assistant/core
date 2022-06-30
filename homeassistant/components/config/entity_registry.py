@@ -218,6 +218,7 @@ def _entry_ext_dict(entry):
     data = _entry_dict(entry)
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
+    data["has_entity_name"] = entry.has_entity_name
     data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon

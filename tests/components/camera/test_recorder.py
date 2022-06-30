@@ -4,7 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 
 from homeassistant.components import camera
-from homeassistant.components.recorder.models import StateAttributes, States
+from homeassistant.components.recorder.db_schema import StateAttributes, States
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.const import (
     ATTR_ATTRIBUTION,

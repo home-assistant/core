@@ -17,16 +17,22 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
-MOCK_ENVIRON = {"HASSIO": "127.0.0.1", "HASSIO_TOKEN": "abcdefgh"}
+MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture()
-def os_info():
+def extra_os_info():
+    """Extra os/info."""
+    return {}
+
+
+@pytest.fixture()
+def os_info(extra_os_info):
     """Mock os/info."""
     return {
         "json": {
             "result": "ok",
-            "data": {"version_latest": "1.0.0", "version": "1.0.0"},
+            "data": {"version_latest": "1.0.0", "version": "1.0.0", **extra_os_info},
         }
     }
 
@@ -336,13 +342,13 @@ async def test_setup_core_push_timezone(hass, aioclient_mock):
 async def test_setup_hassio_no_additional_data(hass, aioclient_mock):
     """Test setup with API push default data."""
     with patch.dict(os.environ, MOCK_ENVIRON), patch.dict(
-        os.environ, {"HASSIO_TOKEN": "123456"}
+        os.environ, {"SUPERVISOR_TOKEN": "123456"}
     ):
         result = await async_setup_component(hass, "hassio", {"hassio": {}})
         assert result
 
     assert aioclient_mock.call_count == 15
-    assert aioclient_mock.mock_calls[-1][3]["X-Hassio-Key"] == "123456"
+    assert aioclient_mock.mock_calls[-1][3]["Authorization"] == "Bearer 123456"
 
 
 async def test_fail_setup_without_environ_var(hass):
@@ -715,21 +721,25 @@ async def test_coordinator_updates(hass, caplog):
 
 
 @pytest.mark.parametrize(
-    "os_info",
+    "extra_os_info, integration",
     [
-        {
-            "json": {
-                "result": "ok",
-                "data": {"version_latest": "1.0.0", "version": "1.0.0", "board": "rpi"},
-            }
-        }
+        ({"board": "odroid-c2"}, "hardkernel"),
+        ({"board": "odroid-c4"}, "hardkernel"),
+        ({"board": "odroid-n2"}, "hardkernel"),
+        ({"board": "odroid-xu4"}, "hardkernel"),
+        ({"board": "rpi2"}, "raspberry_pi"),
+        ({"board": "rpi3"}, "raspberry_pi"),
+        ({"board": "rpi3-64"}, "raspberry_pi"),
+        ({"board": "rpi4"}, "raspberry_pi"),
+        ({"board": "rpi4-64"}, "raspberry_pi"),
+        ({"board": "yellow"}, "homeassistant_yellow"),
     ],
 )
-async def test_setup_hardware_integration(hass, aioclient_mock):
+async def test_setup_hardware_integration(hass, aioclient_mock, integration):
     """Test setup initiates hardware integration."""
 
     with patch.dict(os.environ, MOCK_ENVIRON), patch(
-        "homeassistant.components.raspberry_pi.async_setup_entry",
+        f"homeassistant.components.{integration}.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
         result = await async_setup_component(hass, "hassio", {"hassio": {}})

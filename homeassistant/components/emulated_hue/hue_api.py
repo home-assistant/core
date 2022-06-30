@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from functools import lru_cache
 import hashlib
 from http import HTTPStatus
 from ipaddress import ip_address
@@ -302,15 +303,15 @@ class HueOneLightStateView(HomeAssistantView):
             )
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        if (entity := hass.states.get(hass_entity_id)) is None:
+        if (state := hass.states.get(hass_entity_id)) is None:
             _LOGGER.error("Entity not found: %s", hass_entity_id)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        if not self.config.is_entity_exposed(entity):
+        if not self.config.is_state_exposed(state):
             _LOGGER.error("Entity not exposed: %s", entity_id)
             return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
 
-        json_response = entity_to_json(self.config, entity)
+        json_response = state_to_json(self.config, state)
 
         return self.json(json_response)
 
@@ -346,7 +347,7 @@ class HueOneLightChangeView(HomeAssistantView):
             _LOGGER.error("Entity not found: %s", entity_id)
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
-        if not config.is_entity_exposed(entity):
+        if not config.is_state_exposed(entity):
             _LOGGER.error("Entity not exposed: %s", entity_id)
             return self.json_message("Entity not exposed", HTTPStatus.UNAUTHORIZED)
 
@@ -614,7 +615,7 @@ class HueOneLightChangeView(HomeAssistantView):
         return self.json(json_response)
 
 
-def get_entity_state(config: Config, entity: State) -> dict[str, Any]:
+def get_entity_state_dict(config: Config, entity: State) -> dict[str, Any]:
     """Retrieve and convert state and brightness values for an entity."""
     cached_state_entry = config.cached_states.get(entity.entity_id, None)
     cached_state = None
@@ -718,22 +719,32 @@ def get_entity_state(config: Config, entity: State) -> dict[str, Any]:
     return data
 
 
-def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
+@lru_cache(maxsize=1024)
+def _entity_unique_id(entity_id: str) -> str:
+    """Return the emulated_hue unique id for the entity_id."""
+    unique_id = hashlib.md5(entity_id.encode()).hexdigest()
+    return (
+        f"00:{unique_id[0:2]}:{unique_id[2:4]}:"
+        f"{unique_id[4:6]}:{unique_id[6:8]}:{unique_id[8:10]}:"
+        f"{unique_id[10:12]}:{unique_id[12:14]}-{unique_id[14:16]}"
+    )
+
+
+def state_to_json(config: Config, state: State) -> dict[str, Any]:
     """Convert an entity to its Hue bridge JSON representation."""
-    entity_features = entity.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-    color_modes = entity.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
-    unique_id = hashlib.md5(entity.entity_id.encode()).hexdigest()
-    unique_id = f"00:{unique_id[0:2]}:{unique_id[2:4]}:{unique_id[4:6]}:{unique_id[6:8]}:{unique_id[8:10]}:{unique_id[10:12]}:{unique_id[12:14]}-{unique_id[14:16]}"
+    entity_features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+    color_modes = state.attributes.get(light.ATTR_SUPPORTED_COLOR_MODES, [])
+    unique_id = _entity_unique_id(state.entity_id)
+    state_dict = get_entity_state_dict(config, state)
 
-    state = get_entity_state(config, entity)
-
-    retval: dict[str, Any] = {
-        "state": {
-            HUE_API_STATE_ON: state[STATE_ON],
-            "reachable": entity.state != STATE_UNAVAILABLE,
-            "mode": "homeautomation",
-        },
-        "name": config.get_entity_name(entity),
+    json_state: dict[str, str | bool | int] = {
+        HUE_API_STATE_ON: state_dict[STATE_ON],
+        "reachable": state.state != STATE_UNAVAILABLE,
+        "mode": "homeautomation",
+    }
+    retval: dict[str, str | dict[str, str | bool | int]] = {
+        "state": json_state,
+        "name": config.get_entity_name(state),
         "uniqueid": unique_id,
         "manufacturername": "Home Assistant",
         "swversion": "123",
@@ -744,30 +755,30 @@ def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
         # Same as Color light, but which supports additional setting of color temperature
         retval["type"] = "Extended color light"
         retval["modelid"] = "HASS231"
-        retval["state"].update(
+        json_state.update(
             {
-                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
-                HUE_API_STATE_HUE: state[STATE_HUE],
-                HUE_API_STATE_SAT: state[STATE_SATURATION],
-                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
+                HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
+                HUE_API_STATE_HUE: state_dict[STATE_HUE],
+                HUE_API_STATE_SAT: state_dict[STATE_SATURATION],
+                HUE_API_STATE_CT: state_dict[STATE_COLOR_TEMP],
                 HUE_API_STATE_EFFECT: "none",
             }
         )
-        if state[STATE_HUE] > 0 or state[STATE_SATURATION] > 0:
-            retval["state"][HUE_API_STATE_COLORMODE] = "hs"
+        if state_dict[STATE_HUE] > 0 or state_dict[STATE_SATURATION] > 0:
+            json_state[HUE_API_STATE_COLORMODE] = "hs"
         else:
-            retval["state"][HUE_API_STATE_COLORMODE] = "ct"
+            json_state[HUE_API_STATE_COLORMODE] = "ct"
     elif light.color_supported(color_modes):
         # Color light (Zigbee Device ID: 0x0200)
         # Supports on/off, dimming and color control (hue/saturation, enhanced hue, color loop and XY)
         retval["type"] = "Color light"
         retval["modelid"] = "HASS213"
-        retval["state"].update(
+        json_state.update(
             {
-                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+                HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
                 HUE_API_STATE_COLORMODE: "hs",
-                HUE_API_STATE_HUE: state[STATE_HUE],
-                HUE_API_STATE_SAT: state[STATE_SATURATION],
+                HUE_API_STATE_HUE: state_dict[STATE_HUE],
+                HUE_API_STATE_SAT: state_dict[STATE_SATURATION],
                 HUE_API_STATE_EFFECT: "none",
             }
         )
@@ -776,11 +787,11 @@ def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
         # Supports groups, scenes, on/off, dimming, and setting of a color temperature
         retval["type"] = "Color temperature light"
         retval["modelid"] = "HASS312"
-        retval["state"].update(
+        json_state.update(
             {
                 HUE_API_STATE_COLORMODE: "ct",
-                HUE_API_STATE_CT: state[STATE_COLOR_TEMP],
-                HUE_API_STATE_BRI: state[STATE_BRIGHTNESS],
+                HUE_API_STATE_CT: state_dict[STATE_COLOR_TEMP],
+                HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS],
             }
         )
     elif entity_features & (
@@ -793,7 +804,7 @@ def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
         # Supports groups, scenes, on/off and dimming
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
-        retval["state"].update({HUE_API_STATE_BRI: state[STATE_BRIGHTNESS]})
+        json_state.update({HUE_API_STATE_BRI: state_dict[STATE_BRIGHTNESS]})
     elif not config.lights_all_dimmable:
         # On/Off light (ZigBee Device ID: 0x0000)
         # Supports groups, scenes and on/off control
@@ -806,7 +817,7 @@ def entity_to_json(config: Config, entity: State) -> dict[str, Any]:
         # Reports fixed brightness for compatibility with Alexa.
         retval["type"] = "Dimmable light"
         retval["modelid"] = "HASS123"
-        retval["state"].update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
+        json_state.update({HUE_API_STATE_BRI: HUE_API_STATE_BRI_MAX})
 
     return retval
 
@@ -833,10 +844,9 @@ def create_config_model(config: Config, request: web.Request) -> dict[str, Any]:
 
 def create_list_of_entities(config: Config, request: web.Request) -> dict[str, Any]:
     """Create a list of all entities."""
-    hass: core.HomeAssistant = request.app["hass"]
     json_response: dict[str, Any] = {
-        config.entity_id_to_number(entity.entity_id): entity_to_json(config, entity)
-        for entity in config.filter_exposed_entities(hass.states.async_all())
+        config.entity_id_to_number(state.entity_id): state_to_json(config, state)
+        for state in config.get_exposed_states()
     }
     return json_response
 
@@ -858,7 +868,7 @@ async def wait_for_state_change_or_timeout(
     ev = asyncio.Event()
 
     @core.callback
-    def _async_event_changed(_):
+    def _async_event_changed(event: core.Event) -> None:
         ev.set()
 
     unsub = async_track_state_change_event(hass, [entity_id], _async_event_changed)

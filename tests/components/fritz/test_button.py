@@ -1,4 +1,4 @@
-"""Tests for Shelly button platform."""
+"""Tests for Fritz!Tools button platform."""
 from unittest.mock import patch
 
 import pytest

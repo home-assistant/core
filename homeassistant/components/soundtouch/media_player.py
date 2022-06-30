@@ -523,7 +523,7 @@ class SoundTouchDevice(MediaPlayerEntity):
 
         for slave in zone_slaves:
             slave_instance = self._get_instance_by_ip(slave.device_ip)
-            if slave_instance:
+            if slave_instance and slave_instance.entity_id != master:
                 slaves.append(slave_instance.entity_id)
 
         attributes = {

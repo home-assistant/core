@@ -1,8 +1,6 @@
 """Support for Mikrotik routers as device tracker."""
 from __future__ import annotations
 
-import logging
-
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER,
@@ -11,13 +9,12 @@ from homeassistant.components.device_tracker.const import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .hub import MikrotikDataUpdateCoordinator
 
 # These are normalized to ATTR_IP and ATTR_MAC to conform
 # to device_tracker
@@ -32,7 +29,7 @@ async def async_setup_entry(
     """Set up device tracker for Mikrotik component."""
     hub = hass.data[DOMAIN][config_entry.entry_id]
 
-    tracked: dict[str, MikrotikHubTracker] = {}
+    tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
     registry = entity_registry.async_get(hass)
 
@@ -56,7 +53,7 @@ async def async_setup_entry(
         """Update the status of the device."""
         update_items(hub, async_add_entities, tracked)
 
-    async_dispatcher_connect(hass, hub.signal_update, update_hub)
+    config_entry.async_on_unload(hub.async_add_listener(update_hub))
 
     update_hub()
 
@@ -67,21 +64,22 @@ def update_items(hub, async_add_entities, tracked):
     new_tracked = []
     for mac, device in hub.api.devices.items():
         if mac not in tracked:
-            tracked[mac] = MikrotikHubTracker(device, hub)
+            tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, hub)
             new_tracked.append(tracked[mac])
 
     if new_tracked:
         async_add_entities(new_tracked)
 
 
-class MikrotikHubTracker(ScannerEntity):
+class MikrotikDataUpdateCoordinatorTracker(CoordinatorEntity, ScannerEntity):
     """Representation of network device."""
+
+    coordinator: MikrotikDataUpdateCoordinator
 
     def __init__(self, device, hub):
         """Initialize the tracked device."""
+        super().__init__(hub)
         self.device = device
-        self.hub = hub
-        self.unsub_dispatcher = None
 
     @property
     def is_connected(self):
@@ -89,7 +87,7 @@ class MikrotikHubTracker(ScannerEntity):
         if (
             self.device.last_seen
             and (dt_util.utcnow() - self.device.last_seen)
-            < self.hub.option_detection_time
+            < self.coordinator.option_detection_time
         ):
             return True
         return False
@@ -102,7 +100,8 @@ class MikrotikHubTracker(ScannerEntity):
     @property
     def name(self) -> str:
         """Return the name of the client."""
-        return self.device.name
+        # Stringify to ensure we return a string
+        return str(self.device.name)
 
     @property
     def hostname(self) -> str:
@@ -125,32 +124,8 @@ class MikrotikHubTracker(ScannerEntity):
         return self.device.mac
 
     @property
-    def available(self) -> bool:
-        """Return if controller is available."""
-        return self.hub.available
-
-    @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
         if self.is_connected:
             return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
         return None
-
-    async def async_added_to_hass(self):
-        """Client entity created."""
-        _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
-        self.unsub_dispatcher = async_dispatcher_connect(
-            self.hass, self.hub.signal_update, self.async_write_ha_state
-        )
-
-    async def async_update(self):
-        """Synchronize state with hub."""
-        _LOGGER.debug(
-            "Updating Mikrotik tracked client %s (%s)", self.entity_id, self.unique_id
-        )
-        await self.hub.request_update()
-
-    async def will_remove_from_hass(self):
-        """Disconnect from dispatcher."""
-        if self.unsub_dispatcher:
-            self.unsub_dispatcher()

@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 import logging
 import logging.handlers
 import os
+import platform
 import sys
 import threading
 from time import monotonic
@@ -398,7 +399,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
         domains.update(hass.config_entries.async_domains())
 
     # Make sure the Hass.io component is loaded
-    if "HASSIO" in os.environ:
+    if "SUPERVISOR" in os.environ:
         domains.add("hassio")
 
     return domains
@@ -540,11 +541,22 @@ async def _async_set_up_integrations(
 
     stage_2_domains = domains_to_setup - logging_domains - debuggers - stage_1_domains
 
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
     # Load the registries
     await asyncio.gather(
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         area_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
     )
 
     # Start setup

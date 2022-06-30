@@ -45,6 +45,19 @@ class MocGetSwitchbotDevices:
                 "model": "m",
                 "rawAdvData": "000d6d00",
             },
+            "c0ceb0d426be": {
+                "mac_address": "c0:ce:b0:d4:26:be",
+                "isEncrypted": False,
+                "data": {
+                    "temp": {"c": 21.6, "f": 70.88},
+                    "fahrenheit": False,
+                    "humidity": 73,
+                    "battery": 100,
+                    "rssi": -58,
+                },
+                "model": "T",
+                "modelName": "WoSensorTH",
+            },
         }
         self._curtain_all_services_data = {
             "mac_address": "e7:89:43:90:90:90",
@@ -72,11 +85,11 @@ class MocGetSwitchbotDevices:
             "modelName": "WoOther",
         }
 
-    def discover(self, retry=0, scan_timeout=0):
+    async def discover(self, retry=0, scan_timeout=0):
         """Mock discover."""
         return self._all_services_data
 
-    def get_device_data(self, mac=None):
+    async def get_device_data(self, mac=None):
         """Return data for specific device."""
         if mac == "e7:89:43:99:99:99":
             return self._all_services_data
