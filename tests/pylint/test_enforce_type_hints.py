@@ -120,6 +120,9 @@ def test_ignore_no_annotations(
     hass_enforce_type_hints: ModuleType, type_hint_checker: BaseChecker, code: str
 ) -> None:
     """Ensure that _is_valid_type is not run if there are no annotations."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = True
+
     func_node = astroid.extract_node(
         code,
         "homeassistant.components.pylint_test",
@@ -539,6 +542,9 @@ def test_ignore_invalid_entity_properties(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = True
+
     class_node = astroid.extract_node(
         """
     class LockEntity():
