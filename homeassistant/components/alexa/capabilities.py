@@ -1046,6 +1046,8 @@ class AlexaThermostatController(AlexaCapability):
 
             if preset in API_THERMOSTAT_PRESETS:
                 mode = API_THERMOSTAT_PRESETS[preset]
+            elif self.entity.state == STATE_UNKNOWN:
+                return None
             else:
                 mode = API_THERMOSTAT_MODES.get(self.entity.state)
                 if mode is None:
