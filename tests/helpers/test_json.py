@@ -1,6 +1,7 @@
 """Test Home Assistant remote methods and classes."""
 import datetime
 import json
+import time
 
 import pytest
 
@@ -87,3 +88,11 @@ def test_json_dumps_float_subclass():
         """A float subclass."""
 
     assert json_dumps({"c": FloatSubclass(1.2)}) == '{"c":1.2}'
+
+
+def test_json_dumps_tuple_subclass():
+    """Test the json dumps a tuple subclass."""
+
+    tt = time.struct_time((1999, 3, 17, 32, 44, 55, 2, 76, 0))
+
+    assert json_dumps(tt) == "[1999,3,17,32,44,55,2,76,0]"
