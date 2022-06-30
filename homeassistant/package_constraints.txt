@@ -15,7 +15,7 @@ ciso8601==2.2.0
 cryptography==36.0.2
 fnvhash==0.1.0
 hass-nabucasa==0.54.0
-home-assistant-frontend==20220629.0
+home-assistant-frontend==20220630.0
 httpx==0.23.0
 ifaddr==0.1.7
 jinja2==3.1.2
