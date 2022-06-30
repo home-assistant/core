@@ -40,6 +40,7 @@ from .discovery import async_start_discovery
 from .migrate import async_migrate_data
 from .services import async_cleanup_services, async_setup_services
 from .utils import _async_unifi_mac_from_hass, async_get_devices
+from .views import ThumbnailProxyView, VideoProxyView
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,6 +93,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data_service
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     async_setup_services(hass)
+    hass.http.register_view(ThumbnailProxyView(hass))
+    hass.http.register_view(VideoProxyView(hass))
 
     entry.async_on_unload(entry.add_update_listener(_async_options_updated))
     entry.async_on_unload(
