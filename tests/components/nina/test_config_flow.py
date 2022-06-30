@@ -253,6 +253,9 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=ApiError("Could not connect to Api"),
+    ), patch(
+        "homeassistant.components.nina.async_setup_entry",
+        return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -275,6 +278,9 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
     with patch(
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=Exception("DUMMY"),
+    ), patch(
+        "homeassistant.components.nina.async_setup_entry",
+        return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
