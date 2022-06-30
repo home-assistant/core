@@ -4,15 +4,15 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/zha",
   "requirements": [
-    "bellows==0.30.0",
+    "bellows==0.31.0",
     "pyserial==3.5",
     "pyserial-asyncio==0.6",
-    "zha-quirks==0.0.75",
-    "zigpy-deconz==0.16.0",
-    "zigpy==0.46.0",
-    "zigpy-xbee==0.14.0",
-    "zigpy-zigate==0.7.4",
-    "zigpy-znp==0.7.0"
+    "zha-quirks==0.0.77",
+    "zigpy-deconz==0.18.0",
+    "zigpy==0.47.2",
+    "zigpy-xbee==0.15.0",
+    "zigpy-zigate==0.9.0",
+    "zigpy-znp==0.8.0"
   ],
   "usb": [
     {

@@ -37,6 +37,8 @@ class TypeHintMatch:
             self.function_name == node.name
             or self.has_async_counterpart
             and node.name == f"async_{self.function_name}"
+            or self.function_name.endswith("*")
+            and node.name.startswith(self.function_name[:-1])
         )
 
 
@@ -371,6 +373,16 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
 _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
     "config_flow": [
         ClassTypeHintMatch(
+            base_class="FlowHandler",
+            matches=[
+                TypeHintMatch(
+                    function_name="async_step_*",
+                    arg_types={},
+                    return_type="FlowResult",
+                ),
+            ],
+        ),
+        ClassTypeHintMatch(
             base_class="ConfigFlow",
             matches=[
                 TypeHintMatch(
@@ -406,6 +418,13 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="async_step_mqtt",
                     arg_types={
                         1: "MqttServiceInfo",
+                    },
+                    return_type="FlowResult",
+                ),
+                TypeHintMatch(
+                    function_name="async_step_reauth",
+                    arg_types={
+                        1: "Mapping[str, Any]",
                     },
                     return_type="FlowResult",
                 ),
@@ -572,6 +591,132 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    "alarm_control_panel": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="AlarmControlPanelEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_format",
+                    return_type=["CodeFormat", None],
+                ),
+                TypeHintMatch(
+                    function_name="changed_by",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="code_arm_required",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="alarm_disarm",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_home",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_away",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_night",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_vacation",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_trigger",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="alarm_arm_custom_bypass",
+                    named_arg_types={
+                        "code": "str | None",
+                    },
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "binary_sensor": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="BinarySensorEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["BinarySensorDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type=["bool", None],
+                ),
+            ],
+        ),
+    ],
+    "button": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ButtonEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["ButtonDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="press",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
     "cover": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -742,6 +887,110 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="oscillate",
                     arg_types={1: "bool"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "light": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="LightEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="brightness",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_mode",
+                    return_type=["ColorMode", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="hs_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="xy_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgb_color",
+                    return_type=["tuple[int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbw_color",
+                    return_type=["tuple[int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbww_color",
+                    return_type=["tuple[int, int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_temp",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="min_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="max_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="white_value",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_color_modes",
+                    return_type=["set[ColorMode]", "set[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    named_arg_types={
+                        "brightness": "int | None",
+                        "brightness_pct": "float | None",
+                        "brightness_step": "int | None",
+                        "brightness_step_pct": "float | None",
+                        "color_name": "str | None",
+                        "color_temp": "int | None",
+                        "effect": "str | None",
+                        "flash": "str | None",
+                        "kelvin": "int | None",
+                        "hs_color": "tuple[float, float] | None",
+                        "rgb_color": "tuple[int, int, int] | None",
+                        "rgbw_color": "tuple[int, int, int, int] | None",
+                        "rgbww_color": "tuple[int, int, int, int, int] | None",
+                        "transition": "float | None",
+                        "xy_color": "tuple[float, float] | None",
+                        "white": "int | None",
+                        "white_value": "int | None",
+                    },
+                    kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
                 ),

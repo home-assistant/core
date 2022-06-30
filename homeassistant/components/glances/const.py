@@ -142,7 +142,6 @@ SENSOR_TYPES: tuple[GlancesSensorEntityDescription, ...] = (
         key="process_sleeping",
         type="processcount",
         name_suffix="Sleeping",
-        native_unit_of_measurement="",
         icon=CPU_ICON,
         state_class=SensorStateClass.MEASUREMENT,
     ),
