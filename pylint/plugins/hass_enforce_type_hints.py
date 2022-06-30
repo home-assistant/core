@@ -591,7 +591,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
-    "air_quality": [],  # ignored as deprecated
+    # "air_quality": [],  # ignored as deprecated
     "alarm_control_panel": [
         ClassTypeHintMatch(
             base_class="Entity",
