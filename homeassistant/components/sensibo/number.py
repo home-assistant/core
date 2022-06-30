@@ -9,7 +9,6 @@ from pysensibo.model import SensiboDevice
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -100,10 +99,15 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
+        await self.make_api_call(self.device_data, self.entity_description.key, value)
+
+    @SensiboDeviceBaseEntity.api_call
+    async def make_api_call(
+        self, device_data: SensiboDevice, key: float, value: float
+    ) -> None:
+        """Make service call to api."""
         data = {self.entity_description.remote_key: value}
-        result = await self.async_send_command("set_calibration", {"data": data})
-        if result["status"] == "success":
-            setattr(self.device_data, self.entity_description.key, value)
-            self.async_write_ha_state()
-            return
-        raise HomeAssistantError(f"Could not set calibration for device {self.name}")
+        await self._client.async_set_calibration(
+            self._device_id,
+            {"data": data},
+        )

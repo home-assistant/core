@@ -112,6 +112,28 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             result = await self._client.async_reset_filter(self._device_id)
         return result
 
+    async def api_call(self, function) -> None:
+        """Decorator for api calls."""
+
+        async def wrap_api_call(device_data, key, value) -> None:
+            """Wrap services for api calls."""
+            result: dict[str, Any] = {"status": None}
+            try:
+                async with async_timeout.timeout(TIMEOUT):
+                    result = function(device_data, key, value)
+            except SENSIBO_ERRORS as err:
+                raise HomeAssistantError from err
+
+            LOGGER.debug("Result: %s", result)
+            if result["status"] != "success":
+                raise HomeAssistantError(
+                    f"Could not execute service: {result['status']}"
+                )
+            setattr(device_data, key, value)
+            self.async_write_ha_state()
+
+        return wrap_api_call
+
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
     """Representation of a Sensibo Motion Entity."""
