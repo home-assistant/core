@@ -1,8 +1,10 @@
 """Pushbullet platform for notify component."""
+from __future__ import annotations
+
 import logging
 import mimetypes
 
-from pushbullet import InvalidKeyError, PushBullet, PushError
+from pushbullet import PushBullet, PushError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -13,37 +15,52 @@ from homeassistant.components.notify import (
     PLATFORM_SCHEMA,
     BaseNotificationService,
 )
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .const import ATTR_FILE, ATTR_FILE_URL, ATTR_LIST, ATTR_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-ATTR_URL = "url"
-ATTR_FILE = "file"
-ATTR_FILE_URL = "file_url"
-ATTR_LIST = "list"
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({vol.Required(CONF_API_KEY): cv.string})
 
 
-def get_service(hass, config, discovery_info=None):
+def get_service(
+    hass: HomeAssistant,
+    config: ConfigType,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> PushBulletNotificationService | None:
     """Get the Pushbullet notification service."""
+    if discovery_info is None:
+        hass.create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data=config,
+            )
+        )
 
-    try:
-        pushbullet = PushBullet(config[CONF_API_KEY])
-    except InvalidKeyError:
-        _LOGGER.error("Wrong API key supplied")
+        _LOGGER.warning(
+            "PushBullet notify platform configuration has been imported into the UI. "
+            "Please remove it from configuration.yaml as it will be "
+            "removed in a future release"
+        )
         return None
 
-    return PushBulletNotificationService(pushbullet)
+    pushbullet: PushBullet = hass.data[DOMAIN][discovery_info["entry_id"]]
+    return PushBulletNotificationService(hass, pushbullet)
 
 
 class PushBulletNotificationService(BaseNotificationService):
     """Implement the notification service for Pushbullet."""
 
-    def __init__(self, pb):  # pylint: disable=invalid-name
+    def __init__(self, hass, pushbullet):
         """Initialize the service."""
-        self.pushbullet = pb
+        self.hass = hass
+        self.pushbullet = pushbullet
         self.pbtargets = {}
         self.refresh()
 

@@ -304,6 +304,7 @@ FLOWS = {
         "ps4",
         "pure_energie",
         "pushover",
+        "pushbullet",
         "pvoutput",
         "pvpc_hourly_pricing",
         "qingping",
