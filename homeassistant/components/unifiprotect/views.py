@@ -9,7 +9,7 @@ from urllib.parse import urlencode
 
 from aiohttp import web
 from pyunifiprotect.data import Event
-from pyunifiprotect.exceptions import NvrError
+from pyunifiprotect.exceptions import ClientError
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
@@ -115,8 +115,8 @@ class ProtectProxyView(HomeAssistantView):
 class ThumbnailProxyView(ProtectProxyView):
     """View to proxy event thumbnails from UniFi Protect."""
 
-    url = "/api/ufp/thumbnail/{nvr_id}/{event_id}"
-    name = "api:ufp_thumbnail"
+    url = "/api/unifiprotect/thumbnail/{nvr_id}/{event_id}"
+    name = "api:unifiprotect_thumbnail"
 
     async def get(
         self, request: web.Request, nvr_id: str, event_id: str
@@ -145,7 +145,7 @@ class ThumbnailProxyView(ProtectProxyView):
             thumbnail = await data.api.get_event_thumbnail(
                 event_id, width=width, height=height
             )
-        except NvrError as err:
+        except ClientError as err:
             return _404(err)
 
         if thumbnail is None:
@@ -157,8 +157,8 @@ class ThumbnailProxyView(ProtectProxyView):
 class VideoProxyView(ProtectProxyView):
     """View to proxy video clips from UniFi Protect."""
 
-    url = "/api/ufp/video/{nvr_id}/{camera_id}/{start}/{end}"
-    name = "api:ufp_thumbnail"
+    url = "/api/unifiprotect/video/{nvr_id}/{camera_id}/{start}/{end}"
+    name = "api:unifiprotect_thumbnail"
 
     async def get(
         self, request: web.Request, nvr_id: str, camera_id: str, start: str, end: str
@@ -203,11 +203,9 @@ class VideoProxyView(ProtectProxyView):
 
         try:
             await camera.get_video(start_dt, end_dt, iterator_callback=iterator)
-        except NvrError as err:
+        except ClientError as err:
             return _404(err)
 
-        if not response.prepared:
-            return _404("Video not found")
-
-        await response.write_eof()
+        if response.prepared:
+            await response.write_eof()
         return response
