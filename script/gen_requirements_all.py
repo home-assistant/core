@@ -132,10 +132,6 @@ backoff<2.0
 # Breaking change in version
 # https://github.com/samuelcolvin/pydantic/issues/4092
 pydantic!=1.9.1
-
-# Pin charset-normalizer to 2.0.12 due to version conflict.
-# https://github.com/home-assistant/core/pull/74104
-charset-normalizer==2.0.12
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
