@@ -408,56 +408,56 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={
                         1: "DhcpServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_hassio",
                     arg_types={
                         1: "HassioServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_homekit",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_mqtt",
                     arg_types={
                         1: "MqttServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_reauth",
                     arg_types={
                         1: "Mapping[str, Any]",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_ssdp",
                     arg_types={
                         1: "SsdpServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_usb",
                     arg_types={
                         1: "UsbServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
                 TypeHintMatch(
                     function_name="async_step_zeroconf",
                     arg_types={
                         1: "ZeroconfServiceInfo",
                     },
-                    return_type=_Special.UNDEFINED,  # already covered by async_step_*
+                    return_type="FlowResult",
                 ),
             ],
         ),
@@ -465,12 +465,8 @@ _CLASS_MATCH: dict[str, list[ClassTypeHintMatch]] = {
 }
 # Overriding properties and functions are normally checked by mypy, and will only
 # be checked by pylint when --ignore-missing-annotations is False
-_BASE_DEVICE_CLASS = TypeHintMatch(
-    function_name="device_class",
-    return_type=["str", None],
-)
+
 _ENTITY_MATCH: list[TypeHintMatch] = [
-    _BASE_DEVICE_CLASS,
     TypeHintMatch(
         function_name="should_poll",
         return_type="bool",
@@ -506,6 +502,10 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     TypeHintMatch(
         function_name="device_info",
         return_type=["DeviceInfo", None],
+    ),
+    TypeHintMatch(
+        function_name="device_class",
+        return_type=["str", None],
     ),
     TypeHintMatch(
         function_name="unit_of_measurement",
@@ -1627,29 +1627,28 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
     def visit_classdef(self, node: nodes.ClassDef) -> None:
         """Called when a ClassDef node is visited."""
         ancestor: nodes.ClassDef
-        matches: list[TypeHintMatch] = []
+        checked_class_methods: set[str] = set()
         for ancestor in node.ancestors():
             for class_matches in self._class_matchers:
                 if ancestor.name == class_matches.base_class:
-                    matches.extend(class_matches.matches)
-
-        # Remove duplicate `device_class` when it is overridden
-        if (
-            _BASE_DEVICE_CLASS in matches
-            and sum(1 for m in matches if m.function_name == "device_class") > 1
-        ):
-            matches.remove(_BASE_DEVICE_CLASS)
-
-        self._visit_class_functions(node, matches)
+                    self._visit_class_functions(
+                        node, class_matches.matches, checked_class_methods
+                    )
 
     def _visit_class_functions(
-        self, node: nodes.ClassDef, matches: list[TypeHintMatch]
+        self,
+        node: nodes.ClassDef,
+        matches: list[TypeHintMatch],
+        checked_class_methods: set[str],
     ) -> None:
         cached_methods: list[nodes.FunctionDef] = list(node.mymethods())
         for match in matches:
             for function_node in cached_methods:
+                if function_node.name in checked_class_methods:
+                    continue
                 if match.need_to_check_function(function_node):
                     self._check_function(function_node, match)
+                    checked_class_methods.add(function_node.name)
 
     def visit_functiondef(self, node: nodes.FunctionDef) -> None:
         """Called when a FunctionDef node is visited."""

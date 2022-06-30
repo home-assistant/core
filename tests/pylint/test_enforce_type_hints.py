@@ -651,24 +651,6 @@ def test_named_arguments(
             end_line=14,
             end_col_offset=27,
         ),
-        pylint.testutils.MessageTest(
-            msg_id="hass-argument-type",
-            node=func_node,
-            args=("kwargs", "Any", "async_turn_on"),
-            line=14,
-            col_offset=4,
-            end_line=14,
-            end_col_offset=27,
-        ),
-        pylint.testutils.MessageTest(
-            msg_id="hass-return-type",
-            node=func_node,
-            args=("None", "async_turn_on"),
-            line=14,
-            col_offset=4,
-            end_line=14,
-            end_col_offset=27,
-        ),
     ):
         type_hint_checker.visit_classdef(class_node)
 
