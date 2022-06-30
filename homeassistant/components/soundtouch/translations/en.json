@@ -9,17 +9,13 @@
         "step": {
             "user": {
                 "data": {
-                    "host": "Host",
-                    "name": "Name"
-                },
-                "description": "Enter the device hostname or IP address of the Bose SoundTouch you want to add. Optionally, you can also specify the name to use.",
-                "title": "Setup a new Bose SoundTouch device"
+                    "host": "Host"
+                }
             },
             "zeroconf_confirm": {
                 "description": "You are about to add the SoundTouch device named `{name}` to Home Assistant.",
                 "title": "Confirm adding Bose SoundTouch device"
             }
         }
-    },
-    "title": "Bose SoundTouch"
+    }
 }

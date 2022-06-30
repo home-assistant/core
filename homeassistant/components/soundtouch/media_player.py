@@ -92,7 +92,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Bose SoundTouch media player based on a config entry."""
     device = hass.data[DOMAIN][entry.entry_id].device
-    media_player = SoundTouchMediaPlayer(entry.data[CONF_NAME], device)
+    media_player = SoundTouchMediaPlayer(device)
 
     async_add_entities([media_player], True)
 
@@ -118,13 +118,13 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
     )
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    def __init__(self, name: str, device: SoundTouchDevice) -> None:
+    def __init__(self, device: SoundTouchDevice) -> None:
         """Create SoundTouch media player entity."""
 
         self._device = device
 
         self._attr_unique_id = self._device.config.device_id
-        self._attr_name = name or self._device.config.name
+        self._attr_name = self._device.config.name
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.config.device_id)},
             connections={

@@ -2,11 +2,8 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup a new Bose SoundTouch device",
-        "description": "Enter the device hostname or IP address of the Bose SoundTouch you want to add. Optionally, you can also specify the name to use.",
         "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "name": "[%key:common::config_flow::data::name%]"
+          "host": "[%key:common::config_flow::data::host%]"
         }
       },
       "zeroconf_confirm": {

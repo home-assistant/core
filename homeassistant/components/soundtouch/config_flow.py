@@ -6,7 +6,7 @@ from requests import RequestException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -27,7 +27,6 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_data):
         """Handle a flow initiated by configuration file."""
         self.host = import_data[CONF_HOST]
-        self.name = import_data[CONF_NAME]
 
         try:
             await self._async_get_device_id()
@@ -42,7 +41,6 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self.host = user_input[CONF_HOST]
-            self.name = user_input[CONF_NAME]
 
             try:
                 await self._async_get_device_id(raise_on_progress=False)
@@ -57,7 +55,6 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): cv.string,
-                    vol.Optional(CONF_NAME, default=""): cv.string,
                 }
             ),
             errors=errors,
@@ -66,7 +63,6 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_zeroconf(self, discovery_info):
         """Handle a flow initiated by a zeroconf discovery."""
         self.host = discovery_info.host
-        self.name = discovery_info.name.split(".")[0]
 
         try:
             await self._async_get_device_id()
@@ -83,7 +79,7 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="zeroconf_confirm",
             last_step=True,
-            description_placeholders={CONF_NAME: self.name},
+            description_placeholders={"name": self.name},
         )
 
     async def _async_get_device_id(self, raise_on_progress: bool = True) -> None:
@@ -96,12 +92,13 @@ class SoundtouchConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
         self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
 
+        self.name = device.config.name
+
     async def _async_create_soundtouch_entry(self):
         """Finish config flow and create a SoundTouch config entry."""
         return self.async_create_entry(
-            title=self.name or self.host,
+            title=self.name,
             data={
                 CONF_HOST: self.host,
-                CONF_NAME: self.name,
             },
         )
