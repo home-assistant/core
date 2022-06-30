@@ -189,6 +189,7 @@ FLOWS = {
         "kulersky",
         "launch_library",
         "laundrify",
+        "lg_soundbar",
         "life360",
         "lifx",
         "litejet",

@@ -2289,7 +2289,7 @@ tellcore-py==1.1.2
 tellduslive==0.10.11
 
 # homeassistant.components.lg_soundbar
-temescal==0.3
+temescal==0.5
 
 # homeassistant.components.temper
 temperusb==1.5.3
