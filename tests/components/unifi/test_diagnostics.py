@@ -7,7 +7,12 @@ from homeassistant.components.unifi.const import (
     CONF_BLOCK_CLIENT,
 )
 from homeassistant.components.unifi.device_tracker import CLIENT_TRACKER, DEVICE_TRACKER
-from homeassistant.components.unifi.sensor import RX_SENSOR, TX_SENSOR, UPTIME_SENSOR
+from homeassistant.components.unifi.sensor import (
+    DEVICE_SENSORS,
+    RX_SENSOR,
+    TX_SENSOR,
+    UPTIME_SENSOR,
+)
 from homeassistant.components.unifi.switch import (
     BLOCK_SWITCH,
     DPI_SWITCH,
@@ -47,6 +52,8 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
             }
         ],
         "device_id": "mock-id",
+        "general_temperature": 50,
+        "has_temperature": True,
         "ip": "10.0.1.1",
         "mac": "00:00:00:00:01:01",
         "last_seen": 1562600145,
@@ -85,7 +92,9 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
             },
         ],
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
     dpi_app = {
@@ -155,6 +164,10 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                 RX_SENSOR: ["00:00:00:00:00:00"],
                 TX_SENSOR: ["00:00:00:00:00:00"],
                 UPTIME_SENSOR: ["00:00:00:00:00:00"],
+                **{
+                    f"device_{sensor.key}": ["00:00:00:00:00:01"]
+                    for sensor in DEVICE_SENSORS
+                },
             },
             str(Platform.SWITCH): {
                 BLOCK_SWITCH: ["00:00:00:00:00:00"],
@@ -192,6 +205,8 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                     }
                 ],
                 "device_id": "mock-id",
+                "general_temperature": 50,
+                "has_temperature": True,
                 "ip": "10.0.1.1",
                 "mac": "00:00:00:00:00:01",
                 "last_seen": 1562600145,

@@ -49,7 +49,7 @@ async def async_setup_entry(
         RX_SENSOR: set(),
         TX_SENSOR: set(),
         UPTIME_SENSOR: set(),
-        **{desc.key: set() for desc in DEVICE_SENSORS},
+        **{f"device_{sensor.key}": set() for sensor in DEVICE_SENSORS},
     }
 
     @callback
@@ -118,14 +118,17 @@ def add_device_entities(
     for mac in devices:
         device = controller.api.devices[mac]
 
-        for desc in DEVICE_SENSORS:
-            if mac in controller.entities[UniFiDeviceSensor.DOMAIN][desc.key]:
+        for sensor in DEVICE_SENSORS:
+            if (
+                mac
+                in controller.entities[UniFiDeviceSensor.DOMAIN][f"device_{sensor.key}"]
+            ):
                 continue
 
-            if not desc.is_enabled(device):
+            if not sensor.is_enabled(device):
                 continue
 
-            sensors.append(UniFiDeviceSensor(device, controller, desc))
+            sensors.append(UniFiDeviceSensor(device, controller, sensor))
 
     if sensors:
         async_add_entities(sensors)
@@ -251,6 +254,9 @@ class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
         if self.enabled is None:
             return True
 
+        if self.enabled not in device.raw:
+            return False
+
         return device.raw[self.enabled]
 
 
@@ -262,6 +268,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         icon="mdi:speedometer",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        enabled="system-stats",
         value_fn=lambda device: float(device.raw["system-stats"]["cpu"]),
     ),
     UniFiDeviceSensorEntityDescription(
@@ -271,6 +278,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         icon="mdi:memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+        enabled="system-stats",
         value_fn=lambda device: float(device.raw["system-stats"]["mem"]),
     ),
     UniFiDeviceSensorEntityDescription(
@@ -309,7 +317,7 @@ class UniFiDeviceSensor(UniFiBase, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         # pylint: disable=invalid-name
-        self.TYPE = description.key
+        self.TYPE = f"device_{description.key}"
         super().__init__(device, controller)
         self.device = self._item
         self.entity_description = description

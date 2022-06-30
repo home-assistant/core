@@ -44,8 +44,10 @@ async def test_device_updates(
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
         "upgrade_to_firmware": "4.3.17.11279",
     }
@@ -59,7 +61,9 @@ async def test_device_updates(
         "name": "Device 2",
         "next_interval": 20,
         "state": 0,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
     await setup_unifi_integration(
@@ -139,8 +143,10 @@ async def test_controller_state_change(
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
         "upgrade_to_firmware": "4.3.17.11279",
     }

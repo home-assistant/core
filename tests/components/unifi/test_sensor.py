@@ -349,6 +349,8 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
         "version": "4.0.42.10433",
     }
     now = datetime(2021, 1, 1, 1, 1, 0, tzinfo=dt_util.UTC)
+    uptime = now
+
     with patch("homeassistant.util.dt.now", return_value=now):
         await setup_unifi_integration(
             hass,
@@ -356,10 +358,19 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
             devices_response=[device],
         )
 
-    assert hass.states.get("sensor.device_cpu_utilization").state == "1.23"
-    assert hass.states.get("sensor.device_memory_utilization").state == "50.0"
-    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:01:00+00:00"
-    assert hass.states.get("sensor.device_temperature").state == "49"
+    assert hass.states.get("sensor.device_cpu_utilization").state == str(
+        device["system-stats"]["cpu"]
+    )
+    assert hass.states.get("sensor.device_memory_utilization").state == str(
+        device["system-stats"]["mem"]
+    )
+    assert (
+        hass.states.get("sensor.device_uptime").state
+        == uptime.replace(microsecond=0).isoformat()
+    )
+    assert hass.states.get("sensor.device_temperature").state == str(
+        device["general_temperature"]
+    )
 
     # Verify state update
     device["system-stats"]["cpu"] = "3.21"
@@ -367,7 +378,7 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     device["uptime"] = 1
     device["general_temperature"] = 48
 
-    now = now + timedelta(seconds=1)
+    now = now + timedelta(seconds=device["uptime"])
     with patch("homeassistant.util.dt.now", return_value=now):
         mock_unifi_websocket(
             data={
@@ -377,7 +388,16 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
         )
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.device_cpu_utilization").state == "3.21"
-    assert hass.states.get("sensor.device_memory_utilization").state == "51.0"
-    assert hass.states.get("sensor.device_uptime").state == "2021-01-01T01:01:00+00:00"
-    assert hass.states.get("sensor.device_temperature").state == "48"
+    assert hass.states.get("sensor.device_cpu_utilization").state == str(
+        device["system-stats"]["cpu"]
+    )
+    assert hass.states.get("sensor.device_memory_utilization").state == str(
+        device["system-stats"]["mem"]
+    )
+    assert (
+        hass.states.get("sensor.device_uptime").state
+        == uptime.replace(microsecond=0).isoformat()
+    )
+    assert hass.states.get("sensor.device_temperature").state == str(
+        device["general_temperature"]
+    )

@@ -325,8 +325,10 @@ async def test_tracked_devices(
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
     device_2 = {
@@ -339,7 +341,9 @@ async def test_tracked_devices(
         "name": "Device 2",
         "next_interval": 20,
         "state": 0,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
     await setup_unifi_integration(
@@ -463,8 +467,10 @@ async def test_controller_state_change(
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
 
@@ -522,8 +528,10 @@ async def test_option_track_clients(hass, aioclient_mock, mock_device_registry):
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
 
@@ -588,8 +596,10 @@ async def test_option_track_wired_clients(hass, aioclient_mock, mock_device_regi
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
 
@@ -645,8 +655,10 @@ async def test_option_track_devices(hass, aioclient_mock, mock_device_registry):
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
 
@@ -1074,8 +1086,10 @@ async def test_dont_track_clients(hass, aioclient_mock, mock_device_registry):
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
 
@@ -1125,8 +1139,10 @@ async def test_dont_track_devices(hass, aioclient_mock, mock_device_registry):
         "next_interval": 20,
         "overheating": True,
         "state": 1,
+        "system-stats": {"cpu": "1.23", "mem": "50.0"},
         "type": "usw",
         "upgradable": True,
+        "uptime": 0,
         "version": "4.0.42.10433",
     }
 
