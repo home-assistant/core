@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Any
 
 from pysensibo.model import SensiboDevice
 
@@ -14,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity
+from .entity import SensiboDeviceBaseEntity, api_call
 
 PARALLEL_UPDATES = 0
 
@@ -99,15 +100,17 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
-        await self.make_api_call(self.device_data, self.entity_description.key, value)
+        await self.make_api_call(
+            device_data=self.device_data, key=self.entity_description.key, value=value
+        )
 
-    @SensiboDeviceBaseEntity.api_call
+    @api_call
     async def make_api_call(
         self, device_data: SensiboDevice, key: float, value: float
-    ) -> None:
+    ) -> dict[str, Any]:
         """Make service call to api."""
         data = {self.entity_description.remote_key: value}
-        await self._client.async_set_calibration(
+        return await self._client.async_set_calibration(
             self._device_id,
-            {"data": data},
+            data,
         )
