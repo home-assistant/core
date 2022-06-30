@@ -52,6 +52,7 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_PLAYING,
+    STATE_STANDBY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -888,7 +889,7 @@ class MediaPlayerEntity(Entity):
             await self.hass.async_add_executor_job(self.toggle)
             return
 
-        if self.state in (STATE_OFF, STATE_IDLE):
+        if self.state in (STATE_OFF, STATE_IDLE, STATE_STANDBY):
             await self.async_turn_on()
         else:
             await self.async_turn_off()
