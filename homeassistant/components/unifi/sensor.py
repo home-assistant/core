@@ -63,8 +63,7 @@ async def async_setup_entry(
         if controller.option_allow_uptime_sensors:
             add_uptime_entities(controller, async_add_entities, clients)
 
-        if controller.option_track_devices:
-            add_device_entities(controller, async_add_entities, devices)
+        add_device_entities(controller, async_add_entities, devices)
 
     for signal in (controller.signal_update, controller.signal_options_update):
         config_entry.async_on_unload(
@@ -316,8 +315,3 @@ class UniFiDeviceSensor(UniFiBase, SensorEntity):
     def native_value(self) -> Any:
         """Return the native value of the sensor."""
         return self.entity_description.get_value(self.device)
-
-    async def options_updated(self) -> None:
-        """Config entry options are updated, remove entity if option is disabled."""
-        if not self.controller.option_track_devices:
-            await self.remove_item({self.device.mac})
