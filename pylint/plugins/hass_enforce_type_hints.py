@@ -731,10 +731,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     return_type=["CalendarEvent", None],
                 ),
                 TypeHintMatch(
-                    function_name="state",
-                    return_type=["str", None],
-                ),
-                TypeHintMatch(
                     function_name="async_get_events",
                     arg_types={
                         1: "HomeAssistant",
