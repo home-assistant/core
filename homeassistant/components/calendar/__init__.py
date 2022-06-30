@@ -222,8 +222,9 @@ class CalendarEventDevice(Entity):
             "description": event["description"],
         }
 
+    @final
     @property
-    def state(self) -> str | None:
+    def state(self) -> str:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
             return STATE_OFF
@@ -276,8 +277,9 @@ class CalendarEntity(Entity):
             "description": event.description if event.description else "",
         }
 
+    @final
     @property
-    def state(self) -> str | None:
+    def state(self) -> str:
         """Return the state of the calendar event."""
         if (event := self.event) is None:
             return STATE_OFF
