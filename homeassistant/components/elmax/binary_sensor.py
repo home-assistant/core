@@ -34,14 +34,16 @@ async def async_setup_entry(
         # Otherwise, add all the entities we found
         entities = []
         for zone in panel_status.zones:
+            # Skip already handled devices
+            if zone.endpoint_id in known_devices:
+                continue
             entity = ElmaxSensor(
                 panel=coordinator.panel_entry,
                 elmax_device=zone,
                 panel_version=panel_status.release,
                 coordinator=coordinator,
             )
-            if entity.unique_id not in known_devices:
-                entities.append(entity)
+            entities.append(entity)
         async_add_entities(entities, True)
         known_devices.update([e.unique_id for e in entities])
 
