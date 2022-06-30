@@ -214,10 +214,14 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
         # HSB can always be set, but color temp + brightness is bulb dependent
         command = dimmer_command
         if color_command is not None:
-            command += color_command
+            command = self._device_control.combine_commands(
+                [dimmer_command, color_command]
+            )
 
         if self._device_control.can_combine_commands and temp_command is not None:
-            await self._api(command + temp_command)
+            await self._api(
+                self._device_control.combine_commands([command, temp_command])
+            )
         else:
             if temp_command is not None:
                 await self._api(temp_command)
