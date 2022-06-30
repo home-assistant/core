@@ -70,7 +70,7 @@ class PushBulletNotificationSensor(SensorEntity):
         entry: ConfigEntry,
         pb_provider: PushBulletNotificationProvider,
         description: SensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the Pushbullet sensor."""
         self.hass = hass
         self.entity_description = description
