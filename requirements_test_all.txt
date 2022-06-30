@@ -1521,6 +1521,9 @@ tailscale==0.2.0
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
 
+# homeassistant.components.lg_soundbar
+temescal==0.5
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.18
 
