@@ -356,7 +356,10 @@ def test_valid_config_flow_step(
     """Ensure valid hints are accepted for ConfigFlow step."""
     class_node = astroid.extract_node(
         """
-    class ConfigFlow():
+    class FlowHandler():
+        pass
+
+    class ConfigFlow(FlowHandler):
         pass
 
     class AxisFlowHandler( #@
@@ -380,9 +383,16 @@ def test_invalid_config_flow_async_get_options_flow(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow async_get_options_flow."""
+    # AxisOptionsFlow doesn't inherit OptionsFlow, and therefore should fail
     class_node, func_node, arg_node = astroid.extract_node(
         """
-    class ConfigFlow():
+    class FlowHandler():
+        pass
+
+    class ConfigFlow(FlowHandler):
+        pass
+
+    class OptionsFlow(FlowHandler):
         pass
 
     class AxisOptionsFlow():
@@ -406,18 +416,18 @@ def test_invalid_config_flow_async_get_options_flow(
             msg_id="hass-argument-type",
             node=arg_node,
             args=(1, "ConfigEntry", "async_get_options_flow"),
-            line=12,
+            line=18,
             col_offset=8,
-            end_line=12,
+            end_line=18,
             end_col_offset=20,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
             args=("OptionsFlow", "async_get_options_flow"),
-            line=11,
+            line=17,
             col_offset=4,
-            end_line=11,
+            end_line=17,
             end_col_offset=30,
         ),
     ):
@@ -430,10 +440,13 @@ def test_valid_config_flow_async_get_options_flow(
     """Ensure valid hints are accepted for ConfigFlow async_get_options_flow."""
     class_node = astroid.extract_node(
         """
-    class ConfigFlow():
+    class FlowHandler():
         pass
 
-    class OptionsFlow():
+    class ConfigFlow(FlowHandler):
+        pass
+
+    class OptionsFlow(FlowHandler):
         pass
 
     class AxisOptionsFlow(OptionsFlow):
@@ -470,7 +483,10 @@ def test_invalid_entity_properties(
 
     class_node, prop_node, func_node = astroid.extract_node(
         """
-    class LockEntity():
+    class Entity():
+        pass
+
+    class LockEntity(Entity):
         pass
 
     class DoorLock( #@
@@ -498,27 +514,27 @@ def test_invalid_entity_properties(
             msg_id="hass-return-type",
             node=prop_node,
             args=(["str", None], "changed_by"),
-            line=9,
+            line=12,
             col_offset=4,
-            end_line=9,
+            end_line=12,
             end_col_offset=18,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=func_node,
             args=("kwargs", "Any", "async_lock"),
-            line=14,
+            line=17,
             col_offset=4,
-            end_line=14,
+            end_line=17,
             end_col_offset=24,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
             args=("None", "async_lock"),
-            line=14,
+            line=17,
             col_offset=4,
-            end_line=14,
+            end_line=17,
             end_col_offset=24,
         ),
     ):
@@ -534,7 +550,10 @@ def test_ignore_invalid_entity_properties(
 
     class_node = astroid.extract_node(
         """
-    class LockEntity():
+    class Entity():
+        pass
+
+    class LockEntity(Entity):
         pass
 
     class DoorLock( #@
@@ -569,7 +588,13 @@ def test_named_arguments(
 
     class_node, func_node, percentage_node, preset_mode_node = astroid.extract_node(
         """
-    class FanEntity():
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class FanEntity(ToggleEntity):
         pass
 
     class MyFan( #@
@@ -594,36 +619,54 @@ def test_named_arguments(
             msg_id="hass-argument-type",
             node=percentage_node,
             args=("percentage", "int | None", "async_turn_on"),
-            line=10,
+            line=16,
             col_offset=8,
-            end_line=10,
+            end_line=16,
             end_col_offset=18,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=preset_mode_node,
             args=("preset_mode", "str | None", "async_turn_on"),
-            line=12,
+            line=18,
             col_offset=8,
-            end_line=12,
+            end_line=18,
             end_col_offset=24,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-argument-type",
             node=func_node,
             args=("kwargs", "Any", "async_turn_on"),
-            line=8,
+            line=14,
             col_offset=4,
-            end_line=8,
+            end_line=14,
             end_col_offset=27,
         ),
         pylint.testutils.MessageTest(
             msg_id="hass-return-type",
             node=func_node,
             args=("None", "async_turn_on"),
-            line=8,
+            line=14,
             col_offset=4,
-            end_line=8,
+            end_line=14,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-argument-type",
+            node=func_node,
+            args=("kwargs", "Any", "async_turn_on"),
+            line=14,
+            col_offset=4,
+            end_line=14,
+            end_col_offset=27,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node,
+            args=("None", "async_turn_on"),
+            line=14,
+            col_offset=4,
+            end_line=14,
             end_col_offset=27,
         ),
     ):
