@@ -53,7 +53,6 @@ ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
 ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
 PLATFORM_SCHEMA = vol.All(
-    cv.deprecated(CONF_PORT),
     PLATFORM_SCHEMA.extend(
         {
             vol.Required(CONF_HOST): cv.string,
