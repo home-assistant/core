@@ -1,4 +1,6 @@
-"""Support for tracking MQTT enabled devices."""
+"""Support for tracking MQTT enabled devices identified through discovery."""
+from __future__ import annotations
+
 import asyncio
 import functools
 
@@ -7,6 +9,7 @@ import voluptuous as vol
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import SOURCE_TYPES
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -16,12 +19,14 @@ from homeassistant.const import (
     STATE_HOME,
     STATE_NOT_HOME,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType
 
 from .. import subscription
 from ..config import MQTT_RO_SCHEMA
-from ..const import CONF_QOS, CONF_STATE_TOPIC
+from ..const import CONF_QOS, CONF_STATE_TOPIC, MQTT_DATA_DEVICE_TRACKER_LEGACY
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -30,6 +35,7 @@ from ..mixins import (
     async_setup_entry_helper,
 )
 from ..models import MqttValueTemplate
+from .schema_yaml import async_setup_scanner_from_yaml
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -47,7 +53,11 @@ PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
 DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
-async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
+async def async_setup_entry_from_discovery(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
     """Set up MQTT device tracker configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
     await asyncio.gather(
@@ -63,11 +73,20 @@ async def async_setup_entry_from_discovery(hass, config_entry, async_add_entitie
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, device_tracker.DOMAIN, setup, DISCOVERY_SCHEMA)
+    # (re)load legacy service
+    if MQTT_DATA_DEVICE_TRACKER_LEGACY in hass.data:
+        await async_setup_scanner_from_yaml(
+            hass, **hass.data[MQTT_DATA_DEVICE_TRACKER_LEGACY]
+        )
 
 
 async def _async_setup_entity(
-    hass, async_add_entities, config, config_entry=None, discovery_data=None
-):
+    hass: HomeAssistant,
+    async_add_entities: AddEntitiesCallback,
+    config: ConfigType,
+    config_entry: ConfigEntry | None = None,
+    discovery_data: dict | None = None,
+) -> None:
     """Set up the MQTT Device Tracker entity."""
     async_add_entities([MqttDeviceTracker(hass, config, config_entry, discovery_data)])
 
