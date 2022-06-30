@@ -33,13 +33,12 @@ async def test_load_unload_config_entry(
         host="1.1.1.1", port=14999, update_callback=ANY
     )
     assert mock_config_entry.state == config_entries.ConfigEntryState.LOADED
-    assert hass.data[DOMAIN][mock_config_entry.entry_id] == mock_anthemav
 
     # unload
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     # assert unload and avr is closed
-    assert not hass.data[DOMAIN].get(mock_config_entry.entry_id)
+    assert mock_config_entry.state == config_entries.ConfigEntryState.NOT_LOADED
     mock_anthemav.close.assert_called_once()
 
 
