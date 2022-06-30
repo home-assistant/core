@@ -24,6 +24,7 @@ from homeassistant.helpers.aiohttp_client import async_aiohttp_proxy_stream
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_FFMPEG_ARGUMENTS,
@@ -34,7 +35,7 @@ from .const import (
 )
 from .coordinator import CanaryDataUpdateCoordinator
 
-MIN_TIME_BETWEEN_SESSION_RENEW: Final = timedelta(seconds=90)
+FORCE_CAMERA_REFRESH_INTERVAL: Final = timedelta(minutes=15)
 
 PLATFORM_SCHEMA: Final = vol.All(
     cv.deprecated(CONF_FFMPEG_ARGUMENTS),
@@ -108,6 +109,7 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             name=device.name,
         )
         self._image: bytes | None = None
+        self._expires_at = dt_util.utcnow() - FORCE_CAMERA_REFRESH_INTERVAL
 
     @property
     def location(self) -> Location:
@@ -128,6 +130,8 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
+        await self._check_for_image_expiration()
+
         if self._image is None:
             # if we still don't have an image, grab the live view
             _LOGGER.debug("Grabbing a live view image from %s", self.name)
@@ -155,6 +159,13 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
                 _LOGGER.debug("Stopped live session from %s", self.name)
 
         return self._image
+
+    async def _check_for_image_expiration(self) -> None:
+        utcnow = dt_util.utcnow()
+        if self._expires_at <= utcnow:
+            _LOGGER.debug("Expiring cached image from %s", self.name)
+            self._image = None
+            self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
 
     async def handle_async_mjpeg_stream(
         self, request: Request
