@@ -74,7 +74,7 @@ def async_describe_events(
             else:
                 message = f"{event_type} event was fired"
 
-        if event_data["params"]:
+        if event_data.get("params"):
             message = f"{message} with parameters: {event_data['params']}"
 
         return {
