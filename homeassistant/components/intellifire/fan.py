@@ -81,7 +81,7 @@ class IntellifireFan(IntellifireEntity, FanEntity):
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return on or off."""
         return self.entity_description.value_fn(self.coordinator.read_api.data) >= 1
 

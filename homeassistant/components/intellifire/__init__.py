@@ -22,9 +22,9 @@ from .coordinator import IntellifireDataUpdateCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
-    Platform.SENSOR,
     Platform.CLIMATE,
     Platform.FAN,
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
