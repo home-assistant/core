@@ -74,6 +74,8 @@ build.json @home-assistant/supervisor
 /tests/components/analytics/ @home-assistant/core @ludeeus
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
+/homeassistant/components/anthemav/ @hyralex
+/tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
 /homeassistant/components/api/ @home-assistant/core

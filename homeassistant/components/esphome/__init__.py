@@ -17,7 +17,6 @@ from aioesphomeapi import (
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
-    EntityState,
     HomeassistantServiceCall,
     InvalidEncryptionKeyAPIError,
     ReconnectLogic,
@@ -53,7 +52,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
 # Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData
+from .entry_data import RuntimeEntryData, _StateT
 
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
@@ -149,11 +148,6 @@ async def async_setup_entry(  # noqa: C901
     entry_data.cleanup_callbacks.append(
         hass.bus.async_listen(EVENT_HOMEASSISTANT_STOP, on_stop)
     )
-
-    @callback
-    def async_on_state(state: EntityState) -> None:
-        """Send dispatcher updates when a new state is received."""
-        entry_data.async_update_state(hass, state)
 
     @callback
     def async_on_service_call(service: HomeassistantServiceCall) -> None:
@@ -288,7 +282,7 @@ async def async_setup_entry(  # noqa: C901
             entity_infos, services = await cli.list_entities_services()
             await entry_data.async_update_static_infos(hass, entry, entity_infos)
             await _setup_services(hass, entry_data, services)
-            await cli.subscribe_states(async_on_state)
+            await cli.subscribe_states(entry_data.async_update_state)
             await cli.subscribe_service_calls(async_on_service_call)
             await cli.subscribe_home_assistant_states(async_on_state_subscription)
 
@@ -542,7 +536,6 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
-_StateT = TypeVar("_StateT", bound=EntityState)
 
 
 async def platform_async_setup_entry(
@@ -568,7 +561,6 @@ async def platform_async_setup_entry(
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
         """Update entities of this platform when entities are listed."""
-        key_to_component = entry_data.key_to_component
         old_infos = entry_data.info[component_key]
         new_infos: dict[int, EntityInfo] = {}
         add_entities = []
@@ -584,15 +576,13 @@ async def platform_async_setup_entry(
                 old_infos.pop(info.key)
             else:
                 # Create new entity
-                entity = entity_type(entry_data, component_key, info.key)
+                entity = entity_type(entry_data, component_key, info.key, state_type)
                 add_entities.append(entity)
             new_infos[info.key] = info
-            key_to_component[info.key] = component_key
 
         # Remove old entities
         for info in old_infos.values():
             entry_data.async_remove_entity(hass, component_key, info.key)
-            key_to_component.pop(info.key, None)
 
         # First copy the now-old info into the backup object
         entry_data.old_info[component_key] = entry_data.info[component_key]
@@ -685,9 +675,14 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
     """Define a base esphome entity."""
 
     def __init__(
-        self, entry_data: RuntimeEntryData, component_key: str, key: int
+        self,
+        entry_data: RuntimeEntryData,
+        component_key: str,
+        key: int,
+        state_type: _StateT,
     ) -> None:
         """Initialize."""
+        self._state_type = state_type
         self._entry_data = entry_data
         self._component_key = component_key
         self._key = key
@@ -714,13 +709,8 @@ class EsphomeEntity(Entity, Generic[_InfoT, _StateT]):
         )
 
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                (
-                    f"esphome_{self._entry_id}"
-                    f"_update_{self._component_key}_{self._key}"
-                ),
-                self._on_state_update,
+            self._entry_data.async_subscribe_state_update(
+                self._state_type.__class__.__name__, self._key, self._on_state_update
             )
         )
 
