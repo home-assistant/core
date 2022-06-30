@@ -591,6 +591,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    # "air_quality": [],  # ignored as deprecated
     "alarm_control_panel": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -713,6 +714,30 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     function_name="press",
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "calendar": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="CalendarEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="event",
+                    return_type=["CalendarEvent", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_get_events",
+                    arg_types={
+                        1: "HomeAssistant",
+                        2: "datetime",
+                        3: "datetime",
+                    },
+                    return_type="list[CalendarEvent]",
                 ),
             ],
         ),
