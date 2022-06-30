@@ -62,7 +62,9 @@ def async_describe_events(
                 break
 
         if event_type is None:
-            event_type = event_data[ATTR_COMMAND]
+            event_type = (
+                event_data[ATTR_COMMAND] if ATTR_COMMAND in event_data else ZHA_EVENT
+            )
 
         if event_subtype is not None and event_subtype != event_type:
             event_type = f"{event_type} - {event_subtype}"
