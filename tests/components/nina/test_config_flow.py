@@ -163,6 +163,9 @@ async def test_options_flow_init(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
@@ -213,6 +216,8 @@ async def test_options_flow_with_no_selection(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         wraps=mocked_request_function,
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -249,6 +254,8 @@ async def test_options_flow_connection_error(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=ApiError("Could not connect to Api"),
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
@@ -269,6 +276,8 @@ async def test_options_flow_unexpected_exception(hass: HomeAssistant) -> None:
         "pynina.baseApi.BaseAPI._makeRequest",
         side_effect=Exception("DUMMY"),
     ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
