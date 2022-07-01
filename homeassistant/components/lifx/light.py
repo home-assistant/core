@@ -44,7 +44,7 @@ from .util import (
     convert_8_to_16,
     convert_16_to_8,
     find_hsbk,
-    get_mac_addr,
+    get_real_mac_addr,
     lifx_features,
     merge_hsbk,
 )
@@ -118,7 +118,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         _map = aiolifx().products.product_map
-        mac_addr = get_mac_addr(self.mac_addr, self.bulb.host_firmware_version)
+        mac_addr = get_real_mac_addr(self.mac_addr, self.bulb.host_firmware_version)
 
         info = DeviceInfo(
             identifiers={(LIFX_DOMAIN, self.unique_id)},

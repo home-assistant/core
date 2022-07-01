@@ -123,7 +123,7 @@ class AwaitAioLIFX:
         return self.message
 
 
-def get_mac_addr(host_firmware_version: str, mac_addr: str):
+def get_real_mac_addr(mac_addr: str, host_firmware_version: str):
     """Increment the last byte of the mac address by one for FW>3.70."""
     if host_firmware_version and AwesomeVersion(host_firmware_version) >= FIX_MAC_FW:
         octets = [int(octet, 16) for octet in mac_addr.split(":")]
