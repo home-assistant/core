@@ -6,6 +6,7 @@ import asyncio
 from typing import Any, cast
 
 import aiolifx as aiolifx_module
+from aiolifx import products
 from aiolifx.aiolifx import UDP_BROADCAST_PORT, Device, Light
 from aiolifx.message import Message
 import aiolifx_effects as aiolifx_effects_module
@@ -44,24 +45,22 @@ def convert_16_to_8(value):
     return value >> 8
 
 
-def aiolifx():
+def aiolifx() -> aiolifx_module:
     """Return the aiolifx module."""
     return aiolifx_module
 
 
-def aiolifx_effects():
+def aiolifx_effects() -> aiolifx_effects_module:
     """Return the aiolifx_effects module."""
     return aiolifx_effects_module
 
 
-def lifx_features(bulb):
+def lifx_features(bulb: Light) -> dict[str, Any]:
     """Return a feature map for this bulb, or a default map if unknown."""
-    return aiolifx().products.features_map.get(
-        bulb.product
-    ) or aiolifx().products.features_map.get(1)
+    return products.features_map.get(bulb.product) or products.features_map.get(1)
 
 
-def find_hsbk(hass, **kwargs):
+def find_hsbk(hass, **kwargs: Any) -> list[float | int | None] | None:
     """Find the desired color from a number of possible inputs."""
     hue, saturation, brightness, kelvin = [None] * 4
 
@@ -75,6 +74,7 @@ def find_hsbk(hass, **kwargs):
         hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
 
     if hue is not None:
+        assert saturation is not None
         hue = int(hue / 360 * 65535)
         saturation = int(saturation / 100 * 65535)
         kelvin = 3500
