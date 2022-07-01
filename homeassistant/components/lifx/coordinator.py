@@ -76,9 +76,9 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
             if lifx_features(self.device)["multizone"]:
-                await self.update_color_zones()
+                await self._update_color_zones()
 
-    async def update_color_zones(self) -> None:
+    async def _update_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
         top = 1

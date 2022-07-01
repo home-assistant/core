@@ -126,11 +126,6 @@ class LIFXManager:
         self.entry_id_to_entity_id: dict[str, str] = {}
 
     @callback
-    def async_setup(self) -> None:
-        """Enable the manager."""
-        self.register_effects()
-
-    @callback
     def async_unload(self) -> None:
         """Release resources."""
         for service in SERVICES:
@@ -150,7 +145,8 @@ class LIFXManager:
 
         return unregister_entity
 
-    def register_effects(self) -> None:
+    @callback
+    def async_setup(self) -> None:
         """Register the LIFX effects as hass service calls."""
 
         async def service_handler(service: ServiceCall) -> None:
