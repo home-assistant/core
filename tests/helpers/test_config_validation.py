@@ -1332,3 +1332,26 @@ def test_currency():
 
     for value in ("EUR", "USD"):
         assert schema(value)
+
+
+def test_time_period_str():
+    """Test time_period_str validator and transformer."""
+    schema = vol.Schema(cv.time_period_str)
+
+    for value in [
+        None,
+        datetime.now().time(),
+        "2016-11-23",
+        "2016-11-23T18:59:08",
+        " 1 23:42:25.987654",
+        "1 1 23:42:25.987654",
+    ]:
+        with pytest.raises(vol.MultipleInvalid):
+            schema(value)
+
+    schema("23:42")
+    schema("-23:42:25")
+    schema("23:42:25.987654")
+    schema("1 23:42")
+    schema("-1 23:42:25")
+    schema("1 23:42:25.987654")
