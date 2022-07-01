@@ -73,6 +73,10 @@ def _get_weather_condition(metoffice_code):
 class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+    _attr_pressure_unit = PRESSURE_HPA
+    _attr_wind_speed_unit = SPEED_MILES_PER_HOUR
+
     def __init__(self, coordinator, hass_data, use_3hourly):
         """Initialise the platform with a data instance."""
         super().__init__(coordinator)
@@ -85,10 +89,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
-
-        self._attr_temperature_unit = TEMP_CELSIUS
-        self._attr_pressure_unit = PRESSURE_HPA
-        self._attr_wind_speed_unit = SPEED_MILES_PER_HOUR
 
     @property
     def condition(self):
