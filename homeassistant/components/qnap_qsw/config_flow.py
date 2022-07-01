@@ -113,9 +113,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except LoginError:
                 errors[CONF_PASSWORD] = "invalid_auth"
             except QswError:
-                errors[CONF_URL] = "cannot_connect"
+                errors["base"] = "cannot_connect"
             else:
                 title = f"QNAP {system_board.get_product()} {self._discovered_mac}"
+                user_input[CONF_URL] = self._discovered_url
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(

@@ -1,44 +1,50 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "title": "Configure Life360 Account",
-        "data": {
-          "username": "Username",
-          "password": "Password"
+    "config": {
+        "abort": {
+            "already_configured": "Account is already configured",
+            "invalid_auth": "Invalid authentication",
+            "reauth_successful": "Re-authentication was successful",
+            "unknown": "Unexpected error"
+        },
+        "create_entry": {
+            "default": "To set advanced options, see [Life360 documentation]({docs_url})."
+        },
+        "error": {
+            "already_configured": "Account is already configured",
+            "cannot_connect": "Failed to connect",
+            "invalid_auth": "Invalid authentication",
+            "invalid_username": "Invalid username",
+            "unknown": "Unexpected error"
+        },
+        "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Password"
+                },
+                "title": "Reauthenticate Integration"
+            },
+            "user": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "To set advanced options, see [Life360 documentation]({docs_url}).\nYou may want to do that before adding accounts.",
+                "title": "Configure Life360 Account"
+            }
         }
-      },
-      "reauth_confirm": {
-        "title": "Reauthenticate Integration",
-        "data": {
-          "password": "Password"
-        }
-      }
     },
-    "error": {
-      "invalid_auth": "Invalid authentication",
-      "already_configured": "Account is already configured",
-      "cannot_connect": "Failed to connect",
-      "unknown": "Unexpected error"
-    },
-    "abort": {
-      "invalid_auth": "Invalid authentication",
-      "already_configured": "Account is already configured",
-      "reauth_successful": "Re-authentication was successful"
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Account Options",
-        "data": {
-          "limit_gps_acc": "Limit GPS accuracy",
-          "max_gps_accuracy": "Max GPS accuracy (meters)",
-          "set_drive_speed": "Set driving speed threshold",
-          "driving_speed": "Driving speed",
-          "driving": "Show driving as state"
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "driving": "Show driving as state",
+                    "driving_speed": "Driving speed",
+                    "limit_gps_acc": "Limit GPS accuracy",
+                    "max_gps_accuracy": "Max GPS accuracy (meters)",
+                    "set_drive_speed": "Set driving speed threshold"
+                },
+                "title": "Account Options"
+            }
         }
-      }
     }
-  }
 }
