@@ -2,42 +2,6 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import patch
-
-from homeassistant.components.scrape.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
-
-
-async def init_integration(
-    hass: HomeAssistant,
-    config: dict[str, Any],
-    data: str,
-    entry_id: str = "1",
-    source: str = SOURCE_USER,
-) -> MockConfigEntry:
-    """Set up the Scrape integration in Home Assistant."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=source,
-        data={},
-        options=config,
-        entry_id=entry_id,
-    )
-
-    config_entry.add_to_hass(hass)
-    mocker = MockRestData(data)
-    with patch(
-        "homeassistant.components.scrape.RestData",
-        return_value=mocker,
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    return config_entry
 
 
 def return_config(
@@ -61,8 +25,6 @@ def return_config(
         "resource": "https://www.home-assistant.io",
         "select": select,
         "name": name,
-        "index": 0,
-        "verify_ssl": True,
     }
     if attribute:
         config["attribute"] = attribute
@@ -76,7 +38,7 @@ def return_config(
         config["device_class"] = device_class
     if state_class:
         config["state_class"] = state_class
-    if username:
+    if authentication:
         config["authentication"] = authentication
         config["username"] = username
         config["password"] = password
