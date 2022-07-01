@@ -43,7 +43,7 @@ async def async_discover_devices(
 @callback
 def async_trigger_discovery(
     hass: HomeAssistant,
-    discovered_devices: list[Light],
+    discovered_devices: Iterable[Light],
 ) -> None:
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
