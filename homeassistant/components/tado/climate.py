@@ -56,6 +56,7 @@ from .const import (
     TADO_TO_HA_FAN_MODE_MAP,
     TADO_TO_HA_HVAC_MODE_MAP,
     TADO_TO_HA_OFFSET_MAP,
+    TADO_TO_HA_SWING_MODE_MAP,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
@@ -156,10 +157,10 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
                     if not capabilities[mode][swing_mode]:
                         continue
                     if supported_swing_modes:
-                        supported_swing_modes.append(swing_mode)
+                        supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[swing_mode])
                         supported_swing_modes.append(SWING_BOTH)
                         continue
-                    supported_swing_modes = [SWING_OFF, swing_mode]
+                    supported_swing_modes = [SWING_OFF, TADO_TO_HA_SWING_MODE_MAP[swing_mode]]
 
             if not capabilities[mode].get("fanLevel"):
                 continue

@@ -16,6 +16,8 @@ from homeassistant.components.climate.const import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
+    SWING_VERTICAL,
+    SWING_HORIZONTAL,
     PRESET_AWAY,
     PRESET_HOME,
     HVACAction,
@@ -156,6 +158,11 @@ TADO_TO_HA_HVAC_MODE_MAP = {
 }
 
 TADO_TO_HA_FAN_MODE_MAP = {value: key for key, value in HA_TO_TADO_FAN_MODE_MAP.items()}
+
+TADO_TO_HA_SWING_MODE_MAP = {
+    CONST_SWING_MODE_VERTICAL: SWING_VERTICAL,
+    CONST_SWING_MODE_HORIZONTAL: SWING_HORIZONTAL,
+}
 
 DEFAULT_TADO_PRECISION = 0.1
 
