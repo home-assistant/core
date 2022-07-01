@@ -335,6 +335,7 @@ FLOWS = {
         "sonarr",
         "songpal",
         "sonos",
+        "soundtouch",
         "speedtestdotnet",
         "spider",
         "spotify",
