@@ -130,22 +130,7 @@ class DlnaDmrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="alternative_integration")
 
         # Abort if the device doesn't support all services required for a DmrDevice.
-        # Use the discovery_info instead of DmrDevice.is_profile_device to avoid
-        # contacting the device again.
-        discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
-        if not discovery_service_list:
-            return self.async_abort(reason="not_dmr")
-
-        services = discovery_service_list.get("service")
-        if not services:
-            discovery_service_ids: set[str] = set()
-        elif isinstance(services, list):
-            discovery_service_ids = {service.get("serviceId") for service in services}
-        else:
-            # Only one service defined (etree_to_dict failed to make a list)
-            discovery_service_ids = {services.get("serviceId")}
-
-        if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
+        if not _is_dmr_device(discovery_info):
             return self.async_abort(reason="not_dmr")
 
         # Abort if another config entry has the same location, in case the
@@ -408,3 +393,29 @@ def _is_ignored_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
         return True
 
     return False
+
+
+def _is_dmr_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+    """Determine if discovery is a complete DLNA DMR device.
+
+    Use the discovery_info instead of DmrDevice.is_profile_device to avoid
+    contacting the device again.
+    """
+    # Abort if the device doesn't support all services required for a DmrDevice.
+    discovery_service_list = discovery_info.upnp.get(ssdp.ATTR_UPNP_SERVICE_LIST)
+    if not discovery_service_list:
+        return False
+
+    services = discovery_service_list.get("service")
+    if not services:
+        discovery_service_ids: set[str] = set()
+    elif isinstance(services, list):
+        discovery_service_ids = {service.get("serviceId") for service in services}
+    else:
+        # Only one service defined (etree_to_dict failed to make a list)
+        discovery_service_ids = {services.get("serviceId")}
+
+    if not DmrDevice.SERVICE_IDS.issubset(discovery_service_ids):
+        return False
+
+    return True
