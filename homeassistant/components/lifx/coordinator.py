@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, UNAVAILABLE_GRACE
+from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, TARGET_ANY, UNAVAILABLE_GRACE
 from .util import AwaitAioLIFX, LIFXConnection, get_real_mac_addr, lifx_features
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,6 +74,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                     f"Failed to fetch state from device: {self.device.ip_addr}"
                 )
             self._lifx_mac_address = response.target_addr
+            if self.device.mac_addr == TARGET_ANY:
+                self.device.mac_addr = self._lifx_mac_address
             if lifx_features(self.device)["multizone"]:
                 await self.update_color_zones()
 
