@@ -34,9 +34,18 @@ from homeassistant.components.media_player import ATTR_TO_PROPERTY, const as mp_
 from homeassistant.components.media_player.const import DOMAIN as MP_DOMAIN
 from homeassistant.components.media_source.const import DOMAIN as MS_DOMAIN
 from homeassistant.components.media_source.models import PlayMedia
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_DEVICE_ID,
+    CONF_MAC,
+    CONF_TYPE,
+    CONF_URL,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import async_get as async_get_dr
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    async_get as async_get_dr,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
@@ -51,6 +60,7 @@ from .conftest import (
     MOCK_DEVICE_TYPE,
     MOCK_DEVICE_UDN,
     MOCK_DEVICE_USN,
+    MOCK_MAC_ADDRESS,
     NEW_DEVICE_LOCATION,
 )
 
@@ -316,6 +326,40 @@ async def test_setup_entry_with_options(
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_UNAVAILABLE
+
+
+async def test_setup_entry_mac_address(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dmr_device_mock: Mock,
+) -> None:
+    """Entry with a MAC address will set up and set the device registry connection."""
+    await setup_mock_component(hass, config_entry_mock)
+
+    # Check the device registry connections for MAC address
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
+
+
+async def test_setup_entry_no_mac_address(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock_no_mac: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test setting up an entry without a MAC address will succeed."""
+    await setup_mock_component(hass, config_entry_mock_no_mac)
+
+    # Check the device registry connections does not include the MAC address
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
 
 
 async def test_event_subscribe_failure(
@@ -2139,3 +2183,39 @@ async def test_config_update_poll_availability(
     mock_state = hass.states.get(mock_entity_id)
     assert mock_state is not None
     assert mock_state.state == ha_const.STATE_IDLE
+
+
+async def test_config_update_mac_address(
+    hass: HomeAssistant,
+    domain_data_mock: Mock,
+    config_entry_mock_no_mac: MockConfigEntry,
+    ssdp_scanner_mock: Mock,
+    dmr_device_mock: Mock,
+) -> None:
+    """Test discovering the MAC address post-setup will update the device registry."""
+    await setup_mock_component(hass, config_entry_mock_no_mac)
+
+    domain_data_mock.upnp_factory.async_create_device.reset_mock()
+
+    # Check the device registry connections does not include the MAC address
+    dev_reg = async_get_dr(hass)
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) not in device.connections
+
+    # MAC address discovered and set by config flow
+    hass.config_entries.async_update_entry(
+        config_entry_mock_no_mac,
+        data={
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+            CONF_TYPE: MOCK_DEVICE_TYPE,
+            CONF_MAC: MOCK_MAC_ADDRESS,
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Device registry connections should now include the MAC address
+    device = dev_reg.async_get_device(identifiers={(DLNA_DOMAIN, MOCK_DEVICE_UDN)})
+    assert device is not None
+    assert (CONNECTION_NETWORK_MAC, MOCK_MAC_ADDRESS) in device.connections
