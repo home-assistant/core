@@ -509,7 +509,7 @@ async def test_turn_on_failure(feature, hass, config, caplog):
     caplog.set_level(logging.ERROR)
 
     feature_mock, entity_id = feature
-    feature_mock.async_on = AsyncMock(side_effect=blebox_uniapi.error.BadOnValueError)
+    feature_mock.async_on = AsyncMock(side_effect=ValueError)
     await async_setup_entity(hass, config, entity_id)
 
     feature_mock.sensible_on_value = 123

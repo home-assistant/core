@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from blebox_uniapi.error import BadOnValueError
 import blebox_uniapi.light
 from blebox_uniapi.light import BleboxColorMode
 
@@ -166,7 +165,7 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         else:
             try:
                 await self._feature.async_on(value)
-            except BadOnValueError as ex:
+            except ValueError as ex:
                 _LOGGER.error(
                     "Turning on '%s' failed: Bad value %s (%s)", self.name, value, ex
                 )
