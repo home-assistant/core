@@ -1,4 +1,5 @@
 """Support for LIFX."""
+from __future__ import annotations
 
 from aiolifx.aiolifx import Light
 import voluptuous as vol
@@ -10,9 +11,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, TARGET_ANY
+from .const import DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .manager import LIFXManager
+from .migration import async_migrate_entities_devices
 from .util import async_entry_is_legacy
 
 CONF_SERVER = "server"
@@ -52,13 +54,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
     if async_entry_is_legacy(entry):
         return True
+
+    legacy_entry: ConfigEntry | None = None
+    for config_entry in hass.config_entries.async_entries(DOMAIN):
+        if async_entry_is_legacy(config_entry):
+            legacy_entry = config_entry
+            break
+
+    if legacy_entry is not None:
+        await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
+
     if DATA_LIFX_MANAGER not in hass.data:
         manager = LIFXManager(hass)
         hass.data[DATA_LIFX_MANAGER] = manager
         manager.async_setup()
 
     host = entry.data[CONF_HOST]
-    device = Light(hass.loop, TARGET_ANY, host)
+    device = Light(hass.loop, entry.unique_id, host)
     coordinator = LIFXUpdateCoordinator(hass, device)
     await coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
