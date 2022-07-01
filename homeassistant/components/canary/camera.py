@@ -133,7 +133,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         await self._check_for_image_expiration()
 
         if self._image is None:
-            # if we still don't have an image, grab the live view
             _LOGGER.debug("Grabbing a live view image from %s", self.name)
             await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
@@ -143,20 +142,19 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             if not (live_stream_url := live_stream_session.live_stream_url):
                 return None
 
-            if self._image is None and live_stream_url:
-                image = await ffmpeg.async_get_image(
-                    self.hass,
-                    live_stream_url,
-                    extra_cmd=self._ffmpeg_arguments,
-                    width=width,
-                    height=height,
-                )
+            image = await ffmpeg.async_get_image(
+                self.hass,
+                live_stream_url,
+                extra_cmd=self._ffmpeg_arguments,
+                width=width,
+                height=height,
+            )
 
-                if image:
-                    self._image = image
-                    _LOGGER.debug("Grabbed a live view image from %s", self.name)
-                await self.hass.async_add_executor_job(live_stream_session.stop_session)
-                _LOGGER.debug("Stopped live session from %s", self.name)
+            if image:
+                self._image = image
+                _LOGGER.debug("Grabbed a live view image from %s", self.name)
+            await self.hass.async_add_executor_job(live_stream_session.stop_session)
+            _LOGGER.debug("Stopped live session from %s", self.name)
 
         return self._image
 
