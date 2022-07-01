@@ -17,7 +17,13 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .util import AwaitAioLIFX, LIFXConnection, async_entry_is_legacy, lifx_features
+from .util import (
+    AwaitAioLIFX,
+    LIFXConnection,
+    async_entry_is_legacy,
+    get_real_mac_addr,
+    lifx_features,
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -29,7 +35,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Light] = {}
         self._discovered_device: Light | None = None
-        self.discovered_name: str | None = None
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
@@ -62,7 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
-        device = await self._async_try_connect(host, mac=mac, raise_on_progress=True)
+        device = await self._async_try_connect(host, raise_on_progress=True)
         if not device:
             return self.async_abort(reason="cannot_connect")
         self._discovered_device = device
@@ -165,7 +170,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_try_connect(
-        self, host: str, mac: str | None = None, raise_on_progress: bool = True
+        self, host: str, raise_on_progress: bool = True
     ) -> Light:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
@@ -177,9 +182,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         connection.async_stop()
         if message is None or lifx_features(device)["relays"] is True:
             return None  # relays not supported
-        if not mac:
-            device.mac_addr = message.target_addr
+        device.mac_addr = message.target_addr
+        real_mac = get_real_mac_addr(device.mac_addr, device.host_firmware_version)
         await self.async_set_unique_id(
-            dr.format_mac(device.mac_addr), raise_on_progress=raise_on_progress
+            dr.format_mac(real_mac), raise_on_progress=raise_on_progress
         )
         return device
