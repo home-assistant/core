@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 
 import aiolifx as aiolifx_module
+from aiolifx.aiolifx import Device
+from aiolifx.message import Message
 import aiolifx_effects as aiolifx_effects_module
 from awesomeversion import AwesomeVersion
 
@@ -101,16 +104,16 @@ class AwaitAioLIFX:
 
     def __init__(self):
         """Initialize the wrapper."""
-        self.message = None
+        self.message: Message | None = None
         self.event = asyncio.Event()
 
     @callback
-    def callback(self, bulb, message):
+    def callback(self, bulb: Device, message: Message) -> None:
         """Handle responses."""
         self.message = message
         self.event.set()
 
-    async def wait(self, method):
+    async def wait(self, method: Any) -> Message | None:
         """Call an aiolifx method and wait for its response."""
         self.message = None
         self.event.clear()
