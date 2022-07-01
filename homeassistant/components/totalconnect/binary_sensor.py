@@ -32,104 +32,31 @@ async def async_setup_entry(
 
     for location_id, location in client_locations.items():
 
-        alarm_battery_description = BinarySensorEntityDescription(
-            key=LOW_BATTERY,
-            device_class=BinarySensorDeviceClass.BATTERY,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            name=f"{location.location_name} {LOW_BATTERY}",
-        )
-        alarm_tamper_description = BinarySensorEntityDescription(
-            key=TAMPER,
-            device_class=BinarySensorDeviceClass.TAMPER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            name=f"{location.location_name} {TAMPER}",
-        )
-        alarm_power_description = BinarySensorEntityDescription(
-            key=POWER,
-            device_class=BinarySensorDeviceClass.POWER,
-            entity_category=EntityCategory.DIAGNOSTIC,
-            name=f"{location.location_name} {POWER}",
-        )
-
-        sensors.append(
-            TotalConnectAlarmLowBatteryBinarySensor(location, alarm_battery_description)
-        )
-        sensors.append(
-            TotalConnectAlarmTamperBinarySensor(location, alarm_tamper_description)
-        )
-        sensors.append(
-            TotalConnectAlarmPowerBinarySensor(location, alarm_power_description)
-        )
+        sensors.append(TotalConnectAlarmLowBatteryBinarySensor(location))
+        sensors.append(TotalConnectAlarmTamperBinarySensor(location))
+        sensors.append(TotalConnectAlarmPowerBinarySensor(location))
 
         for zone in location.zones.values():
-
-            zone_description = BinarySensorEntityDescription(
-                key=ZONE, name=zone.description, device_class=zone_device_class(zone)
-            )
-            zone_battery_description = BinarySensorEntityDescription(
-                key=LOW_BATTERY,
-                device_class=BinarySensorDeviceClass.BATTERY,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                name=f"{zone.description} {LOW_BATTERY}",
-            )
-            zone_tamper_description = BinarySensorEntityDescription(
-                key=TAMPER,
-                device_class=BinarySensorDeviceClass.TAMPER,
-                entity_category=EntityCategory.DIAGNOSTIC,
-                name=f"{zone.description} {TAMPER}",
-            )
-
-            sensors.append(
-                TotalConnectZoneSecurityBinarySensor(
-                    location_id, zone, zone_description
-                )
-            )
+            sensors.append(TotalConnectZoneSecurityBinarySensor(location_id, zone))
 
             if not zone.is_type_button():
-
-                sensors.append(
-                    TotalConnectLowBatteryBinarySensor(
-                        location_id, zone, zone_battery_description
-                    )
-                )
-                sensors.append(
-                    TotalConnectTamperBinarySensor(
-                        location_id, zone, zone_tamper_description
-                    )
-                )
+                sensors.append(TotalConnectLowBatteryBinarySensor(location_id, zone))
+                sensors.append(TotalConnectTamperBinarySensor(location_id, zone))
 
     async_add_entities(sensors, True)
-
-
-def zone_device_class(zone):
-    """Return the class of this zone."""
-    if zone.is_type_fire():
-        return BinarySensorDeviceClass.SMOKE
-    if zone.is_type_carbon_monoxide():
-        return BinarySensorDeviceClass.GAS
-    if zone.is_type_motion():
-        return BinarySensorDeviceClass.MOTION
-    if zone.is_type_medical():
-        return BinarySensorDeviceClass.SAFETY
-    # "security" type is a generic category so test for it last
-    if zone.is_type_security():
-        return BinarySensorDeviceClass.DOOR
-
-    _LOGGER.error(
-        "TotalConnect zone %s reported an unexpected device class", zone.zoneid
-    )
-    return None
 
 
 class TotalConnectZoneBinarySensor(BinarySensorEntity):
     """Represent an TotalConnect zone."""
 
-    def __init__(self, location_id, zone, description):
+    def __init__(self, location_id, zone):
         """Initialize the TotalConnect status."""
         self._location_id = location_id
         self._zone = zone
-        self.entity_description = description
-        self._attr_unique_id = f"{location_id}_{zone.zoneid}_{description.key}"
+        self._attr_name = f"{zone.description}{self.entity_description.name}"
+        self._attr_unique_id = (
+            f"{location_id}_{zone.zoneid}_{self.entity_description.key}"
+        )
         self._attr_is_on = None
         self._attr_extra_state_attributes = {
             "zone_id": self._zone.zoneid,
@@ -140,6 +67,31 @@ class TotalConnectZoneBinarySensor(BinarySensorEntity):
 
 class TotalConnectZoneSecurityBinarySensor(TotalConnectZoneBinarySensor):
     """Represent an TotalConnect security zone."""
+
+    entity_description: BinarySensorEntityDescription = BinarySensorEntityDescription(
+        key=ZONE, name=""
+    )
+
+    @property
+    def device_class(self):
+        """Return the class of this zone."""
+        if self._zone.is_type_fire():
+            return BinarySensorDeviceClass.SMOKE
+        if self._zone.is_type_carbon_monoxide():
+            return BinarySensorDeviceClass.GAS
+        if self._zone.is_type_motion():
+            return BinarySensorDeviceClass.MOTION
+        if self._zone.is_type_medical():
+            return BinarySensorDeviceClass.SAFETY
+        # "security" type is a generic category so test for it last
+        if self._zone.is_type_security():
+            return BinarySensorDeviceClass.DOOR
+
+        _LOGGER.error(
+            "TotalConnect zone %s reported an unexpected device class",
+            self._zone.zoneid,
+        )
+        return None
 
     def update(self):
     def update(self) -> None:
@@ -153,6 +105,13 @@ class TotalConnectZoneSecurityBinarySensor(TotalConnectZoneBinarySensor):
 class TotalConnectLowBatteryBinarySensor(TotalConnectZoneBinarySensor):
     """Represent an TotalConnect zone low battery status."""
 
+    entity_description: BinarySensorEntityDescription = BinarySensorEntityDescription(
+        key=LOW_BATTERY,
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name=f" {LOW_BATTERY}",
+    )
+
     def update(self):
         """Return the state of the device."""
         self._attr_is_on = self._zone.is_low_battery()
@@ -160,6 +119,13 @@ class TotalConnectLowBatteryBinarySensor(TotalConnectZoneBinarySensor):
 
 class TotalConnectTamperBinarySensor(TotalConnectZoneBinarySensor):
     """Represent an TotalConnect zone tamper status."""
+
+    entity_description: BinarySensorEntityDescription = BinarySensorEntityDescription(
+        key=TAMPER,
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name=f" {TAMPER}",
+    )
 
     def update(self):
         """Return the state of the device."""
@@ -169,11 +135,11 @@ class TotalConnectTamperBinarySensor(TotalConnectZoneBinarySensor):
 class TotalConnectAlarmBinarySensor(BinarySensorEntity):
     """Represent an TotalConnect alarm device binary sensors."""
 
-    def __init__(self, location, description):
+    def __init__(self, location):
         """Initialize the TotalConnect alarm device binary sensor."""
         self._location = location
-        self.entity_description = description
-        self._attr_unique_id = f"{location.location_id}_{description.key}"
+        self._attr_name = f"{location.location_name}{self.entity_description.name}"
+        self._attr_unique_id = f"{location.location_id}_{self.entity_description.key}"
         self._attr_is_on = None
         self._attr_extra_state_attributes = {
             "location_id": self._location.location_id,
@@ -183,6 +149,13 @@ class TotalConnectAlarmBinarySensor(BinarySensorEntity):
 class TotalConnectAlarmLowBatteryBinarySensor(TotalConnectAlarmBinarySensor):
     """Represent an TotalConnect Alarm low battery status."""
 
+    entity_description: BinarySensorEntityDescription = BinarySensorEntityDescription(
+        key=LOW_BATTERY,
+        device_class=BinarySensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name=f" {LOW_BATTERY}",
+    )
+
     def update(self):
         """Return the state of the device."""
         self._attr_is_on = self._location.is_low_battery()
@@ -191,6 +164,13 @@ class TotalConnectAlarmLowBatteryBinarySensor(TotalConnectAlarmBinarySensor):
 class TotalConnectAlarmTamperBinarySensor(TotalConnectAlarmBinarySensor):
     """Represent an TotalConnect alarm tamper status."""
 
+    entity_description: BinarySensorEntityDescription = BinarySensorEntityDescription(
+        key=TAMPER,
+        device_class=BinarySensorDeviceClass.TAMPER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name=f" {TAMPER}",
+    )
+
     def update(self):
         """Return the state of the device."""
         self._attr_is_on = self._location.is_cover_tampered()
@@ -198,6 +178,13 @@ class TotalConnectAlarmTamperBinarySensor(TotalConnectAlarmBinarySensor):
 
 class TotalConnectAlarmPowerBinarySensor(TotalConnectAlarmBinarySensor):
     """Represent an TotalConnect alarm power status."""
+
+    entity_description: BinarySensorEntityDescription = BinarySensorEntityDescription(
+        key=POWER,
+        device_class=BinarySensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        name=f" {POWER}",
+    )
 
     def update(self):
         """Return the state of the device."""
