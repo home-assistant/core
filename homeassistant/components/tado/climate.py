@@ -157,6 +157,9 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
 
+            # TODO: Refactor to support non-binary swing states.
+            # TODO: Determine if support for the previous "swings" property is necessary
+            # TODO: Clean up TADO<->HA mappings.
             if not supported_swing_modes:
                 for swing_mode in KNOWN_TADO_SWING_MODES:
                     if not capabilities[mode][swing_mode]:
@@ -296,8 +299,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
+
         self._current_tado_vertical_swing_mode = SWING_OFF
         self._current_tado_horizontal_swing_mode = SWING_OFF
+
         self._current_tado_light_mode = light
 
         self._tado_zone_data = None
