@@ -6,14 +6,11 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-from aiolifx.aiolifx import Light
-
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, UNAVAILABLE_GRACE
-from .util import AwaitAioLIFX, lifx_features
+from .util import AwaitAioLIFX, LIFXConnection, lifx_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,17 +23,19 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        device: Light,
+        connection: LIFXConnection,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
-        self.device = device
+        assert connection.device is not None
+        self.connection = connection
+        self.device = connection.device
         self.lock = asyncio.Lock()
-        self.lifx_mac_address = device.mac_addr
+        self.lifx_mac_address = self.device.mac_addr
         update_interval = timedelta(seconds=10)
         super().__init__(
             hass,
             _LOGGER,
-            name=device.ip_addr,
+            name=self.device.ip_addr,
             update_interval=update_interval,
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
@@ -45,20 +44,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             ),
         )
 
-    @callback
-    def async_setup(self) -> None:
-        """Set up the device."""
-        self.device.timeout = MESSAGE_TIMEOUT
-        self.device.retry_count = MESSAGE_RETRIES
-        self.device.unregister_timeout = UNAVAILABLE_GRACE
-
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
-        if self.lock.locked():
+        async with self.lock:
             response = await AwaitAioLIFX().wait(self.device.get_color)
             if response is None:
                 raise UpdateFailed(
-                    "Failed to fetch state from device: {self.device.ip_addr}"
+                    f"Failed to fetch state from device: {self.device.ip_addr}"
                 )
             self.lifx_mac_address = response.target_address
             if lifx_features(self.device)["multizone"]:

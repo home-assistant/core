@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 import aiolifx as aiolifx_module
-from aiolifx.aiolifx import Device
+from aiolifx.aiolifx import UDP_BROADCAST_PORT, Device, Light
 from aiolifx.message import Message
 import aiolifx_effects as aiolifx_effects_module
 from awesomeversion import AwesomeVersion
@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DOMAIN, MESSAGE_RETRIES, MESSAGE_TIMEOUT, UNAVAILABLE_GRACE
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -121,6 +121,35 @@ class AwaitAioLIFX:
 
         await self.event.wait()
         return self.message
+
+
+class LIFXConnection:
+    """Manage a connection to a LIFX device."""
+
+    def __init__(self, host: str, mac: str) -> None:
+        """Init the connection."""
+        self.host = host
+        self.mac = mac
+        self.device: Light | None = None
+        self.transport: asyncio.DatagramTransport | None = None
+
+    async def async_setup(self) -> None:
+        """Ensure we are connected."""
+        loop = asyncio.get_running_loop()
+        transport_proto = await loop.create_datagram_endpoint(
+            lambda: Light(loop, self.mac, self.host),
+            remote_addr=(self.host, UDP_BROADCAST_PORT),
+        )
+        self.transport = cast(asyncio.DatagramTransport, transport_proto[0])
+        self.device = cast(Light, transport_proto[1])
+        self.device.timeout = MESSAGE_TIMEOUT
+        self.device.retry_count = MESSAGE_RETRIES
+        self.device.unregister_timeout = UNAVAILABLE_GRACE
+
+    def async_stop(self) -> None:
+        """Close the transport."""
+        assert self.transport is not None
+        self.transport.close()
 
 
 def get_real_mac_addr(mac_addr: str, host_firmware_version: str):
