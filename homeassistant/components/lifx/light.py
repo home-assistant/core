@@ -30,7 +30,8 @@ from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.color as color_util
 
-from . import DATA_LIFX_MANAGER, DOMAIN as LIFX_DOMAIN
+from . import DATA_LIFX_MANAGER
+from .const import DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .manager import (
     SERVICE_EFFECT_COLORLOOP,
@@ -73,7 +74,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up LIFX from a config entry."""
-    coordinator: LIFXUpdateCoordinator = hass.data[LIFX_DOMAIN][entry.entry_id]
+    coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     manager: LIFXManager = hass.data[DATA_LIFX_MANAGER]
     device = coordinator.device
     platform = entity_platform.async_get_current_platform()
@@ -113,53 +114,31 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         )
         self.postponed_update = None
         self.entry = entry
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about the device."""
-        _map = aiolifx().products.product_map
         mac_addr = get_real_mac_addr(self.mac_addr, self.bulb.host_firmware_version)
-
         info = DeviceInfo(
-            identifiers={(LIFX_DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, mac_addr)},
             connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
             manufacturer="LIFX",
             name=self.name,
         )
-
+        _map = aiolifx().products.product_map
         if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
-
-        return info
-
-    @property
-    def unique_id(self):
-        """Return a unique ID."""
-        return self.mac_addr
-
-    @property
-    def name(self):
-        """Return the name of the bulb."""
-        return self.bulb.label
-
-    @property
-    def who(self):
-        """Return a string identifying the bulb by name and mac."""
-        return f"{self.name} ({self.mac_addr})"
-
-    @property
-    def min_mireds(self):
-        """Return the coldest color_temp that this light supports."""
-        kelvin = lifx_features(self.bulb)["max_kelvin"]
-        return math.floor(color_util.color_temperature_kelvin_to_mired(kelvin))
-
-    @property
-    def max_mireds(self):
-        """Return the warmest color_temp that this light supports."""
-        kelvin = lifx_features(self.bulb)["min_kelvin"]
-        return math.ceil(color_util.color_temperature_kelvin_to_mired(kelvin))
+        self._attr_device_info = info
+        self._attr_unique_id = self.mac_addr
+        self._attr_name = self.bulb.label
+        self._attr_min_mireds = math.floor(
+            color_util.color_temperature_kelvin_to_mired(
+                lifx_features(bulb)["max_kelvin"]
+            )
+        )
+        self._attr_max_mireds = math.ceil(
+            color_util.color_temperature_kelvin_to_mired(
+                lifx_features(bulb)["min_kelvin"]
+            )
+        )
 
     @property
     def color_mode(self) -> ColorMode:
@@ -220,7 +199,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""
-        await self.set_state(**{ATTR_POWER: True})
+        await self.set_state(**{**kwargs, ATTR_POWER: True})
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""
@@ -290,7 +269,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         service = kwargs[ATTR_EFFECT]
         data = {ATTR_ENTITY_ID: self.entity_id}
         await self.hass.services.async_call(
-            LIFX_DOMAIN, service, data, context=self._context
+            DOMAIN, service, data, context=self._context
         )
 
     async def async_added_to_hass(self) -> None:
