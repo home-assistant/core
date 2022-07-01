@@ -262,10 +262,7 @@ async def test_reauth_success(hass):
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_USERNAME: "other_fake_user",
-                CONF_PASSWORD: "other_fake_password",
-            },
+            user_input={CONF_PASSWORD: "other_fake_password"},
         )
 
         assert result["type"] == "abort"
@@ -303,10 +300,7 @@ async def test_reauth_connect_failure(hass):
     with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_USERNAME: "other_fake_user",
-                CONF_PASSWORD: "other_fake_password",
-            },
+            user_input={CONF_PASSWORD: "other_fake_password"},
         )
 
         assert result["type"] == "form"
@@ -345,10 +339,7 @@ async def test_reauth_auth_failure(hass):
     with patch("fiblary3.client.v4.client.Client.login", login_mock, create=True):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_USERNAME: "other_fake_user",
-                CONF_PASSWORD: "other_fake_password",
-            },
+            user_input={CONF_PASSWORD: "other_fake_password"},
         )
 
         assert result["type"] == "form"

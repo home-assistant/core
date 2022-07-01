@@ -11,7 +11,6 @@
       },
       "reauth_confirm": {
         "data": {
-          "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         },
         "title": "[%key:common::config_flow::title::reauth%]",

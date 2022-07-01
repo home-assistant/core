@@ -105,32 +105,22 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None and self._reauth_entry is not None:
             new_data = self._reauth_entry.data | user_input
             try:
-                info = await _validate_input(self.hass, new_data)
+                await _validate_input(self.hass, new_data)
             except FibaroConnectFailed:
                 errors["base"] = "cannot_connect"
             except FibaroAuthFailed:
                 errors["base"] = "invalid_auth"
             else:
                 self.hass.config_entries.async_update_entry(
-                    self._reauth_entry, data=new_data, unique_id=info["serial_number"]
+                    self._reauth_entry, data=new_data
                 )
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
                 )
                 return self.async_abort(reason="reauth_successful")
 
-        username = (
-            self._reauth_entry.data[CONF_USERNAME]
-            if self._reauth_entry is not None
-            else None
-        )
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME, default=username): str,
-                    vol.Required(CONF_PASSWORD): str,
-                }
-            ),
+            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
             errors=errors,
         )
