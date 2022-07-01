@@ -91,6 +91,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
     if async_entry_is_legacy(entry):
+        hass.config_entries.async_update_entry(
+            entry, title="Legacy - Will be removed when all devices are discovered"
+        )
         return True
 
     legacy_entry: ConfigEntry | None = None
