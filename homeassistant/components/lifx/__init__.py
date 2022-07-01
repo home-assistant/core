@@ -4,6 +4,7 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
+from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -25,7 +26,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import LIFXConnection, async_entry_is_legacy, get_real_mac_addr
+from .util import async_entry_is_legacy, get_real_mac_addr
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"

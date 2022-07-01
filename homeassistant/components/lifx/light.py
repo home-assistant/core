@@ -8,6 +8,7 @@ import math
 from typing import Any
 
 from aiolifx import products
+from aiolifx.connection import AwaitAioLIFX
 from aiolifx.message import Message
 import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
@@ -42,14 +43,7 @@ from .manager import (
     SERVICE_EFFECT_STOP,
     LIFXManager,
 )
-from .util import (
-    AwaitAioLIFX,
-    convert_8_to_16,
-    convert_16_to_8,
-    find_hsbk,
-    lifx_features,
-    merge_hsbk,
-)
+from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
