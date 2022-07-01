@@ -49,6 +49,7 @@ def mock_device():
         mock_dev.is_closed = target == 0
 
     type(mock_dev).init_level = Mock(side_effect=mock_init_level)
+
     return mock_dev
 
 
