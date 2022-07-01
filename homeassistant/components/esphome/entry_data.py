@@ -12,21 +12,34 @@ from aioesphomeapi import (
     APIClient,
     APIVersion,
     BinarySensorInfo,
+    BinarySensorState,
     CameraInfo,
+    CameraState,
     ClimateInfo,
+    ClimateState,
     CoverInfo,
+    CoverState,
     DeviceInfo,
     EntityInfo,
     EntityState,
     FanInfo,
+    FanState,
     LightInfo,
+    LightState,
     LockInfo,
+    LockState,
     MediaPlayerInfo,
+    MediaPlayerState,
     NumberInfo,
+    NumberState,
     SelectInfo,
+    SelectState,
     SensorInfo,
+    SensorState,
     SwitchInfo,
+    SwitchState,
     TextSensorInfo,
+    TextSensorState,
     UserService,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -57,6 +70,23 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     TextSensorInfo: "sensor",
 }
 
+STATE_TYPE_TO_COMPONENT_KEY = {
+    BinarySensorState: "binary_sensor",
+    EntityState: "button",
+    CameraState: "camera",
+    ClimateState: "climate",
+    CoverState: "cover",
+    FanState: "fan",
+    LightState: "light",
+    LockState: "lock",
+    MediaPlayerState: "media_player",
+    NumberState: "number",
+    SelectState: "select",
+    SensorState: "sensor",
+    SwitchState: "switch",
+    TextSensorState: "sensor",
+}
+
 
 @dataclass
 class RuntimeEntryData:
@@ -67,12 +97,6 @@ class RuntimeEntryData:
     store: Store
     state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
-    entity_state_type_name_to_component_key: dict[str, str] = field(
-        default_factory=dict
-    )
-    entity_state_type_to_component_key: dict[type[EntityState], str] = field(
-        default_factory=dict
-    )
 
     # A second list of EntityInfo objects
     # This is necessary for when an entity is being removed. HA requires
@@ -133,38 +157,6 @@ class RuntimeEntryData:
         async_dispatcher_send(hass, signal, infos)
 
     @callback
-    def register_state_type(
-        self, state_type: type[EntityState], component_key: str
-    ) -> None:
-        """Register a state type."""
-        self.entity_state_type_to_component_key[state_type] = component_key
-        self.entity_state_type_name_to_component_key[
-            state_type.__name__
-        ] = component_key
-
-    @callback
-    def component_key_for_state(self, state: EntityState) -> str:
-        """Return the component key for a state."""
-        state_class_name = state.__class__.__name__
-
-        # We try to avoid doing a linear search for the
-        # the component key by looking up the class name
-        # in the mapping. If it's not there, we fall back
-        # to a linear search for the component key by doing
-        # an instance search over entity_state_type_to_component_key.
-        if state_class_name in self.entity_state_type_name_to_component_key:
-            return self.entity_state_type_name_to_component_key[state_class_name]
-
-        for (
-            state_type,
-            component_key,
-        ) in self.entity_state_type_to_component_key.items():
-            if isinstance(state, state_type):
-                return component_key
-
-        raise ValueError(f"{state} is not a registered state_type")
-
-    @callback
     def async_subscribe_state_update(
         self,
         component_key: str,
@@ -182,7 +174,7 @@ class RuntimeEntryData:
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        component_key = self.component_key_for_state(state)
+        component_key = STATE_TYPE_TO_COMPONENT_KEY[type(state)]
         subscription_key = (component_key, state.key)
         self.state[component_key][state.key] = state
         _LOGGER.debug(
