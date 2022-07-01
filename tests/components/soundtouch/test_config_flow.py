@@ -1,4 +1,6 @@
 """Test config flow."""
+from unittest.mock import patch
+
 from requests import RequestException
 from requests_mock import ANY, Mocker
 
@@ -25,12 +27,17 @@ async def test_user_flow_create_entry(
     assert result.get("step_id") == "user"
     assert "flow_id" in result
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: DEVICE_1_IP,
-        },
-    )
+    with patch(
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: DEVICE_1_IP,
+            },
+        )
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == DEVICE_1_NAME
@@ -87,9 +94,14 @@ async def test_zeroconf_flow_create_entry(
     assert result.get("step_id") == "zeroconf_confirm"
     assert result.get("description_placeholders") == {"name": DEVICE_1_NAME}
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={}
-    )
+    with patch(
+        "homeassistant.components.soundtouch.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert len(mock_setup_entry.mock_calls) == 1
 
     assert result.get("type") == FlowResultType.CREATE_ENTRY
     assert result.get("title") == DEVICE_1_NAME
