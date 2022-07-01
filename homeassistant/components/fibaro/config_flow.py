@@ -89,7 +89,7 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Import a config entry."""
         return await self.async_step_user(import_config)
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauthentication."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
