@@ -201,7 +201,7 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
         (
             "invalid1://invalid:4\\1",
             "invalid1://invalid:4%5c1",
-            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+            data_entry_flow.RESULT_TYPE_FORM,
         ),
     ],
 )
