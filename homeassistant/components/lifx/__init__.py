@@ -25,7 +25,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices
-from .util import LIFXConnection, async_entry_is_legacy, real_mac_to_lifx_mac_addr
+from .util import LIFXConnection, async_entry_is_legacy
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -99,13 +99,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
-    device_mac = dr.format_mac(coordinator.lifx_mac_address)
-    if (
-        device_mac != entry.unique_id
-        and real_mac_to_lifx_mac_addr(entry.unique_id) == device_mac
+    device_physical_mac = dr.format_mac(coordinator.physical_mac_address)
+    if device_physical_mac != entry.unique_id and entry.unique_id == dr.format_mac(
+        coordinator.internal_mac_address
     ):
         # LIFX firmware >= 3.70 uses an off by one mac
-        hass.config_entries.async_update_entry(entry, unique_id=device_mac)
+        hass.config_entries.async_update_entry(entry, unique_id=device_physical_mac)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
