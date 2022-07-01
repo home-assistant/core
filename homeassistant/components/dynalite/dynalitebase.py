@@ -101,7 +101,7 @@ class DynaliteBase(RestoreEntity, ABC):
 
     @abstractmethod
     def initialize_state(self, state):
-        """Leaving a stub for the inner classes to implement."""
+        """Initialize the state from cache."""
 
     async def async_will_remove_from_hass(self) -> None:
         """Unregister signal dispatch listeners when being removed."""
