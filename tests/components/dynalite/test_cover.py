@@ -9,7 +9,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DEVICE_CLASS_BLIND,
+    CoverDeviceClass,
 )
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -38,7 +38,7 @@ from tests.common import mock_restore_cache
 def mock_device():
     """Mock a Dynalite device."""
     mock_dev = create_mock_device("cover", DynaliteTimeCoverWithTiltDevice)
-    mock_dev.device_class = DEVICE_CLASS_BLIND
+    mock_dev.device_class = CoverDeviceClass.BLIND.value
     mock_dev.current_cover_position = 0
     mock_dev.current_cover_tilt_position = 0
     mock_dev.is_opening = False
