@@ -20,10 +20,5 @@
     "abort": {
       "already_configured": "This NextDNS profile is already configured."
     }
-  },
-  "system_health": {
-    "info": {
-      "can_reach_server": "Reach server"
-    }
   }
 }
