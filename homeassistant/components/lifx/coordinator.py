@@ -31,6 +31,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Initialize DataUpdateCoordinator."""
         self.device = device
         self.lock = asyncio.Lock()
+        self.lifx_mac_address = device.mac_addr
         update_interval = timedelta(seconds=10)
         super().__init__(
             hass,
@@ -54,10 +55,12 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         if self.lock.locked():
-            if await AwaitAioLIFX().wait(self.device.get_color) is None:
+            response = await AwaitAioLIFX().wait(self.device.get_color)
+            if response is None:
                 raise UpdateFailed(
                     "Failed to fetch state from device: {self.device.ip_addr}"
                 )
+            self.lifx_mac_address = response.target_address
             if lifx_features(self.device)["multizone"]:
                 await self.update_color_zones()
 

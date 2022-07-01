@@ -130,3 +130,10 @@ def get_real_mac_addr(mac_addr: str, host_firmware_version: str):
         octets[5] = (octets[5] + 1) % 256
         return ":".join(f"{octet:02x}" for octet in octets)
     return mac_addr
+
+
+def real_mac_to_lifx_mac_addr(mac_addr: str):
+    """Decrement the last byte of the mac address by one for FW>3.70."""
+    octets = [int(octet, 16) for octet in mac_addr.split(":")]
+    octets[5] = (octets[5] - 1) % 256
+    return ":".join(f"{octet:02x}" for octet in octets)

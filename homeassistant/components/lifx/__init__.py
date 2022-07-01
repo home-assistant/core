@@ -16,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -25,7 +26,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices
-from .util import async_entry_is_legacy
+from .util import async_entry_is_legacy, real_mac_to_lifx_mac_addr
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -86,6 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if legacy_entry is not None:
         await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
+    assert entry.unique_id is not None
     if DATA_LIFX_MANAGER not in hass.data:
         manager = LIFXManager(hass)
         hass.data[DATA_LIFX_MANAGER] = manager
@@ -95,6 +97,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     device = Light(hass.loop, entry.unique_id, host)
     coordinator = LIFXUpdateCoordinator(hass, device)
     await coordinator.async_config_entry_first_refresh()
+
+    device_mac = dr.format_mac(coordinator.lifx_mac_address)
+    if (
+        device_mac != entry.unique_id
+        and real_mac_to_lifx_mac_addr(entry.unique_id) == device_mac
+    ):
+        # LIFX firmware >= 3.70 uses an off by one mac
+        hass.config_entries.async_update_entry(entry, unique_id=device_mac)
+
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
