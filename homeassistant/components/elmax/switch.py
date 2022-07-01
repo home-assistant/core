@@ -48,7 +48,7 @@ async def async_setup_entry(
             entities.append(entity)
 
         if entities:
-            async_add_entities(entities, True)
+            async_add_entities(entities)
             known_devices.update([entity.unique_id for entity in entities])
 
     # Register a listener for the discovery of new devices
