@@ -722,3 +722,105 @@ def test_valid_mapping_return_type(
 
     with assert_no_messages(linter):
         type_hint_checker.visit_classdef(class_node)
+
+
+def test_valid_long_tuple(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, rgbw_node, rgbww_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class LightEntity(ToggleEntity):
+        pass
+
+    class TestLight( #@
+        LightEntity
+    ):
+        @property
+        def rgbw_color( #@
+            self
+        ) -> tuple[int, int, int, int]:
+            pass
+
+        @property
+        def rgbww_color( #@
+            self
+        ) -> tuple[int, int, int, int, int]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_no_messages(linter):
+        type_hint_checker.visit_classdef(class_node)
+
+
+def test_invalid_long_tuple(
+    linter: UnittestLinter, type_hint_checker: BaseChecker
+) -> None:
+    """Check invalid entity properties are ignored by default."""
+    # Set ignore option
+    type_hint_checker.config.ignore_missing_annotations = False
+
+    class_node, rgbw_node, rgbww_node = astroid.extract_node(
+        """
+    class Entity():
+        pass
+
+    class ToggleEntity(Entity):
+        pass
+
+    class LightEntity(ToggleEntity):
+        pass
+
+    class TestLight( #@
+        LightEntity
+    ):
+        @property
+        def rgbw_color( #@
+            self
+        ) -> tuple[int, int, int, int, int]:
+            pass
+
+        @property
+        def rgbww_color( #@
+            self
+        ) -> tuple[int, int, int, int, float]:
+            pass
+    """,
+        "homeassistant.components.pylint_test.light",
+    )
+    type_hint_checker.visit_module(class_node.parent)
+
+    with assert_adds_messages(
+        linter,
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=rgbw_node,
+            args=["tuple[int, int, int, int]", None],
+            line=15,
+            col_offset=4,
+            end_line=15,
+            end_col_offset=18,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=rgbww_node,
+            args=["tuple[int, int, int, int, int]", None],
+            line=21,
+            col_offset=4,
+            end_line=21,
+            end_col_offset=19,
+        ),
+    ):
+        type_hint_checker.visit_classdef(class_node)
