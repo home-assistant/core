@@ -29,6 +29,7 @@
       "LIFX Z"
     ]
   },
+  "dhcp": [{ "mac_address": "D073D5" }, { "registered_devices": true }],
   "codeowners": ["@Djelibeybi"],
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]

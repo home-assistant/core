@@ -115,18 +115,6 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self.postponed_update = None
         self.entry = entry
         mac_addr = get_real_mac_addr(self.mac_addr, self.bulb.host_firmware_version)
-        info = DeviceInfo(
-            identifiers={(DOMAIN, mac_addr)},
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
-            manufacturer="LIFX",
-            name=self.name,
-        )
-        _map = aiolifx().products.product_map
-        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
-            info[ATTR_MODEL] = str(model)
-        if (version := self.bulb.host_firmware_version) is not None:
-            info[ATTR_SW_VERSION] = version
-        self._attr_device_info = info
         self._attr_unique_id = self.mac_addr
         self._attr_name = self.bulb.label
         self._attr_min_mireds = math.floor(
@@ -139,6 +127,18 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
                 lifx_features(bulb)["min_kelvin"]
             )
         )
+        info = DeviceInfo(
+            identifiers={(DOMAIN, mac_addr)},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
+            manufacturer="LIFX",
+            name=self.name,
+        )
+        _map = aiolifx().products.product_map
+        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
+            info[ATTR_MODEL] = str(model)
+        if (version := self.bulb.host_firmware_version) is not None:
+            info[ATTR_SW_VERSION] = version
+        self._attr_device_info = info
 
     @property
     def color_mode(self) -> ColorMode:

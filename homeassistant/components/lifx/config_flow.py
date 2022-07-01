@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .util import AwaitAioLIFX, LIFXConnection, async_entry_is_legacy
+from .util import AwaitAioLIFX, LIFXConnection, async_entry_is_legacy, lifx_features
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -175,8 +175,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert device is not None
         message = await AwaitAioLIFX().wait(device.get_color)
         connection.async_stop()
-        if message is None:
-            return None
+        if  message is None or lifx_features(device)["relays"] is True:
+            return None  # relays not supported
         if not mac:
             device.mac_addr = message.target_addr
         await self.async_set_unique_id(
