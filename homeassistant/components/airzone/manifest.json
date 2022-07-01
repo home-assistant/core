@@ -6,5 +6,10 @@
   "requirements": ["aioairzone==0.4.5"],
   "codeowners": ["@Noltari"],
   "iot_class": "local_polling",
-  "loggers": ["aioairzone"]
+  "loggers": ["aioairzone"],
+  "dhcp": [
+    {
+      "macaddress": "E84F25*"
+    }
+  ]
 }

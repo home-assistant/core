@@ -7,6 +7,7 @@ from __future__ import annotations
 # fmt: off
 
 DHCP: list[dict[str, str | bool]] = [
+    {'domain': 'airzone', 'macaddress': 'E84F25*'},
     {'domain': 'august', 'hostname': 'connect', 'macaddress': 'D86162*'},
     {'domain': 'august', 'hostname': 'connect', 'macaddress': 'B8B7F1*'},
     {'domain': 'august', 'hostname': 'connect', 'macaddress': '2C9FFB*'},
