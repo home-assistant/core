@@ -501,8 +501,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(
             f"Could not connect to controller at {entry.data[CONF_URL]}"
         ) from connect_ex
-    except FibaroAuthFailed as error:
-        raise ConfigEntryAuthFailed from error
+    except FibaroAuthFailed as auth_ex:
+        raise ConfigEntryAuthFailed from auth_ex
 
     data: dict[str, Any] = {}
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = data
