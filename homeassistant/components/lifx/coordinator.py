@@ -6,10 +6,11 @@ from datetime import timedelta
 from functools import partial
 import logging
 
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, UNAVAILABLE_GRACE
 from .util import AwaitAioLIFX, LIFXConnection, lifx_features
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,7 +36,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=self.device.ip_addr,
+            name=f"{self.device.label} {self.device.ip_addr} {self.device.mac_addr}",
             update_interval=update_interval,
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
@@ -43,6 +44,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
+
+    @callback
+    def async_setup(self):
+        """Change timeouts."""
+        self.device.timeout = MESSAGE_TIMEOUT
+        self.device.retry_count = MESSAGE_RETRIES
+        self.device.unregister_timeout = UNAVAILABLE_GRACE
 
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""

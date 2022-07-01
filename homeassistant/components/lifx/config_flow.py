@@ -76,6 +76,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         placeholders = {
+            "label": self._discovered_device.label,
             "mac_addr": self.unique_id,
             "host": self._discovered_device.ip_addr,
         }
@@ -126,7 +127,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
-            formatted_mac: f"{device.ip_addr} {formatted_mac}"
+            formatted_mac: f"{device.label} ({device.ip_addr}) {formatted_mac}"
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }
@@ -155,7 +156,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from a smart device."""
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.ip_addr})
         return self.async_create_entry(
-            title=device.mac_addr,
+            title=device.label,
             data={
                 CONF_HOST: device.ip_addr,
             },
