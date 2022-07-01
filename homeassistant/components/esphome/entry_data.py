@@ -45,6 +45,7 @@ from aioesphomeapi import (
 from aioesphomeapi.model import ButtonInfo
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
@@ -54,37 +55,37 @@ _LOGGER = logging.getLogger(__name__)
 
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
-    BinarySensorInfo: "binary_sensor",
-    ButtonInfo: "button",
-    CameraInfo: "camera",
-    ClimateInfo: "climate",
-    CoverInfo: "cover",
-    FanInfo: "fan",
-    LightInfo: "light",
-    LockInfo: "lock",
-    MediaPlayerInfo: "media_player",
-    NumberInfo: "number",
-    SelectInfo: "select",
-    SensorInfo: "sensor",
-    SwitchInfo: "switch",
-    TextSensorInfo: "sensor",
+    BinarySensorInfo: Platform.BINARY_SENSOR,
+    ButtonInfo: Platform.BINARY_SENSOR,
+    CameraInfo: Platform.BINARY_SENSOR,
+    ClimateInfo: Platform.CLIMATE,
+    CoverInfo: Platform.COVER,
+    FanInfo: Platform.FAN,
+    LightInfo: Platform.LIGHT,
+    LockInfo: Platform.LOCK,
+    MediaPlayerInfo: Platform.MEDIA_PLAYER,
+    NumberInfo: Platform.NUMBER,
+    SelectInfo: Platform.SELECT,
+    SensorInfo: Platform.SENSOR,
+    SwitchInfo: Platform.SWITCH,
+    TextSensorInfo: Platform.SENSOR,
 }
 
 STATE_TYPE_TO_COMPONENT_KEY = {
-    BinarySensorState: "binary_sensor",
-    EntityState: "button",
-    CameraState: "camera",
-    ClimateState: "climate",
-    CoverState: "cover",
-    FanState: "fan",
-    LightState: "light",
-    LockState: "lock",
-    MediaPlayerState: "media_player",
-    NumberState: "number",
-    SelectState: "select",
-    SensorState: "sensor",
-    SwitchState: "switch",
-    TextSensorState: "sensor",
+    BinarySensorState: Platform.BINARY_SENSOR,
+    EntityState: Platform.BINARY_SENSOR,
+    CameraState: Platform.BINARY_SENSOR,
+    ClimateState: Platform.CLIMATE,
+    CoverState: Platform.COVER,
+    FanState: Platform.FAN,
+    LightState: Platform.LIGHT,
+    LockState: Platform.LOCK,
+    MediaPlayerState: Platform.MEDIA_PLAYER,
+    NumberState: Platform.NUMBER,
+    SelectState: Platform.SELECT,
+    SensorState: Platform.SENSOR,
+    SwitchState: Platform.SWITCH,
+    TextSensorState: Platform.SENSOR,
 }
 
 
