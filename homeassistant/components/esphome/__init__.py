@@ -559,7 +559,6 @@ async def platform_async_setup_entry(
     entry_data.info[component_key] = {}
     entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
-    entry_data.register_state_type(state_type, component_key)
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
