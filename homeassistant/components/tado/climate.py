@@ -168,7 +168,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
                     support_flags |= ClimateEntityFeature.SWING_MODE
                     supported_swing_modes = [SWING_OFF, TADO_TO_HA_SWING_MODE_MAP[swing_mode]]
 
-            if CONST_LIGHT in capabilities[mode] and light is None
+            if CONST_LIGHT in capabilities[mode] and light is None:
                 light = capabilities[mode][CONST_LIGHT][0]
 
             if not capabilities[mode].get("fanLevel"):
