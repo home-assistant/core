@@ -30,6 +30,7 @@ from .util import LIFXConnection, async_entry_is_legacy, get_real_mac_addr
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
 
+
 INTERFACE_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_SERVER): cv.string,

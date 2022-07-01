@@ -5,11 +5,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any, cast
 
-import aiolifx as aiolifx_module
 from aiolifx import products
 from aiolifx.aiolifx import UDP_BROADCAST_PORT, Device, Light
 from aiolifx.message import Message
-import aiolifx_effects as aiolifx_effects_module
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
@@ -21,7 +19,7 @@ from homeassistant.components.light import (
     preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
@@ -35,36 +33,32 @@ def async_entry_is_legacy(entry: ConfigEntry) -> bool:
     return entry.unique_id is None or entry.unique_id == DOMAIN
 
 
-def convert_8_to_16(value):
+def convert_8_to_16(value: int) -> int:
     """Scale an 8 bit level into 16 bits."""
     return (value << 8) | value
 
 
-def convert_16_to_8(value):
+def convert_16_to_8(value: int) -> int:
     """Scale a 16 bit level into 8 bits."""
     return value >> 8
 
 
-def aiolifx() -> aiolifx_module:
-    """Return the aiolifx module."""
-    return aiolifx_module
-
-
-def aiolifx_effects() -> aiolifx_effects_module:
-    """Return the aiolifx_effects module."""
-    return aiolifx_effects_module
-
-
 def lifx_features(bulb: Light) -> dict[str, Any]:
     """Return a feature map for this bulb, or a default map if unknown."""
-    return products.features_map.get(bulb.product) or products.features_map.get(1)
+    features: dict[str, Any] = (
+        products.features_map.get(bulb.product) or products.features_map[1]
+    )
+    return features
 
 
-def find_hsbk(hass, **kwargs: Any) -> list[float | int | None] | None:
-    """Find the desired color from a number of possible inputs."""
+def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | None:
+    """Find the desired color from a number of possible inputs.
+
+    Hue, Saturation, Brightness, Kelvin
+    """
     hue, saturation, brightness, kelvin = [None] * 4
 
-    preprocess_turn_on_alternatives(hass, kwargs)
+    preprocess_turn_on_alternatives(hass, kwargs)  # type: ignore[no-untyped-call]
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
@@ -92,8 +86,13 @@ def find_hsbk(hass, **kwargs: Any) -> list[float | int | None] | None:
     return None if hsbk == [None] * 4 else hsbk
 
 
-def merge_hsbk(base, change):
-    """Copy change on top of base, except when None."""
+def merge_hsbk(
+    base: list[float | int | None], change: list[float | int | None] | None
+) -> list[float | int | None] | None:
+    """Copy change on top of base, except when None.
+
+    Hue, Saturation, Brightness, Kelvin
+    """
     if change is None:
         return None
     return [b if c is None else c for b, c in zip(base, change)]
@@ -102,7 +101,7 @@ def merge_hsbk(base, change):
 class AwaitAioLIFX:
     """Wait for an aiolifx callback and return the message."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the wrapper."""
         self.message: Message | None = None
         self.event = asyncio.Event()
@@ -137,7 +136,7 @@ class LIFXConnection:
         """Ensure we are connected."""
         loop = asyncio.get_running_loop()
         transport_proto = await loop.create_datagram_endpoint(
-            lambda: Light(loop, self.mac, self.host),
+            lambda: Light(loop, self.mac, self.host),  # type: ignore[no-any-return]
             remote_addr=(self.host, UDP_BROADCAST_PORT),
         )
         self.transport = cast(asyncio.DatagramTransport, transport_proto[0])
@@ -149,7 +148,7 @@ class LIFXConnection:
         self.transport.close()
 
 
-def get_real_mac_addr(mac_addr: str, host_firmware_version: str):
+def get_real_mac_addr(mac_addr: str, host_firmware_version: str) -> str:
     """Increment the last byte of the mac address by one for FW>3.70."""
     if host_firmware_version and AwesomeVersion(host_firmware_version) >= FIX_MAC_FW:
         octets = [int(octet, 16) for octet in mac_addr.split(":")]
@@ -158,7 +157,7 @@ def get_real_mac_addr(mac_addr: str, host_firmware_version: str):
     return mac_addr
 
 
-def real_mac_to_lifx_mac_addr(mac_addr: str):
+def real_mac_to_lifx_mac_addr(mac_addr: str) -> str:
     """Decrement the last byte of the mac address by one for FW>3.70."""
     octets = [int(octet, 16) for octet in mac_addr.split(":")]
     octets[5] = (octets[5] - 1) % 256

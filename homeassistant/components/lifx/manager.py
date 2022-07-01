@@ -6,6 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+import aiolifx_effects
 import voluptuous as vol
 
 from homeassistant.components.light import (
@@ -29,7 +30,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
 from .const import DOMAIN
-from .util import aiolifx_effects, convert_8_to_16, find_hsbk
+from .util import convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +122,7 @@ class LIFXManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the manager."""
         self.hass = hass
-        self.effects_conductor = aiolifx_effects().Conductor(hass.loop)
+        self.effects_conductor = aiolifx_effects.Conductor(hass.loop)
         self.entry_id_to_entity_id: dict[str, str] = {}
 
     @callback
@@ -130,7 +131,7 @@ class LIFXManager:
         self.register_effects()
 
     @callback
-    def async_unload(self):
+    def async_unload(self) -> None:
         """Release resources."""
         for service in SERVICES:
             self.hass.services.async_remove(DOMAIN, service)
@@ -149,7 +150,7 @@ class LIFXManager:
 
         return unregister_entity
 
-    def register_effects(self):
+    def register_effects(self) -> None:
         """Register the LIFX effects as hass service calls."""
 
         async def service_handler(service: ServiceCall) -> None:
@@ -192,7 +193,7 @@ class LIFXManager:
         _LOGGER.debug("Starting effect %s on %s", service, bulbs)
 
         if service == SERVICE_EFFECT_PULSE:
-            effect = aiolifx_effects().EffectPulse(
+            effect = aiolifx_effects.EffectPulse(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
                 cycles=kwargs.get(ATTR_CYCLES),
@@ -201,13 +202,13 @@ class LIFXManager:
             )
             await self.effects_conductor.start(effect, bulbs)
         elif service == SERVICE_EFFECT_COLORLOOP:
-            preprocess_turn_on_alternatives(self.hass, kwargs)
+            preprocess_turn_on_alternatives(self.hass, kwargs)  # type: ignore[no-untyped-call]
 
             brightness = None
             if ATTR_BRIGHTNESS in kwargs:
                 brightness = convert_8_to_16(kwargs[ATTR_BRIGHTNESS])
 
-            effect = aiolifx_effects().EffectColorloop(
+            effect = aiolifx_effects.EffectColorloop(
                 power_on=kwargs.get(ATTR_POWER_ON),
                 period=kwargs.get(ATTR_PERIOD),
                 change=kwargs.get(ATTR_CHANGE),

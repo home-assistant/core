@@ -33,6 +33,7 @@ def async_migrate_legacy_entries(
 ) -> None:
     """Migrate the legacy config entries to have an entry per device."""
     device_registry = dr.async_get(hass)
+
     for dev_entry in dr.async_entries_for_config_entry(
         device_registry, legacy_entry.entry_id
     ):

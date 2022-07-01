@@ -145,6 +145,7 @@ homeassistant.components.lametric.*
 homeassistant.components.laundrify.*
 homeassistant.components.lcn.*
 homeassistant.components.light.*
+homeassistant.components.lifx.*
 homeassistant.components.local_ip.*
 homeassistant.components.lock.*
 homeassistant.components.logbook.*
