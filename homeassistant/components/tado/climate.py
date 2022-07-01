@@ -39,12 +39,15 @@ from .const import (
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
     CONST_OVERLAY_TIMER,
+    CONST_SWING_MODE_VERTICAL,
+    CONST_SWING_MODE_HORIZONTAL,
     DATA,
     DOMAIN,
     HA_TERMINATION_DURATION,
     HA_TERMINATION_TYPE,
     HA_TO_TADO_FAN_MODE_MAP,
     HA_TO_TADO_HVAC_MODE_MAP,
+    HA_TO_TADO_SWING_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
     KNOWN_TADO_SWING_MODES,
     SIGNAL_TADO_UPDATE_RECEIVED,
@@ -284,7 +287,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
-        self._current_tado_swing_mode = TADO_SWING_OFF
+        self._current_tado_swing_mode = SWING_OFF
 
         self._tado_zone_data = None
 
@@ -645,8 +648,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
         swing = None
+        horizontalSwing = None
+        verticalSwing = None
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
-            swing = self._current_tado_swing_mode
+            swing = HA_TO_TADO_SWING_MODE_MAP[self._current_tado_swing_mode]
+            horizontalSwing = swing[CONST_SWING_MODE_VERTICAL]
+            verticalSwing = swing[CONST_SWING_MODE_VERTICAL]
+
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
@@ -655,6 +663,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             duration=duration,
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
-            fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
-            swing=swing,  # api defaults to not sending swing if None specified
+            fan_speed=fan_speed,
+            horizontalSwing=horizontalSwing,
+            verticalSwing=verticalSwing,
         )

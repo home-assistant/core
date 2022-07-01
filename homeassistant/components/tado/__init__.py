@@ -278,11 +278,12 @@ class TadoConnector:
         device_type="HEATING",
         mode=None,
         fan_speed=None,
-        swing=None,
+        verticalSwing=None,
+        horizontalSwing=None,
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s swing=%s",
+            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s verticalSwing=%s horizontalSwing=%s",
             zone_id,
             overlay_mode,
             temperature,
@@ -290,7 +291,8 @@ class TadoConnector:
             device_type,
             mode,
             fan_speed,
-            swing,
+            verticalSwing,
+            horizontalSwing,
         )
 
         try:
@@ -303,7 +305,8 @@ class TadoConnector:
                 "ON",
                 mode,
                 fanLevel=fan_speed,
-                swing=swing,
+                verticalSwing=verticalSwing,
+                horizontalSwing=horizontalSwing,
             )
 
         except RequestException as exc:
