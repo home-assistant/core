@@ -43,7 +43,10 @@ from .const import (
     MANUFACTURER,
     UNASSIGNED_AREA,
 )
-from .device_trigger import async_get_lip_button
+from .device_trigger import (
+    DEVICE_TYPE_SUBTYPE_MAP_TO_LIP,
+    LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP,
+)
 from .models import LutronCasetaData
 from .util import serial_to_unique_id
 
@@ -245,6 +248,18 @@ def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
     if "_" in device_name:
         return device_name.split("_", 1)
     return UNASSIGNED_AREA, device_name
+
+
+@callback
+def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
+    """Get the LIP button for a given LEAP button."""
+    if (
+        lip_buttons_name_to_num := DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    ) is None or (
+        leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
+    ) is None:
+        return None
+    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
 
 
 @callback
