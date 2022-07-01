@@ -50,14 +50,12 @@ class ClassTypeHintMatch:
     matches: list[TypeHintMatch]
 
 
-_INNER_MATCH = r"(.*?]*)"
-_INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
-    # x_of_y_of_z_comma_a matches items such as "list[dict[str, Any]]"
-    "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
+_INNER_MATCH = r"((?:\w+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
 _TYPE_HINT_MATCHERS.update(
     {
         f"x_of_y_{i}": re.compile(
@@ -1418,54 +1416,53 @@ def _is_valid_type(
             and _is_valid_type(match.group(2), node.right)
         )
 
-    if isinstance(node, nodes.Subscript):
-        # Special case for xxx[yyy[zzz, aaa]]`
-        if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
-            return (
-                _is_valid_type(match.group(1), node.value)
-                and isinstance(subnode := node.slice, nodes.Subscript)
-                and _is_valid_type(match.group(2), subnode.value)
-                and isinstance(subnode.slice, nodes.Tuple)
-                and _is_valid_type(match.group(3), subnode.slice.elts[0])
-                and _is_valid_type(match.group(4), subnode.slice.elts[1])
+    # Special case for `xxx[aaa, bbb, ccc, ...]
+    if (
+        isinstance(node, nodes.Subscript)
+        and not isinstance(node.slice, nodes.Tuple)
+        and (match := _TYPE_HINT_MATCHERS["x_of_y_1"].match(expected_type))
+    ):
+        return _is_valid_type(match.group(1), node.value) and _is_valid_type(
+            match.group(2), node.slice
+        )
+
+    # Special case for `xxx[aaa, bbb, ccc, ...]
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.slice, nodes.Tuple)
+        and (
+            match := _TYPE_HINT_MATCHERS[f"x_of_y_{len(node.slice.elts)}"].match(
+                expected_type
             )
-        # Other cases of xxx[yyy, zzz, aaa, ...]`
-        for i in reversed(_INNER_MATCH_POSSIBILITIES):
-            if match := _TYPE_HINT_MATCHERS[f"x_of_y_{i}"].match(expected_type):
-                # Case (i == 1) is separate because node.slice is is not a Tuple
-                if i == 1:
-                    return _is_valid_type(
-                        match.group(1), node.value
-                    ) and _is_valid_type(match.group(2), node.slice)
+        )
+    ):
+        # This special case is separate because we want Mapping[str, Any]
+        # to also match dict[str, int] and similar
+        if (
+            len(node.slice.elts) == 2
+            and in_return
+            and match.group(1) == "Mapping"
+            and match.group(3) == "Any"
+        ):
+            return (
+                isinstance(node.value, nodes.Name)
+                # We accept dict when Mapping is needed
+                and node.value.name in ("Mapping", "dict")
+                and isinstance(node.slice, nodes.Tuple)
+                and _is_valid_type(match.group(2), node.slice.elts[0])
+                # Ignore second item
+                # and _is_valid_type(match.group(3), node.slice.elts[1])
+            )
 
-                # This special case is separate because we want Mapping[str, Any]
-                # to also match dict[str, int] and similar
-                if (
-                    i == 2
-                    and in_return
-                    and match.group(1) == "Mapping"
-                    and match.group(3) == "Any"
-                ):
-                    return (
-                        isinstance(node.value, nodes.Name)
-                        # We accept dict when Mapping is needed
-                        and node.value.name in ("Mapping", "dict")
-                        and isinstance(node.slice, nodes.Tuple)
-                        and _is_valid_type(match.group(2), node.slice.elts[0])
-                        # Ignore second item
-                        # and _is_valid_type(match.group(3), node.slice.elts[1])
-                    )
-
-                # This is the default case
-                return (
-                    _is_valid_type(match.group(1), node.value)
-                    and isinstance(node.slice, nodes.Tuple)
-                    and len(node.slice.elts) == i
-                    and all(
-                        _is_valid_type(match.group(n + 2), node.slice.elts[n])
-                        for n in range(i)
-                    )
-                )
+        # This is the default case
+        return (
+            _is_valid_type(match.group(1), node.value)
+            and isinstance(node.slice, nodes.Tuple)
+            and all(
+                _is_valid_type(match.group(n + 2), node.slice.elts[n])
+                for n in range(len(node.slice.elts))
+            )
+        )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
     if isinstance(node, nodes.Name) and node.name == expected_type:

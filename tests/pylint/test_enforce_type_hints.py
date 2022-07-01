@@ -51,21 +51,23 @@ def test_regex_get_module_platform(
             ("tuple", "int", "int", "int", "int", "int"),
         ),
         ("Awaitable[None]", 1, ("Awaitable", "None")),
+        ("list[dict[str, str]]", 1, ("list", "dict[str, str]")),
+        ("list[dict[str, Any]]", 1, ("list", "dict[str, Any]")),
     ],
 )
-def test_regex_x_of_y_comma_z(
+def test_regex_x_of_y_i(
     hass_enforce_type_hints: ModuleType,
     string: str,
     expected_count: int,
     expected_items: tuple[str, ...],
 ) -> None:
-    """Test x_of_y_comma_z regexes."""
+    """Test x_of_y_i regexes."""
     matchers: dict[str, re.Pattern] = hass_enforce_type_hints._TYPE_HINT_MATCHERS
 
     assert (match := matchers[f"x_of_y_{expected_count}"].match(string))
     assert match.group(0) == string
-    for n in range(expected_count):
-        assert match.group(n + 1) == expected_items[n]
+    for index in range(expected_count):
+        assert match.group(index + 1) == expected_items[index]
 
 
 @pytest.mark.parametrize(
@@ -731,7 +733,7 @@ def test_valid_long_tuple(
     # Set ignore option
     type_hint_checker.config.ignore_missing_annotations = False
 
-    class_node, rgbw_node, rgbww_node = astroid.extract_node(
+    class_node, _, _ = astroid.extract_node(
         """
     class Entity():
         pass
