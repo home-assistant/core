@@ -272,6 +272,17 @@ def _async_subscribe_pico_remote_events(
         type_ = device["type"]
         area, name = _area_and_name_from_name(device["name"])
         button_number = device["button_number"]
+
+        # Catch if type_ is implemented before attempting to map to LIP
+        if type_ not in DEVICE_TYPE_SUBTYPE_MAP_TO_LIP:
+            _LOGGER.error(
+                "LEAP device type %s has not been implemented. %s button %s",
+                type_,
+                name,
+                button_number,
+            )
+            return
+
         # The original implementation used LIP instead of LEAP
         # so we need to convert the button number to maintain compat
         sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
