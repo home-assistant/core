@@ -32,7 +32,6 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.connection = connection
         self.device = connection.device
         self.lock = asyncio.Lock()
-        self._lifx_mac_address = self.device.mac_addr
         update_interval = timedelta(seconds=10)
         super().__init__(
             hass,
@@ -56,13 +55,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     @property
     def internal_mac_address(self):
         """Return the internal mac address."""
-        return self._lifx_mac_address
+        return self.device.mac_addr
 
     @property
     def physical_mac_address(self):
         """Return the physical mac address."""
         return get_real_mac_addr(
-            self._lifx_mac_address, self.device.host_firmware_version
+            self.device.mac_addr, self.device.host_firmware_version
         )
 
     async def _async_update_data(self) -> None:
@@ -73,9 +72,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(
                     f"Failed to fetch state from device: {self.device.ip_addr}"
                 )
-            self._lifx_mac_address = response.target_addr
             if self.device.mac_addr == TARGET_ANY:
-                self.device.mac_addr = self._lifx_mac_address
+                self.device.mac_addr = response.target_addr
             if lifx_features(self.device)["multizone"]:
                 await self.update_color_zones()
 
