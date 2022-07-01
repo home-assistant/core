@@ -175,7 +175,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert device is not None
         message = await AwaitAioLIFX().wait(device.get_color)
         connection.async_stop()
-        if  message is None or lifx_features(device)["relays"] is True:
+        if message is None or lifx_features(device)["relays"] is True:
             return None  # relays not supported
         if not mac:
             device.mac_addr = message.target_addr

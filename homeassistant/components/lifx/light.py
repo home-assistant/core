@@ -45,7 +45,6 @@ from .util import (
     convert_8_to_16,
     convert_16_to_8,
     find_hsbk,
-    get_real_mac_addr,
     lifx_features,
     merge_hsbk,
 )
@@ -114,8 +113,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         )
         self.postponed_update = None
         self.entry = entry
-        mac_addr = get_real_mac_addr(self.mac_addr, self.bulb.host_firmware_version)
-        self._attr_unique_id = self.mac_addr
+        self._attr_unique_id = self.coordinator.internal_mac_address
         self._attr_name = self.bulb.label
         self._attr_min_mireds = math.floor(
             color_util.color_temperature_kelvin_to_mired(
@@ -128,8 +126,10 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             )
         )
         info = DeviceInfo(
-            identifiers={(DOMAIN, mac_addr)},
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
+            identifiers={(DOMAIN, self.coordinator.internal_mac_address)},
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, self.coordinator.physical_mac_address)
+            },
             manufacturer="LIFX",
             name=self.name,
         )
