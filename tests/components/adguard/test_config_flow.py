@@ -16,17 +16,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
+from .const import FIXTURE_USER_INPUT
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-FIXTURE_USER_INPUT = {
-    CONF_HOST: "127.0.0.1",
-    CONF_PORT: 3000,
-    CONF_USERNAME: "user",
-    CONF_PASSWORD: "pass",
-    CONF_SSL: True,
-    CONF_VERIFY_SSL: True,
-}
 
 
 async def test_show_authenticate_form(hass: HomeAssistant) -> None:
