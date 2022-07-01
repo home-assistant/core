@@ -79,8 +79,8 @@ jobs:
           # Defaults
           integrations_glob=""
           test_full_suite="true"
-          test_groups="[3, 4, 5, 6, 7, 8, 9]"
-          test_group_count=48
+          test_groups="[14, 15, 16]"
+          test_group_count=96
           tests="[]"
           tests_glob=""
 
@@ -123,8 +123,8 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
-            test_groups="[3, 4, 5, 6, 7, 8, 9]"
-            test_group_count=48
+            test_groups="[14, 15, 16]"
+            test_group_count=96
             test_full_suite="true"
           fi
 
@@ -752,7 +752,7 @@ jobs:
         group: ${{ fromJson(needs.changes.outputs.test_groups) }}
         python-version: ["3.9"]
     name: >-
-      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
+      Run tests Python ${{ matrix.python-version }} (${{ matrix.group }} / ${{ needs.changes.outputs.test_group_count }})
     container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
