@@ -1124,6 +1124,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
+    # "device_tracker": [],  # ignored as does not provide classes
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -1201,6 +1202,33 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     arg_types={1: "bool"},
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "geo_location": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="GeolocationEvent",
+            matches=[
+                TypeHintMatch(
+                    function_name="source",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="distance",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="latitude",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="longitude",
+                    return_type=["float", None],
                 ),
             ],
         ),
