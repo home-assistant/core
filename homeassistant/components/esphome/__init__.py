@@ -17,6 +17,7 @@ from aioesphomeapi import (
     DeviceInfo as EsphomeDeviceInfo,
     EntityCategory as EsphomeEntityCategory,
     EntityInfo,
+    EntityState,
     HomeassistantServiceCall,
     InvalidEncryptionKeyAPIError,
     ReconnectLogic,
@@ -52,7 +53,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.template import Template
 
 # Import config flow so that it's added to the registry
-from .entry_data import RuntimeEntryData, _StateT
+from .entry_data import RuntimeEntryData
 
 DOMAIN = "esphome"
 CONF_NOISE_PSK = "noise_psk"
@@ -536,6 +537,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
+_StateT = TypeVar("_StateT", bound=EntityState)
 
 
 async def platform_async_setup_entry(
@@ -557,7 +559,6 @@ async def platform_async_setup_entry(
     entry_data.info[component_key] = {}
     entry_data.old_info[component_key] = {}
     entry_data.state[component_key] = {}
-    entry_data.register_state_type(state_type, component_key)
 
     @callback
     def async_list_entities(infos: list[EntityInfo]) -> None:
