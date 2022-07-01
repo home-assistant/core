@@ -11,17 +11,18 @@ import pytest
 
 from homeassistant.components.dlna_dmr.const import DOMAIN as DLNA_DOMAIN
 from homeassistant.components.dlna_dmr.data import DlnaDmrData
-from homeassistant.const import CONF_DEVICE_ID, CONF_TYPE, CONF_URL
+from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
-MOCK_DEVICE_BASE_URL = "http://192.88.99.4"
-MOCK_DEVICE_LOCATION = MOCK_DEVICE_BASE_URL + "/dmr_description.xml"
+MOCK_DEVICE_HOST_ADDR = "192.88.99.4"
+MOCK_DEVICE_LOCATION = f"http://{MOCK_DEVICE_HOST_ADDR}/dmr_description.xml"
 MOCK_DEVICE_NAME = "Test Renderer Device"
 MOCK_DEVICE_TYPE = "urn:schemas-upnp-org:device:MediaRenderer:1"
 MOCK_DEVICE_UDN = "uuid:7cc6da13-7f5d-4ace-9729-58b275c52f1e"
 MOCK_DEVICE_USN = f"{MOCK_DEVICE_UDN}::{MOCK_DEVICE_TYPE}"
+MOCK_MAC_ADDRESS = "ab:cd:ef:01:02:03"
 
 LOCAL_IP = "192.88.99.1"
 EVENT_CALLBACK_URL = "http://192.88.99.1/notify"
@@ -80,6 +81,24 @@ def domain_data_mock(hass: HomeAssistant) -> Iterable[Mock]:
 @pytest.fixture
 def config_entry_mock() -> MockConfigEntry:
     """Mock a config entry for this platform."""
+    mock_entry = MockConfigEntry(
+        unique_id=MOCK_DEVICE_UDN,
+        domain=DLNA_DOMAIN,
+        data={
+            CONF_URL: MOCK_DEVICE_LOCATION,
+            CONF_DEVICE_ID: MOCK_DEVICE_UDN,
+            CONF_TYPE: MOCK_DEVICE_TYPE,
+            CONF_MAC: MOCK_MAC_ADDRESS,
+        },
+        title=MOCK_DEVICE_NAME,
+        options={},
+    )
+    return mock_entry
+
+
+@pytest.fixture
+def config_entry_mock_no_mac() -> MockConfigEntry:
+    """Mock a config entry that does not already contain a MAC address."""
     mock_entry = MockConfigEntry(
         unique_id=MOCK_DEVICE_UDN,
         domain=DLNA_DOMAIN,
