@@ -5,6 +5,7 @@ import asyncio
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import cast
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
@@ -46,19 +47,19 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         )
 
     @callback
-    def async_setup(self):
+    def async_setup(self) -> None:
         """Change timeouts."""
         self.device.timeout = MESSAGE_TIMEOUT
         self.device.retry_count = MESSAGE_RETRIES
         self.device.unregister_timeout = UNAVAILABLE_GRACE
 
     @property
-    def internal_mac_address(self):
+    def internal_mac_address(self) -> str:
         """Return the internal mac address."""
-        return self.device.mac_addr
+        return cast(str, self.device.mac_addr)
 
     @property
-    def physical_mac_address(self):
+    def physical_mac_address(self) -> str:
         """Return the physical mac address."""
         return get_real_mac_addr(
             self.device.mac_addr, self.device.host_firmware_version
@@ -77,7 +78,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if lifx_features(self.device)["multizone"]:
                 await self.update_color_zones()
 
-    async def update_color_zones(self):
+    async def update_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
         top = 1

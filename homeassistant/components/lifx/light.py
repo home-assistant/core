@@ -1,11 +1,14 @@
 """Support for LIFX lights."""
 from __future__ import annotations
 
-from datetime import timedelta
+from collections.abc import Callable, Coroutine
+from datetime import datetime, timedelta
 from functools import partial
 import math
 from typing import Any
 
+from aiolifx import products
+from aiolifx.message import Message
 import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
@@ -20,7 +23,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL, ATTR_SW_VERSION
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -41,7 +44,6 @@ from .manager import (
 )
 from .util import (
     AwaitAioLIFX,
-    aiolifx,
     convert_8_to_16,
     convert_16_to_8,
     find_hsbk,
@@ -111,7 +113,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self.effects_conductor: aiolifx_effects_module.Conductor = (
             manager.effects_conductor
         )
-        self.postponed_update = None
+        self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
         self._attr_unique_id = self.coordinator.internal_mac_address
         self._attr_name = self.bulb.label
@@ -133,7 +135,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             manufacturer="LIFX",
             name=self.name,
         )
-        _map = aiolifx().products.product_map
+        _map = products.product_map
         if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
         if (version := self.bulb.host_firmware_version) is not None:
@@ -154,13 +156,13 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         return {self.color_mode}
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         fade = self.bulb.power_level / 65535
         return convert_16_to_8(int(fade * self.bulb.color[2]))
 
     @property
-    def color_temp(self):
+    def color_temp(self) -> int | None:
         """Return the color temperature."""
         _, sat, _, kelvin = self.bulb.color
         if sat:
@@ -168,19 +170,19 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         return color_util.color_temperature_kelvin_to_mired(kelvin)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.bulb.power_level != 0
+        return bool(self.bulb.power_level != 0)
 
     @property
-    def effect(self):
+    def effect(self) -> str | None:
         """Return the name of the currently running effect."""
         effect = self.effects_conductor.effect(self.bulb)
         if effect:
             return f"lifx_effect_{effect.name}"
         return None
 
-    async def update_during_transition(self, when):
+    async def update_during_transition(self, when: int) -> None:
         """Update state at the start and end of a transition."""
         if self.postponed_update:
             self.postponed_update()
@@ -191,17 +193,22 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
         # Transition has ended
         if when > 0:
+
+            async def _async_refresh(now: datetime) -> None:
+                """Refresh the state."""
+                await self.coordinator.async_refresh()
+
             self.postponed_update = async_track_point_in_utc_time(
                 self.hass,
-                self.coordinator.async_refresh,
+                _async_refresh,
                 util.dt.utcnow() + timedelta(milliseconds=when),
             )
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         await self.set_state(**{**kwargs, ATTR_POWER: True})
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.set_state(**{ATTR_POWER: False})
 
@@ -255,16 +262,27 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
 
-    async def set_power(self, ack, pwr, duration=0):
+    async def set_power(
+        self,
+        ack: Callable[[Any], Coroutine[Any, Any, Message | None]],
+        pwr: bool,
+        duration: int = 0,
+    ) -> None:
         """Send a power change to the bulb."""
         await ack(partial(self.bulb.set_power, pwr, duration=duration))
 
-    async def set_color(self, ack, hsbk, kwargs, duration=0):
+    async def set_color(
+        self,
+        ack: Callable[[Any], Coroutine[Any, Any, Message | None]],
+        hsbk: list[float | int | None],
+        kwargs: dict[str, Any],
+        duration: int = 0,
+    ) -> None:
         """Send a color change to the bulb."""
-        hsbk = merge_hsbk(self.bulb.color, hsbk)
-        await ack(partial(self.bulb.set_color, hsbk, duration=duration))
+        merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
+        await ack(partial(self.bulb.set_color, merged_hsbk, duration=duration))
 
-    async def default_effect(self, **kwargs):
+    async def default_effect(self, **kwargs: Any) -> None:
         """Start an effect with default parameters."""
         service = kwargs[ATTR_EFFECT]
         data = {ATTR_ENTITY_ID: self.entity_id}
@@ -284,7 +302,7 @@ class LIFXWhite(LIFXLight):
     """Representation of a white-only LIFX light."""
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects for this light."""
         return [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
 
@@ -306,12 +324,12 @@ class LIFXColor(LIFXLight):
         return {ColorMode.COLOR_TEMP, ColorMode.HS}
 
     @property
-    def effect_list(self):
+    def effect_list(self) -> list[str]:
         """Return the list of supported effects for this light."""
         return [SERVICE_EFFECT_COLORLOOP, SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hs value."""
         hue, sat, _, _ = self.bulb.color
         hue = hue / 65535 * 360
@@ -322,7 +340,13 @@ class LIFXColor(LIFXLight):
 class LIFXStrip(LIFXColor):
     """Representation of a LIFX light strip with multiple zones."""
 
-    async def set_color(self, ack, hsbk, kwargs, duration=0):
+    async def set_color(
+        self,
+        ack: Callable[[Any], Coroutine[Any, Any, Message | None]],
+        hsbk: list[float | int | None],
+        kwargs: dict[str, Any],
+        duration: int = 0,
+    ) -> None:
         """Send a color change to the bulb."""
         bulb = self.bulb
         num_zones = len(bulb.color_zones)

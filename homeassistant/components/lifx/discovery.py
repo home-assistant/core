@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
-import logging
 
 from aiolifx.aiolifx import LifxDiscovery, Light, ScanManager
 
@@ -16,8 +15,6 @@ from .const import DOMAIN
 from .util import get_real_mac_addr
 
 DEFAULT_TIMEOUT = 10
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_discover_devices(
