@@ -789,17 +789,10 @@ jobs:
           . venv/bin/activate
           python --version
           python3 -X dev -m pytest \
-            -qq \
-            --timeout=9 \
-            --durations=10 \
             -n auto \
             --dist=loadfile \
             --test-group-count ${{ needs.changes.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
-            --cov="homeassistant" \
-            --cov-report=xml \
-            -o console_output_style=count \
-            -p no:sugar \
             tests
       - name: Run pytest (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
