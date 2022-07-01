@@ -35,7 +35,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_devices: dict[str, Light] = {}
         self._discovered_device: Light | None = None
-        self.discovered_name: str | None = None
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
