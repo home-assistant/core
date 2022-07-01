@@ -22,7 +22,7 @@ on:
 env:
   CACHE_VERSION: 10
   PIP_CACHE_VERSION: 4
-  HA_SHORT_VERSION: 2022.7
+  HA_SHORT_VERSION: 2022.8
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
@@ -648,14 +648,14 @@ jobs:
         run: |
           . venv/bin/activate
           python --version
-          pylint homeassistant
+          pylint --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
         if: needs.changes.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
 
   mypy:
     name: Check mypy
