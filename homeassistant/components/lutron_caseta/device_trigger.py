@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     CONF_TYPE,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -369,18 +369,6 @@ TRIGGER_SCHEMA = vol.Any(
     SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
     SUNNATA_KEYPAD_4_BUTTON_TRIGGER_SCHEMA,
 )
-
-
-@callback
-def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
-    """Get the LIP button for a given LEAP button."""
-    if (
-        lip_buttons_name_to_num := DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
-    ) is None or (
-        leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
-    ) is None:
-        return None
-    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
 
 
 async def async_validate_trigger_config(
