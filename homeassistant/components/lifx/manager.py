@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import timedelta
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -31,6 +32,7 @@ from .const import DOMAIN
 from .util import aiolifx_effects, convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
+_LOGGER = logging.getLogger(__name__)
 
 
 SERVICE_EFFECT_PULSE = "effect_pulse"
@@ -187,6 +189,7 @@ class LIFXManager:
             for entry_id, coordinator in self.hass.data[DOMAIN].items()
             if self.entry_id_to_entity_id[entry_id] in entity_ids
         ]
+        _LOGGER.debug("Starting effect %s on %s", service, bulbs)
 
         if service == SERVICE_EFFECT_PULSE:
             effect = aiolifx_effects().EffectPulse(

@@ -95,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     host = entry.data[CONF_HOST]
     connection = LIFXConnection(host, TARGET_ANY)
     await connection.async_setup()
-    coordinator = LIFXUpdateCoordinator(hass, connection)
+    coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 

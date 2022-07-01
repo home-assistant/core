@@ -25,6 +25,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         connection: LIFXConnection,
+        title: str,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         assert connection.device is not None
@@ -36,7 +37,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{self.device.label} {self.device.ip_addr} {self.device.mac_addr}",
+            name=f"{title} ({self.device.ip_addr})",
             update_interval=update_interval,
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change
