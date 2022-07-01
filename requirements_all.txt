@@ -2047,7 +2047,7 @@ pyzerproc==0.4.8
 qnapstats==0.4.0
 
 # homeassistant.components.quantum_gateway
-quantum-gateway==0.0.6
+quantum-gateway==0.0.8
 
 # homeassistant.components.rachio
 rachiopy==1.0.3
