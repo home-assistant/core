@@ -13,6 +13,8 @@ from homeassistant.components.light import (
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_SUPPORTED_FEATURES,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import State
@@ -54,7 +56,7 @@ async def test_light_setup(hass, mock_device):
     assert entity_state.attributes[ATTR_FRIENDLY_NAME] == mock_device.name
     assert entity_state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
     assert entity_state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert entity_state.state == "off"
+    assert entity_state.state == STATE_OFF
     await run_service_tests(
         hass,
         mock_device,
@@ -90,13 +92,13 @@ async def test_light_restore_state(hass, mock_device):
     """Test restore from cache."""
     mock_restore_cache(
         hass,
-        [State("light.name", "on", attributes={ATTR_BRIGHTNESS: 77})],
+        [State("light.name", STATE_ON, attributes={ATTR_BRIGHTNESS: 77})],
     )
     await create_entity_from_device(hass, mock_device)
     mock_device.init_level.assert_called_once_with(77)
     entity_state = hass.states.get("light.name")
-    assert entity_state.state == "on"
-    assert entity_state.attributes["brightness"] == 77
+    assert entity_state.state == STATE_ON
+    assert entity_state.attributes[ATTR_BRIGHTNESS] == 77
     assert entity_state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
 
 
@@ -109,4 +111,4 @@ async def test_light_restore_state_bad_cache(hass, mock_device):
     await create_entity_from_device(hass, mock_device)
     mock_device.init_level.assert_not_called()
     entity_state = hass.states.get("light.name")
-    assert entity_state.state == "off"
+    assert entity_state.state == STATE_OFF
