@@ -8,8 +8,10 @@ from homeassistant.components.unifi.const import (
 )
 from homeassistant.components.unifi.device_tracker import CLIENT_TRACKER, DEVICE_TRACKER
 from homeassistant.components.unifi.sensor import (
-    DEVICE_SENSORS,
+    CPU_UTILIZATION_SENSOR,
+    MEMORY_UTILIZATION_SENSOR,
     RX_SENSOR,
+    TEMPERATURE_SENSOR,
     TX_SENSOR,
     UPTIME_SENSOR,
 )
@@ -161,13 +163,12 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
                 DEVICE_TRACKER: ["00:00:00:00:00:01"],
             },
             str(Platform.SENSOR): {
+                CPU_UTILIZATION_SENSOR: ["00:00:00:00:00:01"],
+                MEMORY_UTILIZATION_SENSOR: ["00:00:00:00:00:01"],
                 RX_SENSOR: ["00:00:00:00:00:00"],
+                TEMPERATURE_SENSOR: ["00:00:00:00:00:01"],
                 TX_SENSOR: ["00:00:00:00:00:00"],
-                UPTIME_SENSOR: ["00:00:00:00:00:00"],
-                **{
-                    f"device_{sensor.key}": ["00:00:00:00:00:01"]
-                    for sensor in DEVICE_SENSORS
-                },
+                UPTIME_SENSOR: ["00:00:00:00:00:01", "00:00:00:00:00:00"],
             },
             str(Platform.SWITCH): {
                 BLOCK_SWITCH: ["00:00:00:00:00:00"],

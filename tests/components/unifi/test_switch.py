@@ -176,7 +176,6 @@ DEVICE_1 = {
         },
     ],
     "state": 1,
-    "system-stats": {"cpu": "1.23", "mem": "50.0"},
     "type": "usw",
     "uptime": 0,
     "version": "4.0.42.10433",

@@ -33,7 +33,10 @@ from .controller import UniFiController
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
+CPU_UTILIZATION_SENSOR = "cpu_utilization"
+MEMORY_UTILIZATION_SENSOR = "memory_utilization"
 RX_SENSOR = "rx"
+TEMPERATURE_SENSOR = "temperature"
 TX_SENSOR = "tx"
 UPTIME_SENSOR = "uptime"
 
@@ -49,7 +52,7 @@ async def async_setup_entry(
         RX_SENSOR: set(),
         TX_SENSOR: set(),
         UPTIME_SENSOR: set(),
-        **{f"device_{sensor.key}": set() for sensor in DEVICE_SENSORS},
+        **{sensor.key: set() for sensor in DEVICE_SENSORS},
     }
 
     @callback
@@ -119,10 +122,7 @@ def add_device_entities(
         device = controller.api.devices[mac]
 
         for sensor in DEVICE_SENSORS:
-            if (
-                mac
-                in controller.entities[UniFiDeviceSensor.DOMAIN][f"device_{sensor.key}"]
-            ):
+            if mac in controller.entities[UniFiDeviceSensor.DOMAIN][sensor.key]:
                 continue
 
             if not sensor.is_enabled(device):
@@ -246,43 +246,39 @@ class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
         if self.value_fn is not None:
             return self.value_fn(device)
 
-        # pragma: no cover
-        raise RuntimeError("`value_fn` is required")
+        return None
 
     def is_enabled(self, device: UniFiDevice) -> bool:
         """Return whether the entity should be enabled."""
         if self.enabled is None:
             return True
 
-        if self.enabled not in device.raw:
-            return False
-
-        return device.raw[self.enabled]
+        return device.raw.get(self.enabled, False)
 
 
 DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
     UniFiDeviceSensorEntityDescription(
-        key="cpu_utilization",
+        key=CPU_UTILIZATION_SENSOR,
         name="CPU Utilization",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:speedometer",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="system-stats",
-        value_fn=lambda device: float(device.raw["system-stats"]["cpu"]),
+        value_fn=lambda device: float(device.raw.get("system-stats", {}).get("cpu")),
     ),
     UniFiDeviceSensorEntityDescription(
-        key="memory_utilization",
+        key=MEMORY_UTILIZATION_SENSOR,
         name="Memory Utilization",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:memory",
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="system-stats",
-        value_fn=lambda device: float(device.raw["system-stats"]["mem"]),
+        value_fn=lambda device: float(device.raw.get("system-stats", {}).get("mem")),
     ),
     UniFiDeviceSensorEntityDescription(
-        key="uptime",
+        key=UPTIME_SENSOR,
         name="Uptime",
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -290,7 +286,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         value_fn=lambda device: dt_util.now() - timedelta(seconds=device.raw["uptime"]),
     ),
     UniFiDeviceSensorEntityDescription(
-        key="temperature",
+        key=TEMPERATURE_SENSOR,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -317,7 +313,7 @@ class UniFiDeviceSensor(UniFiBase, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         # pylint: disable=invalid-name
-        self.TYPE = f"device_{description.key}"
+        self.TYPE = description.key
         super().__init__(device, controller)
         self.device = self._item
         self.entity_description = description
