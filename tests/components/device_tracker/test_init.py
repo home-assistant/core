@@ -615,7 +615,6 @@ async def test_adding_unknown_device_to_config(
     assert device.track
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf, hass):
     """Test that picture and icon are set in initial see."""
     tracker = legacy.DeviceTracker(hass, timedelta(seconds=60), False, {}, [])
@@ -626,7 +625,6 @@ async def test_picture_and_icon_on_see_discovery(mock_device_tracker_conf, hass)
     assert mock_device_tracker_conf[0].entity_picture == "pic_url"
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_backward_compatibility_for_track_new(mock_device_tracker_conf, hass):
     """Test backward compatibility for track new."""
     tracker = legacy.DeviceTracker(
@@ -638,7 +636,6 @@ async def test_backward_compatibility_for_track_new(mock_device_tracker_conf, ha
     assert mock_device_tracker_conf[0].track is False
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     """Test old style config is skipped."""
     tracker = legacy.DeviceTracker(
