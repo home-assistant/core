@@ -533,7 +533,6 @@ async def test_see_passive_zone_state(
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
-@pytest.mark.skip(reason="debug CI fail")
 async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     """Test that the device tracker see failures."""
     devices = mock_device_tracker_conf
@@ -584,7 +583,6 @@ async def test_async_added_to_hass(hass):
         assert atr == val, f"{key}={atr} expected: {val}"
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_bad_platform(hass):
     """Test bad platform."""
     config = {"device_tracker": [{"platform": "bad_platform"}]}
