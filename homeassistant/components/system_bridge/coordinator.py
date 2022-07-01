@@ -105,7 +105,7 @@ class SystemBridgeDataUpdateCoordinator(
             self.websocket_client.get_data(GetData(modules=modules))
         )
 
-    async def async_get_media_directories(self) -> MediaDirectories:
+    async def async_get_media_directories(self) -> None:
         """Get media directories."""
         self.systembridge_data.media_directories = None
         await self.websocket_client.get_directories()
@@ -114,7 +114,7 @@ class SystemBridgeDataUpdateCoordinator(
         self,
         base: str,
         path: str | None = None,
-    ) -> MediaFiles:
+    ) -> None:
         """Get media files."""
         self.systembridge_data.media_files = None
         await self.websocket_client.get_files(base, path)
@@ -123,7 +123,7 @@ class SystemBridgeDataUpdateCoordinator(
         self,
         base: str,
         path: str,
-    ) -> MediaFile:
+    ) -> None:
         """Get media file."""
         self.systembridge_data.media_file = None
         await self.websocket_client.get_file(base, path)
