@@ -178,7 +178,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if message is None:
             return None
         if not mac:
-            device = Light(self.hass.loop, message.target_addr, host)
+            device.mac_addr = message.target_addr
         await self.async_set_unique_id(
             dr.format_mac(device.mac_addr), raise_on_progress=raise_on_progress
         )
