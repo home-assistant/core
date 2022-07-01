@@ -144,12 +144,18 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
                 continue
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
-            if capabilities[mode].get("swings"):
+
+            if capabilities[mode].get("horizontalSwing"):
+                support_flags |= ClimateEntityFeature.SWING_MODE
+
+            if capabilities[mode].get("verticalSwing"):
                 support_flags |= ClimateEntityFeature.SWING_MODE
 
             if not capabilities[mode].get("fanLevel"):
                 continue
 
+            # TODO: support_flags is needed otherwise it will not send
+            # the value to the API call
             support_flags |= ClimateEntityFeature.FAN_MODE
 
             if supported_fan_modes:
