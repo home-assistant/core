@@ -24,8 +24,8 @@ from .const import DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
-from .migration import async_migrate_entities_devices
-from .util import LIFXConnection, async_entry_is_legacy
+from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
+from .util import LIFXConnection, async_entry_is_legacy, get_real_mac_addr
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -59,8 +59,24 @@ DISCOVERY_INTERVAL = timedelta(minutes=15)
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
     hass.data[DOMAIN] = {}
+    config_entries_by_mac = {}
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if async_entry_is_legacy(entry):
+            legacy_entry = entry
+        elif entry.unique_id:
+            config_entries_by_mac[entry.unique_id] = entry
 
-    if discovered_devices := await async_discover_devices(hass):
+    discovered_devices = await async_discover_devices(hass)
+    hosts_by_mac = {
+        get_real_mac_addr(device.mac_addr, device.host_firmware_version): device
+        for device in discovered_devices
+    }
+    if legacy_entry:
+        async_migrate_legacy_entries(
+            hass, hosts_by_mac, config_entries_by_mac, legacy_entry
+        )
+
+    if discovered_devices:
         async_trigger_discovery(hass, discovered_devices)
 
     async def _async_discovery(*_: Any) -> None:

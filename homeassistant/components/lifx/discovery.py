@@ -13,6 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
+from .util import get_real_mac_addr
 
 DEFAULT_TIMEOUT = 10
 
@@ -51,6 +52,11 @@ def async_trigger_discovery(
             hass.config_entries.flow.async_init(
                 DOMAIN,
                 context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-                data={CONF_HOST: device.ip_addr, CONF_MAC: device.mac_addr},
+                data={
+                    CONF_HOST: device.ip_addr,
+                    CONF_MAC: get_real_mac_addr(
+                        device.mac_addr, device.host_firmware_version
+                    ),
+                },
             )
         )
