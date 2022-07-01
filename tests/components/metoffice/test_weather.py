@@ -133,7 +133,8 @@ async def test_one_weather_site_running(hass, requests_mock):
 
     assert weather.state == "sunny"
     assert weather.attributes.get("temperature") == 17
-    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_speed") == 14.48
+    assert weather.attributes.get("wind_speed_unit") == "km/h"
     assert weather.attributes.get("wind_bearing") == "SSE"
     assert weather.attributes.get("visibility") == "Good - 10-20"
     assert weather.attributes.get("humidity") == 50
@@ -148,7 +149,7 @@ async def test_one_weather_site_running(hass, requests_mock):
     assert weather.attributes.get("forecast")[26]["condition"] == "cloudy"
     assert weather.attributes.get("forecast")[26]["precipitation_probability"] == 9
     assert weather.attributes.get("forecast")[26]["temperature"] == 10
-    assert weather.attributes.get("forecast")[26]["wind_speed"] == 4
+    assert weather.attributes.get("forecast")[26]["wind_speed"] == 6.44
     assert weather.attributes.get("forecast")[26]["wind_bearing"] == "NNE"
 
     # Wavertree daily weather platform expected results
@@ -157,7 +158,7 @@ async def test_one_weather_site_running(hass, requests_mock):
 
     assert weather.state == "sunny"
     assert weather.attributes.get("temperature") == 19
-    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_speed") == 14.48
     assert weather.attributes.get("wind_bearing") == "SSE"
     assert weather.attributes.get("visibility") == "Good - 10-20"
     assert weather.attributes.get("humidity") == 50
@@ -172,7 +173,7 @@ async def test_one_weather_site_running(hass, requests_mock):
     assert weather.attributes.get("forecast")[3]["condition"] == "rainy"
     assert weather.attributes.get("forecast")[3]["precipitation_probability"] == 59
     assert weather.attributes.get("forecast")[3]["temperature"] == 13
-    assert weather.attributes.get("forecast")[3]["wind_speed"] == 13
+    assert weather.attributes.get("forecast")[3]["wind_speed"] == 20.92
     assert weather.attributes.get("forecast")[3]["wind_bearing"] == "SE"
 
 
@@ -229,7 +230,8 @@ async def test_two_weather_sites_running(hass, requests_mock):
 
     assert weather.state == "sunny"
     assert weather.attributes.get("temperature") == 17
-    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_speed") == 14.48
+    assert weather.attributes.get("wind_speed_unit") == "km/h"
     assert weather.attributes.get("wind_bearing") == "SSE"
     assert weather.attributes.get("visibility") == "Good - 10-20"
     assert weather.attributes.get("humidity") == 50
@@ -244,7 +246,7 @@ async def test_two_weather_sites_running(hass, requests_mock):
     assert weather.attributes.get("forecast")[18]["condition"] == "clear-night"
     assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 1
     assert weather.attributes.get("forecast")[18]["temperature"] == 9
-    assert weather.attributes.get("forecast")[18]["wind_speed"] == 4
+    assert weather.attributes.get("forecast")[18]["wind_speed"] == 6.44
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "NW"
 
     # Wavertree daily weather platform expected results
@@ -253,7 +255,8 @@ async def test_two_weather_sites_running(hass, requests_mock):
 
     assert weather.state == "sunny"
     assert weather.attributes.get("temperature") == 19
-    assert weather.attributes.get("wind_speed") == 9
+    assert weather.attributes.get("wind_speed") == 14.48
+    assert weather.attributes.get("wind_speed_unit") == "km/h"
     assert weather.attributes.get("wind_bearing") == "SSE"
     assert weather.attributes.get("visibility") == "Good - 10-20"
     assert weather.attributes.get("humidity") == 50
@@ -268,7 +271,7 @@ async def test_two_weather_sites_running(hass, requests_mock):
     assert weather.attributes.get("forecast")[3]["condition"] == "rainy"
     assert weather.attributes.get("forecast")[3]["precipitation_probability"] == 59
     assert weather.attributes.get("forecast")[3]["temperature"] == 13
-    assert weather.attributes.get("forecast")[3]["wind_speed"] == 13
+    assert weather.attributes.get("forecast")[3]["wind_speed"] == 20.92
     assert weather.attributes.get("forecast")[3]["wind_bearing"] == "SE"
 
     # King's Lynn 3-hourly weather platform expected results
@@ -277,7 +280,8 @@ async def test_two_weather_sites_running(hass, requests_mock):
 
     assert weather.state == "sunny"
     assert weather.attributes.get("temperature") == 14
-    assert weather.attributes.get("wind_speed") == 2
+    assert weather.attributes.get("wind_speed") == 3.22
+    assert weather.attributes.get("wind_speed_unit") == "km/h"
     assert weather.attributes.get("wind_bearing") == "E"
     assert weather.attributes.get("visibility") == "Very Good - 20-40"
     assert weather.attributes.get("humidity") == 60
@@ -292,7 +296,7 @@ async def test_two_weather_sites_running(hass, requests_mock):
     assert weather.attributes.get("forecast")[18]["condition"] == "cloudy"
     assert weather.attributes.get("forecast")[18]["precipitation_probability"] == 9
     assert weather.attributes.get("forecast")[18]["temperature"] == 10
-    assert weather.attributes.get("forecast")[18]["wind_speed"] == 7
+    assert weather.attributes.get("forecast")[18]["wind_speed"] == 11.27
     assert weather.attributes.get("forecast")[18]["wind_bearing"] == "SE"
 
     # King's Lynn daily weather platform expected results
@@ -301,7 +305,8 @@ async def test_two_weather_sites_running(hass, requests_mock):
 
     assert weather.state == "cloudy"
     assert weather.attributes.get("temperature") == 9
-    assert weather.attributes.get("wind_speed") == 4
+    assert weather.attributes.get("wind_speed") == 6.44
+    assert weather.attributes.get("wind_speed_unit") == "km/h"
     assert weather.attributes.get("wind_bearing") == "ESE"
     assert weather.attributes.get("visibility") == "Very Good - 20-40"
     assert weather.attributes.get("humidity") == 75
@@ -316,5 +321,5 @@ async def test_two_weather_sites_running(hass, requests_mock):
     assert weather.attributes.get("forecast")[2]["condition"] == "cloudy"
     assert weather.attributes.get("forecast")[2]["precipitation_probability"] == 14
     assert weather.attributes.get("forecast")[2]["temperature"] == 11
-    assert weather.attributes.get("forecast")[2]["wind_speed"] == 7
+    assert weather.attributes.get("forecast")[2]["wind_speed"] == 11.27
     assert weather.attributes.get("forecast")[2]["wind_bearing"] == "ESE"
