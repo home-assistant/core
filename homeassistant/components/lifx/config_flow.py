@@ -62,8 +62,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
-        if await self._async_try_connect(host, mac=mac, raise_on_progress=True) is None:
+        device = await self._async_try_connect(host, mac=mac, raise_on_progress=True)
+        if not device:
             return self.async_abort(reason="cannot_connect")
+        self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(

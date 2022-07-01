@@ -7,10 +7,10 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "{mac_addr} ({host})",
+        "flow_title": "{label} {mac_addr} ({host})",
         "step": {
             "discovery_confirm": {
-                "description": "Do you want to setup {mac_addr} ({host})?"
+                "description": "Do you want to setup {label} {mac_addr} ({host})?"
             },
             "pick_device": {
                 "data": {
