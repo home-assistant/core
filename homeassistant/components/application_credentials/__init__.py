@@ -253,6 +253,11 @@ class ApplicationCredentialsProtocol(Protocol):
     ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
         """Return a custom auth implementation."""
 
+    async def async_get_description_placeholders(
+        self, hass: HomeAssistant
+    ) -> dict[str, str]:
+        """Return description placeholders for the credentials dialog."""
+
 
 async def _get_platform(
     hass: HomeAssistant, integration_domain: str
@@ -282,6 +287,14 @@ async def _get_platform(
     return platform
 
 
+async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[str, Any]:
+    platform = await _get_platform(hass, domain)
+    if platform and hasattr(platform, "async_get_description_placeholders"):
+        placeholders = await platform.async_get_description_placeholders(hass)
+        return {"description_placeholders": placeholders}
+    return {}
+
+
 @websocket_api.websocket_command(
     {vol.Required("type"): "application_credentials/config"}
 )
@@ -290,6 +303,11 @@ async def handle_integration_list(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle integrations command."""
-    connection.send_result(
-        msg["id"], {"domains": await async_get_application_credentials(hass)}
-    )
+    domains = await async_get_application_credentials(hass)
+    result = {
+        "domains": domains,
+        "integrations": {
+            domain: await _async_integration_config(hass, domain) for domain in domains
+        },
+    }
+    connection.send_result(msg["id"], result)

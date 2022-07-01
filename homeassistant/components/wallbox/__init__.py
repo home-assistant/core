@@ -70,7 +70,7 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
     195: ChargerStatus.CHARGING,
     196: ChargerStatus.DISCHARGING,
     209: ChargerStatus.LOCKED,
-    210: ChargerStatus.LOCKED,
+    210: ChargerStatus.LOCKED_CAR_CONNECTED,
 }
 
 

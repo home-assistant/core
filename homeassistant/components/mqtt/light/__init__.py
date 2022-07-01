@@ -1,7 +1,6 @@
 """Support for MQTT lights."""
 from __future__ import annotations
 
-import asyncio
 import functools
 
 import voluptuous as vol
@@ -14,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from ..mixins import (
-    async_get_platform_config_from_yaml,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -97,7 +96,11 @@ async def async_setup_platform(
     """Set up MQTT light through configuration.yaml (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, light.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        light.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -108,14 +111,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT lights configured under the light platform key (deprecated)."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, light.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_yaml_entities(hass, light.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry

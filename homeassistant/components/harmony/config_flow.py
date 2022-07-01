@@ -1,4 +1,6 @@
 """Config flow for Logitech Harmony Hub integration."""
+from __future__ import annotations
+
 import asyncio
 import logging
 from urllib.parse import urlparse
@@ -137,7 +139,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 

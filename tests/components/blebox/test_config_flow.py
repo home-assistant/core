@@ -77,8 +77,8 @@ async def test_flow_works(hass, valid_feature_mock, flow_feature_mock):
 @pytest.fixture(name="product_class_mock")
 def product_class_mock_fixture():
     """Return a mocked feature."""
-    path = "homeassistant.components.blebox.config_flow.Products"
-    patcher = patch(path, DEFAULT, blebox_uniapi.products.Products, True, True)
+    path = "homeassistant.components.blebox.config_flow.Box"
+    patcher = patch(path, DEFAULT, blebox_uniapi.box.Box, True, True)
     yield patcher
 
 

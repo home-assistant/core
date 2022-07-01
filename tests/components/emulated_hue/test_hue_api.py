@@ -49,7 +49,8 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.dt as dt_util
 
 from tests.common import (
@@ -96,41 +97,58 @@ ENTITY_IDS_BY_NUMBER = {
 ENTITY_NUMBERS_BY_ID = {v: k for k, v in ENTITY_IDS_BY_NUMBER.items()}
 
 
-@pytest.fixture
-def hass_hue(loop, hass):
-    """Set up a Home Assistant instance for these tests."""
-    # We need to do this to get access to homeassistant/turn_(on,off)
-    loop.run_until_complete(setup.async_setup_component(hass, "homeassistant", {}))
+def patch_upnp():
+    """Patch async_create_upnp_datagram_endpoint."""
+    return patch(
+        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
+    )
 
-    loop.run_until_complete(
+
+async def async_get_lights(client):
+    """Get lights with the hue client."""
+    result = await client.get("/api/username/lights")
+    assert result.status == HTTPStatus.OK
+    assert CONTENT_TYPE_JSON in result.headers["content-type"]
+    return await result.json()
+
+
+async def _async_setup_emulated_hue(hass: HomeAssistant, conf: ConfigType) -> None:
+    """Set up emulated_hue with a specific config."""
+    with patch_upnp():
+        await setup.async_setup_component(
+            hass,
+            emulated_hue.DOMAIN,
+            {emulated_hue.DOMAIN: conf},
+        ),
+        await hass.async_block_till_done()
+
+
+@pytest.fixture
+async def base_setup(hass):
+    """Set up homeassistant and http."""
+    await asyncio.gather(
+        setup.async_setup_component(hass, "homeassistant", {}),
         setup.async_setup_component(
             hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
-        )
+        ),
     )
 
-    with patch(
-        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
-    ):
-        loop.run_until_complete(
-            setup.async_setup_component(
-                hass,
-                emulated_hue.DOMAIN,
-                {
-                    emulated_hue.DOMAIN: {
-                        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
-                        emulated_hue.CONF_EXPOSE_BY_DEFAULT: True,
-                    }
-                },
-            )
-        )
 
-    loop.run_until_complete(
+@pytest.fixture
+async def demo_setup(hass):
+    """Fixture to setup demo platforms."""
+    # We need to do this to get access to homeassistant/turn_(on,off)
+    setups = [
+        setup.async_setup_component(hass, "homeassistant", {}),
         setup.async_setup_component(
-            hass, light.DOMAIN, {"light": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
+            hass, http.DOMAIN, {http.DOMAIN: {http.CONF_SERVER_PORT: HTTP_SERVER_PORT}}
+        ),
+        *[
+            setup.async_setup_component(
+                hass, comp.DOMAIN, {comp.DOMAIN: [{"platform": "demo"}]}
+            )
+            for comp in (light, climate, humidifier, media_player, fan, cover)
+        ],
         setup.async_setup_component(
             hass,
             script.DOMAIN,
@@ -149,39 +167,7 @@ def hass_hue(loop, hass):
                     }
                 }
             },
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, climate.DOMAIN, {"climate": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, humidifier.DOMAIN, {"humidifier": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, media_player.DOMAIN, {"media_player": [{"platform": "demo"}]}
-        )
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(hass, fan.DOMAIN, {"fan": [{"platform": "demo"}]})
-    )
-
-    loop.run_until_complete(
-        setup.async_setup_component(
-            hass, cover.DOMAIN, {"cover": [{"platform": "demo"}]}
-        )
-    )
-
-    # setup a dummy scene
-    loop.run_until_complete(
+        ),
         setup.async_setup_component(
             hass,
             "scene",
@@ -199,21 +185,49 @@ def hass_hue(loop, hass):
                     },
                 ]
             },
-        )
-    )
+        ),
+    ]
 
-    # create a lamp without brightness support
-    hass.states.async_set("light.no_brightness", "on", {})
-
-    return hass
+    await asyncio.gather(*setups)
 
 
 @pytest.fixture
-def hue_client(loop, hass_hue, hass_client_no_auth):
+async def hass_hue(hass, base_setup, demo_setup):
+    """Set up a Home Assistant instance for these tests."""
+    await _async_setup_emulated_hue(
+        hass,
+        {
+            emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
+            emulated_hue.CONF_EXPOSE_BY_DEFAULT: True,
+        },
+    )
+    # create a lamp without brightness support
+    hass.states.async_set("light.no_brightness", "on", {})
+    return hass
+
+
+@callback
+def _mock_hue_endpoints(
+    hass: HomeAssistant, conf: ConfigType, entity_numbers: dict[str, str]
+) -> None:
+    """Override the hue config with specific entity numbers."""
+    web_app = hass.http.app
+    config = Config(hass, conf, "127.0.0.1")
+    config.numbers = entity_numbers
+    HueUsernameView().register(web_app, web_app.router)
+    HueAllLightsStateView(config).register(web_app, web_app.router)
+    HueOneLightStateView(config).register(web_app, web_app.router)
+    HueOneLightChangeView(config).register(web_app, web_app.router)
+    HueAllGroupsStateView(config).register(web_app, web_app.router)
+    HueFullStateView(config).register(web_app, web_app.router)
+    HueConfigView(config).register(web_app, web_app.router)
+
+
+@pytest.fixture
+async def hue_client(hass_hue, hass_client_no_auth):
     """Create web client for emulated hue api."""
-    web_app = hass_hue.http.app
-    config = Config(
-        None,
+    _mock_hue_endpoints(
+        hass_hue,
         {
             emulated_hue.CONF_ENTITIES: {
                 "light.bed_light": {emulated_hue.CONF_ENTITY_HIDDEN: True},
@@ -244,22 +258,12 @@ def hue_client(loop, hass_hue, hass_client_no_auth):
                 "scene.light_off": {emulated_hue.CONF_ENTITY_HIDDEN: False},
             },
         },
-        "127.0.0.1",
+        ENTITY_IDS_BY_NUMBER,
     )
-    config.numbers = ENTITY_IDS_BY_NUMBER
-
-    HueUsernameView().register(web_app, web_app.router)
-    HueAllLightsStateView(config).register(web_app, web_app.router)
-    HueOneLightStateView(config).register(web_app, web_app.router)
-    HueOneLightChangeView(config).register(web_app, web_app.router)
-    HueAllGroupsStateView(config).register(web_app, web_app.router)
-    HueFullStateView(config).register(web_app, web_app.router)
-    HueConfigView(config).register(web_app, web_app.router)
-
-    return loop.run_until_complete(hass_client_no_auth())
+    return await hass_client_no_auth()
 
 
-async def test_discover_lights(hue_client):
+async def test_discover_lights(hass, hue_client):
     """Test the discovery of lights."""
     result = await hue_client.get("/api/username/lights")
 
@@ -292,6 +296,21 @@ async def test_discover_lights(hue_client):
     assert "00:62:5c:3e:df:58:40:01-43" in devices  # scene.light_on
     assert "00:1c:72:08:ed:09:e7:89-77" in devices  # scene.light_off
 
+    # Remove the state and ensure it disappears from devices
+    hass.states.async_remove("light.ceiling_lights")
+    await hass.async_block_till_done()
+
+    result_json = await async_get_lights(hue_client)
+    devices = {val["uniqueid"] for val in result_json.values()}
+    assert "00:2f:d2:31:ce:c5:55:cc-ee" not in devices  # light.ceiling_lights
+
+    # Restore the state and ensure it reappears in devices
+    hass.states.async_set("light.ceiling_lights", STATE_ON)
+    await hass.async_block_till_done()
+    result_json = await async_get_lights(hue_client)
+    devices = {val["uniqueid"] for val in result_json.values()}
+    assert "00:2f:d2:31:ce:c5:55:cc-ee" in devices  # light.ceiling_lights
+
 
 async def test_light_without_brightness_supported(hass_hue, hue_client):
     """Test that light without brightness is supported."""
@@ -316,19 +335,8 @@ async def test_lights_all_dimmable(hass, hass_client_no_auth):
         emulated_hue.CONF_EXPOSE_BY_DEFAULT: True,
         emulated_hue.CONF_LIGHTS_ALL_DIMMABLE: True,
     }
-    with patch(
-        "homeassistant.components.emulated_hue.async_create_upnp_datagram_endpoint"
-    ):
-        await setup.async_setup_component(
-            hass,
-            emulated_hue.DOMAIN,
-            {emulated_hue.DOMAIN: hue_config},
-        )
-        await hass.async_block_till_done()
-    config = Config(None, hue_config, "127.0.0.1")
-    config.numbers = ENTITY_IDS_BY_NUMBER
-    web_app = hass.http.app
-    HueOneLightStateView(config).register(web_app, web_app.router)
+    await _async_setup_emulated_hue(hass, hue_config)
+    _mock_hue_endpoints(hass, hue_config, ENTITY_IDS_BY_NUMBER)
     client = await hass_client_no_auth()
     light_without_brightness_json = await perform_get_light_state(
         client, "light.no_brightness", HTTPStatus.OK
@@ -568,13 +576,7 @@ async def test_get_light_state(hass_hue, hue_client):
     assert office_json["state"][HUE_API_STATE_SAT] == 217
 
     # Check all lights view
-    result = await hue_client.get("/api/username/lights")
-
-    assert result.status == HTTPStatus.OK
-    assert CONTENT_TYPE_JSON in result.headers["content-type"]
-
-    result_json = await result.json()
-
+    result_json = await async_get_lights(hue_client)
     assert ENTITY_NUMBERS_BY_ID["light.ceiling_lights"] in result_json
     assert (
         result_json[ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]]["state"][
@@ -1616,3 +1618,32 @@ async def test_only_change_hue_or_saturation(hass, hass_hue, hue_client):
     assert hass_hue.states.get("light.ceiling_lights").attributes[
         light.ATTR_HS_COLOR
     ] == (0, 3)
+
+
+async def test_specificly_exposed_entities(hass, base_setup, hass_client_no_auth):
+    """Test specific entities with expose by default off."""
+    conf = {
+        emulated_hue.CONF_LISTEN_PORT: BRIDGE_SERVER_PORT,
+        emulated_hue.CONF_EXPOSE_BY_DEFAULT: False,
+        emulated_hue.CONF_ENTITIES: {
+            "light.exposed": {emulated_hue.CONF_ENTITY_HIDDEN: False},
+        },
+    }
+    await _async_setup_emulated_hue(hass, conf)
+    _mock_hue_endpoints(hass, conf, {"1": "light.exposed"})
+    hass.states.async_set("light.exposed", STATE_ON)
+    await hass.async_block_till_done()
+    client = await hass_client_no_auth()
+    result_json = await async_get_lights(client)
+    assert "1" in result_json
+
+    hass.states.async_remove("light.exposed")
+    await hass.async_block_till_done()
+    result_json = await async_get_lights(client)
+    assert "1" not in result_json
+
+    hass.states.async_set("light.exposed", STATE_ON)
+    await hass.async_block_till_done()
+    result_json = await async_get_lights(client)
+
+    assert "1" in result_json

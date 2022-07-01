@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f"
+            "already_configured": "Konum zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "reauth_successful": "Yeniden kimlik do\u011frulama ba\u015far\u0131l\u0131 oldu"
         },
         "error": {
             "invalid_auth": "Ge\u00e7ersiz kimlik do\u011frulama",
             "no_stations": "Menzilde herhangi bir istasyon bulunamad\u0131."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "API Anahtar\u0131"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "\u0130stasyonlar"
@@ -32,7 +38,8 @@
             "init": {
                 "data": {
                     "scan_interval": "G\u00fcncelle\u015ftirme aral\u0131\u011f\u0131",
-                    "show_on_map": "\u0130stasyonlar\u0131 haritada g\u00f6ster"
+                    "show_on_map": "\u0130stasyonlar\u0131 haritada g\u00f6ster",
+                    "stations": "\u0130stasyonlar"
                 },
                 "title": "Tankerkoenig se\u00e7enekleri"
             }

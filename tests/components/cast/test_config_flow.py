@@ -116,6 +116,26 @@ async def test_zeroconf_setup(hass):
     }
 
 
+async def test_zeroconf_setup_onboarding(hass):
+    """Test we automatically finish a config flow through zeroconf during onboarding."""
+    with patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ):
+        result = await hass.config_entries.flow.async_init(
+            "cast", context={"source": config_entries.SOURCE_ZEROCONF}
+        )
+
+    users = await hass.auth.async_get_users()
+    assert len(users) == 1
+    assert result["type"] == "create_entry"
+    assert result["result"].data == {
+        "ignore_cec": [],
+        "known_hosts": [],
+        "uuid": [],
+        "user_id": users[0].id,  # Home Assistant cast user
+    }
+
+
 def get_suggested(schema, key):
     """Get suggested value for key in voluptuous schema."""
     for k in schema.keys():

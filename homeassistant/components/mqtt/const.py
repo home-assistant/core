@@ -1,5 +1,5 @@
 """Constants used by multiple MQTT modules."""
-from homeassistant.const import CONF_PAYLOAD
+from homeassistant.const import CONF_PAYLOAD, Platform
 
 ATTR_DISCOVERY_HASH = "discovery_hash"
 ATTR_DISCOVERY_PAYLOAD = "discovery_payload"
@@ -14,7 +14,9 @@ CONF_BROKER = "broker"
 CONF_BIRTH_MESSAGE = "birth_message"
 CONF_COMMAND_TEMPLATE = "command_template"
 CONF_COMMAND_TOPIC = "command_topic"
+CONF_DISCOVERY_PREFIX = "discovery_prefix"
 CONF_ENCODING = "encoding"
+CONF_KEEPALIVE = "keepalive"
 CONF_QOS = ATTR_QOS
 CONF_RETAIN = ATTR_RETAIN
 CONF_STATE_TOPIC = "state_topic"
@@ -30,8 +32,10 @@ CONF_TLS_VERSION = "tls_version"
 
 CONFIG_ENTRY_IS_SETUP = "mqtt_config_entry_is_setup"
 DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
+DATA_MQTT = "mqtt"
 DATA_MQTT_CONFIG = "mqtt_config"
 DATA_MQTT_RELOAD_NEEDED = "mqtt_reload_needed"
+DATA_MQTT_UPDATED_CONFIG = "mqtt_updated_config"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
@@ -66,3 +70,44 @@ PAYLOAD_NONE = "None"
 
 PROTOCOL_31 = "3.1"
 PROTOCOL_311 = "3.1.1"
+
+PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.DEVICE_TRACKER,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]
+
+RELOADABLE_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]

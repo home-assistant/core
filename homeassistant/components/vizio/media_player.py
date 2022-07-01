@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from pyvizio import VizioAsync
 from pyvizio.api.apps import find_app_name
@@ -103,7 +102,10 @@ async def async_setup_entry(
         params["data"] = new_data
 
     if params:
-        hass.config_entries.async_update_entry(config_entry, **params)
+        hass.config_entries.async_update_entry(
+            config_entry,
+            **params,  # type: ignore[arg-type]
+        )
 
     device = VizioAsync(
         DEVICE_ID,
@@ -134,7 +136,7 @@ class VizioDevice(MediaPlayerEntity):
         config_entry: ConfigEntry,
         device: VizioAsync,
         name: str,
-        device_class: str,
+        device_class: MediaPlayerDeviceClass,
         apps_coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize Vizio device."""
@@ -145,8 +147,8 @@ class VizioDevice(MediaPlayerEntity):
         self._current_input = None
         self._current_app_config = None
         self._attr_app_name = None
-        self._available_inputs = []
-        self._available_apps = []
+        self._available_inputs: list[str] = []
+        self._available_apps: list[str] = []
         self._all_apps = apps_coordinator.data if apps_coordinator else None
         self._conf_apps = config_entry.options.get(CONF_APPS, {})
         self._additional_app_configs = config_entry.data.get(CONF_APPS, {}).get(
@@ -195,6 +197,7 @@ class VizioDevice(MediaPlayerEntity):
             self._attr_available = True
 
         if not self._attr_device_info:
+            assert self._attr_unique_id
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, self._attr_unique_id)},
                 manufacturer="VIZIO",
@@ -276,7 +279,7 @@ class VizioDevice(MediaPlayerEntity):
         if self._attr_app_name == NO_APP_RUNNING:
             self._attr_app_name = None
 
-    def _get_additional_app_names(self) -> list[dict[str, Any]]:
+    def _get_additional_app_names(self) -> list[str]:
         """Return list of additional apps that were included in configuration.yaml."""
         return [
             additional_app["name"] for additional_app in self._additional_app_configs

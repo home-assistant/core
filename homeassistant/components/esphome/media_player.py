@@ -25,7 +25,12 @@ from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import EsphomeEntity, EsphomeEnumMapper, platform_async_setup_entry
+from . import (
+    EsphomeEntity,
+    EsphomeEnumMapper,
+    esphome_state_property,
+    platform_async_setup_entry,
+)
 
 
 async def async_setup_entry(
@@ -54,6 +59,10 @@ _STATES: EsphomeEnumMapper[MediaPlayerState, str] = EsphomeEnumMapper(
 )
 
 
+# https://github.com/PyCQA/pylint/issues/3150 for all @esphome_state_property
+# pylint: disable=invalid-overridden-method
+
+
 class EsphomeMediaPlayer(
     EsphomeEntity[MediaPlayerInfo, MediaPlayerEntityState], MediaPlayerEntity
 ):
@@ -61,17 +70,17 @@ class EsphomeMediaPlayer(
 
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    @property
+    @esphome_state_property
     def state(self) -> str | None:
         """Return current state."""
         return _STATES.from_esphome(self._state.state)
 
-    @property
+    @esphome_state_property
     def is_volume_muted(self) -> bool:
         """Return true if volume is muted."""
         return self._state.muted
 
-    @property
+    @esphome_state_property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self._state.volume

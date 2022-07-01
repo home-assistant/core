@@ -63,6 +63,12 @@ async def _async_mac_address_from_discovery(
     return await async_get_mac_address_from_host(hass, host)
 
 
+def _is_igd_device(discovery_info: ssdp.SsdpServiceInfo) -> bool:
+    """Test if discovery is a complete IGD device."""
+    root_device_info = discovery_info.upnp
+    return root_device_info.get(ssdp.ATTR_UPNP_DEVICE_TYPE) in {ST_IGD_V1, ST_IGD_V2}
+
+
 class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a UPnP/IGD config flow."""
 
@@ -108,6 +114,7 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             for discovery in discoveries
             if (
                 _is_complete_discovery(discovery)
+                and _is_igd_device(discovery)
                 and discovery.ssdp_usn not in current_unique_ids
             )
         ]
@@ -143,6 +150,12 @@ class UpnpFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not _is_complete_discovery(discovery_info):
             LOGGER.debug("Incomplete discovery, ignoring")
             return self.async_abort(reason="incomplete_discovery")
+
+        # Ensure device is usable. Ideally we would use IgdDevice.is_profile_device,
+        # but that requires constructing the device completely.
+        if not _is_igd_device(discovery_info):
+            LOGGER.debug("Non IGD device, ignoring")
+            return self.async_abort(reason="non_igd_device")
 
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn

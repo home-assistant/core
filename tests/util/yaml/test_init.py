@@ -1,10 +1,12 @@
 """Test Home Assistant yaml loader."""
+import importlib
 import io
 import os
 import unittest
 from unittest.mock import patch
 
 import pytest
+import yaml as pyyaml
 
 from homeassistant.config import YAML_CONFIG_FILE, load_yaml_config_file
 from homeassistant.exceptions import HomeAssistantError
@@ -14,7 +16,41 @@ from homeassistant.util.yaml import loader as yaml_loader
 from tests.common import get_test_config_dir, patch_yaml_files
 
 
-def test_simple_list():
+@pytest.fixture(params=["enable_c_loader", "disable_c_loader"])
+def try_both_loaders(request):
+    """Disable the yaml c loader."""
+    if not request.param == "disable_c_loader":
+        yield
+        return
+    try:
+        cloader = pyyaml.CSafeLoader
+    except ImportError:
+        return
+    del pyyaml.CSafeLoader
+    importlib.reload(yaml_loader)
+    yield
+    pyyaml.CSafeLoader = cloader
+    importlib.reload(yaml_loader)
+
+
+@pytest.fixture(params=["enable_c_dumper", "disable_c_dumper"])
+def try_both_dumpers(request):
+    """Disable the yaml c dumper."""
+    if not request.param == "disable_c_dumper":
+        yield
+        return
+    try:
+        cdumper = pyyaml.CSafeDumper
+    except ImportError:
+        return
+    del pyyaml.CSafeDumper
+    importlib.reload(yaml_loader)
+    yield
+    pyyaml.CSafeDumper = cdumper
+    importlib.reload(yaml_loader)
+
+
+def test_simple_list(try_both_loaders):
     """Test simple list."""
     conf = "config:\n  - simple\n  - list"
     with io.StringIO(conf) as file:
@@ -22,7 +58,7 @@ def test_simple_list():
     assert doc["config"] == ["simple", "list"]
 
 
-def test_simple_dict():
+def test_simple_dict(try_both_loaders):
     """Test simple dict."""
     conf = "key: value"
     with io.StringIO(conf) as file:
@@ -37,14 +73,14 @@ def test_unhashable_key():
         load_yaml_config_file(YAML_CONFIG_FILE)
 
 
-def test_no_key():
+def test_no_key(try_both_loaders):
     """Test item without a key."""
     files = {YAML_CONFIG_FILE: "a: a\nnokeyhere"}
     with pytest.raises(HomeAssistantError), patch_yaml_files(files):
         yaml.load_yaml(YAML_CONFIG_FILE)
 
 
-def test_environment_variable():
+def test_environment_variable(try_both_loaders):
     """Test config file with environment variable."""
     os.environ["PASSWORD"] = "secret_password"
     conf = "password: !env_var PASSWORD"
@@ -54,7 +90,7 @@ def test_environment_variable():
     del os.environ["PASSWORD"]
 
 
-def test_environment_variable_default():
+def test_environment_variable_default(try_both_loaders):
     """Test config file with default value for environment variable."""
     conf = "password: !env_var PASSWORD secret_password"
     with io.StringIO(conf) as file:
@@ -62,14 +98,14 @@ def test_environment_variable_default():
     assert doc["password"] == "secret_password"
 
 
-def test_invalid_environment_variable():
+def test_invalid_environment_variable(try_both_loaders):
     """Test config file with no environment variable sat."""
     conf = "password: !env_var PASSWORD"
     with pytest.raises(HomeAssistantError), io.StringIO(conf) as file:
         yaml_loader.yaml.load(file, Loader=yaml_loader.SafeLineLoader)
 
 
-def test_include_yaml():
+def test_include_yaml(try_both_loaders):
     """Test include yaml."""
     with patch_yaml_files({"test.yaml": "value"}):
         conf = "key: !include test.yaml"
@@ -85,7 +121,7 @@ def test_include_yaml():
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_list(mock_walk):
+def test_include_dir_list(mock_walk, try_both_loaders):
     """Test include dir list yaml."""
     mock_walk.return_value = [["/test", [], ["two.yaml", "one.yaml"]]]
 
@@ -97,7 +133,7 @@ def test_include_dir_list(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_list_recursive(mock_walk):
+def test_include_dir_list_recursive(mock_walk, try_both_loaders):
     """Test include dir recursive list yaml."""
     mock_walk.return_value = [
         ["/test", ["tmp2", ".ignore", "ignore"], ["zero.yaml"]],
@@ -124,7 +160,7 @@ def test_include_dir_list_recursive(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_named(mock_walk):
+def test_include_dir_named(mock_walk, try_both_loaders):
     """Test include dir named yaml."""
     mock_walk.return_value = [
         ["/test", [], ["first.yaml", "second.yaml", "secrets.yaml"]]
@@ -139,7 +175,7 @@ def test_include_dir_named(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_named_recursive(mock_walk):
+def test_include_dir_named_recursive(mock_walk, try_both_loaders):
     """Test include dir named yaml."""
     mock_walk.return_value = [
         ["/test", ["tmp2", ".ignore", "ignore"], ["first.yaml"]],
@@ -167,7 +203,7 @@ def test_include_dir_named_recursive(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_merge_list(mock_walk):
+def test_include_dir_merge_list(mock_walk, try_both_loaders):
     """Test include dir merge list yaml."""
     mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
 
@@ -181,7 +217,7 @@ def test_include_dir_merge_list(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_merge_list_recursive(mock_walk):
+def test_include_dir_merge_list_recursive(mock_walk, try_both_loaders):
     """Test include dir merge list yaml."""
     mock_walk.return_value = [
         ["/test", ["tmp2", ".ignore", "ignore"], ["first.yaml"]],
@@ -208,7 +244,7 @@ def test_include_dir_merge_list_recursive(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_merge_named(mock_walk):
+def test_include_dir_merge_named(mock_walk, try_both_loaders):
     """Test include dir merge named yaml."""
     mock_walk.return_value = [["/test", [], ["first.yaml", "second.yaml"]]]
 
@@ -225,7 +261,7 @@ def test_include_dir_merge_named(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.os.walk")
-def test_include_dir_merge_named_recursive(mock_walk):
+def test_include_dir_merge_named_recursive(mock_walk, try_both_loaders):
     """Test include dir merge named yaml."""
     mock_walk.return_value = [
         ["/test", ["tmp2", ".ignore", "ignore"], ["first.yaml"]],
@@ -257,19 +293,19 @@ def test_include_dir_merge_named_recursive(mock_walk):
 
 
 @patch("homeassistant.util.yaml.loader.open", create=True)
-def test_load_yaml_encoding_error(mock_open):
+def test_load_yaml_encoding_error(mock_open, try_both_loaders):
     """Test raising a UnicodeDecodeError."""
     mock_open.side_effect = UnicodeDecodeError("", b"", 1, 0, "")
     with pytest.raises(HomeAssistantError):
         yaml_loader.load_yaml("test")
 
 
-def test_dump():
+def test_dump(try_both_dumpers):
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "b"}) == "a:\nb: b\n"
 
 
-def test_dump_unicode():
+def test_dump_unicode(try_both_dumpers):
     """The that the dump method returns empty None values."""
     assert yaml.dump({"a": None, "b": "привет"}) == "a:\nb: привет\n"
 
@@ -405,7 +441,7 @@ class TestSecrets(unittest.TestCase):
             )
 
 
-def test_representing_yaml_loaded_data():
+def test_representing_yaml_loaded_data(try_both_dumpers):
     """Test we can represent YAML loaded data."""
     files = {YAML_CONFIG_FILE: 'key: [1, "2", 3]'}
     with patch_yaml_files(files):
@@ -413,7 +449,7 @@ def test_representing_yaml_loaded_data():
     assert yaml.dump(data) == "key:\n- 1\n- '2'\n- 3\n"
 
 
-def test_duplicate_key(caplog):
+def test_duplicate_key(caplog, try_both_loaders):
     """Test duplicate dict keys."""
     files = {YAML_CONFIG_FILE: "key: thing1\nkey: thing2"}
     with patch_yaml_files(files):
@@ -421,7 +457,7 @@ def test_duplicate_key(caplog):
     assert "contains duplicate key" in caplog.text
 
 
-def test_no_recursive_secrets(caplog):
+def test_no_recursive_secrets(caplog, try_both_loaders):
     """Test that loading of secrets from the secrets file fails correctly."""
     files = {YAML_CONFIG_FILE: "key: !secret a", yaml.SECRET_YAML: "a: 1\nb: !secret a"}
     with patch_yaml_files(files), pytest.raises(HomeAssistantError) as e:
@@ -441,7 +477,16 @@ def test_input_class():
     assert len({input, input2}) == 1
 
 
-def test_input():
+def test_input(try_both_loaders, try_both_dumpers):
     """Test loading inputs."""
     data = {"hello": yaml.Input("test_name")}
     assert yaml.parse_yaml(yaml.dump(data)) == data
+
+
+@pytest.mark.skipif(
+    not os.environ.get("HASS_CI"),
+    reason="This test validates that the CI has the C loader available",
+)
+def test_c_loader_is_available_in_ci():
+    """Verify we are testing the C loader in the CI."""
+    assert yaml.loader.HAS_C_LOADER is True

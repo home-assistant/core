@@ -127,7 +127,7 @@ async def async_setup_cast(hass, config=None):
         config = {}
     data = {**{"ignore_cec": [], "known_hosts": [], "uuid": []}, **config}
     with patch(
-        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities"
+        "homeassistant.helpers.entity_platform.EntityPlatform._async_schedule_add_entities_for_entry"
     ) as add_entities:
         entry = MockConfigEntry(data=data, domain="cast")
         entry.add_to_hass(hass)

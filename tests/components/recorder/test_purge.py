@@ -10,7 +10,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder.const import MAX_ROWS_TO_PURGE, SupportedDialect
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     EventData,
     Events,
     RecorderRuns,
@@ -26,7 +26,7 @@ from homeassistant.components.recorder.services import (
 )
 from homeassistant.components.recorder.tasks import PurgeTask
 from homeassistant.components.recorder.util import session_scope
-from homeassistant.const import EVENT_STATE_CHANGED, STATE_ON
+from homeassistant.const import EVENT_STATE_CHANGED, EVENT_THEMES_UPDATED, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
@@ -920,6 +920,15 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
                 Events(
                     event_id=event_id,
                     event_type=EVENT_STATE_CHANGED,
+                    event_data="{}",
+                    origin="LOCAL",
+                    time_fired=timestamp,
+                )
+            )
+            session.add(
+                Events(
+                    event_id=event_id + 1,
+                    event_type=EVENT_THEMES_UPDATED,
                     event_data="{}",
                     origin="LOCAL",
                     time_fired=timestamp,
