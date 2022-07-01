@@ -146,6 +146,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     supported_fan_modes = None
     heat_temperatures = None
     cool_temperatures = None
+    light = None
 
     if zone_type == TYPE_AIR_CONDITIONING:
         # Heat is preferred as it generally has a lower minimum temperature
@@ -182,6 +183,9 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
             ]
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
+
+        if CONST_LIGHT in capabilities
+            light=capabilities[CONST_LIGHT][0]
     else:
         supported_hvac_modes.append(HVACMode.HEAT)
 
@@ -228,6 +232,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
         supported_swing_modes,
         support_flags,
         device_info,
+        light,
     )
     return entity
 
@@ -252,6 +257,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         supported_swing_modes,
         support_flags,
         device_info,
+        light,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -288,6 +294,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
         self._current_tado_swing_mode = SWING_OFF
+        self._current_tado_light_mode = light
 
         self._tado_zone_data = None
 
@@ -666,4 +673,5 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             fan_speed=fan_speed,
             horizontalSwing=horizontalSwing,
             verticalSwing=verticalSwing,
+            light=self._current_tado_light_mode,
         )

@@ -22,6 +22,7 @@ from .const import (
     CONST_OVERLAY_TADO_DEFAULT,
     CONST_OVERLAY_TADO_MODE,
     CONST_OVERLAY_TADO_OPTIONS,
+    CONST_LIGHT,
     DATA,
     DOMAIN,
     INSIDE_TEMPERATURE_MEASUREMENT,
@@ -280,10 +281,11 @@ class TadoConnector:
         fan_speed=None,
         verticalSwing=None,
         horizontalSwing=None,
+        light=None
     ):
         """Set a zone overlay."""
         _LOGGER.debug(
-            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s verticalSwing=%s horizontalSwing=%s",
+            "Set overlay for zone %s: overlay_mode=%s, temp=%s, duration=%s, type=%s, mode=%s fan_speed=%s verticalSwing=%s horizontalSwing=%s light=%s",
             zone_id,
             overlay_mode,
             temperature,
@@ -293,6 +295,7 @@ class TadoConnector:
             fan_speed,
             verticalSwing,
             horizontalSwing,
+            light,
         )
 
         try:
@@ -307,6 +310,7 @@ class TadoConnector:
                 fanLevel=fan_speed,
                 verticalSwing=verticalSwing,
                 horizontalSwing=horizontalSwing,
+                light=light,
             )
 
         except RequestException as exc:
