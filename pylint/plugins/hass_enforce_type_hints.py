@@ -1432,11 +1432,14 @@ def _is_valid_type(
         # Other cases of xxx[yyy, zzz, aaa, ...]`
         for i in reversed(_INNER_MATCH_POSSIBILITIES):
             if match := _TYPE_HINT_MATCHERS[f"x_of_y_{i}"].match(expected_type):
+                # Case (i == 1) is separate because node.slice is is not a Tuple
                 if i == 1:
                     return _is_valid_type(
                         match.group(1), node.value
                     ) and _is_valid_type(match.group(2), node.slice)
 
+                # This special case is separate because we want Mapping[str, Any]
+                # to also match dict[str, int] and similar
                 if (
                     i == 2
                     and in_return
@@ -1453,6 +1456,7 @@ def _is_valid_type(
                         # and _is_valid_type(match.group(3), node.slice.elts[1])
                     )
 
+                # This is the default case
                 return (
                     _is_valid_type(match.group(1), node.value)
                     and isinstance(node.slice, nodes.Tuple)
