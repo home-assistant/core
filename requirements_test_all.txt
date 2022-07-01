@@ -269,6 +269,9 @@ ambiclimate==0.2.1
 # homeassistant.components.androidtv
 androidtv[async]==0.0.67
 
+# homeassistant.components.anthemav
+anthemav==1.3.2
+
 # homeassistant.components.apprise
 apprise==0.9.9
 
@@ -595,7 +598,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220629.0
+home-assistant-frontend==20220630.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -779,7 +782,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.22.4
+numpy==1.23.0
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -914,7 +917,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.29.0
+pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
 pyTibber==0.22.3
@@ -1521,6 +1524,9 @@ tailscale==0.2.0
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
 
+# homeassistant.components.lg_soundbar
+temescal==0.5
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.18
 
@@ -1587,7 +1593,7 @@ vehicle==0.4.0
 velbus-aio==2022.6.2
 
 # homeassistant.components.venstar
-venstarcolortouch==0.16
+venstarcolortouch==0.17
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2
