@@ -25,6 +25,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import WallboxCoordinator, WallboxEntity
 from .const import (
+    CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
     CHARGER_ADDED_ENERGY_KEY,
     CHARGER_ADDED_RANGE_KEY,
     CHARGER_CHARGING_POWER_KEY,
@@ -35,6 +36,7 @@ from .const import (
     CHARGER_DEPOT_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATE_OF_CHARGE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
@@ -52,7 +54,6 @@ class WallboxSensorEntityDescription(SensorEntityDescription):
     """Describes Wallbox sensor entity."""
 
     precision: int | None = None
-
 
 SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_CHARGING_POWER_KEY: WallboxSensorEntityDescription(
@@ -89,6 +90,14 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_ADDED_ENERGY_KEY: WallboxSensorEntityDescription(
         key=CHARGER_ADDED_ENERGY_KEY,
         name="Added Energy",
+        precision=2,
+        native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    CHARGER_ADDED_DISCHARGED_ENERGY_KEY: WallboxSensorEntityDescription(
+        key=CHARGER_ADDED_DISCHARGED_ENERGY_KEY,
+        name="Discharged Energy",
         precision=2,
         native_unit_of_measurement=ENERGY_KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
@@ -138,7 +147,10 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox sensor entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-
+    is_quasar = coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY].startswith("QSX")
+    
+    if not is_quasar: 
+        del SENSOR_TYPES[CHARGER_ADDED_DISCHARGED_ENERGY_KEY]
     async_add_entities(
         [
             WallboxSensor(coordinator, entry, description)

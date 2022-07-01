@@ -14,6 +14,7 @@ from .const import (
     CHARGER_DATA_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
+    CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     DOMAIN,
 )
@@ -28,7 +29,6 @@ NUMBER_TYPES: dict[str, WallboxNumberEntityDescription] = {
     CHARGER_MAX_CHARGING_CURRENT_KEY: WallboxNumberEntityDescription(
         key=CHARGER_MAX_CHARGING_CURRENT_KEY,
         name="Max. Charging Current",
-        native_min_value=6,
     ),
 }
 
@@ -72,11 +72,17 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._is_quasar = coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY].startswith("QSX")
 
     @property
     def native_max_value(self) -> float:
         """Return the maximum available current."""
         return cast(float, self._coordinator.data[CHARGER_MAX_AVAILABLE_POWER_KEY])
+
+    @property
+    def native_min_value(self) -> float:
+        """Return the minimum available current based on charger type - Quasar can discharge"""
+        return (self.max_value*-1) if self._is_quasar else 6
 
     @property
     def native_value(self) -> float | None:

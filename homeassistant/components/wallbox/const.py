@@ -4,6 +4,7 @@ from homeassistant.backports.enum import StrEnum
 DOMAIN = "wallbox"
 
 CONF_STATION = "station"
+CHARGER_ADDED_DISCHARGED_ENERGY_KEY = "added_discharged_energy"
 CHARGER_ADDED_ENERGY_KEY = "added_energy"
 CHARGER_ADDED_RANGE_KEY = "added_range"
 CHARGER_CHARGING_POWER_KEY = "charging_power"
