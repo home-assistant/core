@@ -19,6 +19,7 @@ from telegram import (
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
     Update,
+    User,
 )
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, Filters
@@ -966,15 +967,16 @@ class BaseTelegramBotEntity:
             event_data[ATTR_TEXT] = message.text
 
         if message.from_user:
-            event_data.update(
-                {
-                    ATTR_USER_ID: message.from_user.id,
-                    ATTR_FROM_FIRST: message.from_user.first_name,
-                    ATTR_FROM_LAST: message.from_user.last_name,
-                }
-            )
+            event_data.update(self._get_user_event_data(message.from_user))
 
         return event_type, event_data
+
+    def _get_user_event_data(self, user: User) -> dict[str, Any]:
+        return {
+            ATTR_USER_ID: user.id,
+            ATTR_FROM_FIRST: user.first_name,
+            ATTR_FROM_LAST: user.last_name,
+        }
 
     def _get_callback_query_event_data(
         self, callback_query: CallbackQuery
@@ -990,6 +992,10 @@ class BaseTelegramBotEntity:
         if callback_query.message:
             event_data[ATTR_MSG] = callback_query.message.to_dict()
             event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
+
+        user = getattr(callback_query, "from")
+        if user:
+            event_data.update(self._get_user_event_data(user))
 
         # Split data into command and args if possible
         event_data.update(self._get_command_event_data(callback_query.data))
