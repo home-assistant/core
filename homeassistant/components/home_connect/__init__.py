@@ -110,7 +110,7 @@ def _get_appliance_by_device_id(
             device = dev_dict[CONF_DEVICE]
             if device.device_id == device_id:
                 return device.appliance
-    raise ValueError("Appliance for device id %s not found", device_id)
+    raise ValueError("Appliance for device id %s not found" % device_id)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
