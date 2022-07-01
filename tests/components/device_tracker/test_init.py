@@ -167,7 +167,6 @@ async def test_duplicate_mac_dev_id(mock_warning, hass):
     assert "Duplicate device IDs" in args[0], "Duplicate device IDs warning expected"
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_setup_without_yaml_file(hass, enable_custom_integrations):
     """Test with no YAML file."""
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -274,7 +273,6 @@ async def test_update_stale(hass, mock_device_tracker_conf, enable_custom_integr
     assert hass.states.get("device_tracker.dev1").state == STATE_NOT_HOME
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_entity_attributes(
     hass, mock_device_tracker_conf, enable_custom_integrations
 ):
@@ -354,7 +352,6 @@ async def test_see_service_guard_config_entry(
     assert not devices
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_new_device_event_fired(
     hass, mock_device_tracker_conf, enable_custom_integrations
 ):
