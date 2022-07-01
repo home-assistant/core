@@ -26,6 +26,9 @@ def mock_device():
     mock_dev.device_class = "blind"
     mock_dev.current_cover_position = 0
     mock_dev.current_cover_tilt_position = 0
+    mock_dev.is_opening = False
+    mock_dev.is_closing = False
+    mock_dev.is_closed = True
     return mock_dev
 
 
@@ -118,6 +121,8 @@ async def test_cover_restore_state(hass, mock_device):
     )
     await create_entity_from_device(hass, mock_device)
     mock_device.init_level.assert_called_once_with(77)
+    entity_state = hass.states.get("cover.name")
+    assert entity_state.state == "closed"
 
 
 async def test_cover_restore_state_bad_cache(hass, mock_device):
@@ -128,3 +133,5 @@ async def test_cover_restore_state_bad_cache(hass, mock_device):
     )
     await create_entity_from_device(hass, mock_device)
     mock_device.init_level.assert_not_called()
+    entity_state = hass.states.get("cover.name")
+    assert entity_state.state == "closed"
