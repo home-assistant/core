@@ -147,7 +147,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
             if capabilities[mode].get("swings"):
                 support_flags |= ClimateEntityFeature.SWING_MODE
 
-            if not capabilities[mode].get("fanSpeeds"):
+            if not capabilities[mode].get("fanLevel"):
                 continue
 
             support_flags |= ClimateEntityFeature.FAN_MODE
@@ -157,7 +157,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_fan_modes = [
                 TADO_TO_HA_FAN_MODE_MAP[speed]
-                for speed in capabilities[mode]["fanSpeeds"]
+                for speed in capabilities[mode]["fanLevel"]
             ]
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
