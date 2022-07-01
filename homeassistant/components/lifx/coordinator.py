@@ -7,12 +7,15 @@ from functools import partial
 import logging
 from typing import cast
 
+from aiolifx.aiolifx import Light
+from aiolifx.connection import AwaitAioLIFX, LIFXConnection
+
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, TARGET_ANY, UNAVAILABLE_GRACE
-from .util import AwaitAioLIFX, LIFXConnection, get_real_mac_addr, lifx_features
+from .util import get_real_mac_addr, lifx_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +34,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         """Initialize DataUpdateCoordinator."""
         assert connection.device is not None
         self.connection = connection
-        self.device = connection.device
+        self.device: Light = connection.device
         self.lock = asyncio.Lock()
         update_interval = timedelta(seconds=10)
         super().__init__(

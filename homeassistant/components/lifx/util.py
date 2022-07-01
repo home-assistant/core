@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import asyncio
-from typing import Any, cast
+from typing import Any
 
 from aiolifx import products
-from aiolifx.aiolifx import UDP_BROADCAST_PORT, Device, Light
-from aiolifx.message import Message
+from aiolifx.aiolifx import Light
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
@@ -96,56 +94,6 @@ def merge_hsbk(
     if change is None:
         return None
     return [b if c is None else c for b, c in zip(base, change)]
-
-
-class AwaitAioLIFX:
-    """Wait for an aiolifx callback and return the message."""
-
-    def __init__(self) -> None:
-        """Initialize the wrapper."""
-        self.message: Message | None = None
-        self.event = asyncio.Event()
-
-    @callback
-    def callback(self, bulb: Device, message: Message) -> None:
-        """Handle responses."""
-        self.message = message
-        self.event.set()
-
-    async def wait(self, method: Any) -> Message | None:
-        """Call an aiolifx method and wait for its response."""
-        self.message = None
-        self.event.clear()
-        method(callb=self.callback)
-
-        await self.event.wait()
-        return self.message
-
-
-class LIFXConnection:
-    """Manage a connection to a LIFX device."""
-
-    def __init__(self, host: str, mac: str) -> None:
-        """Init the connection."""
-        self.host = host
-        self.mac = mac
-        self.device: Light | None = None
-        self.transport: asyncio.DatagramTransport | None = None
-
-    async def async_setup(self) -> None:
-        """Ensure we are connected."""
-        loop = asyncio.get_running_loop()
-        transport_proto = await loop.create_datagram_endpoint(
-            lambda: Light(loop, self.mac, self.host),  # type: ignore[no-any-return]
-            remote_addr=(self.host, UDP_BROADCAST_PORT),
-        )
-        self.transport = cast(asyncio.DatagramTransport, transport_proto[0])
-        self.device = cast(Light, transport_proto[1])
-
-    def async_stop(self) -> None:
-        """Close the transport."""
-        assert self.transport is not None
-        self.transport.close()
 
 
 def _get_mac_offset(mac_addr: str, offset: int) -> str:

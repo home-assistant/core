@@ -4,6 +4,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiolifx.aiolifx import Light
+from aiolifx.connection import AwaitAioLIFX, LIFXConnection
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -17,13 +18,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .util import (
-    AwaitAioLIFX,
-    LIFXConnection,
-    async_entry_is_legacy,
-    get_real_mac_addr,
-    lifx_features,
-)
+from .util import async_entry_is_legacy, get_real_mac_addr, lifx_features
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
