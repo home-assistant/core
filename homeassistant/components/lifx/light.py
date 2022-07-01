@@ -193,7 +193,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         if when > 0:
             self.postponed_update = async_track_point_in_utc_time(
                 self.hass,
-                self.coordinator.async_request_refresh,
+                self.coordinator.async_refresh,
                 util.dt.utcnow() + timedelta(milliseconds=when),
             )
 
