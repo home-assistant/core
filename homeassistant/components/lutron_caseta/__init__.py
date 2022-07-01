@@ -284,9 +284,7 @@ def _async_subscribe_pico_remote_events(
         type_ = device["type"]
         area, name = _area_and_name_from_name(device["name"])
         leap_button_number = device["button_number"]
-        lip_button_number = (
-            async_get_lip_button(type_, leap_button_number) or leap_button_number
-        )
+        lip_button_number = async_get_lip_button(type_, leap_button_number)
         hass_device = dev_reg.async_get_device({(DOMAIN, device["serial"])})
 
         hass.bus.async_fire(
