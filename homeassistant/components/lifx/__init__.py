@@ -60,6 +60,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
     hass.data[DOMAIN] = {}
     config_entries_by_mac = {}
+    legacy_entry = None
     for entry in hass.config_entries.async_entries(DOMAIN):
         if async_entry_is_legacy(entry):
             legacy_entry = entry
