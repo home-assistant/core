@@ -1,6 +1,7 @@
 """Support for getting data from websites with scraping."""
 from __future__ import annotations
 
+from datetime import timedelta
 import logging
 from typing import Any
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_RESOURCE,
+    CONF_SCAN_INTERVAL,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_USERNAME,
     CONF_VALUE_TEMPLATE,
@@ -43,6 +45,7 @@ from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DO
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(minutes=10)
 ICON = "mdi:web"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
@@ -90,7 +93,7 @@ async def async_setup_platform(
         hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=config,
+            data={k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL},
         )
     )
 
