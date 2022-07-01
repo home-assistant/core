@@ -24,7 +24,7 @@ DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
 )
 
 TEST_PASSWORD = "test-password"
-TEST_URL = "test-url"
+TEST_URL = f"http://{DHCP_SERVICE_INFO.ip}"
 TEST_USERNAME = "test-username"
 
 
@@ -187,6 +187,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
     assert result2["data"] == {
         CONF_USERNAME: TEST_USERNAME,
         CONF_PASSWORD: TEST_PASSWORD,
+        CONF_URL: TEST_URL,
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -237,7 +238,7 @@ async def test_dhcp_connection_error(hass: HomeAssistant):
             },
         )
 
-        assert result["errors"] == {CONF_URL: "cannot_connect"}
+        assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_dhcp_login_error(hass: HomeAssistant):
