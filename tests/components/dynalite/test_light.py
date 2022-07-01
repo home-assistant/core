@@ -44,7 +44,6 @@ def mock_device():
         mock_dev.brightness = target
 
     type(mock_dev).init_level = Mock(side_effect=mock_init_level)
-
     return mock_dev
 
 
