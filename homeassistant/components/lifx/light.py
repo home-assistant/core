@@ -7,7 +7,6 @@ import math
 from typing import Any
 
 import aiolifx_effects as aiolifx_effects_module
-from awesomeversion import AwesomeVersion
 import voluptuous as vol
 
 from homeassistant import util
@@ -45,11 +44,10 @@ from .util import (
     convert_8_to_16,
     convert_16_to_8,
     find_hsbk,
+    get_mac_addr,
     lifx_features,
     merge_hsbk,
 )
-
-FIX_MAC_FW = AwesomeVersion("3.70")
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -116,25 +114,15 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self.postponed_update = None
         self.entry = entry
 
-    def get_mac_addr(self):
-        """Increment the last byte of the mac address by one for FW>3.70."""
-        if (
-            self.bulb.host_firmware_version
-            and AwesomeVersion(self.bulb.host_firmware_version) >= FIX_MAC_FW
-        ):
-            octets = [int(octet, 16) for octet in self.mac_addr.split(":")]
-            octets[5] = (octets[5] + 1) % 256
-            return ":".join(f"{octet:02x}" for octet in octets)
-        return self.mac_addr
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
         _map = aiolifx().products.product_map
+        mac_addr = get_mac_addr(self.mac_addr, self.bulb.host_firmware_version)
 
         info = DeviceInfo(
             identifiers={(LIFX_DOMAIN, self.unique_id)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.get_mac_addr())},
+            connections={(dr.CONNECTION_NETWORK_MAC, mac_addr)},
             manufacturer="LIFX",
             name=self.name,
         )

@@ -6,6 +6,7 @@ import asyncio
 
 import aiolifx as aiolifx_module
 import aiolifx_effects as aiolifx_effects_module
+from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -20,6 +21,8 @@ from homeassistant.core import callback
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN
+
+FIX_MAC_FW = AwesomeVersion("3.70")
 
 
 @callback
@@ -115,3 +118,12 @@ class AwaitAioLIFX:
 
         await self.event.wait()
         return self.message
+
+
+def get_mac_addr(host_firmware_version: str, mac_addr: str):
+    """Increment the last byte of the mac address by one for FW>3.70."""
+    if host_firmware_version and AwesomeVersion(host_firmware_version) >= FIX_MAC_FW:
+        octets = [int(octet, 16) for octet in mac_addr.split(":")]
+        octets[5] = (octets[5] + 1) % 256
+        return ":".join(f"{octet:02x}" for octet in octets)
+    return mac_addr
