@@ -1,6 +1,6 @@
 {
   "config": {
-    "flow_title": "{mac_addr} ({host})",
+    "flow_title": "{label} {mac_addr} ({host})",
     "step": {
       "user": {
         "description": "If you leave the host empty, discovery will be used to find devices.",
@@ -14,7 +14,7 @@
         }
       },
       "discovery_confirm": {
-        "description": "Do you want to setup {mac_addr} ({host})?"
+        "description": "Do you want to setup {label} {mac_addr} ({host})?"
       }
     },
     "error": {

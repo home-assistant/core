@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .util import AwaitAioLIFX, LIFXConnection, async_entry_is_legacy
+from .util import AwaitAioLIFX, LIFXConnection, async_entry_is_legacy, lifx_features
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,8 +62,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
-        if await self._async_try_connect(host, mac=mac, raise_on_progress=True) is None:
+        device = await self._async_try_connect(host, mac=mac, raise_on_progress=True)
+        if not device:
             return self.async_abort(reason="cannot_connect")
+        self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
@@ -76,6 +78,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         placeholders = {
+            "label": self._discovered_device.label,
             "mac_addr": self.unique_id,
             "host": self._discovered_device.ip_addr,
         }
@@ -126,7 +129,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
-            formatted_mac: f"{device.ip_addr} {formatted_mac}"
+            formatted_mac: f"{device.label} ({device.ip_addr}) {formatted_mac}"
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }
@@ -155,7 +158,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create a config entry from a smart device."""
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.ip_addr})
         return self.async_create_entry(
-            title=device.mac_addr,
+            title=device.label,
             data={
                 CONF_HOST: device.ip_addr,
             },
@@ -172,10 +175,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         assert device is not None
         message = await AwaitAioLIFX().wait(device.get_color)
         connection.async_stop()
-        if message is None:
-            return None
+        if message is None or lifx_features(device)["relays"] is True:
+            return None  # relays not supported
         if not mac:
-            device = Light(self.hass.loop, message.target_address, host)
+            device.mac_addr = message.target_addr
         await self.async_set_unique_id(
             dr.format_mac(device.mac_addr), raise_on_progress=raise_on_progress
         )

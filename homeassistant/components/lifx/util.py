@@ -23,7 +23,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN, MESSAGE_RETRIES, MESSAGE_TIMEOUT, UNAVAILABLE_GRACE
+from .const import DOMAIN
 
 FIX_MAC_FW = AwesomeVersion("3.70")
 
@@ -142,9 +142,6 @@ class LIFXConnection:
         )
         self.transport = cast(asyncio.DatagramTransport, transport_proto[0])
         self.device = cast(Light, transport_proto[1])
-        self.device.timeout = MESSAGE_TIMEOUT
-        self.device.retry_count = MESSAGE_RETRIES
-        self.device.unregister_timeout = UNAVAILABLE_GRACE
 
     def async_stop(self) -> None:
         """Close the transport."""

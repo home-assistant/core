@@ -23,11 +23,11 @@ from homeassistant.components.light import (
     preprocess_turn_on_alternatives,
 )
 from homeassistant.const import ATTR_MODE
-from homeassistant.core import DOMAIN, HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.service import async_extract_referenced_entity_ids
 
-from . import DOMAIN as LIFX_DOMAIN
+from .const import DOMAIN
 from .util import aiolifx_effects, convert_8_to_16, find_hsbk
 
 SCAN_INTERVAL = timedelta(seconds=10)
@@ -131,7 +131,7 @@ class LIFXManager:
     def async_unload(self):
         """Release resources."""
         for service in SERVICES:
-            self.hass.services.async_remove(LIFX_DOMAIN, service)
+            self.hass.services.async_remove(DOMAIN, service)
 
     @callback
     def async_register_entity(
@@ -158,21 +158,21 @@ class LIFXManager:
                 await self.start_effect(all_referenced, service.service, **service.data)
 
         self.hass.services.async_register(
-            LIFX_DOMAIN,
+            DOMAIN,
             SERVICE_EFFECT_PULSE,
             service_handler,
             schema=LIFX_EFFECT_PULSE_SCHEMA,
         )
 
         self.hass.services.async_register(
-            LIFX_DOMAIN,
+            DOMAIN,
             SERVICE_EFFECT_COLORLOOP,
             service_handler,
             schema=LIFX_EFFECT_COLORLOOP_SCHEMA,
         )
 
         self.hass.services.async_register(
-            LIFX_DOMAIN,
+            DOMAIN,
             SERVICE_EFFECT_STOP,
             service_handler,
             schema=LIFX_EFFECT_STOP_SCHEMA,
