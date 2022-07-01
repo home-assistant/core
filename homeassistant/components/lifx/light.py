@@ -193,13 +193,17 @@ async def async_setup_entry(
     """Set up LIFX from a config entry."""
     # Priority 1: manual config
     if not (interfaces := hass.data[LIFX_DOMAIN].get(DOMAIN)):
-        # Priority 2: Home Assistant enabled interfaces
-        ip_addresses = (
-            source_ip
-            for source_ip in await network.async_get_enabled_source_ips(hass)
-            if isinstance(source_ip, IPv4Address) and not source_ip.is_loopback
-        )
-        interfaces = [{CONF_SERVER: str(ip)} for ip in ip_addresses]
+        # Priority 2: scanned interfaces
+        lifx_ip_addresses = await aiolifx().LifxScan(hass.loop).scan()
+        interfaces = [{CONF_SERVER: ip} for ip in lifx_ip_addresses]
+        if not interfaces:
+            # Priority 3: Home Assistant enabled interfaces
+            ip_addresses = (
+                source_ip
+                for source_ip in await network.async_get_enabled_source_ips(hass)
+                if isinstance(source_ip, IPv4Address) and not source_ip.is_loopback
+            )
+            interfaces = [{CONF_SERVER: str(ip)} for ip in ip_addresses]
 
     platform = entity_platform.async_get_current_platform()
     lifx_manager = LIFXManager(hass, platform, config_entry, async_add_entities)
