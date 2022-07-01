@@ -160,6 +160,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
                         supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[swing_mode])
                         supported_swing_modes.append(SWING_BOTH)
                         continue
+                    support_flags |= ClimateEntityFeature.SWING_MODE
                     supported_swing_modes = [SWING_OFF, TADO_TO_HA_SWING_MODE_MAP[swing_mode]]
 
             if not capabilities[mode].get("fanLevel"):
