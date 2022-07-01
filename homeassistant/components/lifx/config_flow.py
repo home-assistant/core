@@ -76,9 +76,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         self._set_confirm_only()
         placeholders = {
-            "name": self._discovered_device.alias,
-            "model": self._discovered_device.model,
-            "host": self._discovered_device.host,
+            "mac_addr": self.unique_id,
+            "host": self._discovered_device.ip_addr,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(
