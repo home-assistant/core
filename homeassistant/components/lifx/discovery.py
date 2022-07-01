@@ -2,6 +2,8 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Iterable
+import logging
 
 from aiolifx.aiolifx import LifxDiscovery, Light, ScanManager
 
@@ -14,30 +16,28 @@ from .const import DOMAIN
 
 DEFAULT_TIMEOUT = 10
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_discover_devices(
     hass: HomeAssistant, timeout: int = DEFAULT_TIMEOUT
-) -> list[Light]:
+) -> Iterable[Light]:
     """Discover lifx devices."""
+    all_lights: dict[str, Light] = {}
     broadcast_addrs = await network.async_get_ipv4_broadcast_addresses(hass)
-    tasks: list[asyncio.Task] = []
     discoveries = []
     for address in broadcast_addrs:
         manager = ScanManager(str(address))
         lifx_discovery = LifxDiscovery(hass.loop, manager, broadcast_ip=str(address))
         discoveries.append(lifx_discovery)
         lifx_discovery.start()
-        tasks.append(hass.loop.create_task(manager.lifx_ip()))
 
-    (done, pending) = await asyncio.wait(tasks, timeout=timeout)
-
+    await asyncio.sleep(timeout)
     for discovery in discoveries:
+        all_lights.update(discovery.lights)
         discovery.cleanup()
 
-    for task in pending:
-        task.cancel()
-
-    return [task.result() for task in done]
+    return all_lights.values()
 
 
 @callback
