@@ -4,7 +4,6 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import Any
 
-from aiolifx.aiolifx import Light
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -21,12 +20,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DOMAIN, TARGET_ANY
 from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices
-from .util import async_entry_is_legacy, real_mac_to_lifx_mac_addr
+from .util import LIFXConnection, async_entry_is_legacy, real_mac_to_lifx_mac_addr
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -94,8 +93,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         manager.async_setup()
 
     host = entry.data[CONF_HOST]
-    device = Light(hass.loop, entry.unique_id, host)
-    coordinator = LIFXUpdateCoordinator(hass, device)
+    connection = LIFXConnection(host, TARGET_ANY)
+    await connection.async_setup()
+    coordinator = LIFXUpdateCoordinator(hass, connection)
     await coordinator.async_config_entry_first_refresh()
 
     device_mac = dr.format_mac(coordinator.lifx_mac_address)
@@ -114,7 +114,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        coordinator.connection.async_stop()
     if not hass.data[DOMAIN]:
         hass.data.pop(DATA_LIFX_MANAGER).async_unload()
     return unload_ok

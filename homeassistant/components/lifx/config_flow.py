@@ -17,7 +17,7 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .util import AwaitAioLIFX, async_entry_is_legacy
+from .util import AwaitAioLIFX, LIFXConnection, async_entry_is_legacy
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -166,8 +166,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> Light:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
-        device = Light(self.hass.loop, mac or TARGET_ANY, host)
+        connection = LIFXConnection(host, TARGET_ANY)
+        await connection.async_setup()
+        device = connection.device
+        assert device is not None
         message = await AwaitAioLIFX().wait(device.get_color)
+        connection.async_stop()
         if message is None:
             return None
         if not mac:
