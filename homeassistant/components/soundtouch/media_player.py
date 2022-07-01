@@ -1,23 +1,25 @@
-"""Support for interface with a Bose Soundtouch."""
+"""Support for interface with a Bose SoundTouch."""
 from __future__ import annotations
 
 from functools import partial
 import logging
 import re
 
-from libsoundtouch import soundtouch_device
+from libsoundtouch.device import SoundTouchDevice
 from libsoundtouch.utils import Source
 import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
 from homeassistant.components.media_player.browse_media import (
     async_process_play_media_url,
 )
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -27,19 +29,16 @@ from homeassistant.const import (
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import (
-    DOMAIN,
-    SERVICE_ADD_ZONE_SLAVE,
-    SERVICE_CREATE_ZONE,
-    SERVICE_PLAY_EVERYWHERE,
-    SERVICE_REMOVE_ZONE_SLAVE,
-)
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,137 +49,57 @@ MAP_STATUS = {
     "STOP_STATE": STATE_OFF,
 }
 
-DATA_SOUNDTOUCH = "soundtouch"
 ATTR_SOUNDTOUCH_GROUP = "soundtouch_group"
 ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
-SOUNDTOUCH_PLAY_EVERYWHERE = vol.Schema({vol.Required("master"): cv.entity_id})
-
-SOUNDTOUCH_CREATE_ZONE_SCHEMA = vol.Schema(
-    {vol.Required("master"): cv.entity_id, vol.Required("slaves"): cv.entity_ids}
-)
-
-SOUNDTOUCH_ADD_ZONE_SCHEMA = vol.Schema(
-    {vol.Required("master"): cv.entity_id, vol.Required("slaves"): cv.entity_ids}
-)
-
-SOUNDTOUCH_REMOVE_ZONE_SCHEMA = vol.Schema(
-    {vol.Required("master"): cv.entity_id, vol.Required("slaves"): cv.entity_ids}
-)
-
-DEFAULT_NAME = "Bose Soundtouch"
-DEFAULT_PORT = 8090
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-    }
+PLATFORM_SCHEMA = vol.All(
+    PLATFORM_SCHEMA.extend(
+        {
+            vol.Required(CONF_HOST): cv.string,
+            vol.Optional(CONF_PORT): cv.port,
+            vol.Optional(CONF_NAME, default=""): cv.string,
+        }
+    ),
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Bose Soundtouch platform."""
-    if DATA_SOUNDTOUCH not in hass.data:
-        hass.data[DATA_SOUNDTOUCH] = []
-
-    if discovery_info:
-        host = discovery_info["host"]
-        port = int(discovery_info["port"])
-
-        # if device already exists by config
-        if host in [device.config["host"] for device in hass.data[DATA_SOUNDTOUCH]]:
-            return
-
-        remote_config = {"id": "ha.component.soundtouch", "host": host, "port": port}
-        bose_soundtouch_entity = SoundTouchDevice(None, remote_config)
-        hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
-        add_entities([bose_soundtouch_entity], True)
-    else:
-        name = config.get(CONF_NAME)
-        remote_config = {
-            "id": "ha.component.soundtouch",
-            "port": config.get(CONF_PORT),
-            "host": config.get(CONF_HOST),
-        }
-        bose_soundtouch_entity = SoundTouchDevice(name, remote_config)
-        hass.data[DATA_SOUNDTOUCH].append(bose_soundtouch_entity)
-        add_entities([bose_soundtouch_entity], True)
-
-    def service_handle(service: ServiceCall) -> None:
-        """Handle the applying of a service."""
-        master_device_id = service.data.get("master")
-        slaves_ids = service.data.get("slaves")
-        slaves = []
-        if slaves_ids:
-            slaves = [
-                device
-                for device in hass.data[DATA_SOUNDTOUCH]
-                if device.entity_id in slaves_ids
-            ]
-
-        master = next(
-            iter(
-                [
-                    device
-                    for device in hass.data[DATA_SOUNDTOUCH]
-                    if device.entity_id == master_device_id
-                ]
-            ),
-            None,
+    """Set up the Bose SoundTouch platform."""
+    _LOGGER.warning(
+        "Configuration of the Bose SoundTouch platform in YAML is deprecated and will be "
+        "removed in a future release; Your existing configuration "
+        "has been imported into the UI automatically and can be safely removed "
+        "from your configuration.yaml file"
+    )
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data=config,
         )
-
-        if master is None:
-            _LOGGER.warning(
-                "Unable to find master with entity_id: %s", str(master_device_id)
-            )
-            return
-
-        if service.service == SERVICE_PLAY_EVERYWHERE:
-            slaves = [
-                d for d in hass.data[DATA_SOUNDTOUCH] if d.entity_id != master_device_id
-            ]
-            master.create_zone(slaves)
-        elif service.service == SERVICE_CREATE_ZONE:
-            master.create_zone(slaves)
-        elif service.service == SERVICE_REMOVE_ZONE_SLAVE:
-            master.remove_zone_slave(slaves)
-        elif service.service == SERVICE_ADD_ZONE_SLAVE:
-            master.add_zone_slave(slaves)
-
-    hass.services.register(
-        DOMAIN,
-        SERVICE_PLAY_EVERYWHERE,
-        service_handle,
-        schema=SOUNDTOUCH_PLAY_EVERYWHERE,
-    )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_CREATE_ZONE,
-        service_handle,
-        schema=SOUNDTOUCH_CREATE_ZONE_SCHEMA,
-    )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_REMOVE_ZONE_SLAVE,
-        service_handle,
-        schema=SOUNDTOUCH_REMOVE_ZONE_SCHEMA,
-    )
-    hass.services.register(
-        DOMAIN,
-        SERVICE_ADD_ZONE_SLAVE,
-        service_handle,
-        schema=SOUNDTOUCH_ADD_ZONE_SCHEMA,
     )
 
 
-class SoundTouchDevice(MediaPlayerEntity):
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up the Bose SoundTouch media player based on a config entry."""
+    device = hass.data[DOMAIN][entry.entry_id].device
+    media_player = SoundTouchMediaPlayer(device)
+
+    async_add_entities([media_player], True)
+
+    hass.data[DOMAIN][entry.entry_id].media_player = media_player
+
+
+class SoundTouchMediaPlayer(MediaPlayerEntity):
     """Representation of a SoundTouch Bose device."""
 
     _attr_supported_features = (
@@ -197,28 +116,32 @@ class SoundTouchDevice(MediaPlayerEntity):
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.BROWSE_MEDIA
     )
+    _attr_device_class = MediaPlayerDeviceClass.SPEAKER
 
-    def __init__(self, name, config):
-        """Create Soundtouch Entity."""
+    def __init__(self, device: SoundTouchDevice) -> None:
+        """Create SoundTouch media player entity."""
 
-        self._device = soundtouch_device(config["host"], config["port"])
-        if name is None:
-            self._name = self._device.config.name
-        else:
-            self._name = name
+        self._device = device
+
+        self._attr_unique_id = self._device.config.device_id
+        self._attr_name = self._device.config.name
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._device.config.device_id)},
+            connections={
+                (CONNECTION_NETWORK_MAC, format_mac(self._device.config.mac_address))
+            },
+            manufacturer="Bose Corporation",
+            model=self._device.config.type,
+            name=self._device.config.name,
+        )
+
         self._status = None
         self._volume = None
-        self._config = config
         self._zone = None
 
     @property
-    def config(self):
-        """Return specific soundtouch configuration."""
-        return self._config
-
-    @property
     def device(self):
-        """Return Soundtouch device."""
+        """Return SoundTouch device."""
         return self._device
 
     def update(self):
@@ -233,15 +156,13 @@ class SoundTouchDevice(MediaPlayerEntity):
         return self._volume.actual / 100
 
     @property
-    def name(self):
-        """Return the name of the device."""
-        return self._name
-
-    @property
     def state(self):
         """Return the state of the device."""
-        if self._status.source == "STANDBY":
+        if self._status is None or self._status.source == "STANDBY":
             return STATE_OFF
+
+        if self._status.source == "INVALID_SOURCE":
+            return STATE_UNKNOWN
 
         return MAP_STATUS.get(self._status.play_status, STATE_UNAVAILABLE)
 
@@ -478,15 +399,12 @@ class SoundTouchDevice(MediaPlayerEntity):
         if not zone_status:
             return None
 
-        # Due to a bug in the SoundTouch API itself client devices do NOT return their
-        # siblings as part of the "slaves" list. Only the master has the full list of
-        # slaves for some reason. To compensate for this shortcoming we have to fetch
-        # the zone info from the master when the current device is a slave until this is
-        # fixed in the SoundTouch API or libsoundtouch, or of course until somebody has a
-        # better idea on how to fix this.
+        # Client devices do NOT return their siblings as part of the "slaves" list.
+        # Only the master has the full list of slaves. To compensate for this shortcoming
+        # we have to fetch the zone info from the master when the current device is a slave.
         # In addition to this shortcoming, libsoundtouch seems to report the "is_master"
         # property wrong on some slaves, so the only reliable way to detect if the current
-        # devices is the master, is by comparing the master_id of the zone with the device_id
+        # devices is the master, is by comparing the master_id of the zone with the device_id.
         if zone_status.master_id == self._device.config.device_id:
             return self._build_zone_info(self.entity_id, zone_status.slaves)
 
@@ -505,16 +423,16 @@ class SoundTouchDevice(MediaPlayerEntity):
 
     def _get_instance_by_ip(self, ip_address):
         """Search and return a SoundTouchDevice instance by it's IP address."""
-        for instance in self.hass.data[DATA_SOUNDTOUCH]:
-            if instance and instance.config["host"] == ip_address:
-                return instance
+        for data in self.hass.data[DOMAIN].values():
+            if data.device.config.device_ip == ip_address:
+                return data.media_player
         return None
 
     def _get_instance_by_id(self, instance_id):
         """Search and return a SoundTouchDevice instance by it's ID (aka MAC address)."""
-        for instance in self.hass.data[DATA_SOUNDTOUCH]:
-            if instance and instance.device.config.device_id == instance_id:
-                return instance
+        for data in self.hass.data[DOMAIN].values():
+            if data.device.config.device_id == instance_id:
+                return data.media_player
         return None
 
     def _build_zone_info(self, master, zone_slaves):
