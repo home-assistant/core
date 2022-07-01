@@ -187,9 +187,6 @@ aiokafka==0.6.0
 aiokef==0.2.16
 
 # homeassistant.components.lifx
-aiolifx==0.8.1
-
-# homeassistant.components.lifx
 aiolifx_effects==0.2.2
 
 # homeassistant.components.lookin
@@ -787,6 +784,9 @@ ha-ffmpeg==3.0.2
 
 # homeassistant.components.philips_js
 ha-philipsjs==2.9.0
+
+# homeassistant.components.lifx
+haaiolifx==0.8.1
 
 # homeassistant.components.habitica
 habitipy==0.2.0
