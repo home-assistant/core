@@ -554,7 +554,6 @@ async def test_see_failures(mock_warning, hass, mock_device_tracker_conf):
     assert len(devices) == 4
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_async_added_to_hass(hass):
     """Test restoring state."""
     attr = {
@@ -590,7 +589,6 @@ async def test_bad_platform(hass):
     assert f"{device_tracker.DOMAIN}.bad_platform" not in hass.config.components
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_adding_unknown_device_to_config(
     mock_device_tracker_conf, hass, enable_custom_integrations
 ):
