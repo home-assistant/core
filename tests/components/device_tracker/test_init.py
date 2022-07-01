@@ -130,7 +130,6 @@ async def test_reading_yaml_config(hass, enable_custom_integrations):
 
 
 @patch("homeassistant.components.device_tracker.const.LOGGER.warning")
-@pytest.mark.skip(reason="debug CI fail")
 async def test_duplicate_mac_dev_id(mock_warning, hass):
     """Test adding duplicate MACs or device IDs to DeviceTracker."""
     devices = [
@@ -651,7 +650,6 @@ async def test_old_style_track_new_is_skipped(mock_device_tracker_conf, hass):
     assert mock_device_tracker_conf[0].track is False
 
 
-@pytest.mark.skip(reason="debug CI fail")
 def test_see_schema_allowing_ios_calls():
     """Test SEE service schema allows extra keys.
 
