@@ -1,13 +1,13 @@
 """The tests for the Mikrotik device tracker platform."""
 from datetime import timedelta
 
+from freezegun import freeze_time
 import pytest
 
 from homeassistant.components import mikrotik
 import homeassistant.components.device_tracker as device_tracker
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util.dt import utcnow
 
 from . import (
     DEVICE_2_WIRELESS,
@@ -20,9 +20,7 @@ from . import (
 )
 from .test_hub import setup_mikrotik_entry
 
-from tests.common import MockConfigEntry, patch
-
-DEFAULT_DETECTION_TIME = timedelta(seconds=300)
+from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
 
 @pytest.fixture
@@ -56,24 +54,11 @@ def mock_command(self, cmd, params=None):
     return {}
 
 
-async def test_platform_manually_configured(hass):
-    """Test that nothing happens when configuring mikrotik through device tracker platform."""
-    assert (
-        await async_setup_component(
-            hass,
-            device_tracker.DOMAIN,
-            {device_tracker.DOMAIN: {"platform": "mikrotik"}},
-        )
-        is False
-    )
-    assert mikrotik.DOMAIN not in hass.data
-
-
 async def test_device_trackers(hass, mock_device_registry_devices):
     """Test device_trackers created by mikrotik."""
 
     # test devices are added from wireless list only
-    hub = await setup_mikrotik_entry(hass)
+    await setup_mikrotik_entry(hass)
 
     device_1 = hass.states.get("device_tracker.device_1")
     assert device_1 is not None
@@ -90,7 +75,7 @@ async def test_device_trackers(hass, mock_device_registry_devices):
         # test device_2 is added after connecting to wireless network
         WIRELESS_DATA.append(DEVICE_2_WIRELESS)
 
-        await hub.async_refresh()
+        async_fire_time_changed(hass, utcnow() + timedelta(seconds=10))
         await hass.async_block_till_done()
 
         device_2 = hass.states.get("device_tracker.device_2")
@@ -104,21 +89,17 @@ async def test_device_trackers(hass, mock_device_registry_devices):
 
         # test state remains home if last_seen  consider_home_interval
         del WIRELESS_DATA[1]  # device 2 is removed from wireless list
-        hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
-            minutes=4
-        )
-        await hub.async_update()
-        await hass.async_block_till_done()
+        with freeze_time(utcnow() + timedelta(minutes=4)):
+            async_fire_time_changed(hass, utcnow() + timedelta(minutes=4))
+            await hass.async_block_till_done()
 
         device_2 = hass.states.get("device_tracker.device_2")
-        assert device_2.state != "not_home"
+        assert device_2.state == "home"
 
         # test state changes to away if last_seen > consider_home_interval
-        hub.api.devices["00:00:00:00:00:02"]._last_seen = dt_util.utcnow() - timedelta(
-            minutes=5
-        )
-        await hub.async_refresh()
-        await hass.async_block_till_done()
+        with freeze_time(utcnow() + timedelta(minutes=6)):
+            async_fire_time_changed(hass, utcnow() + timedelta(minutes=6))
+            await hass.async_block_till_done()
 
         device_2 = hass.states.get("device_tracker.device_2")
         assert device_2.state == "not_home"

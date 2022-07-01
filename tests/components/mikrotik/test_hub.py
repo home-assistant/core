@@ -65,9 +65,9 @@ async def test_hub_not_support_wireless(hass):
     hub = await setup_mikrotik_entry(hass, support_wireless=False)
 
     assert hub.api.devices["00:00:00:00:00:01"]._params == DHCP_DATA[0]
-    assert hub.api.devices["00:00:00:00:00:01"]._wireless_params is None
+    assert not hub.api.devices["00:00:00:00:00:01"]._wireless_params
     assert hub.api.devices["00:00:00:00:00:02"]._params == DHCP_DATA[1]
-    assert hub.api.devices["00:00:00:00:00:02"]._wireless_params is None
+    assert not hub.api.devices["00:00:00:00:00:02"]._wireless_params
 
 
 async def test_hub_support_wireless(hass):
@@ -98,7 +98,7 @@ async def test_force_dhcp(hass):
 
     # devices not in wireless list are added from dhcp
     assert hub.api.devices["00:00:00:00:00:02"]._params == DHCP_DATA[1]
-    assert hub.api.devices["00:00:00:00:00:02"]._wireless_params is None
+    assert not hub.api.devices["00:00:00:00:00:02"]._wireless_params
 
 
 async def test_arp_ping(hass):
