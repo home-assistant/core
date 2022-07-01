@@ -1460,9 +1460,10 @@ def _is_valid_type(
                 return (
                     _is_valid_type(match.group(1), node.value)
                     and isinstance(node.slice, nodes.Tuple)
+                    and len(node.slice.elts) == i
                     and all(
                         _is_valid_type(match.group(n + 2), node.slice.elts[n])
-                        for n in range(i - 1)
+                        for n in range(i)
                     )
                 )
 
