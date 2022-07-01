@@ -165,10 +165,10 @@ class BleBoxLightEntity(BleBoxEntity, LightEntity):
         else:
             try:
                 await self._feature.async_on(value)
-            except ValueError as ex:
-                _LOGGER.error(
-                    "Turning on '%s' failed: Bad value %s (%s)", self.name, value, ex
-                )
+            except ValueError as exc:
+                raise ValueError(
+                    f"Turning on '{self.name}' failed: Bad value {value}"
+                ) from exc
 
     async def async_turn_off(self, **kwargs):
         """Turn the light off."""

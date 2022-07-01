@@ -513,13 +513,14 @@ async def test_turn_on_failure(feature, hass, config, caplog):
     await async_setup_entity(hass, config, entity_id)
 
     feature_mock.sensible_on_value = 123
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id},
-        blocking=True,
-    )
+    with pytest.raises(ValueError) as info:
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
 
-    assert (
-        f"Turning on '{feature_mock.full_name}' failed: Bad value 123 ()" in caplog.text
+    assert f"Turning on '{feature_mock.full_name}' failed: Bad value 123" in str(
+        info.value
     )
