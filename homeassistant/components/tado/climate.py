@@ -185,7 +185,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
         cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
 
-        if CONST_LIGHT in capabilities
+        if CONST_LIGHT in capabilities:
             light=capabilities[CONST_LIGHT][0]
     else:
         supported_hvac_modes.append(HVACMode.HEAT)
