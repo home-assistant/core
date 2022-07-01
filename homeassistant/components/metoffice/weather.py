@@ -73,9 +73,9 @@ def _get_weather_condition(metoffice_code):
 class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Office weather condition."""
 
-    _attr_temperature_unit = TEMP_CELSIUS
-    _attr_pressure_unit = PRESSURE_HPA
-    _attr_wind_speed_unit = SPEED_MILES_PER_HOUR
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
 
     def __init__(self, coordinator, hass_data, use_3hourly):
         """Initialise the platform with a data instance."""
