@@ -309,7 +309,6 @@ async def test_entity_attributes(
 
 
 @patch("homeassistant.components.device_tracker.legacy.DeviceTracker.async_see")
-@pytest.mark.skip(reason="debug CI fail")
 async def test_see_service(mock_see, hass, enable_custom_integrations):
     """Test the see service with a unicode dev_id and NO MAC."""
     with assert_setup_component(1, device_tracker.DOMAIN):
@@ -337,7 +336,6 @@ async def test_see_service(mock_see, hass, enable_custom_integrations):
     assert mock_see.call_args == call(**params)
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_see_service_guard_config_entry(
     hass, mock_device_tracker_conf, enable_custom_integrations
 ):
