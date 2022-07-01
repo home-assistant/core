@@ -68,7 +68,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     discovered_devices = await async_discover_devices(hass)
     hosts_by_mac = {
-        get_real_mac_addr(device.mac_addr, device.host_firmware_version): device
+        get_real_mac_addr(device.mac_addr, device.host_firmware_version): device.ip_addr
         for device in discovered_devices
     }
     if legacy_entry:
