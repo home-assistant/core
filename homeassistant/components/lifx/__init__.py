@@ -1,4 +1,6 @@
 """Support for LIFX."""
+import logging
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -9,7 +11,10 @@ from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN
+from .const import DISCOVERY_ERROR, DOMAIN
+from .discovery import LifxNetworkScanner
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -50,6 +55,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
+    lifx_network_scanner = LifxNetworkScanner(hass)
+
+    # Log an error if LIFX is configured but no devices are found using
+    # only enabled network interfaces.
+    if await lifx_network_scanner.found_lifx_devices() is False:
+        _LOGGER.error(DISCOVERY_ERROR)
+        return False
+
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
 

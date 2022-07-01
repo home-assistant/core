@@ -29,7 +29,7 @@
       "LIFX Z"
     ]
   },
-  "codeowners": ["@Djelibeybi"],
+  "codeowners": [],
   "iot_class": "local_polling",
   "loggers": ["aiolifx", "aiolifx_effects", "bitstring"]
 }
