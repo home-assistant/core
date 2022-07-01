@@ -52,7 +52,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(
                     f"Failed to fetch state from device: {self.device.ip_addr}"
                 )
-            self.lifx_mac_address = response.target_address
+            self.lifx_mac_address = response.target_addr
             if lifx_features(self.device)["multizone"]:
                 await self.update_color_zones()
 
