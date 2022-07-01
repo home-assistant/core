@@ -1419,16 +1419,6 @@ def _is_valid_type(
     # Special case for `xxx[aaa, bbb, ccc, ...]
     if (
         isinstance(node, nodes.Subscript)
-        and not isinstance(node.slice, nodes.Tuple)
-        and (match := _TYPE_HINT_MATCHERS["x_of_y_1"].match(expected_type))
-    ):
-        return _is_valid_type(match.group(1), node.value) and _is_valid_type(
-            match.group(2), node.slice
-        )
-
-    # Special case for `xxx[aaa, bbb, ccc, ...]
-    if (
-        isinstance(node, nodes.Subscript)
         and isinstance(node.slice, nodes.Tuple)
         and (
             match := _TYPE_HINT_MATCHERS[f"x_of_y_{len(node.slice.elts)}"].match(
@@ -1462,6 +1452,14 @@ def _is_valid_type(
                 _is_valid_type(match.group(n + 2), node.slice.elts[n])
                 for n in range(len(node.slice.elts))
             )
+        )
+
+    # Special case for xxx[yyy]
+    if match := _TYPE_HINT_MATCHERS["x_of_y_1"].match(expected_type):
+        return (
+            isinstance(node, nodes.Subscript)
+            and _is_valid_type(match.group(1), node.value)
+            and _is_valid_type(match.group(2), node.slice)
         )
 
     # Name occurs when a namespace is not used, eg. "HomeAssistant"
