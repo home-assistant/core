@@ -10,6 +10,10 @@ from homeassistant.components.climate.const import (
     FAN_AUTO,
     PRESET_AWAY,
     PRESET_HOME,
+    SWING_VERTICAL,
+    SWING_HORIZONTAL,
+    SWING_BOTH,
+    SWING_OFF,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
@@ -42,6 +46,7 @@ from .const import (
     HA_TO_TADO_FAN_MODE_MAP,
     HA_TO_TADO_HVAC_MODE_MAP,
     ORDERED_KNOWN_TADO_MODES,
+    KNOWN_TADO_SWING_MODES,
     SIGNAL_TADO_UPDATE_RECEIVED,
     SUPPORT_PRESET,
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
@@ -133,6 +138,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
     ]
+    supported_swing_modes = None
     supported_fan_modes = None
     heat_temperatures = None
     cool_temperatures = None
@@ -145,11 +151,14 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
 
-            if capabilities[mode].get("horizontalSwing"):
-                support_flags |= ClimateEntityFeature.SWING_MODE
-
-            if capabilities[mode].get("verticalSwing"):
-                support_flags |= ClimateEntityFeature.SWING_MODE
+            for swing_mode in KNOWN_TADO_SWING_MODES:
+                if not capabilities[mode][swing_mode]:
+                    continue
+                if supported_swing_modes:
+                    supported_swing_modes.append(swing_mode)
+                    supported_swing_modes.append(SWING_BOTH)
+                    continue
+                supported_swing_modes = [SWING_OFF, swing_mode]
 
             if not capabilities[mode].get("fanLevel"):
                 continue
@@ -210,6 +219,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
         cool_step,
         supported_hvac_modes,
         supported_fan_modes,
+        supported_swing_modes,
         support_flags,
         device_info,
     )
@@ -233,6 +243,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         cool_step,
         supported_hvac_modes,
         supported_fan_modes,
+        supported_swing_modes,
         support_flags,
         device_info,
     ):
@@ -249,6 +260,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._supported_hvac_modes = supported_hvac_modes
         self._supported_fan_modes = supported_fan_modes
+        self._supported_swing_modes = supported_swing_modes
         self._support_flags = support_flags
 
         self._available = False
@@ -476,7 +488,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def swing_modes(self):
         """Swing modes for the device."""
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
-            return [TADO_SWING_ON, TADO_SWING_OFF]
+            return self._supported_swing_modes
         return None
 
     @property
