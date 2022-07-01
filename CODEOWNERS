@@ -979,6 +979,8 @@ build.json @home-assistant/supervisor
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @cgtobi @jjlawren
 /tests/components/sonos/ @cgtobi @jjlawren
+/homeassistant/components/soundtouch/ @kroimon
+/tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
 /tests/components/spaceapi/ @fabaff
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
