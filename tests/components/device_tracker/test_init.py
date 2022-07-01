@@ -67,7 +67,6 @@ async def test_is_on(hass):
     assert not device_tracker.is_on(hass, entity_id)
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_reading_broken_yaml_config(hass):
     """Test when known devices contains invalid data."""
     files = {
