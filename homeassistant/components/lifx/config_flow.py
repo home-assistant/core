@@ -130,7 +130,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not async_entry_is_legacy(entry)
         }
         self._discovered_devices = {
-            dr.format_mac(device.mac_addr): device
+            dr.format_mac(
+                get_real_mac_addr(device.mac_addr, device.host_firmware_version)
+            ): device
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
