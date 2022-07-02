@@ -77,6 +77,7 @@ async def test_error_for_none_zero_exit_code(
         DOMAIN, "test", {"message": "error"}, blocking=True
     )
     assert "Command failed" in caplog.text
+    assert "return code 1" in caplog.text
 
 
 async def test_timeout(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
