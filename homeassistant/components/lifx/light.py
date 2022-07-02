@@ -169,10 +169,11 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     @property
     def color_temp(self) -> int | None:
         """Return the color temperature."""
-        _, sat, _, kelvin = self.bulb.color
-        if sat:
+        if self.bulb.color[HSBK_SATURATION]:
             return None
-        return color_util.color_temperature_kelvin_to_mired(kelvin)
+        return color_util.color_temperature_kelvin_to_mired(
+            self.bulb.color[HSBK_KELVIN]
+        )
 
     @property
     def is_on(self) -> bool:
