@@ -633,6 +633,11 @@ class TodoistProjectData:
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all tasks in a specific time frame."""
+        # 2022-06-21 14:17:49 ERROR (MainThread) [homeassistant.components.todoist.calendar] error getting events
+        # Traceback (most recent call last):
+        #  File "/workspaces/core/homeassistant/components/todoist/calendar.py", line 597, in async_get_events
+        #    self._api.projects.get_data, self._id
+        # AttributeError: 'TodoistAPIAsync' object has no attribute 'projects'
         if self._id is None:
             tasks = await self._api.get_tasks()
             project_task_data = [
