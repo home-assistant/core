@@ -89,13 +89,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 self.device.mac_addr = response.target_addr
             if lifx_features(self.device)["multizone"]:
                 try:
-                    await self.update_color_zones()
+                    await self.async_update_color_zones()
                 except asyncio.TimeoutError as ex:
                     raise UpdateFailed(
                         f"Failed to fetch zones from device: {self.device.ip_addr}"
                     ) from ex
 
-    async def update_color_zones(self) -> None:
+    async def async_update_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
         top = 1
@@ -110,3 +110,41 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             # We only await multizone responses so don't ask for just one
             if zone == top - 1:
                 zone -= 1
+
+    async def async_get_color(self) -> None:
+        """Send a get color message to the device."""
+        await async_execute_lifx(self.device.get_color)
+
+    async def async_set_power(self, state: bool, duration: int | None) -> None:
+        """Send a set power message to the device."""
+        await async_execute_lifx(
+            partial(self.device.set_power, state, duration=duration)
+        )
+
+    async def async_set_color(
+        self, hsbk: list[float | int | None], duration: int | None
+    ) -> None:
+        """Send a set color message to the device."""
+        await async_execute_lifx(
+            partial(self.device.set_color, hsbk, duration=duration)
+        )
+
+    async def async_set_color_zones(
+        self,
+        start_index: int,
+        end_index: int,
+        hsbk: list[float | int | None],
+        duration: int | None,
+        apply: int,
+    ) -> None:
+        """Send a set color zones message to the device."""
+        await async_execute_lifx(
+            partial(
+                self.device.set_color_zones,
+                start_index=start_index,
+                end_index=end_index,
+                color=hsbk,
+                duration=duration,
+                apply=apply,
+            )
+        )
