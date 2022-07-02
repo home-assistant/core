@@ -14,6 +14,9 @@ on:
 env:
   DEFAULT_PYTHON: 3.9
 
+permissions:
+  contents: read
+
 jobs:
   upload:
     name: Upload
@@ -34,6 +37,8 @@ jobs:
           python3 -m script.translations upload
 
   download:
+    permissions:
+      contents: write  # for Git to git push
     name: Download
     needs: upload
     if: github.repository_owner == 'home-assistant' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')

@@ -13,6 +13,9 @@ on:
       - "requirements.txt"
       - "requirements_all.txt"
 
+permissions:
+  contents: read
+
 jobs:
   init:
     name: Initialize wheels builder
