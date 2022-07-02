@@ -279,7 +279,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._supported_fan_modes = supported_fan_modes
         self._supported_swing_modes = supported_swing_modes
         self._support_flags = support_flags
-        self._
 
         self._available = False
 
