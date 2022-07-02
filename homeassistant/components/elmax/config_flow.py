@@ -174,13 +174,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._reauth_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(self, user_input=None) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
         if user_input is not None:
             panel_pin = user_input.get(CONF_ELMAX_PANEL_PIN)
             password = user_input.get(CONF_ELMAX_PASSWORD)
             entry = await self.async_set_unique_id(self._reauth_panelid)
+
+            # This is an edge case: if re-auth flow is triggered, it means that the integration is already
+            # configured, therefore the async_set_unique_id should return the entry. If this does not happen,
+            # just start over the configuration from user step.
+            if entry is None or self._reauth_username is None:
+                return await self.async_step_user()
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
