@@ -278,8 +278,8 @@ class TadoConnector:
         device_type="HEATING",
         mode=None,
         fan_speed=None,
-        verticalSwing=None,
-        horizontalSwing=None,
+        vertical_swing=None,
+        horizontal_swing=None,
         light=None
     ):
         """Set a zone overlay."""
@@ -292,8 +292,8 @@ class TadoConnector:
             device_type,
             mode,
             fan_speed,
-            verticalSwing,
-            horizontalSwing,
+            vertical_swing,
+            horizontal_swing,
             light,
         )
 
@@ -307,8 +307,8 @@ class TadoConnector:
                 "ON",
                 mode,
                 fanLevel=fan_speed,
-                verticalSwing=verticalSwing,
-                horizontalSwing=horizontalSwing,
+                verticalSwing=vertical_swing,
+                horizontalSwing=horizontal_swing,
                 light=light,
             )
 

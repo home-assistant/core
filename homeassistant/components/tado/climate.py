@@ -686,16 +686,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             temperature_to_send = None
 
         fan_speed = None
+        horizontal_swing = None
+        vertical_swing = None
+
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
-        swing = None
-        horizontalSwing = None
-        verticalSwing = None
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
             swing = HA_TO_TADO_SWING_MODE_MAP[self._current_tado_swing_mode]
-            verticalSwing = swing[CONST_SWING_MODE_VERTICAL]
-            horizontalSwing = swing[CONST_SWING_MODE_HORIZONTAL]
-
+            vertical_swing = swing[CONST_SWING_MODE_VERTICAL]
+            horizontal_swing = swing[CONST_SWING_MODE_HORIZONTAL]
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
@@ -705,7 +704,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
             fan_speed=fan_speed,
-            horizontalSwing=horizontalSwing,
-            verticalSwing=verticalSwing,
+            horizontal_swing=horizontal_swing,
+            vertical_swing=vertical_swing,
             light=self._current_tado_light_mode,
         )
