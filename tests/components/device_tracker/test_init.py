@@ -384,7 +384,6 @@ async def test_new_device_event_fired(
     }
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_duplicate_yaml_keys(
     hass, mock_device_tracker_conf, enable_custom_integrations
 ):
@@ -452,7 +451,6 @@ async def test_see_state(hass, yaml_devices, enable_custom_integrations):
     assert attrs["number"] == 1
 
 
-@pytest.mark.skip(reason="debug CI fail")
 async def test_see_passive_zone_state(
     hass, mock_device_tracker_conf, enable_custom_integrations
 ):
