@@ -114,6 +114,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         bulb = coordinator.device
         self.mac_addr = bulb.mac_addr
         self.bulb = bulb
+        bulb_features = lifx_features(self.bulb)
         self.manager = manager
         self.effects_conductor: aiolifx_effects_module.Conductor = (
             manager.effects_conductor
@@ -123,14 +124,10 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self._attr_unique_id = self.coordinator.internal_mac_address
         self._attr_name = self.bulb.label
         self._attr_min_mireds = math.floor(
-            color_util.color_temperature_kelvin_to_mired(
-                lifx_features(bulb)["max_kelvin"]
-            )
+            color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
         )
         self._attr_max_mireds = math.ceil(
-            color_util.color_temperature_kelvin_to_mired(
-                lifx_features(bulb)["min_kelvin"]
-            )
+            color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
         )
         info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.internal_mac_address)},
@@ -146,25 +143,18 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
         self._attr_device_info = info
-
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        bulb_features = lifx_features(self.bulb)
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
-            return ColorMode.COLOR_TEMP
-        return ColorMode.BRIGHTNESS
-
-    @property
-    def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported color modes."""
-        return {self.color_mode}
+            color_mode = ColorMode.COLOR_TEMP
+        else:
+            color_mode = ColorMode.BRIGHTNESS
+        self._attr_color_mode = color_mode
+        self._attr_supported_color_modes = {color_mode}
 
     @property
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         fade = self.bulb.power_level / 65535
-        return convert_16_to_8(int(fade * self.bulb.color[2]))
+        return convert_16_to_8(int(fade * self.bulb.color[HSBK_BRIGHTNESS]))
 
     @property
     def color_temp(self) -> int | None:
@@ -297,10 +287,13 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         duration: int = 0,
     ) -> None:
         """Send a color change to the bulb."""
-        merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
         try:
             await async_execute_lifx(
-                partial(self.bulb.set_color, merged_hsbk, duration=duration)
+                partial(
+                    self.bulb.set_color,
+                    merge_hsbk(self.bulb.color, hsbk),
+                    duration=duration,
+                )
             )
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
@@ -318,10 +311,11 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
     async def default_effect(self, **kwargs: Any) -> None:
         """Start an effect with default parameters."""
-        service = kwargs[ATTR_EFFECT]
-        data = {ATTR_ENTITY_ID: self.entity_id}
         await self.hass.services.async_call(
-            DOMAIN, service, data, context=self._context
+            DOMAIN,
+            kwargs[ATTR_EFFECT],
+            {ATTR_ENTITY_ID: self.entity_id},
+            context=self._context,
         )
 
     async def async_added_to_hass(self) -> None:
@@ -335,32 +329,28 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 class LIFXWhite(LIFXLight):
     """Representation of a white-only LIFX light."""
 
-    @property
-    def effect_list(self) -> list[str]:
-        """Return the list of supported effects for this light."""
-        return [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
+    _attr_effect_list = [SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
 
 
 class LIFXColor(LIFXLight):
     """Representation of a color LIFX light."""
 
-    @property
-    def color_mode(self) -> ColorMode:
-        """Return the color mode of the light."""
-        sat = self.bulb.color[1]
-        if sat:
-            return ColorMode.HS
-        return ColorMode.COLOR_TEMP
+    _attr_effect_list = [
+        SERVICE_EFFECT_COLORLOOP,
+        SERVICE_EFFECT_PULSE,
+        SERVICE_EFFECT_STOP,
+    ]
 
     @property
     def supported_color_modes(self) -> set[ColorMode]:
-        """Flag supported color modes."""
+        """Return the supported color modes."""
         return {ColorMode.COLOR_TEMP, ColorMode.HS}
 
     @property
-    def effect_list(self) -> list[str]:
-        """Return the list of supported effects for this light."""
-        return [SERVICE_EFFECT_COLORLOOP, SERVICE_EFFECT_PULSE, SERVICE_EFFECT_STOP]
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        has_sat = self.bulb.color[HSBK_SATURATION]
+        return ColorMode.HS if has_sat else ColorMode.COLOR_TEMP
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
