@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import SensorEntity, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
