@@ -171,9 +171,8 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     @property
     def effect(self) -> str | None:
         """Return the name of the currently running effect."""
-        effect = self.effects_conductor.effect(self.bulb)
-        if effect:
-            return f"lifx_effect_{effect.name}"
+        if effect := self.effects_conductor.effect(self.bulb):
+            return f"effect_{effect.name}"
         return None
 
     async def update_during_transition(self, when: int) -> None:
