@@ -154,7 +154,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         fade = self.bulb.power_level / 65535
-        return convert_16_to_8(int(fade * self.bulb.color[2]))
+        return convert_16_to_8(int(fade * self.bulb.color[HSBK_BRIGHTNESS]))
 
     @property
     def color_temp(self) -> int | None:
