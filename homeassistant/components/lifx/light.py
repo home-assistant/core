@@ -68,6 +68,11 @@ LIFX_SET_STATE_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+HSBK_HUE = 0
+HSBK_SATURATION = 1
+HSBK_BRIGHTNESS = 2
+HSBK_KELVIN = 3
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -257,7 +262,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
                     # bulb is actually on or not, so we don't need to
                     # call power_on if its already on
                     if power_on and self.bulb.power_level == 0:
-                        await self.set_power(True, duration=fade)
+                        await self.set_power(True)
                 elif power_on:
                     await self.set_power(True)
                 if power_off:
@@ -293,6 +298,17 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             )
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
+
+    async def get_color(
+        self,
+    ) -> None:
+        """Send a get color message to the bulb."""
+        try:
+            await async_execute_lifx(self.bulb.get_color)
+        except asyncio.TimeoutError as ex:
+            raise HomeAssistantError(
+                f"Timeout setting getting color for {self.name}"
+            ) from ex
 
     async def default_effect(self, **kwargs: Any) -> None:
         """Start an effect with default parameters."""
@@ -365,7 +381,7 @@ class LIFXStrip(LIFXColor):
         if (zones := kwargs.get(ATTR_ZONES)) is None:
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
-            if hsbk[2] is not None and hsbk[3] is not None:
+            if hsbk[HSBK_BRIGHTNESS] is not None and hsbk[HSBK_KELVIN] is not None:
                 await super().set_color(hsbk, kwargs, duration)
                 return
 
@@ -374,10 +390,10 @@ class LIFXStrip(LIFXColor):
             zones = [x for x in set(zones) if x < num_zones]
 
         # Zone brightness is not reported when powered off
-        if not self.is_on and hsbk[2] is None:
-            for state in (True, False):
-                await self.set_power(state)
-                await self.coordinator.async_refresh()
+        if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
+            await self.set_power(True)
+            await self.get_color()
+            await self.set_power(False)
 
         # Send new color to each zone
         for index, zone in enumerate(zones):
@@ -397,3 +413,7 @@ class LIFXStrip(LIFXColor):
                 raise HomeAssistantError(
                     f"Timeout setting color zones for {self.name}"
                 ) from ex
+
+        # set_color_zones does not update the
+        # state of the bulb, so we need to do that
+        await self.get_color()
