@@ -1,21 +1,12 @@
 """Tests for the lifx integration."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
-from . import MAC_ADDRESS, _patch_discovery
+from . import MockExecuteAwaitAioLIFX, _patch_discovery
 
 from tests.common import mock_device_registry, mock_registry
-
-
-class MockExecuteAwaitAioLIFX:
-    """Mock and execute an AwaitAioLIFX."""
-
-    async def wait(self, call, *args, **kwargs):
-        """Wait."""
-        call()
-        return MagicMock(target_addr=MAC_ADDRESS)
 
 
 @pytest.fixture

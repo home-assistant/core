@@ -6,6 +6,7 @@ from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
+    ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
@@ -175,7 +176,7 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_white_bulb()
     bulb.power_level = 65535
-    bulb.color = [65535, 65535, 65535, 65535]
+    bulb.color = [32000, None, 32000, 6000]
     with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
         device=bulb
     ), _patch_device(device=bulb):
@@ -187,16 +188,12 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
     state = hass.states.get(entity_id)
     assert state.state == "on"
     attributes = state.attributes
-    assert attributes[ATTR_BRIGHTNESS] == 255
-    assert attributes[ATTR_COLOR_MODE] == ColorMode.HS
+    assert attributes[ATTR_BRIGHTNESS] == 125
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [
         ColorMode.COLOR_TEMP,
-        ColorMode.HS,
     ]
-    assert attributes[ATTR_HS_COLOR] == (360.0, 100.0)
-    assert attributes[ATTR_RGB_COLOR] == (255, 0, 0)
-    assert attributes[ATTR_XY_COLOR] == (0.701, 0.299)
-
+    assert attributes[ATTR_COLOR_TEMP] == 166
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
@@ -213,14 +210,14 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([65535, 65535, 25700, 65535], duration=0)
+    bulb.set_color.assert_called_with([32000, None, 25700, 6000], duration=0)
     bulb.set_color.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
+        {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 400},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([1820, 19660, 65535, 3500], duration=0)
+    bulb.set_color.assert_called_with([32000, 0, 32000, 2500], duration=0)
     bulb.set_color.reset_mock()
