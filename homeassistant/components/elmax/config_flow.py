@@ -32,6 +32,14 @@ LOGIN_FORM_SCHEMA = vol.Schema(
     }
 )
 
+REAUTH_FORM_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_ELMAX_USERNAME): str,
+        vol.Required(CONF_ELMAX_PASSWORD): str,
+        vol.Required(CONF_ELMAX_PANEL_PIN): str,
+    }
+)
+
 
 def _store_panel_by_name(
     panel: PanelEntry, username: str, panel_names: dict[str, str]
@@ -56,7 +64,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _password: str
     _panels_schema: vol.Schema
     _panel_names: dict
-    _reauth_username: str | None
     _reauth_panelid: str | None
 
     async def async_step_user(
@@ -170,7 +177,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_username = entry_data.get(CONF_ELMAX_USERNAME)
         self._reauth_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
         return await self.async_step_reauth_confirm()
 
@@ -178,23 +184,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle reauthorization flow."""
         errors = {}
         if user_input is not None:
-            panel_pin = user_input.get(CONF_ELMAX_PANEL_PIN)
+            username = user_input.get(CONF_ELMAX_USERNAME)
             password = user_input.get(CONF_ELMAX_PASSWORD)
+            panel_pin = user_input.get(CONF_ELMAX_PANEL_PIN)
             entry = await self.async_set_unique_id(self._reauth_panelid)
 
             # This is an edge case: if re-auth flow is triggered, it means that the integration is already
             # configured, therefore the async_set_unique_id should return the entry. If this does not happen,
             # just start over the configuration from user step.
-            if entry is None or self._reauth_username is None:
+            if entry is None:
                 return await self.async_step_user()
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
             try:
                 # Test login.
-                client = await self._async_login(
-                    username=self._reauth_username, password=password
-                )
+                client = await self._async_login(username=username, password=password)
 
                 # Make sure the panel we are authenticating to is still available.
                 panels = [
@@ -216,12 +221,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     data={
                         CONF_ELMAX_PANEL_ID: self._reauth_panelid,
                         CONF_ELMAX_PANEL_PIN: panel_pin,
-                        CONF_ELMAX_USERNAME: self._reauth_username,
+                        CONF_ELMAX_USERNAME: username,
                         CONF_ELMAX_PASSWORD: password,
                     },
                 )
                 await self.hass.config_entries.async_reload(entry.entry_id)
-                self._reauth_username = None
                 self._reauth_panelid = None
                 return self.async_abort(reason="reauth_successful")
 
@@ -239,19 +243,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except ElmaxBadPinError:
                 errors["base"] = "invalid_pin"
 
-        # We want the user to re-authenticate only for the given panel id using the same login.
-        # We pin them to the UI, so the user realizes she must log in with the appropriate credentials
-        # for the that specific panel.
-        schema = vol.Schema(
-            {
-                vol.Required(CONF_ELMAX_USERNAME): self._reauth_username,
-                vol.Required(CONF_ELMAX_PASSWORD): str,
-                vol.Required(CONF_ELMAX_PANEL_ID): self._reauth_panelid,
-                vol.Required(CONF_ELMAX_PANEL_PIN): str,
-            }
-        )
         return self.async_show_form(
-            step_id="reauth_confirm", data_schema=schema, errors=errors
+            step_id="reauth_confirm", data_schema=REAUTH_FORM_SCHEMA, errors=errors
         )
 
     @staticmethod
