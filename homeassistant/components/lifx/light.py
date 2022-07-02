@@ -214,6 +214,9 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     async def set_state(self, **kwargs: Any) -> None:
         """Set a color on the light and turn it on/off."""
         async with self.coordinator.lock:
+            # Cancel any pending refreshes
+            self.coordinator.async_set_updated_data(None)
+
             bulb = self.bulb
 
             await self.effects_conductor.stop([bulb])
@@ -250,11 +253,11 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             else:
                 if hsbk:
                     await self.set_color(hsbk, kwargs, duration=fade)
-                    # We think the bulb is on, but since we are polling
-                    # it may have changed state so we fire and forget a
-                    # set power message to True as well
-                    if power_on:
-                        self.bulb.set_power(True)
+                    # The response from set_color will tell us if the
+                    # bulb is actually on or not, so we don't need to
+                    # call power_on if its already on
+                    if power_on and self.bulb.power_level == 0:
+                        await self.set_power(True, duration=fade)
                 elif power_on:
                     await self.set_power(True)
                 if power_off:
