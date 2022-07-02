@@ -88,22 +88,22 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
             if lifx_features(self.device)["multizone"]:
-                await self._update_color_zones()
+                try:
+                    await self.update_color_zones()
+                except asyncio.TimeoutError as ex:
+                    raise UpdateFailed(
+                        f"Failed to fetch zones from device: {self.device.ip_addr}"
+                    ) from ex
 
-    async def _update_color_zones(self) -> None:
+    async def update_color_zones(self) -> None:
         """Get updated color information for each zone."""
         zone = 0
         top = 1
         while zone < top:
             # Each get_color_zones can update 8 zones at once
-            try:
-                resp = await async_execute_lifx(
-                    partial(self.device.get_color_zones, start_index=zone)
-                )
-            except asyncio.TimeoutError as ex:
-                raise UpdateFailed(
-                    f"Failed to fetch zones from device: {self.device.ip_addr}"
-                ) from ex
+            resp = await async_execute_lifx(
+                partial(self.device.get_color_zones, start_index=zone)
+            )
             zone += 8
             top = resp.count
 
