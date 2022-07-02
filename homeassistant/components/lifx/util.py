@@ -12,8 +12,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
-    ATTR_RGB_COLOR,
-    ATTR_XY_COLOR,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -60,10 +58,6 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
-    elif ATTR_RGB_COLOR in kwargs:
-        hue, saturation = color_util.color_RGB_to_hs(*kwargs[ATTR_RGB_COLOR])
-    elif ATTR_XY_COLOR in kwargs:
-        hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
 
     if hue is not None:
         assert saturation is not None
@@ -85,14 +79,12 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
 
 
 def merge_hsbk(
-    base: list[float | int | None], change: list[float | int | None] | None
-) -> list[float | int | None] | None:
+    base: list[float | int | None], change: list[float | int | None]
+) -> list[float | int | None]:
     """Copy change on top of base, except when None.
 
     Hue, Saturation, Brightness, Kelvin
     """
-    if change is None:
-        return None
     return [b if c is None else c for b, c in zip(base, change)]
 
 

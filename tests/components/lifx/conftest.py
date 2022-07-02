@@ -1,12 +1,33 @@
 """Tests for the lifx integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from . import MockExecuteAwaitAioLIFX, _patch_discovery
+from . import MockExecuteAwaitAioLIFX
 
-from tests.common import mock_device_registry, mock_registry
+
+@pytest.fixture
+def mock_effect_conductor():
+    """Mock the effect conductor."""
+
+    class MockConductor:
+        def __init__(self, *args, **kwargs) -> None:
+            """Mock the conductor."""
+            self.start = AsyncMock()
+            self.stop = AsyncMock()
+
+        def effect(self, bulb):
+            """Mock effect."""
+            return MagicMock()
+
+    mock_conductor = MockConductor()
+
+    with patch(
+        "homeassistant.components.lifx.manager.aiolifx_effects.Conductor",
+        return_value=mock_conductor,
+    ):
+        yield mock_conductor
 
 
 @pytest.fixture
@@ -19,26 +40,6 @@ def mock_await_aiolifx():
         "homeassistant.components.lifx.light.AwaitAioLIFX", MockExecuteAwaitAioLIFX
     ):
         yield
-
-
-@pytest.fixture
-def mock_discovery():
-    """Mock lifx discovery."""
-    with _patch_discovery() as mock_discover:
-        mock_discover.return_value = {}
-        yield mock_discover
-
-
-@pytest.fixture(name="device_reg")
-def device_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_device_registry(hass)
-
-
-@pytest.fixture(name="entity_reg")
-def entity_reg_fixture(hass):
-    """Return an empty, loaded, registry."""
-    return mock_registry(hass)
 
 
 @pytest.fixture(autouse=True)
