@@ -967,8 +967,13 @@ build.json @home-assistant/supervisor
 /homeassistant/components/schedule/ @home-assistant/core
 /tests/components/schedule/ @home-assistant/core
 /homeassistant/components/schluter/ @prairieapps
+<<<<<<< HEAD
 /homeassistant/components/scrape/ @fabaff @gjohansson-ST @epenet
 /tests/components/scrape/ @fabaff @gjohansson-ST @epenet
+=======
+/homeassistant/components/scrape/ @fabaff @gjohansson-ST
+/tests/components/scrape/ @fabaff @gjohansson-ST
+>>>>>>> fd509c02c3 (Scrape take 2)
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core

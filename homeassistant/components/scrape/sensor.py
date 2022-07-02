@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
     STATE_CLASSES_SCHEMA,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_AUTHENTICATION,
@@ -33,6 +34,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.template_entity import (
@@ -42,12 +45,13 @@ from homeassistant.helpers.template_entity import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL
+from .const import CONF_INDEX, CONF_SELECT, DEFAULT_NAME, DEFAULT_VERIFY_SSL, DOMAIN
 from .coordinator import ScrapeCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 SCAN_INTERVAL = timedelta(minutes=10)
+
+_LOGGER = logging.getLogger(__name__)
+ICON = "mdi:web"
 
 PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
@@ -124,6 +128,8 @@ async def async_setup_platform(
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], TemplateSensor):
     """Representation of a web scrape sensor."""
+
+    _attr_icon = ICON
 
     def __init__(
         self,

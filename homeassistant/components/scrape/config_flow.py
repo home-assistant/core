@@ -95,7 +95,6 @@ DATA_SCHEMA_OPT = vol.Schema({**SCHEMA_OPT})
 
 CONFIG_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "user": SchemaFlowFormStep(DATA_SCHEMA),
-    "import": SchemaFlowFormStep(DATA_SCHEMA),
 }
 OPTIONS_FLOW: dict[str, SchemaFlowFormStep | SchemaFlowMenuStep] = {
     "init": SchemaFlowFormStep(DATA_SCHEMA_OPT),
