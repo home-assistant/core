@@ -90,7 +90,7 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
     assert device.identifiers == {(DOMAIN, MAC_ADDRESS)}
 
 
-async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
+async def test_light_strip(hass: HomeAssistant) -> None:
     """Test a light strip."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -154,7 +154,7 @@ async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
 
 
 async def test_color_light_with_temp(
-    hass: HomeAssistant, mock_await_aiolifx, mock_effect_conductor
+    hass: HomeAssistant, mock_effect_conductor
 ) -> None:
     """Test a color light with temp."""
     already_migrated_config_entry = MockConfigEntry(
@@ -280,7 +280,7 @@ async def test_color_light_with_temp(
     assert len(mock_effect_conductor.stop.mock_calls) == 2
 
 
-async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
+async def test_white_bulb(hass: HomeAssistant) -> None:
     """Test a white bulb."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -357,9 +357,7 @@ async def test_config_zoned_light_strip_fails(hass):
             call()
             return MockMessage()
 
-    with _patch_discovery(device=light_strip), _patch_device(
-        device=light_strip, await_mock=MockExecuteAwaitAioLIFXZonesFailing
-    ):
+    with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         entity_registry = er.async_get(hass)

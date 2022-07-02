@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+import logging
 from typing import Any
 
 from aiolifx import products
@@ -25,6 +26,7 @@ import homeassistant.util.color as color_util
 from .const import DOMAIN, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -117,6 +119,8 @@ async def async_execute_lifx(method: Callable) -> Message:
 
     method(callb=_callback)
     result = None
+
+    _LOGGER.debug("Sending LIFX command: %s", method)
     async with async_timeout.timeout(OVERALL_TIMEOUT):
         result = await future
 

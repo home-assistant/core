@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolifx.aiolifx import Light
@@ -20,15 +19,40 @@ PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE = "aa:bb:cc:dd:ee:cd"
 DEFAULT_ENTRY_TITLE = LABEL
 
 
+class MockMessage:
+    """Mock a lifx message."""
+
+    def __init__(self):
+        """Init message."""
+        self.target_addr = MAC_ADDRESS
+        self.count = 9
+
+
+class MockLifxCommand:
+    """Mock a lifx command."""
+
+    def __init__(self, bulb, **kwargs):
+        """Init command."""
+        self.bulb = bulb
+
+    def __call__(self, callb=None, *args, **kwargs):
+        """Call command."""
+        if callb:
+            callb(self.bulb, MockMessage())
+
+
 def _mocked_bulb() -> Light:
     bulb = Light(asyncio.get_running_loop(), MAC_ADDRESS, IP_ADDRESS)
     bulb.host_firmware_version = "3.00"
     bulb.label = LABEL
     bulb.color = [1, 2, 3, 4]
     bulb.power_level = 0
-    bulb.set_power = MagicMock()
-    bulb.set_color = MagicMock()
     bulb.try_sending = AsyncMock()
+    bulb.get_color = MockLifxCommand(bulb)
+    bulb.set_power = MockLifxCommand(bulb)
+    bulb.set_color = MockLifxCommand(bulb)
+    bulb.get_hostfirmware = MockLifxCommand(bulb)
+    bulb.get_version = MockLifxCommand(bulb)
     bulb.product = 1  # LIFX Original 1000
     return bulb
 
@@ -42,7 +66,8 @@ def _mocked_white_bulb() -> Light:
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
-    bulb.set_color_zones = MagicMock()
+    bulb.get_color_zones = MockLifxCommand(bulb)
+    bulb.set_color_zones = MockLifxCommand(bulb)
     bulb.color_zones = [MagicMock(), MagicMock()]
     return bulb
 
@@ -53,35 +78,7 @@ def _mocked_bulb_new_firmware() -> Light:
     return bulb
 
 
-class MockMessage:
-    """Mock a lifx message."""
-
-    def __init__(self):
-        """Init message."""
-        self.target_addr = MAC_ADDRESS
-        self.count = 9
-
-
-class MockExecuteAwaitAioLIFX:
-    """Mock and execute an AwaitAioLIFX."""
-
-    async def wait(self, call, *args, **kwargs):
-        """Wait."""
-        call()
-        return MockMessage()
-
-
-class MockAwaitAioLIFXNoConnection:
-    """Mock AwaitAioLIFX."""
-
-    async def wait(*args, **kwargs):
-        """Wait."""
-        return None
-
-
-def _patch_device(
-    device: Light | None = None, no_device: bool = False, await_mock: Any = None
-):
+def _patch_device(device: Light | None = None, no_device: bool = False):
     """Patch out discovery."""
 
     class MockLifxConnecton:
@@ -98,16 +95,9 @@ def _patch_device(
         def async_stop(self):
             """Mock teardown."""
 
-    if not await_mock:
-        await_mock = (
-            MockAwaitAioLIFXNoConnection if no_device else MockExecuteAwaitAioLIFX
-        )
-
     @contextmanager
     def _patcher():
-        with patch(
-            "homeassistant.components.lifx.coordinator.AwaitAioLIFX", await_mock
-        ), patch("homeassistant.components.lifx.LIFXConnection", MockLifxConnecton):
+        with patch("homeassistant.components.lifx.LIFXConnection", MockLifxConnecton):
             yield
 
     return _patcher()
@@ -162,13 +152,9 @@ def _patch_config_flow_try_connect(
         def async_stop(self):
             """Mock teardown."""
 
-    await_mock = MockAwaitAioLIFXNoConnection if no_device else MockExecuteAwaitAioLIFX
-
     @contextmanager
     def _patcher():
         with patch(
-            "homeassistant.components.lifx.config_flow.AwaitAioLIFX", await_mock
-        ), patch(
             "homeassistant.components.lifx.config_flow.LIFXConnection",
             MockLifxConnecton,
         ):

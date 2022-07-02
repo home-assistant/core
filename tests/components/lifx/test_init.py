@@ -115,9 +115,7 @@ async def test_get_version_fails(hass):
             call()
             return MockMessage()
 
-    with _patch_discovery(device=bulb), _patch_device(
-        device=bulb, await_mock=MockExecuteAwaitAioLIFXVersionFailing
-    ):
+    with _patch_discovery(device=bulb), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
