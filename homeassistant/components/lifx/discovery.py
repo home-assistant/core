@@ -17,7 +17,7 @@ from .util import get_real_mac_addr
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 8.5
 
 
 async def async_discover_devices(hass: HomeAssistant) -> Iterable[Light]:
