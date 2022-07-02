@@ -15,7 +15,8 @@ MODULE = "homeassistant.components.lifx"
 MODULE_CONFIG_FLOW = "homeassistant.components.lifx.config_flow"
 IP_ADDRESS = "127.0.0.1"
 LABEL = "My Bulb"
-MAC_ADDRESS = "aa:bb:cc:dd:ee:ff"
+MAC_ADDRESS = "aa:bb:cc:dd:ee:cc"
+PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE = "aa:bb:cc:dd:ee:cd"
 DEFAULT_ENTRY_TITLE = LABEL
 
 
