@@ -131,8 +131,13 @@ class RuntimeEntryData:
     ) -> None:
         async with self.platform_load_lock:
             needed = platforms - self.loaded_platforms
-            if needed:
-                await hass.config_entries.async_forward_entry_setups(entry, needed)
+            tasks = []
+            for platform in needed:
+                tasks.append(
+                    hass.config_entries.async_forward_entry_setup(entry, platform)
+                )
+            if tasks:
+                await asyncio.wait(tasks)
             self.loaded_platforms |= needed
 
     async def async_update_static_infos(
