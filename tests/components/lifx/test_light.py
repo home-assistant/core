@@ -21,13 +21,14 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
+    PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE,
     MockMessage,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
@@ -56,7 +57,13 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
 
     entity_id = "light.my_bulb"
     entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers=set(), connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)}
+    )
+    assert device.identifiers == {(DOMAIN, MAC_ADDRESS)}
 
 
 async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
@@ -74,7 +81,13 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
 
     entity_id = "light.my_bulb"
     entity_registry = er.async_get(hass)
-    assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+    assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers=set(),
+        connections={(dr.CONNECTION_NETWORK_MAC, PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE)},
+    )
+    assert device.identifiers == {(DOMAIN, MAC_ADDRESS)}
 
 
 async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
@@ -350,7 +363,7 @@ async def test_config_zoned_light_strip_fails(hass):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         entity_registry = er.async_get(hass)
-        assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+        assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
         assert hass.states.get(entity_id).state == STATE_OFF
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))

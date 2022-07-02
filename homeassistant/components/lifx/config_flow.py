@@ -181,9 +181,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         connection = LIFXConnection(host, TARGET_ANY)
         await connection.async_setup()
         device: Light = connection.device
+        device.get_hostfirmware()
         message = await AwaitAioLIFX().wait(device.get_color)
         connection.async_stop()
-        if message is None or lifx_features(device)["relays"] is True:
+        if (
+            message is None
+            or lifx_features(device)["relays"] is True
+            or device.host_firmware_version is None
+        ):
             return None  # relays not supported
         device.mac_addr = message.target_addr
         real_mac = get_real_mac_addr(device.mac_addr, device.host_firmware_version)
