@@ -39,6 +39,7 @@ def _mocked_white_bulb() -> Light:
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
+    bulb.set_color_zones = MagicMock()
     bulb.color_zones = [MagicMock(), MagicMock()]
     return bulb
 

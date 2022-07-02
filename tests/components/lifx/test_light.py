@@ -96,8 +96,10 @@ async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([65535, 65535, 25700, 65535], duration=0)
-    bulb.set_color.reset_mock()
+    bulb.set_color_zones.assert_called_with(
+        start_index=1, end_index=1, color=[], duration=0, apply=1
+    )
+    bulb.set_color_zones.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -105,8 +107,10 @@ async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([1820, 19660, 65535, 3500], duration=0)
-    bulb.set_color.reset_mock()
+    bulb.set_color_zones.assert_called_with(
+        start_index=1, end_index=1, color=[], duration=0, apply=1
+    )
+    bulb.set_color_zones.reset_mock()
 
 
 async def test_color_light_with_temp(hass: HomeAssistant, mock_await_aiolifx) -> None:
