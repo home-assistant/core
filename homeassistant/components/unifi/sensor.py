@@ -350,6 +350,15 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
             None,
         ),
     ),
+    UniFiDeviceSensorEntityDescription(
+        key=FAN_LEVEL_SENSOR,
+        name="Fan Level",
+        native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        enabled="has_fan",
+        value_fn=lambda device: device.fan_level,
+    ),
 )
 
 

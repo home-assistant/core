@@ -332,7 +332,9 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     device = {
         "board_rev": 3,
         "device_id": "mock-id",
+        "fan_level": 70,
         "general_temperature": 49,
+        "has_fan": True,
         "has_temperature": True,
         "ip": "10.0.1.1",
         "last_seen": 1562600145,
@@ -397,6 +399,7 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.device_phy_temperature").state == str(
         device["temperatures"][2]["value"]
     )
+    assert hass.states.get("sensor.device_fan_level").state == str(device["fan_level"])
 
     # Verify state update
     device["system-stats"]["cpu"] = "3.21"
@@ -420,6 +423,7 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
             "value": 42.75,
         },
     ]
+    device["fan_level"] = 80
 
     now = now + timedelta(seconds=device["uptime"])
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -453,3 +457,4 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.device_phy_temperature").state == str(
         device["temperatures"][2]["value"]
     )
+    assert hass.states.get("sensor.device_fan_level").state == str(device["fan_level"])
