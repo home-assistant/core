@@ -8,7 +8,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
 
 from aiounifi.models.device import Device as UniFiDevice
 
@@ -26,6 +25,7 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
 import homeassistant.util.dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN as UNIFI_DOMAIN
@@ -243,9 +243,9 @@ class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
     """Describes UniFi device sensor entities."""
 
     enabled: str | None = None
-    value_fn: Callable[[UniFiDevice], Any] | None = None
+    value_fn: Callable[[UniFiDevice], StateType | datetime] | None = None
 
-    def get_value(self, device: UniFiDevice) -> Any:
+    def get_value(self, device: UniFiDevice) -> StateType | datetime:
         """Return value from UniFi device."""
         if self.value_fn is not None:
             return self.value_fn(device)
@@ -260,6 +260,49 @@ class UniFiDeviceSensorEntityDescription(SensorEntityDescription):
         return device.raw.get(self.enabled, False)
 
 
+def _get_device_cpu_utilization(device: UniFiDevice) -> float | None:
+    return float(device.raw.get("system-stats", {}).get("cpu"))
+
+
+def _get_device_memory_utilization(device: UniFiDevice) -> float | None:
+    return float(device.raw.get("system-stats", {}).get("mem"))
+
+
+def _get_device_uptime(device: UniFiDevice) -> datetime:
+    return dt_util.now() - timedelta(seconds=device.raw["uptime"])
+
+
+def _get_device_general_temperature(device: UniFiDevice) -> int | None:
+    return device.raw.get("general_temperature")
+
+
+def _get_device_temperature(device: UniFiDevice, name: str) -> float | None:
+    return next(
+        (
+            temperature["value"]
+            for temperature in device.raw.get("temperatures", [])
+            if temperature["name"] == name
+        ),
+        None,
+    )
+
+
+def _get_device_cpu_temperature(device: UniFiDevice) -> float | None:
+    return _get_device_temperature(device, "CPU")
+
+
+def _get_device_local_temperature(device: UniFiDevice) -> float | None:
+    return _get_device_temperature(device, "Local")
+
+
+def _get_device_phy_temperature(device: UniFiDevice) -> float | None:
+    return _get_device_temperature(device, "PHY")
+
+
+def _get_device_fan_level(device: UniFiDevice) -> int | None:
+    return device.raw.get("fan_level")
+
+
 DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
     UniFiDeviceSensorEntityDescription(
         key=CPU_UTILIZATION_SENSOR,
@@ -269,7 +312,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="system-stats",
-        value_fn=lambda device: float(device.raw.get("system-stats", {}).get("cpu")),
+        value_fn=_get_device_cpu_utilization,
     ),
     UniFiDeviceSensorEntityDescription(
         key=MEMORY_UTILIZATION_SENSOR,
@@ -279,7 +322,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="system-stats",
-        value_fn=lambda device: float(device.raw.get("system-stats", {}).get("mem")),
+        value_fn=_get_device_memory_utilization,
     ),
     UniFiDeviceSensorEntityDescription(
         key=UPTIME_SENSOR,
@@ -287,7 +330,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda device: dt_util.now() - timedelta(seconds=device.raw["uptime"]),
+        value_fn=_get_device_uptime,
     ),
     UniFiDeviceSensorEntityDescription(
         key=TEMPERATURE_SENSOR,
@@ -297,7 +340,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="has_temperature",
-        value_fn=lambda device: device.raw["general_temperature"],
+        value_fn=_get_device_general_temperature,
     ),
     UniFiDeviceSensorEntityDescription(
         key=CPU_TEMPERATURE_SENSOR,
@@ -307,14 +350,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="temperatures",
-        value_fn=lambda device: next(
-            (
-                temperature["value"]
-                for temperature in device.raw.get("temperatures", [])
-                if temperature["name"] == "CPU"
-            ),
-            None,
-        ),
+        value_fn=_get_device_cpu_temperature,
     ),
     UniFiDeviceSensorEntityDescription(
         key=LOCAL_TEMPERATURE_SENSOR,
@@ -324,14 +360,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="temperatures",
-        value_fn=lambda device: next(
-            (
-                temperature["value"]
-                for temperature in device.raw.get("temperatures", [])
-                if temperature["name"] == "Local"
-            ),
-            None,
-        ),
+        value_fn=_get_device_local_temperature,
     ),
     UniFiDeviceSensorEntityDescription(
         key=PHY_TEMPERATURE_SENSOR,
@@ -341,14 +370,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="temperatures",
-        value_fn=lambda device: next(
-            (
-                temperature["value"]
-                for temperature in device.raw.get("temperatures", [])
-                if temperature["name"] == "PHY"
-            ),
-            None,
-        ),
+        value_fn=_get_device_phy_temperature,
     ),
     UniFiDeviceSensorEntityDescription(
         key=FAN_LEVEL_SENSOR,
@@ -357,7 +379,7 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         enabled="has_fan",
-        value_fn=lambda device: device.fan_level,
+        value_fn=_get_device_fan_level,
     ),
 )
 
@@ -368,6 +390,7 @@ class UniFiDeviceSensor(UniFiBase, SensorEntity):
     DOMAIN = DOMAIN
 
     entity_description: UniFiDeviceSensorEntityDescription
+    previous_native_value: StateType | datetime = None
 
     def __init__(
         self,
@@ -382,7 +405,7 @@ class UniFiDeviceSensor(UniFiBase, SensorEntity):
         self.device = self._item
         self.entity_description = description
 
-        self._attr_unique_id = f"{self.device.mac}_{description.key}"
+        self._attr_unique_id = f"{self.device.mac}-{description.key}"
         self._attr_name = f"{self.device.name} {(description.name or '')}"
 
     @property
@@ -402,6 +425,23 @@ class UniFiDeviceSensor(UniFiBase, SensorEntity):
         )
 
     @property
-    def native_value(self) -> Any:
+    def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.get_value(self.device)
+
+    @callback
+    def async_update_callback(self) -> None:
+        """Prevent sensor updates if value has not changed.
+
+        This will help avoid unnecessary updates to the state machine.
+        """
+
+        if self.previous_native_value == self.native_value:
+            return
+
+        self.previous_native_value = self.native_value
+        super().async_update_callback()
+
+    async def options_updated(self) -> None:
+        """Config entry options are updated, remove entity if option is disabled."""
+        pass  # pylint: disable=unnecessary-pass

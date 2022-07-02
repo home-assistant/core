@@ -10,6 +10,7 @@ from homeassistant.components.unifi.device_tracker import CLIENT_TRACKER, DEVICE
 from homeassistant.components.unifi.sensor import (
     CPU_TEMPERATURE_SENSOR,
     CPU_UTILIZATION_SENSOR,
+    FAN_LEVEL_SENSOR,
     LOCAL_TEMPERATURE_SENSOR,
     MEMORY_UTILIZATION_SENSOR,
     PHY_TEMPERATURE_SENSOR,
@@ -168,6 +169,7 @@ async def test_entry_diagnostics(hass, hass_client, aioclient_mock):
             str(Platform.SENSOR): {
                 CPU_TEMPERATURE_SENSOR: [],
                 CPU_UTILIZATION_SENSOR: ["00:00:00:00:00:01"],
+                FAN_LEVEL_SENSOR: [],
                 LOCAL_TEMPERATURE_SENSOR: [],
                 MEMORY_UTILIZATION_SENSOR: ["00:00:00:00:00:01"],
                 PHY_TEMPERATURE_SENSOR: [],

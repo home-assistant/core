@@ -75,7 +75,7 @@ class UniFiBase(Entity):
 
     async def options_updated(self) -> None:
         """Config entry options are updated, remove entity if option is disabled."""
-        pass  # pylint: disable=unnecessary-pass
+        raise NotImplementedError
 
     async def remove_item(self, keys: set) -> None:
         """Remove entity if key is part of set."""
