@@ -8,6 +8,7 @@
             "invalid_pin": "The provided pin is invalid",
             "network_error": "A network error occurred",
             "no_panel_online": "No online Elmax control panel was found.",
+            "reauth_panel_disappeared": "The given panel is no longer associated to this user. Please log in using an account associated to this panel.",
             "unknown": "Unexpected error"
         },
         "step": {
@@ -18,6 +19,15 @@
                     "panel_pin": "PIN Code"
                 },
                 "description": "Select which panel you would like to control with this integration. Please note that the panel must be ON in order to be configured."
+            },
+            "reauth_confirm": {
+                "data": {
+                    "panel_id": "Panel ID",
+                    "panel_pin": "Panel Pin",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Please re-authenticate with the panel."
             },
             "user": {
                 "data": {
