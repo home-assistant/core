@@ -114,6 +114,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         bulb = coordinator.device
         self.mac_addr = bulb.mac_addr
         self.bulb = bulb
+        bulb_features = lifx_features(self.bulb)
         self.manager = manager
         self.effects_conductor: aiolifx_effects_module.Conductor = (
             manager.effects_conductor
@@ -123,14 +124,10 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self._attr_unique_id = self.coordinator.internal_mac_address
         self._attr_name = self.bulb.label
         self._attr_min_mireds = math.floor(
-            color_util.color_temperature_kelvin_to_mired(
-                lifx_features(bulb)["max_kelvin"]
-            )
+            color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
         )
         self._attr_max_mireds = math.ceil(
-            color_util.color_temperature_kelvin_to_mired(
-                lifx_features(bulb)["min_kelvin"]
-            )
+            color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
         )
         info = DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.internal_mac_address)},
@@ -146,7 +143,6 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         if (version := self.bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
         self._attr_device_info = info
-        bulb_features = lifx_features(self.bulb)
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
             color_mode = ColorMode.COLOR_TEMP
         else:
