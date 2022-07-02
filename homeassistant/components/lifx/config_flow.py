@@ -1,6 +1,7 @@
 """Config flow flow LIFX."""
 from __future__ import annotations
 
+import socket
 from typing import Any
 
 from aiolifx.aiolifx import Light
@@ -179,7 +180,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
         connection = LIFXConnection(host, TARGET_ANY)
-        await connection.async_setup()
+        try:
+            await connection.async_setup()
+        except socket.gaierror:
+            return None
         device: Light = connection.device
         device.get_hostfirmware()
         message = await AwaitAioLIFX().wait(device.get_color)

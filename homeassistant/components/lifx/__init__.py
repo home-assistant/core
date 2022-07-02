@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import socket
 from typing import Any
 
 from aiolifx.connection import LIFXConnection
@@ -16,6 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
@@ -116,7 +118,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     host = entry.data[CONF_HOST]
     connection = LIFXConnection(host, TARGET_ANY)
-    await connection.async_setup()
+    try:
+        await connection.async_setup()
+    except socket.gaierror as ex:
+        raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
     coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
