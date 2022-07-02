@@ -43,7 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     BinarySensorInfo: Platform.BINARY_SENSOR,
-    ButtonInfo: Platform.BINARY_SENSOR,
+    ButtonInfo: Platform.BUTTON,
     CameraInfo: Platform.BINARY_SENSOR,
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
