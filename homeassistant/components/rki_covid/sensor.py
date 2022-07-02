@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from homeassistant import config_entries, core
-from homeassistant.components.sensor import STATE_CLASS_MEASUREMENT, SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -71,7 +71,7 @@ class RKICovidNumbersSensor(SensorEntity, CoordinatorEntity):
     """Representation of a sensor."""
 
     _attr_attribution = ATTRIBUTION
-    _attr_state_class = STATE_CLASS_MEASUREMENT
+    _attr_state_class = SensorStateClass.MEASUREMENT
 
     def __init__(
         self,
