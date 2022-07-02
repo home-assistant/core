@@ -6,7 +6,7 @@
     },
     "step": {
       "confirm": {
-        "description": "Make sure to configure the 'split topic' data sources in DSMR Reader, as described [in the documentation](https://www.home-assistant.io/integrations/dsmr_reader#setup)."
+        "description": "Make sure to configure the 'split topic' data sources in DSMR Reader, as described [in the documentation]({documentation_link})."
       }
     }
   }
