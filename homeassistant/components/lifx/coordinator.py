@@ -8,14 +8,14 @@ import logging
 from typing import cast
 
 from aiolifx.aiolifx import Light
-from aiolifx.connection import AwaitAioLIFX, LIFXConnection
+from aiolifx.connection import LIFXConnection
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import MESSAGE_RETRIES, MESSAGE_TIMEOUT, TARGET_ANY, UNAVAILABLE_GRACE
-from .util import get_real_mac_addr, lifx_features
+from .util import async_execute_lifx, get_real_mac_addr, lifx_features
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,11 +75,12 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 self.device.get_hostfirmware()
             if self.device.product is None:
                 self.device.get_version()
-            response = await AwaitAioLIFX().wait(self.device.get_color)
-            if response is None:
+            try:
+                response = await async_execute_lifx(self.device.get_color)
+            except asyncio.TimeoutError as ex:
                 raise UpdateFailed(
                     f"Failed to fetch state from device: {self.device.ip_addr}"
-                )
+                ) from ex
             if self.device.product is None:
                 raise UpdateFailed(
                     f"Failed to fetch get version from device: {self.device.ip_addr}"
@@ -95,13 +96,14 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         top = 1
         while zone < top:
             # Each get_color_zones can update 8 zones at once
-            resp = await AwaitAioLIFX().wait(
-                partial(self.device.get_color_zones, start_index=zone)
-            )
-            if not resp:
+            try:
+                resp = await async_execute_lifx(
+                    partial(self.device.get_color_zones, start_index=zone)
+                )
+            except asyncio.TimeoutError as ex:
                 raise UpdateFailed(
                     f"Failed to fetch zones from device: {self.device.ip_addr}"
-                )
+                ) from ex
             zone += 8
             top = resp.count
 

@@ -1,15 +1,13 @@
 """Support for LIFX lights."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+import asyncio
 from datetime import datetime, timedelta
 from functools import partial
 import math
 from typing import Any
 
 from aiolifx import products
-from aiolifx.connection import AwaitAioLIFX
-from aiolifx.message import Message
 import aiolifx_effects as aiolifx_effects_module
 import voluptuous as vol
 
@@ -25,6 +23,7 @@ from homeassistant.components.light import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODEL, ATTR_SW_VERSION
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
@@ -43,7 +42,14 @@ from .manager import (
     SERVICE_EFFECT_STOP,
     LIFXManager,
 )
-from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
+from .util import (
+    async_execute_lifx,
+    convert_8_to_16,
+    convert_16_to_8,
+    find_hsbk,
+    lifx_features,
+    merge_hsbk,
+)
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -230,50 +236,55 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
             hsbk = find_hsbk(self.hass, **kwargs)
 
-            # Send messages, waiting for ACK each time
-            ack = AwaitAioLIFX().wait
-
             if not self.is_on:
                 if power_off:
-                    await self.set_power(ack, False)
+                    await self.set_power(False)
                 # If fading on with color, set color immediately
                 if hsbk and power_on:
-                    await self.set_color(ack, hsbk, kwargs)
-                    await self.set_power(ack, True, duration=fade)
+                    await self.set_color(hsbk, kwargs)
+                    await self.set_power(True, duration=fade)
                 elif hsbk:
-                    await self.set_color(ack, hsbk, kwargs, duration=fade)
+                    await self.set_color(hsbk, kwargs, duration=fade)
                 elif power_on:
-                    await self.set_power(ack, True, duration=fade)
+                    await self.set_power(True, duration=fade)
             else:
                 if power_on:
-                    await self.set_power(ack, True)
+                    await self.set_power(True)
                 if hsbk:
-                    await self.set_color(ack, hsbk, kwargs, duration=fade)
+                    await self.set_color(hsbk, kwargs, duration=fade)
                 if power_off:
-                    await self.set_power(ack, False, duration=fade)
+                    await self.set_power(False, duration=fade)
 
         # Update when the transition starts and ends
         await self.update_during_transition(fade)
 
     async def set_power(
         self,
-        ack: Callable[[Any], Coroutine[Any, Any, Message | None]],
         pwr: bool,
         duration: int = 0,
     ) -> None:
         """Send a power change to the bulb."""
-        await ack(partial(self.bulb.set_power, pwr, duration=duration))
+        try:
+            await async_execute_lifx(
+                partial(self.bulb.set_power, pwr, duration=duration)
+            )
+        except asyncio.TimeoutError as ex:
+            raise HomeAssistantError(f"Timeout setting power for {self.name}") from ex
 
     async def set_color(
         self,
-        ack: Callable[[Any], Coroutine[Any, Any, Message | None]],
         hsbk: list[float | int | None],
         kwargs: dict[str, Any],
         duration: int = 0,
     ) -> None:
         """Send a color change to the bulb."""
         merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
-        await ack(partial(self.bulb.set_color, merged_hsbk, duration=duration))
+        try:
+            await async_execute_lifx(
+                partial(self.bulb.set_color, merged_hsbk, duration=duration)
+            )
+        except asyncio.TimeoutError as ex:
+            raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
 
     async def default_effect(self, **kwargs: Any) -> None:
         """Start an effect with default parameters."""
@@ -335,7 +346,6 @@ class LIFXStrip(LIFXColor):
 
     async def set_color(
         self,
-        ack: Callable[[Any], Coroutine[Any, Any, Message | None]],
         hsbk: list[float | int | None],
         kwargs: dict[str, Any],
         duration: int = 0,
@@ -348,7 +358,7 @@ class LIFXStrip(LIFXColor):
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
             if hsbk[2] is not None and hsbk[3] is not None:
-                await super().set_color(ack, hsbk, kwargs, duration)
+                await super().set_color(hsbk, kwargs, duration)
                 return
 
             zones = list(range(0, num_zones))
@@ -358,7 +368,7 @@ class LIFXStrip(LIFXColor):
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:
             for state in (True, False):
-                await self.set_power(ack, state)
+                await self.set_power(state)
                 await self.coordinator.async_refresh()
 
         # Send new color to each zone
@@ -373,4 +383,9 @@ class LIFXStrip(LIFXColor):
                 duration=duration,
                 apply=apply,
             )
-            await ack(set_zone)
+            try:
+                await async_execute_lifx(set_zone)
+            except asyncio.TimeoutError as ex:
+                raise HomeAssistantError(
+                    f"Timeout setting color zones for {self.name}"
+                ) from ex
