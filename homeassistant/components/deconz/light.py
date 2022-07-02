@@ -85,8 +85,7 @@ async def async_setup_entry(
     @callback
     def async_add_light(_: EventType, light_id: str) -> None:
         """Add light from deCONZ."""
-        light = gateway.api.lights[light_id]
-        assert isinstance(light, Light)
+        light = gateway.api.lights.lights[light_id]
         if light.type in POWER_PLUGS:
             return
 
@@ -95,11 +94,6 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_light,
         gateway.api.lights.lights,
-    )
-
-    gateway.register_platform_add_device_callback(
-        async_add_light,
-        gateway.api.lights.fans,
     )
 
     @callback
