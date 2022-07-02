@@ -102,7 +102,8 @@ class FibaroConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle a flow initiated by reauthentication."""
         errors = {}
 
-        if user_input is not None and self._reauth_entry is not None:
+        assert self._reauth_entry
+        if user_input is not None:
             new_data = self._reauth_entry.data | user_input
             try:
                 await _validate_input(self.hass, new_data)
