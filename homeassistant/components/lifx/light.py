@@ -248,10 +248,15 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
                 elif power_on:
                     await self.set_power(True, duration=fade)
             else:
-                if power_on:
-                    await self.set_power(True)
                 if hsbk:
                     await self.set_color(hsbk, kwargs, duration=fade)
+                    # We think the bulb is on, but since we are polling
+                    # it may have changed state so we fire and forget a
+                    # set power message to True as well
+                    if power_on:
+                        self.bulb.set_power(True)
+                elif power_on:
+                    await self.set_power(True)
                 if power_off:
                     await self.set_power(False, duration=fade)
 
