@@ -298,8 +298,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
-        self._current_tado_swing_mode = SWING_OFF
 
+        self._current_tado_swing_mode = SWING_OFF
         self._current_tado_vertical_swing_mode = SWING_OFF
         self._current_tado_horizontal_swing_mode = SWING_OFF
 
@@ -573,6 +573,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_hvac_mode = self._tado_zone_data.current_hvac_mode
         self._current_tado_hvac_action = self._tado_zone_data.current_hvac_action
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
+        self._current_tado_vertical_swing_mode = self._tado_zone_data.current_vertical_swing_mode
+        self._current_tado_horizontal_swing_mode = self._tado_zone_data.current_horizontal_swing_mode
 
     @callback
     def _async_update_callback(self):
