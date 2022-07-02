@@ -257,7 +257,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
                     # bulb is actually on or not, so we don't need to
                     # call power_on if its already on
                     if power_on and self.bulb.power_level == 0:
-                        await self.bulb.set_power(True)
+                        await self.set_power(True, duration=fade)
                 elif power_on:
                     await self.set_power(True)
                 if power_off:
