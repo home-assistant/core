@@ -27,8 +27,6 @@ from .const import (
     MODE_3HOURLY_LABEL,
     MODE_DAILY,
     MODE_DAILY_LABEL,
-    VISIBILITY_CLASSES,
-    VISIBILITY_DISTANCE_CLASSES,
 )
 
 
@@ -103,19 +101,6 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         if self.coordinator.data.now.temperature:
             return self.coordinator.data.now.temperature.value
         return None
-
-    @property
-    def visibility(self):
-        """Return the platform visibility."""
-        _visibility = None
-        weather_now = self.coordinator.data.now
-        if hasattr(weather_now, "visibility"):
-            visibility_class = VISIBILITY_CLASSES.get(weather_now.visibility.value)
-            visibility_distance = VISIBILITY_DISTANCE_CLASSES.get(
-                weather_now.visibility.value
-            )
-            _visibility = f"{visibility_class} - {visibility_distance}"
-        return _visibility
 
     @property
     def native_pressure(self):
