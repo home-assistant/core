@@ -116,7 +116,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             mac = user_input[CONF_DEVICE]
             await self.async_set_unique_id(mac, raise_on_progress=False)
-            return self._async_create_entry_from_device(self._discovered_devices[mac])
+            device_without_label = self._discovered_devices[mac]
+            device = await self._async_try_connect(
+                device_without_label.ip_addr, raise_on_progress=False
+            )
+            return self._async_create_entry_from_device(device)
 
         configured_devices = {
             entry.unique_id
@@ -130,7 +134,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
-            formatted_mac: f"{device.label} ({device.ip_addr}) {formatted_mac}"
+            formatted_mac: f"{formatted_mac} ({device.ip_addr})"
             for formatted_mac, device in self._discovered_devices.items()
             if formatted_mac not in configured_devices
         }
