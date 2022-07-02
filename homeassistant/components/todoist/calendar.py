@@ -6,7 +6,7 @@ import logging
 from typing import Any
 
 from todoist_api_python.api_async import TodoistAPIAsync
-from todoist_api_python.models import Due, Task
+from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -50,7 +50,7 @@ from .const import (
     START,
     SUMMARY,
 )
-from .types import CalData, CustomProject, DueDate, ProjectData, TodoistEvent
+from .types import CalData, CustomProject, ProjectData, TodoistEvent
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -133,7 +133,7 @@ async def async_setup_platform(
     for project in projects:
         # Project is an object, not a dict!
         # Because of that, we convert what we need to a dict.
-        project_data: ProjectData = {CONF_NAME: project[NAME], CONF_ID: project[ID]}
+        project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
         project_devices.append(TodoistProjectEntity(project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project.name.lower()] = project.id
@@ -181,6 +181,7 @@ async def async_setup_platform(
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
 
+        # @TODO:
         # Create the task
         item = {}  # api.items.add(call.data[CONTENT], project_id=project_id)
 
@@ -275,8 +276,8 @@ class TodoistProjectEntity(CalendarEntity):
     def __init__(
         self,
         data: ProjectData,
-        labels: list[str],
-        token: TodoistAPI,
+        labels: list[Label],
+        api: TodoistAPIAsync,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[int] | None = None,
@@ -285,7 +286,7 @@ class TodoistProjectEntity(CalendarEntity):
         self.data = TodoistProjectData(
             data,
             labels,
-            token,
+            api,
             due_date_days,
             whitelisted_labels,
             whitelisted_projects,
@@ -310,7 +311,7 @@ class TodoistProjectEntity(CalendarEntity):
         """Update all Todoist Calendars."""
         await self.data.async_update()
         # Set Todoist-specific data that can't easily be grabbed
-        self._cal_data[ALL_TASKS] = [
+        self._cal_data["all_tasks"] = [
             task[SUMMARY] for task in self.data.all_project_tasks
         ]
 
@@ -375,14 +376,14 @@ class TodoistProjectData:
     def __init__(
         self,
         project_data: ProjectData,
-        labels: list[str],
-        api: TodoistAPI,
+        labels: list[Label],
+        api: TodoistAPIAsync,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[int] | None = None,
     ) -> None:
         """Initialize a Todoist Project."""
-        self.event = None
+        self.event: TodoistEvent | None = None
 
         self._api = api
         self._name = project_data[CONF_NAME]
@@ -402,7 +403,7 @@ class TodoistProjectData:
             self._due_date_days = timedelta(days=due_date_days)
 
         # Only tasks with one of these labels will be included.
-        self._label_whitelist: list[str] = []
+        self._label_whitelist: list[Label] = []
         if whitelisted_labels is not None:
             self._label_whitelist = whitelisted_labels
 
@@ -565,18 +566,12 @@ class TodoistProjectData:
             ):
                 event = proposed_event
                 continue
-
         return event
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all tasks in a specific time frame."""
-        # 2022-06-21 14:17:49 ERROR (MainThread) [homeassistant.components.todoist.calendar] error getting events
-        # Traceback (most recent call last):
-        #  File "/workspaces/core/homeassistant/components/todoist/calendar.py", line 597, in async_get_events
-        #    self._api.projects.get_data, self._id
-        # AttributeError: 'TodoistAPIAsync' object has no attribute 'projects'
         if self._id is None:
             tasks = await self._api.get_tasks()
             project_task_data = [
@@ -586,10 +581,6 @@ class TodoistProjectData:
                 or task.project_id in self._project_id_whitelist
             ]
         else:
-            # project_data = await hass.async_add_executor_job(
-            #    self._api.projects.get_data, self._id
-            # )
-            # project_task_data = project_data[TASKS]
             project_task_data = await self._api.get_tasks(project_id=self._id)
 
         events = []
@@ -598,7 +589,7 @@ class TodoistProjectData:
                 continue
             # @NOTE: _parse_due_date always returns the date in UTC time.
             due_date: datetime | None = _parse_due_date(
-                task.due, -7  # self._api.state["user"]["tz_info"]["hours"]
+                task.due, -7  # @TODO: self._api.state["user"]["tz_info"]["hours"]
             )
             if not due_date:
                 continue
