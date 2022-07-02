@@ -32,6 +32,7 @@ from . import (
     MAC_ADDRESS,
     PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE,
     MockFailingLifxCommand,
+    MockLifxCommand,
     MockMessage,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
@@ -417,3 +418,16 @@ async def test_white_light_fails(hass):
             )
         assert bulb.set_power.calls[0][0][0] is True
         bulb.set_power.reset_mock()
+
+        bulb.set_power = MockLifxCommand(bulb)
+        bulb.set_color = MockFailingLifxCommand(bulb)
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                "turn_on",
+                {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 153},
+                blocking=True,
+            )
+        assert bulb.set_color.calls[0][0][0] == [1, 0, 3, 6535]
+        bulb.set_color.reset_mock()
