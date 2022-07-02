@@ -167,6 +167,24 @@ async def test_color_light_with_temp(hass: HomeAssistant, mock_await_aiolifx) ->
     bulb.set_color.assert_called_with([1820, 19660, 65535, 3500], duration=0)
     bulb.set_color.reset_mock()
 
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 30, 80)},
+        blocking=True,
+    )
+    bulb.set_color.assert_called_with([63107, 57824, 65535, 3500], duration=0)
+    bulb.set_color.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.46, 0.376)},
+        blocking=True,
+    )
+    bulb.set_color.assert_called_with([4956, 30583, 65535, 3500], duration=0)
+    bulb.set_color.reset_mock()
+
 
 async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
     """Test a white bulb."""
