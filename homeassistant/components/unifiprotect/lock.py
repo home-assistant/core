@@ -40,7 +40,9 @@ async def async_setup_entry(
         if isinstance(device, Doorlock):
             async_add_entities([ProtectLock(data, device)])
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
 
     entities = []
     for device in data.api.bootstrap.doorlocks.values():

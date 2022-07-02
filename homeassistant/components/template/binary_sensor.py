@@ -14,6 +14,7 @@ from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA,
+    BinarySensorDeviceClass,
     BinarySensorEntity,
 )
 from homeassistant.const import (
@@ -82,9 +83,7 @@ BINARY_SENSOR_SCHEMA = vol.Schema(
         vol.Optional(CONF_DELAY_OFF): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DELAY_ON): vol.Any(cv.positive_time_period, cv.template),
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
-        vol.Optional(CONF_NAME): cv.template,
         vol.Required(CONF_STATE): cv.template,
-        vol.Optional(CONF_UNIQUE_ID): cv.string,
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA.schema)
@@ -210,16 +209,18 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
                 ENTITY_ID_FORMAT, object_id, hass=hass
             )
 
-        self._device_class = config.get(CONF_DEVICE_CLASS)
+        self._device_class: BinarySensorDeviceClass | None = config.get(
+            CONF_DEVICE_CLASS
+        )
         self._template = config[CONF_STATE]
-        self._state = None
+        self._state: bool | None = None
         self._delay_cancel = None
         self._delay_on = None
         self._delay_on_raw = config.get(CONF_DELAY_ON)
         self._delay_off = None
         self._delay_off_raw = config.get(CONF_DELAY_OFF)
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Restore state and register callbacks."""
         if (
             (self._delay_on_raw is not None or self._delay_off_raw is not None)
@@ -285,12 +286,12 @@ class BinarySensorTemplate(TemplateEntity, BinarySensorEntity, RestoreEntity):
         self._delay_cancel = async_call_later(self.hass, delay, _set_state)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if sensor is on."""
         return self._state
 
     @property
-    def device_class(self):
+    def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class of the binary sensor."""
         return self._device_class
 

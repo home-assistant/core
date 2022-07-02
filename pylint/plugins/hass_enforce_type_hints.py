@@ -591,6 +591,7 @@ _TOGGLE_ENTITY_MATCH: list[TypeHintMatch] = [
     ),
 ]
 _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
+    # "air_quality": [],  # ignored as deprecated
     "alarm_control_panel": [
         ClassTypeHintMatch(
             base_class="Entity",
@@ -674,6 +675,356 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                     },
                     return_type=None,
                     has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "binary_sensor": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="BinarySensorEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["BinarySensorDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type=["bool", None],
+                ),
+            ],
+        ),
+    ],
+    "button": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ButtonEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="device_class",
+                    return_type=["ButtonDeviceClass", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="press",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "calendar": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="CalendarEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="event",
+                    return_type=["CalendarEvent", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_get_events",
+                    arg_types={
+                        1: "HomeAssistant",
+                        2: "datetime",
+                        3: "datetime",
+                    },
+                    return_type="list[CalendarEvent]",
+                ),
+            ],
+        ),
+    ],
+    "camera": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="Camera",
+            matches=[
+                TypeHintMatch(
+                    function_name="entity_picture",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="is_recording",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="is_streaming",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="brand",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="motion_detection_enabled",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="model",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="frame_interval",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="frontend_stream_type",
+                    return_type=["StreamType", None],
+                ),
+                TypeHintMatch(
+                    function_name="available",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="async_create_stream",
+                    return_type=["Stream", None],
+                ),
+                TypeHintMatch(
+                    function_name="stream_source",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="async_handle_web_rtc_offer",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="camera_image",
+                    named_arg_types={
+                        "width": "int | None",
+                        "height": "int | None",
+                    },
+                    return_type=["bytes", None],
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="handle_async_still_stream",
+                    arg_types={
+                        1: "Request",
+                        2: "float",
+                    },
+                    return_type="StreamResponse",
+                ),
+                TypeHintMatch(
+                    function_name="handle_async_mjpeg_stream",
+                    arg_types={
+                        1: "Request",
+                    },
+                    return_type=["StreamResponse", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_on",
+                    return_type="bool",
+                ),
+                TypeHintMatch(
+                    function_name="turn_off",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="enable_motion_detection",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="disable_motion_detection",
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "climate": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ClimateEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="precision",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="temperature_unit",
+                    return_type="str",
+                ),
+                TypeHintMatch(
+                    function_name="current_humidity",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_humidity",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="hvac_mode",
+                    return_type=["HVACMode", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="hvac_modes",
+                    return_type=["list[HVACMode]", "list[str]"],
+                ),
+                TypeHintMatch(
+                    function_name="hvac_action",
+                    return_type=["HVACAction", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="current_temperature",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature_step",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature_high",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="target_temperature_low",
+                    return_type=["float", None],
+                ),
+                TypeHintMatch(
+                    function_name="preset_mode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="preset_modes",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="is_aux_heat",
+                    return_type=["bool", None],
+                ),
+                TypeHintMatch(
+                    function_name="fan_mode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="fan_modes",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="swing_mode",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="swing_modes",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="set_temperature",
+                    kwargs_type="Any",
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_humidity",
+                    arg_types={
+                        1: "int",
+                    },
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_fan_mode",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_hvac_mode",
+                    arg_types={
+                        1: "HVACMode",
+                    },
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_swing_mode",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="set_preset_mode",
+                    arg_types={
+                        1: "str",
+                    },
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_aux_heat_on",
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_aux_heat_off",
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="turn_off",
+                    return_type="None",
+                    has_async_counterpart=True,
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="min_temp",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="max_temp",
+                    return_type="float",
+                ),
+                TypeHintMatch(
+                    function_name="min_humidity",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="max_humidity",
+                    return_type="int",
                 ),
             ],
         ),
@@ -848,6 +1199,110 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 TypeHintMatch(
                     function_name="oscillate",
                     arg_types={1: "bool"},
+                    return_type=None,
+                    has_async_counterpart=True,
+                ),
+            ],
+        ),
+    ],
+    "light": [
+        ClassTypeHintMatch(
+            base_class="Entity",
+            matches=_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="ToggleEntity",
+            matches=_TOGGLE_ENTITY_MATCH,
+        ),
+        ClassTypeHintMatch(
+            base_class="LightEntity",
+            matches=[
+                TypeHintMatch(
+                    function_name="brightness",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_mode",
+                    return_type=["ColorMode", "str", None],
+                ),
+                TypeHintMatch(
+                    function_name="hs_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="xy_color",
+                    return_type=["tuple[float, float]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgb_color",
+                    return_type=["tuple[int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbw_color",
+                    return_type=["tuple[int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="rgbww_color",
+                    return_type=["tuple[int, int, int, int, int]", None],
+                ),
+                TypeHintMatch(
+                    function_name="color_temp",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="min_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="max_mireds",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="white_value",
+                    return_type=["int", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect_list",
+                    return_type=["list[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="effect",
+                    return_type=["str", None],
+                ),
+                TypeHintMatch(
+                    function_name="capability_attributes",
+                    return_type=["dict[str, Any]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_color_modes",
+                    return_type=["set[ColorMode]", "set[str]", None],
+                ),
+                TypeHintMatch(
+                    function_name="supported_features",
+                    return_type="int",
+                ),
+                TypeHintMatch(
+                    function_name="turn_on",
+                    named_arg_types={
+                        "brightness": "int | None",
+                        "brightness_pct": "float | None",
+                        "brightness_step": "int | None",
+                        "brightness_step_pct": "float | None",
+                        "color_name": "str | None",
+                        "color_temp": "int | None",
+                        "effect": "str | None",
+                        "flash": "str | None",
+                        "kelvin": "int | None",
+                        "hs_color": "tuple[float, float] | None",
+                        "rgb_color": "tuple[int, int, int] | None",
+                        "rgbw_color": "tuple[int, int, int, int] | None",
+                        "rgbww_color": "tuple[int, int, int, int, int] | None",
+                        "transition": "float | None",
+                        "xy_color": "tuple[float, float] | None",
+                        "white": "int | None",
+                        "white_value": "int | None",
+                    },
+                    kwargs_type="Any",
                     return_type=None,
                     has_async_counterpart=True,
                 ),
@@ -1100,7 +1555,7 @@ class HassTypeHintChecker(BaseChecker):  # type: ignore[misc]
         (
             "ignore-missing-annotations",
             {
-                "default": True,
+                "default": False,
                 "type": "yn",
                 "metavar": "<y or n>",
                 "help": "Set to ``no`` if you wish to check functions that do not "

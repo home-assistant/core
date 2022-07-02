@@ -1,5 +1,7 @@
 """Adds config flow for Vulcan."""
+from collections.abc import Mapping
 import logging
+from typing import Any
 
 from aiohttp import ClientConnectionError
 import voluptuous as vol
@@ -16,6 +18,7 @@ from vulcan import (
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_PIN, CONF_REGION, CONF_TOKEN
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import DOMAIN
@@ -236,7 +239,7 @@ class VulcanFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         return await self.async_step_reauth_confirm()
 

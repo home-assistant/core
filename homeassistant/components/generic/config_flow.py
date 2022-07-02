@@ -221,6 +221,14 @@ async def async_test_stream(
         stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
     if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
         stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+
+    url = yarl.URL(stream_source)
+    if not url.user and not url.password:
+        username = info.get(CONF_USERNAME)
+        password = info.get(CONF_PASSWORD)
+        if username and password:
+            url = url.with_user(username).with_password(password)
+            stream_source = str(url)
     try:
         stream = create_stream(hass, stream_source, stream_options, "test_stream")
         hls_provider = stream.add_provider(HLS_PROVIDER)

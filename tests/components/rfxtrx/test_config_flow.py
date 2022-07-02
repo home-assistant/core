@@ -847,7 +847,7 @@ async def test_options_configure_rfy_cover_device(hass):
         result["flow_id"],
         user_input={
             "automatic_add": True,
-            "event_code": "071a000001020301",
+            "event_code": "0C1a0000010203010000000000",
         },
     )
 
@@ -863,7 +863,10 @@ async def test_options_configure_rfy_cover_device(hass):
 
     await hass.async_block_till_done()
 
-    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+    assert (
+        entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
+        == "EU"
+    )
 
     device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
@@ -897,7 +900,10 @@ async def test_options_configure_rfy_cover_device(hass):
 
     await hass.async_block_till_done()
 
-    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+    assert (
+        entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
+        == "EU"
+    )
 
 
 def test_get_serial_by_id_no_dir():

@@ -10,6 +10,7 @@ import respx
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.camera import async_get_image
+from homeassistant.components.generic.config_flow import slug
 from homeassistant.components.generic.const import (
     CONF_CONTENT_TYPE,
     CONF_FRAMERATE,
@@ -515,6 +516,17 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
         )
     assert result5.get("type") == data_entry_flow.RESULT_TYPE_FORM
     assert result5["errors"] == {"stream_source": "template_error"}
+
+
+async def test_slug(hass, caplog):
+    """
+    Test that the slug function generates an error in case of invalid template.
+
+    Other paths in the slug function are already tested by other tests.
+    """
+    result = slug(hass, "http://127.0.0.2/testurl/{{1/0}}")
+    assert result is None
+    assert "Syntax error in" in caplog.text
 
 
 @respx.mock
