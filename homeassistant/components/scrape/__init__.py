@@ -1,8 +1,6 @@
 """The scrape component."""
 from __future__ import annotations
 
-from datetime import timedelta
-
 import httpx
 import voluptuous as vol
 
@@ -29,6 +27,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -43,10 +42,6 @@ from .const import (
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     PLATFORMS,
-)
-
-time_period = vol.Any(
-    cv.time_period_str, cv.time_period_seconds, timedelta, cv.time_period_dict
 )
 
 SCRAPE_CONFIG = vol.Schema(
@@ -68,7 +63,7 @@ SCRAPE_CONFIG = vol.Schema(
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
         vol.Optional(CONF_UNIQUE_ID): cv.string,
-        vol.Optional(CONF_SCAN_INTERVAL): time_period,
+        vol.Optional(CONF_SCAN_INTERVAL): cv.time_period,
     }
 )
 
@@ -84,7 +79,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         return True
 
     for sensor_conf in conf:
-        discovery.load_platform(hass, "sensor", DOMAIN, sensor_conf, config)
+        discovery.load_platform(hass, Platform.SENSOR, DOMAIN, sensor_conf, config)
 
     return True
 
