@@ -1,12 +1,10 @@
 """The tests for the Demo component."""
-from contextlib import suppress
 import json
-import os
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.demo import DOMAIN
-from homeassistant.components.device_tracker.legacy import YAML_DEVICES
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import list_statistic_ids
 from homeassistant.helpers.json import JSONEncoder
@@ -22,11 +20,10 @@ def mock_history(hass):
 
 
 @pytest.fixture(autouse=True)
-def demo_cleanup(hass):
-    """Clean up device tracker demo file."""
-    yield
-    with suppress(FileNotFoundError):
-        os.remove(hass.config.path(YAML_DEVICES))
+def mock_device_tracker_update_config(hass):
+    """Prevent device tracker from creating known devices file."""
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        yield
 
 
 async def test_setting_up_demo(hass):

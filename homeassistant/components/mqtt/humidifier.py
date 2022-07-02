@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -407,7 +408,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
@@ -431,10 +432,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         """Return the current mode."""
         return self._mode
 
-    async def async_turn_on(
-        self,
-        **kwargs,
-    ) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity.
 
         This method is a coroutine.
@@ -451,7 +449,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
         This method is a coroutine.

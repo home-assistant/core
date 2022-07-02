@@ -1,15 +1,15 @@
 """Support for UK Met Office weather service."""
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import PRESSURE_HPA, SPEED_MILES_PER_HOUR, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -53,11 +53,11 @@ def _build_forecast_data(timestep):
     if timestep.precipitation:
         data[ATTR_FORECAST_PRECIPITATION_PROBABILITY] = timestep.precipitation.value
     if timestep.temperature:
-        data[ATTR_FORECAST_TEMP] = timestep.temperature.value
+        data[ATTR_FORECAST_NATIVE_TEMP] = timestep.temperature.value
     if timestep.wind_direction:
         data[ATTR_FORECAST_WIND_BEARING] = timestep.wind_direction.value
     if timestep.wind_speed:
-        data[ATTR_FORECAST_WIND_SPEED] = timestep.wind_speed.value
+        data[ATTR_FORECAST_NATIVE_WIND_SPEED] = timestep.wind_speed.value
     return data
 
 
@@ -70,6 +70,10 @@ def _get_weather_condition(metoffice_code):
 
 class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Office weather condition."""
+
+    _attr_native_temperature_unit = TEMP_CELSIUS
+    _attr_native_pressure_unit = PRESSURE_HPA
+    _attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
 
     def __init__(self, coordinator, hass_data, use_3hourly):
         """Initialise the platform with a data instance."""
@@ -92,19 +96,14 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
-    def temperature(self):
+    def native_temperature(self):
         """Return the platform temperature."""
         if self.coordinator.data.now.temperature:
             return self.coordinator.data.now.temperature.value
         return None
 
     @property
-    def temperature_unit(self):
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
-
-    @property
-    def pressure(self):
+    def native_pressure(self):
         """Return the mean sea-level pressure."""
         weather_now = self.coordinator.data.now
         if weather_now and weather_now.pressure:
@@ -120,7 +119,7 @@ class MetOfficeWeather(CoordinatorEntity, WeatherEntity):
         return None
 
     @property
-    def wind_speed(self):
+    def native_wind_speed(self):
         """Return the wind speed."""
         weather_now = self.coordinator.data.now
         if weather_now and weather_now.wind_speed:
