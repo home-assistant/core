@@ -215,13 +215,13 @@ async def test_gravatar_and_picture(hass):
 
 @patch("homeassistant.components.device_tracker.legacy.DeviceTracker.see")
 @patch("homeassistant.components.demo.device_tracker.setup_scanner", autospec=True)
-@pytest.mark.skip(reason="debug CI fail")
 async def test_discover_platform(mock_demo_setup_scanner, mock_see, hass):
     """Test discovery of device_tracker demo platform."""
-    await discovery.async_load_platform(
-        hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
-    )
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        await discovery.async_load_platform(
+            hass, device_tracker.DOMAIN, "demo", {"test_key": "test_val"}, {"bla": {}}
+        )
+        await hass.async_block_till_done()
     assert device_tracker.DOMAIN in hass.config.components
     assert mock_demo_setup_scanner.called
     assert mock_demo_setup_scanner.call_args[0] == (
