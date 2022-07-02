@@ -343,19 +343,23 @@ async def test_config_zoned_light_strip_fails(hass):
     already_migrated_config_entry.add_to_hass(hass)
     light_strip = _mocked_light_strip()
     entity_id = "light.my_bulb"
-    call_count = 0
 
-    class MockExecuteAwaitAioLIFXZonesFailing:
-        """Mock and execute an AwaitAioLIFX with the zones call failing."""
+    class MockFailingLifxCommand:
+        """Mock a lifx command that fails on the 3rd try."""
 
-        async def wait(self, call, *args, **kwargs):
-            """Wait or simulate failure."""
-            nonlocal call_count
-            call_count += 1
-            if call_count > 3 and "get_color_zones" in str(call):
-                return None
-            call()
-            return MockMessage()
+        def __init__(self, bulb, **kwargs):
+            """Init command."""
+            self.bulb = bulb
+            self.call_count = 0
+
+        def __call__(self, callb=None, *args, **kwargs):
+            """Call command."""
+            self.call_count += 1
+            response = None if self.call_count >= 3 else MockMessage()
+            if callb:
+                callb(self.bulb, response)
+
+    light_strip.get_color_zones = MockFailingLifxCommand(light_strip)
 
     with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
