@@ -33,8 +33,12 @@ from .controller import UniFiController
 from .unifi_client import UniFiClient
 from .unifi_entity_base import UniFiBase
 
+CPU_TEMPERATURE_SENSOR = "cpu_temperature"
 CPU_UTILIZATION_SENSOR = "cpu_utilization"
+FAN_LEVEL_SENSOR = "fan_level"
+LOCAL_TEMPERATURE_SENSOR = "local_temperature"
 MEMORY_UTILIZATION_SENSOR = "memory_utilization"
+PHY_TEMPERATURE_SENSOR = "phy_temperature"
 RX_SENSOR = "rx"
 TEMPERATURE_SENSOR = "temperature"
 TX_SENSOR = "tx"
@@ -294,6 +298,57 @@ DEVICE_SENSORS: tuple[UniFiDeviceSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         enabled="has_temperature",
         value_fn=lambda device: device.raw["general_temperature"],
+    ),
+    UniFiDeviceSensorEntityDescription(
+        key=CPU_TEMPERATURE_SENSOR,
+        name="CPU Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        enabled="temperatures",
+        value_fn=lambda device: next(
+            (
+                temperature["value"]
+                for temperature in device.raw.get("temperatures", [])
+                if temperature["name"] == "CPU"
+            ),
+            None,
+        ),
+    ),
+    UniFiDeviceSensorEntityDescription(
+        key=LOCAL_TEMPERATURE_SENSOR,
+        name="Local Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        enabled="temperatures",
+        value_fn=lambda device: next(
+            (
+                temperature["value"]
+                for temperature in device.raw.get("temperatures", [])
+                if temperature["name"] == "Local"
+            ),
+            None,
+        ),
+    ),
+    UniFiDeviceSensorEntityDescription(
+        key=PHY_TEMPERATURE_SENSOR,
+        name="PHY Temperature",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        enabled="temperatures",
+        value_fn=lambda device: next(
+            (
+                temperature["value"]
+                for temperature in device.raw.get("temperatures", [])
+                if temperature["name"] == "PHY"
+            ),
+            None,
+        ),
     ),
 )
 

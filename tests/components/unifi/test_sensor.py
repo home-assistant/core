@@ -343,6 +343,23 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
         "overheating": True,
         "state": 1,
         "system-stats": {"cpu": "1.23", "mem": "50.0"},
+        "temperatures": [
+            {
+                "name": "CPU",
+                "type": "cpu",
+                "value": 48.75,
+            },
+            {
+                "name": "Local",
+                "type": "board",
+                "value": 46.5,
+            },
+            {
+                "name": "PHY",
+                "type": "board",
+                "value": 42.25,
+            },
+        ],
         "type": "usw",
         "upgradable": True,
         "uptime": 0,
@@ -371,12 +388,38 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     assert hass.states.get("sensor.device_temperature").state == str(
         device["general_temperature"]
     )
+    assert hass.states.get("sensor.device_cpu_temperature").state == str(
+        device["temperatures"][0]["value"]
+    )
+    assert hass.states.get("sensor.device_local_temperature").state == str(
+        device["temperatures"][1]["value"]
+    )
+    assert hass.states.get("sensor.device_phy_temperature").state == str(
+        device["temperatures"][2]["value"]
+    )
 
     # Verify state update
     device["system-stats"]["cpu"] = "3.21"
     device["system-stats"]["mem"] = "51.0"
     device["uptime"] = 1
     device["general_temperature"] = 48
+    device["temperatures"] = [
+        {
+            "name": "CPU",
+            "type": "cpu",
+            "value": 49.0,
+        },
+        {
+            "name": "Local",
+            "type": "board",
+            "value": 47.0,
+        },
+        {
+            "name": "PHY",
+            "type": "board",
+            "value": 42.75,
+        },
+    ]
 
     now = now + timedelta(seconds=device["uptime"])
     with patch("homeassistant.util.dt.now", return_value=now):
@@ -400,4 +443,13 @@ async def test_device_sensors(hass, aioclient_mock, mock_unifi_websocket):
     )
     assert hass.states.get("sensor.device_temperature").state == str(
         device["general_temperature"]
+    )
+    assert hass.states.get("sensor.device_cpu_temperature").state == str(
+        device["temperatures"][0]["value"]
+    )
+    assert hass.states.get("sensor.device_local_temperature").state == str(
+        device["temperatures"][1]["value"]
+    )
+    assert hass.states.get("sensor.device_phy_temperature").state == str(
+        device["temperatures"][2]["value"]
     )
