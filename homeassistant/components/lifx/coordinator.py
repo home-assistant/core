@@ -92,7 +92,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
             )
             if not resp:
                 raise UpdateFailed(
-                    "Failed to fetch zones from device: {self.device.ip_addr}"
+                    f"Failed to fetch zones from device: {self.device.ip_addr}"
                 )
             zone += 8
             top = resp.count

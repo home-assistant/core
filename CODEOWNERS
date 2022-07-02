@@ -576,6 +576,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/life360/ @pnbruckner
 /tests/components/life360/ @pnbruckner
 /homeassistant/components/lifx/ @bdraco @Djelibeybi
+/tests/components/lifx/ @bdraco @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
 /homeassistant/components/linux_battery/ @fabaff

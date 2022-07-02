@@ -1,5 +1,7 @@
 """Tests for the lifx integration light platform."""
 
+from datetime import timedelta
+
 import aiolifx_effects
 
 from homeassistant.components import lifx
@@ -17,13 +19,16 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
+    IP_ADDRESS,
     MAC_ADDRESS,
+    MockMessage,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
     _mocked_light_strip,
@@ -33,7 +38,7 @@ from . import (
     _patch_discovery,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_light_unique_id(hass: HomeAssistant) -> None:
@@ -315,3 +320,39 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
     )
     bulb.set_color.assert_called_with([32000, 0, 32000, 2500], duration=0)
     bulb.set_color.reset_mock()
+
+
+async def test_config_zoned_light_strip_fails(hass):
+    """Test we handle failure to update zones."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    light_strip = _mocked_light_strip()
+    entity_id = "light.my_bulb"
+    call_count = 0
+
+    class MockExecuteAwaitAioLIFXZonesFailing:
+        """Mock and execute an AwaitAioLIFX with the zones call failing."""
+
+        async def wait(self, call, *args, **kwargs):
+            """Wait or simulate failure."""
+            nonlocal call_count
+            call_count += 1
+            if call_count > 3 and "get_color_zones" in str(call):
+                return None
+            call()
+            return MockMessage()
+
+    with _patch_discovery(device=light_strip), _patch_device(
+        device=light_strip, await_mock=MockExecuteAwaitAioLIFXZonesFailing
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+        assert hass.states.get(entity_id).state == STATE_OFF
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
+        await hass.async_block_till_done()
+        assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
