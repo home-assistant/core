@@ -64,15 +64,16 @@ async def async_legacy_migration(
     hass: HomeAssistant, legacy_entry: ConfigEntry
 ) -> None:
     """Migrate config entries."""
-    existing_macs = {
+    existing_serials = {
         entry.unique_id
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.unique_id and not async_entry_is_legacy(entry)
     }
     discovered_devices = await async_discover_devices(hass)
-    hosts_by_mac = {device.mac_addr: device.ip_addr for device in discovered_devices}
+    # device.mac_addr not the mac_address, its the serial number
+    hosts_by_serial = {device.mac_addr: device.ip_addr for device in discovered_devices}
     migration_complete = await async_migrate_legacy_entries(
-        hass, hosts_by_mac, existing_macs, legacy_entry
+        hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if not migration_complete:
         raise ConfigEntryNotReady("Migration in progress, waiting to discover devices")

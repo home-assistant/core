@@ -59,13 +59,17 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     @property
     def serial_number(self) -> str:
         """Return the internal mac address."""
-        return cast(str, self.device.mac_addr)
+        return cast(
+            str, self.device.mac_addr
+        )  # device.mac_addr not the mac_address, its the serial number
 
     @property
     def mac_address(self) -> str:
         """Return the physical mac address."""
         return get_real_mac_addr(
-            self.device.mac_addr, self.device.host_firmware_version
+            # device.mac_addr not the mac_address, its the serial number
+            self.device.mac_addr,
+            self.device.host_firmware_version,
         )
 
     async def _async_update_data(self) -> None:
@@ -85,6 +89,7 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
                 raise UpdateFailed(
                     f"Failed to fetch get version from device: {self.device.ip_addr}"
                 )
+            # device.mac_addr not the mac_address, its the serial number
             if self.device.mac_addr == TARGET_ANY:
                 self.device.mac_addr = response.target_addr
             if lifx_features(self.device)["multizone"]:

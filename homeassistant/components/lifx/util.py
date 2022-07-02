@@ -23,6 +23,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 import homeassistant.util.color as color_util
 
 from .const import DOMAIN, OVERALL_TIMEOUT
@@ -123,6 +124,20 @@ def _off_by_one_mac(firmware: str) -> bool:
 def get_real_mac_addr(mac_addr: str, firmware: str) -> str:
     """Increment the last byte of the mac address by one for FW>3.70."""
     return _get_mac_offset(mac_addr, 1) if _off_by_one_mac(firmware) else mac_addr
+
+
+def formatted_serial(serial_number: str) -> str:
+    """Format the serial number to match the HA device registry."""
+    return dr.format_mac(serial_number)
+
+
+def mac_matches_serial_number(mac_addr: str, serial_number: str) -> bool:
+    """Check if a mac address matches the serial number."""
+    formatted_mac = dr.format_mac(mac_addr)
+    return bool(
+        formatted_serial(serial_number) == formatted_mac
+        or _get_mac_offset(mac_addr, 1) == formatted_mac
+    )
 
 
 async def async_execute_lifx(method: Callable) -> Message:
