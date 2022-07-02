@@ -45,6 +45,12 @@ def _mocked_light_strip() -> Light:
     return bulb
 
 
+def _mocked_bulb_new_firmware() -> Light:
+    bulb = _mocked_bulb()
+    bulb.host_firmware_version = "3.90"
+    return bulb
+
+
 class MockMessage:
     """Mock a lifx message."""
 
