@@ -8,6 +8,7 @@ from aiolifx.aiolifx import Light
 from decorator import contextmanager
 
 from homeassistant.components.lifx import discovery
+from homeassistant.components.lifx.const import TARGET_ANY
 
 MODULE = "homeassistant.components.lifx"
 MODULE_CONFIG_FLOW = "homeassistant.components.lifx.config_flow"
@@ -79,6 +80,7 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
         def __init__(self, *args, **kwargs):
             """Init connection."""
             self.device = device or _mocked_bulb()
+            self.device.mac_addr = TARGET_ANY
 
         async def async_setup(self):
             """Mock setup."""
@@ -139,6 +141,7 @@ def _patch_config_flow_try_connect(
         def __init__(self, *args, **kwargs):
             """Init connection."""
             self.device = device or _mocked_bulb()
+            self.device.mac_addr = TARGET_ANY
 
         async def async_setup(self):
             """Mock setup."""
