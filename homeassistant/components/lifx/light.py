@@ -358,10 +358,9 @@ class LIFXStrip(LIFXColor):
 
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[2] is None:
-            await self.set_power(ack, True)
-            await self.coordinator.async_request_refresh()
-            await self.set_power(ack, False)
-            await self.coordinator.async_request_refresh()
+            for state in (True, False):
+                await self.set_power(ack, state)
+                await self.coordinator.async_refresh()
 
         # Send new color to each zone
         for index, zone in enumerate(zones):
