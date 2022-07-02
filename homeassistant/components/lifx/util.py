@@ -37,6 +37,15 @@ def async_entry_is_legacy(entry: ConfigEntry) -> bool:
     return entry.unique_id is None or entry.unique_id == DOMAIN
 
 
+@callback
+def async_get_legacy_entry(hass: HomeAssistant) -> ConfigEntry | None:
+    """Get the legacy config entry."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if async_entry_is_legacy(entry):
+            return entry
+    return None
+
+
 def convert_8_to_16(value: int) -> int:
     """Scale an 8 bit level into 16 bits."""
     return (value << 8) | value

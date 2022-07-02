@@ -28,7 +28,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import async_entry_is_legacy, get_real_mac_addr
+from .util import async_entry_is_legacy
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -64,18 +64,15 @@ async def async_legacy_migration(
     hass: HomeAssistant, legacy_entry: ConfigEntry
 ) -> None:
     """Migrate config entries."""
-    config_entries_by_mac = {
-        entry.unique_id: entry
+    existing_macs = {
+        entry.unique_id
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.unique_id and not async_entry_is_legacy(entry)
     }
     discovered_devices = await async_discover_devices(hass)
-    hosts_by_mac = {
-        get_real_mac_addr(device.mac_addr, device.host_firmware_version): device.ip_addr
-        for device in discovered_devices
-    }
+    hosts_by_mac = {device.mac_addr: device.ip_addr for device in discovered_devices}
     migration_complete = await async_migrate_legacy_entries(
-        hass, hosts_by_mac, config_entries_by_mac, legacy_entry
+        hass, hosts_by_mac, existing_macs, legacy_entry
     )
     if not migration_complete:
         raise ConfigEntryNotReady("Migration in progress, waiting to discover devices")

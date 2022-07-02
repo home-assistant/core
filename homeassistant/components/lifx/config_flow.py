@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -19,7 +19,13 @@ from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .util import async_entry_is_legacy, get_real_mac_addr, lifx_features
+from .migration import async_get_device_entry
+from .util import (
+    async_entry_is_legacy,
+    async_get_legacy_entry,
+    get_real_mac_addr,
+    lifx_features,
+)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -74,6 +80,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
+        assert self.unique_id is not None
+        legacy_entry = async_get_legacy_entry(self.hass)
+        if legacy_entry is not None and async_get_device_entry(
+            self.hass, legacy_entry, {self.unique_id}
+        ):
+            # If we discover a device to be migrated we set it up
+            return self._async_create_entry_from_device(self._discovered_device)
+
         if user_input is not None:
             return self._async_create_entry_from_device(self._discovered_device)
 
@@ -149,18 +163,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="pick_device",
             data_schema=vol.Schema({vol.Required(CONF_DEVICE): vol.In(devices_name)}),
-        )
-
-    async def async_step_migration(self, migration_input: dict[str, Any]) -> FlowResult:
-        """Handle migration from legacy config entry to per device config entry."""
-        mac = migration_input[CONF_MAC]
-        await self.async_set_unique_id(dr.format_mac(mac), raise_on_progress=False)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=migration_input[CONF_NAME],
-            data={
-                CONF_HOST: migration_input[CONF_HOST],
-            },
         )
 
     @callback
