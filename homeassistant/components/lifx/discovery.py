@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Iterable
+import logging
 
 from aiolifx.aiolifx import LifxDiscovery, Light, ScanManager
 
@@ -14,12 +15,12 @@ from homeassistant.core import HomeAssistant, callback
 from .const import DOMAIN
 from .util import get_real_mac_addr
 
+_LOGGER = logging.getLogger(__name__)
+
 DEFAULT_TIMEOUT = 10
 
 
-async def async_discover_devices(
-    hass: HomeAssistant, timeout: int = DEFAULT_TIMEOUT
-) -> Iterable[Light]:
+async def async_discover_devices(hass: HomeAssistant) -> Iterable[Light]:
     """Discover lifx devices."""
     all_lights: dict[str, Light] = {}
     broadcast_addrs = await network.async_get_ipv4_broadcast_addresses(hass)
@@ -30,10 +31,13 @@ async def async_discover_devices(
         discoveries.append(lifx_discovery)
         lifx_discovery.start()
 
-    await asyncio.sleep(timeout)
+    _LOGGER.debug("Running integration discovery with timeout: %s", DEFAULT_TIMEOUT)
+    await asyncio.sleep(DEFAULT_TIMEOUT)
     for discovery in discoveries:
         all_lights.update(discovery.lights)
         discovery.cleanup()
+
+    _LOGGER.debug("Integration discovery found: %s", all_lights)
 
     return all_lights.values()
 
