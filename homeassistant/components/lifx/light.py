@@ -214,10 +214,9 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
     async def set_state(self, **kwargs: Any) -> None:
         """Set a color on the light and turn it on/off."""
+        self.coordinator.async_set_updated_data(None)
         async with self.coordinator.lock:
             # Cancel any pending refreshes
-            self.coordinator.async_set_updated_data(None)
-
             bulb = self.bulb
 
             await self.effects_conductor.stop([bulb])
@@ -384,14 +383,18 @@ class LIFXStrip(LIFXColor):
         if (zones := kwargs.get(ATTR_ZONES)) is None:
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
-            first_zone_brighness = color_zones[0][HSBK_BRIGHTNESS]
+            first_zone = color_zones[0]
+            first_zone_brightness = first_zone[HSBK_BRIGHTNESS]
             all_zones_have_same_brightness = all(
-                color_zones[zone][HSBK_BRIGHTNESS] == first_zone_brighness
+                color_zones[zone][HSBK_BRIGHTNESS] == first_zone_brightness
                 for zone in range(num_zones)
             )
+            all_zones_are_the_same = all(
+                color_zones[zone] == first_zone for zone in range(num_zones)
+            )
             if (
-                hsbk[HSBK_BRIGHTNESS] is not None or all_zones_have_same_brightness
-            ) and hsbk[HSBK_KELVIN] is not None:
+                all_zones_have_same_brightness or hsbk[HSBK_BRIGHTNESS] is not None
+            ) and (all_zones_are_the_same or hsbk[HSBK_KELVIN] is not None):
                 await super().set_color(hsbk, kwargs, duration)
                 return
 

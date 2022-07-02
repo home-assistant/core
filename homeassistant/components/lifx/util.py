@@ -17,6 +17,8 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP,
     ATTR_HS_COLOR,
+    ATTR_RGB_COLOR,
+    ATTR_XY_COLOR,
     preprocess_turn_on_alternatives,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -64,6 +66,10 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
 
     if ATTR_HS_COLOR in kwargs:
         hue, saturation = kwargs[ATTR_HS_COLOR]
+    elif ATTR_RGB_COLOR in kwargs:
+        hue, saturation = color_util.color_RGB_to_hs(*kwargs[ATTR_RGB_COLOR])
+    elif ATTR_XY_COLOR in kwargs:
+        hue, saturation = color_util.color_xy_to_hs(*kwargs[ATTR_XY_COLOR])
 
     if hue is not None:
         assert saturation is not None
