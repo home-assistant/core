@@ -402,3 +402,33 @@ async def test_reauth_bad_login(hass):
         assert result["step_id"] == "reauth_confirm"
         assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result["errors"] == {"base": "invalid_auth"}
+
+
+async def test_reauth_no_entry(hass):
+    """Test no entry configured at re-auth time."""
+    # Trigger re-auth without having a configured entry in place
+    with patch(
+        "elmax_api.http.Elmax.login",
+        side_effect=ElmaxBadLoginError(),
+    ):
+        reauth_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_REAUTH},
+            data={
+                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+                CONF_ELMAX_USERNAME: MOCK_USERNAME,
+                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+        result = await hass.config_entries.flow.async_configure(
+            reauth_result["flow_id"],
+            {
+                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
+                CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
+                CONF_ELMAX_USERNAME: MOCK_USERNAME,
+                CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
+            },
+        )
+        assert result["step_id"] == "user"
+        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
