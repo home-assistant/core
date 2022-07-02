@@ -10,27 +10,16 @@ WORKDIR /usr/src
 ## Setup Home Assistant Core dependencies
 COPY requirements.txt homeassistant/
 COPY homeassistant/package_constraints.txt homeassistant/homeassistant/
-# hadolint ignore=DL4006
-RUN \ 
-   grep -v '^[#-]' < homeassistant/requirements.txt | xargs -P 6 -n 4 -- \
-   pip3 download --no-index --only-binary=:all: \
-   --find-links "${WHEELS_LINKS}" --use-deprecated=legacy-resolver \
-   --cache-dir "/tmp/pip_cache" ; exit 0
 RUN \
-    pip3 install --cache-dir "/tmp/pip_cache" --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
     -r homeassistant/requirements.txt --use-deprecated=legacy-resolver
-COPY requirements_all.txt homeassistant/
-# hadolint ignore=DL4006
-RUN \ 
-   grep -v '^[#-]' < homeassistant/requirements_all.txt | xargs -P 8 -n 120 -- \
-   pip3 download --no-index --only-binary=:all: \
-   --find-links "${WHEELS_LINKS}" --use-deprecated=legacy-resolver \
-   --cache-dir "/tmp/pip_cache" ; exit 0
+COPY requirements_all.txt home_assistant_frontend-* homeassistant/
 RUN \
-    pip3 install --cache-dir "/tmp/pip_cache" --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
+    if ls homeassistant/home_assistant_frontend*.whl 1> /dev/null 2>&1; then \
+        pip3 install --no-cache-dir --no-index homeassistant/home_assistant_frontend-*.whl; \
+    fi \
+    && pip3 install --no-cache-dir --no-index --only-binary=:all: --find-links "${WHEELS_LINKS}" \
     -r homeassistant/requirements_all.txt --use-deprecated=legacy-resolver
-
-RUN rm -rf /tmp/pip_cache
 
 ## Setup Home Assistant Core
 COPY . homeassistant/
