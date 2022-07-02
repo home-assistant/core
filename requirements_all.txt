@@ -783,7 +783,7 @@ ha-ffmpeg==3.0.2
 ha-philipsjs==2.9.0
 
 # homeassistant.components.lifx
-haaiolifx==0.8.1
+haaiolifx==0.8.2
 
 # homeassistant.components.habitica
 habitipy==0.2.0

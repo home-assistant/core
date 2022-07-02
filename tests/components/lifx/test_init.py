@@ -8,16 +8,13 @@ from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN, discovery
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
-from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
-    MockMessage,
     _mocked_bulb,
-    _mocked_light_strip,
     _patch_config_flow_try_connect,
     _patch_device,
     _patch_discovery,
@@ -95,29 +92,3 @@ async def test_config_entry_retry(hass):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
-
-
-async def test_config_zoned_light_strip_fails(hass):
-    """Test we handle failure to update zones."""
-    already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
-    )
-    already_migrated_config_entry.add_to_hass(hass)
-    light_strip = _mocked_light_strip()
-    entity_id = "light.my_bulb"
-
-    class MockExecuteAwaitAioLIFXZonesFailing:
-        """Mock and execute an AwaitAioLIFX with the zones call failing."""
-
-        async def wait(self, call, *args, **kwargs):
-            """Wait."""
-            call()
-            return MockMessage()
-
-    with _patch_discovery(device=light_strip), _patch_device(
-        device=light_strip, await_mock=MockExecuteAwaitAioLIFXZonesFailing
-    ):
-        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
-        await hass.async_block_till_done()
-        entity_registry = er.async_get(hass)
-        assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
