@@ -98,7 +98,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not host:
                 return await self.async_step_pick_device()
             if (
-                device := await self._async_try_connect(host, raise_on_progress=True)
+                device := await self._async_try_connect(host, raise_on_progress=False)
             ) is None:
                 errors["base"] = "cannot_connect"
             else:
