@@ -1,4 +1,5 @@
 """Tests for the lifx integration config flow."""
+import socket
 from unittest.mock import patch
 
 import pytest
@@ -16,6 +17,7 @@ from . import (
     LABEL,
     MAC_ADDRESS,
     MODULE,
+    _mocked_failing_bulb,
     _patch_config_flow_try_connect,
     _patch_discovery,
 )
@@ -254,6 +256,44 @@ async def test_manual(hass: HomeAssistant):
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "already_configured"
+
+
+async def test_manual_dns_error(hass: HomeAssistant):
+    """Test manually setup with unresolving host."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    class MockLifxConnectonDnsError:
+        """Mock lifx discovery."""
+
+        def __init__(self, *args, **kwargs):
+            """Init connection."""
+            self.device = _mocked_failing_bulb()
+
+        async def async_setup(self):
+            """Mock setup."""
+            raise socket.gaierror()
+
+        def async_stop(self):
+            """Mock teardown."""
+
+    # Cannot connect due to dns error
+    with _patch_discovery(no_device=True), patch(
+        "homeassistant.components.lifx.config_flow.LIFXConnection",
+        MockLifxConnectonDnsError,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "does.not.resolve"}
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == "form"
+    assert result2["step_id"] == "user"
+    assert result2["errors"] == {"base": "cannot_connect"}
 
 
 async def test_manual_no_capabilities(hass: HomeAssistant):
