@@ -5,7 +5,7 @@ from unittest.mock import PropertyMock
 
 import pytest
 
-from homeassistant.components import tplink
+from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -44,7 +44,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.color_temp = None
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -62,7 +62,7 @@ async def test_color_light(hass: HomeAssistant, transition: Optional[float]) -> 
     bulb = _mocked_bulb()
     bulb.color_temp = None
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -144,7 +144,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     bulb.is_variable_color_temp = False
     type(bulb).color_temp = PropertyMock(side_effect=Exception)
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -202,7 +202,7 @@ async def test_color_temp_light(hass: HomeAssistant, is_color: bool) -> None:
     bulb.is_variable_color_temp = True
 
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -265,7 +265,7 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     bulb.is_variable_color_temp = False
 
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -310,7 +310,7 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     bulb.is_dimmable = False
 
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -345,7 +345,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     bulb.is_on = False
 
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"
@@ -367,7 +367,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     bulb.is_on = False
 
     with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
-        await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
     entity_id = "light.my_bulb"

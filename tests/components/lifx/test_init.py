@@ -16,7 +16,7 @@ from . import IP_ADDRESS, MAC_ADDRESS, _patch_config_entry_try_connect, _patch_d
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_configuring_tplink_causes_discovery(hass):
+async def test_configuring_lifx_causes_discovery(hass):
     """Test that specifying empty config does discovery."""
     with patch("homeassistant.components.lifx.Discover.discover") as discover:
         discover.return_value = {MagicMock(): MagicMock()}
