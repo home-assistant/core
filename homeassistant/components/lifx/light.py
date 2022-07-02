@@ -344,7 +344,11 @@ class LIFXColor(LIFXLight):
         SERVICE_EFFECT_PULSE,
         SERVICE_EFFECT_STOP,
     ]
-    _attr_supported_color_modes = {ColorMode.COLOR_TEMP, ColorMode.HS}
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Return the supported color modes."""
+        return {ColorMode.COLOR_TEMP, ColorMode.HS}
 
     @property
     def color_mode(self) -> ColorMode:
