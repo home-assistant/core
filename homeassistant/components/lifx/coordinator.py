@@ -71,6 +71,13 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> None:
         """Fetch all device data from the api."""
         async with self.lock:
+            if self.device.product is None:
+                await AwaitAioLIFX().wait(self.device.get_version)
+            if self.device.product is None:
+                raise UpdateFailed(
+                    f"Failed to fetch get version from device: {self.device.ip_addr}"
+                )
+
             response = await AwaitAioLIFX().wait(self.device.get_color)
             if response is None:
                 raise UpdateFailed(
