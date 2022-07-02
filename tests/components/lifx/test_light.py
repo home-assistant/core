@@ -4,6 +4,7 @@ import aiolifx_effects
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx.manager import SERVICE_EFFECT_COLORLOOP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -16,7 +17,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -24,6 +25,7 @@ from homeassistant.setup import async_setup_component
 from . import (
     MAC_ADDRESS,
     _mocked_bulb,
+    _mocked_bulb_new_firmware,
     _mocked_light_strip,
     _mocked_white_bulb,
     _patch_config_flow_try_connect,
@@ -37,10 +39,28 @@ from tests.common import MockConfigEntry
 async def test_light_unique_id(hass: HomeAssistant) -> None:
     """Test a light unique id."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+    entity_registry = er.async_get(hass)
+    assert entity_registry.async_get(entity_id).unique_id == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
+    """Test a light unique id with newer firmware."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "1.2.3.4"}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
     with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
         device=bulb
     ), _patch_device(device=bulb):
@@ -197,6 +217,19 @@ async def test_color_light_with_temp(
         LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_colorloop"},
+        blocking=True,
+    )
+    start_call = mock_effect_conductor.start.mock_calls
+    first_call = start_call[0][1]
+    assert isinstance(first_call[0], aiolifx_effects.EffectColorloop)
+    assert first_call[1][0] == bulb
+    mock_effect_conductor.start.reset_mock()
+    mock_effect_conductor.stop.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
     start_call = mock_effect_conductor.start.mock_calls

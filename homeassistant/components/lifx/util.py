@@ -102,8 +102,3 @@ def _off_by_one_mac(firmware: str) -> bool:
 def get_real_mac_addr(mac_addr: str, firmware: str) -> str:
     """Increment the last byte of the mac address by one for FW>3.70."""
     return _get_mac_offset(mac_addr, 1) if _off_by_one_mac(firmware) else mac_addr
-
-
-def real_mac_to_lifx_mac_addr(mac_addr: str) -> str:
-    """Decrement the last byte of the mac address by one for FW>3.70."""
-    return _get_mac_offset(mac_addr, -1)
