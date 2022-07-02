@@ -4,6 +4,7 @@ import aiolifx_effects
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx.manager import SERVICE_EFFECT_COLORLOOP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -197,6 +198,19 @@ async def test_color_light_with_temp(
         LIGHT_DOMAIN,
         "turn_on",
         {ATTR_ENTITY_ID: entity_id, ATTR_EFFECT: "effect_colorloop"},
+        blocking=True,
+    )
+    start_call = mock_effect_conductor.start.mock_calls
+    first_call = start_call[0][1]
+    assert isinstance(first_call[0], aiolifx_effects.EffectColorloop)
+    assert first_call[1][0] == bulb
+    mock_effect_conductor.start.reset_mock()
+    mock_effect_conductor.stop.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_EFFECT_COLORLOOP,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
         blocking=True,
     )
     start_call = mock_effect_conductor.start.mock_calls
