@@ -35,7 +35,6 @@ from .const import (
     NETATMO_CREATE_ROOM_SENSOR,
     NETATMO_CREATE_SELECT,
     NETATMO_CREATE_SENSOR,
-    NETATMO_CREATE_SWITCH,
     NETATMO_CREATE_WEATHER_SENSOR,
     PLATFORMS,
     WEBHOOK_ACTIVATION,
@@ -318,7 +317,6 @@ class NetatmoDataHandler:
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
-                NETATMO_CREATE_SWITCH,
                 NETATMO_CREATE_SENSOR,
             ],
             NetatmoDeviceCategory.meter: [NETATMO_CREATE_SENSOR],
