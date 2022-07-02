@@ -1,10 +1,14 @@
 """The scrape component."""
 from __future__ import annotations
 
+
 import asyncio
 from collections.abc import Coroutine
 from datetime import timedelta
 from typing import Any
+from datetime import timedelta
+import logging
+import httpx
 
 import voluptuous as vol
 from homeassistant.components.rest.data import RestData

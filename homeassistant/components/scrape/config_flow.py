@@ -118,4 +118,4 @@ class ScrapeConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
 
 class ScrapeOptionsFlowHandler(SchemaOptionsFlowHandler):
-    """Handle a config flow for Scrape."""
+    """Handle a options flow for Scrape."""
