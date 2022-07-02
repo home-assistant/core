@@ -13,6 +13,7 @@ from . import (
     LABEL,
     MAC_ADDRESS,
     _patch_config_flow_try_connect,
+    _patch_device,
     _patch_discovery,
 )
 
@@ -39,7 +40,7 @@ async def test_migration_device_online_end_to_end(
         device_id=device.id,
     )
 
-    with _patch_discovery(), _patch_config_flow_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -92,7 +93,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
         device_id=device.id,
     )
 
-    with _patch_discovery(), _patch_config_flow_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -158,7 +159,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         device_id=other_device.id,
     )
 
-    with _patch_discovery(), _patch_config_flow_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 

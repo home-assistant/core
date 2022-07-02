@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
+import logging
 from typing import Any
 
 from aiolifx import products
 from aiolifx.aiolifx import Light
+from aiolifx.message import Message
+import async_timeout
 from awesomeversion import AwesomeVersion
 
 from homeassistant.components.light import (
@@ -18,9 +23,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 import homeassistant.util.color as color_util
 
-from .const import DOMAIN
+from .const import DOMAIN, OVERALL_TIMEOUT
 
 FIX_MAC_FW = AwesomeVersion("3.70")
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -102,3 +108,25 @@ def _off_by_one_mac(firmware: str) -> bool:
 def get_real_mac_addr(mac_addr: str, firmware: str) -> str:
     """Increment the last byte of the mac address by one for FW>3.70."""
     return _get_mac_offset(mac_addr, 1) if _off_by_one_mac(firmware) else mac_addr
+
+
+async def async_execute_lifx(method: Callable) -> Message:
+    """Execute a lifx coroutine and wait for a response."""
+    future: asyncio.Future[Message] = asyncio.Future()
+
+    def _callback(bulb: Light, message: Message) -> None:
+        future.set_result(message)
+
+    _LOGGER.debug("Sending LIFX command: %s", method)
+
+    method(callb=_callback)
+    result = None
+
+    async with async_timeout.timeout(OVERALL_TIMEOUT):
+        result = await future
+
+    _LOGGER.debug("LIFX command result: %s", result)
+
+    if result is None:
+        raise asyncio.TimeoutError("No response from LIFX bulb")
+    return result

@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 import aiolifx_effects
+import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
@@ -21,6 +22,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -29,6 +31,8 @@ from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
     PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE,
+    MockFailingLifxCommand,
+    MockLifxCommand,
     MockMessage,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
@@ -90,7 +94,7 @@ async def test_light_unique_id_new_firmware(hass: HomeAssistant) -> None:
     assert device.identifiers == {(DOMAIN, MAC_ADDRESS)}
 
 
-async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
+async def test_light_strip(hass: HomeAssistant) -> None:
     """Test a light strip."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -123,12 +127,14 @@ async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    bulb.set_power.assert_called_with(False, duration=0)
+    assert bulb.set_power.calls[0][0][0] is False
+    bulb.set_power.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    bulb.set_power.assert_called_with(True, duration=0)
+    assert bulb.set_power.calls[0][0][0] is True
+    bulb.set_power.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -136,9 +142,15 @@ async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.set_color_zones.assert_called_with(
-        start_index=1, end_index=1, color=[], duration=0, apply=1
-    )
+    call_dict = bulb.set_color_zones.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 0,
+        "color": [],
+        "duration": 0,
+        "end_index": 0,
+        "start_index": 0,
+    }
     bulb.set_color_zones.reset_mock()
 
     await hass.services.async_call(
@@ -147,14 +159,20 @@ async def test_light_strip(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.set_color_zones.assert_called_with(
-        start_index=1, end_index=1, color=[], duration=0, apply=1
-    )
+    call_dict = bulb.set_color_zones.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 0,
+        "color": [],
+        "duration": 0,
+        "end_index": 0,
+        "start_index": 0,
+    }
     bulb.set_color_zones.reset_mock()
 
 
 async def test_color_light_with_temp(
-    hass: HomeAssistant, mock_await_aiolifx, mock_effect_conductor
+    hass: HomeAssistant, mock_effect_conductor
 ) -> None:
     """Test a color light with temp."""
     already_migrated_config_entry = MockConfigEntry(
@@ -188,12 +206,14 @@ async def test_color_light_with_temp(
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    bulb.set_power.assert_called_with(False, duration=0)
+    assert bulb.set_power.calls[0][0][0] is False
+    bulb.set_power.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    bulb.set_power.assert_called_with(True, duration=0)
+    assert bulb.set_power.calls[0][0][0] is True
+    bulb.set_power.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -201,7 +221,7 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([65535, 65535, 25700, 65535], duration=0)
+    assert bulb.set_color.calls[0][0][0] == [65535, 65535, 25700, 65535]
     bulb.set_color.reset_mock()
 
     await hass.services.async_call(
@@ -210,7 +230,7 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([1820, 19660, 65535, 3500], duration=0)
+    assert bulb.set_color.calls[0][0][0] == [1820, 19660, 65535, 3500]
     bulb.set_color.reset_mock()
 
     await hass.services.async_call(
@@ -219,7 +239,7 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 30, 80)},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([63107, 57824, 65535, 3500], duration=0)
+    assert bulb.set_color.calls[0][0][0] == [63107, 57824, 65535, 3500]
     bulb.set_color.reset_mock()
 
     await hass.services.async_call(
@@ -228,7 +248,7 @@ async def test_color_light_with_temp(
         {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.46, 0.376)},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([4956, 30583, 65535, 3500], duration=0)
+    assert bulb.set_color.calls[0][0][0] == [4956, 30583, 65535, 3500]
     bulb.set_color.reset_mock()
 
     await hass.services.async_call(
@@ -280,7 +300,7 @@ async def test_color_light_with_temp(
     assert len(mock_effect_conductor.stop.mock_calls) == 2
 
 
-async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
+async def test_white_bulb(hass: HomeAssistant) -> None:
     """Test a white bulb."""
     already_migrated_config_entry = MockConfigEntry(
         domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
@@ -309,12 +329,14 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    bulb.set_power.assert_called_with(False, duration=0)
+    assert bulb.set_power.calls[0][0][0] is False
+    bulb.set_power.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
-    bulb.set_power.assert_called_with(True, duration=0)
+    assert bulb.set_power.calls[0][0][0] is True
+    bulb.set_power.reset_mock()
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -322,7 +344,7 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([32000, None, 25700, 6000], duration=0)
+    assert bulb.set_color.calls[0][0][0] == [32000, None, 25700, 6000]
     bulb.set_color.reset_mock()
 
     await hass.services.async_call(
@@ -331,7 +353,7 @@ async def test_white_bulb(hass: HomeAssistant, mock_await_aiolifx) -> None:
         {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 400},
         blocking=True,
     )
-    bulb.set_color.assert_called_with([32000, 0, 32000, 2500], duration=0)
+    assert bulb.set_color.calls[0][0][0] == [32000, 0, 32000, 2500]
     bulb.set_color.reset_mock()
 
 
@@ -343,23 +365,25 @@ async def test_config_zoned_light_strip_fails(hass):
     already_migrated_config_entry.add_to_hass(hass)
     light_strip = _mocked_light_strip()
     entity_id = "light.my_bulb"
-    call_count = 0
 
-    class MockExecuteAwaitAioLIFXZonesFailing:
-        """Mock and execute an AwaitAioLIFX with the zones call failing."""
+    class MockFailingLifxCommand:
+        """Mock a lifx command that fails on the 3rd try."""
 
-        async def wait(self, call, *args, **kwargs):
-            """Wait or simulate failure."""
-            nonlocal call_count
-            call_count += 1
-            if call_count > 3 and "get_color_zones" in str(call):
-                return None
-            call()
-            return MockMessage()
+        def __init__(self, bulb, **kwargs):
+            """Init command."""
+            self.bulb = bulb
+            self.call_count = 0
 
-    with _patch_discovery(device=light_strip), _patch_device(
-        device=light_strip, await_mock=MockExecuteAwaitAioLIFXZonesFailing
-    ):
+        def __call__(self, callb=None, *args, **kwargs):
+            """Call command."""
+            self.call_count += 1
+            response = None if self.call_count >= 3 else MockMessage()
+            if callb:
+                callb(self.bulb, response)
+
+    light_strip.get_color_zones = MockFailingLifxCommand(light_strip)
+
+    with _patch_discovery(device=light_strip), _patch_device(device=light_strip):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         entity_registry = er.async_get(hass)
@@ -369,3 +393,41 @@ async def test_config_zoned_light_strip_fails(hass):
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=30))
         await hass.async_block_till_done()
         assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_white_light_fails(hass):
+    """Test we handle failure to power on off."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_white_bulb()
+    entity_id = "light.my_bulb"
+
+    bulb.set_power = MockFailingLifxCommand(bulb)
+
+    with _patch_discovery(device=bulb), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        entity_registry = er.async_get(hass)
+        assert entity_registry.async_get(entity_id).unique_id == MAC_ADDRESS
+        assert hass.states.get(entity_id).state == STATE_OFF
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+            )
+        assert bulb.set_power.calls[0][0][0] is True
+        bulb.set_power.reset_mock()
+
+        bulb.set_power = MockLifxCommand(bulb)
+        bulb.set_color = MockFailingLifxCommand(bulb)
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                LIGHT_DOMAIN,
+                "turn_on",
+                {ATTR_ENTITY_ID: entity_id, ATTR_COLOR_TEMP: 153},
+                blocking=True,
+            )
+        assert bulb.set_color.calls[0][0][0] == [1, 0, 3, 6535]
+        bulb.set_color.reset_mock()

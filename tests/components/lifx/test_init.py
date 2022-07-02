@@ -14,7 +14,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
-    MockMessage,
+    MockFailingLifxCommand,
     _mocked_bulb,
     _patch_config_flow_try_connect,
     _patch_device,
@@ -104,20 +104,9 @@ async def test_get_version_fails(hass):
     bulb = _mocked_bulb()
     bulb.product = None
     bulb.host_firmware_version = None
+    bulb.get_version = MockFailingLifxCommand(bulb)
 
-    class MockExecuteAwaitAioLIFXVersionFailing:
-        """Mock and execute an AwaitAioLIFX with the version call failing."""
-
-        async def wait(self, call, *args, **kwargs):
-            """Wait or simulate failure."""
-            if "get_version" in str(call):
-                return None
-            call()
-            return MockMessage()
-
-    with _patch_discovery(device=bulb), _patch_device(
-        device=bulb, await_mock=MockExecuteAwaitAioLIFXVersionFailing
-    ):
+    with _patch_discovery(device=bulb), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
