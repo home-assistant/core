@@ -23,6 +23,21 @@ def _mocked_bulb() -> Light:
     bulb.label = LABEL
     bulb.color = [1, 2, 3, 4]
     bulb.power_level = 0
+    bulb.set_power = MagicMock()
+    bulb.set_color = MagicMock()
+    bulb.product = 1  # LIFX Original 1000
+    return bulb
+
+
+def _mocked_white_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 19  # LIFX White 900 BR30 (High Voltage)
+    return bulb
+
+
+def _mocked_light_strip() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 31  # LIFX Z
     return bulb
 
 
