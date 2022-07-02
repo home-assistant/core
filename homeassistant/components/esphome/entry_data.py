@@ -44,7 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     BinarySensorInfo: Platform.BINARY_SENSOR,
     ButtonInfo: Platform.BUTTON,
-    CameraInfo: Platform.BINARY_SENSOR,
+    CameraInfo: Platform.CAMERA,
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
     FanInfo: Platform.FAN,
