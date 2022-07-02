@@ -188,7 +188,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             self.postponed_update = None
 
         # Transition has started
-        await self.coordinator.async_request_refresh()
+        self.async_write_ha_state()
 
         # Transition has ended
         if when > 0:
