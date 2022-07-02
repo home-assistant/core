@@ -78,7 +78,7 @@ async def async_legacy_migration(
         hass, hosts_by_mac, config_entries_by_mac, legacy_entry
     )
     if not migration_complete:
-        raise ConfigEntryNotReady("Migration not complete, waiting to discover devices")
+        raise ConfigEntryNotReady("Migration in progress, waiting to discover devices")
 
     await hass.config_entries.async_remove(legacy_entry.entry_id)
 
