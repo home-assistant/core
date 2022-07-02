@@ -5,7 +5,8 @@ from datetime import date, datetime, timedelta, timezone
 import logging
 from typing import Any
 
-from todoist.api import TodoistAPI
+from todoist_api_python.api_async import TodoistAPIAsync
+from todoist_api_python.models import Due, Task
 import voluptuous as vol
 
 from homeassistant.components.calendar import (
@@ -24,8 +25,6 @@ from .const import (
     ALL_DAY,
     ALL_TASKS,
     ASSIGNEE,
-    CHECKED,
-    COLLABORATORS,
     COMPLETED,
     CONF_EXTRA_PROJECTS,
     CONF_PROJECT_DUE_DATE,
@@ -34,29 +33,22 @@ from .const import (
     CONTENT,
     DESCRIPTION,
     DOMAIN,
-    DUE,
     DUE_DATE,
     DUE_DATE_LANG,
     DUE_DATE_STRING,
     DUE_DATE_VALID_LANGS,
     DUE_TODAY,
     END,
-    FULL_NAME,
-    ID,
     LABELS,
-    NAME,
     OVERDUE,
     PRIORITY,
-    PROJECT_ID,
     PROJECT_NAME,
-    PROJECTS,
     REMINDER_DATE,
     REMINDER_DATE_LANG,
     REMINDER_DATE_STRING,
     SERVICE_NEW_TASK,
     START,
     SUMMARY,
-    TASKS,
 )
 from .types import CalData, CustomProject, DueDate, ProjectData, TodoistEvent
 
@@ -108,10 +100,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Todoist platform."""
@@ -122,16 +114,19 @@ def setup_platform(
     label_id_lookup = {}
     collaborator_id_lookup = {}
 
-    api = TodoistAPI(token)
-    api.sync()
+    api = TodoistAPIAsync(token)
 
     # Setup devices:
     # Grab all projects.
-    projects = api.state[PROJECTS]
+    projects = await api.get_projects()
 
-    collaborators = api.state[COLLABORATORS]
+    collaborators = []
+    for project in projects:
+        # TODO: could be duplicates, need to de-duplicate
+        collaborators.extend(await api.get_collaborators(project.id))
+
     # Grab all labels
-    labels = api.state[LABELS]
+    labels = await api.get_labels()
 
     # Add all Todoist-defined projects.
     project_devices = []
@@ -141,14 +136,14 @@ def setup_platform(
         project_data: ProjectData = {CONF_NAME: project[NAME], CONF_ID: project[ID]}
         project_devices.append(TodoistProjectEntity(project_data, labels, api))
         # Cache the names so we can easily look up name->ID.
-        project_id_lookup[project[NAME].lower()] = project[ID]
+        project_id_lookup[project.name.lower()] = project.id
 
     # Cache all label names
-    for label in labels:
-        label_id_lookup[label[NAME].lower()] = label[ID]
+    label_id_lookup = {label.name.lower(): label.id for label in labels}
 
-    for collaborator in collaborators:
-        collaborator_id_lookup[collaborator[FULL_NAME].lower()] = collaborator[ID]
+    collaborator_id_lookup = {
+        collab.name.lower(): collab.id for collab in collaborators
+    }
 
     # Check config for more projects.
     extra_projects: list[CustomProject] = config[CONF_EXTRA_PROJECTS]
@@ -178,7 +173,8 @@ def setup_platform(
                 project_id_filter,
             )
         )
-    add_entities(project_devices)
+
+    async_add_entities(project_devices)
 
     def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
@@ -186,7 +182,7 @@ def setup_platform(
         project_id = project_id_lookup[project_name]
 
         # Create the task
-        item = api.items.add(call.data[CONTENT], project_id=project_id)
+        item = {}  # api.items.add(call.data[CONTENT], project_id=project_id)
 
         if LABELS in call.data:
             task_labels = call.data[LABELS]
@@ -249,23 +245,24 @@ def setup_platform(
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
         if _reminder_due:
-            api.reminders.add(item["id"], due=_reminder_due)
+            pass
+            # api.reminders.add(item["id"], due=_reminder_due)
 
         # Commit changes
-        api.commit()
+        # api.commit()
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN, SERVICE_NEW_TASK, handle_new_task, schema=NEW_TASK_SERVICE_SCHEMA
     )
 
 
-def _parse_due_date(data: DueDate, timezone_offset: int) -> datetime | None:
+def _parse_due_date(data: Due, timezone_offset: int) -> datetime | None:
     """Parse the due date dict into a datetime object in UTC.
 
     This function will always return a timezone aware datetime if it can be parsed.
     """
-    if not (nowtime := dt.parse_datetime(data["date"])):
+    if not (nowtime := dt.parse_datetime(data.date)):
         return None
     if nowtime.tzinfo is None:
         nowtime = nowtime.replace(tzinfo=timezone(timedelta(hours=timezone_offset)))
@@ -309,9 +306,9 @@ class TodoistProjectEntity(CalendarEntity):
         """Return the name of the entity."""
         return self._name
 
-    def update(self) -> None:
+    async def async_update(self) -> None:
         """Update all Todoist Calendars."""
-        self.data.update()
+        await self.data.async_update()
         # Set Todoist-specific data that can't easily be grabbed
         self._cal_data[ALL_TASKS] = [
             task[SUMMARY] for task in self.data.all_project_tasks
@@ -430,7 +427,7 @@ class TodoistProjectData:
             summary=self.event[SUMMARY], start=self.event[START], end=self.event[END]
         )
 
-    def create_todoist_task(self, data):
+    def create_todoist_task(self, data: Task):
         """
         Create a dictionary based on a Task passed from the Todoist API.
 
@@ -438,14 +435,14 @@ class TodoistProjectData:
         """
         task = {}
         # Fields are required to be in all returned task objects.
-        task[SUMMARY] = data[CONTENT]
-        task[COMPLETED] = data[CHECKED] == 1
-        task[PRIORITY] = data[PRIORITY]
-        task[DESCRIPTION] = f"https://todoist.com/showTask?id={data[ID]}"
+        task[SUMMARY] = data.content
+        task[COMPLETED] = data.completed
+        task[PRIORITY] = data.priority
+        task[DESCRIPTION] = f"https://todoist.com/showTask?id={data.id}"
 
         # All task Labels (optional parameter).
         task[LABELS] = [
-            label[NAME].lower() for label in self._labels if label[ID] in data[LABELS]
+            label.name.lower() for label in self._labels if label.id in data.label_ids
         ]
 
         if self._label_whitelist and (
@@ -461,9 +458,13 @@ class TodoistProjectData:
         # complete the task.
         # Generally speaking, that means right now.
         task[START] = dt.utcnow()
-        if data[DUE] is not None:
+        if data.due is not None:
             task[END] = _parse_due_date(
-                data[DUE], self._api.state["user"]["tz_info"]["hours"]
+                # @TODO: how to get hours offset, allow user to specify or manually
+                # call the sync api?
+                data.due,
+                -7
+                # self._api.state["user"]["tz_info"]["hours"],
             )
 
             if self._due_date_days is not None and (
@@ -571,26 +572,33 @@ class TodoistProjectData:
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all tasks in a specific time frame."""
+        # 2022-06-21 14:17:49 ERROR (MainThread) [homeassistant.components.todoist.calendar] error getting events
+        # Traceback (most recent call last):
+        #  File "/workspaces/core/homeassistant/components/todoist/calendar.py", line 597, in async_get_events
+        #    self._api.projects.get_data, self._id
+        # AttributeError: 'TodoistAPIAsync' object has no attribute 'projects'
         if self._id is None:
+            tasks = await self._api.get_tasks()
             project_task_data = [
                 task
-                for task in self._api.state[TASKS]
+                for task in tasks
                 if not self._project_id_whitelist
-                or task[PROJECT_ID] in self._project_id_whitelist
+                or task.project_id in self._project_id_whitelist
             ]
         else:
-            project_data = await hass.async_add_executor_job(
-                self._api.projects.get_data, self._id
-            )
-            project_task_data = project_data[TASKS]
+            # project_data = await hass.async_add_executor_job(
+            #    self._api.projects.get_data, self._id
+            # )
+            # project_task_data = project_data[TASKS]
+            project_task_data = await self._api.get_tasks(project_id=self._id)
 
         events = []
         for task in project_task_data:
-            if task["due"] is None:
+            if task.due is None:
                 continue
             # @NOTE: _parse_due_date always returns the date in UTC time.
             due_date: datetime | None = _parse_due_date(
-                task["due"], self._api.state["user"]["tz_info"]["hours"]
+                task.due, -7  # self._api.state["user"]["tz_info"]["hours"]
             )
             if not due_date:
                 continue
@@ -610,26 +618,35 @@ class TodoistProjectData:
                     # will render correctly as an all day event on a calendar.
                     due_date_value = due_date.date()
                 event = CalendarEvent(
-                    summary=task["content"],
+                    summary=task.content,
                     start=due_date_value,
                     end=due_date_value,
                 )
                 events.append(event)
         return events
 
-    def update(self):
+    async def async_update(self) -> None:
         """Get the latest data."""
         if self._id is None:
-            self._api.reset_state()
-            self._api.sync()
+            # @TODO: sets self._api.state to empty values
+            # self._api.reset_state()
+            # @TODO: This fetches the latest updated date from the server perhaps
+            # replace with self._api.get_tasks()
+            # self._api.sync()
+            tasks = await self._api.get_tasks()
             project_task_data = [
                 task
-                for task in self._api.state[TASKS]
+                for task in tasks
                 if not self._project_id_whitelist
-                or task[PROJECT_ID] in self._project_id_whitelist
+                or task.project_id in self._project_id_whitelist
             ]
         else:
-            project_task_data = self._api.projects.get_data(self._id)[TASKS]
+            # replace with self._api.get_tasks(project_id=self._id)
+            # https://developer.todoist.com/rest/v1/#get-active-tasks
+            project_task_data = await self._api.get_tasks(project_id=self._id)
+            # Currently returns items key from:
+            # https://developer.todoist.com/sync/v8/#get-project-data
+            # project_task_data = self._api.projects.get_data(self._id)[TASKS]
 
         # If we have no data, we can just return right away.
         if not project_task_data:
