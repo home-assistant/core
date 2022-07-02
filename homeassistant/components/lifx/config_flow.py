@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.dhcp import DhcpServiceInfo
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import device_registry as dr
@@ -54,12 +54,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        return await self._async_handle_discovery(
-            discovery_info[CONF_HOST], discovery_info[CONF_MAC]
-        )
+        # TODO: keep sending the mac so we can use the off by one mac matcher
+        return await self._async_handle_discovery(discovery_info[CONF_HOST], None)
 
     async def _async_handle_discovery(self, host: str, mac: str | None) -> FlowResult:
         """Handle any discovery."""
+        # TODO: keep sending the mac so we can use the off by one mac matcher
         if mac:
             await self.async_set_unique_id(dr.format_mac(mac))
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
