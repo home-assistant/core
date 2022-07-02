@@ -529,7 +529,15 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_mode(self):
         """Active swing mode for the device."""
-        return self._current_tado_swing_mode
+        if self._current_tado_horizontal_swing_mode == TADO_SWING_ON:
+            if self._current_tado_vertical_swing_mode == TADO_SWING_OFF:
+                return SWING_BOTH
+            else:
+                return SWING_HORIZONTAL
+        elif self._current_tado_horizontal_swing_mode == TADO_SWING_ON:
+            return SWING_HORIZONTAL
+
+        return SWING_OFF
 
     @property
     def swing_modes(self):
