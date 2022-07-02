@@ -103,6 +103,7 @@ async def test_get_version_fails(hass):
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.product = None
+    bulb.host_firmware_version = None
 
     class MockExecuteAwaitAioLIFXVersionFailing:
         """Mock and execute an AwaitAioLIFX with the version call failing."""
