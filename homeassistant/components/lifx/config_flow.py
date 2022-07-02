@@ -120,6 +120,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             device = await self._async_try_connect(
                 device_without_label.ip_addr, raise_on_progress=False
             )
+            if not device:
+                return self.async_abort(reason="cannot_connect")
             return self._async_create_entry_from_device(device)
 
         configured_devices = {
