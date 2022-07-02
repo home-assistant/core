@@ -124,11 +124,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return self._async_create_entry_from_device(device)
 
-        configured_devices = {
-            entry.unique_id
-            for entry in self._async_current_entries()
-            if not async_entry_is_legacy(entry)
-        }
+        configured_macs: set[str] = set()
+        configured_hosts: set[str] = set()
+        for entry in self._async_current_entries():
+            if entry.unique_id and not async_entry_is_legacy(entry):
+                configured_macs.add(entry.unique_id)
+                configured_hosts.add(entry.data[CONF_HOST])
         self._discovered_devices = {
             dr.format_mac(
                 get_real_mac_addr(device.mac_addr, device.host_firmware_version)
@@ -138,7 +139,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         devices_name = {
             formatted_mac: f"{formatted_mac} ({device.ip_addr})"
             for formatted_mac, device in self._discovered_devices.items()
-            if formatted_mac not in configured_devices
+            if formatted_mac not in configured_macs
+            and device.ip_addr not in configured_hosts
         }
         # Check if there is at least one device
         if not devices_name:
