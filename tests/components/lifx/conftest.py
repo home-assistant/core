@@ -1,4 +1,4 @@
-"""tplink conftest."""
+"""Tests for the lifx integration."""
 
 import pytest
 

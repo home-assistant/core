@@ -1,14 +1,20 @@
-"""Test the tplink config flow."""
+"""Tests the lifx migration."""
 
 from homeassistant import setup
-from homeassistant.components.tplink import CONF_DISCOVERY, CONF_SWITCH, DOMAIN
+from homeassistant.components.lifx import DOMAIN
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from . import ALIAS, IP_ADDRESS, MAC_ADDRESS, _patch_discovery, _patch_single_discovery
+from . import (
+    ALIAS,
+    IP_ADDRESS,
+    MAC_ADDRESS,
+    _patch_config_entry_try_connect,
+    _patch_discovery,
+)
 
 from tests.common import MockConfigEntry
 
@@ -49,7 +55,7 @@ async def test_migration_device_online_end_to_end(
         device_id=device.id,
     )
 
-    with _patch_discovery(), _patch_single_discovery():
+    with _patch_discovery(), _patch_config_entry_try_connect():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -112,7 +118,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
         device_id=device.id,
     )
 
-    with _patch_discovery(), _patch_single_discovery():
+    with _patch_discovery(), _patch_config_entry_try_connect():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -187,7 +193,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         device_id=other_device.id,
     )
 
-    with _patch_discovery(), _patch_single_discovery():
+    with _patch_discovery(), _patch_config_entry_try_connect():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 
@@ -217,47 +223,3 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
                 break
 
         assert legacy_entry is not None
-
-
-async def test_migrate_from_yaml(hass: HomeAssistant):
-    """Test migrate from yaml."""
-    config = {
-        DOMAIN: {
-            CONF_DISCOVERY: False,
-            CONF_SWITCH: [{CONF_HOST: IP_ADDRESS}],
-        }
-    }
-    with _patch_discovery(), _patch_single_discovery():
-        await setup.async_setup_component(hass, DOMAIN, config)
-        await hass.async_block_till_done()
-
-    migrated_entry = None
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.unique_id == MAC_ADDRESS:
-            migrated_entry = entry
-            break
-
-    assert migrated_entry is not None
-    assert migrated_entry.data[CONF_HOST] == IP_ADDRESS
-
-
-async def test_migrate_from_legacy_entry(hass: HomeAssistant):
-    """Test migrate from legacy entry that was already imported from yaml."""
-    data = {
-        CONF_DISCOVERY: False,
-        CONF_SWITCH: [{CONF_HOST: IP_ADDRESS}],
-    }
-    config_entry = MockConfigEntry(domain=DOMAIN, data=data, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-    with _patch_discovery(), _patch_single_discovery():
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-
-    migrated_entry = None
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.unique_id == MAC_ADDRESS:
-            migrated_entry = entry
-            break
-
-    assert migrated_entry is not None
-    assert migrated_entry.data[CONF_HOST] == IP_ADDRESS

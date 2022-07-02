@@ -1,4 +1,4 @@
-"""Tests for light platform."""
+"""Tests for the lifx integration light platform."""
 
 from typing import Optional
 from unittest.mock import PropertyMock
@@ -6,6 +6,7 @@ from unittest.mock import PropertyMock
 import pytest
 
 from homeassistant.components import tplink
+from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
@@ -19,13 +20,17 @@ from homeassistant.components.light import (
     ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
 )
-from homeassistant.components.tplink.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from . import MAC_ADDRESS, _mocked_bulb, _patch_discovery, _patch_single_discovery
+from . import (
+    MAC_ADDRESS,
+    _mocked_bulb,
+    _patch_config_entry_try_connect,
+    _patch_discovery,
+)
 
 from tests.common import MockConfigEntry
 
@@ -38,7 +43,7 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.color_temp = None
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -56,7 +61,7 @@ async def test_color_light(hass: HomeAssistant, transition: Optional[float]) -> 
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.color_temp = None
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -138,7 +143,7 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.is_variable_color_temp = False
     type(bulb).color_temp = PropertyMock(side_effect=Exception)
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -196,7 +201,7 @@ async def test_color_temp_light(hass: HomeAssistant, is_color: bool) -> None:
     bulb.color_temp = 4000
     bulb.is_variable_color_temp = True
 
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -259,7 +264,7 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     bulb.is_color = False
     bulb.is_variable_color_temp = False
 
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -304,7 +309,7 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     bulb.is_variable_color_temp = False
     bulb.is_dimmable = False
 
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -339,7 +344,7 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     bulb.is_dimmable = False
     bulb.is_on = False
 
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -361,7 +366,7 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     bulb.is_dimmer = True
     bulb.is_on = False
 
-    with _patch_discovery(device=bulb), _patch_single_discovery(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_entry_try_connect(device=bulb):
         await async_setup_component(hass, tplink.DOMAIN, {tplink.DOMAIN: {}})
         await hass.async_block_till_done()
 

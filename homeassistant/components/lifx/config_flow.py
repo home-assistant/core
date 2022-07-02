@@ -43,7 +43,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle HomeKit discovery."""
         return await self._async_handle_discovery(discovery_info.host, None)
 
-    async def async_step_integreation_discovery(
+    async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
@@ -97,9 +97,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not host:
                 return await self.async_step_pick_device()
             if (
-                device := (await self._async_try_connect(host, raise_on_progress=True))
-                is None
-            ):
+                device := await self._async_try_connect(host, raise_on_progress=True)
+            ) is None:
                 errors["base"] = "cannot_connect"
             else:
                 return self._async_create_entry_from_device(device)
@@ -173,8 +172,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_HOST: host})
         connection = LIFXConnection(host, TARGET_ANY)
         await connection.async_setup()
-        device = connection.device
-        assert device is not None
+        device: Light = connection.device
         message = await AwaitAioLIFX().wait(device.get_color)
         connection.async_stop()
         if message is None or lifx_features(device)["relays"] is True:
