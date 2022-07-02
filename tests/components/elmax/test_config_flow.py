@@ -266,7 +266,6 @@ async def test_reauth_flow(hass):
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -309,7 +308,6 @@ async def test_reauth_panel_disappeared(hass):
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -351,7 +349,6 @@ async def test_reauth_invalid_pin(hass):
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -393,7 +390,6 @@ async def test_reauth_bad_login(hass):
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
@@ -424,7 +420,6 @@ async def test_reauth_no_entry(hass):
         result = await hass.config_entries.flow.async_configure(
             reauth_result["flow_id"],
             {
-                CONF_ELMAX_PANEL_ID: MOCK_PANEL_ID,
                 CONF_ELMAX_PANEL_PIN: MOCK_PANEL_PIN,
                 CONF_ELMAX_USERNAME: MOCK_USERNAME,
                 CONF_ELMAX_PASSWORD: MOCK_PASSWORD,
