@@ -103,7 +103,7 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.LIGHT, Platform.SENSOR, Platform.S
 
 def _get_appliance_by_device_id(
     hass: HomeAssistant, device_id: str
-) -> api.HomeConnectDevice | None:
+) -> api.HomeConnectDevice:
     """Return a Home Connect appliance instance given an device_id."""
     for hc_api in hass.data[DOMAIN].values():
         for dev_dict in hc_api.devices:
