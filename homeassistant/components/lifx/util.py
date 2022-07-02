@@ -79,14 +79,12 @@ def find_hsbk(hass: HomeAssistant, **kwargs: Any) -> list[float | int | None] | 
 
 
 def merge_hsbk(
-    base: list[float | int | None], change: list[float | int | None] | None
-) -> list[float | int | None] | None:
+    base: list[float | int | None], change: list[float | int | None]
+) -> list[float | int | None]:
     """Copy change on top of base, except when None.
 
     Hue, Saturation, Brightness, Kelvin
     """
-    if change is None:
-        return None
     return [b if c is None else c for b, c in zip(base, change)]
 
 
