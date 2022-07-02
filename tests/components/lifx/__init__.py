@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolifx.aiolifx import Light
 from decorator import contextmanager
@@ -25,6 +25,7 @@ def _mocked_bulb() -> Light:
     bulb.power_level = 0
     bulb.set_power = MagicMock()
     bulb.set_color = MagicMock()
+    bulb.try_sending = AsyncMock()
     bulb.product = 1  # LIFX Original 1000
     return bulb
 
@@ -38,15 +39,26 @@ def _mocked_white_bulb() -> Light:
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
+    bulb.color_zones = [MagicMock(), MagicMock()]
     return bulb
 
 
-class MockAwaitAioLIFX:
-    """Mock AwaitAioLIFX."""
+class MockMessage:
+    """Mock a lifx message."""
 
-    async def wait(*args, **kwargs):
+    def __init__(self):
+        """Init message."""
+        self.target_addr = MAC_ADDRESS
+        self.count = 2
+
+
+class MockExecuteAwaitAioLIFX:
+    """Mock and execute an AwaitAioLIFX."""
+
+    async def wait(self, call, *args, **kwargs):
         """Wait."""
-        return MagicMock(target_addr=MAC_ADDRESS)
+        call()
+        return MockMessage()
 
 
 class MockAwaitAioLIFXNoConnection:
@@ -73,7 +85,7 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
         def async_stop(self):
             """Mock teardown."""
 
-    await_mock = MockAwaitAioLIFXNoConnection if no_device else MockAwaitAioLIFX
+    await_mock = MockAwaitAioLIFXNoConnection if no_device else MockExecuteAwaitAioLIFX
 
     @contextmanager
     def _patcher():
@@ -133,7 +145,7 @@ def _patch_config_flow_try_connect(
         def async_stop(self):
             """Mock teardown."""
 
-    await_mock = MockAwaitAioLIFXNoConnection if no_device else MockAwaitAioLIFX
+    await_mock = MockAwaitAioLIFXNoConnection if no_device else MockExecuteAwaitAioLIFX
 
     @contextmanager
     def _patcher():
