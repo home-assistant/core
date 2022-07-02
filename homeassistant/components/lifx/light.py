@@ -106,7 +106,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         bulb = coordinator.device
         self.mac_addr = bulb.mac_addr
         self.bulb = bulb
-        bulb_features = lifx_features(self.bulb)
+        bulb_features = lifx_features(bulb)
         self.manager = manager
         self.effects_conductor: aiolifx_effects_module.Conductor = (
             manager.effects_conductor
@@ -114,7 +114,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
         self._attr_unique_id = self.coordinator.serial_number
-        self._attr_name = self.bulb.label
+        self._attr_name = bulb.label
         self._attr_min_mireds = math.floor(
             color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
         )
@@ -122,15 +122,15 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
         )
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.serial_number)},
-            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
+            identifiers={(DOMAIN, coordinator.serial_number)},
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)},
             manufacturer="LIFX",
             name=self.name,
         )
         _map = products.product_map
-        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
+        if (model := (_map.get(bulb.product) or bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
-        if (version := self.bulb.host_firmware_version) is not None:
+        if (version := bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
         self._attr_device_info = info
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
