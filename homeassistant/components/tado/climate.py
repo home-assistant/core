@@ -311,6 +311,31 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._async_update_zone_data()
 
+        # Debug
+        params = {
+            "zone_id": self.zone_id,
+            "zone_name": self.zone_name,
+            "zone_type": self.zone_type,
+            "device_info": device_info,
+            "ac_device": self._ac_device,
+            "supported_hvac_modes": supported_hvac_modes,
+            "supported_fan_modes": supported_fan_modes,
+            "supported_swing_modes": supported_swing_modes,
+            "support_flags": support_flags,
+            "heat_min_temp": heat_min_temp,
+            "heat_max_temp": heat_max_temp,
+            "heat_step": heat_step,
+            "cool_min_temp": cool_min_temp,
+            "cool_max_temp": cool_max_temp,
+            "cool_step": cool_step,
+        }
+
+        # Obfuscate fields
+        params["device_info"]["serialNo"] = "[REDACTED]"
+        params["device_info"]["shortSerialNo"] = "[REDACTED]"
+        params["device_info"]["currentFwVersion"] = "[REDACTED]"
+        _LOGGER.warning("%s [%s]", self, params)
+
     async def async_added_to_hass(self):
         """Register for sensor updates."""
 
