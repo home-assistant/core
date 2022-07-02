@@ -9,8 +9,8 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
 from . import (
-    ALIAS,
     IP_ADDRESS,
+    LABEL,
     MAC_ADDRESS,
     _patch_config_entry_try_connect,
     _patch_discovery,
@@ -28,30 +28,14 @@ async def test_migration_device_online_end_to_end(
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
-        name=ALIAS,
-    )
-    switch_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="switch",
-        unique_id=MAC_ADDRESS,
-        original_name=ALIAS,
-        device_id=device.id,
+        name=LABEL,
     )
     light_entity_reg = entity_reg.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
         unique_id=dr.format_mac(MAC_ADDRESS),
-        original_name=ALIAS,
-        device_id=device.id,
-    )
-    power_sensor_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="sensor",
-        unique_id=f"{MAC_ADDRESS}_sensor",
-        original_name=ALIAS,
+        original_name=LABEL,
         device_id=device.id,
     )
 
@@ -69,8 +53,6 @@ async def test_migration_device_online_end_to_end(
 
         assert device.config_entries == {migrated_entry.entry_id}
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
-        assert switch_entity_reg.config_entry_id == migrated_entry.entry_id
-        assert power_sensor_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -99,22 +81,14 @@ async def test_migration_device_online_end_to_end_after_downgrade(
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
-        name=ALIAS,
+        name=LABEL,
     )
     light_entity_reg = entity_reg.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
         unique_id=MAC_ADDRESS,
-        original_name=ALIAS,
-        device_id=device.id,
-    )
-    power_sensor_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="sensor",
-        unique_id=f"{MAC_ADDRESS}_sensor",
-        original_name=ALIAS,
+        original_name=LABEL,
         device_id=device.id,
     )
 
@@ -124,7 +98,6 @@ async def test_migration_device_online_end_to_end_after_downgrade(
 
         assert device.config_entries == {config_entry.entry_id}
         assert light_entity_reg.config_entry_id == config_entry.entry_id
-        assert power_sensor_entity_reg.config_entry_id == config_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
@@ -153,27 +126,19 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
-        name=ALIAS,
+        name=LABEL,
     )
     other_device = device_reg.async_get_or_create(
         config_entry_id=other_domain_config_entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, "556655665566")},
-        name=ALIAS,
+        name=LABEL,
     )
     light_entity_reg = entity_reg.async_get_or_create(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
         unique_id=MAC_ADDRESS,
-        original_name=ALIAS,
-        device_id=device.id,
-    )
-    power_sensor_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
-        platform=DOMAIN,
-        domain="sensor",
-        unique_id=f"{MAC_ADDRESS}_sensor",
-        original_name=ALIAS,
+        original_name=LABEL,
         device_id=device.id,
     )
     ignored_entity_reg = entity_reg.async_get_or_create(
@@ -181,7 +146,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         platform=DOMAIN,
         domain="sensor",
         unique_id="00:00:00:00:00:00_sensor",
-        original_name=ALIAS,
+        original_name=LABEL,
         device_id=device.id,
     )
     garbage_entity_reg = entity_reg.async_get_or_create(
@@ -189,7 +154,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         platform=DOMAIN,
         domain="sensor",
         unique_id="garbage",
-        original_name=ALIAS,
+        original_name=LABEL,
         device_id=other_device.id,
     )
 
@@ -207,7 +172,6 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
 
         assert device.config_entries == {migrated_entry.entry_id}
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
-        assert power_sensor_entity_reg.config_entry_id == migrated_entry.entry_id
         assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
         assert garbage_entity_reg.config_entry_id == config_entry.entry_id
 
