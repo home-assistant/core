@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolifx.aiolifx import Light
@@ -57,7 +58,7 @@ class MockMessage:
     def __init__(self):
         """Init message."""
         self.target_addr = MAC_ADDRESS
-        self.count = 2
+        self.count = 9
 
 
 class MockExecuteAwaitAioLIFX:
@@ -77,7 +78,9 @@ class MockAwaitAioLIFXNoConnection:
         return None
 
 
-def _patch_device(device: Light | None = None, no_device: bool = False):
+def _patch_device(
+    device: Light | None = None, no_device: bool = False, await_mock: Any = None
+):
     """Patch out discovery."""
 
     class MockLifxConnecton:
@@ -94,7 +97,10 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
         def async_stop(self):
             """Mock teardown."""
 
-    await_mock = MockAwaitAioLIFXNoConnection if no_device else MockExecuteAwaitAioLIFX
+    if not await_mock:
+        await_mock = (
+            MockAwaitAioLIFXNoConnection if no_device else MockExecuteAwaitAioLIFX
+        )
 
     @contextmanager
     def _patcher():
