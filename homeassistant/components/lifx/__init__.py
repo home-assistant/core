@@ -77,10 +77,6 @@ async def async_legacy_migration(
     migration_complete = await async_migrate_legacy_entries(
         hass, hosts_by_mac, config_entries_by_mac, legacy_entry
     )
-
-    if discovered_devices:
-        async_trigger_discovery(hass, discovered_devices)
-
     if not migration_complete:
         raise ConfigEntryNotReady("Migration not complete, waiting to discover devices")
 
