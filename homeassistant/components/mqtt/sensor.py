@@ -347,7 +347,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         return self._config.get(CONF_UNIT_OF_MEASUREMENT)
 
     @property
-    def force_update(self):
+    def force_update(self) -> bool:
         """Force update."""
         return self._config[CONF_FORCE_UPDATE]
 

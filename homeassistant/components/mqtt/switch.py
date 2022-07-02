@@ -2,11 +2,16 @@
 from __future__ import annotations
 
 import functools
+from typing import Any
 
 import voluptuous as vol
 
 from homeassistant.components import switch
-from homeassistant.components.switch import DEVICE_CLASSES_SCHEMA, SwitchEntity
+from homeassistant.components.switch import (
+    DEVICE_CLASSES_SCHEMA,
+    SwitchDeviceClass,
+    SwitchEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -195,16 +200,16 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
         return self._state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> SwitchDeviceClass | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)
 
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on.
 
         This method is a coroutine.
@@ -221,7 +226,7 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 
         This method is a coroutine.
