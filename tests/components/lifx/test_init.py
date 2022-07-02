@@ -14,6 +14,7 @@ from homeassistant.util import dt as dt_util
 from . import (
     IP_ADDRESS,
     MAC_ADDRESS,
+    MockMessage,
     _mocked_bulb,
     _patch_config_flow_try_connect,
     _patch_device,
@@ -89,6 +90,33 @@ async def test_config_entry_retry(hass):
     with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ), _patch_device(no_device=True):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_get_version_fails(hass):
+    """Test we handle get version failing."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb()
+    bulb.product = None
+
+    class MockExecuteAwaitAioLIFXVersionFailing:
+        """Mock and execute an AwaitAioLIFX with the version call failing."""
+
+        async def wait(self, call, *args, **kwargs):
+            """Wait or simulate failure."""
+            if "get_version" in str(call):
+                return None
+            call()
+            return MockMessage()
+
+    with _patch_discovery(device=bulb), _patch_device(
+        device=bulb, await_mock=MockExecuteAwaitAioLIFXVersionFailing
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
