@@ -95,9 +95,9 @@ jobs:
 
   build_base:
     permissions:
-      actions: read  # for dawidd6/action-download-artifact to query and download artifacts
-      contents: read  # for actions/checkout to fetch code
-      pull-requests: read  # for dawidd6/action-download-artifact to query commit hash
+      actions: read # for dawidd6/action-download-artifact to query and download artifacts
+      contents: read # for actions/checkout to fetch code
+      pull-requests: read # for dawidd6/action-download-artifact to query commit hash
     name: Build ${{ matrix.arch }} base core image
     if: github.repository_owner == 'home-assistant'
     needs: init
@@ -276,7 +276,7 @@ jobs:
 
   publish_container:
     permissions:
-      packages: write  # to push container image
+      packages: write # to push container image
     name: Publish meta container for ${{ matrix.registry }}
     if: github.repository_owner == 'home-assistant'
     needs: ["init", "build_base"]

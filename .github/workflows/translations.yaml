@@ -38,7 +38,7 @@ jobs:
 
   download:
     permissions:
-      contents: write  # for Git to git push
+      contents: write # for Git to git push
     name: Download
     needs: upload
     if: github.repository_owner == 'home-assistant' && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')

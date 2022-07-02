@@ -11,8 +11,8 @@ permissions:
 jobs:
   lock:
     permissions:
-      issues: write  # for dessant/lock-threads to lock issues
-      pull-requests: write  # for dessant/lock-threads to lock PRs
+      issues: write # for dessant/lock-threads to lock issues
+      pull-requests: write # for dessant/lock-threads to lock PRs
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:

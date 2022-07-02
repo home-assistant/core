@@ -12,8 +12,8 @@ permissions:
 jobs:
   stale:
     permissions:
-      issues: write  # for actions/stale to close stale issues
-      pull-requests: write  # for actions/stale to close stale PRs
+      issues: write # for actions/stale to close stale issues
+      pull-requests: write # for actions/stale to close stale PRs
     if: github.repository_owner == 'home-assistant'
     runs-on: ubuntu-latest
     steps:
