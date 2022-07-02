@@ -195,6 +195,11 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         # Transition has started
         self.async_write_ha_state()
 
+        # The state reply we get back may be stale so we also request
+        # a refresh to get a fresh state
+        # https://lan.developer.lifx.com/docs/changing-a-device
+        await self.coordinator.async_request_refresh()
+
         # Transition has ended
         if when > 0:
 
