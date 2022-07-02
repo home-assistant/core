@@ -34,11 +34,17 @@ class MockFailingLifxCommand:
     def __init__(self, bulb, **kwargs):
         """Init command."""
         self.bulb = bulb
+        self.calls = []
 
-    def __call__(self, callb=None, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """Call command."""
-        if callb:
+        if callb := kwargs.get("callb"):
             callb(self.bulb, None)
+        self.calls.append([args, kwargs])
+
+    def reset_mock(self):
+        """Reset mock."""
+        self.calls = []
 
 
 class MockLifxCommand:
@@ -47,11 +53,17 @@ class MockLifxCommand:
     def __init__(self, bulb, **kwargs):
         """Init command."""
         self.bulb = bulb
+        self.calls = []
 
-    def __call__(self, callb=None, *args, **kwargs):
+    def __call__(self, *args, **kwargs):
         """Call command."""
-        if callb:
+        if callb := kwargs.get("callb"):
             callb(self.bulb, MockMessage())
+        self.calls.append([args, kwargs])
+
+    def reset_mock(self):
+        """Reset mock."""
+        self.calls = []
 
 
 def _mocked_bulb() -> Light:

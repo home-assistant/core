@@ -117,10 +117,11 @@ async def async_execute_lifx(method: Callable) -> Message:
     def _callback(bulb: Light, message: Message) -> None:
         future.set_result(message)
 
+    _LOGGER.debug("Sending LIFX command: %s", method)
+
     method(callb=_callback)
     result = None
 
-    _LOGGER.debug("Sending LIFX command: %s", method)
     async with async_timeout.timeout(OVERALL_TIMEOUT):
         result = await future
 
