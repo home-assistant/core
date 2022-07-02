@@ -30,21 +30,31 @@ class DsmrReaderFlowHandler(DiscoveryFlowHandler[Awaitable[bool]], domain=DOMAIN
 
     async def async_step_import(self, _: dict[str, Any] | None) -> FlowResult:
         """Import from configuration.yaml and create config entry."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if not self.hass.services.has_service(domain="mqtt", service="publish"):
             _LOGGER.warning("DSMR Reader configuration import failed. MQTT is missing")
             return self.async_abort(reason="mqtt_missing")
-        # There's no configuration supported for this integration, so data can be a fixed object
-        return self.async_create_entry(title="DSMR Reader", data={})
+
+        return await super().async_step_import(None)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle user step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if not self.hass.services.has_service(domain="mqtt", service="publish"):
             return self.async_abort(reason="mqtt_missing")
 
-        return await self.async_step_confirm()
+        return await super().async_step_user(user_input)
+
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Confirm setup."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="confirm",
+                description_placeholders={
+                    "documentation_link": "https://www.home-assistant.io/integrations/dsmr_reader#setup"
+                },
+            )
+
+        return await super().async_step_confirm(user_input)

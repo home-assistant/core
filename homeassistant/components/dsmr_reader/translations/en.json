@@ -1,12 +1,12 @@
 {
     "config": {
         "abort": {
-            "single_instance_allowed": "Already configured. Only a single configuration possible.",
-            "mqtt_missing": "The MQTT service is required for this integration."
+            "mqtt_missing": "The MQTT service is required for this integration.",
+            "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
             "confirm": {
-                "description": "Make sure to configure the 'split topic' data sources in DSMR Reader, as described [in the documentation](https://www.home-assistant.io/integrations/dsmr_reader#setup)."
+                "description": "Make sure to configure the 'split topic' data sources in DSMR Reader, as described [in the documentation]({documentation_link})."
             }
         }
     }
