@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import socket
 from unittest.mock import patch
 
 from homeassistant.components import lifx
@@ -16,6 +17,7 @@ from . import (
     MAC_ADDRESS,
     MockFailingLifxCommand,
     _mocked_bulb,
+    _mocked_failing_bulb,
     _patch_config_flow_try_connect,
     _patch_device,
     _patch_discovery,
@@ -107,6 +109,38 @@ async def test_get_version_fails(hass):
     bulb.get_version = MockFailingLifxCommand(bulb)
 
     with _patch_discovery(device=bulb), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
+
+
+async def test_dns_error_at_startup(hass):
+    """Test we handle get version failing."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_failing_bulb()
+
+    class MockLifxConnectonDnsError:
+        """Mock lifx discovery."""
+
+        def __init__(self, *args, **kwargs):
+            """Init connection."""
+            self.device = bulb
+
+        async def async_setup(self):
+            """Mock setup."""
+            raise socket.gaierror()
+
+        def async_stop(self):
+            """Mock teardown."""
+
+    # Cannot connect due to dns error
+    with _patch_discovery(device=bulb), patch(
+        "homeassistant.components.lifx.LIFXConnection",
+        MockLifxConnectonDnsError,
+    ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
         assert already_migrated_config_entry.state == ConfigEntryState.SETUP_RETRY
