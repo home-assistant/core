@@ -376,12 +376,26 @@ class LIFXStrip(LIFXColor):
     ) -> None:
         """Send a color change to the bulb."""
         bulb = self.bulb
-        num_zones = len(bulb.color_zones)
+        color_zones = bulb.color_zones
+        num_zones = len(color_zones)
+
+        # Zone brightness is not reported when powered off
+        if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
+            await self.set_power(True)
+            await self.update_color_zones()
+            await self.set_power(False)
 
         if (zones := kwargs.get(ATTR_ZONES)) is None:
             # Fast track: setting all zones to the same brightness and color
             # can be treated as a single-zone bulb.
-            if hsbk[HSBK_BRIGHTNESS] is not None and hsbk[HSBK_KELVIN] is not None:
+            first_zone_brighness = color_zones[0][HSBK_BRIGHTNESS]
+            all_zones_have_same_brightness = all(
+                color_zones[zone][HSBK_BRIGHTNESS] == first_zone_brighness
+                for zone in range(num_zones)
+            )
+            if (
+                hsbk[HSBK_BRIGHTNESS] is not None or all_zones_have_same_brightness
+            ) and hsbk[HSBK_KELVIN] is not None:
                 await super().set_color(hsbk, kwargs, duration)
                 return
 
@@ -389,15 +403,9 @@ class LIFXStrip(LIFXColor):
         else:
             zones = [x for x in set(zones) if x < num_zones]
 
-        # Zone brightness is not reported when powered off
-        if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
-            await self.set_power(True)
-            await self.get_color()
-            await self.set_power(False)
-
         # Send new color to each zone
         for index, zone in enumerate(zones):
-            zone_hsbk = merge_hsbk(bulb.color_zones[zone], hsbk)
+            zone_hsbk = merge_hsbk(color_zones[zone], hsbk)
             apply = 1 if (index == len(zones) - 1) else 0
             set_zone = partial(
                 bulb.set_color_zones,
@@ -417,3 +425,14 @@ class LIFXStrip(LIFXColor):
         # set_color_zones does not update the
         # state of the bulb, so we need to do that
         await self.get_color()
+
+    async def update_color_zones(
+        self,
+    ) -> None:
+        """Send a get color zones message to the bulb."""
+        try:
+            await self.coordinator.update_color_zones()
+        except asyncio.TimeoutError as ex:
+            raise HomeAssistantError(
+                f"Timeout setting updating color zones for {self.name}"
+            ) from ex
