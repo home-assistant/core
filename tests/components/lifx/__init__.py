@@ -28,6 +28,19 @@ class MockMessage:
         self.count = 9
 
 
+class MockFailingLifxCommand:
+    """Mock a lifx command that fails."""
+
+    def __init__(self, bulb, **kwargs):
+        """Init command."""
+        self.bulb = bulb
+
+    def __call__(self, callb=None, *args, **kwargs):
+        """Call command."""
+        if callb:
+            callb(self.bulb, None)
+
+
 class MockLifxCommand:
     """Mock a lifx command."""
 
@@ -54,6 +67,16 @@ def _mocked_bulb() -> Light:
     bulb.get_hostfirmware = MockLifxCommand(bulb)
     bulb.get_version = MockLifxCommand(bulb)
     bulb.product = 1  # LIFX Original 1000
+    return bulb
+
+
+def _mocked_failing_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.get_color = MockFailingLifxCommand(bulb)
+    bulb.set_power = MockFailingLifxCommand(bulb)
+    bulb.set_color = MockFailingLifxCommand(bulb)
+    bulb.get_hostfirmware = MockFailingLifxCommand(bulb)
+    bulb.get_version = MockFailingLifxCommand(bulb)
     return bulb
 
 
@@ -86,7 +109,10 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
 
         def __init__(self, *args, **kwargs):
             """Init connection."""
-            self.device = device or _mocked_bulb()
+            if no_device:
+                self.device = _mocked_failing_bulb()
+            else:
+                self.device = device or _mocked_bulb()
             self.device.mac_addr = TARGET_ANY
 
         async def async_setup(self):
@@ -143,7 +169,10 @@ def _patch_config_flow_try_connect(
 
         def __init__(self, *args, **kwargs):
             """Init connection."""
-            self.device = device or _mocked_bulb()
+            if no_device:
+                self.device = _mocked_failing_bulb()
+            else:
+                self.device = device or _mocked_bulb()
             self.device.mac_addr = TARGET_ANY
 
         async def async_setup(self):
