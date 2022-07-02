@@ -124,9 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
-    device_physical_mac = dr.format_mac(coordinator.physical_mac_address)
+    device_physical_mac = dr.format_mac(coordinator.mac_address)
     if device_physical_mac != entry.unique_id and entry.unique_id == dr.format_mac(
-        coordinator.internal_mac_address
+        coordinator.serial_number
     ):
         # LIFX firmware >= 3.70 uses an off by one mac
         hass.config_entries.async_update_entry(entry, unique_id=device_physical_mac)

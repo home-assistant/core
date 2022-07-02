@@ -57,12 +57,12 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator):
         self.device.unregister_timeout = UNAVAILABLE_GRACE
 
     @property
-    def internal_mac_address(self) -> str:
+    def serial_number(self) -> str:
         """Return the internal mac address."""
         return cast(str, self.device.mac_addr)
 
     @property
-    def physical_mac_address(self) -> str:
+    def mac_address(self) -> str:
         """Return the physical mac address."""
         return get_real_mac_addr(
             self.device.mac_addr, self.device.host_firmware_version

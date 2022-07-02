@@ -113,7 +113,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         )
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
-        self._attr_unique_id = self.coordinator.internal_mac_address
+        self._attr_unique_id = self.coordinator.serial_number
         self._attr_name = self.bulb.label
         self._attr_min_mireds = math.floor(
             color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
@@ -122,10 +122,8 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
         )
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.internal_mac_address)},
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, self.coordinator.physical_mac_address)
-            },
+            identifiers={(DOMAIN, self.coordinator.serial_number)},
+            connections={(dr.CONNECTION_NETWORK_MAC, self.coordinator.mac_address)},
             manufacturer="LIFX",
             name=self.name,
         )
