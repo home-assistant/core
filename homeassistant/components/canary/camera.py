@@ -109,7 +109,10 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             name=device.name,
         )
         self._image: bytes | None = None
-        self._expires_at = dt_util.utcnow() - FORCE_CAMERA_REFRESH_INTERVAL
+        self._expires_at = dt_util.utcnow()
+        _LOGGER.debug(
+            "%s %s has been initialized", self.name, device.device_type["name"]
+        )
 
     @property
     def location(self) -> Location:
@@ -130,9 +133,8 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return a still image response from the camera."""
-        await self._check_for_image_expiration()
-
-        if self._image is None:
+        utcnow = dt_util.utcnow()
+        if self._expires_at <= utcnow:
             _LOGGER.debug("Grabbing a live view image from %s", self.name)
             await self.hass.async_add_executor_job(self.renew_live_stream_session)
 
@@ -152,18 +154,12 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
 
             if image:
                 self._image = image
+                self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
                 _LOGGER.debug("Grabbed a live view image from %s", self.name)
             await self.hass.async_add_executor_job(live_stream_session.stop_session)
             _LOGGER.debug("Stopped live session from %s", self.name)
 
         return self._image
-
-    async def _check_for_image_expiration(self) -> None:
-        utcnow = dt_util.utcnow()
-        if self._expires_at <= utcnow:
-            _LOGGER.debug("Expiring cached image from %s", self.name)
-            self._image = None
-            self._expires_at = FORCE_CAMERA_REFRESH_INTERVAL + utcnow
 
     async def handle_async_mjpeg_stream(
         self, request: Request
