@@ -71,7 +71,7 @@ async def test_configuring_lifx_causes_discovery(hass):
 async def test_config_entry_reload(hass):
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
