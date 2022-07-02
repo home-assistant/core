@@ -292,6 +292,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._cool_min_temp = cool_min_temp
         self._cool_max_temp = cool_max_temp
         self._cool_step = cool_step
+        self._swing_mode = None
 
         self._target_temp = None
 
@@ -627,7 +628,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._current_tado_fan_speed = fan_mode
 
         if swing_mode:
-            self._current_tado_swing_mode = swing_mode
+            self._swing_mode = swing_mode
 
         self._normalize_target_temp_for_hvac_mode()
 
@@ -702,7 +703,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
-            swing = HA_TO_TADO_SWING_MODE_MAP[self._current_tado_swing_mode]
+            swing = HA_TO_TADO_SWING_MODE_MAP[self._swing_mode]
             vertical_swing = swing[CONST_SWING_MODE_VERTICAL]
             horizontal_swing = swing[CONST_SWING_MODE_HORIZONTAL]
 
