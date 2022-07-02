@@ -98,7 +98,7 @@ def _patch_discovery(device: Light | None = None, no_device: bool = False):
     return _patcher()
 
 
-def _patch_config_entry_try_connect(
+def _patch_config_flow_try_connect(
     device: Light | None = None, no_device: bool = False
 ):
     """Patch out discovery."""

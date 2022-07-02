@@ -16,7 +16,7 @@ from . import (
     LABEL,
     MAC_ADDRESS,
     MODULE,
-    _patch_config_entry_try_connect,
+    _patch_config_flow_try_connect,
     _patch_discovery,
 )
 
@@ -25,7 +25,7 @@ from tests.common import MockConfigEntry
 
 async def test_discovery(hass: HomeAssistant):
     """Test setting up discovery."""
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
@@ -54,7 +54,7 @@ async def test_discovery(hass: HomeAssistant):
         assert result2["step_id"] == "pick_device"
         assert not result2["errors"]
 
-    with _patch_discovery(), _patch_config_entry_try_connect(), patch(
+    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
         f"{MODULE}.async_setup", return_value=True
     ) as mock_setup, patch(
         f"{MODULE}.async_setup_entry", return_value=True
@@ -79,7 +79,7 @@ async def test_discovery(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -94,7 +94,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     )
     config_entry.add_to_hass(hass)
 
-    with _patch_discovery(), _patch_config_entry_try_connect(no_device=True):
+    with _patch_discovery(), _patch_config_flow_try_connect(no_device=True):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -105,7 +105,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -122,7 +122,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -130,7 +130,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result2["step_id"] == "pick_device"
     assert not result2["errors"]
 
-    with _patch_discovery(), _patch_config_entry_try_connect(), patch(
+    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
@@ -153,7 +153,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
@@ -167,7 +167,7 @@ async def test_discovery_no_device(hass: HomeAssistant):
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ):
         result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
@@ -187,7 +187,7 @@ async def test_manual(hass: HomeAssistant):
     assert not result["errors"]
 
     # Cannot connect (timeout)
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -200,7 +200,7 @@ async def test_manual(hass: HomeAssistant):
     assert result2["errors"] == {"base": "cannot_connect"}
 
     # Success
-    with _patch_discovery(), _patch_config_entry_try_connect(), patch(
+    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
         f"{MODULE}.async_setup", return_value=True
     ), patch(f"{MODULE}.async_setup_entry", return_value=True):
         result4 = await hass.config_entries.flow.async_configure(
@@ -217,7 +217,7 @@ async def test_manual(hass: HomeAssistant):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -238,7 +238,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
     assert result["step_id"] == "user"
     assert not result["errors"]
 
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(), patch(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(), patch(
         f"{MODULE}.async_setup", return_value=True
     ), patch(f"{MODULE}.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_configure(
@@ -255,7 +255,7 @@ async def test_manual_no_capabilities(hass: HomeAssistant):
 async def test_discovered_by_discovery_and_dhcp(hass):
     """Test we get the form with discovery and abort for dhcp source when we get both."""
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
@@ -265,7 +265,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -277,7 +277,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     assert result2["type"] == RESULT_TYPE_ABORT
     assert result2["reason"] == "already_in_progress"
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result3 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
@@ -289,7 +289,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     assert result3["type"] == RESULT_TYPE_ABORT
     assert result3["reason"] == "already_in_progress"
 
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ):
         result3 = await hass.config_entries.flow.async_init(
@@ -332,7 +332,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
 async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     """Test we can setup when discovered from dhcp or discovery."""
 
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": source}, data=data
         )
@@ -341,7 +341,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     assert result["type"] == RESULT_TYPE_FORM
     assert result["errors"] is None
 
-    with _patch_discovery(), _patch_config_entry_try_connect(), patch(
+    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
         f"{MODULE}.async_setup", return_value=True
     ) as mock_async_setup, patch(
         f"{MODULE}.async_setup_entry", return_value=True
@@ -385,7 +385,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
 async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source, data):
     """Test we abort if we cannot get the unique id when discovered from dhcp."""
 
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ):
         result = await hass.config_entries.flow.async_init(
@@ -402,7 +402,7 @@ async def test_migration_device_online(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
     config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: LABEL, CONF_HOST: IP_ADDRESS}
 
-    with _patch_discovery(), _patch_config_entry_try_connect(), patch(
+    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         await setup.async_setup_component(hass, DOMAIN, {})
@@ -420,7 +420,7 @@ async def test_migration_device_online(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 2
 
     # Duplicate
-    with _patch_discovery(), _patch_config_entry_try_connect():
+    with _patch_discovery(), _patch_config_flow_try_connect():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         result = await hass.config_entries.flow.async_init(
@@ -438,7 +438,7 @@ async def test_migration_device_offline(hass: HomeAssistant):
     config_entry.add_to_hass(hass)
     config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: LABEL, CONF_HOST: None}
 
-    with _patch_discovery(no_device=True), _patch_config_entry_try_connect(
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
         no_device=True
     ), patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry:
         await setup.async_setup_component(hass, DOMAIN, {})
