@@ -21,6 +21,8 @@ def _mocked_bulb() -> Light:
     bulb = Light(asyncio.get_running_loop(), MAC_ADDRESS, IP_ADDRESS)
     bulb.host_firmware_version = "3.00"
     bulb.label = LABEL
+    bulb.color = [1, 2, 3, 4]
+    bulb.power_level = 0
     return bulb
 
 
