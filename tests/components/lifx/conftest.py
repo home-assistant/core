@@ -1,15 +1,38 @@
 """Tests for the lifx integration."""
 
+from unittest.mock import MagicMock, patch
+
 import pytest
 
-from . import _patch_discovery
+from . import MAC_ADDRESS, _patch_discovery
 
 from tests.common import mock_device_registry, mock_registry
 
 
+class MockExecuteAwaitAioLIFX:
+    """Mock and execute an AwaitAioLIFX."""
+
+    async def wait(self, call, *args, **kwargs):
+        """Wait."""
+        call()
+        return MagicMock(target_addr=MAC_ADDRESS)
+
+
+@pytest.fixture
+def mock_await_aiolifx():
+    """Mock waiting for a response."""
+    with patch(
+        "homeassistant.components.lifx.coordinator.AwaitAioLIFX",
+        MockExecuteAwaitAioLIFX,
+    ), patch(
+        "homeassistant.components.lifx.light.AwaitAioLIFX", MockExecuteAwaitAioLIFX
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_discovery():
-    """Mock python-kasa discovery."""
+    """Mock lifx discovery."""
     with _patch_discovery() as mock_discover:
         mock_discover.return_value = {}
         yield mock_discover
