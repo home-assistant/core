@@ -102,18 +102,14 @@ def _get_mac_offset(mac_addr: str, offset: int) -> str:
     return ":".join(f"{octet:02x}" for octet in octets)
 
 
-def _has_off_by_one_mac(firmware_version: str) -> bool:
+def _off_by_one_mac(firmware: str) -> bool:
     """Check if the firmware version has the off by one mac."""
-    return bool(firmware_version and AwesomeVersion(firmware_version) >= FIX_MAC_FW)
+    return bool(firmware and AwesomeVersion(firmware) >= FIX_MAC_FW)
 
 
-def get_real_mac_addr(mac_addr: str, firmware_version: str) -> str:
+def get_real_mac_addr(mac_addr: str, firmware: str) -> str:
     """Increment the last byte of the mac address by one for FW>3.70."""
-    return (
-        _get_mac_offset(mac_addr, 1)
-        if _has_off_by_one_mac(firmware_version)
-        else mac_addr
-    )
+    return _get_mac_offset(mac_addr, 1) if _off_by_one_mac(firmware) else mac_addr
 
 
 def real_mac_to_lifx_mac_addr(mac_addr: str) -> str:
