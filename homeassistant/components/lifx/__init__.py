@@ -60,29 +60,36 @@ PLATFORMS = [Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the LIFX component."""
-    hass.data[DOMAIN] = {}
-    config_entries_by_mac = {}
-    legacy_entry = None
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if async_entry_is_legacy(entry):
-            legacy_entry = entry
-        elif entry.unique_id:
-            config_entries_by_mac[entry.unique_id] = entry
-
+async def async_legacy_migration(
+    hass: HomeAssistant, legacy_entry: ConfigEntry
+) -> None:
+    """Migrate config entries."""
+    config_entries_by_mac = {
+        entry.unique_id: entry
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if entry.unique_id and not async_entry_is_legacy(entry)
+    }
     discovered_devices = await async_discover_devices(hass)
     hosts_by_mac = {
         get_real_mac_addr(device.mac_addr, device.host_firmware_version): device.ip_addr
         for device in discovered_devices
     }
-    if legacy_entry:
-        async_migrate_legacy_entries(
-            hass, hosts_by_mac, config_entries_by_mac, legacy_entry
-        )
+    migration_complete = await async_migrate_legacy_entries(
+        hass, hosts_by_mac, config_entries_by_mac, legacy_entry
+    )
 
     if discovered_devices:
         async_trigger_discovery(hass, discovered_devices)
+
+    if not migration_complete:
+        raise ConfigEntryNotReady("Migration not complete, waiting to discover devices")
+
+    await hass.config_entries.async_remove(legacy_entry.entry_id)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the LIFX component."""
+    hass.data[DOMAIN] = {}
 
     async def _async_discovery(*_: Any) -> None:
         if discovered := await async_discover_devices(hass):
@@ -96,9 +103,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
     if async_entry_is_legacy(entry):
-        hass.config_entries.async_update_entry(
-            entry, title="Legacy - Will be removed when all devices are discovered"
-        )
+        await async_legacy_migration(hass, entry)
         return True
 
     legacy_entry: ConfigEntry | None = None

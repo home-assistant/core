@@ -2,35 +2,19 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_NAME,
-    EVENT_HOMEASSISTANT_STARTED,
-)
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import DOMAIN
 
 
-async def async_cleanup_legacy_entry(
-    hass: HomeAssistant,
-    legacy_entry_id: str,
-) -> None:
-    """Cleanup the legacy entry if the migration is successful."""
-    entity_registry = er.async_get(hass)
-    if not er.async_entries_for_config_entry(entity_registry, legacy_entry_id):
-        await hass.config_entries.async_remove(legacy_entry_id)
-
-
-@callback
-def async_migrate_legacy_entries(
+async def async_migrate_legacy_entries(
     hass: HomeAssistant,
     hosts_by_mac: dict[str, str],
     config_entries_by_mac: dict[str, ConfigEntry],
     legacy_entry: ConfigEntry,
-) -> None:
+) -> bool:
     """Migrate the legacy config entries to have an entry per device."""
     device_registry = dr.async_get(hass)
 
@@ -43,22 +27,20 @@ def async_migrate_legacy_entries(
                 or mac in config_entries_by_mac
             ):
                 continue
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": "migration"},
-                    data={
-                        CONF_HOST: hosts_by_mac.get(mac),
-                        CONF_MAC: mac,
-                        CONF_NAME: dev_entry.name or f"LIFX device {mac}",
-                    },
-                )
+            # await the flows so we only migrrate one at a time
+            await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": "migration"},
+                data={
+                    CONF_HOST: hosts_by_mac.get(mac),
+                    CONF_MAC: mac,
+                    CONF_NAME: dev_entry.name or f"LIFX device {mac}",
+                },
             )
 
-    async def _async_cleanup_legacy_entry(_event: Event) -> None:
-        await async_cleanup_legacy_entry(hass, legacy_entry.entry_id)
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_cleanup_legacy_entry)
+    return not er.async_entries_for_config_entry(
+        er.async_get(hass), legacy_entry.entry_id
+    )
 
 
 async def async_migrate_entities_devices(
