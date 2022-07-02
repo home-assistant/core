@@ -29,6 +29,7 @@ from . import (
     MAC_ADDRESS,
     _mocked_bulb,
     _patch_config_flow_try_connect,
+    _patch_device,
     _patch_discovery,
 )
 
@@ -43,7 +44,9 @@ async def test_light_unique_id(hass: HomeAssistant) -> None:
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.color_temp = None
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -61,7 +64,9 @@ async def test_color_light(hass: HomeAssistant, transition: Optional[float]) -> 
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
     bulb.color_temp = None
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -143,7 +148,9 @@ async def test_color_light_no_temp(hass: HomeAssistant) -> None:
     bulb = _mocked_bulb()
     bulb.is_variable_color_temp = False
     type(bulb).color_temp = PropertyMock(side_effect=Exception)
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -201,7 +208,9 @@ async def test_color_temp_light(hass: HomeAssistant, is_color: bool) -> None:
     bulb.color_temp = 4000
     bulb.is_variable_color_temp = True
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -264,7 +273,9 @@ async def test_brightness_only_light(hass: HomeAssistant) -> None:
     bulb.is_color = False
     bulb.is_variable_color_temp = False
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -309,7 +320,9 @@ async def test_on_off_light(hass: HomeAssistant) -> None:
     bulb.is_variable_color_temp = False
     bulb.is_dimmable = False
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -344,7 +357,9 @@ async def test_off_at_start_light(hass: HomeAssistant) -> None:
     bulb.is_dimmable = False
     bulb.is_on = False
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
@@ -366,7 +381,9 @@ async def test_dimmer_turn_on_fix(hass: HomeAssistant) -> None:
     bulb.is_dimmer = True
     bulb.is_on = False
 
-    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(device=bulb):
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
