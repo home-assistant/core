@@ -16,6 +16,7 @@ from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
     LABEL,
+    MAC_ADDRESS,
     MODULE,
     SERIAL,
     _mocked_failing_bulb,
@@ -337,7 +338,9 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=SERIAL, hostname=LABEL),
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
+            ),
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -375,7 +378,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=SERIAL, hostname=LABEL),
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -428,7 +431,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=SERIAL, hostname=LABEL),
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -460,3 +463,25 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_discovered_by_dhcp_updates_ip(hass):
+    """Update host from dhcp."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.2"}, unique_id=SERIAL
+    )
+    config_entry.add_to_hass(hass)
+    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
+        no_device=True
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
+            ),
+        )
+        await hass.async_block_till_done()
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == IP_ADDRESS
