@@ -157,6 +157,13 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
             "fan_speeds": None,
             "swing_modes": None,
             "support_flags": 0,
+        },
+        CONST_MODE_SMART_SCHEDULE: {
+            "temperatures": None,
+            "light_modes": None,
+            "fan_speeds": None,
+            "swing_modes": None,
+            "support_flags": ClimateEntityFeature.PRESET_MODE,
         }
     }
 
