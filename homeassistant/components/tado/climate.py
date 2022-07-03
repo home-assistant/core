@@ -718,11 +718,14 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         horizontal_swing = None
         vertical_swing = None
         light_mode = None
-        fan_speed_to_send = None
+        fan_speed_to_send = self._current_tado_fan_speed
         temperature_to_send = self._target_temp
 
-        if self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
-            fan_speed_to_send = self._current_tado_fan_speed
+        if not self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
+            fan_speed_to_send = None
+
+        if fan_speed_to_send and fan_speed_to_send not in self._current_capabilities["fan_speed"]:
+            fan_speed_to_send = HA_TO_TADO_FAN_MODE_MAP[self._current_capabilities["fan_speed"][0]]
 
         if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
             if SWING_VERTICAL in self._current_capabilities["swing_modes"]:
@@ -740,10 +743,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # Here we reset any forbidden settings so our requests won't be rejected.
         if not self._current_capabilities["support_flags"] & ClimateEntityFeature.TARGET_TEMPERATURE:
             temperature_to_send = None
-        if not self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
-            fan_speed_to_send = None
-        if fan_speed_to_send not in self._current_capabilities["fan_speeds"]:
-            fan_speed_to_send = HA_TO_TADO_FAN_MODE_MAP[self._current_capabilities["fan_speeds"][0]]
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
