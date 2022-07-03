@@ -1,7 +1,9 @@
 """Sensor data of the Renson ventilation unit."""
 from dataclasses import dataclass
+from datetime import timedelta
 import logging
 
+import async_timeout
 from renson_endura_delta.field_enum import (
     AIR_QUALITY_FIELD,
     BREEZE_LEVEL_FIELD,
@@ -27,7 +29,6 @@ from renson_endura_delta.field_enum import (
     OUTDOOR_TEMP_FIELD,
     FieldEnum,
 )
-from renson_endura_delta.general_enum import DataType
 from renson_endura_delta.renson import RensonVentilation
 import voluptuous as vol
 
@@ -40,9 +41,14 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, TEMP_CELSIUS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
 
 from .const import CONCENTRATION_PARTS_PER_CUBIC_METER, DOMAIN
 
@@ -261,16 +267,41 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
 )
 
 
-class RensonSensor(SensorEntity):
+class RensonCoordinator(DataUpdateCoordinator):
+    """My custom coordinator."""
+
+    def __init__(self, hass, api):
+        """Initialize my coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            # Name of the data. For logging purposes.
+            name="Renson sensor",
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=timedelta(seconds=30),
+        )
+        self.api = api
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint."""
+        try:
+            async with async_timeout.timeout(30):
+                return await self.hass.async_add_executor_job(self.api.get_all_data)
+        except Exception as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
+
+
+class RensonSensor(CoordinatorEntity, SensorEntity):
     """Get a sensor data from the Renson API and store it in the state of the class."""
 
     def __init__(
         self,
         description: RensonSensorEntityDescription,
         renson_api: RensonVentilation,
+        coordinator: RensonCoordinator,
     ) -> None:
         """Initialize class."""
-        super().__init__()
+        super().__init__(coordinator)
 
         self._state = None
         self.entity_description = description
@@ -284,24 +315,19 @@ class RensonSensor(SensorEntity):
         """Return the value reported by the sensor."""
         return self._state
 
-    def update(self):
-        """Save state of sensor."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        all_data = self.coordinator.data
+
+        value = self.renson_api.get_field_value(all_data, self.field.name)
+
         if self.raw_format:
-            self._state = self.renson_api.get_data_string(self.field)
+            self._state = value
         else:
-            if self.data_type == DataType.NUMERIC:
-                self._state = self.renson_api.get_data_numeric(self.field)
-            elif self.data_type == DataType.STRING:
-                self._state = self.renson_api.get_data_string(self.field)
+            self._state = self.renson_api.parse_value(value, self.data_type)
 
-            elif self.data_type == DataType.LEVEL:
-                self._state = self.renson_api.get_data_level(self.field).value
-
-            elif self.data_type == DataType.BOOLEAN:
-                self._state = self.renson_api.get_data_boolean(self.field)
-
-            elif self.data_type == DataType.QUALITY:
-                self._state = self.renson_api.get_data_quality(self.field).value
+        self.async_write_ha_state()
 
 
 async def async_setup_entry(
@@ -314,7 +340,10 @@ async def async_setup_entry(
 
     renson_api: RensonVentilation = hass.data[DOMAIN][config.entry_id]
 
+    coordinator = RensonCoordinator(hass, renson_api)
+
     entities: list = []
     for description in SENSORS:
-        entities.append(RensonSensor(description, renson_api))
+        entities.append(RensonSensor(description, renson_api, coordinator))
     async_add_entities(entities)
+    await coordinator.async_config_entry_first_refresh()

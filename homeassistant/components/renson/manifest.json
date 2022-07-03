@@ -3,7 +3,7 @@
   "name": "Renson",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/renson",
-  "requirements": ["renson-endura-delta==1.3.1"],
+  "requirements": ["renson-endura-delta==1.3.2"],
   "dependencies": [],
   "codeowners": ["@jimmyd-be"],
   "iot_class": "local_polling"
