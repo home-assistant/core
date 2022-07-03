@@ -384,7 +384,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return TADO_HVAC_MODE_FEATURE_MAP.get(self._current_tado_hvac_mode, self._support_flags)
+        return self._current_capabilities["support_flags"]
 
     @property
     def name(self):
