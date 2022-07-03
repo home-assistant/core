@@ -6,12 +6,12 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NetioDeviceEntity
-from .const import DATA_NETIO_CLIENT, DOMAIN
-from .pdu import NetioPDU
+from .const import API_OUTLET, API_OUTLET_STATE, DATA_NETIO_CLIENT, DOMAIN
+from .pdu import NetioPDUCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,14 +23,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up NetIO PDU Sensors from Config Entry."""
     _LOGGER.info("Async setup entry in sensor")
-    pdu = hass.data[DOMAIN][config_entry.entry_id][DATA_NETIO_CLIENT]
-    if pdu.read_only:
+    coordinator = hass.data[DOMAIN][config_entry.entry_id][DATA_NETIO_CLIENT]
+    if coordinator.pdu.read_only:
         return
 
     switches = []
 
-    for output in range(pdu.output_count()):
-        switches.append(NetioSwitch(pdu, config_entry, output + 1))
+    for output in range(coordinator.pdu.output_count()):
+        switches.append(NetioSwitch(coordinator, config_entry, output + 1))
 
     async_add_entities(switches, True)
 
@@ -40,18 +40,22 @@ class NetioSwitch(NetioDeviceEntity, SwitchEntity):
 
     def __init__(
         self,
-        pdu: NetioPDU,
+        coordinator: NetioPDUCoordinator,
         config_entry: ConfigEntry,
         outlet: int,
         enabled_default: bool = True,
     ) -> None:
         """Initialize NetIO PDU Output."""
         self._state: int | str | float | None = None
-        self.outlet = outlet
-        name = f"{pdu.device_name} Output {outlet}"
-        icon = ""
+        self._outlet = outlet
 
-        super().__init__(pdu, config_entry, name, icon, enabled_default)
+        super().__init__(
+            coordinator,
+            config_entry,
+            f"{coordinator.pdu.device_name} Outlet {outlet}",
+            "",
+            enabled_default,
+        )
 
     @property
     def unique_id(self) -> str:
@@ -61,7 +65,7 @@ class NetioSwitch(NetioDeviceEntity, SwitchEntity):
                 DOMAIN,
                 self.pdu.host,
                 "outlet",
-                str(self.outlet),
+                str(self._outlet),
             ]
         )
 
@@ -87,15 +91,18 @@ class NetioSwitch(NetioDeviceEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.hass.async_add_executor_job(self.pdu.output_on, self.outlet)
-        self.schedule_update_ha_state()
+        await self.hass.async_add_executor_job(self.pdu.output_on, self._outlet)
+        # self.schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        await self.hass.async_add_executor_job(self.pdu.output_off, self.outlet)
-        self.schedule_update_ha_state()
+        await self.hass.async_add_executor_job(self.pdu.output_off, self._outlet)
+        # self.schedule_update_ha_state()
+        await self.coordinator.async_request_refresh()
 
-    async def _pdu_update(self) -> None:
-        """Update NetIO PDU entity."""
-        self._state = await self.pdu.get_outlet(self.outlet, "State")
-        # self._state = tmp.State
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._state = self.coordinator.data[API_OUTLET][self._outlet][API_OUTLET_STATE]
+        self.async_write_ha_state()

@@ -3,17 +3,19 @@ from __future__ import annotations
 
 import logging
 
-from Netio.exceptions import NetioException
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo, Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DATA_NETIO_CLIENT, DOMAIN
-from .pdu import NetioPDU
+from .pdu import NetioPDU, NetioPDUCoordinator
+
+# from Netio.exceptions import NetioException
+
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
@@ -24,7 +26,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NetIO JSON from a config entry."""
 
     pdu = NetioPDU(hass, entry)
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_NETIO_CLIENT: pdu}
+    coordinator = NetioPDUCoordinator(hass, pdu)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {DATA_NETIO_CLIENT: coordinator}
 
     try:
         await pdu.async_initialize_pdu()
@@ -48,24 +51,26 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return unload_ok
 
 
-class NetioEntity(Entity):
+class NetioEntity(CoordinatorEntity, Entity):
     """Defines a base NetIO PDU entity."""
 
     def __init__(
         self,
-        pdu: NetioPDU,
+        coordinator: NetioPDUCoordinator,
         entry: ConfigEntry,
         name: str,
         icon: str,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the NetIO PDU entity."""
+        super().__init__(coordinator)
         self._available = True
         self._enabled_default = enabled_default
         self._icon = icon
         self._name = name
         self._entry = entry
-        self.pdu = pdu
+        self.coordinator = coordinator
+        self.pdu = coordinator.pdu
 
     @property
     def name(self) -> str:
@@ -87,21 +92,21 @@ class NetioEntity(Entity):
         """Return True if entity is available."""
         return self._available
 
-    async def async_update(self) -> None:
-        """Update NetIO PDU entity."""
-        if not self.enabled:
-            return
+    # async def async_update(self) -> None:
+    #     """Update NetIO PDU entity."""
+    #     if not self.enabled:
+    #         return
 
-        try:
-            await self._pdu_update()
-            self._available = True
-        except NetioException:
-            if self._available:
-                _LOGGER.debug(
-                    "An error occurred while updating NetIO PDU sensor",
-                    exc_info=True,
-                )
-            self._available = False
+    #     try:
+    #         await self._pdu_update()
+    #         self._available = True
+    #     except NetioException:
+    #         if self._available:
+    #             _LOGGER.debug(
+    #                 "An error occurred while updating NetIO PDU sensor",
+    #                 exc_info=True,
+    #             )
+    #         self._available = False
 
     async def _pdu_update(self) -> None:
         """Update NetIO PDU entity."""
@@ -129,3 +134,10 @@ class NetioDeviceEntity(NetioEntity):
     async def _pdu_update(self) -> None:
         """Update NetIO PDU entity."""
         raise NotImplementedError()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        raise NotImplementedError()
+        # self._attr_is_on = self.coordinator.data[self.idx]["state"]
+        # self.async_write_ha_state()
