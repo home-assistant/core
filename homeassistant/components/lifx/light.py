@@ -149,8 +149,6 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     @property
     def color_temp(self) -> int | None:
         """Return the color temperature."""
-        if self.bulb.color[HSBK_SATURATION]:
-            return None
         return color_util.color_temperature_kelvin_to_mired(
             self.bulb.color[HSBK_KELVIN]
         )
@@ -200,7 +198,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.set_state(**{ATTR_POWER: False})
+        await self.set_state(**{**kwargs, ATTR_POWER: False})
 
     async def set_state(self, **kwargs: Any) -> None:
         """Set a color on the light and turn it on/off."""

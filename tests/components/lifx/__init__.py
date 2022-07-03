@@ -73,6 +73,7 @@ def _mocked_bulb() -> Light:
     bulb.color = [1, 2, 3, 4]
     bulb.power_level = 0
     bulb.try_sending = AsyncMock()
+    bulb.set_infrared = MockLifxCommand(bulb)
     bulb.get_color = MockLifxCommand(bulb)
     bulb.set_power = MockLifxCommand(bulb)
     bulb.set_color = MockLifxCommand(bulb)
@@ -98,6 +99,12 @@ def _mocked_white_bulb() -> Light:
     return bulb
 
 
+def _mocked_brightness_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 51  # LIFX Mini White
+    return bulb
+
+
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
@@ -110,6 +117,12 @@ def _mocked_light_strip() -> Light:
 def _mocked_bulb_new_firmware() -> Light:
     bulb = _mocked_bulb()
     bulb.host_firmware_version = "3.90"
+    return bulb
+
+
+def _mocked_relay() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 70  # LIFX Switch
     return bulb
 
 

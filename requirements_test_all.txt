@@ -165,6 +165,12 @@ aiohue==4.4.2
 aiokafka==0.6.0
 
 # homeassistant.components.lifx
+aiolifx-connection==1.0.0
+
+# homeassistant.components.lifx
+aiolifx==0.8.1
+
+# homeassistant.components.lifx
 aiolifx_effects==0.2.2
 
 # homeassistant.components.lookin
@@ -570,9 +576,6 @@ ha-ffmpeg==3.0.2
 # homeassistant.components.philips_js
 ha-philipsjs==2.9.0
 
-# homeassistant.components.lifx
-haaiolifx==0.8.2
-
 # homeassistant.components.habitica
 habitipy==0.2.0
 
@@ -797,7 +800,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.0
+onvif-zeep-async==1.2.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0

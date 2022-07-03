@@ -1,12 +1,13 @@
 """Config flow flow LIFX."""
 from __future__ import annotations
 
+import asyncio
 import logging
 import socket
 from typing import Any
 
 from aiolifx.aiolifx import Light
-from aiolifx.connection import AwaitAioLIFX, LIFXConnection
+from aiolifx_connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -22,6 +23,7 @@ from .const import CONF_SERIAL, DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
 from .util import (
     async_entry_is_legacy,
+    async_execute_lifx,
     async_get_legacy_entry,
     formatted_serial,
     lifx_features,
@@ -47,7 +49,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info.ip
         hass = self.hass
         for entry in self._async_current_entries():
-            if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
+            if (
+                entry.unique_id
+                and not async_entry_is_legacy(entry)
+                and mac_matches_serial_number(mac, entry.unique_id)
+            ):
                 if entry.data[CONF_HOST] != host:
                     hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: host}
@@ -217,11 +223,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return None
         device: Light = connection.device
         device.get_hostfirmware()
-        message = await AwaitAioLIFX().wait(device.get_color)
-        connection.async_stop()
+        try:
+            message = await async_execute_lifx(device.get_color)
+        except asyncio.TimeoutError:
+            return None
+        finally:
+            connection.async_stop()
         if (
-            message is None
-            or lifx_features(device)["relays"] is True
+            lifx_features(device)["relays"] is True
             or device.host_firmware_version is None
         ):
             return None  # relays not supported

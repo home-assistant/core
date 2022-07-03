@@ -9,7 +9,7 @@ import socket
 from typing import Any
 
 from aiolifx.aiolifx import Light
-from aiolifx.connection import LIFXConnection
+from aiolifx_connection import LIFXConnection
 import voluptuous as vol
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN

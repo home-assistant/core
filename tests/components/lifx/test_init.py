@@ -123,7 +123,7 @@ async def test_dns_error_at_startup(hass):
     bulb = _mocked_failing_bulb()
 
     class MockLifxConnectonDnsError:
-        """Mock lifx discovery."""
+        """Mock lifx connection with a dns error."""
 
         def __init__(self, *args, **kwargs):
             """Init connection."""
