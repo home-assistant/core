@@ -6,9 +6,11 @@ from renson_endura_delta.field_enum import (
     BREEZE_ENABLE_FIELD,
     BREEZE_MET_FIELD,
     CO2_CONTROL_FIELD,
+    FIRMWARE_VERSION,
     FROST_PROTECTION_FIELD,
     HUMIDITY_CONTROL_FIELD,
     PREHEATER_FIELD,
+    DataType,
     FieldEnum,
 )
 from renson_endura_delta.renson import RensonVentilation
@@ -18,10 +20,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .sensor import RensonCoordinator
 
 
 @dataclass
@@ -81,29 +85,44 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
 )
 
 
-class RensonBinarySensor(BinarySensorEntity):
+class RensonBinarySensor(CoordinatorEntity, BinarySensorEntity):
     """Get a sensor data from the Renson API and store it in the state of the class."""
 
     def __init__(
         self,
         description: RensonBinarySensorEntityDescription,
         renson_api: RensonVentilation,
+        coordinator: RensonCoordinator,
     ) -> None:
         """Initialize class."""
+        super().__init__(coordinator)
         self.renson = renson_api
         self.field = description.field
         self.entity_description = description
 
-    def update(self):
-        """Get binary data and save it in state."""
-        self._attr_is_on = self.renson.get_data_boolean(self.field)
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        all_data = self.coordinator.data
+
+        value = self.renson.get_field_value(all_data, self.field.name)
+
+        self._attr_is_on = self.renson.parse_value(value, DataType.BOOLEAN)
+
+        self.async_write_ha_state()
 
 
-class FirmwareSensor(BinarySensorEntity):
+class FirmwareSensor(CoordinatorEntity, BinarySensorEntity):
     """Check firmware update and store it in the state of the class."""
 
-    def __init__(self, renson_api: RensonVentilation, hass):
+    def __init__(
+        self,
+        renson_api: RensonVentilation,
+        hass,
+        coordinator: RensonCoordinator,
+    ):
         """Initialize class."""
+        super().__init__(coordinator)
         self._state = None
         self.renson = renson_api
         self.hass = hass
@@ -118,11 +137,16 @@ class FirmwareSensor(BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self._state
 
-    async def async_update(self):
-        """Get firmware and save it in state."""
-        self._state = await self.hass.async_add_executor_job(
-            self.renson.is_firmware_up_to_date
-        )
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        all_data = self.coordinator.data
+
+        value = self.renson.get_field_value(all_data, FIRMWARE_VERSION.name)
+
+        self._state = self.renson.is_firmware_up_to_date(value)
+
+        self.async_write_ha_state()
 
 
 async def async_setup_entry(
@@ -133,9 +157,12 @@ async def async_setup_entry(
     """Call the Renson integration to setup."""
     renson_api: RensonVentilation = hass.data[DOMAIN][config_entry.entry_id]
 
+    coordinator = RensonCoordinator(hass, renson_api)
+
     entities: list = []
     for description in BINARY_SENSORS:
-        entities.append(RensonBinarySensor(description, renson_api))
+        entities.append(RensonBinarySensor(description, renson_api, coordinator))
 
-    entities.append(FirmwareSensor(renson_api, hass))
+    entities.append(FirmwareSensor(renson_api, hass, coordinator))
     async_add_entities(entities)
+    await coordinator.async_config_entry_first_refresh()
