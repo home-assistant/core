@@ -123,7 +123,7 @@ jobs:
         if: needs.init.outputs.channel == 'dev'
         shell: bash
         run: |
-          python3 -m pip install packaging
+          python3 -m pip install packaging tomli
           python3 -m pip install --use-deprecated=legacy-resolver .
           version="$(python3 script/version_bump.py nightly)"
 
