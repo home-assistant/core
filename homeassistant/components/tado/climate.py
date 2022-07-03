@@ -601,7 +601,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # Set a target temperature if we don't have any
         # This can happen when we switch from Off to On
         if self._target_temp is None:
-            self._target_temp = self._tado_zone_data.current_temp
+            self._target_temp = self._tado_zone_data.target_temp or self._tado_zone_data.current_temp
         elif self._current_tado_hvac_mode == CONST_MODE_COOL:
             if self._target_temp > self._cool_max_temp:
                 self._target_temp = self._cool_max_temp
