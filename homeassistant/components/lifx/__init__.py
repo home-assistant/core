@@ -74,7 +74,6 @@ async def async_legacy_migration(
     discovered_devices: Iterable[Light],
 ) -> None:
     """Migrate config entries."""
-    _LOGGER.debug("Migrating legacy entry")
     existing_serials = {
         entry.unique_id
         for entry in hass.config_entries.async_entries(DOMAIN)
@@ -116,8 +115,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
-    _LOGGER.debug("setting up entry %s with id: %s", entry.unique_id, entry.entry_id)
-
     if async_entry_is_legacy(entry):
         return True
 

@@ -34,9 +34,6 @@ async def async_migrate_legacy_entries(
             if domain != DOMAIN or serial in existing_serials:
                 continue
             if host := discovered_hosts_by_serial.get(serial):
-                _LOGGER.debug(
-                    "Migrating %s with serial %s", dev_entry.identifiers, serial
-                )
                 async_init_discovery_flow(hass, host, serial)
 
     remaining_devices = dr.async_entries_for_config_entry(

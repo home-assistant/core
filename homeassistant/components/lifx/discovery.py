@@ -30,13 +30,10 @@ async def async_discover_devices(hass: HomeAssistant) -> Iterable[Light]:
         discoveries.append(lifx_discovery)
         lifx_discovery.start()
 
-    _LOGGER.debug("Running integration discovery with timeout: %s", DEFAULT_TIMEOUT)
     await asyncio.sleep(DEFAULT_TIMEOUT)
     for discovery in discoveries:
         all_lights.update(discovery.lights)
         discovery.cleanup()
-
-    _LOGGER.debug("Integration discovery found: %s", all_lights)
 
     return all_lights.values()
 
