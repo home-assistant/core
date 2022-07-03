@@ -81,9 +81,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovery %s %s", host, serial)
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        if any(
+            progress.get("context", {}).get(CONF_HOST) == host
+            for progress in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
         device = await self._async_try_connect(
             host, serial=serial, raise_on_progress=True
         )
