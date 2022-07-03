@@ -54,8 +54,8 @@ async def test_vocolinc_flowerbud_setup(hass):
                     state="on",
                 ),
                 EntityTestInfo(
-                    entity_id="number.vocolinc_flowerbud_0d324b_flowerbud_spray_quantity",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b FLOWERBUD Spray Quantity",
+                    entity_id="number.vocolinc_flowerbud_0d324b_spray_quantity",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Spray Quantity",
                     unique_id="homekit-AM01121849000327-aid:1-sid:30-cid:38",
                     capabilities={
                         "max": 5,
@@ -67,8 +67,8 @@ async def test_vocolinc_flowerbud_setup(hass):
                     entity_category=EntityCategory.CONFIG,
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.vocolinc_flowerbud_0d324b_flowerbud_current_humidity",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b FLOWERBUD Current Humidity",
+                    entity_id="sensor.vocolinc_flowerbud_0d324b_current_humidity",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Current Humidity",
                     unique_id="homekit-AM01121849000327-aid:1-sid:30-cid:33",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
