@@ -378,6 +378,27 @@ async def test_color_light_with_temp(
     assert attributes[ATTR_RGB_COLOR] == (255, 0, 0)
     assert attributes[ATTR_XY_COLOR] == (0.701, 0.299)
 
+    bulb.color = [32000, None, 32000, 6000]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert bulb.set_power.calls[0][0][0] is True
+    bulb.set_power.reset_mock()
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 125
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.COLOR_TEMP,
+        ColorMode.HS,
+    ]
+    assert attributes[ATTR_HS_COLOR] == (31.007, 6.862)
+    assert attributes[ATTR_RGB_COLOR] == (255, 246, 237)
+    assert attributes[ATTR_XY_COLOR] == (0.339, 0.338)
+    bulb.color = [65535, 65535, 65535, 65535]
+
     await hass.services.async_call(
         LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
