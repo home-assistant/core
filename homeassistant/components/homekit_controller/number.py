@@ -140,9 +140,12 @@ class HomeKitEcobeeFanModeNumber(CharacteristicEntity, NumberEntity):
         return [self._char.type]
 
     @property
-    def default_name(self) -> str:
-        """Return the default name of the device."""
-        return "Fan Mode"
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = name
+        return f"{prefix} Fan Mode"
 
     @property
     def native_min_value(self) -> float:
