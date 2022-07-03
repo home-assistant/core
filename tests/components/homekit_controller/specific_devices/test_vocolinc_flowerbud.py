@@ -34,8 +34,8 @@ async def test_vocolinc_flowerbud_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="humidifier.vocolinc_flowerbud_0d324b",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b",
+                    entity_id="humidifier.vocolinc_flowerbud_0d324b_flowerbud",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b FLOWERBUD",
                     unique_id="homekit-AM01121849000327-30",
                     supported_features=SUPPORT_MODES,
                     capabilities={
@@ -46,16 +46,16 @@ async def test_vocolinc_flowerbud_setup(hass):
                     state="off",
                 ),
                 EntityTestInfo(
-                    entity_id="light.vocolinc_flowerbud_0d324b",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b",
+                    entity_id="light.vocolinc_flowerbud_0d324b_mood_light",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b Mood Light",
                     unique_id="homekit-AM01121849000327-9",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="on",
                 ),
                 EntityTestInfo(
-                    entity_id="number.vocolinc_flowerbud_0d324b_spray_quantity",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b Spray Quantity",
+                    entity_id="number.vocolinc_flowerbud_0d324b_flowerbud_spray_quantity",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b FLOWERBUD Spray Quantity",
                     unique_id="homekit-AM01121849000327-aid:1-sid:30-cid:38",
                     capabilities={
                         "max": 5,
@@ -67,8 +67,8 @@ async def test_vocolinc_flowerbud_setup(hass):
                     entity_category=EntityCategory.CONFIG,
                 ),
                 EntityTestInfo(
-                    entity_id="sensor.vocolinc_flowerbud_0d324b_current_humidity",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b Current Humidity",
+                    entity_id="sensor.vocolinc_flowerbud_0d324b_flowerbud_current_humidity",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b FLOWERBUD Current Humidity",
                     unique_id="homekit-AM01121849000327-aid:1-sid:30-cid:33",
                     capabilities={"state_class": SensorStateClass.MEASUREMENT},
                     unit_of_measurement=PERCENTAGE,
