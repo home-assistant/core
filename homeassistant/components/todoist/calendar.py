@@ -4,8 +4,12 @@ from __future__ import annotations
 from datetime import date, datetime, timedelta, timezone
 import logging
 from typing import Any
+import uuid
 
+import requests
 from todoist_api_python.api_async import TodoistAPIAsync
+from todoist_api_python.endpoints import get_sync_url
+from todoist_api_python.http_requests import post
 from todoist_api_python.models import Due, Label, Task
 import voluptuous as vol
 
@@ -176,38 +180,37 @@ async def async_setup_platform(
 
     async_add_entities(project_devices)
 
-    def handle_new_task(call: ServiceCall) -> None:
+    async def handle_new_task(call: ServiceCall) -> None:
         """Call when a user creates a new Todoist Task from Home Assistant."""
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
 
-        # @TODO:
         # Create the task
-        item = {}  # api.items.add(call.data[CONTENT], project_id=project_id)
+        content = call.data[CONTENT]
+        data = {"project_id": project_id}
 
         if LABELS in call.data:
             task_labels = call.data[LABELS]
             label_ids = [label_id_lookup[label.lower()] for label in task_labels]
-            item.update(labels=label_ids)
+            data["label_ids"] = label_ids
 
         if ASSIGNEE in call.data:
             task_assignee = call.data[ASSIGNEE].lower()
             if task_assignee in collaborator_id_lookup:
-                item.update(responsible_uid=collaborator_id_lookup[task_assignee])
+                data["assignee"] = collaborator_id_lookup[task_assignee]
             else:
                 raise ValueError(
                     f"User is not part of the shared project. user: {task_assignee}"
                 )
 
         if PRIORITY in call.data:
-            item.update(priority=call.data[PRIORITY])
+            data["priority"] = call.data[PRIORITY]
 
-        _due: dict = {}
         if DUE_DATE_STRING in call.data:
-            _due["string"] = call.data[DUE_DATE_STRING]
+            data["due_string"] = call.data[DUE_DATE_STRING]
 
         if DUE_DATE_LANG in call.data:
-            _due["lang"] = call.data[DUE_DATE_LANG]
+            data["due_lang"] = call.data[DUE_DATE_LANG]
 
         if DUE_DATE in call.data:
             due_date = dt.parse_datetime(call.data[DUE_DATE])
@@ -219,11 +222,13 @@ async def async_setup_platform(
             # Format it in the manner Todoist expects
             due_date = dt.as_utc(due_date)
             date_format = "%Y-%m-%dT%H:%M:%S"
-            _due["date"] = datetime.strftime(due_date, date_format)
+            data["due_datetime"] = datetime.strftime(due_date, date_format)
 
-        if _due:
-            item.update(due=_due)
+        api_task = await api.add_task(content, **data)
 
+        # @TODO: rest-api doesn't support reminders, this works manually using
+        # the sync api, but doesn't feel super great.
+        sync_url = get_sync_url("sync")
         _reminder_due: dict = {}
         if REMINDER_DATE_STRING in call.data:
             _reminder_due["string"] = call.data[REMINDER_DATE_STRING]
@@ -245,12 +250,22 @@ async def async_setup_platform(
             date_format = "%Y-%m-%dT%H:%M:%S"
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
-        if _reminder_due:
-            pass
-            # api.reminders.add(item["id"], due=_reminder_due)
+        def add_reminder(r):
+            d = {
+                "commands": [
+                    {
+                        "type": "reminder_add",
+                        "temp_id": str(uuid.uuid1()),
+                        "uuid": str(uuid.uuid1()),
+                        "args": {"item_id": api_task.id, "due": r},
+                    }
+                ]
+            }
+            return post(requests.Session(), sync_url, token, data=d)
 
-        # Commit changes
-        # api.commit()
+        if _reminder_due:
+            hass.async_add_executor_job(add_reminder, _reminder_due)
+
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
     hass.services.async_register(
@@ -424,9 +439,10 @@ class TodoistProjectData:
                 start=start,
                 end=start + timedelta(days=1),
             )
-        return CalendarEvent(
-            summary=self.event[SUMMARY], start=self.event[START], end=self.event[END]
-        )
+        if end := self.event[END]:
+            return CalendarEvent(
+                summary=self.event[SUMMARY], start=self.event[START], end=end
+            )
 
     def create_todoist_task(self, data: Task):
         """
@@ -619,11 +635,6 @@ class TodoistProjectData:
     async def async_update(self) -> None:
         """Get the latest data."""
         if self._id is None:
-            # @TODO: sets self._api.state to empty values
-            # self._api.reset_state()
-            # @TODO: This fetches the latest updated date from the server perhaps
-            # replace with self._api.get_tasks()
-            # self._api.sync()
             tasks = await self._api.get_tasks()
             project_task_data = [
                 task
@@ -632,12 +643,7 @@ class TodoistProjectData:
                 or task.project_id in self._project_id_whitelist
             ]
         else:
-            # replace with self._api.get_tasks(project_id=self._id)
-            # https://developer.todoist.com/rest/v1/#get-active-tasks
             project_task_data = await self._api.get_tasks(project_id=self._id)
-            # Currently returns items key from:
-            # https://developer.todoist.com/sync/v8/#get-project-data
-            # project_task_data = self._api.projects.get_data(self._id)[TASKS]
 
         # If we have no data, we can just return right away.
         if not project_task_data:
@@ -647,7 +653,6 @@ class TodoistProjectData:
 
         # Keep an updated list of all tasks in this project.
         project_tasks = []
-
         for task in project_task_data:
             todoist_task = self.create_todoist_task(task)
             if todoist_task is not None:
