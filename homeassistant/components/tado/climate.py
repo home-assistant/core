@@ -175,7 +175,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
             hvac_mode_fan_speeds = None
 
             if "temperatures" in capabilities[mode]:
-                hvac_mode_temperatures = capabilities[mode]["temperatures"]["celsius"]
+                hvac_mode_temperatures = capabilities[mode]["temperatures"]
                 hvac_mode_support_flags = ClimateEntityFeature.TARGET_TEMPERATURE
 
             if "light" in capabilities[mode]:
