@@ -191,7 +191,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
             for swing_mode in KNOWN_TADO_SWING_MODES:
                 if not capabilities[mode][swing_mode]:
                     continue
-                if supported_swing_modes:
+                if hvac_mode_swing_modes:
                     hvac_mode_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[swing_mode])
                     hvac_mode_swing_modes.append(SWING_BOTH)
                     continue
