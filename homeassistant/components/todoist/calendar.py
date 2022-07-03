@@ -216,7 +216,6 @@ async def async_setup_platform(
         project_name = call.data[PROJECT_NAME]
         project_id = project_id_lookup[project_name]
 
-        # @TODO:
         # Create the task
         content = call.data[CONTENT]
         data = {"project_id": project_id}
