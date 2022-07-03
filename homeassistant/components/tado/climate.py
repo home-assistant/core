@@ -66,6 +66,7 @@ from .const import (
     TYPE_HEATING,
     TADO_HVAC_MODE_FEATURE_MAP,
     CONST_BASE_FEATURES,
+    TADO_LIGHT_OFF,
 )
 from .entity import TadoZoneEntity
 
@@ -145,9 +146,9 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     ]
     supported_swing_modes = None
     supported_fan_modes = None
+    supported_light_modes = None
     heat_temperatures = None
     cool_temperatures = None
-    light = None
 
     if zone_type == TYPE_AIR_CONDITIONING:
         # Heat is preferred as it generally has a lower minimum temperature
@@ -171,8 +172,8 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
                     support_flags |= ClimateEntityFeature.SWING_MODE
                     supported_swing_modes = [SWING_OFF, TADO_TO_HA_SWING_MODE_MAP[swing_mode]]
 
-            if CONST_LIGHT in capabilities[mode] and light is None:
-                light = capabilities[mode][CONST_LIGHT][0]
+            if CONST_LIGHT in capabilities[mode] and supported_light_modes is None:
+                supported_light_modes = capabilities[mode][CONST_LIGHT]
 
             if not capabilities[mode].get("fanLevel"):
                 continue
@@ -237,7 +238,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
         supported_swing_modes,
         support_flags,
         device_info,
-        light,
+        supported_light_modes,
     )
     return entity
 
@@ -262,7 +263,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         supported_swing_modes,
         support_flags,
         device_info,
-        light,
+        supported_light_modes,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -278,6 +279,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._supported_hvac_modes = supported_hvac_modes
         self._supported_fan_modes = supported_fan_modes
         self._supported_swing_modes = supported_swing_modes
+        self._supported_light_modes = supported_light_modes
         self._support_flags = support_flags
 
         self._available = False
@@ -303,8 +305,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_vertical_swing_mode = TADO_SWING_OFF
         self._current_tado_horizontal_swing_mode = TADO_SWING_OFF
 
-        # Todo: obtain from PyTado
-        self._current_tado_light_mode = light
+        self._current_tado_light_mode = TADO_LIGHT_OFF
 
         self._tado_zone_data = None
 
@@ -709,14 +710,18 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         fan_speed = None
         horizontal_swing = None
         vertical_swing = None
+        light_mode = None
 
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
 
         # Todo: Handle ACs where only one swing mode is supported.
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
-            horizontal_swing = self._current_tado_horizontal_swing_mode
-            vertical_swing = self._current_tado_vertical_swing_mode
+            horizontal_swing = self._current_tado_horizontal_swing_mode or TADO_SWING_OFF
+            vertical_swing = self._current_tado_vertical_swing_mode or TADO_SWING_OFF
+
+        if self._supported_light_modes and self._current_tado_light_mode is None:
+            light_mode = self._supported_light_modes[0]
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
@@ -728,5 +733,5 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             fan_speed=fan_speed,
             horizontal_swing=horizontal_swing,
             vertical_swing=vertical_swing,
-            light=self._current_tado_light_mode,
+            light=light_mode,
         )
