@@ -33,8 +33,11 @@ async def async_migrate_legacy_entries(
         for domain, serial in dev_entry.identifiers:
             if domain != DOMAIN or serial in existing_serials:
                 continue
-            _LOGGER.debug("Migrating %s with serial %s", dev_entry.identifiers, serial)
-            async_init_discovery_flow(hass, discovered_hosts_by_serial[serial], serial)
+            if host := discovered_hosts_by_serial.get(serial):
+                _LOGGER.debug(
+                    "Migrating %s with serial %s", dev_entry.identifiers, serial
+                )
+                async_init_discovery_flow(hass, host, serial)
 
     return len(
         er.async_entries_for_config_entry(er.async_get(hass), legacy_entry.entry_id)
