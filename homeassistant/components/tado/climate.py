@@ -183,7 +183,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             if "temperatures" in capabilities[mode]:
                 hvac_mode_temperatures = capabilities[mode]["temperatures"]
-                hvac_mode_support_flags = ClimateEntityFeature.TARGET_TEMPERATURE
+                hvac_mode_support_flags |= ClimateEntityFeature.TARGET_TEMPERATURE
 
             if "light" in capabilities[mode]:
                 hvac_mode_light_modes = capabilities[mode][CONST_LIGHT]
@@ -391,6 +391,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
+        _LOGGER.warning(self._current_capabilities)
         return self._current_capabilities["support_flags"]
 
     @property
