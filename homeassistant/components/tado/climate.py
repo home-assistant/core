@@ -589,6 +589,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_swing_mode = self._tado_zone_data.current_swing_mode
         self._current_tado_vertical_swing_mode = self._tado_zone_data.current_vertical_swing_mode
         self._current_tado_horizontal_swing_mode = self._tado_zone_data.current_horizontal_swing_mode
+        self._current_tado_light_mode = self._tado_zone_data.current_light_mode
 
     @callback
     def _async_update_callback(self):
