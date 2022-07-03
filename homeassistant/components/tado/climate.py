@@ -67,6 +67,7 @@ from .const import (
     TADO_HVAC_MODE_FEATURE_MAP,
     CONST_BASE_FEATURES,
     TADO_LIGHT_OFF,
+    TADO_MODES_WITH_NO_FAN_SETTING,
 )
 from .entity import TadoZoneEntity
 
@@ -703,18 +704,14 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             overlay_mode,
         )
 
-        temperature_to_send = self._target_temp
-        if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_TEMP_SETTING:
-            # A temperature cannot be passed with these modes
-            temperature_to_send = None
-
-        fan_speed = None
         horizontal_swing = None
         vertical_swing = None
         light_mode = None
+        fan_speed_to_send = None
+        temperature_to_send = self._target_temp
 
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
-            fan_speed = self._current_tado_fan_speed
+            fan_speed_to_send = self._current_tado_fan_speed
 
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
             if SWING_VERTICAL in self._supported_swing_modes:
@@ -728,6 +725,13 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if self._supported_light_modes:
             light_mode = self._current_tado_light_mode or self._supported_light_modes[0]
 
+        # Tado only accepts certain settings in some HVAC modes.
+        # Here we reset any forbidden settings so our requests won't be rejected.
+        if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_TEMP_SETTING:
+            temperature_to_send = None
+        if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_FAN_SETTING:
+            fan_speed_to_send = None
+
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
             overlay_mode=overlay_mode,  # What to do when the period ends
@@ -735,7 +739,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             duration=duration,
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
-            fan_speed=fan_speed,
+            fan_speed=fan_speed_to_send,
             horizontal_swing=horizontal_swing,
             vertical_swing=vertical_swing,
             light=light_mode,

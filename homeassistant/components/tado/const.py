@@ -134,6 +134,9 @@ TADO_MODES_TO_HA_CURRENT_HVAC_ACTION = {
 
 # These modes will not allow a temp to be set
 TADO_MODES_WITH_NO_TEMP_SETTING = [CONST_MODE_AUTO, CONST_MODE_DRY, CONST_MODE_FAN]
+
+# These modes will not allow a fan speed to be set
+TADO_MODES_WITH_NO_FAN_SETTING = [CONST_MODE_DRY]
 #
 # HVAC_MODE_HEAT_COOL is mapped to CONST_MODE_AUTO
 #    This lets tado decide on a temp
