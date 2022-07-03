@@ -803,7 +803,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.0
+onvif-zeep-async==1.2.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
