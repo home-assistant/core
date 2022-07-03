@@ -63,7 +63,7 @@ class NetioSwitch(NetioDeviceEntity, SwitchEntity):
         return "_".join(
             [
                 DOMAIN,
-                self.pdu.host,
+                self.pdu.get_device_serial_number(),
                 "outlet",
                 str(self._outlet),
             ]

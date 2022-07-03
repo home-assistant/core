@@ -125,7 +125,7 @@ class NetioSensor(NetioDeviceEntity, SensorEntity):
         return "_".join(
             [
                 DOMAIN,
-                self.pdu.host,
+                self.pdu.get_device_serial_number(),
                 "sensor",
                 self.measurement,
             ]

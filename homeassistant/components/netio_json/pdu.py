@@ -81,7 +81,7 @@ class NetioPDU:
         self.model: str | None = None
         self.device_name: str | None = None
         self._mac: str | None = None
-        self.serial_number: str | None = None
+        self._serial_number: str | None = None
         self._num_output: int | None = None
         self._num_input: int | None = None
         self.sw_version: str | None = None
@@ -121,7 +121,7 @@ class NetioPDU:
         self.model = self._get_device_model(info["Agent"]["Model"])
         self.device_name = info["Agent"]["DeviceName"]
         self._mac = info["Agent"]["MAC"]
-        self.serial_number = info["Agent"]["SerialNumber"]
+        self._serial_number = info["Agent"]["SerialNumber"]
         self._num_output = info["Agent"]["NumOutputs"]
         self._num_input = info["Agent"]["NumInputs"]
         self.sw_version = info["Agent"]["Version"]
@@ -137,14 +137,12 @@ class NetioPDU:
 
     async def async_get_state(self) -> None:
         """Get the state of the NetIO PDU."""
-        _LOGGER.info("Update PDU")
         try:
             data = await self.hass.async_add_executor_job(self.pdu.get_info)
             data[API_OUTLET] = {}
             outputs = await self.hass.async_add_executor_job(self.pdu.get_outputs)
             for out in outputs:
                 outdict = out._asdict()
-                # _LOGGER.info(outdict)
                 data[API_OUTLET][outdict["ID"]] = outdict
         except KeyError:
             return None
@@ -166,15 +164,17 @@ class NetioPDU:
             raise NotImplementedError("Device is configured as Read Only")
         self.pdu.set_output(output, Netio.ACTION.ON)
 
-    async def get_outlet(self, outlet: int, key: str) -> str | int | float | None:
-        """Return Outlet values."""
-        try:
-            info = await self.hass.async_add_executor_job(self.pdu.get_output, outlet)
-            _LOGGER.warning("OUTLET: %s", info)
-            # return info._fields[key]
-            return getattr(info, key)
-        except KeyError:
-            return None
+    # async def get_outlet(self, outlet: int, key: str) -> str | int | float | None:
+    #     """Return Outlet values."""
+    #     try:
+    #         info = await self.hass.async_add_executor_job(self.pdu.get_output, outlet)
+    #         return getattr(info, key)
+    #     except KeyError:
+    #         return None
+
+    def get_device_serial_number(self) -> str:
+        """Return the devices serial number."""
+        return str(self._serial_number)
 
     def _get_device_model(self, model: str) -> str:
         """Return the full device model name."""
