@@ -145,7 +145,9 @@ class HomeKitEntity(Entity):
     def name(self) -> str | None:
         """Return the name of the device if any."""
         accessory_name = self.accessory.name
-        if self._char_name and accessory_name != self._char_name:
+        if self._char_name and accessory_name.casefold().replace(
+            " ", ""
+        ) != self._char_name.casefold().replace(" ", ""):
             return f"{accessory_name} {self._char_name}"
         return accessory_name
 

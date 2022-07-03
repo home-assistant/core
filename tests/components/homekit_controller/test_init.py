@@ -16,8 +16,8 @@ from .common import Helper, remove_device
 
 from tests.components.homekit_controller.common import setup_test_component
 
-ALIVE_DEVICE_NAME = "Light Bulb"
-ALIVE_DEEVICE_ENTITY_ID = "light.testdevice"
+ALIVE_DEVICE_NAME = "testdevice"
+ALIVE_DEVICE_ENTITY_ID = "light.testdevice"
 
 
 def create_motion_sensor_service(accessory):
@@ -72,7 +72,7 @@ async def test_device_remove_devices(hass, hass_ws_client):
     entry_id = config_entry.entry_id
 
     registry: EntityRegistry = er.async_get(hass)
-    entity = registry.entities[ALIVE_DEEVICE_ENTITY_ID]
+    entity = registry.entities[ALIVE_DEVICE_ENTITY_ID]
     device_registry = dr.async_get(hass)
 
     live_device_entry = device_registry.async_get(entity.device_id)
