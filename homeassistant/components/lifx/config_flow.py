@@ -1,6 +1,7 @@
 """Config flow flow LIFX."""
 from __future__ import annotations
 
+import logging
 import socket
 from typing import Any
 
@@ -14,11 +15,11 @@ from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
 from .const import CONF_SERIAL, DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
-from .migration import async_get_device_entry
 from .util import (
     async_entry_is_legacy,
     async_get_legacy_entry,
@@ -26,6 +27,8 @@ from .util import (
     lifx_features,
     mac_matches_serial_number,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -54,6 +57,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
+        _LOGGER.debug("async_step_integration_discovery %s", discovery_info)
+
         return await self._async_handle_discovery(
             host=discovery_info[CONF_HOST], serial=discovery_info[CONF_SERIAL]
         )
@@ -62,6 +67,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, host: str, serial: str | None = None, mac: str | None = None
     ) -> FlowResult:
         """Handle any discovery."""
+        _LOGGER.debug("Discovery %s %s %s", host, serial, mac)
         if serial:
             await self.async_set_unique_id(formatted_serial(serial))
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
@@ -96,12 +102,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovered_device is not None
         assert self.unique_id is not None
-        legacy_entry = async_get_legacy_entry(self.hass)
-        if legacy_entry is not None and async_get_device_entry(
-            self.hass, legacy_entry, {self.unique_id}
-        ):
-            # If we discover a device to be migrated we set it up
-            return self._async_create_entry_from_device(self._discovered_device)
+        if legacy_entry := async_get_legacy_entry(self.hass):
+            _LOGGER.debug("Found legacy entry %s", legacy_entry.entry_id)
+            device_registry = dr.async_get(self.hass)
+            existing_device = device_registry.async_get_device(
+                identifiers={(DOMAIN, self.unique_id)}
+            )
+            if (
+                existing_device is not None
+                and legacy_entry.entry_id in existing_device.config_entries
+            ):
+                _LOGGER.debug("Found unmigrated device with serial %s", self.unique_id)
+                # If we discover a device to be migrated we set it up
+                return self._async_create_entry_from_device(self._discovered_device)
 
         if user_input is not None:
             return self._async_create_entry_from_device(self._discovered_device)
@@ -184,9 +197,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: device.ip_addr})
         return self.async_create_entry(
             title=device.label,
-            data={
-                CONF_HOST: device.ip_addr,
-            },
+            data={CONF_HOST: device.ip_addr},
         )
 
     async def _async_try_connect(
