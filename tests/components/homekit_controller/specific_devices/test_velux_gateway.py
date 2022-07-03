@@ -73,22 +73,22 @@ async def test_velux_cover_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="sensor.velux_sensor_temperature",
-                            friendly_name="VELUX Sensor Temperature",
+                            entity_id="sensor.velux_sensor_temperature_sensor",
+                            friendly_name="VELUX Sensor Temperature sensor",
                             unique_id="homekit-a11b111-8",
                             unit_of_measurement=TEMP_CELSIUS,
                             state="18.9",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.velux_sensor_humidity",
-                            friendly_name="VELUX Sensor Humidity",
+                            entity_id="sensor.velux_sensor_humidity_sensor",
+                            friendly_name="VELUX Sensor Humidity sensor",
                             unique_id="homekit-a11b111-11",
                             unit_of_measurement=PERCENTAGE,
                             state="58",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.velux_sensor_co2",
-                            friendly_name="VELUX Sensor CO2",
+                            entity_id="sensor.velux_sensor_carbon_dioxide_sensor",
+                            friendly_name="VELUX Sensor Carbon Dioxide sensor",
                             unique_id="homekit-a11b111-14",
                             unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                             state="400",
