@@ -67,7 +67,7 @@ from .const import (
     TADO_HVAC_MODE_FEATURE_MAP,
     CONST_BASE_FEATURES,
     TADO_LIGHT_OFF,
-    TADO_MODES_WITH_NO_FAN_SETTING,
+    TADO_MODES_WITH_NO_FAN_SETTING, CONST_MODE_FAN, CONST_FAN_LEVEL_1,
 )
 from .entity import TadoZoneEntity
 
@@ -731,6 +731,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             temperature_to_send = None
         if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_FAN_SETTING:
             fan_speed_to_send = None
+        if self._current_tado_hvac_mode in CONST_MODE_FAN and fan_speed_to_send == CONST_FAN_AUTO:
+            fan_speed_to_send = CONST_FAN_LEVEL_1
+
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
