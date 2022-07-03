@@ -102,6 +102,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Confirm discovery."""
         assert self._discovered_device is not None
         assert self.unique_id is not None
+        _LOGGER.debug(
+            "Confirming discovery: %s with serial %s",
+            self._discovered_device.label,
+            self.unique_id,
+        )
         if legacy_entry := async_get_legacy_entry(self.hass):
             _LOGGER.debug("Found legacy entry %s", legacy_entry.entry_id)
             device_registry = dr.async_get(self.hass)

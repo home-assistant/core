@@ -1,11 +1,13 @@
 """Support for LIFX."""
 from __future__ import annotations
 
+from collections.abc import Iterable
 from datetime import timedelta
 import logging
 import socket
 from typing import Any
 
+from aiolifx.aiolifx import Light
 from aiolifx.connection import LIFXConnection
 import voluptuous as vol
 
@@ -67,7 +69,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_legacy_migration(
-    hass: HomeAssistant, legacy_entry: ConfigEntry
+    hass: HomeAssistant,
+    legacy_entry: ConfigEntry,
+    discovered_devices: Iterable[Light],
 ) -> None:
     """Migrate config entries."""
     existing_serials = {
@@ -75,16 +79,17 @@ async def async_legacy_migration(
         for entry in hass.config_entries.async_entries(DOMAIN)
         if entry.unique_id and not async_entry_is_legacy(entry)
     }
-    discovered_devices = await async_discover_devices(hass)
     # device.mac_addr not the mac_address, its the serial number
     hosts_by_serial = {device.mac_addr: device.ip_addr for device in discovered_devices}
     missing_discovery_count = await async_migrate_legacy_entries(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
-        raise ConfigEntryNotReady(
-            f"Migration in progress, waiting to discover {missing_discovery_count} device(s)"
+        _LOGGER.info(
+            "Migration in progress, waiting to discover %s device(s)",
+            missing_discovery_count,
         )
+        return
 
     _LOGGER.debug(
         "Migration successful, removing legacy entry %s", legacy_entry.entry_id
@@ -98,8 +103,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _async_discovery(*_: Any) -> None:
         if discovered := await async_discover_devices(hass):
+            if legacy_entry := async_get_legacy_entry(hass):
+                await async_legacy_migration(hass, legacy_entry, discovered)
             async_trigger_discovery(hass, discovered)
 
+    await _async_discovery()
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
     return True
@@ -107,10 +115,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
-    _LOGGER.debug("setting up entry %s", entry.entry_id)
-
     if async_entry_is_legacy(entry):
-        await async_legacy_migration(hass, entry)
         return True
 
     if legacy_entry := async_get_legacy_entry(hass):
@@ -146,6 +151,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    if async_entry_is_legacy(entry):
+        return True
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         coordinator: LIFXUpdateCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
         coordinator.connection.async_stop()

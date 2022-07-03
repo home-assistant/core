@@ -4,8 +4,7 @@ from datetime import timedelta
 
 from homeassistant import setup
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -64,9 +63,7 @@ async def test_migration_device_online_end_to_end(
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
-        assert config_entry.state == ConfigEntryState.SETUP_RETRY
-        await hass.async_block_till_done()
-        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
         legacy_entry = None
@@ -109,6 +106,8 @@ async def test_migration_device_online_end_to_end_after_downgrade(
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
+        await hass.async_block_till_done()
 
         assert device.config_entries == {config_entry.entry_id}
         assert light_entity_reg.config_entry_id == config_entry.entry_id
@@ -127,17 +126,17 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
     hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
 ):
     """Test migration from single config entry."""
-    config_entry = MockConfigEntry(
+    legacy_config_entry = MockConfigEntry(
         domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
     )
-    config_entry.add_to_hass(hass)
+    legacy_config_entry.add_to_hass(hass)
 
     other_domain_config_entry = MockConfigEntry(
         domain="other_domain", data={}, unique_id="other_domain"
     )
     other_domain_config_entry.add_to_hass(hass)
     device = device_reg.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
+        config_entry_id=legacy_config_entry.entry_id,
         identifiers={(DOMAIN, SERIAL)},
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
         name=LABEL,
@@ -148,7 +147,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         name=LABEL,
     )
     light_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
+        config_entry=legacy_config_entry,
         platform=DOMAIN,
         domain="light",
         unique_id=SERIAL,
@@ -164,7 +163,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         device_id=device.id,
     )
     garbage_entity_reg = entity_reg.async_get_or_create(
-        config_entry=config_entry,
+        config_entry=legacy_config_entry,
         platform=DOMAIN,
         domain="sensor",
         unique_id="garbage",
@@ -175,29 +174,24 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
-
-        migrated_entry = None
-        for entry in hass.config_entries.async_entries(DOMAIN):
-            if entry.unique_id == DOMAIN:
-                migrated_entry = entry
-                break
-
-        assert migrated_entry is not None
-
-        assert device.config_entries == {migrated_entry.entry_id}
-        assert light_entity_reg.config_entry_id == migrated_entry.entry_id
-        assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
-        assert garbage_entity_reg.config_entry_id == config_entry.entry_id
-
-        assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
+        new_entry = None
         legacy_entry = None
         for entry in hass.config_entries.async_entries(DOMAIN):
             if entry.unique_id == DOMAIN:
                 legacy_entry = entry
-                break
+            else:
+                new_entry = entry
 
-        assert legacy_entry is not None
+        assert new_entry is not None
+        assert legacy_entry is None
+
+        assert device.config_entries == {legacy_config_entry.entry_id}
+        assert light_entity_reg.config_entry_id == legacy_config_entry.entry_id
+        assert ignored_entity_reg.config_entry_id == other_domain_config_entry.entry_id
+        assert garbage_entity_reg.config_entry_id == legacy_config_entry.entry_id
+
+        assert er.async_entries_for_config_entry(entity_reg, legacy_config_entry) == []
+        assert dr.async_entries_for_config_entry(device_reg, legacy_config_entry) == []
