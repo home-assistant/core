@@ -765,6 +765,9 @@ nexia==2.0.1
 # homeassistant.components.discord
 nextcord==2.0.0a8
 
+# homeassistant.components.nextdns
+nextdns==1.0.0
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
