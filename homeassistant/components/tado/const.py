@@ -84,7 +84,7 @@ CONST_SWING_MODE_VERTICAL = "verticalSwing"
 CONST_SWING_MODE_HORIZONTAL = "horizontalSwing"
 
 # Some ACs require a "light" status of either "ON" or "OFF"
-CONST_LIGHT="light"
+CONST_LIGHT = "light"
 
 
 # When we change the temperature setting, we need an overlay mode
