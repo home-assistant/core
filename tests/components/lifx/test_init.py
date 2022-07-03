@@ -14,7 +14,7 @@ from homeassistant.util import dt as dt_util
 
 from . import (
     IP_ADDRESS,
-    MAC_ADDRESS,
+    SERIAL,
     MockFailingLifxCommand,
     _mocked_bulb,
     _mocked_failing_bulb,
@@ -53,25 +53,24 @@ async def test_configuring_lifx_causes_discovery(hass):
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        call_count = start_calls
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert start_calls == call_count * 2
+        assert start_calls == 2
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
         await hass.async_block_till_done()
-        assert start_calls == call_count * 3
+        assert start_calls == 4
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
         await hass.async_block_till_done()
-        assert start_calls == call_count * 4
+        assert start_calls == 6
 
 
 async def test_config_entry_reload(hass):
     """Test that a config entry can be reloaded."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
@@ -86,7 +85,7 @@ async def test_config_entry_reload(hass):
 async def test_config_entry_retry(hass):
     """Test that a config entry can be retried."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
     )
     already_migrated_config_entry.add_to_hass(hass)
     with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
@@ -100,7 +99,7 @@ async def test_config_entry_retry(hass):
 async def test_get_version_fails(hass):
     """Test we handle get version failing."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_bulb()
@@ -117,7 +116,7 @@ async def test_get_version_fails(hass):
 async def test_dns_error_at_startup(hass):
     """Test we handle get version failing."""
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
     )
     already_migrated_config_entry.add_to_hass(hass)
     bulb = _mocked_failing_bulb()

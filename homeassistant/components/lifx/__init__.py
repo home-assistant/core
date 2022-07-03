@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+import logging
 import socket
 from typing import Any
 
@@ -27,7 +28,11 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import async_entry_is_legacy, mac_matches_serial_number
+from .util import (
+    async_entry_is_legacy,
+    async_get_legacy_entry,
+    mac_matches_serial_number,
+)
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -58,6 +63,8 @@ DATA_LIFX_MANAGER = "lifx_manager"
 PLATFORMS = [Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_legacy_migration(
     hass: HomeAssistant, legacy_entry: ConfigEntry
@@ -71,12 +78,17 @@ async def async_legacy_migration(
     discovered_devices = await async_discover_devices(hass)
     # device.mac_addr not the mac_address, its the serial number
     hosts_by_serial = {device.mac_addr: device.ip_addr for device in discovered_devices}
-    migration_complete = await async_migrate_legacy_entries(
+    missing_discovery_count = await async_migrate_legacy_entries(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
-    if not migration_complete:
-        raise ConfigEntryNotReady("Migration in progress, waiting to discover devices")
+    if missing_discovery_count:
+        raise ConfigEntryNotReady(
+            f"Migration in progress, waiting to discover {missing_discovery_count} device(s)"
+        )
 
+    _LOGGER.debug(
+        "Migration successful, removing legacy entry %s", legacy_entry.entry_id
+    )
     await hass.config_entries.async_remove(legacy_entry.entry_id)
 
 
@@ -95,17 +107,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up LIFX from a config entry."""
+    _LOGGER.debug("setting up entry %s", entry.entry_id)
+
     if async_entry_is_legacy(entry):
         await async_legacy_migration(hass, entry)
         return True
 
-    legacy_entry: ConfigEntry | None = None
-    for config_entry in hass.config_entries.async_entries(DOMAIN):
-        if async_entry_is_legacy(config_entry):
-            legacy_entry = config_entry
-            break
-
-    if legacy_entry is not None:
+    if legacy_entry := async_get_legacy_entry(hass):
+        # If the legacy entry still exists, harvest the entities
+        # that are moving to this config entry.
         await async_migrate_entities_devices(hass, legacy_entry.entry_id, entry)
 
     assert entry.unique_id is not None
