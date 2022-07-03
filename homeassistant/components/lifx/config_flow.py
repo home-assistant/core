@@ -45,14 +45,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery via dhcp."""
         mac = discovery_info.macaddress
         host = discovery_info.ip
+        hass = self.hass
         for entry in self._async_current_entries():
             if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
                 if entry.data[CONF_HOST] != host:
-                    self.hass.config_entries.async_update_entry(
+                    hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: host}
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
+                    hass.async_create_task(
+                        hass.config_entries.async_reload(entry.entry_id)
                     )
                 return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery(host)
