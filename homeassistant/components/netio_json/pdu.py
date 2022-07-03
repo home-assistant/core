@@ -9,12 +9,21 @@ from Netio.exceptions import AuthError, CommunicationError
 
 # import asyncio
 import aiohttp
+import async_timeout
 from requests.exceptions import ConnectionError as requestsConnectionError
 
 from homeassistant import core
 from homeassistant.config_entries import ConfigEntry  # SOURCE_IMPORT,
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import (
+    API_GLOBAL_ENERGY_START,
+    API_GLOBAL_MEASURE,
+    API_OUTLET,
+    DOMAIN,
+    SCAN_INTERVAL,
+)
 
 # import async_timeout
 
@@ -101,7 +110,6 @@ class NetioPDU:
 
     async def async_initialize_pdu(self) -> None:
         """Initialize connection with the NetIO PDU."""
-        # await self.hass.async_add_executor_job(self.pdu.init)
         try:
             await self.hass.async_add_executor_job(self.pdu.init)
         except (CommunicationError, AuthError, ValueError) as ex:
@@ -118,9 +126,29 @@ class NetioPDU:
         self._num_input = info["Agent"]["NumInputs"]
         self.sw_version = info["Agent"]["Version"]
         self.energy_start = datetime.strptime(
-            info["GlobalMeasure"]["EnergyStart"], "%Y-%m-%dT%H:%M:%S%z"
+            info[API_GLOBAL_MEASURE][API_GLOBAL_ENERGY_START], "%Y-%m-%dT%H:%M:%S%z"
         )
-        # 2022-07-01T00:38:37+01:00
+
+    def ready(self) -> bool:
+        """Return True if device MAC is set."""
+        if self._mac is not None:
+            return True
+        return False
+
+    async def async_get_state(self) -> None:
+        """Get the state of the NetIO PDU."""
+        _LOGGER.info("Update PDU")
+        try:
+            data = await self.hass.async_add_executor_job(self.pdu.get_info)
+            data[API_OUTLET] = {}
+            outputs = await self.hass.async_add_executor_job(self.pdu.get_outputs)
+            for out in outputs:
+                outdict = out._asdict()
+                # _LOGGER.info(outdict)
+                data[API_OUTLET][outdict["ID"]] = outdict
+        except KeyError:
+            return None
+        return data
 
     def output_count(self) -> int | None:
         """Return the number of outputs."""
@@ -138,18 +166,8 @@ class NetioPDU:
             raise NotImplementedError("Device is configured as Read Only")
         self.pdu.set_output(output, Netio.ACTION.ON)
 
-    async def get_global_measures(self, key: str) -> str | int | float | None:
-        """Return global measures."""
-
-        try:
-            info = await self.hass.async_add_executor_job(self.pdu.get_info)
-            return info["GlobalMeasure"][key]
-        except KeyError:
-            return None
-
     async def get_outlet(self, outlet: int, key: str) -> str | int | float | None:
         """Return Outlet values."""
-
         try:
             info = await self.hass.async_add_executor_job(self.pdu.get_output, outlet)
             _LOGGER.warning("OUTLET: %s", info)
@@ -177,6 +195,41 @@ class NetioPDU:
         if model == "8QS":
             return "PowerPDU 8QS"
         return f"UNKNOWN {model}"
+
+
+class NetioPDUCoordinator(DataUpdateCoordinator):
+    """Data Update Coordinator for a NetIO PDU."""
+
+    def __init__(self, hass, pdu):
+        """Initialize my coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            # Name of the data. For logging purposes.
+            name="NetIO PDU",
+            # Polling interval. Will only be polled if there are subscribers.
+            update_interval=SCAN_INTERVAL,
+        )
+        self.pdu = pdu
+
+    async def _async_update_data(self):
+        """Fetch data from API endpoint.
+
+        This is the place to pre-process the data to lookup tables
+        so entities can quickly look up their data.
+        """
+        # _LOGGER.info("Fetching PDU Data")
+        try:
+            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+            # handled by the data update coordinator.
+            async with async_timeout.timeout(10):
+                return await self.pdu.async_get_state()
+        except InvalidAuth as err:
+            # Raising ConfigEntryAuthFailed will cancel future updates
+            # and start a config flow with SOURCE_REAUTH (async_step_reauth)
+            raise ConfigEntryAuthFailed from err
+        except CannotConnect as err:
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 
 
 class CannotConnect(ConnectionError):
