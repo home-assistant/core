@@ -170,6 +170,72 @@ async def test_light_strip(hass: HomeAssistant) -> None:
     }
     bulb.set_color_zones.reset_mock()
 
+    bulb.color_zones = [
+        (0, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+    ]
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_HS_COLOR: (10, 30)},
+        blocking=True,
+    )
+    # Single color uses the fast path
+    assert bulb.set_color.calls[0][0][0] == [1820, 19660, 65535, 3500]
+    bulb.set_color.reset_mock()
+    assert len(bulb.set_color_zones.calls) == 0
+
+    bulb.color_zones = [
+        (0, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 10, 30)},
+        blocking=True,
+    )
+    # Single color uses the fast path
+    assert bulb.set_color.calls[0][0][0] == [64643, 62964, 65535, 3500]
+    bulb.set_color.reset_mock()
+    assert len(bulb.set_color_zones.calls) == 0
+
+    bulb.color_zones = [
+        (0, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_XY_COLOR: (0.3, 0.7)},
+        blocking=True,
+    )
+    # Single color uses the fast path
+    assert bulb.set_color.calls[0][0][0] == [15848, 65535, 65535, 3500]
+    bulb.set_color.reset_mock()
+    assert len(bulb.set_color_zones.calls) == 0
+
 
 async def test_color_light_with_temp(
     hass: HomeAssistant, mock_effect_conductor
