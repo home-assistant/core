@@ -57,5 +57,5 @@ def async_trigger_discovery(
 ) -> None:
     """Trigger config flows for discovered devices."""
     for device in discovered_devices:
-        # device.mac_addr not the mac_address, its the serial number
+        # device.mac_addr is not the mac_address, its the serial number
         async_init_discovery_flow(hass, device.ip_addr, device.mac_addr)
