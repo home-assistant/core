@@ -96,32 +96,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_device = device
         return await self.async_step_discovery_confirm()
 
+    @callback
+    def _async_discovered_pending_migration(self) -> bool:
+        """Check if a discovered device is pending migration."""
+        assert self.unique_id is not None
+        if not (legacy_entry := async_get_legacy_entry(self.hass)):
+            return False
+        device_registry = dr.async_get(self.hass)
+        existing_device = device_registry.async_get_device(
+            identifiers={(DOMAIN, self.unique_id)}
+        )
+        return bool(
+            existing_device is not None
+            and legacy_entry.entry_id in existing_device.config_entries
+        )
+
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Confirm discovery."""
         assert self._discovered_device is not None
-        assert self.unique_id is not None
         _LOGGER.debug(
             "Confirming discovery: %s with serial %s",
             self._discovered_device.label,
             self.unique_id,
         )
-        if legacy_entry := async_get_legacy_entry(self.hass):
-            _LOGGER.debug("Found legacy entry %s", legacy_entry.entry_id)
-            device_registry = dr.async_get(self.hass)
-            existing_device = device_registry.async_get_device(
-                identifiers={(DOMAIN, self.unique_id)}
-            )
-            if (
-                existing_device is not None
-                and legacy_entry.entry_id in existing_device.config_entries
-            ):
-                _LOGGER.debug("Found unmigrated device with serial %s", self.unique_id)
-                # If we discover a device to be migrated we set it up
-                return self._async_create_entry_from_device(self._discovered_device)
-
-        if user_input is not None:
+        if user_input is not None or self._async_discovered_pending_migration():
             return self._async_create_entry_from_device(self._discovered_device)
 
         self._set_confirm_only()
