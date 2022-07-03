@@ -568,7 +568,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def swing_modes(self):
         """Swing modes for the device."""
         if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
-            return self._supported_swing_modes
+            return self._current_capabilities["swing_modes"]
         return None
 
     @property
