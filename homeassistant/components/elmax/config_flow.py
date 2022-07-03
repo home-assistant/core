@@ -64,7 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     _password: str
     _panels_schema: vol.Schema
     _panel_names: dict
-    _reauth_panelid: str | None
+    _entry: config_entries.ConfigEntry
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -177,56 +177,52 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_panelid = entry_data.get(CONF_ELMAX_PANEL_ID)
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        if entry is None:
+            return await self.async_step_user()
+        self._entry = entry
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(self, user_input=None) -> FlowResult:
         """Handle reauthorization flow."""
         errors = {}
         if user_input is not None:
-            username = user_input.get(CONF_ELMAX_USERNAME)
-            password = user_input.get(CONF_ELMAX_PASSWORD)
-            panel_pin = user_input.get(CONF_ELMAX_PANEL_PIN)
-            entry = await self.async_set_unique_id(self._reauth_panelid)
-
-            # This is an edge case: if re-auth flow is triggered, it means that the integration is already
-            # configured, therefore the async_set_unique_id should return the entry. If this does not happen,
-            # just start over the configuration from user step.
-            if entry is None:
-                return await self.async_step_user()
+            username = user_input[CONF_ELMAX_USERNAME]
+            password = user_input[CONF_ELMAX_PASSWORD]
+            panel_pin = user_input[CONF_ELMAX_PANEL_PIN]
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
             try:
                 # Test login.
                 client = await self._async_login(username=username, password=password)
-
+                reauth_panel_id = self._entry.data[CONF_ELMAX_PANEL_ID]
                 # Make sure the panel we are authenticating to is still available.
                 panels = [
                     p
                     for p in await client.list_control_panels()
-                    if p.hash == self._reauth_panelid
+                    if p.hash == self._entry.data[CONF_ELMAX_PANEL_ID]
                 ]
                 if len(panels) < 1:
                     raise NoOnlinePanelsError()
 
                 # Verify the pin is still valid.from
                 await client.get_panel_status(
-                    control_panel_id=self._reauth_panelid, pin=panel_pin
+                    control_panel_id=self._entry.data[CONF_ELMAX_PANEL_ID],
+                    pin=panel_pin,
                 )
 
                 # If it is, proceed with configuration update.
                 self.hass.config_entries.async_update_entry(
-                    entry,
+                    self._entry,
                     data={
-                        CONF_ELMAX_PANEL_ID: self._reauth_panelid,
+                        CONF_ELMAX_PANEL_ID: reauth_panel_id,
                         CONF_ELMAX_PANEL_PIN: panel_pin,
                         CONF_ELMAX_USERNAME: username,
                         CONF_ELMAX_PASSWORD: password,
                     },
                 )
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                self._reauth_panelid = None
+                await self.hass.config_entries.async_reload(self._entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
             except ElmaxBadLoginError:
@@ -237,7 +233,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except NoOnlinePanelsError:
                 _LOGGER.warning(
                     "Panel ID %s is no longer associated to this user",
-                    self._reauth_panelid,
+                    reauth_panel_id,
                 )
                 errors["base"] = "reauth_panel_disappeared"
             except ElmaxBadPinError:
