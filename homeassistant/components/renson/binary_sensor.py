@@ -90,19 +90,13 @@ class RensonBinarySensor(BinarySensorEntity):
         renson_api: RensonVentilation,
     ) -> None:
         """Initialize class."""
-        self._state = None
         self.renson = renson_api
         self.field = description.field
         self.entity_description = description
 
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
     def update(self):
         """Get binary data and save it in state."""
-        self._state = self.renson.get_data_boolean(self.field)
+        self._attr_is_on = self.renson.get_data_boolean(self.field)
 
 
 class FirmwareSensor(BinarySensorEntity):
