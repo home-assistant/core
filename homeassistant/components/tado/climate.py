@@ -724,8 +724,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # Tado will refuse any HVAC changes if a "light" mode is listed as a
         # capability but not provided with every HVAC change
         # Todo: Allow light mode to be adjusted by the end user.
-        if self._supported_light_modes and self._current_tado_light_mode is None:
-            light_mode = self._supported_light_modes[0]
+        if self._supported_light_modes:
+            light_mode = self._current_tado_light_mode or self._supported_light_modes[0]
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
