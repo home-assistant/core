@@ -140,7 +140,6 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
-    support_flags = CONST_BASE_FEATURES
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
@@ -736,7 +735,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         fan_speed_to_send = None
         temperature_to_send = self._target_temp
 
-        if self._support_flags & ClimateEntityFeature.FAN_MODE:
+        if self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
             fan_speed_to_send = self._current_tado_fan_speed
 
         if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
@@ -749,7 +748,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         # capability but not provided with every HVAC change
         # Todo: Allow light mode to be adjusted by the end user.
         if self._current_capabilities["light_modes"]:
-            light_mode = self._current_tado_light_mode or self._supported_light_modes[0]
+            light_mode = self._current_tado_light_mode or self._current_capabilities["light_modes"][0]
 
         # Tado only accepts certain settings in some HVAC modes.
         # Here we reset any forbidden settings so our requests won't be rejected.
