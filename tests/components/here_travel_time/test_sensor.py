@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.here_travel_time.config_flow import default_options
 from homeassistant.components.here_travel_time.const import (
+    ATTR_ROUTE,
     CONF_ARRIVAL_TIME,
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION_ENTITY_ID,
@@ -158,49 +159,34 @@ async def test_sensor(
     )
     assert duration.attributes.get(ATTR_ICON) == icon
     assert duration.state == expected_duration
-
-    assert (
-        hass.states.get("sensor.test_duration_in_traffic").state
-        == expected_duration_in_traffic
-    )
-    assert hass.states.get("sensor.test_distance").state == expected_distance
-    assert hass.states.get("sensor.test_route").state == (
+    assert duration.attributes.get(ATTR_ROUTE) == (
         "US-29 - K St NW; US-29 - Whitehurst Fwy; "
         "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
     )
-    assert (
-        hass.states.get("sensor.test_duration_in_traffic").state
-        == expected_duration_in_traffic
-    )
-    assert hass.states.get("sensor.test_origin").state == "22nd St NW"
-    assert (
-        hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
-        == CAR_ORIGIN_LATITUDE
-    )
-    assert (
-        hass.states.get("sensor.test_origin").attributes.get(ATTR_LONGITUDE)
-        == CAR_ORIGIN_LONGITUDE
+
+    duration_in_traffic = hass.states.get("sensor.test_duration_in_traffic")
+    assert duration_in_traffic.state == expected_duration_in_traffic
+    assert duration_in_traffic.attributes.get(ATTR_ROUTE) == (
+        "US-29 - K St NW; US-29 - Whitehurst Fwy; "
+        "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
     )
 
-    assert hass.states.get("sensor.test_origin").state == "22nd St NW"
-    assert (
-        hass.states.get("sensor.test_origin").attributes.get(ATTR_LATITUDE)
-        == CAR_ORIGIN_LATITUDE
-    )
-    assert (
-        hass.states.get("sensor.test_origin").attributes.get(ATTR_LONGITUDE)
-        == CAR_ORIGIN_LONGITUDE
+    distance = hass.states.get("sensor.test_distance")
+    assert distance.state == expected_distance
+    assert distance.attributes.get(ATTR_ROUTE) == (
+        "US-29 - K St NW; US-29 - Whitehurst Fwy; "
+        "I-495 N - Capital Beltway; MD-187 S - Old Georgetown Rd"
     )
 
-    assert hass.states.get("sensor.test_destination").state == "Service Rd S"
-    assert (
-        hass.states.get("sensor.test_destination").attributes.get(ATTR_LATITUDE)
-        == CAR_DESTINATION_LATITUDE
-    )
-    assert (
-        hass.states.get("sensor.test_destination").attributes.get(ATTR_LONGITUDE)
-        == CAR_DESTINATION_LONGITUDE
-    )
+    origin = hass.states.get("sensor.test_origin")
+    assert origin.state == "22nd St NW"
+    assert origin.attributes.get(ATTR_LATITUDE) == CAR_ORIGIN_LATITUDE
+    assert origin.attributes.get(ATTR_LONGITUDE) == CAR_ORIGIN_LONGITUDE
+
+    destination = hass.states.get("sensor.test_destination")
+    assert destination.state == "Service Rd S"
+    assert destination.attributes.get(ATTR_LATITUDE) == CAR_DESTINATION_LATITUDE
+    assert destination.attributes.get(ATTR_LONGITUDE) == CAR_DESTINATION_LONGITUDE
 
 
 @pytest.mark.usefixtures("valid_response")

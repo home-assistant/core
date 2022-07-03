@@ -145,11 +145,6 @@ def sensor_descriptions(travel_mode: str) -> tuple[SensorEntityDescription, ...]
             key=ATTR_DISTANCE,
             state_class=SensorStateClass.MEASUREMENT,
         ),
-        SensorEntityDescription(
-            name="Route",
-            icon="mdi:directions",
-            key=ATTR_ROUTE,
-        ),
     )
 
 
@@ -217,7 +212,7 @@ async def async_setup_entry(
     sensors: list[HERETravelTimeSensor] = []
     for sensor_description in sensor_descriptions(config_entry.data[CONF_MODE]):
         sensors.append(
-            HERETravelTimeSensor(
+            WithRouteSensor(
                 config_entry.entry_id,
                 config_entry.data[CONF_NAME],
                 sensor_description,
@@ -272,6 +267,19 @@ class HERETravelTimeSensor(SensorEntity, CoordinatorEntity):
         """Return the attribution."""
         if self.coordinator.data is not None:
             return self.coordinator.data.get(ATTR_ATTRIBUTION)
+        return None
+
+
+class WithRouteSensor(HERETravelTimeSensor):
+    """HERETravelTimeSensor with route as an attribute."""
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the route street names separated by semicolon."""
+        if self.coordinator.data is not None:
+            return {
+                ATTR_ROUTE: self.coordinator.data[ATTR_ROUTE],
+            }
         return None
 
 
