@@ -110,7 +110,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         placeholders = {
             "label": self._discovered_device.label,
             "host": self._discovered_device.ip_addr,
-            "mac_addr": self.unique_id,
+            "serial": self.unique_id,
         }
         self.context["title_placeholders"] = placeholders
         return self.async_show_form(

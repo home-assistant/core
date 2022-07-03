@@ -8,10 +8,10 @@
         "error": {
             "cannot_connect": "Failed to connect"
         },
-        "flow_title": "{label} ({host}) {mac_addr}",
+        "flow_title": "{label} ({host}) {serial}",
         "step": {
             "discovery_confirm": {
-                "description": "Do you want to setup {label} ({host}) {mac_addr}?"
+                "description": "Do you want to setup {label} ({host}) {serial}?"
             },
             "pick_device": {
                 "data": {
