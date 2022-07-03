@@ -45,6 +45,8 @@ from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, me
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
+COLOR_ZONE_POPULATE_DELAY = 0.3
+
 ATTR_INFRARED = "infrared"
 ATTR_ZONES = "zones"
 ATTR_POWER = "power"
@@ -358,6 +360,7 @@ class LIFXStrip(LIFXColor):
         # Zone brightness is not reported when powered off
         if not self.is_on and hsbk[HSBK_BRIGHTNESS] is None:
             await self.set_power(True)
+            await asyncio.sleep(COLOR_ZONE_POPULATE_DELAY)
             await self.update_color_zones()
             await self.set_power(False)
 
