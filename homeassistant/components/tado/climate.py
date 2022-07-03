@@ -267,11 +267,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
         cool_max_temp,
         cool_step,
         supported_hvac_modes,
-        supported_fan_modes,
-        supported_swing_modes,
-        support_flags,
         device_info,
-        supported_light_modes,
         hvac_capability_map,
     )
     return entity
@@ -293,11 +289,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         cool_max_temp,
         cool_step,
         supported_hvac_modes,
-        supported_fan_modes,
-        supported_swing_modes,
-        support_flags,
         device_info,
-        supported_light_modes,
         hvac_capability_map,
     ):
         """Initialize of Tado climate entity."""
@@ -312,11 +304,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._ac_device = zone_type == TYPE_AIR_CONDITIONING
         self._supported_hvac_modes = supported_hvac_modes
-        self._supported_fan_modes = supported_fan_modes
-        self._supported_swing_modes = supported_swing_modes
-        self._supported_light_modes = supported_light_modes
         self._hvac_capability_map = hvac_capability_map
-        self._support_flags = support_flags
 
         self._available = False
 
@@ -336,7 +324,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
-        self._current_tado_hvac_capabilities = self._hvac_capability_map.get(self._current_tado_hvac_mode)
 
         self._current_tado_swing_mode = TADO_SWING_OFF
         self._current_tado_vertical_swing_mode = TADO_SWING_OFF
@@ -358,9 +345,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             "device_info": device_info,
             "ac_device": self._ac_device,
             "supported_hvac_modes": supported_hvac_modes,
-            "supported_fan_modes": supported_fan_modes,
-            "supported_swing_modes": supported_swing_modes,
-            "support_flags": support_flags,
+            "capabilities": hvac_capability_map,
             "heat_min_temp": heat_min_temp,
             "heat_max_temp": heat_max_temp,
             "heat_step": heat_step,
