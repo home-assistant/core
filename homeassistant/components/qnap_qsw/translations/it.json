@@ -9,6 +9,12 @@
             "invalid_auth": "Autenticazione non valida"
         },
         "step": {
+            "discovered_connection": {
+                "data": {
+                    "password": "Password",
+                    "username": "Nome utente"
+                }
+            },
             "user": {
                 "data": {
                     "password": "Password",
