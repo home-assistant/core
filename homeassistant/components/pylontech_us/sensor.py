@@ -124,13 +124,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up the pylontech sensors."""
 
+    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+
     entities: list[SensorEntity] = []
     entities.extend(
-        PylontechStackSensor(
-            hass, hass.data[DOMAIN][config_entry.entry_id], desc, config_entry.entry_id
-        )
+        PylontechStackSensor(hass, coordinator, desc, config_entry.entry_id)
         for desc in PYLONTECH_STACK_SENSORS
     )
+    factory = PylontechPackSensorFactory(hass, coordinator.get_result(), coordinator)
+    new_entity: SensorEntity | None = None
+    while True:
+        new_entity = factory.create_next_sensor()
+        if new_entity is None:
+            break
+        entities.append(new_entity)
 
     async_add_entities(entities)
 
@@ -202,6 +209,18 @@ class PylontechStackSensor(CoordinatorEntity, SensorEntity):
 
 class PylontechPackSensorFactory:
     """Create all sensor entities for the packs."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        data: PylontechStack,
+        coordinator: PylontechCoordinator,
+    ) -> None:
+        """Sensor Factory constructor."""
+        self._sensor_list = self._pylon_to_sensors(
+            data=data, hass=hass, coordinator=coordinator
+        )
+        self._activated_sensor = 0
 
     def _pylon_to_sensors(
         self,
@@ -372,18 +391,6 @@ class PylontechPackSensorFactory:
             pack_count = pack_count + 1
 
         return return_list
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        data: PylontechStack,
-        coordinator: PylontechCoordinator,
-    ) -> None:
-        """Sensor Factory constructor."""
-        self._sensor_list = self._pylon_to_sensors(
-            data=data, hass=hass, coordinator=coordinator
-        )
-        self._activated_sensor = 0
 
     def create_next_sensor(self) -> SensorEntity | None:
         """Return next sensor or None if no more left."""
