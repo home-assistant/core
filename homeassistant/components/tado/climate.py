@@ -535,8 +535,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 return SWING_BOTH
             else:
                 return SWING_HORIZONTAL
-        elif self._current_tado_horizontal_swing_mode == TADO_SWING_ON:
-            return SWING_HORIZONTAL
+        elif self._current_tado_vertical_swing_mode == TADO_SWING_ON:
+            return SWING_VERTICAL
 
         return SWING_OFF
 
