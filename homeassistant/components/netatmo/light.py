@@ -158,7 +158,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
         netatmo_device: NetatmoDevice,
     ) -> None:
         """Initialize a Netatmo light."""
-        LightEntity.__init__(self)
         super().__init__(netatmo_device.data_handler)
 
         self._dimmer = cast(NaModules.NLFN, netatmo_device.device)
@@ -183,14 +182,6 @@ class NetatmoLight(NetatmoBase, LightEntity):
         )
 
     @property
-    def brightness(self) -> int | None:
-        """Return the brightness of this light between 0..255."""
-        if self._dimmer.brightness is not None:
-            # Netatmo uses a range of [0, 100] to control brightness
-            return round((self._dimmer.brightness / 100) * 255)
-        return None
-
-    @property
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._attr_brightness is not None and self._attr_brightness > 0
@@ -209,3 +200,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         self._attr_brightness = self._dimmer.brightness
+
+        if self._dimmer.brightness is not None:
+            # Netatmo uses a range of [0, 100] to control brightness
+            self._attr_brightness = round((self._dimmer.brightness / 100) * 255)
