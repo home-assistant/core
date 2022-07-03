@@ -35,6 +35,7 @@ from . import (
     MockFailingLifxCommand,
     MockLifxCommand,
     MockMessage,
+    _mocked_brightness_bulb,
     _mocked_bulb,
     _mocked_bulb_new_firmware,
     _mocked_light_strip,
@@ -627,3 +628,50 @@ async def test_white_light_fails(hass):
             )
         assert bulb.set_color.calls[0][0][0] == [1, 0, 3, 6535]
         bulb.set_color.reset_mock()
+
+
+async def test_brightness_bulb(hass: HomeAssistant) -> None:
+    """Test a brightness only bulb."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_brightness_bulb()
+    bulb.power_level = 65535
+    bulb.color = [32000, None, 32000, 6000]
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+    attributes = state.attributes
+    assert attributes[ATTR_BRIGHTNESS] == 125
+    assert attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert attributes[ATTR_SUPPORTED_COLOR_MODES] == [
+        ColorMode.BRIGHTNESS,
+    ]
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert bulb.set_power.calls[0][0][0] is False
+    bulb.set_power.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN, "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+    assert bulb.set_power.calls[0][0][0] is True
+    bulb.set_power.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 100},
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [32000, None, 25700, 6000]
+    bulb.set_color.reset_mock()

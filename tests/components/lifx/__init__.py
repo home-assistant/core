@@ -98,6 +98,12 @@ def _mocked_white_bulb() -> Light:
     return bulb
 
 
+def _mocked_brightness_bulb() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 51  # LIFX Mini White
+    return bulb
+
+
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
