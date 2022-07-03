@@ -109,7 +109,7 @@ jobs:
           github_token: ${{secrets.GITHUB_TOKEN}}
           repo: home-assistant/frontend
           branch: dev
-          workflow: nightly.yml
+          workflow: nightly.yaml
           workflow_conclusion: success
           name: wheels
 
