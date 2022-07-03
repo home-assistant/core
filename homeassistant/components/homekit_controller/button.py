@@ -104,9 +104,11 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         return [self._char.type]
 
     @property
-    def default_name(self) -> str | None:
-        """Return the default name of the device."""
-        return self.entity_description.name
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        if name := self.accessory.name:
+            return f"{name} {self.entity_description.name}"
+        return f"{self.entity_description.name}"
 
     async def async_press(self) -> None:
         """Press the button."""
