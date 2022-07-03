@@ -444,8 +444,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             await _async_setup_discovery(hass, conf, entry)
         # Setup reload service after all platforms have loaded
         await async_setup_reload_service()
-        if DATA_MQTT_RELOAD_ENTRY in hass.data:
-            hass.data.pop(DATA_MQTT_RELOAD_ENTRY)
         if DATA_MQTT_RELOAD_NEEDED in hass.data:
             hass.data.pop(DATA_MQTT_RELOAD_NEEDED)
             await async_reload_manual_mqtt_items(hass)
@@ -611,11 +609,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         connection.cleanup()
 
     # Trigger reload manual MQTT items at entry setup
-    hass.data[DATA_MQTT_RELOAD_NEEDED] = True
+    # Reload the legacy yaml platform
+    await async_reload_integration_platforms(hass, DOMAIN, RELOADABLE_PLATFORMS)
     if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
-        # The entry is disabled:
-        # Make sure items are deactivated by reloading with the disabled entry
-        await async_reload_manual_mqtt_items(hass)
+        # The entry is disabled reload legacy manual items when the entry is enabled again
+        hass.data[DATA_MQTT_RELOAD_NEEDED] = True
         # Stop the loop
         await connection.async_disconnect()
     elif mqtt_entry_status is True:
