@@ -122,7 +122,7 @@ class NetioDeviceEntity(NetioEntity):
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.pdu.host, self.pdu.serial_number)},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, self.pdu.host, self.pdu.get_device_serial_number())},  # type: ignore[arg-type]
             default_name="NetIO PDU",
             manufacturer="NetIO",
             name=self.pdu.device_name,
