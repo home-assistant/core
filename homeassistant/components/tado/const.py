@@ -18,6 +18,7 @@ from homeassistant.components.climate.const import (
     SWING_VERTICAL,
     SWING_HORIZONTAL,
     PRESET_AWAY,
+    ClimateEntityFeature,
     PRESET_HOME,
     HVACAction,
     HVACMode,
@@ -86,6 +87,7 @@ CONST_SWING_MODE_HORIZONTAL = "horizontalSwing"
 # Some ACs require a "light" status of either "ON" or "OFF"
 CONST_LIGHT = "light"
 
+CONST_BASE_FEATURES = ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
 
 # When we change the temperature setting, we need an overlay mode
 CONST_OVERLAY_TADO_MODE = (
@@ -190,6 +192,11 @@ TADO_TO_HA_FAN_MODE_MAP = {value: key for key, value in HA_TO_TADO_FAN_MODE_MAP.
 TADO_TO_HA_SWING_MODE_MAP = {
     CONST_SWING_MODE_VERTICAL: SWING_VERTICAL,
     CONST_SWING_MODE_HORIZONTAL: SWING_HORIZONTAL,
+}
+
+TADO_HVAC_MODE_FEATURE_MAP = {
+    CONST_MODE_SMART_SCHEDULE: CONST_BASE_FEATURES,
+    CONST_MODE_OFF: CONST_BASE_FEATURES,
 }
 
 DEFAULT_TADO_PRECISION = 0.1

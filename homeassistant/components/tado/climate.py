@@ -63,7 +63,7 @@ from .const import (
     TADO_TO_HA_SWING_MODE_MAP,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
-    TYPE_HEATING,
+    TYPE_HEATING, TADO_HVAC_MODE_FEATURE_MAP,
 )
 from .entity import TadoZoneEntity
 
@@ -353,7 +353,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def supported_features(self):
         """Return the list of supported features."""
-        return self._support_flags
+        return TADO_HVAC_MODE_FEATURE_MAP.get(self._current_tado_hvac_mode, self._support_flags)
 
     @property
     def name(self):
