@@ -80,6 +80,16 @@ class SMAsensor(CoordinatorEntity, SensorEntity):
         self._sensor.enabled = False
 
     @property
+    def name(self) -> str:
+        """Return the name of the sensor prefixed with the device name."""
+        if self._attr_device_info is None or not (
+            name_prefix := self._attr_device_info.get("name")
+        ):
+            name_prefix = "SMA"
+
+        return f"{name_prefix} {super().name}"
+
+    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._sensor.value
