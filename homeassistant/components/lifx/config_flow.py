@@ -43,9 +43,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
-        return await self._async_handle_discovery(
-            host=discovery_info.ip, mac=discovery_info.macaddress
-        )
+        mac = discovery_info.macaddress
+        host = discovery_info.ip
+        for entry in self._async_current_entries():
+            if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
+                if entry.data[CONF_HOST] != host:
+                    self.hass.config_entries.async_update_entry(
+                        entry, data={**entry.data, CONF_HOST: host}
+                    )
+                    self.hass.async_create_task(
+                        self.hass.config_entries.async_reload(entry.entry_id)
+                    )
+                return self.async_abort(reason="already_configured")
+        return await self._async_handle_discovery(host)
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
@@ -58,36 +68,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle discovery."""
         _LOGGER.debug("async_step_integration_discovery %s", discovery_info)
-
-        return await self._async_handle_discovery(
-            host=discovery_info[CONF_HOST], serial=discovery_info[CONF_SERIAL]
-        )
+        serial = discovery_info[CONF_SERIAL]
+        host = discovery_info[CONF_HOST]
+        await self.async_set_unique_id(formatted_serial(serial))
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        return await self._async_handle_discovery(host, serial)
 
     async def _async_handle_discovery(
-        self, host: str, serial: str | None = None, mac: str | None = None
+        self, host: str, serial: str | None = None
     ) -> FlowResult:
         """Handle any discovery."""
-        _LOGGER.debug("Discovery %s %s %s", host, serial, mac)
-        if serial:
-            await self.async_set_unique_id(formatted_serial(serial))
-            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
-        elif mac:
-            for entry in self._async_current_entries():
-                if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
-                    if entry.data[CONF_HOST] != host:
-                        self.hass.config_entries.async_update_entry(
-                            entry, data={**entry.data, CONF_HOST: host}
-                        )
-                        self.hass.async_create_task(
-                            self.hass.config_entries.async_reload(entry.entry_id)
-                        )
-                return self.async_abort(reason="already_configured")
+        _LOGGER.debug("Discovery %s %s", host, serial)
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
-
         device = await self._async_try_connect(
             host, serial=serial, raise_on_progress=True
         )
