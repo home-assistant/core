@@ -16,6 +16,9 @@ HAP-python==4.5.0
 # homeassistant.components.mastodon
 Mastodon.py==1.5.1
 
+# homeassistant.components.netio_json
+Netio==1.0.6
+
 # homeassistant.components.flick_electric
 PyFlick==0.0.2
 
