@@ -284,7 +284,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._cur_temp = None
         self._cur_humidity = None
-        self._swing_mode = SWING_OFF
 
         self._heat_min_temp = heat_min_temp
         self._heat_max_temp = heat_max_temp
@@ -562,7 +561,12 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     def set_swing_mode(self, swing_mode):
         """Set swing modes for the device."""
-        self._control_hvac(swing_mode=swing_mode)
+        if swing_mode in HA_TO_TADO_SWING_MODE_MAP:
+            vertical_swing = HA_TO_TADO_SWING_MODE_MAP[swing_mode][CONST_SWING_MODE_VERTICAL]
+            horizontal_swing = HA_TO_TADO_SWING_MODE_MAP[swing_mode][CONST_SWING_MODE_HORIZONTAL]
+            self._control_hvac(vertical_swing=vertical_swing, horizontal_swing=horizontal_swing)
+        else:
+            _LOGGER.warning("Tried setting an unsupported swing_mode: %s", swing_mode)
 
     @callback
     def _async_update_zone_data(self):
@@ -613,7 +617,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         hvac_mode=None,
         target_temp=None,
         fan_mode=None,
-        swing_mode=None,
+        vertical_swing=None,
+        horizontal_swing=None,
         duration=None,
         overlay_mode=None,
     ):
@@ -628,8 +633,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if fan_mode:
             self._current_tado_fan_speed = fan_mode
 
-        if swing_mode:
-            self._swing_mode = swing_mode
+        if horizontal_swing:
+            self._current_tado_horizontal_swing_mode = horizontal_swing
+
+        if vertical_swing:
+            self._current_tado_horizontal_swing_mode = vertical_swing
 
         self._normalize_target_temp_for_hvac_mode()
 
@@ -704,9 +712,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed = self._current_tado_fan_speed
         if self._support_flags & ClimateEntityFeature.SWING_MODE:
-            swing = HA_TO_TADO_SWING_MODE_MAP[self._swing_mode]
-            vertical_swing = swing[CONST_SWING_MODE_VERTICAL]
-            horizontal_swing = swing[CONST_SWING_MODE_HORIZONTAL]
+            horizontal_swing = self._current_tado_horizontal_swing_mode
+            vertical_swing = self._current_tado_vertical_swing_mode
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
