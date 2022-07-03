@@ -45,14 +45,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle discovery via dhcp."""
         mac = discovery_info.macaddress
         host = discovery_info.ip
+        hass = self.hass
         for entry in self._async_current_entries():
             if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
                 if entry.data[CONF_HOST] != host:
-                    self.hass.config_entries.async_update_entry(
+                    hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: host}
                     )
-                    self.hass.async_create_task(
-                        self.hass.config_entries.async_reload(entry.entry_id)
+                    hass.async_create_task(
+                        hass.config_entries.async_reload(entry.entry_id)
                     )
                 return self.async_abort(reason="already_configured")
         return await self._async_handle_discovery(host)
@@ -81,9 +82,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovery %s %s", host, serial)
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
-        for progress in self._async_in_progress():
-            if progress.get("context", {}).get(CONF_HOST) == host:
-                return self.async_abort(reason="already_in_progress")
+        if any(
+            progress.get("context", {}).get(CONF_HOST) == host
+            for progress in self._async_in_progress()
+        ):
+            return self.async_abort(reason="already_in_progress")
         device = await self._async_try_connect(
             host, serial=serial, raise_on_progress=True
         )
@@ -175,7 +178,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 configured_serials.add(entry.unique_id)
                 configured_hosts.add(entry.data[CONF_HOST])
         self._discovered_devices = {
-            device.mac_addr: device  # device.mac_addr is not the mac_address, its the serial number
+            # device.mac_addr is not the mac_address, its the serial number
+            device.mac_addr: device
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
@@ -221,9 +225,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             or device.host_firmware_version is None
         ):
             return None  # relays not supported
-        device.mac_addr = (
-            serial or message.target_addr
-        )  # device.mac_addr is not the mac_address, its the serial number
+        # device.mac_addr is not the mac_address, its the serial number
+        device.mac_addr = serial or message.target_addr
         await self.async_set_unique_id(
             formatted_serial(device.mac_addr), raise_on_progress=raise_on_progress
         )
