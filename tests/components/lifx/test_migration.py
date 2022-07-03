@@ -4,7 +4,7 @@ from datetime import timedelta
 
 from homeassistant import setup
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
@@ -63,6 +63,8 @@ async def test_migration_device_online_end_to_end(
         assert light_entity_reg.config_entry_id == migrated_entry.entry_id
         assert er.async_entries_for_config_entry(entity_reg, config_entry) == []
 
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
 
@@ -105,6 +107,8 @@ async def test_migration_device_online_end_to_end_after_downgrade(
 
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
@@ -173,6 +177,8 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
 
     with _patch_discovery(), _patch_config_flow_try_connect(), _patch_device():
         await setup.async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=20))
         await hass.async_block_till_done()
