@@ -284,6 +284,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._cur_temp = None
         self._cur_humidity = None
+        self._swing_mode = SWING_OFF
 
         self._heat_min_temp = heat_min_temp
         self._heat_max_temp = heat_max_temp
@@ -292,7 +293,6 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._cool_min_temp = cool_min_temp
         self._cool_max_temp = cool_max_temp
         self._cool_step = cool_step
-        self._swing_mode = None
 
         self._target_temp = None
 
