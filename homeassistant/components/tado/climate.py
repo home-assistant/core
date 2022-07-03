@@ -174,14 +174,14 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
             hvac_mode_support_flags = ClimateEntityFeature.PRESET_MODE
             hvac_mode_fan_speeds = None
 
-            if capabilities[mode]["temperatures"]:
+            if "temperatures" in capabilities[mode]:
                 hvac_mode_temperatures = capabilities[mode]["temperatures"]["celsius"]
                 hvac_mode_support_flags = ClimateEntityFeature.TARGET_TEMPERATURE
 
-            if capabilities[mode]["light"]:
+            if "light" in capabilities[mode]:
                 hvac_mode_light_modes = capabilities[mode][CONST_LIGHT]
 
-            if capabilities[mode]["fanLevel"]:
+            if "fanLevel" in capabilities[mode]:
                 hvac_mode_fan_speeds = [
                     TADO_TO_HA_FAN_MODE_MAP[speed]
                     for speed in capabilities[mode]["fanLevel"]
@@ -190,7 +190,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             # Detect HA compatible Swing Modes
             for swing_mode in KNOWN_TADO_SWING_MODES:
-                if not capabilities[mode][swing_mode]:
+                if swing_mode not in capabilities[mode]:
                     continue
                 if hvac_mode_swing_modes:
                     hvac_mode_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[swing_mode])
