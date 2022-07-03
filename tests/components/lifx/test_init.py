@@ -53,19 +53,18 @@ async def test_configuring_lifx_causes_discovery(hass):
     ):
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
-        call_count = start_calls
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert start_calls == call_count * 2
+        assert start_calls == 2
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
         await hass.async_block_till_done()
-        assert start_calls == call_count * 3
+        assert start_calls == 4
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=30))
         await hass.async_block_till_done()
-        assert start_calls == call_count * 4
+        assert start_calls == 6
 
 
 async def test_config_entry_reload(hass):
