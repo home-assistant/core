@@ -54,7 +54,6 @@ from .const import (
     SIGNAL_TADO_UPDATE_RECEIVED,
     SUPPORT_PRESET,
     TADO_HVAC_ACTION_TO_HA_HVAC_ACTION,
-    TADO_MODES_WITH_NO_TEMP_SETTING,
     TADO_SWING_OFF,
     TADO_SWING_ON,
     TADO_TO_HA_FAN_MODE_MAP,
@@ -64,10 +63,7 @@ from .const import (
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
-    TADO_HVAC_MODE_FEATURE_MAP,
-    CONST_BASE_FEATURES,
     TADO_LIGHT_OFF,
-    TADO_MODES_WITH_NO_FAN_SETTING, CONST_MODE_FAN, CONST_FAN_LEVEL_1,
 )
 from .entity import TadoZoneEntity
 
@@ -139,16 +135,13 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     capabilities = tado.get_capabilities(zone_id)
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
+    heat_temperatures = None
+    cool_temperatures = None
     zone_type = capabilities["type"]
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
     ]
-    supported_swing_modes = None
-    supported_fan_modes = None
-    supported_light_modes = None
-    heat_temperatures = None
-    cool_temperatures = None
     hvac_capability_map = {
         CONST_MODE_OFF: {
             "temperatures": None,
@@ -210,17 +203,10 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
                     "temperatures": hvac_mode_temperatures,
                     "light_modes": hvac_mode_light_modes,
                     "fan_speeds": hvac_mode_fan_speeds,
-                    "swing_modes": supported_swing_modes,
+                    "swing_modes": hvac_mode_swing_modes,
                     "support_flags": hvac_mode_support_flags,
                 }
             })
-
-            if not supported_swing_modes:
-                supported_swing_modes = hvac_mode_swing_modes
-            if not supported_fan_modes:
-                supported_fan_modes = hvac_mode_fan_speeds
-            if not supported_light_modes:
-                supported_light_modes = hvac_mode_light_modes
 
         cool_temperatures = hvac_capability_map[CONST_MODE_COOL]["temperatures"]
 
