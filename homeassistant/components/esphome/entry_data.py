@@ -12,34 +12,21 @@ from aioesphomeapi import (
     APIClient,
     APIVersion,
     BinarySensorInfo,
-    BinarySensorState,
     CameraInfo,
-    CameraState,
     ClimateInfo,
-    ClimateState,
     CoverInfo,
-    CoverState,
     DeviceInfo,
     EntityInfo,
     EntityState,
     FanInfo,
-    FanState,
     LightInfo,
-    LightState,
     LockInfo,
-    LockState,
     MediaPlayerInfo,
-    MediaPlayerState,
     NumberInfo,
-    NumberState,
     SelectInfo,
-    SelectState,
     SensorInfo,
-    SensorState,
     SwitchInfo,
-    SwitchState,
     TextSensorInfo,
-    TextSensorState,
     UserService,
 )
 from aioesphomeapi.model import ButtonInfo
@@ -56,8 +43,8 @@ _LOGGER = logging.getLogger(__name__)
 # Mapping from ESPHome info type to HA platform
 INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     BinarySensorInfo: Platform.BINARY_SENSOR,
-    ButtonInfo: Platform.BINARY_SENSOR,
-    CameraInfo: Platform.BINARY_SENSOR,
+    ButtonInfo: Platform.BUTTON,
+    CameraInfo: Platform.CAMERA,
     ClimateInfo: Platform.CLIMATE,
     CoverInfo: Platform.COVER,
     FanInfo: Platform.FAN,
@@ -71,23 +58,6 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], str] = {
     TextSensorInfo: Platform.SENSOR,
 }
 
-STATE_TYPE_TO_COMPONENT_KEY = {
-    BinarySensorState: Platform.BINARY_SENSOR,
-    EntityState: Platform.BINARY_SENSOR,
-    CameraState: Platform.BINARY_SENSOR,
-    ClimateState: Platform.CLIMATE,
-    CoverState: Platform.COVER,
-    FanState: Platform.FAN,
-    LightState: Platform.LIGHT,
-    LockState: Platform.LOCK,
-    MediaPlayerState: Platform.MEDIA_PLAYER,
-    NumberState: Platform.NUMBER,
-    SelectState: Platform.SELECT,
-    SensorState: Platform.SENSOR,
-    SwitchState: Platform.SWITCH,
-    TextSensorState: Platform.SENSOR,
-}
-
 
 @dataclass
 class RuntimeEntryData:
@@ -96,7 +66,7 @@ class RuntimeEntryData:
     entry_id: str
     client: APIClient
     store: Store
-    state: dict[str, dict[int, EntityState]] = field(default_factory=dict)
+    state: dict[type[EntityState], dict[int, EntityState]] = field(default_factory=dict)
     info: dict[str, dict[int, EntityInfo]] = field(default_factory=dict)
 
     # A second list of EntityInfo objects
@@ -111,9 +81,9 @@ class RuntimeEntryData:
     api_version: APIVersion = field(default_factory=APIVersion)
     cleanup_callbacks: list[Callable[[], None]] = field(default_factory=list)
     disconnect_callbacks: list[Callable[[], None]] = field(default_factory=list)
-    state_subscriptions: dict[tuple[str, int], Callable[[], None]] = field(
-        default_factory=dict
-    )
+    state_subscriptions: dict[
+        tuple[type[EntityState], int], Callable[[], None]
+    ] = field(default_factory=dict)
     loaded_platforms: set[str] = field(default_factory=set)
     platform_load_lock: asyncio.Lock = field(default_factory=asyncio.Lock)
     _storage_contents: dict[str, Any] | None = None
@@ -160,24 +130,23 @@ class RuntimeEntryData:
     @callback
     def async_subscribe_state_update(
         self,
-        component_key: str,
+        state_type: type[EntityState],
         state_key: int,
         entity_callback: Callable[[], None],
     ) -> Callable[[], None]:
         """Subscribe to state updates."""
 
         def _unsubscribe() -> None:
-            self.state_subscriptions.pop((component_key, state_key))
+            self.state_subscriptions.pop((state_type, state_key))
 
-        self.state_subscriptions[(component_key, state_key)] = entity_callback
+        self.state_subscriptions[(state_type, state_key)] = entity_callback
         return _unsubscribe
 
     @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
-        component_key = STATE_TYPE_TO_COMPONENT_KEY[type(state)]
-        subscription_key = (component_key, state.key)
-        self.state[component_key][state.key] = state
+        subscription_key = (type(state), state.key)
+        self.state[type(state)][state.key] = state
         _LOGGER.debug(
             "Dispatching update with key %s: %s",
             subscription_key,
