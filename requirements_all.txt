@@ -1095,7 +1095,7 @@ nextcloudmonitor==1.1.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==0.1.0
+nextdns==1.0.0
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
