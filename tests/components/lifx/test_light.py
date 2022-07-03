@@ -347,6 +347,49 @@ async def test_light_strip(hass: HomeAssistant) -> None:
     bulb.set_power.reset_mock()
     bulb.set_color_zones.reset_mock()
 
+    bulb.set_color_zones = MockFailingLifxCommand(bulb)
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_state",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_RGB_COLOR: (255, 255, 255),
+                ATTR_ZONES: [3],
+            },
+            blocking=True,
+        )
+
+    bulb.set_color_zones = MockLifxCommand(bulb)
+    bulb.get_color_zones = MockFailingLifxCommand(bulb)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_state",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_RGB_COLOR: (255, 255, 255),
+                ATTR_ZONES: [3],
+            },
+            blocking=True,
+        )
+
+    bulb.get_color_zones = MockLifxCommand(bulb)
+    bulb.get_color = MockFailingLifxCommand(bulb)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_state",
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_RGB_COLOR: (255, 255, 255),
+                ATTR_ZONES: [3],
+            },
+            blocking=True,
+        )
+
 
 async def test_color_light_with_temp(
     hass: HomeAssistant, mock_effect_conductor
@@ -895,3 +938,54 @@ async def test_infrared_color_bulb(hass: HomeAssistant) -> None:
         blocking=True,
     )
     assert bulb.set_infrared.calls[0][0][0] == 25700
+
+
+async def test_color_bulb_is_actually_off(hass: HomeAssistant) -> None:
+    """Test setting a color when we think a bulb is on but its actually off."""
+    already_migrated_config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: "127.0.0.1"}, unique_id=SERIAL
+    )
+    already_migrated_config_entry.add_to_hass(hass)
+    bulb = _mocked_bulb_new_firmware()
+    bulb.power_level = 65535
+    bulb.color = [32000, None, 32000, 6000]
+    with _patch_discovery(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), _patch_device(device=bulb):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+
+    entity_id = "light.my_bulb"
+
+    state = hass.states.get(entity_id)
+    assert state.state == "on"
+
+    class MockLifxCommandActuallyOff:
+        """Mock a lifx command that will update our power level state."""
+
+        def __init__(self, bulb, **kwargs):
+            """Init command."""
+            self.bulb = bulb
+            self.calls = []
+
+        def __call__(self, *args, **kwargs):
+            """Call command."""
+            bulb.power_level = 0
+            if callb := kwargs.get("callb"):
+                callb(self.bulb, MockMessage())
+            self.calls.append([args, kwargs])
+
+    bulb.set_color = MockLifxCommandActuallyOff(bulb)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_on",
+        {
+            ATTR_RGB_COLOR: (100, 100, 100),
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_BRIGHTNESS: 100,
+        },
+        blocking=True,
+    )
+    assert bulb.set_color.calls[0][0][0] == [0, 0, 25700, 3500]
+    assert len(bulb.set_power.calls) == 1
