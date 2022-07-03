@@ -125,9 +125,12 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
         return []
 
     @property
-    def default_name(self) -> str:
-        """Return the default name of the device."""
-        return "Clear Hold"
+    def name(self) -> str:
+        """Return the name of the device if any."""
+        prefix = ""
+        if name := super().name:
+            prefix = name
+        return f"{prefix} Clear Hold"
 
     async def async_press(self) -> None:
         """Press the button."""
