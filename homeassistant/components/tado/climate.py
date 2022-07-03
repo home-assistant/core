@@ -755,9 +755,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             fan_speed_to_send = self._current_tado_fan_speed
 
         if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
-            if SWING_VERTICAL in self._current_tado_hvac_mode["swing_modes"]:
+            if SWING_VERTICAL in self._current_capabilities["swing_modes"]:
                 vertical_swing = self._current_tado_vertical_swing_mode or TADO_SWING_OFF
-            if SWING_HORIZONTAL in self._current_tado_hvac_mode["swing_modes"]:
+            if SWING_HORIZONTAL in self._current_capabilities["swing_modes"]:
                 horizontal_swing = self._current_tado_horizontal_swing_mode or TADO_SWING_OFF
 
         # Tado will refuse any HVAC changes if a "light" mode is listed as a
