@@ -30,11 +30,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import (
-    async_entry_is_legacy,
-    async_get_legacy_entry,
-    mac_matches_serial_number,
-)
+from .util import async_entry_is_legacy, async_get_legacy_entry
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -138,11 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
-
-    serial = coordinator.serial_number
-    if serial != entry.unique_id and mac_matches_serial_number(serial, entry.unique_id):
-        # LIFX firmware >= 3.70 uses an off by one mac
-        hass.config_entries.async_update_entry(entry, unique_id=serial)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
