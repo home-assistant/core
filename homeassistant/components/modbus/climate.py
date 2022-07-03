@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import struct
-from typing import Any, cast
+from typing import Any, cast, Optional
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
@@ -207,8 +207,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
 
         # Read the mode register if defined
         if self._hvac_mode_register is not None:
-            hvac_mode = await self._async_read_register_raw(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register
+            hvac_mode = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._hvac_mode_register, raw=True
             )
 
             # Translate the value received
@@ -223,8 +223,8 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         # register is "OFF", it will take precedence over the value
         # in the mode register.
         if self._hvac_onoff_register is not None:
-            onoff = await self._async_read_register_raw(
-                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register
+            onoff = await self._async_read_register(
+                CALL_TYPE_REGISTER_HOLDING, self._hvac_onoff_register, raw=True
             )
             if onoff == 0:
                 self._attr_hvac_mode = HVACMode.OFF
@@ -233,7 +233,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self.async_write_ha_state()
 
     async def _async_read_register(
-        self, register_type: str, register: int
+        self, register_type: str, register: int, raw: Optional[bool] = False
     ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pymodbus_call(
@@ -248,28 +248,17 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return -1
 
         self._lazy_errors = self._lazy_error_count
-        self._value = self.unpack_structure_result(result.registers)
-        if not self._value:
-            self._attr_available = False
-            return None
-        self._attr_available = True
-        return float(self._value)
 
-    async def _async_read_register_raw(
-        self, register_type: str, register: int
-    ) -> int | None:
-        """Read a single register using the Modbus hub slave, without post-processing."""
-        result = await self._hub.async_pymodbus_call(
-            self._slave, register, 1, register_type
-        )
-        if result is None:
-            if self._lazy_errors:
-                self._lazy_errors -= 1
+        if raw:
+            # Return the raw value read from the register, do not change
+            # the object's state
+            self._attr_available = True
+            return int(result.registers[0])
+        else:
+            # The regular handling of the value
+            self._value = self.unpack_structure_result(result.registers)
+            if not self._value:
+                self._attr_available = False
                 return None
-            self._lazy_errors = self._lazy_error_count
-            self._attr_available = False
-            return None
-
-        self._lazy_errors = self._lazy_error_count
-        self._attr_available = True
-        return int(result.registers[0])
+            self._attr_available = True
+            return float(self._value)
