@@ -8,7 +8,7 @@ import logging
 from typing import cast
 
 from aiolifx.aiolifx import Light
-from aiolifx.connection import LIFXConnection
+from aiolifx_connection import LIFXConnection
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.debounce import Debouncer
