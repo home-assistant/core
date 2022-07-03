@@ -198,7 +198,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        await self.set_state(**{ATTR_POWER: False})
+        await self.set_state(**{**kwargs, ATTR_POWER: False})
 
     async def set_state(self, **kwargs: Any) -> None:
         """Set a color on the light and turn it on/off."""

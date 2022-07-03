@@ -776,6 +776,22 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
+        "turn_off",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TRANSITION: 5,
+        },
+        blocking=True,
+    )
+    assert bulb.set_power.calls[0][0][0] is False
+    call_dict = bulb.set_power.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {"duration": 0}  # already off
+    bulb.set_power.reset_mock()
+    bulb.set_color.reset_mock()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
         "turn_on",
         {
             ATTR_RGB_COLOR: (255, 5, 10),
@@ -820,6 +836,24 @@ async def test_transitions_color_bulb(hass: HomeAssistant) -> None:
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=5))
     await hass.async_block_till_done()
     assert len(bulb.get_color.calls) == 2
+
+    bulb.set_power.reset_mock()
+    bulb.set_color.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        "turn_off",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_TRANSITION: 5,
+        },
+        blocking=True,
+    )
+    assert bulb.set_power.calls[0][0][0] is False
+    call_dict = bulb.set_power.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {"duration": 5000}
+    bulb.set_power.reset_mock()
+    bulb.set_color.reset_mock()
 
 
 async def test_infrared_color_bulb(hass: HomeAssistant) -> None:
