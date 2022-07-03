@@ -724,8 +724,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if not self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
             fan_speed_to_send = None
 
-        if fan_speed_to_send and fan_speed_to_send not in self._current_capabilities["fan_speed"]:
-            fan_speed_to_send = HA_TO_TADO_FAN_MODE_MAP[self._current_capabilities["fan_speed"][0]]
+        if fan_speed_to_send and fan_speed_to_send not in self._current_capabilities["fan_speeds"]:
+            fan_speed_to_send = HA_TO_TADO_FAN_MODE_MAP[self._current_capabilities["fan_speeds"][0]]
 
         if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
             if SWING_VERTICAL in self._current_capabilities["swing_modes"]:
