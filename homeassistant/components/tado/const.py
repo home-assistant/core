@@ -87,8 +87,6 @@ CONST_SWING_MODE_HORIZONTAL = "horizontalSwing"
 # Some ACs require a "light" status of either "ON" or "OFF"
 CONST_LIGHT = "light"
 
-CONST_BASE_FEATURES = ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
-
 # When we change the temperature setting, we need an overlay mode
 CONST_OVERLAY_TADO_MODE = (
     "NEXT_TIME_BLOCK"  # wait until tado changes the mode automatic
@@ -200,15 +198,9 @@ TADO_TO_HA_SWING_MODE_MAP = {
     CONST_SWING_MODE_HORIZONTAL: SWING_HORIZONTAL,
 }
 
-TADO_HVAC_MODE_FEATURE_MAP = {
-    CONST_MODE_SMART_SCHEDULE: CONST_BASE_FEATURES,
-    CONST_MODE_OFF: ClimateEntityFeature.TARGET_TEMPERATURE,
-}
-
 DEFAULT_TADO_PRECISION = 0.1
 
 SUPPORT_PRESET = [PRESET_AWAY, PRESET_HOME]
-
 
 DOMAIN = "tado"
 
