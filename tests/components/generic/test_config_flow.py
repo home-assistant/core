@@ -180,33 +180,43 @@ async def test_form_only_still_sample(hass, user_flow, image_file):
 
 @respx.mock
 @pytest.mark.parametrize(
-    ("template", "url", "expected_result"),
+    ("template", "url", "expected_result", "expected_errors"),
     [
         # Test we can handle templates in strange parts of the url, #70961.
         (
             "http://localhost:812{{3}}/static/icons/favicon-apple-180x180.png",
             "http://localhost:8123/static/icons/favicon-apple-180x180.png",
             data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+            None,
         ),
         (
             "{% if 1 %}https://bla{% else %}https://yo{% endif %}",
             "https://bla/",
             data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+            None,
         ),
         (
             "http://{{example.org",
             "http://example.org",
             data_entry_flow.RESULT_TYPE_FORM,
+            {"still_image_url": "template_error"},
         ),
         (
             "invalid1://invalid:4\\1",
             "invalid1://invalid:4%5c1",
-            data_entry_flow.RESULT_TYPE_CREATE_ENTRY,
+            data_entry_flow.RESULT_TYPE_FORM,
+            {"still_image_url": "malformed_url"},
+        ),
+        (
+            "relative/urls/are/not/allowed.jpg",
+            "relative/urls/are/not/allowed.jpg",
+            data_entry_flow.RESULT_TYPE_FORM,
+            {"still_image_url": "relative_url"},
         ),
     ],
 )
 async def test_still_template(
-    hass, user_flow, fakeimgbytes_png, template, url, expected_result
+    hass, user_flow, fakeimgbytes_png, template, url, expected_result, expected_errors
 ) -> None:
     """Test we can handle various templates."""
     respx.get(url).respond(stream=fakeimgbytes_png)
@@ -220,6 +230,7 @@ async def test_still_template(
         )
         await hass.async_block_till_done()
     assert result2["type"] == expected_result
+    assert result2.get("errors") == expected_errors
 
 
 @respx.mock
@@ -514,8 +525,29 @@ async def test_options_template_error(hass, fakeimgbytes_png, mock_create_stream
             result4["flow_id"],
             user_input=data,
         )
-    assert result5.get("type") == data_entry_flow.RESULT_TYPE_FORM
-    assert result5["errors"] == {"stream_source": "template_error"}
+
+        assert result5.get("type") == data_entry_flow.RESULT_TYPE_FORM
+        assert result5["errors"] == {"stream_source": "template_error"}
+
+        # verify that an relative stream url is rejected.
+        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+        data[CONF_STREAM_SOURCE] = "relative/stream.mjpeg"
+        result6 = await hass.config_entries.options.async_configure(
+            result5["flow_id"],
+            user_input=data,
+        )
+        assert result6.get("type") == data_entry_flow.RESULT_TYPE_FORM
+        assert result6["errors"] == {"stream_source": "relative_url"}
+
+        # verify that an malformed stream url is rejected.
+        data[CONF_STILL_IMAGE_URL] = "http://127.0.0.1/testurl/1"
+        data[CONF_STREAM_SOURCE] = "http://example.com:45:56"
+        result7 = await hass.config_entries.options.async_configure(
+            result6["flow_id"],
+            user_input=data,
+        )
+    assert result7.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result7["errors"] == {"stream_source": "malformed_url"}
 
 
 async def test_slug(hass, caplog):
@@ -525,6 +557,10 @@ async def test_slug(hass, caplog):
     Other paths in the slug function are already tested by other tests.
     """
     result = slug(hass, "http://127.0.0.2/testurl/{{1/0}}")
+    assert result is None
+    assert "Syntax error in" in caplog.text
+
+    result = slug(hass, "http://example.com:999999999999/stream")
     assert result is None
     assert "Syntax error in" in caplog.text
 
