@@ -630,8 +630,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
-/homeassistant/components/metoffice/ @MrHarcombe
-/tests/components/metoffice/ @MrHarcombe
+/homeassistant/components/metoffice/ @MrHarcombe @avee87
+/tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
