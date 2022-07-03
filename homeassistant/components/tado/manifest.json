@@ -3,7 +3,7 @@
   "name": "Tado",
   "version": "0.0.1",
   "documentation": "https://www.home-assistant.io/integrations/tado",
-  "requirements": ["jorgenvatle-python-tado==0.14.dev1"],
+  "requirements": ["jorgenvatle-python-tado==0.14.dev2"],
   "codeowners": ["@michaelarnauts", "@north3221"],
   "config_flow": true,
   "homekit": {
