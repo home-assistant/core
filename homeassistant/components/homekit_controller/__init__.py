@@ -150,8 +150,12 @@ class HomeKitEntity(Entity):
     def name(self) -> str | None:
         """Return the name of the device if any."""
         accessory_name = self.accessory.name
+        # If the service has a name char, use that, if not
+        # fallback to the default name provided by the subclass
         device_name = self._char_name or self.default_name
-        if device_name and folded_name(accessory_name) != folded_name(device_name):
+        if device_name and not folded_name(accessory_name).endswith(
+            folded_name(device_name)
+        ):
             return f"{accessory_name} {device_name}"
         return accessory_name
 
