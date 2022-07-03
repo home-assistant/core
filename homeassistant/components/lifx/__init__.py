@@ -109,6 +109,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     @callback
     def _async_delayed_discovery(now: datetime) -> None:
+        """Start an untracked task to discover devices.
+
+        We do not want the discovery task to block startup.
+        """
         asyncio.create_task(_async_discovery())
 
     # Let the system settle a bit before starting discovery
