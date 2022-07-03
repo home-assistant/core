@@ -200,7 +200,24 @@ SIMPLE_SENSOR: dict[str, HomeKitSensorEntityDescription] = {
 }
 
 
-class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
+class HomeKitSensor(HomeKitEntity):
+    """Representation of a HomeKit sensor."""
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the device."""
+        full_name = super().name
+        default_name = self.default_name
+        if (
+            default_name
+            and full_name
+            and folded_name(default_name) not in folded_name(full_name)
+        ):
+            return f"{full_name} {default_name}"
+        return full_name
+
+
+class HomeKitHumiditySensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit humidity sensor."""
 
     _attr_device_class = SensorDeviceClass.HUMIDITY
@@ -221,7 +238,7 @@ class HomeKitHumiditySensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.RELATIVE_HUMIDITY_CURRENT)
 
 
-class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
+class HomeKitTemperatureSensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
@@ -242,7 +259,7 @@ class HomeKitTemperatureSensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.TEMPERATURE_CURRENT)
 
 
-class HomeKitLightSensor(HomeKitEntity, SensorEntity):
+class HomeKitLightSensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit light level sensor."""
 
     _attr_device_class = SensorDeviceClass.ILLUMINANCE
@@ -284,7 +301,7 @@ class HomeKitCarbonDioxideSensor(HomeKitEntity, SensorEntity):
         return self.service.value(CharacteristicsTypes.CARBON_DIOXIDE_LEVEL)
 
 
-class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
+class HomeKitBatterySensor(HomeKitSensor, SensorEntity):
     """Representation of a Homekit battery sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY
@@ -302,14 +319,6 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     def default_name(self) -> str:
         """Return the default name of the device."""
         return "Battery"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the device."""
-        full_name = super().name
-        if full_name and "battery" not in folded_name(full_name):
-            return f"{full_name} Battery"
-        return full_name
 
     @property
     def icon(self) -> str:
