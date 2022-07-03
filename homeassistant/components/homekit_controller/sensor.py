@@ -32,6 +32,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import KNOWN_DEVICES, CharacteristicEntity, HomeKitEntity
 from .connection import HKDevice
+from .utils import folded_name
 
 CO2_ICON = "mdi:molecule-co2"
 
@@ -301,6 +302,14 @@ class HomeKitBatterySensor(HomeKitEntity, SensorEntity):
     def default_name(self) -> str:
         """Return the default name of the device."""
         return "Battery"
+
+    @property
+    def name(self) -> str | None:
+        """Return the name of the device."""
+        full_name = super().name
+        if full_name and "battery" not in folded_name(full_name):
+            return f"{full_name} Battery"
+        return full_name
 
     @property
     def icon(self) -> str:
