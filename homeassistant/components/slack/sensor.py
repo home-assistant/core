@@ -27,8 +27,8 @@ async def async_setup_entry(
             SlackSensorEntity(
                 hass.data[DOMAIN][entry.entry_id][DATA_CLIENT],
                 SensorEntityDescription(
-                    key="do_not_disturb_timer",
-                    name="Do Not Disturb Timer",
+                    key="do_not_disturb_until",
+                    name="Do Not Disturb Until",
                     icon="mdi:clock",
                     device_class=SensorDeviceClass.TIMESTAMP,
                 ),
