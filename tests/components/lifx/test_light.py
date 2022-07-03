@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
+from homeassistant.components.lifx.light import ATTR_ZONES
 from homeassistant.components.lifx.manager import SERVICE_EFFECT_COLORLOOP
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -235,6 +236,114 @@ async def test_light_strip(hass: HomeAssistant) -> None:
     assert bulb.set_color.calls[0][0][0] == [15848, 65535, 65535, 3500]
     bulb.set_color.reset_mock()
     assert len(bulb.set_color_zones.calls) == 0
+
+    bulb.color_zones = [
+        (0, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (54612, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+        (46420, 65535, 65535, 3500),
+    ]
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
+        blocking=True,
+    )
+    # multiple zones in effect and we are changing the brightness
+    # we need to do each zone individually
+    assert len(bulb.set_color.calls) == 0
+    call_dict = bulb.set_color_zones.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 0,
+        "color": [0, 65535, 32896, 3500],
+        "duration": 0,
+        "end_index": 0,
+        "start_index": 0,
+    }
+    call_dict = bulb.set_color_zones.calls[1][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 0,
+        "color": [54612, 65535, 32896, 3500],
+        "duration": 0,
+        "end_index": 1,
+        "start_index": 1,
+    }
+    call_dict = bulb.set_color_zones.calls[7][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 1,
+        "color": [46420, 65535, 32896, 3500],
+        "duration": 0,
+        "end_index": 7,
+        "start_index": 7,
+    }
+    bulb.set_color_zones.reset_mock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_RGB_COLOR: (255, 255, 255),
+            ATTR_ZONES: [0, 2],
+        },
+        blocking=True,
+    )
+    # set a two zones
+    assert len(bulb.set_color.calls) == 0
+    call_dict = bulb.set_color_zones.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 0,
+        "color": [0, 0, 65535, 3500],
+        "duration": 0,
+        "end_index": 0,
+        "start_index": 0,
+    }
+    call_dict = bulb.set_color_zones.calls[1][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 1,
+        "color": [0, 0, 65535, 3500],
+        "duration": 0,
+        "end_index": 2,
+        "start_index": 2,
+    }
+    bulb.set_color_zones.reset_mock()
+
+    bulb.get_color_zones.reset_mock()
+    bulb.set_power.reset_mock()
+
+    bulb.power_level = 0
+    await hass.services.async_call(
+        DOMAIN,
+        "set_state",
+        {ATTR_ENTITY_ID: entity_id, ATTR_RGB_COLOR: (255, 255, 255), ATTR_ZONES: [3]},
+        blocking=True,
+    )
+    # set a one zone
+    assert len(bulb.set_power.calls) == 2
+    assert len(bulb.get_color_zones.calls) == 2
+    assert len(bulb.set_color.calls) == 0
+    call_dict = bulb.set_color_zones.calls[0][1]
+    call_dict.pop("callb")
+    assert call_dict == {
+        "apply": 1,
+        "color": [0, 0, 65535, 3500],
+        "duration": 0,
+        "end_index": 3,
+        "start_index": 3,
+    }
+    bulb.get_color_zones.reset_mock()
+    bulb.set_power.reset_mock()
+    bulb.set_color_zones.reset_mock()
 
 
 async def test_color_light_with_temp(
