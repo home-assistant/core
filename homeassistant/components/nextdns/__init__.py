@@ -164,7 +164,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, nextdns, profile_id, update_interval
         )
         tasks.append(
-            hass.data[DOMAIN][entry.entry_id][coordinator_name].async_refresh()
+            hass.data[DOMAIN][entry.entry_id][
+                coordinator_name
+            ].async_config_entry_first_refresh()
         )
 
     await asyncio.gather(*tasks)
