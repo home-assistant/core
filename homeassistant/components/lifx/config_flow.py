@@ -47,7 +47,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         host = discovery_info.ip
         hass = self.hass
         for entry in self._async_current_entries():
-            if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
+            if (
+                entry.unique_id
+                and not async_entry_is_legacy(entry)
+                and mac_matches_serial_number(mac, entry.unique_id)
+            ):
                 if entry.data[CONF_HOST] != host:
                     hass.config_entries.async_update_entry(
                         entry, data={**entry.data, CONF_HOST: host}
