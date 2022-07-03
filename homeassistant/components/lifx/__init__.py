@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
@@ -28,7 +27,7 @@ from .coordinator import LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
 from .migration import async_migrate_entities_devices, async_migrate_legacy_entries
-from .util import async_entry_is_legacy
+from .util import async_entry_is_legacy, mac_matches_serial_number
 
 CONF_SERVER = "server"
 CONF_BROADCAST = "broadcast"
@@ -125,12 +124,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 
-    device_physical_mac = dr.format_mac(coordinator.mac_address)
-    if device_physical_mac != entry.unique_id and entry.unique_id == dr.format_mac(
-        coordinator.serial_number
-    ):
+    serial = coordinator.serial_number
+    if serial != entry.unique_id and mac_matches_serial_number(serial, entry.unique_id):
         # LIFX firmware >= 3.70 uses an off by one mac
-        hass.config_entries.async_update_entry(entry, unique_id=device_physical_mac)
+        hass.config_entries.async_update_entry(entry, unique_id=serial)
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
