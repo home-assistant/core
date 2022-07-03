@@ -178,7 +178,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 configured_serials.add(entry.unique_id)
                 configured_hosts.add(entry.data[CONF_HOST])
         self._discovered_devices = {
-            device.mac_addr: device  # device.mac_addr is not the mac_address, its the serial number
+            # device.mac_addr is not the mac_address, its the serial number
+            device.mac_addr: device
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
@@ -224,9 +225,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             or device.host_firmware_version is None
         ):
             return None  # relays not supported
-        device.mac_addr = (
-            serial or message.target_addr
-        )  # device.mac_addr is not the mac_address, its the serial number
+        # device.mac_addr is not the mac_address, its the serial number
+        device.mac_addr = serial or message.target_addr
         await self.async_set_unique_id(
             formatted_serial(device.mac_addr), raise_on_progress=raise_on_progress
         )
