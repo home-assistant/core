@@ -399,6 +399,7 @@ async def test_service_climate_set_temperature(
                                 HVACMode.HEAT.value: 2,
                             },
                         },
+                        CONF_HVAC_ONOFF_REGISTER: 119
                     }
                 ]
             },
