@@ -720,6 +720,9 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             horizontal_swing = self._current_tado_horizontal_swing_mode or TADO_SWING_OFF
             vertical_swing = self._current_tado_vertical_swing_mode or TADO_SWING_OFF
 
+        # Tado will refuse any HVAC changes if a "light" mode is listed as a
+        # capability but not provided with every HVAC change
+        # Todo: Allow light mode to be adjusted by the end user.
         if self._supported_light_modes and self._current_tado_light_mode is None:
             light_mode = self._supported_light_modes[0]
 
