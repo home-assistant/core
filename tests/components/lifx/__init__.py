@@ -14,8 +14,8 @@ MODULE = "homeassistant.components.lifx"
 MODULE_CONFIG_FLOW = "homeassistant.components.lifx.config_flow"
 IP_ADDRESS = "127.0.0.1"
 LABEL = "My Bulb"
-MAC_ADDRESS = "aa:bb:cc:dd:ee:cc"
-PHYSICAL_MAC_ADDRESS_NEW_FIRMWARE = "aa:bb:cc:dd:ee:cd"
+SERIAL = "aa:bb:cc:dd:ee:cc"
+MAC_ADDRESS = "aa:bb:cc:dd:ee:cd"
 DEFAULT_ENTRY_TITLE = LABEL
 
 
@@ -24,7 +24,7 @@ class MockMessage:
 
     def __init__(self):
         """Init message."""
-        self.target_addr = MAC_ADDRESS
+        self.target_addr = SERIAL
         self.count = 9
 
 
@@ -67,7 +67,7 @@ class MockLifxCommand:
 
 
 def _mocked_bulb() -> Light:
-    bulb = Light(asyncio.get_running_loop(), MAC_ADDRESS, IP_ADDRESS)
+    bulb = Light(asyncio.get_running_loop(), SERIAL, IP_ADDRESS)
     bulb.host_firmware_version = "3.00"
     bulb.label = LABEL
     bulb.color = [1, 2, 3, 4]

@@ -12,6 +12,7 @@ from . import (
     IP_ADDRESS,
     LABEL,
     MAC_ADDRESS,
+    SERIAL,
     _patch_config_flow_try_connect,
     _patch_device,
     _patch_discovery,
@@ -28,6 +29,7 @@ async def test_migration_device_online_end_to_end(
     config_entry.add_to_hass(hass)
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, SERIAL)},
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
         name=LABEL,
     )
@@ -35,7 +37,7 @@ async def test_migration_device_online_end_to_end(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
-        unique_id=dr.format_mac(MAC_ADDRESS),
+        unique_id=dr.format_mac(SERIAL),
         original_name=LABEL,
         device_id=device.id,
     )
@@ -76,11 +78,12 @@ async def test_migration_device_online_end_to_end_after_downgrade(
     config_entry.add_to_hass(hass)
 
     already_migrated_config_entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=SERIAL
     )
     already_migrated_config_entry.add_to_hass(hass)
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, SERIAL)},
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
         name=LABEL,
     )
@@ -88,7 +91,7 @@ async def test_migration_device_online_end_to_end_after_downgrade(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
         original_name=LABEL,
         device_id=device.id,
     )
@@ -126,6 +129,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
     other_domain_config_entry.add_to_hass(hass)
     device = device_reg.async_get_or_create(
         config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, SERIAL)},
         connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
         name=LABEL,
     )
@@ -138,7 +142,7 @@ async def test_migration_device_online_end_to_end_ignores_other_devices(
         config_entry=config_entry,
         platform=DOMAIN,
         domain="light",
-        unique_id=MAC_ADDRESS,
+        unique_id=SERIAL,
         original_name=LABEL,
         device_id=device.id,
     )

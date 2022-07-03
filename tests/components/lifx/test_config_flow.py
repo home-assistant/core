@@ -4,10 +4,11 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries
 from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.lifx import DOMAIN
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_NAME
+from homeassistant.components.lifx.const import CONF_SERIAL
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
 
@@ -15,8 +16,8 @@ from . import (
     DEFAULT_ENTRY_TITLE,
     IP_ADDRESS,
     LABEL,
-    MAC_ADDRESS,
     MODULE,
+    SERIAL,
     _mocked_failing_bulb,
     _patch_config_flow_try_connect,
     _patch_discovery,
@@ -63,7 +64,7 @@ async def test_discovery(hass: HomeAssistant):
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DEVICE: MAC_ADDRESS},
+            {CONF_DEVICE: SERIAL},
         )
         await hass.async_block_till_done()
 
@@ -108,7 +109,7 @@ async def test_discovery_but_cannot_connect(hass: HomeAssistant):
 
         result3 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_DEVICE: MAC_ADDRESS},
+            {CONF_DEVICE: SERIAL},
         )
         await hass.async_block_till_done()
 
@@ -163,7 +164,7 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
         f"{MODULE}.async_setup_entry", return_value=True
     ) as mock_setup_entry:
         result3 = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_DEVICE: MAC_ADDRESS}
+            result["flow_id"], {CONF_DEVICE: SERIAL}
         )
         assert result3["type"] == "create_entry"
         assert result3["title"] == DEFAULT_ENTRY_TITLE
@@ -326,7 +327,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
-            data={CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS},
+            data={CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
         )
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_FORM
@@ -336,9 +337,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         result2 = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
-                ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL
-            ),
+            data=dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=SERIAL, hostname=LABEL),
         )
         await hass.async_block_till_done()
     assert result2["type"] == RESULT_TYPE_ABORT
@@ -376,7 +375,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=SERIAL, hostname=LABEL),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -392,7 +391,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
         ),
         (
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
-            {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS},
+            {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
         ),
     ],
 )
@@ -429,7 +428,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
     [
         (
             config_entries.SOURCE_DHCP,
-            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=MAC_ADDRESS, hostname=LABEL),
+            dhcp.DhcpServiceInfo(ip=IP_ADDRESS, macaddress=SERIAL, hostname=LABEL),
         ),
         (
             config_entries.SOURCE_HOMEKIT,
@@ -445,7 +444,7 @@ async def test_discovered_by_dhcp_or_discovery(hass, source, data):
         ),
         (
             config_entries.SOURCE_INTEGRATION_DISCOVERY,
-            {CONF_HOST: IP_ADDRESS, CONF_MAC: MAC_ADDRESS},
+            {CONF_HOST: IP_ADDRESS, CONF_SERIAL: SERIAL},
         ),
     ],
 )
@@ -461,63 +460,3 @@ async def test_discovered_by_dhcp_or_discovery_failed_to_get_device(hass, source
         await hass.async_block_till_done()
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "cannot_connect"
-
-
-async def test_migration_device_online(hass: HomeAssistant):
-    """Test migration from single config entry."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: LABEL, CONF_HOST: IP_ADDRESS}
-
-    with _patch_discovery(), _patch_config_flow_try_connect(), patch(
-        f"{MODULE}.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "migration"}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == LABEL
-    assert result["data"] == {
-        CONF_HOST: IP_ADDRESS,
-    }
-    assert len(mock_setup_entry.mock_calls) == 2
-
-    # Duplicate
-    with _patch_discovery(), _patch_config_flow_try_connect():
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "migration"}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "already_configured"
-
-
-async def test_migration_device_offline(hass: HomeAssistant):
-    """Test migration from single config entry."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
-    config_entry.add_to_hass(hass)
-    config = {CONF_MAC: MAC_ADDRESS, CONF_NAME: LABEL, CONF_HOST: None}
-
-    with _patch_discovery(no_device=True), _patch_config_flow_try_connect(
-        no_device=True
-    ), patch(f"{MODULE}.async_setup_entry", return_value=True) as mock_setup_entry:
-        await setup.async_setup_component(hass, DOMAIN, {})
-        await hass.async_block_till_done()
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": "migration"}, data=config
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] == "create_entry"
-    assert result["title"] == LABEL
-    assert result["data"] == {
-        CONF_HOST: None,
-    }
-    assert len(mock_setup_entry.mock_calls) == 2
