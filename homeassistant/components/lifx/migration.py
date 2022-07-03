@@ -39,9 +39,11 @@ async def async_migrate_legacy_entries(
                 )
                 async_init_discovery_flow(hass, host, serial)
 
-    return len(
-        er.async_entries_for_config_entry(er.async_get(hass), legacy_entry.entry_id)
+    remaining_devices = dr.async_entries_for_config_entry(
+        dr.async_get(hass), legacy_entry.entry_id
     )
+    _LOGGER.debug("The following devices remain: %s", remaining_devices)
+    return len(remaining_devices)
 
 
 async def async_migrate_entities_devices(
@@ -55,9 +57,16 @@ async def async_migrate_entities_devices(
     ):
         for domain, value in dev_entry.identifiers:
             if domain == DOMAIN and value == new_entry.unique_id:
+                _LOGGER.debug(
+                    "Migrating device with %s to %s",
+                    dev_entry.identifiers,
+                    new_entry.unique_id,
+                )
                 migrated_devices.append(dev_entry.id)
                 device_registry.async_update_device(
-                    dev_entry.id, add_config_entry_id=new_entry.entry_id
+                    dev_entry.id,
+                    add_config_entry_id=new_entry.entry_id,
+                    remove_config_entry_id=legacy_entry_id,
                 )
 
     entity_registry = er.async_get(hass)
