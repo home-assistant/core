@@ -81,7 +81,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         self.hass.async_create_task(
                             self.hass.config_entries.async_reload(entry.entry_id)
                         )
-                    return self.async_abort(reason="already_configured")
+                return self.async_abort(reason="already_configured")
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
