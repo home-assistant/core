@@ -558,6 +558,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         state_attr[
             HA_TERMINATION_DURATION
         ] = self._tado_zone_data.default_overlay_termination_duration
+        state_attr[CONST_LIGHT] = self._current_tado_light_mode
         return state_attr
 
     def set_swing_mode(self, swing_mode):
