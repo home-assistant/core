@@ -300,10 +300,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
 
-        self._current_tado_swing_mode = SWING_OFF
-        self._current_tado_vertical_swing_mode = SWING_OFF
-        self._current_tado_horizontal_swing_mode = SWING_OFF
+        self._current_tado_swing_mode = TADO_SWING_OFF
+        self._current_tado_vertical_swing_mode = TADO_SWING_OFF
+        self._current_tado_horizontal_swing_mode = TADO_SWING_OFF
 
+        # Todo: obtain from PyTado
         self._current_tado_light_mode = light
 
         self._tado_zone_data = None
