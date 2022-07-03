@@ -153,8 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
 
     tasks = []
 
