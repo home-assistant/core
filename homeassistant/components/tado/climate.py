@@ -63,7 +63,9 @@ from .const import (
     TADO_TO_HA_SWING_MODE_MAP,
     TEMP_OFFSET,
     TYPE_AIR_CONDITIONING,
-    TYPE_HEATING, TADO_HVAC_MODE_FEATURE_MAP,
+    TYPE_HEATING,
+    TADO_HVAC_MODE_FEATURE_MAP,
+    CONST_BASE_FEATURES,
 )
 from .entity import TadoZoneEntity
 
@@ -136,9 +138,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     _LOGGER.debug("Capabilities for zone %s: %s", zone_id, capabilities)
 
     zone_type = capabilities["type"]
-    support_flags = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
-    )
+    support_flags = CONST_BASE_FEATURES
     supported_hvac_modes = [
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_OFF],
         TADO_TO_HA_HVAC_MODE_MAP[CONST_MODE_SMART_SCHEDULE],
