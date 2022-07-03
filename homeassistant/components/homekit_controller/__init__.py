@@ -42,6 +42,7 @@ class HomeKitEntity(Entity):
         self._accessory = accessory
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
+        self._char_name: str | None = None
         self._features = 0
         self.setup()
 
@@ -127,6 +128,9 @@ class HomeKitEntity(Entity):
         if CharacteristicPermissions.events in char.perms:
             self.watchable_characteristics.append((self._aid, char.iid))
 
+        if self._char_name is None:
+            self._char_name = char.service.value(CharacteristicsTypes.NAME)
+
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
@@ -140,7 +144,10 @@ class HomeKitEntity(Entity):
     @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
-        return self.accessory.name
+        accessory_name = self.accessory.name
+        if self._char_name and accessory_name != self._char_name:
+            return f"{accessory_name} {self._char_name}"
+        return accessory_name
 
     @property
     def available(self) -> bool:
