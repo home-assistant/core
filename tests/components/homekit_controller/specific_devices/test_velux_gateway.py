@@ -52,8 +52,8 @@ async def test_velux_cover_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.velux_window",
-                            friendly_name="VELUX Window",
+                            entity_id="cover.velux_window_roof_window",
+                            friendly_name="VELUX Window Roof Window",
                             unique_id="homekit-1111111a114a111a-8",
                             supported_features=SUPPORT_CLOSE
                             | SUPPORT_SET_POSITION

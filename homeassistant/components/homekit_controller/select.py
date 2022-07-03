@@ -26,10 +26,8 @@ class EcobeeModeSelect(CharacteristicEntity, SelectEntity):
     _attr_device_class = DEVICE_CLASS_ECOBEE_MODE
 
     @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := super().name:
-            return f"{name} Current Mode"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
         return "Current Mode"
 
     def get_characteristic_types(self) -> list[str]:

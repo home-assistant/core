@@ -104,11 +104,9 @@ class HomeKitButton(CharacteristicEntity, ButtonEntity):
         return [self._char.type]
 
     @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        if name := super().name:
-            return f"{name} {self.entity_description.name}"
-        return f"{self.entity_description.name}"
+    def default_name(self) -> str | None:
+        """Return the default name of the device."""
+        return self.entity_description.name
 
     async def async_press(self) -> None:
         """Press the button."""
@@ -125,12 +123,9 @@ class HomeKitEcobeeClearHoldButton(CharacteristicEntity, ButtonEntity):
         return []
 
     @property
-    def name(self) -> str:
-        """Return the name of the device if any."""
-        prefix = ""
-        if name := super().name:
-            prefix = name
-        return f"{prefix} Clear Hold"
+    def default_name(self) -> str:
+        """Return the default name of the device."""
+        return "Clear Hold"
 
     async def async_press(self) -> None:
         """Press the button."""

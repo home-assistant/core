@@ -147,10 +147,8 @@ class DeclarativeCharacteristicSwitch(CharacteristicEntity, SwitchEntity):
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str | None:
-        """Return the name of the device if any."""
-        if prefix := super().name:
-            return f"{prefix} {self.entity_description.name}"
+    def default_name(self) -> str | None:
+        """Return the default name of the device."""
         return self.entity_description.name
 
     def get_characteristic_types(self) -> list[str]:

@@ -27,7 +27,7 @@ from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
 from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
-from .utils import async_get_controller
+from .utils import async_get_controller, folded_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -142,13 +142,17 @@ class HomeKitEntity(Entity):
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
+    def default_name(self) -> str | None:
+        """Return the default name of the device."""
+        return None
+
+    @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
         accessory_name = self.accessory.name
-        if self._char_name and accessory_name.casefold().replace(
-            " ", ""
-        ) != self._char_name.casefold().replace(" ", ""):
-            return f"{accessory_name} {self._char_name}"
+        device_name = self._char_name or self.default_name
+        if device_name and folded_name(accessory_name) != folded_name(device_name):
+            return f"{accessory_name} {device_name}"
         return accessory_name
 
     @property
