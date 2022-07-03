@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from functools import partial
 import math
 from typing import Any
 
@@ -42,14 +41,7 @@ from .manager import (
     SERVICE_EFFECT_STOP,
     LIFXManager,
 )
-from .util import (
-    async_execute_lifx,
-    convert_8_to_16,
-    convert_16_to_8,
-    find_hsbk,
-    lifx_features,
-    merge_hsbk,
-)
+from .util import convert_8_to_16, convert_16_to_8, find_hsbk, lifx_features, merge_hsbk
 
 SERVICE_LIFX_SET_STATE = "set_state"
 
@@ -114,15 +106,15 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         bulb = coordinator.device
         self.mac_addr = bulb.mac_addr
         self.bulb = bulb
-        bulb_features = lifx_features(self.bulb)
+        bulb_features = lifx_features(bulb)
         self.manager = manager
         self.effects_conductor: aiolifx_effects_module.Conductor = (
             manager.effects_conductor
         )
         self.postponed_update: CALLBACK_TYPE | None = None
         self.entry = entry
-        self._attr_unique_id = self.coordinator.internal_mac_address
-        self._attr_name = self.bulb.label
+        self._attr_unique_id = self.coordinator.serial_number
+        self._attr_name = bulb.label
         self._attr_min_mireds = math.floor(
             color_util.color_temperature_kelvin_to_mired(bulb_features["max_kelvin"])
         )
@@ -130,17 +122,15 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
             color_util.color_temperature_kelvin_to_mired(bulb_features["min_kelvin"])
         )
         info = DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.internal_mac_address)},
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, self.coordinator.physical_mac_address)
-            },
+            identifiers={(DOMAIN, coordinator.serial_number)},
+            connections={(dr.CONNECTION_NETWORK_MAC, coordinator.mac_address)},
             manufacturer="LIFX",
             name=self.name,
         )
         _map = products.product_map
-        if (model := (_map.get(self.bulb.product) or self.bulb.product)) is not None:
+        if (model := (_map.get(bulb.product) or bulb.product)) is not None:
             info[ATTR_MODEL] = str(model)
-        if (version := self.bulb.host_firmware_version) is not None:
+        if (version := bulb.host_firmware_version) is not None:
             info[ATTR_SW_VERSION] = version
         self._attr_device_info = info
         if bulb_features["min_kelvin"] != bulb_features["max_kelvin"]:
@@ -273,9 +263,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     ) -> None:
         """Send a power change to the bulb."""
         try:
-            await async_execute_lifx(
-                partial(self.bulb.set_power, pwr, duration=duration)
-            )
+            await self.coordinator.async_set_power(pwr, duration)
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting power for {self.name}") from ex
 
@@ -286,14 +274,9 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
         duration: int = 0,
     ) -> None:
         """Send a color change to the bulb."""
+        merged_hsbk = merge_hsbk(self.bulb.color, hsbk)
         try:
-            await async_execute_lifx(
-                partial(
-                    self.bulb.set_color,
-                    merge_hsbk(self.bulb.color, hsbk),
-                    duration=duration,
-                )
-            )
+            await self.coordinator.async_set_color(merged_hsbk, duration)
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(f"Timeout setting color for {self.name}") from ex
 
@@ -302,7 +285,7 @@ class LIFXLight(CoordinatorEntity[LIFXUpdateCoordinator], LightEntity):
     ) -> None:
         """Send a get color message to the bulb."""
         try:
-            await async_execute_lifx(self.bulb.get_color)
+            await self.coordinator.async_get_color()
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting getting color for {self.name}"
@@ -406,16 +389,10 @@ class LIFXStrip(LIFXColor):
         for index, zone in enumerate(zones):
             zone_hsbk = merge_hsbk(color_zones[zone], hsbk)
             apply = 1 if (index == len(zones) - 1) else 0
-            set_zone = partial(
-                bulb.set_color_zones,
-                start_index=zone,
-                end_index=zone,
-                color=zone_hsbk,
-                duration=duration,
-                apply=apply,
-            )
             try:
-                await async_execute_lifx(set_zone)
+                await self.coordinator.async_set_color_zones(
+                    zone, zone, zone_hsbk, duration, apply
+                )
             except asyncio.TimeoutError as ex:
                 raise HomeAssistantError(
                     f"Timeout setting color zones for {self.name}"
@@ -430,7 +407,7 @@ class LIFXStrip(LIFXColor):
     ) -> None:
         """Send a get color zones message to the bulb."""
         try:
-            await self.coordinator.update_color_zones()
+            await self.coordinator.async_update_color_zones()
         except asyncio.TimeoutError as ex:
             raise HomeAssistantError(
                 f"Timeout setting updating color zones for {self.name}"

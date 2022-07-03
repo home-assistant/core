@@ -5,35 +5,38 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
+from .const import DOMAIN
 from .discovery import async_init_discovery_flow
 
 
 def async_get_device_entry(
-    hass: HomeAssistant, legacy_entry: ConfigEntry, existing_macs: set[str]
+    hass: HomeAssistant, legacy_entry: ConfigEntry, existing_serials: set[str]
 ) -> tuple[dr.DeviceEntry | None, str | None]:
     """Return the device entry for a given mac."""
     device_registry = dr.async_get(hass)
     for dev_entry in dr.async_entries_for_config_entry(
         device_registry, legacy_entry.entry_id
     ):
-        for connection_type, mac in dev_entry.connections:
-            if connection_type != dr.CONNECTION_NETWORK_MAC or mac in existing_macs:
+        for domain, serial in dev_entry.identifiers:
+            if domain != DOMAIN or serial in existing_serials:
                 continue
-            return dev_entry, mac
+            return dev_entry, serial
     return None, None
 
 
 async def async_migrate_legacy_entries(
     hass: HomeAssistant,
-    discovered_hosts_by_mac: dict[str, str],
-    existing_macs: set[str],
+    discovered_hosts_by_serial: dict[str, str],
+    existing_serials: set[str],
     legacy_entry: ConfigEntry,
 ) -> bool:
     """Migrate the legacy config entries to have an entry per device."""
-    dev_entry, mac = async_get_device_entry(hass, legacy_entry, existing_macs)
-    # await the flows so we only migrrate one at a time
-    if dev_entry and mac:
-        await async_init_discovery_flow(hass, discovered_hosts_by_mac[mac])
+    dev_entry, serial = async_get_device_entry(hass, legacy_entry, existing_serials)
+    # await the flows so we only migrate one at a time
+    if dev_entry and serial:
+        await async_init_discovery_flow(
+            hass, discovered_hosts_by_serial[serial], serial
+        )
 
     return not er.async_entries_for_config_entry(
         er.async_get(hass), legacy_entry.entry_id

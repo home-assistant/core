@@ -14,17 +14,17 @@ from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from .const import DOMAIN, TARGET_ANY
+from .const import CONF_SERIAL, DOMAIN, TARGET_ANY
 from .discovery import async_discover_devices
 from .migration import async_get_device_entry
 from .util import (
     async_entry_is_legacy,
     async_get_legacy_entry,
-    get_real_mac_addr,
+    formatted_serial,
     lifx_features,
+    mac_matches_serial_number,
 )
 
 
@@ -41,35 +41,50 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_dhcp(self, discovery_info: DhcpServiceInfo) -> FlowResult:
         """Handle discovery via dhcp."""
         return await self._async_handle_discovery(
-            discovery_info.ip, discovery_info.macaddress
+            host=discovery_info.ip, mac=discovery_info.macaddress
         )
 
     async def async_step_homekit(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle HomeKit discovery."""
-        return await self._async_handle_discovery(discovery_info.host, None)
+        return await self._async_handle_discovery(host=discovery_info.host)
 
     async def async_step_integration_discovery(
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle discovery."""
-        # TODO: keep sending the mac so we can use the off by one mac matcher
-        return await self._async_handle_discovery(discovery_info[CONF_HOST], None)
+        return await self._async_handle_discovery(
+            host=discovery_info[CONF_HOST], serial=discovery_info[CONF_SERIAL]
+        )
 
-    async def _async_handle_discovery(self, host: str, mac: str | None) -> FlowResult:
+    async def _async_handle_discovery(
+        self, host: str, serial: str | None = None, mac: str | None = None
+    ) -> FlowResult:
         """Handle any discovery."""
-        # TODO: keep sending the mac so we can use the off by one mac matcher
-        if mac:
-            await self.async_set_unique_id(dr.format_mac(mac))
+        if serial:
+            await self.async_set_unique_id(formatted_serial(serial))
             self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        elif mac:
+            for entry in self._async_current_entries():
+                if entry.unique_id and mac_matches_serial_number(mac, entry.unique_id):
+                    if entry.data[CONF_HOST] != host:
+                        self.hass.config_entries.async_update_entry(
+                            entry, data={**entry.data, CONF_HOST: host}
+                        )
+                        self.hass.async_create_task(
+                            self.hass.config_entries.async_reload(entry.entry_id)
+                        )
+                    return self.async_abort(reason="already_configured")
         self._async_abort_entries_match({CONF_HOST: host})
         self.context[CONF_HOST] = host
         for progress in self._async_in_progress():
             if progress.get("context", {}).get(CONF_HOST) == host:
                 return self.async_abort(reason="already_in_progress")
 
-        device = await self._async_try_connect(host, raise_on_progress=True)
+        device = await self._async_try_connect(
+            host, serial=serial, raise_on_progress=True
+        )
         if not device:
             return self.async_abort(reason="cannot_connect")
         self._discovered_device = device
@@ -129,9 +144,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> FlowResult:
         """Handle the step to pick discovered device."""
         if user_input is not None:
-            mac = user_input[CONF_DEVICE]
-            await self.async_set_unique_id(mac, raise_on_progress=False)
-            device_without_label = self._discovered_devices[mac]
+            serial = user_input[CONF_DEVICE]
+            await self.async_set_unique_id(serial, raise_on_progress=False)
+            device_without_label = self._discovered_devices[serial]
             device = await self._async_try_connect(
                 device_without_label.ip_addr, raise_on_progress=False
             )
@@ -139,22 +154,20 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_abort(reason="cannot_connect")
             return self._async_create_entry_from_device(device)
 
-        configured_macs: set[str] = set()
+        configured_serials: set[str] = set()
         configured_hosts: set[str] = set()
         for entry in self._async_current_entries():
             if entry.unique_id and not async_entry_is_legacy(entry):
-                configured_macs.add(entry.unique_id)
+                configured_serials.add(entry.unique_id)
                 configured_hosts.add(entry.data[CONF_HOST])
         self._discovered_devices = {
-            dr.format_mac(
-                get_real_mac_addr(device.mac_addr, device.host_firmware_version)
-            ): device
+            device.mac_addr: device  # device.mac_addr not the mac_address, its the serial number
             for device in await async_discover_devices(self.hass)
         }
         devices_name = {
-            formatted_mac: f"{formatted_mac} ({device.ip_addr})"
-            for formatted_mac, device in self._discovered_devices.items()
-            if formatted_mac not in configured_macs
+            serial: f"{serial} ({device.ip_addr})"
+            for serial, device in self._discovered_devices.items()
+            if serial not in configured_serials
             and device.ip_addr not in configured_hosts
         }
         # Check if there is at least one device
@@ -177,7 +190,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_try_connect(
-        self, host: str, raise_on_progress: bool = True
+        self, host: str, serial: str | None = None, raise_on_progress: bool = True
     ) -> Light:
         """Try to connect."""
         self._async_abort_entries_match({CONF_HOST: host})
@@ -196,9 +209,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             or device.host_firmware_version is None
         ):
             return None  # relays not supported
-        device.mac_addr = message.target_addr
-        real_mac = get_real_mac_addr(device.mac_addr, device.host_firmware_version)
+        device.mac_addr = (
+            serial or message.target_addr
+        )  # device.mac_addr not the mac_address, its the serial number
         await self.async_set_unique_id(
-            dr.format_mac(real_mac), raise_on_progress=raise_on_progress
+            formatted_serial(device.mac_addr), raise_on_progress=raise_on_progress
         )
         return device
