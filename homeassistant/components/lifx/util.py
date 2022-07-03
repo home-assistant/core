@@ -136,7 +136,7 @@ def mac_matches_serial_number(mac_addr: str, serial_number: str) -> bool:
     formatted_mac = dr.format_mac(mac_addr)
     return bool(
         formatted_serial(serial_number) == formatted_mac
-        or _get_mac_offset(mac_addr, 1) == formatted_mac
+        or _get_mac_offset(serial_number, 1) == formatted_mac
     )
 
 
