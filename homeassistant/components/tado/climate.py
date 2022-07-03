@@ -754,27 +754,26 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         if self._support_flags & ClimateEntityFeature.FAN_MODE:
             fan_speed_to_send = self._current_tado_fan_speed
 
-        if self._support_flags & ClimateEntityFeature.SWING_MODE:
-            if SWING_VERTICAL in self._supported_swing_modes:
+        if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
+            if SWING_VERTICAL in self._current_tado_hvac_mode["swing_modes"]:
                 vertical_swing = self._current_tado_vertical_swing_mode or TADO_SWING_OFF
-            if SWING_HORIZONTAL in self._supported_swing_modes:
+            if SWING_HORIZONTAL in self._current_tado_hvac_mode["swing_modes"]:
                 horizontal_swing = self._current_tado_horizontal_swing_mode or TADO_SWING_OFF
 
         # Tado will refuse any HVAC changes if a "light" mode is listed as a
         # capability but not provided with every HVAC change
         # Todo: Allow light mode to be adjusted by the end user.
-        if self._supported_light_modes:
+        if self._current_capabilities["light_modes"]:
             light_mode = self._current_tado_light_mode or self._supported_light_modes[0]
 
         # Tado only accepts certain settings in some HVAC modes.
         # Here we reset any forbidden settings so our requests won't be rejected.
-        if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_TEMP_SETTING:
+        if not self._current_capabilities["support_flags"] & ClimateEntityFeature.TARGET_TEMPERATURE:
             temperature_to_send = None
-        if self._current_tado_hvac_mode in TADO_MODES_WITH_NO_FAN_SETTING:
+        if not self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
             fan_speed_to_send = None
-        if self._current_tado_hvac_mode in CONST_MODE_FAN and fan_speed_to_send == CONST_FAN_AUTO:
-            fan_speed_to_send = CONST_FAN_LEVEL_1
-
+        if fan_speed_to_send not in self._current_capabilities["fan_speeds"]:
+            fan_speed_to_send = self._current_capabilities["fan_speeds"][0]
 
         self._tado.set_zone_overlay(
             zone_id=self.zone_id,
