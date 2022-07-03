@@ -150,6 +150,15 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
     supported_light_modes = None
     heat_temperatures = None
     cool_temperatures = None
+    hvac_capability_map = {
+        CONST_MODE_OFF: {
+            "temperatures": None,
+            "light_modes": None,
+            "fan_speeds": None,
+            "swing_modes": None,
+            "support_flags": 0,
+        }
+    }
 
     if zone_type == TYPE_AIR_CONDITIONING:
         # Heat is preferred as it generally has a lower minimum temperature
@@ -159,39 +168,54 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
             supported_hvac_modes.append(TADO_TO_HA_HVAC_MODE_MAP[mode])
 
-            # TODO: Refactor to support non-binary swing states.
-            # TODO: Determine if support for the previous "swings" property is necessary
-            # TODO: Clean up TADO<->HA mappings.
+            hvac_mode_temperatures = None
+            hvac_mode_light_modes = None
+            hvac_mode_swing_modes = None
+            hvac_mode_support_flags = 0
+            hvac_mode_fan_speeds = None
+
+            if capabilities[mode]["temperatures"]:
+                hvac_mode_temperatures = capabilities[mode]["temperatures"]["celsius"]
+
+            if capabilities[mode]["light"]:
+                hvac_mode_light_modes = capabilities[mode][CONST_LIGHT]
+
+            if capabilities[mode]["fanLevel"]:
+                hvac_mode_fan_speeds = [
+                    TADO_TO_HA_FAN_MODE_MAP[speed]
+                    for speed in capabilities[mode]["fanLevel"]
+                ]
+                hvac_mode_support_flags |= ClimateEntityFeature.FAN_MODE
+
+            # Detect HA compatible Swing Modes
+            for swing_mode in KNOWN_TADO_SWING_MODES:
+                if not capabilities[mode][swing_mode]:
+                    continue
+                if supported_swing_modes:
+                    hvac_mode_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[swing_mode])
+                    hvac_mode_swing_modes.append(SWING_BOTH)
+                    continue
+                hvac_mode_support_flags |= ClimateEntityFeature.SWING_MODE
+                hvac_mode_swing_modes = [SWING_OFF, TADO_TO_HA_SWING_MODE_MAP[swing_mode]]
+
+            hvac_capability_map.update({
+                mode: {
+                    "temperatures": hvac_mode_temperatures,
+                    "light_modes": hvac_mode_light_modes,
+                    "fan_speeds": hvac_mode_fan_speeds,
+                    "swing_modes": supported_swing_modes,
+                    "support_flags": hvac_mode_support_flags,
+                }
+            })
+
             if not supported_swing_modes:
-                for swing_mode in KNOWN_TADO_SWING_MODES:
-                    if not capabilities[mode][swing_mode]:
-                        continue
-                    if supported_swing_modes:
-                        supported_swing_modes.append(TADO_TO_HA_SWING_MODE_MAP[swing_mode])
-                        supported_swing_modes.append(SWING_BOTH)
-                        continue
-                    support_flags |= ClimateEntityFeature.SWING_MODE
-                    supported_swing_modes = [SWING_OFF, TADO_TO_HA_SWING_MODE_MAP[swing_mode]]
+                supported_swing_modes = hvac_mode_swing_modes
+            if not supported_fan_modes:
+                supported_fan_modes = hvac_mode_fan_speeds
+            if not supported_light_modes:
+                supported_light_modes = hvac_mode_light_modes
 
-            if CONST_LIGHT in capabilities[mode] and supported_light_modes is None:
-                supported_light_modes = capabilities[mode][CONST_LIGHT]
-
-            if not capabilities[mode].get("fanLevel"):
-                continue
-
-            # TODO: support_flags is needed otherwise it will not send
-            # the value to the API call
-            support_flags |= ClimateEntityFeature.FAN_MODE
-
-            if supported_fan_modes:
-                continue
-
-            supported_fan_modes = [
-                TADO_TO_HA_FAN_MODE_MAP[speed]
-                for speed in capabilities[mode]["fanLevel"]
-            ]
-
-        cool_temperatures = capabilities[CONST_MODE_COOL]["temperatures"]
+        cool_temperatures = hvac_capability_map[CONST_MODE_COOL]["temperatures"]
 
     else:
         supported_hvac_modes.append(HVACMode.HEAT)
@@ -240,6 +264,7 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
         support_flags,
         device_info,
         supported_light_modes,
+        hvac_capability_map,
     )
     return entity
 
@@ -265,6 +290,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         support_flags,
         device_info,
         supported_light_modes,
+        hvac_capability_map,
     ):
         """Initialize of Tado climate entity."""
         self._tado = tado
@@ -281,6 +307,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._supported_fan_modes = supported_fan_modes
         self._supported_swing_modes = supported_swing_modes
         self._supported_light_modes = supported_light_modes
+        self._hvac_capability_map = hvac_capability_map
         self._support_flags = support_flags
 
         self._available = False
@@ -301,6 +328,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._current_tado_fan_speed = CONST_FAN_OFF
         self._current_tado_hvac_mode = CONST_MODE_OFF
         self._current_tado_hvac_action = HVACAction.OFF
+        self._current_tado_hvac_capabilities = self._hvac_capability_map.get(self._current_tado_hvac_mode)
 
         self._current_tado_swing_mode = TADO_SWING_OFF
         self._current_tado_vertical_swing_mode = TADO_SWING_OFF
@@ -615,6 +643,10 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
                 self._target_temp = self._heat_max_temp
             elif self._target_temp < self._heat_min_temp:
                 self._target_temp = self._heat_min_temp
+
+    @property
+    def _current_capabilities(self):
+        return self._hvac_capability_map[self._current_tado_hvac_mode]
 
     def _control_hvac(
         self,
