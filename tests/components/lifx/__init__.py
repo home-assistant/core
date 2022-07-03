@@ -2,10 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from contextlib import contextmanager
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiolifx.aiolifx import Light
-from decorator import contextmanager
 
 from homeassistant.components.lifx import discovery
 from homeassistant.components.lifx.const import TARGET_ANY
