@@ -25,6 +25,7 @@ CONF_XPATH = "xpath"
 DOMAIN = "ihc"
 
 IHC_CONTROLLER = "controller"
+IHC_CONTROLLER_INDEX = "controller_index"
 IHC_PLATFORMS = (
     Platform.BINARY_SENSOR,
     Platform.LIGHT,

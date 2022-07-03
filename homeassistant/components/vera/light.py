@@ -9,8 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_HS_COLOR,
     ENTITY_ID_FORMAT,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -63,11 +62,18 @@ class VeraLight(VeraDevice[veraApi.VeraDimmer], LightEntity):
         return self._color
 
     @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        if self._color:
-            return SUPPORT_BRIGHTNESS | SUPPORT_COLOR
-        return SUPPORT_BRIGHTNESS
+    def color_mode(self) -> ColorMode:
+        """Return the color mode of the light."""
+        if self.vera_device.is_dimmable:
+            if self._color:
+                return ColorMode.HS
+            return ColorMode.BRIGHTNESS
+        return ColorMode.ONOFF
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode]:
+        """Flag supported color modes."""
+        return {self.color_mode}
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

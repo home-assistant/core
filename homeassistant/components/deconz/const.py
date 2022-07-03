@@ -1,6 +1,8 @@
 """Constants for the deCONZ component."""
 import logging
 
+from pydeconz.models import ResourceType
+
 from homeassistant.const import Platform
 
 LOGGER = logging.getLogger(__package__)
@@ -25,6 +27,7 @@ CONF_MASTER_GATEWAY = "master"
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.FAN,
@@ -44,7 +47,12 @@ ATTR_ON = "on"
 ATTR_VALVE = "valve"
 
 # Switches
-POWER_PLUGS = ["On/Off light", "On/Off plug-in unit", "Smart plug"]
+POWER_PLUGS = [
+    ResourceType.ON_OFF_LIGHT.value,
+    ResourceType.ON_OFF_OUTPUT.value,
+    ResourceType.ON_OFF_PLUGIN_UNIT.value,
+    ResourceType.SMART_PLUG.value,
+]
 
 CONF_ANGLE = "angle"
 CONF_GESTURE = "gesture"

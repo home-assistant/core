@@ -31,12 +31,16 @@ async def setup_github_integration(
             },
             headers=headers,
         )
-        for endpoint in ("issues", "pulls", "releases", "commits"):
-            aioclient_mock.get(
-                f"https://api.github.com/repos/{repository}/{endpoint}",
-                json=json.loads(load_fixture(f"{endpoint}.json", DOMAIN)),
-                headers=headers,
-            )
+        aioclient_mock.get(
+            f"https://api.github.com/repos/{repository}/events",
+            json=[],
+            headers=headers,
+        )
+    aioclient_mock.post(
+        "https://api.github.com/graphql",
+        json=json.loads(load_fixture("graphql.json", DOMAIN)),
+        headers=headers,
+    )
     mock_config_entry.add_to_hass(hass)
 
     setup_result = await hass.config_entries.async_setup(mock_config_entry.entry_id)

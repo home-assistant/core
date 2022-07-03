@@ -1,0 +1,34 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "entity_ids": "Entidades de entrada",
+                    "name": "Nombre",
+                    "round_digits": "Precisi\u00f3n",
+                    "type": "Caracter\u00edstica estad\u00edstica"
+                },
+                "data_description": {
+                    "round_digits": "Controla el n\u00famero de d\u00edgitos decimales cuando la caracter\u00edstica estad\u00edstica es la media o mediana."
+                },
+                "description": "Cree un sensor que calcule un valor m\u00ednimo, m\u00e1ximo, medio o mediano a partir de una lista de sensores de entrada.",
+                "title": "Agregar sensor m\u00edn / m\u00e1x / media / mediana"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "entity_ids": "Entidades de entrada",
+                    "round_digits": "Precisi\u00f3n",
+                    "type": "Caracter\u00edstica estad\u00edstica"
+                },
+                "data_description": {
+                    "round_digits": "Controla el n\u00famero de d\u00edgitos decimales cuando la caracter\u00edstica estad\u00edstica es la media o mediana."
+                }
+            }
+        }
+    },
+    "title": "Sensor m\u00edn / m\u00e1x / media / mediana"
+}

@@ -2,22 +2,19 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "connection_error": "Sikertelen csatlakoz\u00e1s"
         },
         "error": {
-            "discovery_error": "Nem siker\u00fclt felfedezni a Motion Gateway-t",
-            "invalid_interface": "\u00c9rv\u00e9nytelen h\u00e1l\u00f3zati interf\u00e9sz"
+            "discovery_error": "Nem siker\u00fclt felfedezni a Motion Gateway-t"
         },
-        "flow_title": "Mozg\u00f3 red\u0151ny",
+        "flow_title": "{short_mac} ({ip_address})",
         "step": {
             "connect": {
                 "data": {
-                    "api_key": "API kulcs",
-                    "interface": "A haszn\u00e1lni k\u00edv\u00e1nt h\u00e1l\u00f3zati interf\u00e9sz"
+                    "api_key": "API kulcs"
                 },
-                "description": "Sz\u00fcks\u00e9ge lesz a 16 karakteres API kulcsra, \u00fatmutat\u00e1s\u00e9rt l\u00e1sd: https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key",
-                "title": "Mozg\u00f3 red\u0151ny"
+                "description": "Sz\u00fcks\u00e9ge lesz a 16 karakteres API kulcsra, \u00fatmutat\u00e1s\u00e9rt l\u00e1sd: https://www.home-assistant.io/integrations/motion_blinds/#retrieving-the-key"
             },
             "select": {
                 "data": {
@@ -28,11 +25,9 @@
             },
             "user": {
                 "data": {
-                    "api_key": "API kulcs",
                     "host": "IP c\u00edm"
                 },
-                "description": "Csatlakozzon a Motion Gateway-hez, ha az IP-c\u00edm nincs be\u00e1ll\u00edtva, akkor az automatikus felder\u00edt\u00e9st haszn\u00e1lja",
-                "title": "Mozg\u00f3 red\u0151ny"
+                "description": "Csatlakozzon a Motion Gateway-hez, ha az IP-c\u00edm nincs be\u00e1ll\u00edtva, akkor az automatikus felder\u00edt\u00e9st haszn\u00e1lja"
             }
         }
     },
@@ -41,9 +36,7 @@
             "init": {
                 "data": {
                     "wait_for_push": "Multicast adatokra v\u00e1rakoz\u00e1s friss\u00edt\u00e9skor"
-                },
-                "description": "Opcion\u00e1lis be\u00e1ll\u00edt\u00e1sok megad\u00e1sa",
-                "title": "Motion Blinds"
+                }
             }
         }
     }

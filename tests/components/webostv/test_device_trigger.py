@@ -2,6 +2,7 @@
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.device_automation import DeviceAutomationType
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
@@ -11,7 +12,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import async_get as get_dev_reg
 from homeassistant.setup import async_setup_component
 
-from . import ENTITY_ID, FAKE_UUID, setup_webostv
+from . import setup_webostv
+from .const import ENTITY_ID, FAKE_UUID
 
 from tests.common import MockConfigEntry, async_get_device_automations
 
@@ -28,9 +30,12 @@ async def test_get_triggers(hass, client):
         "domain": DOMAIN,
         "type": "webostv.turn_on",
         "device_id": device.id,
+        "metadata": {},
     }
 
-    triggers = await async_get_device_automations(hass, "trigger", device.id)
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
     assert turn_on_trigger in triggers
 
 

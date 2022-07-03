@@ -1,0 +1,69 @@
+{
+  "account": "12345012",
+  "settings": {
+    "normal": {
+      "wifiSSID": "MY_WIFI",
+      "alarmDuration": 240,
+      "alarmVolume": 3,
+      "doorChime": 2,
+      "entryDelayAway": 30,
+      "entryDelayAway2": 30,
+      "entryDelayHome": 30,
+      "entryDelayHome2": 30,
+      "exitDelayAway": 60,
+      "exitDelayAway2": 60,
+      "exitDelayHome": 0,
+      "exitDelayHome2": 0,
+      "lastUpdated": "2019-07-03T03:24:20.999Z",
+      "light": true,
+      "voicePrompts": 2,
+      "_id": "1197192618725121765212"
+    },
+    "pins": {
+      "lastUpdated": "2019-07-04T20:47:44.016Z",
+      "_id": "asd6281526381253123",
+      "users": [
+        {
+          "_id": "1271279d966212121124c7",
+          "pin": "3456",
+          "name": "Test 1"
+        },
+        {
+          "_id": "1271279d966212121124c6",
+          "pin": "5423",
+          "name": "Test 2"
+        },
+        {
+          "_id": "1271279d966212121124c5",
+          "pin": "",
+          "name": ""
+        },
+        {
+          "_id": "1271279d966212121124c4",
+          "pin": "",
+          "name": ""
+        }
+      ],
+      "duress": {
+        "pin": "9876"
+      },
+      "master": {
+        "pin": "1234"
+      }
+    }
+  },
+  "basestationStatus": {
+    "lastUpdated": "2019-07-15T15:28:22.961Z",
+    "rfJamming": false,
+    "ethernetStatus": 4,
+    "gsmRssi": -73,
+    "gsmStatus": 3,
+    "backupBattery": 5293,
+    "wallPower": 5933,
+    "wifiRssi": -49,
+    "wifiStatus": 1,
+    "_id": "6128153715231t237123",
+    "encryptionErrors": []
+  },
+  "lastUpdated": 1562273264
+}

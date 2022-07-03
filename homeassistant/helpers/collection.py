@@ -330,11 +330,17 @@ def sync_entity_lifecycle(
     create_entity: Callable[[dict], Entity],
 ) -> None:
     """Map a collection to an entity component."""
-    entities = {}
+    entities: dict[str, Entity] = {}
     ent_reg = entity_registry.async_get(hass)
 
     async def _add_entity(change_set: CollectionChangeSet) -> Entity:
+        def entity_removed() -> None:
+            """Remove entity from entities if it's removed or not added."""
+            if change_set.item_id in entities:
+                entities.pop(change_set.item_id)
+
         entities[change_set.item_id] = create_entity(change_set.item)
+        entities[change_set.item_id].async_on_remove(entity_removed)
         return entities[change_set.item_id]
 
     async def _remove_entity(change_set: CollectionChangeSet) -> None:
@@ -343,12 +349,17 @@ def sync_entity_lifecycle(
         )
         if ent_to_remove is not None:
             ent_reg.async_remove(ent_to_remove)
-        else:
+        elif change_set.item_id in entities:
             await entities[change_set.item_id].async_remove(force_remove=True)
-        entities.pop(change_set.item_id)
+        # Unconditionally pop the entity from the entity list to avoid racing against
+        # the entity registry event handled by Entity._async_registry_updated
+        if change_set.item_id in entities:
+            entities.pop(change_set.item_id)
 
     async def _update_entity(change_set: CollectionChangeSet) -> None:
-        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore
+        if change_set.item_id not in entities:
+            return
+        await entities[change_set.item_id].async_update_config(change_set.item)  # type: ignore[attr-defined]
 
     _func_map: dict[
         str, Callable[[CollectionChangeSet], Coroutine[Any, Any, Entity | None]]

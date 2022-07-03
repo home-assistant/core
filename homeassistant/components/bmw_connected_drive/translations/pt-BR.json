@@ -11,7 +11,17 @@
             "user": {
                 "data": {
                     "password": "Senha",
+                    "region": "Regi\u00e3o do ConnectedDrive",
                     "username": "Usu\u00e1rio"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "account_options": {
+                "data": {
+                    "read_only": "Somente leitura (somente sensores e notificar, sem execu\u00e7\u00e3o de servi\u00e7os, sem bloqueio)"
                 }
             }
         }

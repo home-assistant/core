@@ -1,11 +1,16 @@
 """Test to verify that Home Assistant core works."""
+from __future__ import annotations
+
 # pylint: disable=protected-access
+import array
 import asyncio
 from datetime import datetime, timedelta
 import functools
+import gc
 import logging
 import os
 from tempfile import TemporaryDirectory
+from typing import Any
 from unittest.mock import MagicMock, Mock, PropertyMock, patch
 
 import pytest
@@ -13,8 +18,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
-    ATTR_NOW,
-    ATTR_SECONDS,
     CONF_UNIT_SYSTEM,
     EVENT_CALL_SERVICE,
     EVENT_CORE_CONFIG_UPDATE,
@@ -26,12 +29,11 @@ from homeassistant.const import (
     EVENT_SERVICE_REGISTERED,
     EVENT_SERVICE_REMOVED,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
-    EVENT_TIMER_OUT_OF_SYNC,
     MATCH_ALL,
     __version__,
 )
 import homeassistant.core as ha
+from homeassistant.core import State
 from homeassistant.exceptions import (
     InvalidEntityFormatError,
     InvalidStateError,
@@ -39,6 +41,7 @@ from homeassistant.exceptions import (
     ServiceNotFound,
 )
 import homeassistant.util.dt as dt_util
+from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from tests.common import async_capture_events, async_mock_service
@@ -48,7 +51,17 @@ PST = dt_util.get_time_zone("America/Los_Angeles")
 
 def test_split_entity_id():
     """Test split_entity_id."""
-    assert ha.split_entity_id("domain.object_id") == ["domain", "object_id"]
+    assert ha.split_entity_id("domain.object_id") == ("domain", "object_id")
+    with pytest.raises(ValueError):
+        ha.split_entity_id("")
+    with pytest.raises(ValueError):
+        ha.split_entity_id(".")
+    with pytest.raises(ValueError):
+        ha.split_entity_id("just_domain")
+    with pytest.raises(ValueError):
+        ha.split_entity_id("empty_object_id.")
+    with pytest.raises(ValueError):
+        ha.split_entity_id(".empty_domain")
 
 
 def test_async_add_hass_job_schedule_callback():
@@ -377,10 +390,14 @@ def test_state_as_dict():
         "last_updated": last_time.isoformat(),
         "state": "on",
     }
-    assert state.as_dict() == expected
+    as_dict_1 = state.as_dict()
+    assert isinstance(as_dict_1, ReadOnlyDict)
+    assert isinstance(as_dict_1["attributes"], ReadOnlyDict)
+    assert isinstance(as_dict_1["context"], ReadOnlyDict)
+    assert as_dict_1 == expected
     # 2nd time to verify cache
     assert state.as_dict() == expected
-    assert state.as_dict() is state.as_dict()
+    assert state.as_dict() is as_dict_1
 
 
 async def test_eventbus_add_remove_listener(hass):
@@ -426,6 +443,24 @@ async def test_eventbus_filtered_listener(hass):
     hass.bus.async_fire("test", {"filtered": False})
     await hass.async_block_till_done()
 
+    assert len(calls) == 1
+
+    unsub()
+
+
+async def test_eventbus_run_immediately(hass):
+    """Test we can call events immediately."""
+    calls = []
+
+    @ha.callback
+    def listener(event):
+        """Mock listener."""
+        calls.append(event)
+
+    unsub = hass.bus.async_listen("test", listener, run_immediately=True)
+
+    hass.bus.async_fire("test", {"event": True})
+    # No async_block_till_done here
     assert len(calls) == 1
 
     unsub()
@@ -1022,13 +1057,7 @@ def test_config_is_allowed_external_url():
 
 async def test_event_on_update(hass):
     """Test that event is fired on update."""
-    events = []
-
-    @ha.callback
-    def callback(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, callback)
+    events = async_capture_events(hass, EVENT_CORE_CONFIG_UPDATE)
 
     assert hass.config.latitude != 12
 
@@ -1046,129 +1075,6 @@ async def test_bad_timezone_raises_value_error(hass):
         await hass.config.async_update(time_zone="not_a_timezone")
 
 
-@patch("homeassistant.core.monotonic")
-def test_create_timer(mock_monotonic, loop):
-    """Test create timer."""
-    hass = MagicMock()
-    funcs = []
-    orig_callback = ha.callback
-
-    def mock_callback(func):
-        funcs.append(func)
-        return orig_callback(func)
-
-    mock_monotonic.side_effect = 10.2, 10.8, 11.3
-
-    with patch.object(ha, "callback", mock_callback), patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 5, 333333),
-    ):
-        ha._async_create_timer(hass)
-
-    assert len(funcs) == 2
-    fire_time_event, stop_timer = funcs
-
-    assert len(hass.loop.call_later.mock_calls) == 1
-    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
-    assert abs(delay - 0.666667) < 0.001
-    assert callback is fire_time_event
-    assert abs(target - 10.866667) < 0.001
-
-    with patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 6, 100000),
-    ):
-        callback(target)
-
-    assert len(hass.bus.async_listen_once.mock_calls) == 1
-    assert len(hass.bus.async_fire.mock_calls) == 1
-    assert len(hass.loop.call_later.mock_calls) == 2
-
-    event_type, callback = hass.bus.async_listen_once.mock_calls[0][1]
-    assert event_type == EVENT_HOMEASSISTANT_STOP
-    assert callback is stop_timer
-
-    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
-    assert abs(delay - 0.9) < 0.001
-    assert callback is fire_time_event
-    assert abs(target - 12.2) < 0.001
-
-    event_type, event_data = hass.bus.async_fire.mock_calls[0][1]
-    assert event_type == EVENT_TIME_CHANGED
-    assert event_data[ATTR_NOW] == datetime(2018, 12, 31, 3, 4, 6, 100000)
-
-
-@patch("homeassistant.core.monotonic")
-def test_timer_out_of_sync(mock_monotonic, loop):
-    """Test create timer."""
-    hass = MagicMock()
-    funcs = []
-    orig_callback = ha.callback
-
-    def mock_callback(func):
-        funcs.append(func)
-        return orig_callback(func)
-
-    mock_monotonic.side_effect = 10.2, 13.3, 13.4
-
-    with patch.object(ha, "callback", mock_callback), patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 5, 333333),
-    ):
-        ha._async_create_timer(hass)
-
-    delay, callback, target = hass.loop.call_later.mock_calls[0][1]
-
-    with patch(
-        "homeassistant.core.dt_util.utcnow",
-        return_value=datetime(2018, 12, 31, 3, 4, 8, 200000),
-    ):
-        callback(target)
-
-        _, event_0_args, event_0_kwargs = hass.bus.async_fire.mock_calls[0]
-        event_context_0 = event_0_kwargs["context"]
-
-        event_type_0, _ = event_0_args
-        assert event_type_0 == EVENT_TIME_CHANGED
-
-        _, event_1_args, event_1_kwargs = hass.bus.async_fire.mock_calls[1]
-        event_type_1, event_data_1 = event_1_args
-        event_context_1 = event_1_kwargs["context"]
-
-        assert event_type_1 == EVENT_TIMER_OUT_OF_SYNC
-        assert abs(event_data_1[ATTR_SECONDS] - 2.433333) < 0.001
-
-        assert event_context_0 == event_context_1
-
-        assert len(funcs) == 2
-        fire_time_event, _ = funcs
-
-    assert len(hass.loop.call_later.mock_calls) == 2
-
-    delay, callback, target = hass.loop.call_later.mock_calls[1][1]
-    assert abs(delay - 0.8) < 0.001
-    assert callback is fire_time_event
-    assert abs(target - 14.2) < 0.001
-
-
-async def test_hass_start_starts_the_timer(loop):
-    """Test when hass starts, it starts the timer."""
-    hass = ha.HomeAssistant()
-
-    try:
-        with patch("homeassistant.core._async_create_timer") as mock_timer:
-            await hass.async_start()
-
-        assert hass.state == ha.CoreState.running
-        assert not hass._track_task
-        assert len(mock_timer.mock_calls) == 1
-        assert mock_timer.mock_calls[0][1][0] is hass
-
-    finally:
-        await hass.async_stop()
-        assert hass.state == ha.CoreState.stopped
-
-
 async def test_start_taking_too_long(loop, caplog):
     """Test when async_start takes too long."""
     hass = ha.HomeAssistant()
@@ -1177,12 +1083,10 @@ async def test_start_taking_too_long(loop, caplog):
     try:
         with patch.object(
             hass, "async_block_till_done", side_effect=asyncio.TimeoutError
-        ), patch("homeassistant.core._async_create_timer") as mock_timer:
+        ):
             await hass.async_start()
 
         assert hass.state == ha.CoreState.running
-        assert len(mock_timer.mock_calls) == 1
-        assert mock_timer.mock_calls[0][1][0] is hass
         assert "Something is blocking Home Assistant" in caplog.text
 
     finally:
@@ -1233,13 +1137,7 @@ async def test_service_executed_with_subservices(hass):
 
 async def test_service_call_event_contains_original_data(hass):
     """Test that service call event contains original data."""
-    events = []
-
-    @ha.callback
-    def callback(event):
-        events.append(event)
-
-    hass.bus.async_listen(EVENT_CALL_SERVICE, callback)
+    events = async_capture_events(hass, EVENT_CALL_SERVICE)
 
     calls = async_mock_service(
         hass, "test", "service", vol.Schema({"number": vol.Coerce(int)})
@@ -1585,19 +1483,394 @@ async def test_reserving_states(hass):
     assert hass.states.async_available("light.bedroom") is True
 
 
-async def test_state_change_events_match_state_time(hass):
-    """Test last_updated and timed_fired only call utcnow once."""
+def _ulid_timestamp(ulid: str) -> int:
+    encoded = ulid[:10].encode("ascii")
+    # This unpacks the time from the ulid
 
+    # Copied from
+    # https://github.com/ahawker/ulid/blob/06289583e9de4286b4d80b4ad000d137816502ca/ulid/base32.py#L296
+    decoding = array.array(
+        "B",
+        (
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0x00,
+            0x01,
+            0x02,
+            0x03,
+            0x04,
+            0x05,
+            0x06,
+            0x07,
+            0x08,
+            0x09,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0x0A,
+            0x0B,
+            0x0C,
+            0x0D,
+            0x0E,
+            0x0F,
+            0x10,
+            0x11,
+            0x01,
+            0x12,
+            0x13,
+            0x01,
+            0x14,
+            0x15,
+            0x00,
+            0x16,
+            0x17,
+            0x18,
+            0x19,
+            0x1A,
+            0xFF,
+            0x1B,
+            0x1C,
+            0x1D,
+            0x1E,
+            0x1F,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0x0A,
+            0x0B,
+            0x0C,
+            0x0D,
+            0x0E,
+            0x0F,
+            0x10,
+            0x11,
+            0x01,
+            0x12,
+            0x13,
+            0x01,
+            0x14,
+            0x15,
+            0x00,
+            0x16,
+            0x17,
+            0x18,
+            0x19,
+            0x1A,
+            0xFF,
+            0x1B,
+            0x1C,
+            0x1D,
+            0x1E,
+            0x1F,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+            0xFF,
+        ),
+    )
+    return int.from_bytes(
+        bytes(
+            (
+                ((decoding[encoded[0]] << 5) | decoding[encoded[1]]) & 0xFF,
+                ((decoding[encoded[2]] << 3) | (decoding[encoded[3]] >> 2)) & 0xFF,
+                (
+                    (decoding[encoded[3]] << 6)
+                    | (decoding[encoded[4]] << 1)
+                    | (decoding[encoded[5]] >> 4)
+                )
+                & 0xFF,
+                ((decoding[encoded[5]] << 4) | (decoding[encoded[6]] >> 1)) & 0xFF,
+                (
+                    (decoding[encoded[6]] << 7)
+                    | (decoding[encoded[7]] << 2)
+                    | (decoding[encoded[8]] >> 3)
+                )
+                & 0xFF,
+                ((decoding[encoded[8]] << 5) | (decoding[encoded[9]])) & 0xFF,
+            )
+        ),
+        byteorder="big",
+    )
+
+
+async def test_state_change_events_context_id_match_state_time(hass):
+    """Test last_updated, timed_fired, and the ulid all have the same time."""
+    events = async_capture_events(hass, ha.EVENT_STATE_CHANGED)
+    hass.states.async_set("light.bedroom", "on")
+    await hass.async_block_till_done()
+    state: State = hass.states.get("light.bedroom")
+    assert state.last_updated == events[0].time_fired
+    assert len(state.context.id) == 26
+    # ULIDs store time to 3 decimal places compared to python timestamps
+    assert _ulid_timestamp(state.context.id) == int(
+        state.last_updated.timestamp() * 1000
+    )
+
+
+async def test_state_firing_event_matches_context_id_ulid_time(hass):
+    """Test timed_fired and the ulid have the same time."""
+    events = async_capture_events(hass, EVENT_HOMEASSISTANT_STARTED)
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+
+    event = events[0]
+    assert len(event.context.id) == 26
+    # ULIDs store time to 3 decimal places compared to python timestamps
+    assert _ulid_timestamp(event.context.id) == int(
+        events[0].time_fired.timestamp() * 1000
+    )
+
+
+async def test_event_context(hass):
+    """Test we can lookup the origin of a context from an event."""
     events = []
 
     @ha.callback
-    def _event_listener(event):
+    def capture_events(event):
+        nonlocal events
         events.append(event)
 
-    hass.bus.async_listen(ha.EVENT_STATE_CHANGED, _event_listener)
+    cancel = hass.bus.async_listen("dummy_event", capture_events)
+    cancel2 = hass.bus.async_listen("dummy_event_2", capture_events)
 
-    hass.states.async_set("light.bedroom", "on")
+    hass.bus.async_fire("dummy_event")
     await hass.async_block_till_done()
-    state = hass.states.get("light.bedroom")
 
-    assert state.last_updated == events[0].time_fired
+    dummy_event: ha.Event = events[0]
+
+    hass.bus.async_fire("dummy_event_2", context=dummy_event.context)
+    await hass.async_block_till_done()
+    context_id = dummy_event.context.id
+
+    dummy_event2: ha.Event = events[1]
+    assert dummy_event2.context == dummy_event.context
+    assert dummy_event2.context.id == context_id
+    cancel()
+    cancel2()
+
+    assert dummy_event2.context.origin_event == dummy_event
+
+
+def _get_full_name(obj) -> str:
+    """Get the full name of an object in memory."""
+    objtype = type(obj)
+    name = objtype.__name__
+    if module := getattr(objtype, "__module__", None):
+        return f"{module}.{name}"
+    return name
+
+
+def _get_by_type(full_name: str) -> list[Any]:
+    """Get all objects in memory with a specific type."""
+    return [obj for obj in gc.get_objects() if _get_full_name(obj) == full_name]
+
+
+# The logger will hold a strong reference to the event for the life of the tests
+# so we must patch it out
+@pytest.mark.skipif(
+    not os.environ.get("DEBUG_MEMORY"),
+    reason="Takes too long on the CI",
+)
+@patch.object(ha._LOGGER, "debug", lambda *args: None)
+async def test_state_changed_events_to_not_leak_contexts(hass):
+    """Test state changed events do not leak contexts."""
+    gc.collect()
+    # Other tests can log Contexts which keep them in memory
+    # so we need to look at how many exist at the start
+    init_count = len(_get_by_type("homeassistant.core.Context"))
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count
+    for i in range(20):
+        hass.states.async_set("light.switch", str(i))
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count + 2
+
+    hass.states.async_remove("light.switch")
+    await hass.async_block_till_done()
+    gc.collect()
+
+    assert len(_get_by_type("homeassistant.core.Context")) == init_count

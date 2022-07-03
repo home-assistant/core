@@ -2,13 +2,12 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_configured_device": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "backoff": "Az eszk\u00f6z jelenleg nem fogadja el a p\u00e1ros\u00edt\u00e1si k\u00e9relmeket (lehet, hogy t\u00fal sokszor adott meg \u00e9rv\u00e9nytelen PIN-k\u00f3dot), pr\u00f3b\u00e1lkozzon \u00fajra k\u00e9s\u0151bb.",
             "device_did_not_pair": "A p\u00e1ros\u00edt\u00e1s folyamat\u00e1t az eszk\u00f6zr\u0151l nem pr\u00f3b\u00e1lt\u00e1k befejezni.",
             "device_not_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a felder\u00edt\u00e9s sor\u00e1n, k\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni.",
             "inconsistent_device": "Az elv\u00e1rt protokollok nem tal\u00e1lhat\u00f3k a felder\u00edt\u00e9s sor\u00e1n. Ez \u00e1ltal\u00e1ban a multicast DNS (Zeroconf) probl\u00e9m\u00e1j\u00e1t jelzi. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni az eszk\u00f6zt.",
-            "invalid_config": "Az eszk\u00f6z konfigur\u00e1l\u00e1sa nem teljes. K\u00e9rj\u00fck, pr\u00f3b\u00e1lja meg \u00fajra hozz\u00e1adni.",
+            "ipv6_not_supported": "Az IPv6 nem t\u00e1mogatott.",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
             "reauth_successful": "Az \u00fajrahiteles\u00edt\u00e9s sikeres volt.",
             "setup_failed": "Az eszk\u00f6z be\u00e1ll\u00edt\u00e1sa sikertelen.",
@@ -18,17 +17,16 @@
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "no_devices_found": "Nem tal\u00e1lhat\u00f3 eszk\u00f6z a h\u00e1l\u00f3zaton",
-            "no_usable_service": "Tal\u00e1ltunk egy eszk\u00f6zt, de nem tudtuk azonos\u00edtani, hogyan lehetne kapcsolatot l\u00e9tes\u00edteni vele. Ha tov\u00e1bbra is ezt az \u00fczenetet l\u00e1tja, pr\u00f3b\u00e1lja meg megadni az IP-c\u00edm\u00e9t, vagy ind\u00edtsa \u00fajra az Apple TV-t.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
-        "flow_title": "{name}",
+        "flow_title": "{name} ({type})",
         "step": {
             "confirm": {
-                "description": "Arra k\u00e9sz\u00fcl, hogy felvegye {name} nev\u0171 Apple TV-t a Home Assistant p\u00e9ld\u00e1ny\u00e1ba. \n\n ** A folyamat befejez\u00e9s\u00e9hez t\u00f6bb PIN-k\u00f3dot kell megadnia. ** \n\nFelh\u00edvjuk figyelm\u00e9t, hogy ezzel az integr\u00e1ci\u00f3val *nem* fogja tudni kikapcsolni az Apple TV-t. Csak a Home Assistant saj\u00e1t m\u00e9dialej\u00e1tsz\u00f3ja kapcsol ki!",
+                "description": "\u00d6n a `{name}`,  `{type}` t\u00edpus\u00fa eszk\u00f6zt k\u00e9sz\u00fcl hozz\u00e1adni a Home Assistanthoz.\n\n**A folyamat befejez\u00e9s\u00e9hez t\u00f6bb PIN k\u00f3dot is meg kell adnia.**\n\nK\u00e9rj\u00fck, vegye figyelembe, hogy ezzel az integr\u00e1ci\u00f3val *nem* tudja kikapcsolni az Apple TV k\u00e9sz\u00fcl\u00e9k\u00e9t. Csak a Home Assistant m\u00e9dialej\u00e1tsz\u00f3ja fog kikapcsolni!",
                 "title": "Apple TV sikeresen hozz\u00e1adva"
             },
             "pair_no_pin": {
-                "description": "P\u00e1ros\u00edt\u00e1sra van sz\u00fcks\u00e9g a {protocol} szolg\u00e1ltat\u00e1shoz. A folytat\u00e1shoz k\u00e9rj\u00fck, \u00edrja be az Apple TV {pin}-t.",
+                "description": "P\u00e1ros\u00edt\u00e1sra van sz\u00fcks\u00e9g a {protocol} szolg\u00e1ltat\u00e1shoz. A folytat\u00e1shoz k\u00e9rj\u00fck, \u00edrja be k\u00e9sz\u00fcl\u00e9ken a PIN k\u00f3dot: {pin}.",
                 "title": "P\u00e1ros\u00edt\u00e1s"
             },
             "pair_with_pin": {
@@ -47,7 +45,7 @@
                 "title": "A p\u00e1ros\u00edt\u00e1s nem lehets\u00e9ges"
             },
             "reconfigure": {
-                "description": "Ez az Apple TV csatlakoz\u00e1si neh\u00e9zs\u00e9gekkel k\u00fczd, ez\u00e9rt \u00fajra kell konfigur\u00e1lni.",
+                "description": "Konfigur\u00e1lja \u00fajra ezt az eszk\u00f6zt a m\u0171k\u00f6d\u0151k\u00e9pess\u00e9g vissza\u00e1ll\u00edt\u00e1s\u00e1hoz.",
                 "title": "Eszk\u00f6z \u00fajrakonfigur\u00e1l\u00e1sa"
             },
             "service_problem": {
@@ -58,7 +56,7 @@
                 "data": {
                     "device_input": "Eszk\u00f6z"
                 },
-                "description": "El\u0151sz\u00f6r \u00edrja be a hozz\u00e1adni k\u00edv\u00e1nt Apple TV eszk\u00f6znev\u00e9t (pl. Konyha vagy H\u00e1l\u00f3szoba) vagy IP-c\u00edm\u00e9t. Ha valamilyen eszk\u00f6zt automatikusan tal\u00e1ltak a h\u00e1l\u00f3zat\u00e1n, az al\u00e1bb l\u00e1that\u00f3. \n\nHa nem l\u00e1tja eszk\u00f6z\u00e9t, vagy b\u00e1rmilyen probl\u00e9m\u00e1t tapasztal, pr\u00f3b\u00e1lja meg megadni az eszk\u00f6z IP-c\u00edm\u00e9t. \n\n {devices}",
+                "description": "Kezdje a hozz\u00e1adni k\u00edv\u00e1nt Apple TV eszk\u00f6znev\u00e9nek (pl. Konyha vagy H\u00e1l\u00f3szoba) vagy IP-c\u00edm\u00e9nek megad\u00e1s\u00e1val. \n\n Ha nem l\u00e1tja az eszk\u00f6zt, vagy b\u00e1rmilyen probl\u00e9m\u00e1t tapasztal, pr\u00f3b\u00e1lja meg megadni az eszk\u00f6z IP-c\u00edm\u00e9t.",
                 "title": "\u00daj Apple TV be\u00e1ll\u00edt\u00e1sa"
             }
         }
@@ -72,6 +70,5 @@
                 "description": "Konfigur\u00e1lja az eszk\u00f6z \u00e1ltal\u00e1nos be\u00e1ll\u00edt\u00e1sait"
             }
         }
-    },
-    "title": "Apple TV"
+    }
 }

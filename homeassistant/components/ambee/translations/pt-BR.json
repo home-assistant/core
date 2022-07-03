@@ -10,7 +10,8 @@
         "step": {
             "reauth_confirm": {
                 "data": {
-                    "api_key": "Chave da API"
+                    "api_key": "Chave da API",
+                    "description": "Re-autentique com sua conta Ambee."
                 }
             },
             "user": {
@@ -19,7 +20,8 @@
                     "latitude": "Latitude",
                     "longitude": "Longitude",
                     "name": "Nome"
-                }
+                },
+                "description": "Configure o Ambee para integrar com o Home Assistant."
             }
         }
     }

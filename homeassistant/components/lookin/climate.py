@@ -14,17 +14,10 @@ from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MIDDLE,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_OFF,
-    SUPPORT_FAN_MODE,
-    SUPPORT_SWING_MODE,
-    SUPPORT_TARGET_TEMPERATURE,
     SWING_BOTH,
     SWING_OFF,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -41,17 +34,15 @@ from .coordinator import LookinDataUpdateCoordinator
 from .entity import LookinCoordinatorEntity
 from .models import LookinData
 
-SUPPORT_FLAGS: int = SUPPORT_TARGET_TEMPERATURE | SUPPORT_FAN_MODE | SUPPORT_SWING_MODE
-
 LOOKIN_FAN_MODE_IDX_TO_HASS: Final = [FAN_AUTO, FAN_LOW, FAN_MIDDLE, FAN_HIGH]
 LOOKIN_SWING_MODE_IDX_TO_HASS: Final = [SWING_OFF, SWING_BOTH]
 LOOKIN_HVAC_MODE_IDX_TO_HASS: Final = [
-    HVAC_MODE_OFF,
-    HVAC_MODE_AUTO,
-    HVAC_MODE_COOL,
-    HVAC_MODE_HEAT,
-    HVAC_MODE_DRY,
-    HVAC_MODE_FAN_ONLY,
+    HVACMode.OFF,
+    HVACMode.AUTO,
+    HVACMode.COOL,
+    HVACMode.HEAT,
+    HVACMode.DRY,
+    HVACMode.FAN_ONLY,
 ]
 
 HASS_TO_LOOKIN_HVAC_MODE: dict[str, int] = {
@@ -100,12 +91,16 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
-    _attr_current_humidity: float | None = None  # type: ignore
+    _attr_current_humidity: float | None = None  # type: ignore[assignment]
     _attr_temperature_unit = TEMP_CELSIUS
-    _attr_supported_features: int = SUPPORT_FLAGS
+    _attr_supported_features: int = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.SWING_MODE
+    )
     _attr_fan_modes: list[str] = LOOKIN_FAN_MODE_IDX_TO_HASS
     _attr_swing_modes: list[str] = LOOKIN_SWING_MODE_IDX_TO_HASS
-    _attr_hvac_modes: list[str] = LOOKIN_HVAC_MODE_IDX_TO_HASS
+    _attr_hvac_modes: list[HVACMode] = LOOKIN_HVAC_MODE_IDX_TO_HASS
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
     _attr_target_temperature_step = PRECISION_WHOLE
@@ -125,7 +120,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     def _climate(self) -> Climate:
         return cast(Climate, self.coordinator.data)
 
-    async def async_set_hvac_mode(self, hvac_mode: str) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the hvac mode of the device."""
         if (mode := HASS_TO_LOOKIN_HVAC_MODE.get(hvac_mode)) is None:
             return
@@ -140,7 +135,7 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
         lookin_index = LOOKIN_HVAC_MODE_IDX_TO_HASS
         if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
             self._climate.hvac_mode = HASS_TO_LOOKIN_HVAC_MODE[hvac_mode]
-        elif self._climate.hvac_mode == lookin_index.index(HVAC_MODE_OFF):
+        elif self._climate.hvac_mode == lookin_index.index(HVACMode.OFF):
             #
             # If the device is off, and the user didn't specify an HVAC mode
             # (which is the default when using the HA UI), the device won't turn
@@ -152,13 +147,12 @@ class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
             # an educated guess.
             #
             meteo_data: MeteoSensor = self._meteo_coordinator.data
-            current_temp = meteo_data.temperature
-            if not current_temp:
-                self._climate.hvac_mode = lookin_index.index(HVAC_MODE_AUTO)
+            if not (current_temp := meteo_data.temperature):
+                self._climate.hvac_mode = lookin_index.index(HVACMode.AUTO)
             elif current_temp >= self._climate.temp_celsius:
-                self._climate.hvac_mode = lookin_index.index(HVAC_MODE_COOL)
+                self._climate.hvac_mode = lookin_index.index(HVACMode.COOL)
             else:
-                self._climate.hvac_mode = lookin_index.index(HVAC_MODE_HEAT)
+                self._climate.hvac_mode = lookin_index.index(HVACMode.HEAT)
         await self._async_update_conditioner()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:

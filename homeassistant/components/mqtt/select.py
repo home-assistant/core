@@ -13,12 +13,11 @@ from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import PLATFORMS, MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -26,10 +25,17 @@ from .const import (
     CONF_QOS,
     CONF_RETAIN,
     CONF_STATE_TOPIC,
-    DOMAIN,
 )
 from .debug_info import log_messages
-from .mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from .mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_discover_yaml_entities,
+    async_setup_entry_helper,
+    async_setup_platform_helper,
+    warn_for_legacy_schema,
+)
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,7 +51,7 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
-_PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -55,9 +61,13 @@ _PLATFORM_SCHEMA_BASE = mqtt.MQTT_RW_PLATFORM_SCHEMA.extend(
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-PLATFORM_SCHEMA = vol.All(_PLATFORM_SCHEMA_BASE)
+# Configuring MQTT Select under the select platform key is deprecated in HA Core 2022.6
+PLATFORM_SCHEMA = vol.All(
+    cv.PLATFORM_SCHEMA.extend(PLATFORM_SCHEMA_MODERN.schema),
+    warn_for_legacy_schema(select.DOMAIN),
+)
 
-DISCOVERY_SCHEMA = vol.All(_PLATFORM_SCHEMA_BASE.extend({}, extra=vol.REMOVE_EXTRA))
+DISCOVERY_SCHEMA = vol.All(PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA))
 
 
 async def async_setup_platform(
@@ -66,9 +76,15 @@ async def async_setup_platform(
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up MQTT select through configuration.yaml."""
-    await async_setup_reload_service(hass, DOMAIN, PLATFORMS)
-    await _async_setup_entity(hass, async_add_entities, config)
+    """Set up MQTT select configured under the select platform key (deprecated)."""
+    # Deprecated in HA Core 2022.6
+    await async_setup_platform_helper(
+        hass,
+        select.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
+    )
 
 
 async def async_setup_entry(
@@ -76,7 +92,10 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up MQTT select dynamically through MQTT discovery."""
+    """Set up MQTT select through configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await async_discover_yaml_entities(hass, select.DOMAIN)
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -128,7 +147,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             ).async_render_with_possible_json_value,
         }
 
-    async def _subscribe_topics(self):
+    def _prepare_subscribe_topics(self):
         """(Re)Subscribe to topics."""
 
         @callback
@@ -156,7 +175,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             # Force into optimistic mode.
             self._optimistic = True
         else:
-            self._sub_state = await subscription.async_subscribe_topics(
+            self._sub_state = subscription.async_prepare_subscribe_topics(
                 self.hass,
                 self._sub_state,
                 {
@@ -169,6 +188,10 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
                 },
             )
 
+    async def _subscribe_topics(self):
+        """(Re)Subscribe to topics."""
+        await subscription.async_subscribe_topics(self.hass, self._sub_state)
+
         if self._optimistic and (last_state := await self.async_get_last_state()):
             self._attr_current_option = last_state.state
 
@@ -179,8 +202,7 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
             self._attr_current_option = option
             self.async_write_ha_state()
 
-        await mqtt.async_publish(
-            self.hass,
+        await self.async_publish(
             self._config[CONF_COMMAND_TOPIC],
             payload,
             self._config[CONF_QOS],
@@ -189,6 +211,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic

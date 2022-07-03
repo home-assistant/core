@@ -1,13 +1,19 @@
 """Support for functionality to interact with Android TV/Fire TV devices."""
-import logging
+from __future__ import annotations
+
+from collections.abc import Mapping
 import os
+from typing import Any
 
 from adb_shell.auth.keygen import keygen
-from androidtv.adb_manager.adb_manager_sync import ADBPythonSync
-from androidtv.setup_async import setup
+from androidtv.adb_manager.adb_manager_sync import ADBPythonSync, PythonRSASigner
+from androidtv.setup_async import (
+    AndroidTVAsync,
+    FireTVAsync,
+    setup as async_androidtv_setup,
+)
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_HOST,
@@ -17,10 +23,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import STORAGE_DIR
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ANDROID_DEV,
@@ -33,19 +38,34 @@ from .const import (
     DEVICE_ANDROIDTV,
     DEVICE_FIRETV,
     DOMAIN,
-    PROP_SERIALNO,
+    PROP_ETHMAC,
+    PROP_WIFIMAC,
     SIGNAL_CONFIG_ENTITY,
 )
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 RELOAD_OPTIONS = [CONF_STATE_DETECTION_RULES]
 
-_LOGGER = logging.getLogger(__name__)
+_INVALID_MACS = {"ff:ff:ff:ff:ff:ff"}
 
 
-def _setup_androidtv(hass, config):
+def get_androidtv_mac(dev_props: dict[str, Any]) -> str | None:
+    """Return formatted mac from device properties."""
+    for prop_mac in (PROP_ETHMAC, PROP_WIFIMAC):
+        if if_mac := dev_props.get(prop_mac):
+            mac = format_mac(if_mac)
+            if mac not in _INVALID_MACS:
+                return mac
+    return None
+
+
+def _setup_androidtv(
+    hass: HomeAssistant, config: Mapping[str, Any]
+) -> tuple[str, PythonRSASigner | None, str]:
     """Generate an ADB key (if needed) and load it."""
-    adbkey = config.get(CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey"))
+    adbkey: str = config.get(
+        CONF_ADBKEY, hass.config.path(STORAGE_DIR, "androidtv_adbkey")
+    )
     if CONF_ADB_SERVER_IP not in config:
         # Use "adb_shell" (Python ADB implementation)
         if not os.path.isfile(adbkey):
@@ -65,8 +85,12 @@ def _setup_androidtv(hass, config):
 
 
 async def async_connect_androidtv(
-    hass, config, *, state_detection_rules=None, timeout=30.0
-):
+    hass: HomeAssistant,
+    config: Mapping[str, Any],
+    *,
+    state_detection_rules: dict[str, Any] | None = None,
+    timeout: float = 30.0,
+) -> tuple[AndroidTVAsync | FireTVAsync | None, str | None]:
     """Connect to Android device."""
     address = f"{config[CONF_HOST]}:{config[CONF_PORT]}"
 
@@ -74,7 +98,7 @@ async def async_connect_androidtv(
         _setup_androidtv, hass, config
     )
 
-    aftv = await setup(
+    aftv = await async_androidtv_setup(
         config[CONF_HOST],
         config[CONF_PORT],
         adbkey,
@@ -101,36 +125,6 @@ async def async_connect_androidtv(
     return aftv, None
 
 
-def _migrate_aftv_entity(hass, aftv, entry_unique_id):
-    """Migrate a entity to new unique id."""
-    entity_reg = er.async_get(hass)
-
-    entity_unique_id = entry_unique_id
-    if entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, entity_unique_id):
-        # entity already exist, nothing to do
-        return
-
-    old_unique_id = aftv.device_properties.get(PROP_SERIALNO)
-    if not old_unique_id:
-        # serial no not found, exit
-        return
-
-    migr_entity = entity_reg.async_get_entity_id(MP_DOMAIN, DOMAIN, old_unique_id)
-    if not migr_entity:
-        # old entity not found, exit
-        return
-
-    try:
-        entity_reg.async_update_entity(migr_entity, new_unique_id=entity_unique_id)
-    except ValueError as exp:
-        _LOGGER.warning("Migration of old entity failed: %s", exp)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Android TV integration."""
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Android TV platform."""
 
@@ -140,10 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     if not aftv:
         raise ConfigEntryNotReady(error_message)
-
-    # migrate existing entity to new unique ID
-    if entry.source == SOURCE_IMPORT:
-        _migrate_aftv_entity(hass, aftv, entry.unique_id)
 
     async def async_close_connection(event):
         """Close Android TV connection on HA Stop."""

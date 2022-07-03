@@ -9,6 +9,10 @@ from functools import partial
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import (
+    create_rfxtrx_dsmr_reader,
+    create_rfxtrx_tcp_dsmr_reader,
+)
 from dsmr_parser.objects import DSMRObject
 import serial
 
@@ -29,6 +33,7 @@ from homeassistant.util import Throttle
 from .const import (
     CONF_DSMR_VERSION,
     CONF_PRECISION,
+    CONF_PROTOCOL,
     CONF_RECONNECT_INTERVAL,
     CONF_SERIAL_ID,
     CONF_SERIAL_ID_GAS,
@@ -37,9 +42,10 @@ from .const import (
     DEFAULT_PRECISION,
     DEFAULT_RECONNECT_INTERVAL,
     DEFAULT_TIME_BETWEEN_UPDATE,
-    DEVICE_NAME_ENERGY,
+    DEVICE_NAME_ELECTRICITY,
     DEVICE_NAME_GAS,
     DOMAIN,
+    DSMR_PROTOCOL,
     LOGGER,
     SENSORS,
 )
@@ -77,9 +83,14 @@ async def async_setup_entry(
 
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
     if CONF_HOST in entry.data:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_tcp_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_tcp_dsmr_reader
         reader_factory = partial(
-            create_tcp_dsmr_reader,
+            create_reader,
             entry.data[CONF_HOST],
             entry.data[CONF_PORT],
             dsmr_version,
@@ -88,8 +99,12 @@ async def async_setup_entry(
             keep_alive_interval=60,
         )
     else:
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_dsmr_reader
         reader_factory = partial(
-            create_dsmr_reader,
+            create_reader,
             entry.data[CONF_PORT],
             dsmr_version,
             update_entities_telegram,
@@ -186,7 +201,7 @@ class DSMREntity(SensorEntity):
         self.telegram: dict[str, DSMRObject] = {}
 
         device_serial = entry.data[CONF_SERIAL_ID]
-        device_name = DEVICE_NAME_ENERGY
+        device_name = DEVICE_NAME_ELECTRICITY
         if entity_description.is_gas:
             device_serial = entry.data[CONF_SERIAL_ID_GAS]
             device_name = DEVICE_NAME_GAS

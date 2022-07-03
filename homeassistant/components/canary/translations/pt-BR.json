@@ -7,11 +7,23 @@
         "error": {
             "cannot_connect": "Falha ao conectar"
         },
+        "flow_title": "{name}",
         "step": {
             "user": {
                 "data": {
                     "password": "Senha",
                     "username": "Usu\u00e1rio"
+                },
+                "title": "Conecte-se ao Canary"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "ffmpeg_arguments": "Argumentos passados para ffmpeg para c\u00e2meras",
+                    "timeout": "Tempo limite da solicita\u00e7\u00e3o (segundos)"
                 }
             }
         }

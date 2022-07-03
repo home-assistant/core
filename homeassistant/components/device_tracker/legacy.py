@@ -30,9 +30,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_per_platform, discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_registry import async_get_registry
+from homeassistant.helpers import (
+    config_per_platform,
+    config_validation as cv,
+    discovery,
+    entity_registry as er,
+)
 from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
@@ -487,7 +490,7 @@ class DeviceTracker:
 
         This method is a coroutine.
         """
-        registry = await async_get_registry(self.hass)
+        registry = er.async_get(self.hass)
         if mac is None and dev_id is None:
             raise HomeAssistantError("Neither mac or device id passed in")
         if mac is not None:

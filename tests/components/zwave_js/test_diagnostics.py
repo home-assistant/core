@@ -2,11 +2,14 @@
 from unittest.mock import patch
 
 import pytest
-from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
-from zwave_js_server.model.value import _get_value_id_from_dict, get_value_id
 
-from homeassistant.components.zwave_js.diagnostics import async_get_device_diagnostics
+from homeassistant.components.diagnostics.const import REDACTED
+from homeassistant.components.zwave_js.diagnostics import (
+    ZwaveValueMatcher,
+    async_get_device_diagnostics,
+)
+from homeassistant.components.zwave_js.discovery import async_discover_node_values
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.helpers.device_registry import async_get
 
@@ -18,15 +21,27 @@ from tests.components.diagnostics import (
 )
 
 
-async def test_config_entry_diagnostics(hass, hass_client, integration):
+async def test_config_entry_diagnostics(
+    hass, hass_client, integration, config_entry_diagnostics
+):
     """Test the config entry level diagnostics data dump."""
     with patch(
         "homeassistant.components.zwave_js.diagnostics.dump_msgs",
-        return_value=[{"hello": "world"}, {"second": "msg"}],
+        return_value=config_entry_diagnostics,
     ):
-        assert await get_diagnostics_for_config_entry(
+        diagnostics = await get_diagnostics_for_config_entry(
             hass, hass_client, integration
-        ) == [{"hello": "world"}, {"second": "msg"}]
+        )
+        assert len(diagnostics) == 3
+        assert diagnostics[0]["homeId"] == REDACTED
+        nodes = diagnostics[2]["result"]["state"]["nodes"]
+        for node in nodes:
+            assert "location" not in node or node["location"] == REDACTED
+            for value in node["values"]:
+                if value["commandClass"] == 99 and value["property"] == "userCode":
+                    assert value["value"] == REDACTED
+                else:
+                    assert value.get("value") != REDACTED
 
 
 async def test_device_diagnostics(
@@ -39,13 +54,10 @@ async def test_device_diagnostics(
 ):
     """Test the device level diagnostics data dump."""
     dev_reg = async_get(hass)
-    device = dev_reg.async_get_device({get_device_id(client, multisensor_6)})
+    device = dev_reg.async_get_device({get_device_id(client.driver, multisensor_6)})
     assert device
 
     # Update a value and ensure it is reflected in the node state
-    value_id = get_value_id(
-        multisensor_6, CommandClass.SENSOR_MULTILEVEL, PROPERTY_ULTRAVIOLET
-    )
     event = Event(
         type="value updated",
         data={
@@ -74,19 +86,22 @@ async def test_device_diagnostics(
         "minSchemaVersion": 0,
         "maxSchemaVersion": 0,
     }
-
-    # Assert that the data returned doesn't match the stale node state data
-    assert diagnostics_data["state"] != multisensor_6.data
-
-    # Replace data for the value we updated and assert the new node data is the same
-    # as what's returned
-    updated_node_data = multisensor_6.data.copy()
-    for idx, value in enumerate(updated_node_data["values"]):
-        if _get_value_id_from_dict(multisensor_6, value) == value_id:
-            updated_node_data["values"][idx] = multisensor_6.values[
-                value_id
-            ].data.copy()
-    assert diagnostics_data["state"] == updated_node_data
+    # Assert that we only have the entities that were discovered for this device
+    # Entities that are created outside of discovery (e.g. node status sensor and
+    # ping button) should not be in dump.
+    assert len(diagnostics_data["entities"]) == len(
+        list(async_discover_node_values(multisensor_6, device, {device.id: set()}))
+    )
+    assert diagnostics_data["state"] == {
+        **multisensor_6.data,
+        "statistics": {
+            "commandsDroppedRX": 0,
+            "commandsDroppedTX": 0,
+            "commandsRX": 0,
+            "commandsTX": 0,
+            "timeoutResponse": 0,
+        },
+    }
 
 
 async def test_device_diagnostics_error(hass, integration):
@@ -97,3 +112,9 @@ async def test_device_diagnostics_error(hass, integration):
     )
     with pytest.raises(ValueError):
         await async_get_device_diagnostics(hass, integration, device)
+
+
+async def test_empty_zwave_value_matcher():
+    """Test empty ZwaveValueMatcher is invalid."""
+    with pytest.raises(ValueError):
+        ZwaveValueMatcher()

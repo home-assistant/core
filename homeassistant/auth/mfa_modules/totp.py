@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.auth.models import User
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.storage import Store
 
 from . import (
     MULTI_FACTOR_AUTH_MODULE_SCHEMA,
@@ -76,8 +77,8 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._users: dict[str, str] | None = None
-        self._user_store = hass.helpers.storage.Store(
-            STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
+        self._user_store = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._init_lock = asyncio.Lock()
 
@@ -92,7 +93,9 @@ class TotpAuthModule(MultiFactorAuthModule):
             if self._users is not None:
                 return
 
-            if (data := await self._user_store.async_load()) is None:
+            if (data := await self._user_store.async_load()) is None or not isinstance(
+                data, dict
+            ):
                 data = {STORAGE_USERS: {}}
 
             self._users = data.get(STORAGE_USERS, {})
@@ -107,7 +110,7 @@ class TotpAuthModule(MultiFactorAuthModule):
 
         ota_secret: str = secret or pyotp.random_base32()
 
-        self._users[user_id] = ota_secret  # type: ignore
+        self._users[user_id] = ota_secret  # type: ignore[index]
         return ota_secret
 
     async def async_setup_flow(self, user_id: str) -> SetupFlow:
@@ -136,7 +139,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        if self._users.pop(user_id, None):  # type: ignore
+        if self._users.pop(user_id, None):  # type: ignore[union-attr]
             await self._async_save()
 
     async def async_is_user_setup(self, user_id: str) -> bool:
@@ -144,7 +147,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         if self._users is None:
             await self._async_load()
 
-        return user_id in self._users  # type: ignore
+        return user_id in self._users  # type: ignore[operator]
 
     async def async_validate(self, user_id: str, user_input: dict[str, Any]) -> bool:
         """Return True if validation passed."""
@@ -161,7 +164,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Validate two factor authentication code."""
         import pyotp  # pylint: disable=import-outside-toplevel
 
-        if (ota_secret := self._users.get(user_id)) is None:  # type: ignore
+        if (ota_secret := self._users.get(user_id)) is None:  # type: ignore[union-attr]
             # even we cannot find user, we still do verify
             # to make timing the same as if user was found.
             pyotp.TOTP(DUMMY_SECRET).verify(code, valid_window=1)
@@ -182,8 +185,8 @@ class TotpSetupFlow(SetupFlow):
         self._auth_module: TotpAuthModule = auth_module
         self._user = user
         self._ota_secret: str = ""
-        self._url = None  # type Optional[str]
-        self._image = None  # type Optional[str]
+        self._url: str | None = None
+        self._image: str | None = None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -218,7 +221,7 @@ class TotpSetupFlow(SetupFlow):
                 self._url,
                 self._image,
             ) = await hass.async_add_executor_job(
-                _generate_secret_and_qr_code,  # type: ignore
+                _generate_secret_and_qr_code,
                 str(self._user.name),
             )
 

@@ -1,14 +1,18 @@
 """Sensor to indicate whether the current day is a workday."""
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import date, timedelta
 import logging
 from typing import Any
 
 import holidays
+from holidays import HolidayBase
 import voluptuous as vol
 
-from homeassistant.components.binary_sensor import PLATFORM_SCHEMA, BinarySensorEntity
+from homeassistant.components.binary_sensor import (
+    PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
+    BinarySensorEntity,
+)
 from homeassistant.const import CONF_NAME, WEEKDAYS
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -54,7 +58,7 @@ def valid_country(value: Any) -> str:
     return value
 
 
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_COUNTRY): valid_country,
         vol.Optional(CONF_EXCLUDES, default=DEFAULT_EXCLUDES): vol.All(
@@ -83,29 +87,26 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Workday sensor."""
-    add_holidays = config[CONF_ADD_HOLIDAYS]
-    remove_holidays = config[CONF_REMOVE_HOLIDAYS]
-    country = config[CONF_COUNTRY]
-    days_offset = config[CONF_OFFSET]
-    excludes = config[CONF_EXCLUDES]
-    province = config.get(CONF_PROVINCE)
-    sensor_name = config[CONF_NAME]
-    workdays = config[CONF_WORKDAYS]
+    add_holidays: list[str] = config[CONF_ADD_HOLIDAYS]
+    remove_holidays: list[str] = config[CONF_REMOVE_HOLIDAYS]
+    country: str = config[CONF_COUNTRY]
+    days_offset: int = config[CONF_OFFSET]
+    excludes: list[str] = config[CONF_EXCLUDES]
+    province: str | None = config.get(CONF_PROVINCE)
+    sensor_name: str = config[CONF_NAME]
+    workdays: list[str] = config[CONF_WORKDAYS]
 
-    year = (get_date(dt.now()) + timedelta(days=days_offset)).year
-    obj_holidays = getattr(holidays, country)(years=year)
+    year: int = (get_date(dt.now()) + timedelta(days=days_offset)).year
+    obj_holidays: HolidayBase = getattr(holidays, country)(years=year)
 
     if province:
-        # 'state' and 'prov' are not interchangeable, so need to make
-        # sure we use the right one
-        if hasattr(obj_holidays, "PROVINCES") and province in obj_holidays.PROVINCES:
-            obj_holidays = getattr(holidays, country)(prov=province, years=year)
-        elif hasattr(obj_holidays, "STATES") and province in obj_holidays.STATES:
-            obj_holidays = getattr(holidays, country)(state=province, years=year)
+        if (
+            hasattr(obj_holidays, "subdivisions")
+            and province in obj_holidays.subdivisions
+        ):
+            obj_holidays = getattr(holidays, country)(subdiv=province, years=year)
         else:
-            _LOGGER.error(
-                "There is no province/state %s in country %s", province, country
-            )
+            _LOGGER.error("There is no subdivision %s in country %s", province, country)
             return
 
     # Add custom holidays
@@ -116,27 +117,29 @@ def setup_platform(
 
     # Remove holidays
     try:
-        for date in remove_holidays:
+        for remove_holiday in remove_holidays:
             try:
                 # is this formatted as a date?
-                if dt.parse_date(date):
+                if dt.parse_date(remove_holiday):
                     # remove holiday by date
-                    removed = obj_holidays.pop(date)
-                    _LOGGER.debug("Removed %s", date)
+                    removed = obj_holidays.pop(remove_holiday)
+                    _LOGGER.debug("Removed %s", remove_holiday)
                 else:
                     # remove holiday by name
-                    _LOGGER.debug("Treating '%s' as named holiday", date)
-                    removed = obj_holidays.pop_named(date)
+                    _LOGGER.debug("Treating '%s' as named holiday", remove_holiday)
+                    removed = obj_holidays.pop_named(remove_holiday)
                     for holiday in removed:
-                        _LOGGER.debug("Removed %s by name '%s'", holiday, date)
+                        _LOGGER.debug(
+                            "Removed %s by name '%s'", holiday, remove_holiday
+                        )
             except KeyError as unmatched:
                 _LOGGER.warning("No holiday found matching %s", unmatched)
     except TypeError:
         _LOGGER.debug("No holidays to remove or invalid holidays")
 
     _LOGGER.debug("Found the following holidays for your configuration:")
-    for date, name in sorted(obj_holidays.items()):
-        _LOGGER.debug("%s %s", date, name)
+    for remove_holiday, name in sorted(obj_holidays.items()):
+        _LOGGER.debug("%s %s", remove_holiday, name)
 
     add_entities(
         [IsWorkdaySensor(obj_holidays, workdays, excludes, days_offset, sensor_name)],
@@ -144,7 +147,7 @@ def setup_platform(
     )
 
 
-def day_to_string(day):
+def day_to_string(day: int) -> str | None:
     """Convert day index 0 - 7 to string."""
     try:
         return ALLOWED_DAYS[day]
@@ -152,34 +155,35 @@ def day_to_string(day):
         return None
 
 
-def get_date(date):
+def get_date(input_date: date) -> date:
     """Return date. Needed for testing."""
-    return date
+    return input_date
 
 
 class IsWorkdaySensor(BinarySensorEntity):
     """Implementation of a Workday sensor."""
 
-    def __init__(self, obj_holidays, workdays, excludes, days_offset, name):
+    def __init__(
+        self,
+        obj_holidays: HolidayBase,
+        workdays: list[str],
+        excludes: list[str],
+        days_offset: int,
+        name: str,
+    ) -> None:
         """Initialize the Workday sensor."""
-        self._name = name
+        self._attr_name = name
         self._obj_holidays = obj_holidays
         self._workdays = workdays
         self._excludes = excludes
         self._days_offset = days_offset
-        self._state = None
+        self._attr_extra_state_attributes = {
+            CONF_WORKDAYS: workdays,
+            CONF_EXCLUDES: excludes,
+            CONF_OFFSET: days_offset,
+        }
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return the state of the device."""
-        return self._state
-
-    def is_include(self, day, now):
+    def is_include(self, day: str, now: date) -> bool:
         """Check if given day is in the includes list."""
         if day in self._workdays:
             return True
@@ -188,7 +192,7 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         return False
 
-    def is_exclude(self, day, now):
+    def is_exclude(self, day: str, now: date) -> bool:
         """Check if given day is in the excludes list."""
         if day in self._excludes:
             return True
@@ -197,28 +201,21 @@ class IsWorkdaySensor(BinarySensorEntity):
 
         return False
 
-    @property
-    def extra_state_attributes(self):
-        """Return the attributes of the entity."""
-        # return self._attributes
-        return {
-            CONF_WORKDAYS: self._workdays,
-            CONF_EXCLUDES: self._excludes,
-            CONF_OFFSET: self._days_offset,
-        }
-
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get date and look whether it is a holiday."""
         # Default is no workday
-        self._state = False
+        self._attr_is_on = False
 
         # Get ISO day of the week (1 = Monday, 7 = Sunday)
-        date = get_date(dt.now()) + timedelta(days=self._days_offset)
-        day = date.isoweekday() - 1
+        adjusted_date = get_date(dt.now()) + timedelta(days=self._days_offset)
+        day = adjusted_date.isoweekday() - 1
         day_of_week = day_to_string(day)
 
-        if self.is_include(day_of_week, date):
-            self._state = True
+        if day_of_week is None:
+            return
 
-        if self.is_exclude(day_of_week, date):
-            self._state = False
+        if self.is_include(day_of_week, adjusted_date):
+            self._attr_is_on = True
+
+        if self.is_exclude(day_of_week, adjusted_date):
+            self._attr_is_on = False

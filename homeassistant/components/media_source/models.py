@@ -50,6 +50,7 @@ class MediaSourceItem:
     hass: HomeAssistant
     domain: str | None
     identifier: str
+    target_media_player: str | None
 
     async def async_browse(self) -> BrowseMediaSource:
         """Browse this item."""
@@ -64,19 +65,22 @@ class MediaSourceItem:
                 can_expand=True,
                 children_media_class=MEDIA_CLASS_APP,
             )
-            base.children = [
-                BrowseMediaSource(
-                    domain=source.domain,
-                    identifier=None,
-                    media_class=MEDIA_CLASS_APP,
-                    media_content_type=MEDIA_TYPE_APP,
-                    thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
-                    title=source.name,
-                    can_play=False,
-                    can_expand=True,
-                )
-                for source in self.hass.data[DOMAIN].values()
-            ]
+            base.children = sorted(
+                (
+                    BrowseMediaSource(
+                        domain=source.domain,
+                        identifier=None,
+                        media_class=MEDIA_CLASS_APP,
+                        media_content_type=MEDIA_TYPE_APP,
+                        thumbnail=f"https://brands.home-assistant.io/_/{source.domain}/logo.png",
+                        title=source.name,
+                        can_play=False,
+                        can_expand=True,
+                    )
+                    for source in self.hass.data[DOMAIN].values()
+                ),
+                key=lambda item: item.title,
+            )
             return base
 
         return await self.async_media_source().async_browse_media(self)
@@ -91,7 +95,9 @@ class MediaSourceItem:
         return cast(MediaSource, self.hass.data[DOMAIN][self.domain])
 
     @classmethod
-    def from_uri(cls, hass: HomeAssistant, uri: str) -> MediaSourceItem:
+    def from_uri(
+        cls, hass: HomeAssistant, uri: str, target_media_player: str | None
+    ) -> MediaSourceItem:
         """Create an item from a uri."""
         if not (match := URI_SCHEME_REGEX.match(uri)):
             raise ValueError("Invalid media source URI")
@@ -99,7 +105,7 @@ class MediaSourceItem:
         domain = match.group("domain")
         identifier = match.group("identifier")
 
-        return cls(hass, domain, identifier)
+        return cls(hass, domain, identifier, target_media_player)
 
 
 class MediaSource(ABC):

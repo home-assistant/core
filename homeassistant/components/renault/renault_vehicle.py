@@ -104,7 +104,7 @@ class RenaultVehicleProxy:
             coordinator = self.coordinators[key]
             if coordinator.not_supported:
                 # Remove endpoint as it is not supported for this vehicle.
-                LOGGER.warning(
+                LOGGER.info(
                     "Ignoring endpoint %s as it is not supported for this vehicle: %s",
                     coordinator.name,
                     coordinator.last_exception,
@@ -112,7 +112,7 @@ class RenaultVehicleProxy:
                 del self.coordinators[key]
             elif coordinator.access_denied:
                 # Remove endpoint as it is denied for this vehicle.
-                LOGGER.warning(
+                LOGGER.info(
                     "Ignoring endpoint %s as it is denied for this vehicle: %s",
                     coordinator.name,
                     coordinator.last_exception,
@@ -147,5 +147,15 @@ COORDINATORS: tuple[RenaultCoordinatorDescription, ...] = (
         key="charge_mode",
         requires_electricity=True,
         update_method=lambda x: x.get_charge_mode,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="lock-status",
+        key="lock_status",
+        update_method=lambda x: x.get_lock_status,
+    ),
+    RenaultCoordinatorDescription(
+        endpoint="res-state",
+        key="res_state",
+        update_method=lambda x: x.get_res_state,
     ),
 )

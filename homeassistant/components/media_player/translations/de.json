@@ -1,6 +1,7 @@
 {
     "device_automation": {
         "condition_type": {
+            "is_buffering": "{entity_name} puffert",
             "is_idle": "{entity_name} ist unt\u00e4tig",
             "is_off": "{entity_name} ist ausgeschaltet",
             "is_on": "{entity_name} ist eingeschaltet",
@@ -8,6 +9,7 @@
             "is_playing": "{entity_name} spielt"
         },
         "trigger_type": {
+            "buffering": "{entity_name} beginnt mit dem Puffern",
             "changed_states": "{entity_name} hat den Status ge\u00e4ndert",
             "idle": "{entity_name} wird inaktiv",
             "paused": "{entity_name} ist angehalten",
@@ -18,6 +20,7 @@
     },
     "state": {
         "_": {
+            "buffering": "Puffern",
             "idle": "Unt\u00e4tig",
             "off": "Aus",
             "on": "An",

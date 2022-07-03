@@ -11,7 +11,7 @@ import attr
 from homeassistant.backports.enum import StrEnum
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import RequiredParameterMissing
+from homeassistant.exceptions import HomeAssistantError, RequiredParameterMissing
 from homeassistant.loader import bind_hass
 import homeassistant.util.uuid as uuid_util
 
@@ -42,6 +42,8 @@ CONNECTION_UPNP = "upnp"
 CONNECTION_ZIGBEE = "zigbee"
 
 ORPHANED_DEVICE_KEEP_SECONDS = 86400 * 30
+
+RUNTIME_ONLY_ATTRS = {"suggested_area"}
 
 
 class _DeviceIndex(NamedTuple):
@@ -418,11 +420,19 @@ class DeviceRegistry:
         via_device_id: str | None | UndefinedType = UNDEFINED,
     ) -> DeviceEntry | None:
         """Update device attributes."""
+        # Circular dep
+        # pylint: disable=import-outside-toplevel
+        from . import area_registry as ar
+
         old = self.devices[device_id]
 
-        changes: dict[str, Any] = {}
+        new_values: dict[str, Any] = {}  # Dict with new key/value pairs
+        old_values: dict[str, Any] = {}  # Dict with old key/value pairs
 
         config_entries = old.config_entries
+
+        if merge_identifiers is not UNDEFINED and new_identifiers is not UNDEFINED:
+            raise HomeAssistantError()
 
         if isinstance(disabled_by, str) and not isinstance(
             disabled_by, DeviceEntryDisabler
@@ -436,13 +446,13 @@ class DeviceRegistry:
             disabled_by = DeviceEntryDisabler(disabled_by)
 
         if (
-            suggested_area not in (UNDEFINED, None, "")
+            suggested_area is not None
+            and suggested_area is not UNDEFINED
+            and suggested_area != ""
             and area_id is UNDEFINED
             and old.area_id is None
         ):
-            area = self.hass.helpers.area_registry.async_get(
-                self.hass
-            ).async_get_or_create(suggested_area)
+            area = ar.async_get(self.hass).async_get_or_create(suggested_area)
             area_id = area.id
 
         if (
@@ -462,7 +472,8 @@ class DeviceRegistry:
             config_entries = config_entries - {remove_config_entry_id}
 
         if config_entries != old.config_entries:
-            changes["config_entries"] = config_entries
+            new_values["config_entries"] = config_entries
+            old_values["config_entries"] = old.config_entries
 
         for attr_name, setvalue in (
             ("connections", merge_connections),
@@ -471,10 +482,12 @@ class DeviceRegistry:
             old_value = getattr(old, attr_name)
             # If not undefined, check if `value` contains new items.
             if setvalue is not UNDEFINED and not setvalue.issubset(old_value):
-                changes[attr_name] = old_value | setvalue
+                new_values[attr_name] = old_value | setvalue
+                old_values[attr_name] = old_value
 
         if new_identifiers is not UNDEFINED:
-            changes["identifiers"] = new_identifiers
+            new_values["identifiers"] = new_identifiers
+            old_values["identifiers"] = old.identifiers
 
         for attr_name, value in (
             ("configuration_url", configuration_url),
@@ -491,25 +504,36 @@ class DeviceRegistry:
             ("via_device_id", via_device_id),
         ):
             if value is not UNDEFINED and value != getattr(old, attr_name):
-                changes[attr_name] = value
+                new_values[attr_name] = value
+                old_values[attr_name] = getattr(old, attr_name)
 
         if old.is_new:
-            changes["is_new"] = False
+            new_values["is_new"] = False
 
-        if not changes:
+        if not new_values:
             return old
 
-        new = attr.evolve(old, **changes)
+        new = attr.evolve(old, **new_values)
         self._update_device(old, new)
+
+        # If its only run time attributes (suggested_area)
+        # that do not get saved we do not want to write
+        # to disk or fire an event as we would end up
+        # firing events for data we have nothing to compare
+        # against since its never saved on disk
+        if RUNTIME_ONLY_ATTRS.issuperset(new_values):
+            return new
+
         self.async_schedule_save()
 
-        self.hass.bus.async_fire(
-            EVENT_DEVICE_REGISTRY_UPDATED,
-            {
-                "action": "create" if "is_new" in changes else "update",
-                "device_id": new.id,
-            },
-        )
+        data: dict[str, Any] = {
+            "action": "create" if old.is_new else "update",
+            "device_id": new.id,
+        }
+        if not old.is_new:
+            data["changes"] = old_values
+
+        self.hass.bus.async_fire(EVENT_DEVICE_REGISTRY_UPDATED, data)
 
         return new
 
@@ -696,6 +720,9 @@ async def async_get_registry(hass: HomeAssistant) -> DeviceRegistry:
 
     This is deprecated and will be removed in the future. Use async_get instead.
     """
+    report(
+        "uses deprecated `async_get_registry` to access device registry, use async_get instead"
+    )
     return async_get(hass)
 
 
@@ -803,7 +830,7 @@ def async_setup_cleanup(hass: HomeAssistant, dev_reg: DeviceRegistry) -> None:
 
     async def cleanup() -> None:
         """Cleanup."""
-        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg = entity_registry.async_get(hass)
         async_cleanup(hass, dev_reg, ent_reg)
 
     debounced_cleanup = Debouncer(

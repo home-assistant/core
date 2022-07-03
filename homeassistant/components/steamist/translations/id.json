@@ -4,7 +4,8 @@
             "already_configured": "Perangkat sudah dikonfigurasi",
             "already_in_progress": "Alur konfigurasi sedang berlangsung",
             "cannot_connect": "Gagal terhubung",
-            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan"
+            "no_devices_found": "Tidak ada perangkat yang ditemukan di jaringan",
+            "not_steamist_device": "Bukan perangkat steamist"
         },
         "error": {
             "cannot_connect": "Gagal terhubung",
@@ -12,6 +13,9 @@
         },
         "flow_title": "{name} ({ipaddress})",
         "step": {
+            "discovery_confirm": {
+                "description": "Ingin menyiapkan {name} ({ipaddress})?"
+            },
             "pick_device": {
                 "data": {
                     "device": "Perangkat"
@@ -20,7 +24,8 @@
             "user": {
                 "data": {
                     "host": "Host"
-                }
+                },
+                "description": "Jika host dibiarkan kosong, proses penemuan akan digunakan untuk menemukan perangkat."
             }
         }
     }

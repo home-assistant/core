@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from pytest import LogCaptureFixture
+
 from homeassistant import setup
 from homeassistant.components.binary_sensor import DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON
@@ -51,6 +53,7 @@ async def test_template(hass: HomeAssistant) -> None:
     )
 
     entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
     assert entity_state.state == STATE_ON
 
 
@@ -65,10 +68,11 @@ async def test_sensor_off(hass: HomeAssistant) -> None:
         },
     )
     entity_state = hass.states.get("binary_sensor.test")
+    assert entity_state
     assert entity_state.state == STATE_OFF
 
 
-async def test_unique_id(hass):
+async def test_unique_id(hass: HomeAssistant) -> None:
     """Test unique_id option and if it only creates one binary sensor per id."""
     assert await setup.async_setup_component(
         hass,
@@ -110,3 +114,14 @@ async def test_unique_id(hass):
         )
         is not None
     )
+
+
+async def test_return_code(caplog: LogCaptureFixture, hass: HomeAssistant) -> None:
+    """Test setting the state with a template."""
+    await setup_test_entity(
+        hass,
+        {
+            "command": "exit 33",
+        },
+    )
+    assert "return code 33" in caplog.text

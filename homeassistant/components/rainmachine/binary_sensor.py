@@ -1,6 +1,5 @@
 """This platform provides binary sensors for key RainMachine data."""
 from dataclasses import dataclass
-from functools import partial
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -20,7 +19,8 @@ from .const import (
     DATA_RESTRICTIONS_UNIVERSAL,
     DOMAIN,
 )
-from .model import RainMachineSensorDescriptionMixin
+from .model import RainMachineDescriptionMixinApiCategory
+from .util import key_exists
 
 TYPE_FLOW_SENSOR = "flow_sensor"
 TYPE_FREEZE = "freeze"
@@ -35,7 +35,7 @@ TYPE_WEEKDAY = "weekday"
 
 @dataclass
 class RainMachineBinarySensorDescription(
-    BinarySensorEntityDescription, RainMachineSensorDescriptionMixin
+    BinarySensorEntityDescription, RainMachineDescriptionMixinApiCategory
 ):
     """Describe a RainMachine binary sensor."""
 
@@ -46,6 +46,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         name="Flow Sensor",
         icon="mdi:water-pump",
         api_category=DATA_PROVISION_SETTINGS,
+        data_key="useFlowSensor",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE,
@@ -53,6 +54,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
+        data_key="freeze",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE_PROTECTION,
@@ -60,6 +62,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         icon="mdi:weather-snowy",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
+        data_key="freezeProtectEnabled",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOT_DAYS,
@@ -67,6 +70,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         icon="mdi:thermometer-lines",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
+        data_key="hotDaysExtraWatering",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOURLY,
@@ -75,6 +79,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
+        data_key="hourly",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_MONTH,
@@ -83,6 +88,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
+        data_key="month",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_RAINDELAY,
@@ -91,6 +97,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
+        data_key="rainDelay",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_RAINSENSOR,
@@ -99,6 +106,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
+        data_key="rainSensor",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_WEEKDAY,
@@ -107,6 +115,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_category=DATA_RESTRICTIONS_CURRENT,
+        data_key="weekDay",
     ),
 )
 
@@ -118,33 +127,23 @@ async def async_setup_entry(
     controller = hass.data[DOMAIN][entry.entry_id][DATA_CONTROLLER]
     coordinators = hass.data[DOMAIN][entry.entry_id][DATA_COORDINATOR]
 
-    @callback
-    def async_get_sensor(api_category: str) -> partial:
-        """Generate the appropriate sensor object for an API category."""
-        if api_category == DATA_PROVISION_SETTINGS:
-            return partial(
-                ProvisionSettingsBinarySensor,
-                entry,
-                coordinators[DATA_PROVISION_SETTINGS],
-            )
-
-        if api_category == DATA_RESTRICTIONS_CURRENT:
-            return partial(
-                CurrentRestrictionsBinarySensor,
-                entry,
-                coordinators[DATA_RESTRICTIONS_CURRENT],
-            )
-
-        return partial(
-            UniversalRestrictionsBinarySensor,
-            entry,
-            coordinators[DATA_RESTRICTIONS_UNIVERSAL],
-        )
+    api_category_sensor_map = {
+        DATA_PROVISION_SETTINGS: ProvisionSettingsBinarySensor,
+        DATA_RESTRICTIONS_CURRENT: CurrentRestrictionsBinarySensor,
+        DATA_RESTRICTIONS_UNIVERSAL: UniversalRestrictionsBinarySensor,
+    }
 
     async_add_entities(
         [
-            async_get_sensor(description.api_category)(controller, description)
+            api_category_sensor_map[description.api_category](
+                entry, coordinator, controller, description
+            )
             for description in BINARY_SENSOR_DESCRIPTIONS
+            if (
+                (coordinator := coordinators[description.api_category]) is not None
+                and coordinator.data
+                and key_exists(coordinator.data, description.data_key)
+            )
         ]
     )
 
@@ -156,17 +155,17 @@ class CurrentRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE:
-            self._attr_is_on = self.coordinator.data["freeze"]
+            self._attr_is_on = self.coordinator.data.get("freeze")
         elif self.entity_description.key == TYPE_HOURLY:
-            self._attr_is_on = self.coordinator.data["hourly"]
+            self._attr_is_on = self.coordinator.data.get("hourly")
         elif self.entity_description.key == TYPE_MONTH:
-            self._attr_is_on = self.coordinator.data["month"]
+            self._attr_is_on = self.coordinator.data.get("month")
         elif self.entity_description.key == TYPE_RAINDELAY:
-            self._attr_is_on = self.coordinator.data["rainDelay"]
+            self._attr_is_on = self.coordinator.data.get("rainDelay")
         elif self.entity_description.key == TYPE_RAINSENSOR:
-            self._attr_is_on = self.coordinator.data["rainSensor"]
+            self._attr_is_on = self.coordinator.data.get("rainSensor")
         elif self.entity_description.key == TYPE_WEEKDAY:
-            self._attr_is_on = self.coordinator.data["weekDay"]
+            self._attr_is_on = self.coordinator.data.get("weekDay")
 
 
 class ProvisionSettingsBinarySensor(RainMachineEntity, BinarySensorEntity):
@@ -186,6 +185,6 @@ class UniversalRestrictionsBinarySensor(RainMachineEntity, BinarySensorEntity):
     def update_from_latest_data(self) -> None:
         """Update the state."""
         if self.entity_description.key == TYPE_FREEZE_PROTECTION:
-            self._attr_is_on = self.coordinator.data["freezeProtectEnabled"]
+            self._attr_is_on = self.coordinator.data.get("freezeProtectEnabled")
         elif self.entity_description.key == TYPE_HOT_DAYS:
-            self._attr_is_on = self.coordinator.data["hotDaysExtraWatering"]
+            self._attr_is_on = self.coordinator.data.get("hotDaysExtraWatering")

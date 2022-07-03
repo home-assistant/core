@@ -9,7 +9,7 @@ from pyvizio.const import APPS
 from pyvizio.util import gen_apps_list_from_url
 import voluptuous as vol
 
-from homeassistant.components.media_player import DEVICE_CLASS_TV
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry, ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -24,13 +24,13 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def validate_apps(config: ConfigType) -> ConfigType:
-    """Validate CONF_APPS is only used when CONF_DEVICE_CLASS == DEVICE_CLASS_TV."""
+    """Validate CONF_APPS is only used when CONF_DEVICE_CLASS is MediaPlayerDeviceClass.TV."""
     if (
         config.get(CONF_APPS) is not None
-        and config[CONF_DEVICE_CLASS] != DEVICE_CLASS_TV
+        and config[CONF_DEVICE_CLASS] != MediaPlayerDeviceClass.TV
     ):
         raise vol.Invalid(
-            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is '{DEVICE_CLASS_TV}'"
+            f"'{CONF_APPS}' can only be used if {CONF_DEVICE_CLASS}' is '{MediaPlayerDeviceClass.TV}'"
         )
 
     return config
@@ -63,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     if (
         CONF_APPS not in hass.data[DOMAIN]
-        and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+        and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
     ):
         coordinator = VizioAppsDataUpdateCoordinator(hass)
         await coordinator.async_refresh()
@@ -83,7 +83,7 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if not any(
         entry.state is ConfigEntryState.LOADED
         and entry.entry_id != config_entry.entry_id
-        and entry.data[CONF_DEVICE_CLASS] == DEVICE_CLASS_TV
+        and entry.data[CONF_DEVICE_CLASS] == MediaPlayerDeviceClass.TV
         for entry in hass.config_entries.async_entries(DOMAIN)
     ):
         hass.data[DOMAIN].pop(CONF_APPS, None)

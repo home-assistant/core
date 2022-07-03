@@ -13,7 +13,12 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ASSUMED_STATE,
+    ATTR_ENTITY_ID,
+    STATE_UNKNOWN,
+    Platform,
+)
 import homeassistant.core as ha
 from homeassistant.setup import async_setup_component
 
@@ -37,9 +42,11 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -57,7 +64,14 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_run_select_setup(hass, mqtt_mock):
+@pytest.fixture(autouse=True)
+def select_platform_only():
+    """Only setup the select platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.SELECT]):
+        yield
+
+
+async def test_run_select_setup(hass, mqtt_mock_entry_with_yaml_config):
     """Test that it fetches the given payload."""
     topic = "test/select"
     await async_setup_component(
@@ -74,6 +88,7 @@ async def test_run_select_setup(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, topic, "milk")
 
@@ -90,7 +105,7 @@ async def test_run_select_setup(hass, mqtt_mock):
     assert state.state == "beer"
 
 
-async def test_value_template(hass, mqtt_mock):
+async def test_value_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test that it fetches the given payload with a template."""
     topic = "test/select"
     await async_setup_component(
@@ -108,6 +123,7 @@ async def test_value_template(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, topic, '{"val":"milk"}')
 
@@ -131,7 +147,7 @@ async def test_value_template(hass, mqtt_mock):
     assert state.state == STATE_UNKNOWN
 
 
-async def test_run_select_service_optimistic(hass, mqtt_mock):
+async def test_run_select_service_optimistic(hass, mqtt_mock_entry_with_yaml_config):
     """Test that set_value service works in optimistic mode."""
     topic = "test/select"
 
@@ -154,6 +170,7 @@ async def test_run_select_service_optimistic(hass, mqtt_mock):
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("select.test_select")
     assert state.state == "milk"
@@ -172,7 +189,9 @@ async def test_run_select_service_optimistic(hass, mqtt_mock):
     assert state.state == "beer"
 
 
-async def test_run_select_service_optimistic_with_command_template(hass, mqtt_mock):
+async def test_run_select_service_optimistic_with_command_template(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test that set_value service works in optimistic mode and with a command_template."""
     topic = "test/select"
 
@@ -196,6 +215,7 @@ async def test_run_select_service_optimistic_with_command_template(hass, mqtt_mo
             },
         )
         await hass.async_block_till_done()
+        mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("select.test_select")
     assert state.state == "milk"
@@ -216,7 +236,7 @@ async def test_run_select_service_optimistic_with_command_template(hass, mqtt_mo
     assert state.state == "beer"
 
 
-async def test_run_select_service(hass, mqtt_mock):
+async def test_run_select_service(hass, mqtt_mock_entry_with_yaml_config):
     """Test that set_value service works in non optimistic mode."""
     cmd_topic = "test/select/set"
     state_topic = "test/select"
@@ -235,6 +255,7 @@ async def test_run_select_service(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, state_topic, "beer")
     state = hass.states.get("select.test_select")
@@ -251,7 +272,9 @@ async def test_run_select_service(hass, mqtt_mock):
     assert state.state == "beer"
 
 
-async def test_run_select_service_with_command_template(hass, mqtt_mock):
+async def test_run_select_service_with_command_template(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test that set_value service works in non optimistic mode and with a command_template."""
     cmd_topic = "test/select/set"
     state_topic = "test/select"
@@ -271,6 +294,7 @@ async def test_run_select_service_with_command_template(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, state_topic, "beer")
     state = hass.states.get("select.test_select")
@@ -287,77 +311,91 @@ async def test_run_select_service_with_command_template(hass, mqtt_mock):
     )
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock):
+async def test_availability_when_connection_lost(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock):
+async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock):
+async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock):
+async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_blocked_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_no_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG, MQTT_SELECT_ATTRIBUTES_BLOCKED
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        select.DOMAIN,
+        DEFAULT_CONFIG,
+        MQTT_SELECT_ATTRIBUTES_BLOCKED,
     )
 
 
-async def test_setting_attribute_with_template(hass, mqtt_mock):
+async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_not_dict(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, caplog, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_bad_JSON(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_JSON(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, caplog, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_discovery_update_attr(hass, mqtt_mock, caplog):
+async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock, caplog, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_unique_id(hass, mqtt_mock):
+async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique id option only creates one select per unique_id."""
     config = {
         select.DOMAIN: [
@@ -379,16 +417,20 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, mqtt_mock, select.DOMAIN, config)
+    await help_test_unique_id(
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, config
+    )
 
 
-async def test_discovery_removal_select(hass, mqtt_mock, caplog):
+async def test_discovery_removal_select(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered select."""
     data = json.dumps(DEFAULT_CONFIG[select.DOMAIN])
-    await help_test_discovery_removal(hass, mqtt_mock, caplog, select.DOMAIN, data)
+    await help_test_discovery_removal(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, data
+    )
 
 
-async def test_discovery_update_select(hass, mqtt_mock, caplog):
+async def test_discovery_update_select(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered select."""
     config1 = {
         "name": "Beer",
@@ -404,83 +446,97 @@ async def test_discovery_update_select(hass, mqtt_mock, caplog):
     }
 
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, select.DOMAIN, config1, config2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, config1, config2
     )
 
 
-async def test_discovery_update_unchanged_select(hass, mqtt_mock, caplog):
+async def test_discovery_update_unchanged_select(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test update of discovered select."""
     data1 = '{ "name": "Beer", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
     with patch(
         "homeassistant.components.mqtt.select.MqttSelect.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, select.DOMAIN, data1, discovery_update
+            hass,
+            mqtt_mock_entry_no_yaml_config,
+            caplog,
+            select.DOMAIN,
+            data1,
+            discovery_update,
         )
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog):
+async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "state_topic": "test-topic", "command_topic": "test-topic", "options": ["milk", "beer"]}'
 
     await help_test_discovery_broken(
-        hass, mqtt_mock, caplog, select.DOMAIN, data1, data2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, select.DOMAIN, data1, data2
     )
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock):
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT select device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT select device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_update(hass, mqtt_mock):
+async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_remove(hass, mqtt_mock):
+async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, select.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_debug_info_message(hass, mqtt_mock):
+async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, select.DOMAIN, DEFAULT_CONFIG, payload="milk"
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        select.DOMAIN,
+        DEFAULT_CONFIG,
+        select.SERVICE_SELECT_OPTION,
+        service_parameters={ATTR_OPTION: "beer"},
+        command_payload="beer",
+        state_payload="milk",
     )
 
 
 @pytest.mark.parametrize("options", [["milk", "beer"], ["milk"], []])
-async def test_options_attributes(hass, mqtt_mock, options):
+async def test_options_attributes(hass, mqtt_mock_entry_with_yaml_config, options):
     """Test options attribute."""
     topic = "test/select"
     await async_setup_component(
@@ -497,12 +553,15 @@ async def test_options_attributes(hass, mqtt_mock, options):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("select.test_select")
     assert state.attributes.get(ATTR_OPTIONS) == options
 
 
-async def test_mqtt_payload_not_an_option_warning(hass, caplog, mqtt_mock):
+async def test_mqtt_payload_not_an_option_warning(
+    hass, caplog, mqtt_mock_entry_with_yaml_config
+):
     """Test warning for MQTT payload which is not a valid option."""
     topic = "test/select"
     await async_setup_component(
@@ -519,6 +578,7 @@ async def test_mqtt_payload_not_an_option_warning(hass, caplog, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, topic, "öl")
 
@@ -543,7 +603,14 @@ async def test_mqtt_payload_not_an_option_warning(hass, caplog, mqtt_mock):
     ],
 )
 async def test_publishing_with_custom_encoding(
-    hass, mqtt_mock, caplog, service, topic, parameters, payload, template
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    caplog,
+    service,
+    topic,
+    parameters,
+    payload,
+    template,
 ):
     """Test publishing MQTT payload with different encoding."""
     domain = select.DOMAIN
@@ -552,7 +619,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         domain,
         config,
@@ -564,11 +631,20 @@ async def test_publishing_with_custom_encoding(
     )
 
 
-async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = select.DOMAIN
     config = DEFAULT_CONFIG[domain]
-    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+    await help_test_reloadable(
+        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
+    )
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = select.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
 
 
 @pytest.mark.parametrize(
@@ -579,14 +655,20 @@ async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
     ],
 )
 async def test_encoding_subscribable_topics(
-    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    caplog,
+    topic,
+    value,
+    attribute,
+    attribute_value,
 ):
     """Test handling of incoming encoded payload."""
     config = copy.deepcopy(DEFAULT_CONFIG["select"])
     config["options"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         "select",
         config,
@@ -595,3 +677,13 @@ async def test_encoding_subscribable_topics(
         attribute,
         attribute_value,
     )
+
+
+async def test_setup_manual_entity_from_yaml(hass):
+    """Test setup manual configured MQTT entity."""
+    platform = select.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
+    assert hass.states.get(f"{platform}.test") is not None

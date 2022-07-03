@@ -7,6 +7,15 @@
         "error": {
             "cannot_connect": "Falha ao conectar",
             "unknown": "Erro inesperado"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "baud_speed": "Velocidade de transmiss\u00e3o",
+                    "device": "Dispositivo"
+                },
+                "title": "Conectado ao modem"
+            }
         }
     }
 }

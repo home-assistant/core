@@ -1,25 +1,18 @@
 """Support for ZHA sirens."""
-
 from __future__ import annotations
 
+from collections.abc import Callable
 import functools
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from zigpy.zcl.clusters.security import IasWd as WD
 
 from homeassistant.components.siren import (
     ATTR_DURATION,
-    SUPPORT_DURATION,
-    SUPPORT_TURN_OFF,
-    SUPPORT_TURN_ON,
     SirenEntity,
+    SirenEntityFeature,
 )
-from homeassistant.components.siren.const import (
-    ATTR_TONE,
-    ATTR_VOLUME_LEVEL,
-    SUPPORT_TONES,
-    SUPPORT_VOLUME_SET,
-)
+from homeassistant.components.siren.const import ATTR_TONE, ATTR_VOLUME_LEVEL
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
@@ -46,8 +39,11 @@ from .core.const import (
     Strobe,
 )
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.SIREN)
 DEFAULT_DURATION = 5  # seconds
@@ -68,7 +64,6 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
@@ -81,17 +76,17 @@ class ZHASiren(ZhaEntity, SirenEntity):
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this siren."""
         self._attr_supported_features = (
-            SUPPORT_TURN_ON
-            | SUPPORT_TURN_OFF
-            | SUPPORT_DURATION
-            | SUPPORT_VOLUME_SET
-            | SUPPORT_TONES
+            SirenEntityFeature.TURN_ON
+            | SirenEntityFeature.TURN_OFF
+            | SirenEntityFeature.DURATION
+            | SirenEntityFeature.VOLUME_SET
+            | SirenEntityFeature.TONES
         )
         self._attr_available_tones: list[int | str] | dict[int, str] | None = {
             WARNING_DEVICE_MODE_BURGLAR: "Burglar",
@@ -102,9 +97,9 @@ class ZHASiren(ZhaEntity, SirenEntity):
             WARNING_DEVICE_MODE_EMERGENCY_PANIC: "Emergency Panic",
         }
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: IasWd = channels[0]
+        self._channel: IasWd = cast(IasWd, channels[0])
         self._attr_is_on: bool = False
-        self._off_listener = None
+        self._off_listener: Callable[[], None] | None = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on siren."""

@@ -6,6 +6,7 @@
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
+            "firmware_not_fully_provisioned": "El dispositivo no est\u00e1 completamente aprovisionado. P\u00f3ngase en contacto con el servicio de asistencia de Shelly",
             "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
             "unknown": "Error inesperado"
         },
@@ -42,7 +43,7 @@
             "double": "Pulsaci\u00f3n doble de {subtype}",
             "double_push": "Pulsaci\u00f3n doble de {subtype}",
             "long": "Pulsaci\u00f3n larga de {subtype}",
-            "long_push": "Pulsaci\u00f3n larga de {subtype}",
+            "long_push": "{subtype} pulsado durante un rato",
             "long_single": "Pulsaci\u00f3n larga de {subtype} seguida de una pulsaci\u00f3n simple",
             "single": "Pulsaci\u00f3n simple de {subtype}",
             "single_long": "Pulsaci\u00f3n simple de {subtype} seguida de una pulsaci\u00f3n larga",

@@ -1,26 +1,33 @@
 {
     "config": {
         "abort": {
-            "no_services_found": "Er zijn geen services gevonden voor dit account"
+            "already_configured": "Account is al geconfigureerd",
+            "no_services_found": "Er zijn geen services gevonden voor dit account",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
-            "cannot_connect": "Kan geen verbinding maken"
+            "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
+            "unknown": "Onverwachte fout"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Wachtwoord"
                 },
-                "description": "Update wachtwoord voor {username}"
+                "description": "Update wachtwoord voor {username}",
+                "title": "Integratie herauthenticeren"
             },
             "service": {
                 "data": {
                     "services": "Services"
-                }
+                },
+                "title": "Selecteer Services"
             },
             "user": {
                 "data": {
-                    "password": "Wachtwoord"
+                    "password": "Wachtwoord",
+                    "username": "Gebruikersnaam"
                 }
             }
         }
@@ -28,6 +35,7 @@
     "options": {
         "abort": {
             "cannot_connect": "Kan geen verbinding maken",
+            "invalid_auth": "Ongeldige authenticatie",
             "unknown": "Onverwachte fout"
         },
         "step": {

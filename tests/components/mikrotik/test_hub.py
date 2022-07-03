@@ -1,9 +1,6 @@
 """Test Mikrotik hub."""
 from unittest.mock import patch
 
-import librouteros
-
-from homeassistant import config_entries
 from homeassistant.components import mikrotik
 
 from . import ARP_DATA, DHCP_DATA, MOCK_DATA, MOCK_OPTIONS, WIRELESS_DATA
@@ -47,63 +44,6 @@ async def setup_mikrotik_entry(hass, **kwargs):
         return hass.data[mikrotik.DOMAIN][config_entry.entry_id]
 
 
-async def test_hub_setup_successful(hass):
-    """Successful setup of Mikrotik hub."""
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
-        return_value=True,
-    ) as forward_entry_setup:
-        hub = await setup_mikrotik_entry(hass)
-
-    assert hub.config_entry.data == {
-        mikrotik.CONF_NAME: "Mikrotik",
-        mikrotik.CONF_HOST: "0.0.0.0",
-        mikrotik.CONF_USERNAME: "user",
-        mikrotik.CONF_PASSWORD: "pass",
-        mikrotik.CONF_PORT: 8278,
-        mikrotik.CONF_VERIFY_SSL: False,
-    }
-    assert hub.config_entry.options == {
-        mikrotik.hub.CONF_FORCE_DHCP: False,
-        mikrotik.CONF_ARP_PING: False,
-        mikrotik.CONF_DETECTION_TIME: 300,
-    }
-
-    assert hub.api.available is True
-    assert hub.signal_update == "mikrotik-update-0.0.0.0"
-    assert forward_entry_setup.mock_calls[0][1] == (hub.config_entry, "device_tracker")
-
-
-async def test_hub_setup_failed(hass):
-    """Failed setup of Mikrotik hub."""
-
-    config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
-    config_entry.add_to_hass(hass)
-    # error when connection fails
-    with patch(
-        "librouteros.connect", side_effect=librouteros.exceptions.ConnectionClosed
-    ):
-
-        await hass.config_entries.async_setup(config_entry.entry_id)
-
-        assert config_entry.state is config_entries.ConfigEntryState.SETUP_RETRY
-
-    # error when username or password is invalid
-    config_entry = MockConfigEntry(domain=mikrotik.DOMAIN, data=MOCK_DATA)
-    config_entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup"
-    ) as forward_entry_setup, patch(
-        "librouteros.connect",
-        side_effect=librouteros.exceptions.TrapError("invalid user name or password"),
-    ):
-
-        result = await hass.config_entries.async_setup(config_entry.entry_id)
-
-        assert result is False
-        assert len(forward_entry_setup.mock_calls) == 0
-
-
 async def test_update_failed(hass):
     """Test failing to connect during update."""
 
@@ -112,9 +52,9 @@ async def test_update_failed(hass):
     with patch.object(
         mikrotik.hub.MikrotikData, "command", side_effect=mikrotik.errors.CannotConnect
     ):
-        await hub.async_update()
+        await hub.async_refresh()
 
-    assert hub.api.available is False
+    assert not hub.last_update_success
 
 
 async def test_hub_not_support_wireless(hass):

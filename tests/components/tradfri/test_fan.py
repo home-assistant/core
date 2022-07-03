@@ -129,8 +129,8 @@ async def test_set_percentage(
     responses = mock_gateway.mock_responses
     mock_gateway_response = responses[0]
 
-    # A KeyError is raised if we don't add the 5908 response code
-    mock_gateway_response["15025"][0].update({"5908": 10, "5907": 12})
+    # A KeyError is raised if we don't this to the response code
+    mock_gateway_response["15025"][0].update({"5908": 10, "5907": 12, "5910": 20})
 
     # Use the callback function to update the fan state.
     dev = Device(mock_gateway_response)

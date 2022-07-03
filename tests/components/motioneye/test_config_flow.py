@@ -259,6 +259,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": config_entry.entry_id,
         },
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert not result["errors"]
@@ -479,6 +480,24 @@ async def test_advanced_options(hass: HomeAssistant) -> None:
         return_value=True,
     ) as mock_setup_entry:
         await hass.async_block_till_done()
+
+        result = await hass.config_entries.options.async_init(
+            config_entry.entry_id, context={"show_advanced_options": True}
+        )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_WEBHOOK_SET: True,
+                CONF_WEBHOOK_SET_OVERWRITE: True,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["data"][CONF_WEBHOOK_SET]
+        assert result["data"][CONF_WEBHOOK_SET_OVERWRITE]
+        assert CONF_STREAM_URL_TEMPLATE not in result["data"]
+        assert len(mock_setup.mock_calls) == 0
+        assert len(mock_setup_entry.mock_calls) == 0
 
         result = await hass.config_entries.options.async_init(
             config_entry.entry_id, context={"show_advanced_options": True}

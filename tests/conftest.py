@@ -1,9 +1,11 @@
 """Set up some common test helper things."""
+from __future__ import annotations
+
 import asyncio
-import datetime
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 import functools
 import logging
-import socket
 import ssl
 import threading
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
@@ -26,10 +28,12 @@ from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH_REQUIRED,
 )
 from homeassistant.components.websocket_api.http import URL
-from homeassistant.const import ATTR_NOW, EVENT_TIME_CHANGED, HASSIO_USER_NAME
-from homeassistant.helpers import config_entry_oauth2_flow, event
+from homeassistant.const import HASSIO_USER_NAME
+from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import location
+from homeassistant.util import dt as dt_util, location
 
 from tests.ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
 
@@ -38,7 +42,9 @@ pytest.register_assert_rewrite("tests.common")
 from tests.common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
+    MockConfigEntry,
     MockUser,
+    SetupRecorderInstanceT,
     async_fire_mqtt_message,
     async_test_home_assistant,
     get_test_home_assistant,
@@ -46,7 +52,11 @@ from tests.common import (  # noqa: E402, isort:skip
     mock_storage as mock_storage,
 )
 from tests.test_util.aiohttp import mock_aiohttp_client  # noqa: E402, isort:skip
+from tests.components.recorder.common import (  # noqa: E402, isort:skip
+    async_recorder_block_till_done,
+)
 
+_LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
@@ -77,63 +87,10 @@ def pytest_runtest_setup():
     Modified to include https://github.com/spulec/freezegun/pull/424
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
-    disable_socket(allow_unix_socket=True)
+    pytest_socket.disable_socket(allow_unix_socket=True)
 
     freezegun.api.datetime_to_fakedatetime = ha_datetime_to_fakedatetime
     freezegun.api.FakeDatetime = HAFakeDatetime
-
-
-@pytest.fixture
-def socket_disabled(pytestconfig):
-    """Disable socket.socket for duration of this test function.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
-    and hardcodes allow_unix_socket to True because it's not passed on the command line.
-    """
-    socket_was_enabled = socket.socket == pytest_socket._true_socket
-    disable_socket(allow_unix_socket=True)
-    yield
-    if socket_was_enabled:
-        pytest_socket.enable_socket()
-
-
-@pytest.fixture
-def socket_enabled(pytestconfig):
-    """Enable socket.socket for duration of this test function.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/76
-    and hardcodes allow_unix_socket to True because it's not passed on the command line.
-    """
-    socket_was_disabled = socket.socket != pytest_socket._true_socket
-    pytest_socket.enable_socket()
-    yield
-    if socket_was_disabled:
-        disable_socket(allow_unix_socket=True)
-
-
-def disable_socket(allow_unix_socket=False):
-    """Disable socket.socket to disable the Internet. useful in testing.
-
-    This incorporates changes from https://github.com/miketheman/pytest-socket/pull/75
-    """
-
-    class GuardedSocket(socket.socket):
-        """socket guard to disable socket creation (from pytest-socket)."""
-
-        def __new__(cls, *args, **kwargs):
-            try:
-                if len(args) > 0:
-                    is_unix_socket = args[0] == socket.AF_UNIX
-                else:
-                    is_unix_socket = kwargs.get("family") == socket.AF_UNIX
-            except AttributeError:
-                # AF_UNIX not supported on Windows https://bugs.python.org/issue33408
-                is_unix_socket = False
-            if is_unix_socket and allow_unix_socket:
-                return super().__new__(cls, *args, **kwargs)
-            raise pytest_socket.SocketBlockedError()
-
-    socket.socket = GuardedSocket
 
 
 def ha_datetime_to_fakedatetime(datetime):
@@ -248,6 +205,8 @@ def load_registries():
 def hass(loop, load_registries, hass_storage, request):
     """Fixture to provide a test instance of Home Assistant."""
 
+    orig_tz = dt_util.DEFAULT_TIME_ZONE
+
     def exc_handle(loop, context):
         """Handle exceptions by rethrowing them, which will fail the test."""
         # Most of these contexts will contain an exception, but not all.
@@ -272,6 +231,10 @@ def hass(loop, load_registries, hass_storage, request):
     yield hass
 
     loop.run_until_complete(hass.async_stop(force=True))
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = orig_tz
+
     for ex in exceptions:
         if (
             request.module.__name__,
@@ -585,30 +548,100 @@ def mqtt_client_mock(hass):
 
 
 @pytest.fixture
-async def mqtt_mock(hass, mqtt_client_mock, mqtt_config):
+async def mqtt_mock(
+    hass,
+    mqtt_client_mock,
+    mqtt_config,
+    mqtt_mock_entry_no_yaml_config,
+):
     """Fixture to mock MQTT component."""
+    return await mqtt_mock_entry_no_yaml_config()
+
+
+@asynccontextmanager
+async def _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config):
+    """Fixture to mock a delayed setup of the MQTT config entry."""
     if mqtt_config is None:
         mqtt_config = {mqtt.CONF_BROKER: "mock-broker", mqtt.CONF_BIRTH_MESSAGE: {}}
 
-    result = await async_setup_component(hass, mqtt.DOMAIN, {mqtt.DOMAIN: mqtt_config})
-    assert result
     await hass.async_block_till_done()
 
-    # Workaround: asynctest==0.13 fails on @functools.lru_cache
-    spec = dir(hass.data["mqtt"])
-    spec.remove("_matching_subscriptions")
-
-    mqtt_component_mock = MagicMock(
-        return_value=hass.data["mqtt"],
-        spec_set=spec,
-        wraps=hass.data["mqtt"],
+    entry = MockConfigEntry(
+        data=mqtt_config,
+        domain=mqtt.DOMAIN,
+        title="MQTT",
     )
-    mqtt_component_mock._mqttc = mqtt_client_mock
+    entry.add_to_hass(hass)
 
-    hass.data["mqtt"] = mqtt_component_mock
-    component = hass.data["mqtt"]
-    component.reset_mock()
-    return component
+    real_mqtt = mqtt.MQTT
+    real_mqtt_instance = None
+    mock_mqtt_instance = None
+
+    async def _setup_mqtt_entry(setup_entry):
+        """Set up the MQTT config entry."""
+        assert await setup_entry(hass, entry)
+
+        # Assert that MQTT is setup
+        assert real_mqtt_instance is not None, "MQTT was not setup correctly"
+        mock_mqtt_instance.conf = real_mqtt_instance.conf  # For diagnostics
+        mock_mqtt_instance._mqttc = mqtt_client_mock
+
+        # connected set to True to get a more realistic behavior when subscribing
+        mock_mqtt_instance.connected = True
+
+        hass.helpers.dispatcher.async_dispatcher_send(mqtt.MQTT_CONNECTED)
+        await hass.async_block_till_done()
+
+        return mock_mqtt_instance
+
+    def create_mock_mqtt(*args, **kwargs):
+        """Create a mock based on mqtt.MQTT."""
+        nonlocal mock_mqtt_instance
+        nonlocal real_mqtt_instance
+        real_mqtt_instance = real_mqtt(*args, **kwargs)
+        mock_mqtt_instance = MagicMock(
+            return_value=real_mqtt_instance,
+            spec_set=real_mqtt_instance,
+            wraps=real_mqtt_instance,
+        )
+        return mock_mqtt_instance
+
+    with patch("homeassistant.components.mqtt.MQTT", side_effect=create_mock_mqtt):
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture
+async def mqtt_mock_entry_no_yaml_config(hass, mqtt_client_mock, mqtt_config):
+    """Set up an MQTT config entry without MQTT yaml config."""
+
+    async def _async_setup_config_entry(hass, entry):
+        """Help set up the config entry."""
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        return True
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        return await mqtt_mock_entry(_async_setup_config_entry)
+
+    async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
+        yield _setup_mqtt_entry
+
+
+@pytest.fixture
+async def mqtt_mock_entry_with_yaml_config(hass, mqtt_client_mock, mqtt_config):
+    """Set up an MQTT config entry with MQTT yaml config."""
+
+    async def _async_do_not_setup_config_entry(hass, entry):
+        """Do nothing."""
+        return True
+
+    async def _setup_mqtt_entry():
+        """Set up the MQTT config entry."""
+        return await mqtt_mock_entry(_async_do_not_setup_config_entry)
+
+    async with _mqtt_mock_entry(hass, mqtt_client_mock, mqtt_config) as mqtt_mock_entry:
+        yield _setup_mqtt_entry
 
 
 @pytest.fixture(autouse=True)
@@ -646,115 +679,6 @@ def mock_async_zeroconf(mock_zeroconf):
 
 
 @pytest.fixture
-def legacy_patchable_time():
-    """Allow time to be patchable by using event listeners instead of asyncio loop."""
-
-    @ha.callback
-    @loader.bind_hass
-    def async_track_point_in_utc_time(hass, action, point_in_time):
-        """Add a listener that fires once after a specific point in UTC time."""
-        # Ensure point_in_time is UTC
-        point_in_time = event.dt_util.as_utc(point_in_time)
-
-        # Since this is called once, we accept a HassJob so we can avoid
-        # having to figure out how to call the action every time its called.
-        job = action if isinstance(action, ha.HassJob) else ha.HassJob(action)
-
-        @ha.callback
-        def point_in_time_listener(event):
-            """Listen for matching time_changed events."""
-            now = event.data[ATTR_NOW]
-
-            if now < point_in_time or hasattr(point_in_time_listener, "run"):
-                return
-
-            # Set variable so that we will never run twice.
-            # Because the event bus might have to wait till a thread comes
-            # available to execute this listener it might occur that the
-            # listener gets lined up twice to be executed. This will make
-            # sure the second time it does nothing.
-            setattr(point_in_time_listener, "run", True)
-            async_unsub()
-
-            hass.async_run_hass_job(job, now)
-
-        async_unsub = hass.bus.async_listen(EVENT_TIME_CHANGED, point_in_time_listener)
-
-        return async_unsub
-
-    @ha.callback
-    @loader.bind_hass
-    def async_track_utc_time_change(
-        hass, action, hour=None, minute=None, second=None, local=False
-    ):
-        """Add a listener that will fire if time matches a pattern."""
-
-        job = ha.HassJob(action)
-        # We do not have to wrap the function with time pattern matching logic
-        # if no pattern given
-        if all(val is None for val in (hour, minute, second)):
-
-            @ha.callback
-            def time_change_listener(ev) -> None:
-                """Fire every time event that comes in."""
-                hass.async_run_hass_job(job, ev.data[ATTR_NOW])
-
-            return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
-
-        matching_seconds = event.dt_util.parse_time_expression(second, 0, 59)
-        matching_minutes = event.dt_util.parse_time_expression(minute, 0, 59)
-        matching_hours = event.dt_util.parse_time_expression(hour, 0, 23)
-
-        next_time = None
-
-        def calculate_next(now) -> None:
-            """Calculate and set the next time the trigger should fire."""
-            nonlocal next_time
-
-            localized_now = event.dt_util.as_local(now) if local else now
-            next_time = event.dt_util.find_next_time_expression_time(
-                localized_now, matching_seconds, matching_minutes, matching_hours
-            )
-
-        # Make sure rolling back the clock doesn't prevent the timer from
-        # triggering.
-        last_now = None
-
-        @ha.callback
-        def pattern_time_change_listener(ev) -> None:
-            """Listen for matching time_changed events."""
-            nonlocal next_time, last_now
-
-            now = ev.data[ATTR_NOW]
-
-            if last_now is None or now < last_now:
-                # Time rolled back or next time not yet calculated
-                calculate_next(now)
-
-            last_now = now
-
-            if next_time <= now:
-                hass.async_run_hass_job(
-                    job, event.dt_util.as_local(now) if local else now
-                )
-                calculate_next(now + datetime.timedelta(seconds=1))
-
-        # We can't use async_track_point_in_utc_time here because it would
-        # break in the case that the system time abruptly jumps backwards.
-        # Our custom last_now logic takes care of resolving that scenario.
-        return hass.bus.async_listen(EVENT_TIME_CHANGED, pattern_time_change_listener)
-
-    with patch(
-        "homeassistant.helpers.event.async_track_point_in_utc_time",
-        async_track_point_in_utc_time,
-    ), patch(
-        "homeassistant.helpers.event.async_track_utc_time_change",
-        async_track_utc_time_change,
-    ):
-        yield
-
-
-@pytest.fixture
 def enable_custom_integrations(hass):
     """Enable custom integrations defined in the test dir."""
     hass.data.pop(loader.DATA_CUSTOM_COMPONENTS)
@@ -771,11 +695,38 @@ def enable_statistics():
 
 
 @pytest.fixture
-def hass_recorder(enable_statistics, hass_storage):
+def enable_nightly_purge():
+    """Fixture to control enabling of recorder's nightly purge job.
+
+    To enable nightly purging, tests can be marked with:
+    @pytest.mark.parametrize("enable_nightly_purge", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def recorder_config():
+    """Fixture to override recorder config.
+
+    To override the config, tests can be marked with:
+    @pytest.mark.parametrize("recorder_config", [{...}])
+    """
+    return None
+
+
+@pytest.fixture
+def hass_recorder(enable_nightly_purge, enable_statistics, hass_storage):
     """Home Assistant fixture with in-memory recorder."""
+    original_tz = dt_util.DEFAULT_TIME_ZONE
+
     hass = get_test_home_assistant()
+    nightly = recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
     stats = recorder.Recorder.async_periodic_statistics if enable_statistics else None
     with patch(
+        "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+        side_effect=nightly,
+        autospec=True,
+    ), patch(
         "homeassistant.components.recorder.Recorder.async_periodic_statistics",
         side_effect=stats,
         autospec=True,
@@ -791,6 +742,72 @@ def hass_recorder(enable_statistics, hass_storage):
 
         yield setup_recorder
         hass.stop()
+
+    # Restore timezone, it is set when creating the hass object
+    dt_util.DEFAULT_TIME_ZONE = original_tz
+
+
+async def _async_init_recorder_component(hass, add_config=None):
+    """Initialize the recorder asynchronously."""
+    config = dict(add_config) if add_config else {}
+    if recorder.CONF_DB_URL not in config:
+        config[recorder.CONF_DB_URL] = "sqlite://"  # In memory DB
+        if recorder.CONF_COMMIT_INTERVAL not in config:
+            config[recorder.CONF_COMMIT_INTERVAL] = 0
+
+    with patch("homeassistant.components.recorder.ALLOW_IN_MEMORY_DB", True), patch(
+        "homeassistant.components.recorder.migration.migrate_schema"
+    ):
+        assert await async_setup_component(
+            hass, recorder.DOMAIN, {recorder.DOMAIN: config}
+        )
+        assert recorder.DOMAIN in hass.config.components
+    _LOGGER.info(
+        "Test recorder successfully started, database location: %s",
+        config[recorder.CONF_DB_URL],
+    )
+
+
+@pytest.fixture
+async def async_setup_recorder_instance(
+    enable_nightly_purge, enable_statistics
+) -> AsyncGenerator[SetupRecorderInstanceT, None]:
+    """Yield callable to setup recorder instance."""
+
+    async def async_setup_recorder(
+        hass: HomeAssistant, config: ConfigType | None = None
+    ) -> recorder.Recorder:
+        """Setup and return recorder instance."""  # noqa: D401
+        nightly = (
+            recorder.Recorder.async_nightly_tasks if enable_nightly_purge else None
+        )
+        stats = (
+            recorder.Recorder.async_periodic_statistics if enable_statistics else None
+        )
+        with patch(
+            "homeassistant.components.recorder.Recorder.async_nightly_tasks",
+            side_effect=nightly,
+            autospec=True,
+        ), patch(
+            "homeassistant.components.recorder.Recorder.async_periodic_statistics",
+            side_effect=stats,
+            autospec=True,
+        ):
+            await _async_init_recorder_component(hass, config)
+            await hass.async_block_till_done()
+            instance = hass.data[recorder.DATA_INSTANCE]
+            # The recorder's worker is not started until Home Assistant is running
+            if hass.state == CoreState.running:
+                await async_recorder_block_till_done(hass)
+            return instance
+
+    return async_setup_recorder
+
+
+@pytest.fixture
+async def recorder_mock(recorder_config, async_setup_recorder_instance, hass):
+    """Fixture with in-memory recorder."""
+    await async_setup_recorder_instance(hass, recorder_config)
 
 
 @pytest.fixture

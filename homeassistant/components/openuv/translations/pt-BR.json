@@ -17,5 +17,16 @@
                 "title": "Preencha suas informa\u00e7\u00f5es"
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "from_window": "Iniciar \u00edndice UV para a janela de prote\u00e7\u00e3o",
+                    "to_window": "Fim do \u00edndice UV para a janela de prote\u00e7\u00e3o"
+                },
+                "title": "Configurar OpenUV"
+            }
+        }
     }
 }

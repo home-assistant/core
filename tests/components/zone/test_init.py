@@ -11,6 +11,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     ATTR_NAME,
+    ATTR_PERSONS,
     SERVICE_RELOAD,
 )
 from homeassistant.core import Context
@@ -519,94 +520,84 @@ async def test_state(hass):
     assert len(hass.states.async_entity_ids("zone")) == 2
     state = hass.states.get("zone.test_zone")
     assert state.state == "0"
+    assert state.attributes[ATTR_PERSONS] == []
 
     # Person entity enters zone
     hass.states.async_set(
         "person.person1",
         "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
     )
     await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "0"
 
-    # Person entity enters zone
-    hass.states.async_set(
-        "person.person2",
-        "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "2"
-    assert hass.states.get("zone.home").state == "0"
-
-    # Person entity enters another zone
-    hass.states.async_set(
-        "person.person1",
-        "home",
-        {"latitude": 32.87336, "longitude": -117.22743, "gps_accuracy": 0},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "1"
-
-    # Person entity removed
-    hass.states.async_remove("person.person2")
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "0"
-    assert hass.states.get("zone.home").state == "1"
-
-
-async def test_state_2(hass):
-    """Test the state of a zone."""
-    hass.states.async_set("person.person1", "unknown")
-    hass.states.async_set("person.person2", "unknown")
-
-    info = {
-        "name": "Test Zone",
-        "latitude": 32.880837,
-        "longitude": -117.237561,
-        "radius": 250,
-        "passive": False,
-    }
-    assert await setup.async_setup_component(hass, zone.DOMAIN, {"zone": info})
-
-    assert len(hass.states.async_entity_ids("zone")) == 2
     state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
+
+    state = hass.states.get("zone.home")
+    assert state
     assert state.state == "0"
+    assert state.attributes[ATTR_PERSONS] == []
 
-    # Person entity enters zone
-    hass.states.async_set(
-        "person.person1",
-        "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "0"
-
-    # Person entity enters zone
+    # Person entity enters zone (case insensitive)
     hass.states.async_set(
         "person.person2",
-        "Test Zone",
-        {"latitude": 32.880837, "longitude": -117.237561, "gps_accuracy": 0},
+        "TEST zone",
     )
     await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "2"
-    assert hass.states.get("zone.home").state == "0"
+
+    state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "2"
+    assert sorted(state.attributes[ATTR_PERSONS]) == [
+        "person.person1",
+        "person.person2",
+    ]
+
+    state = hass.states.get("zone.home")
+    assert state
+    assert state.state == "0"
+    assert state.attributes[ATTR_PERSONS] == []
 
     # Person entity enters another zone
     hass.states.async_set(
         "person.person1",
         "home",
-        {"latitude": 32.87336, "longitude": -117.22743, "gps_accuracy": 0},
     )
     await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "1"
-    assert hass.states.get("zone.home").state == "1"
+
+    state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
+
+    state = hass.states.get("zone.home")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person1"]
+
+    # Person entity enters not_home
+    hass.states.async_set(
+        "person.person1",
+        "not_home",
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "1"
+    assert state.attributes[ATTR_PERSONS] == ["person.person2"]
 
     # Person entity removed
     hass.states.async_remove("person.person2")
     await hass.async_block_till_done()
-    assert hass.states.get("zone.test_zone").state == "0"
-    assert hass.states.get("zone.home").state == "1"
+
+    state = hass.states.get("zone.test_zone")
+    assert state
+    assert state.state == "0"
+    assert state.attributes[ATTR_PERSONS] == []
+
+    state = hass.states.get("zone.home")
+    assert state
+    assert state.state == "0"
+    assert state.attributes[ATTR_PERSONS] == []

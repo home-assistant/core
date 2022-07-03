@@ -9,9 +9,11 @@
             "cannot_connect": "Ha fallat la connexi\u00f3",
             "invalid_auth": "Autenticaci\u00f3 inv\u00e0lida",
             "server_in_maintenance": "El servidor est\u00e0 inoperatiu per manteniment",
+            "too_many_attempts": "Massa intents amb un 'token' inv\u00e0lid, bloquejat temporalment",
             "too_many_requests": "Massa sol\u00b7licituds, torna-ho a provar m\u00e9s tard",
             "unknown": "Error inesperat"
         },
+        "flow_title": "Passarel\u00b7la: {gateway_id}",
         "step": {
             "user": {
                 "data": {

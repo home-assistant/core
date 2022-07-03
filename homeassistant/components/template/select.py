@@ -94,6 +94,8 @@ async def async_setup_platform(
 class TemplateSelect(TemplateEntity, SelectEntity):
     """Representation of a template select."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -102,13 +104,14 @@ class TemplateSelect(TemplateEntity, SelectEntity):
     ) -> None:
         """Initialize the select."""
         super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         self._command_select_option = Script(
             hass, config[CONF_SELECT_OPTION], self._attr_name, DOMAIN
         )
         self._options_template = config[ATTR_OPTIONS]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_options = None
+        self._attr_options = []
         self._attr_current_option = None
 
     async def async_added_to_hass(self) -> None:
@@ -132,8 +135,10 @@ class TemplateSelect(TemplateEntity, SelectEntity):
         if self._optimistic:
             self._attr_current_option = option
             self.async_write_ha_state()
-        await self._command_select_option.async_run(
-            {ATTR_OPTION: option}, context=self._context
+        await self.async_run_script(
+            self._command_select_option,
+            run_variables={ATTR_OPTION: option},
+            context=self._context,
         )
 
 

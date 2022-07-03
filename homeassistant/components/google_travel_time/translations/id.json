@@ -14,7 +14,7 @@
                     "name": "Nama",
                     "origin": "Asal"
                 },
-                "description": "Saat menentukan asal dan tujuan, Anda dapat menyediakan satu atau beberapa lokasi yang dipisahkan oleh karakter pipe, dalam bentuk alamat, koordinat lintang/bujur, atau ID tempat Google. Saat menentukan lokasi menggunakan ID tempat Google, ID harus diawali dengan \"place_id:'."
+                "description": "Saat menentukan asal dan tujuan, Anda dapat menyediakan satu atau beberapa lokasi yang dipisahkan oleh karakter pipe, dalam bentuk alamat, koordinat lintang/bujur, atau ID tempat Google. Saat menentukan lokasi menggunakan ID tempat Google, ID harus diawali dengan `place_id:`."
             }
         }
     },
@@ -31,7 +31,7 @@
                     "transit_routing_preference": "Preferensi Perutean Transit",
                     "units": "Unit"
                 },
-                "description": "Anda dapat menentukan Waktu Keberangkatan atau Waktu Kedatangan secara opsional. Jika menentukan waktu keberangkatan, Anda dapat memasukkan 'sekarang', stempel waktu Unix, atau string waktu 24 jam seperti 08:00:00`. Jika menentukan waktu kedatangan, Anda dapat menggunakan stempel waktu Unix atau string waktu 24 jam seperti 08:00:00`"
+                "description": "Anda dapat menentukan Waktu Keberangkatan atau Waktu Kedatangan secara opsional. Jika menentukan waktu keberangkatan, Anda dapat memasukkan `now`, stempel waktu Unix, atau string waktu 24 jam seperti `08:00:00`. Jika menentukan waktu kedatangan, Anda dapat menggunakan stempel waktu Unix atau string waktu 24 jam seperti `08:00:00`."
             }
         }
     },

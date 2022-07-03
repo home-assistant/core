@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
+from typing import Any, TypeVar
 
 import aiohttp.client_exceptions
 from iaqualink.client import AqualinkClient
@@ -16,9 +18,8 @@ from iaqualink.device import (
     AqualinkToggle,
 )
 from iaqualink.exception import AqualinkServiceException
-import voluptuous as vol
+from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
@@ -29,16 +30,17 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, UPDATE_INTERVAL
+
+_AqualinkEntityT = TypeVar("_AqualinkEntityT", bound="AqualinkEntity")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,43 +48,12 @@ ATTR_CONFIG = "config"
 PARALLEL_UPDATES = 0
 
 PLATFORMS = [
-    BINARY_SENSOR_DOMAIN,
-    CLIMATE_DOMAIN,
-    LIGHT_DOMAIN,
-    SENSOR_DOMAIN,
-    SWITCH_DOMAIN,
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.LIGHT,
+    Platform.SENSOR,
+    Platform.SWITCH,
 ]
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(
-        cv.deprecated(DOMAIN),
-        {
-            DOMAIN: vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                }
-            )
-        },
-    ),
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Aqualink component."""
-    conf = config.get(DOMAIN)
-
-    if conf is not None:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN,
-                context={"source": config_entries.SOURCE_IMPORT},
-                data=conf,
-            )
-        )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -195,11 +166,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.config_entries.async_unload_platforms(entry, platforms_to_unload)
 
 
-def refresh_system(func):
+def refresh_system(
+    func: Callable[Concatenate[_AqualinkEntityT, _P], Awaitable[Any]]
+) -> Callable[Concatenate[_AqualinkEntityT, _P], Coroutine[Any, Any, None]]:
     """Force update all entities after state change."""
 
     @wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(
+        self: _AqualinkEntityT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> None:
         """Call decorated function and send update signal to all entities."""
         await func(self, *args, **kwargs)
         async_dispatcher_send(self.hass, DOMAIN)

@@ -3,9 +3,37 @@
   "name": "Motion Blinds",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/motion_blinds",
-  "requirements": ["motionblinds==0.5.10"],
+  "requirements": ["motionblinds==0.6.8"],
   "dependencies": ["network"],
+  "dhcp": [
+    { "registered_devices": true },
+    {
+      "hostname": "motion_*"
+    },
+    {
+      "hostname": "brel_*"
+    },
+    {
+      "hostname": "connector_*"
+    }
+  ],
   "codeowners": ["@starkillerOG"],
   "iot_class": "local_push",
-  "loggers": ["motionblinds"]
+  "loggers": ["motionblinds"],
+  "supported_brands": {
+    "amp_motorization": "AMP Motorization",
+    "bliss_automation": "Bliss Automation",
+    "bloc_blinds": "Bloc Blinds",
+    "brel_home": "Brel Home",
+    "3_day_blinds": "3 Day Blinds",
+    "dooya": "Dooya",
+    "gaviota": "Gaviota",
+    "hurrican_shutters_wholesale": "Hurrican Shutters Wholesale",
+    "ismartwindow": "iSmartWindow",
+    "martec": "Martec",
+    "raven_rock_mfg": "Raven Rock MFG",
+    "smart_blinds": "Smart Blinds",
+    "smart_home": "Smart Home",
+    "uprise_smart_shades": "Uprise Smart Shades"
+  }
 }

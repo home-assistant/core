@@ -64,7 +64,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class AbstractAemetSensor(CoordinatorEntity, SensorEntity):
+class AbstractAemetSensor(CoordinatorEntity[WeatherUpdateCoordinator], SensorEntity):
     """Abstract class for an AEMET OpenData sensor."""
 
     _attr_extra_state_attributes = {ATTR_ATTRIBUTION: ATTRIBUTION}

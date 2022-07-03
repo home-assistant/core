@@ -27,6 +27,8 @@ from homeassistant.const import (
     ATTR_SUPPORTED_FEATURES,
     STATE_OFF,
     STATE_ON,
+    STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -50,9 +52,11 @@ from .test_common import (
     help_test_entity_id_update_subscriptions,
     help_test_publishing_with_custom_encoding,
     help_test_reloadable,
+    help_test_reloadable_late,
     help_test_setting_attribute_via_mqtt_json_message,
     help_test_setting_attribute_with_template,
     help_test_setting_blocked_attribute_via_mqtt_json_message,
+    help_test_setup_manual_entity_from_yaml,
     help_test_unique_id,
     help_test_update_with_json_attrs_bad_JSON,
     help_test_update_with_json_attrs_not_dict,
@@ -71,16 +75,32 @@ DEFAULT_CONFIG = {
 }
 
 
-async def test_fail_setup_if_no_command_topic(hass, mqtt_mock):
+@pytest.fixture(autouse=True)
+def fan_platform_only():
+    """Only setup the fan platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.FAN]):
+        yield
+
+
+async def test_fail_setup_if_no_command_topic(
+    hass, caplog, mqtt_mock_entry_no_yaml_config
+):
     """Test if command fails with command topic."""
     assert await async_setup_component(
         hass, fan.DOMAIN, {fan.DOMAIN: {"platform": "mqtt", "name": "test"}}
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_no_yaml_config()
     assert hass.states.get("fan.test") is None
+    assert (
+        "Invalid config for [fan.mqtt]: required key not provided @ data['command_topic']"
+        in caplog.text
+    )
 
 
-async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
+async def test_controlling_state_via_topic(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test the controlling state via topic."""
     assert await async_setup_component(
         hass,
@@ -117,9 +137,10 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", "StAtE_On")
@@ -192,11 +213,14 @@ async def test_controlling_state_via_topic(hass, mqtt_mock, caplog):
     async_fire_mqtt_message(hass, "percentage-state-topic", "rEset_percentage")
     state = hass.states.get("fan.test")
     assert state.attributes.get(fan.ATTR_PERCENTAGE) is None
-    assert state.attributes.get(fan.ATTR_SPEED) is None
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_controlling_state_via_topic_with_different_speed_range(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test the controlling state via topic using an alternate speed range."""
     assert await async_setup_component(
@@ -235,6 +259,7 @@ async def test_controlling_state_via_topic_with_different_speed_range(
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, "percentage-state-topic1", "100")
     state = hass.states.get("fan.test1")
@@ -258,7 +283,7 @@ async def test_controlling_state_via_topic_with_different_speed_range(
 
 
 async def test_controlling_state_via_topic_no_percentage_topics(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test the controlling state via topic without percentage topics."""
     assert await async_setup_component(
@@ -283,9 +308,10 @@ async def test_controlling_state_via_topic_no_percentage_topics(
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "preset-mode-state-topic", "smart")
@@ -312,7 +338,9 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     caplog.clear()
 
 
-async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, caplog):
+async def test_controlling_state_via_topic_and_json_message(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test the controlling state via topic and JSON message (percentage mode)."""
     assert await async_setup_component(
         hass,
@@ -347,14 +375,19 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"ON"}')
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
+
+    async_fire_mqtt_message(hass, "state-topic", '{"val": null}')
+    state = hass.states.get("fan.test")
+    assert state.state == STATE_UNKNOWN
 
     async_fire_mqtt_message(hass, "state-topic", '{"val":"OFF"}')
     state = hass.states.get("fan.test")
@@ -411,7 +444,7 @@ async def test_controlling_state_via_topic_and_json_message(hass, mqtt_mock, cap
 
 
 async def test_controlling_state_via_topic_and_json_message_shared_topic(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test the controlling state via topic and JSON message using a shared topic."""
     assert await async_setup_component(
@@ -447,9 +480,10 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     async_fire_mqtt_message(
@@ -499,7 +533,9 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     caplog.clear()
 
 
-async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
+async def test_sending_mqtt_commands_and_optimistic(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
         hass,
@@ -525,9 +561,10 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -589,9 +626,8 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -621,7 +657,9 @@ async def test_sending_mqtt_commands_and_optimistic(hass, mqtt_mock, caplog):
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_with_alternate_speed_range(hass, mqtt_mock):
+async def test_sending_mqtt_commands_with_alternate_speed_range(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test the controlling state via topic using an alternate speed range."""
     assert await async_setup_component(
         hass,
@@ -659,6 +697,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(hass, mqtt_mock)
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     await common.async_set_percentage(hass, "fan.test1", 0)
     mqtt_mock.async_publish.assert_called_once_with(
@@ -725,7 +764,9 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(hass, mqtt_mock)
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, caplog):
+async def test_sending_mqtt_commands_and_optimistic_no_legacy(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test optimistic mode without state topic without legacy speed command topic."""
     assert await async_setup_component(
         hass,
@@ -746,9 +787,10 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -789,13 +831,11 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
-    await common.async_set_preset_mode(hass, "fan.test", "auto")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "auto")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -855,7 +895,9 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(hass, mqtt_mock, c
         await common.async_turn_on(hass, "fan.test", preset_mode="freaking-high")
 
 
-async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
+async def test_sending_mqtt_command_templates_(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test optimistic mode without state topic without legacy speed command topic."""
     assert await async_setup_component(
         hass,
@@ -881,9 +923,10 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -928,13 +971,11 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
     assert state.attributes.get(fan.ATTR_PERCENTAGE) == 0
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -997,7 +1038,7 @@ async def test_sending_mqtt_command_templates_(hass, mqtt_mock, caplog):
 
 
 async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
-    hass, mqtt_mock, caplog
+    hass, mqtt_mock_entry_with_yaml_config, caplog
 ):
     """Test optimistic mode without state topic without percentage command topic."""
     assert await async_setup_component(
@@ -1020,14 +1061,14 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1057,7 +1098,9 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
 
-async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, caplog):
+async def test_sending_mqtt_commands_and_explicit_optimistic(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test optimistic mode with state topic and turn on attributes."""
     assert await async_setup_component(
         hass,
@@ -1084,9 +1127,10 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
         },
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
@@ -1121,6 +1165,10 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
 
     with pytest.raises(NotValidPresetModeError):
         await common.async_turn_on(hass, "fan.test", preset_mode="auto")
+    assert mqtt_mock.async_publish.call_count == 1
+    # We can turn on, but the invalid preset mode will raise
+    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.reset_mock()
 
     await common.async_turn_on(hass, "fan.test", preset_mode="whoosh")
     assert mqtt_mock.async_publish.call_count == 2
@@ -1249,13 +1297,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     with pytest.raises(MultipleInvalid):
         await common.async_set_percentage(hass, "fan.test", 101)
 
-    await common.async_set_preset_mode(hass, "fan.test", "low")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "low")
 
-    await common.async_set_preset_mode(hass, "fan.test", "medium")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "medium")
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
@@ -1275,9 +1321,8 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     assert state.state == STATE_OFF
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
-    await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
-    assert "not a valid preset mode" in caplog.text
-    caplog.clear()
+    with pytest.raises(NotValidPresetModeError):
+        await common.async_set_preset_mode(hass, "fan.test", "freaking-high")
 
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1300,7 +1345,13 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(hass, mqtt_mock, ca
     ],
 )
 async def test_encoding_subscribable_topics(
-    hass, mqtt_mock, caplog, topic, value, attribute, attribute_value
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    caplog,
+    topic,
+    value,
+    attribute,
+    attribute_value,
 ):
     """Test handling of incoming encoded payload."""
     config = copy.deepcopy(DEFAULT_CONFIG[fan.DOMAIN])
@@ -1310,7 +1361,7 @@ async def test_encoding_subscribable_topics(
     config[CONF_OSCILLATION_COMMAND_TOPIC] = "fan/some_oscillation_command_topic"
     await help_test_encoding_subscribable_topics(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         fan.DOMAIN,
         config,
@@ -1321,7 +1372,7 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_attributes(hass, mqtt_mock, caplog):
+async def test_attributes(hass, mqtt_mock_entry_with_yaml_config, caplog):
     """Test attributes."""
     assert await async_setup_component(
         hass,
@@ -1342,9 +1393,10 @@ async def test_attributes(hass, mqtt_mock, caplog):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test")
-    assert state.state == STATE_OFF
+    assert state.state == STATE_UNKNOWN
 
     await common.async_turn_on(hass, "fan.test")
     state = hass.states.get("fan.test")
@@ -1371,7 +1423,7 @@ async def test_attributes(hass, mqtt_mock, caplog):
     assert state.attributes.get(fan.ATTR_OSCILLATING) is False
 
 
-async def test_supported_features(hass, mqtt_mock):
+async def test_supported_features(hass, mqtt_mock_entry_with_yaml_config):
     """Test optimistic mode without state topic."""
     assert await async_setup_component(
         hass,
@@ -1493,6 +1545,7 @@ async def test_supported_features(hass, mqtt_mock):
         },
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get("fan.test1")
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 0
@@ -1543,77 +1596,103 @@ async def test_supported_features(hass, mqtt_mock):
     assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == fan.SUPPORT_PRESET_MODE
 
 
-async def test_availability_when_connection_lost(hass, mqtt_mock):
+async def test_availability_when_connection_lost(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test availability after MQTT disconnection."""
     await help_test_availability_when_connection_lost(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_availability_without_topic(hass, mqtt_mock):
+async def test_availability_without_topic(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability without defined availability topic."""
     await help_test_availability_without_topic(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_default_availability_payload(hass, mqtt_mock):
+async def test_default_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by default payload with defined topic."""
     await help_test_default_availability_payload(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG, True, "state-topic", "1"
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        fan.DOMAIN,
+        DEFAULT_CONFIG,
+        True,
+        "state-topic",
+        "1",
     )
 
 
-async def test_custom_availability_payload(hass, mqtt_mock):
+async def test_custom_availability_payload(hass, mqtt_mock_entry_with_yaml_config):
     """Test availability by custom payload with defined topic."""
     await help_test_custom_availability_payload(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG, True, "state-topic", "1"
+        hass,
+        mqtt_mock_entry_with_yaml_config,
+        fan.DOMAIN,
+        DEFAULT_CONFIG,
+        True,
+        "state-topic",
+        "1",
     )
 
 
-async def test_setting_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_with_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_setting_blocked_attribute_via_mqtt_json_message(hass, mqtt_mock):
+async def test_setting_blocked_attribute_via_mqtt_json_message(
+    hass, mqtt_mock_entry_no_yaml_config
+):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_blocked_attribute_via_mqtt_json_message(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG, MQTT_FAN_ATTRIBUTES_BLOCKED
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        fan.DOMAIN,
+        DEFAULT_CONFIG,
+        MQTT_FAN_ATTRIBUTES_BLOCKED,
     )
 
 
-async def test_setting_attribute_with_template(hass, mqtt_mock):
+async def test_setting_attribute_with_template(hass, mqtt_mock_entry_with_yaml_config):
     """Test the setting of attribute via MQTT with JSON payload."""
     await help_test_setting_attribute_with_template(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_not_dict(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_not_dict(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_not_dict(
-        hass, mqtt_mock, caplog, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, caplog, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_update_with_json_attrs_bad_json(hass, mqtt_mock, caplog):
+async def test_update_with_json_attrs_bad_json(
+    hass, mqtt_mock_entry_with_yaml_config, caplog
+):
     """Test attributes get extracted from a JSON result."""
     await help_test_update_with_json_attrs_bad_JSON(
-        hass, mqtt_mock, caplog, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, caplog, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_discovery_update_attr(hass, mqtt_mock, caplog):
+async def test_discovery_update_attr(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered MQTTAttributes."""
     await help_test_discovery_update_attr(
-        hass, mqtt_mock, caplog, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_unique_id(hass, mqtt_mock):
+async def test_unique_id(hass, mqtt_mock_entry_with_yaml_config):
     """Test unique_id option only creates one fan per id."""
     config = {
         fan.DOMAIN: [
@@ -1633,89 +1712,107 @@ async def test_unique_id(hass, mqtt_mock):
             },
         ]
     }
-    await help_test_unique_id(hass, mqtt_mock, fan.DOMAIN, config)
+    await help_test_unique_id(
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, config
+    )
 
 
-async def test_discovery_removal_fan(hass, mqtt_mock, caplog):
+async def test_discovery_removal_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test removal of discovered fan."""
     data = '{ "name": "test", "command_topic": "test_topic" }'
-    await help_test_discovery_removal(hass, mqtt_mock, caplog, fan.DOMAIN, data)
+    await help_test_discovery_removal(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, data
+    )
 
 
-async def test_discovery_update_fan(hass, mqtt_mock, caplog):
+async def test_discovery_update_fan(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test update of discovered fan."""
     config1 = {"name": "Beer", "command_topic": "test_topic"}
     config2 = {"name": "Milk", "command_topic": "test_topic"}
     await help_test_discovery_update(
-        hass, mqtt_mock, caplog, fan.DOMAIN, config1, config2
+        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, config1, config2
     )
 
 
-async def test_discovery_update_unchanged_fan(hass, mqtt_mock, caplog):
+async def test_discovery_update_unchanged_fan(
+    hass, mqtt_mock_entry_no_yaml_config, caplog
+):
     """Test update of discovered fan."""
     data1 = '{ "name": "Beer", "command_topic": "test_topic" }'
     with patch(
         "homeassistant.components.mqtt.fan.MqttFan.discovery_update"
     ) as discovery_update:
         await help_test_discovery_update_unchanged(
-            hass, mqtt_mock, caplog, fan.DOMAIN, data1, discovery_update
+            hass,
+            mqtt_mock_entry_no_yaml_config,
+            caplog,
+            fan.DOMAIN,
+            data1,
+            discovery_update,
         )
 
 
 @pytest.mark.no_fail_on_log_exception
-async def test_discovery_broken(hass, mqtt_mock, caplog):
+async def test_discovery_broken(hass, mqtt_mock_entry_no_yaml_config, caplog):
     """Test handling of bad discovery message."""
     data1 = '{ "name": "Beer" }'
     data2 = '{ "name": "Milk", "command_topic": "test_topic" }'
-    await help_test_discovery_broken(hass, mqtt_mock, caplog, fan.DOMAIN, data1, data2)
+
+    await help_test_discovery_broken(
+        hass, mqtt_mock_entry_no_yaml_config, caplog, fan.DOMAIN, data1, data2
+    )
 
 
-async def test_entity_device_info_with_connection(hass, mqtt_mock):
+async def test_entity_device_info_with_connection(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_connection(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_with_identifier(hass, mqtt_mock):
+async def test_entity_device_info_with_identifier(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT fan device registry integration."""
     await help_test_entity_device_info_with_identifier(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_update(hass, mqtt_mock):
+async def test_entity_device_info_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry update."""
     await help_test_entity_device_info_update(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_device_info_remove(hass, mqtt_mock):
+async def test_entity_device_info_remove(hass, mqtt_mock_entry_no_yaml_config):
     """Test device registry remove."""
     await help_test_entity_device_info_remove(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_subscriptions(hass, mqtt_mock):
+async def test_entity_id_update_subscriptions(hass, mqtt_mock_entry_with_yaml_config):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     await help_test_entity_id_update_subscriptions(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_with_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_id_update_discovery_update(hass, mqtt_mock):
+async def test_entity_id_update_discovery_update(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT discovery update when entity_id is updated."""
     await help_test_entity_id_update_discovery_update(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass, mqtt_mock_entry_no_yaml_config, fan.DOMAIN, DEFAULT_CONFIG
     )
 
 
-async def test_entity_debug_info_message(hass, mqtt_mock):
+async def test_entity_debug_info_message(hass, mqtt_mock_entry_no_yaml_config):
     """Test MQTT debug info."""
     await help_test_entity_debug_info_message(
-        hass, mqtt_mock, fan.DOMAIN, DEFAULT_CONFIG
+        hass,
+        mqtt_mock_entry_no_yaml_config,
+        fan.DOMAIN,
+        DEFAULT_CONFIG,
+        fan.SERVICE_TURN_ON,
     )
 
 
@@ -1761,7 +1858,7 @@ async def test_entity_debug_info_message(hass, mqtt_mock):
 )
 async def test_publishing_with_custom_encoding(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     caplog,
     service,
     topic,
@@ -1777,7 +1874,7 @@ async def test_publishing_with_custom_encoding(
 
     await help_test_publishing_with_custom_encoding(
         hass,
-        mqtt_mock,
+        mqtt_mock_entry_with_yaml_config,
         caplog,
         domain,
         config,
@@ -1789,8 +1886,27 @@ async def test_publishing_with_custom_encoding(
     )
 
 
-async def test_reloadable(hass, mqtt_mock, caplog, tmp_path):
+async def test_reloadable(hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path):
     """Test reloading the MQTT platform."""
     domain = fan.DOMAIN
     config = DEFAULT_CONFIG[domain]
-    await help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config)
+    await help_test_reloadable(
+        hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
+    )
+
+
+async def test_reloadable_late(hass, mqtt_client_mock, caplog, tmp_path):
+    """Test reloading the MQTT platform with late entry setup."""
+    domain = fan.DOMAIN
+    config = DEFAULT_CONFIG[domain]
+    await help_test_reloadable_late(hass, caplog, tmp_path, domain, config)
+
+
+async def test_setup_manual_entity_from_yaml(hass):
+    """Test setup manual configured MQTT entity."""
+    platform = fan.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
+    assert hass.states.get(f"{platform}.test") is not None

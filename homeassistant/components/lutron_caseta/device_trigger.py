@@ -1,8 +1,6 @@
 """Provides device triggers for lutron caseta."""
 from __future__ import annotations
 
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.components.automation import (
@@ -29,13 +27,19 @@ from .const import (
     ACTION_PRESS,
     ACTION_RELEASE,
     ATTR_ACTION,
-    ATTR_BUTTON_NUMBER,
+    ATTR_LEAP_BUTTON_NUMBER,
     ATTR_SERIAL,
-    BUTTON_DEVICES,
     CONF_SUBTYPE,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
+from .models import LutronCasetaData
+
+
+def _reverse_dict(forward_dict: dict) -> dict:
+    """Reverse a dictionary."""
+    return {v: k for k, v in forward_dict.items()}
+
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
@@ -53,9 +57,6 @@ PICO_2_BUTTON_BUTTON_TYPES_TO_LIP = {
 PICO_2_BUTTON_BUTTON_TYPES_TO_LEAP = {
     "on": 0,
     "off": 2,
-}
-LEAP_TO_PICO_2_BUTTON_BUTTON_TYPES = {
-    v: k for k, v in PICO_2_BUTTON_BUTTON_TYPES_TO_LEAP.items()
 }
 PICO_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -76,9 +77,6 @@ PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
     "raise": 3,
     "lower": 4,
 }
-LEAP_TO_PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
-    v: k for k, v in PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP.items()
-}
 PICO_2_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(
@@ -97,9 +95,6 @@ PICO_3_BUTTON_BUTTON_TYPES_TO_LEAP = {
     "on": 0,
     "stop": 1,
     "off": 2,
-}
-LEAP_TO_PICO_3_BUTTON_BUTTON_TYPES = {
-    v: k for k, v in PICO_3_BUTTON_BUTTON_TYPES_TO_LEAP.items()
 }
 PICO_3_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -120,9 +115,6 @@ PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
     "off": 2,
     "raise": 3,
     "lower": 4,
-}
-LEAP_TO_PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES = {
-    v: k for k, v in PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP.items()
 }
 PICO_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -188,9 +180,6 @@ PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LEAP = {
     "button_3": 3,
     "off": 4,
 }
-LEAP_TO_PICO_4_BUTTON_SCENE_BUTTON_TYPES = {
-    v: k for k, v in PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LEAP.items()
-}
 PICO_4_BUTTON_SCENE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LIP),
@@ -209,9 +198,6 @@ PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LEAP = {
     "group_1_button_2": 2,
     "group_2_button_1": 3,
     "group_2_button_2": 4,
-}
-LEAP_TO_PICO_4_BUTTON_2_GROUP_BUTTON_TYPES = {
-    v: k for k, v in PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LEAP.items()
 }
 PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
@@ -273,14 +259,57 @@ FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP = {
     "raise_4": 23,
     "lower_4": 24,
 }
-LEAP_TO_FOUR_GROUP_REMOTE_BUTTON_TYPES = {
-    v: k for k, v in FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP.items()
-}
 FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_SUBTYPE): vol.In(FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LIP),
     }
 )
+
+
+SUNNATA_KEYPAD_2_BUTTON_BUTTON_TYPES_TO_LEAP = {
+    "button_1": 1,
+    "button_2": 2,
+}
+SUNNATA_KEYPAD_2_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+    {
+        vol.Required(CONF_SUBTYPE): vol.In(
+            SUNNATA_KEYPAD_2_BUTTON_BUTTON_TYPES_TO_LEAP
+        ),
+    }
+)
+
+
+SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP = {
+    "button_1": 1,
+    "button_2": 2,
+    "button_3": 3,
+    "raise": 19,
+    "lower": 18,
+}
+SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA = (
+    LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+        {
+            vol.Required(CONF_SUBTYPE): vol.In(
+                SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP
+            ),
+        }
+    )
+)
+
+SUNNATA_KEYPAD_4_BUTTON_BUTTON_TYPES_TO_LEAP = {
+    "button_1": 1,
+    "button_2": 2,
+    "button_3": 3,
+    "button_4": 4,
+}
+SUNNATA_KEYPAD_4_BUTTON_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
+    {
+        vol.Required(CONF_SUBTYPE): vol.In(
+            SUNNATA_KEYPAD_4_BUTTON_BUTTON_TYPES_TO_LEAP
+        ),
+    }
+)
+
 
 DEVICE_TYPE_SCHEMA_MAP = {
     "Pico2Button": PICO_2_BUTTON_TRIGGER_SCHEMA,
@@ -292,6 +321,9 @@ DEVICE_TYPE_SCHEMA_MAP = {
     "Pico4ButtonZone": PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA,
     "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA,
     "FourGroupRemote": FOUR_GROUP_REMOTE_TRIGGER_SCHEMA,
+    "SunnataKeypad_2Button": SUNNATA_KEYPAD_2_BUTTON_TRIGGER_SCHEMA,
+    "SunnataKeypad_3ButtonRaiseLower": SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
+    "SunnataKeypad_4Button": SUNNATA_KEYPAD_4_BUTTON_TRIGGER_SCHEMA,
 }
 
 DEVICE_TYPE_SUBTYPE_MAP_TO_LIP = {
@@ -306,16 +338,23 @@ DEVICE_TYPE_SUBTYPE_MAP_TO_LIP = {
     "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LIP,
 }
 
+DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP = {
+    "Pico2Button": PICO_2_BUTTON_BUTTON_TYPES_TO_LEAP,
+    "Pico2ButtonRaiseLower": PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP,
+    "Pico3Button": PICO_3_BUTTON_BUTTON_TYPES_TO_LEAP,
+    "Pico3ButtonRaiseLower": PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP,
+    "Pico4Button": PICO_4_BUTTON_BUTTON_TYPES_TO_LEAP,
+    "Pico4ButtonScene": PICO_4_BUTTON_SCENE_BUTTON_TYPES_TO_LEAP,
+    "Pico4ButtonZone": PICO_4_BUTTON_ZONE_BUTTON_TYPES_TO_LEAP,
+    "Pico4Button2Group": PICO_4_BUTTON_2_GROUP_BUTTON_TYPES_TO_LEAP,
+    "FourGroupRemote": FOUR_GROUP_REMOTE_BUTTON_TYPES_TO_LEAP,
+    "SunnataKeypad_2Button": SUNNATA_KEYPAD_2_BUTTON_BUTTON_TYPES_TO_LEAP,
+    "SunnataKeypad_3ButtonRaiseLower": SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_BUTTON_TYPES_TO_LEAP,
+    "SunnataKeypad_4Button": SUNNATA_KEYPAD_4_BUTTON_BUTTON_TYPES_TO_LEAP,
+}
+
 LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP = {
-    "Pico2Button": LEAP_TO_PICO_2_BUTTON_BUTTON_TYPES,
-    "Pico2ButtonRaiseLower": LEAP_TO_PICO_2_BUTTON_RAISE_LOWER_BUTTON_TYPES,
-    "Pico3Button": LEAP_TO_PICO_3_BUTTON_BUTTON_TYPES,
-    "Pico3ButtonRaiseLower": LEAP_TO_PICO_3_BUTTON_RAISE_LOWER_BUTTON_TYPES,
-    "Pico4Button": LEAP_TO_PICO_4_BUTTON_BUTTON_TYPES,
-    "Pico4ButtonScene": LEAP_TO_PICO_4_BUTTON_SCENE_BUTTON_TYPES,
-    "Pico4ButtonZone": LEAP_TO_PICO_4_BUTTON_ZONE_BUTTON_TYPES,
-    "Pico4Button2Group": LEAP_TO_PICO_4_BUTTON_2_GROUP_BUTTON_TYPES,
-    "FourGroupRemote": LEAP_TO_FOUR_GROUP_REMOTE_BUTTON_TYPES,
+    k: _reverse_dict(v) for k, v in DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.items()
 }
 
 TRIGGER_SCHEMA = vol.Any(
@@ -326,10 +365,15 @@ TRIGGER_SCHEMA = vol.Any(
     PICO_4_BUTTON_ZONE_TRIGGER_SCHEMA,
     PICO_4_BUTTON_2_GROUP_TRIGGER_SCHEMA,
     FOUR_GROUP_REMOTE_TRIGGER_SCHEMA,
+    SUNNATA_KEYPAD_2_BUTTON_TRIGGER_SCHEMA,
+    SUNNATA_KEYPAD_3_BUTTON_RAISE_LOWER_TRIGGER_SCHEMA,
+    SUNNATA_KEYPAD_4_BUTTON_TRIGGER_SCHEMA,
 )
 
 
-async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     # if device is available verify parameters against device capabilities
     device = get_button_device_by_dr_id(hass, config[CONF_DEVICE_ID])
@@ -347,14 +391,14 @@ async def async_validate_trigger_config(hass: HomeAssistant, config: ConfigType)
 
 async def async_get_triggers(
     hass: HomeAssistant, device_id: str
-) -> list[dict[str, Any]]:
+) -> list[dict[str, str]]:
     """List device triggers for lutron caseta devices."""
     triggers = []
 
     if not (device := get_button_device_by_dr_id(hass, device_id)):
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device["type"], [])
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(device["type"], {})
 
     for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
         for subtype in valid_buttons:
@@ -389,14 +433,14 @@ async def async_attach_trigger(
     device_type = _device_model_to_type(device.model)
     _, serial = list(device.identifiers)[0]
     schema = DEVICE_TYPE_SCHEMA_MAP.get(device_type)
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP[device_type]
     config = schema(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
         event_trigger.CONF_EVENT_TYPE: LUTRON_CASETA_BUTTON_EVENT,
         event_trigger.CONF_EVENT_DATA: {
             ATTR_SERIAL: serial,
-            ATTR_BUTTON_NUMBER: valid_buttons[config[CONF_SUBTYPE]],
+            ATTR_LEAP_BUTTON_NUMBER: valid_buttons[config[CONF_SUBTYPE]],
             ATTR_ACTION: config[CONF_TYPE],
         },
     }
@@ -411,9 +455,9 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
     if DOMAIN not in hass.data:
         return None
 
-    for config_entry in hass.data[DOMAIN]:
-        button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        if device := button_devices.get(device_id):
+    for entry_id in hass.data[DOMAIN]:
+        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
+        if device := data.button_devices.get(device_id):
             return device
 
     return None

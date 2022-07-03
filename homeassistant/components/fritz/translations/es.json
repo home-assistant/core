@@ -3,14 +3,15 @@
         "abort": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
+            "ignore_ip6_link_local": "El enlace con direcciones IPv6 locales no est\u00e1 permitido",
             "reauth_successful": "La reautenticaci\u00f3n se realiz\u00f3 correctamente"
         },
         "error": {
             "already_configured": "El dispositivo ya est\u00e1 configurado",
             "already_in_progress": "El flujo de configuraci\u00f3n ya est\u00e1 en proceso",
             "cannot_connect": "No se pudo conectar",
-            "connection_error": "No se pudo conectar",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "upnp_not_configured": "Falta la configuraci\u00f3n de UPnP en el dispositivo."
         },
         "flow_title": "FRITZ!Box Tools: {name}",
         "step": {
@@ -30,16 +31,6 @@
                 "description": "Actualizar credenciales de FRITZ!Box Tools para: {host}.\n\n FRITZ!Box Tools no puede iniciar sesi\u00f3n en tu FRITZ!Box.",
                 "title": "Actualizando FRITZ!Box Tools - credenciales"
             },
-            "start_config": {
-                "data": {
-                    "host": "Host",
-                    "password": "Contrase\u00f1a",
-                    "port": "Puerto",
-                    "username": "Usuario"
-                },
-                "description": "Configurar FRITZ!Box Tools para controlar tu FRITZ!Box.\nM\u00ednimo necesario: usuario, contrase\u00f1a.",
-                "title": "Configurar FRITZ!Box Tools - obligatorio"
-            },
             "user": {
                 "data": {
                     "host": "Host",
@@ -56,7 +47,8 @@
         "step": {
             "init": {
                 "data": {
-                    "consider_home": "Segundos para considerar un dispositivo en 'casa'"
+                    "consider_home": "Segundos para considerar un dispositivo en 'casa'",
+                    "old_discovery": "Habilitar m\u00e9todo de descubrimiento antiguo"
                 }
             }
         }

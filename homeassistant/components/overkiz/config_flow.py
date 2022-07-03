@@ -1,6 +1,7 @@
 """Config flow for Overkiz (by Somfy) integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any, cast
 
 from aiohttp import ClientError
@@ -9,6 +10,7 @@ from pyoverkiz.const import SUPPORTED_SERVERS
 from pyoverkiz.exceptions import (
     BadCredentialsException,
     MaintenanceException,
+    TooManyAttemptsBannedException,
     TooManyRequestsException,
 )
 from pyoverkiz.models import obfuscate_id
@@ -19,7 +21,7 @@ from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.data_entry_flow import FlowResult
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_HUB, DEFAULT_HUB, DOMAIN, LOGGER
 
@@ -46,13 +48,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
         server = SUPPORTED_SERVERS[user_input[CONF_HUB]]
-        session = async_get_clientsession(self.hass)
+        session = async_create_clientsession(self.hass)
 
         client = OverkizClient(
             username=username, password=password, server=server, session=session
         )
 
-        await client.login()
+        await client.login(register_event_listener=False)
 
         # Set first gateway id as unique id
         if gateways := await client.get_gateways():
@@ -66,6 +68,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input:
+            self._default_user = user_input[CONF_USERNAME]
+            self._default_hub = user_input[CONF_HUB]
+
             try:
                 await self.async_validate_input(user_input)
             except TooManyRequestsException:
@@ -76,6 +81,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except MaintenanceException:
                 errors["base"] = "server_in_maintenance"
+            except TooManyAttemptsBannedException:
+                errors["base"] = "too_many_attempts"
             except Exception as exception:  # pylint: disable=broad-except
                 errors["base"] = "unknown"
                 LOGGER.exception(exception)
@@ -128,38 +135,38 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         gateway_id = hostname[8:22]
 
         LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
-
-        await self.async_set_unique_id(gateway_id)
-        self._abort_if_unique_id_configured()
-
-        return await self.async_step_user()
+        return await self._process_discovery(gateway_id)
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> FlowResult:
         """Handle ZeroConf discovery."""
-
-        # abort if we already have exactly this bridge id/host
         properties = discovery_info.properties
         gateway_id = properties["gateway_pin"]
 
         LOGGER.debug("ZeroConf discovery detected gateway %s", obfuscate_id(gateway_id))
+        return await self._process_discovery(gateway_id)
 
+    async def _process_discovery(self, gateway_id: str) -> FlowResult:
+        """Handle discovery of a gateway."""
         await self.async_set_unique_id(gateway_id)
         self._abort_if_unique_id_configured()
+        self.context["title_placeholders"] = {"gateway_id": gateway_id}
 
         return await self.async_step_user()
 
-    async def async_step_reauth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle reauth."""
         self._config_entry = cast(
             ConfigEntry,
             self.hass.config_entries.async_get_entry(self.context["entry_id"]),
         )
 
+        self.context["title_placeholders"] = {
+            "gateway_id": self._config_entry.unique_id
+        }
+
         self._default_user = self._config_entry.data[CONF_USERNAME]
         self._default_hub = self._config_entry.data[CONF_HUB]
 
-        return await self.async_step_user(user_input)
+        return await self.async_step_user(dict(entry_data))

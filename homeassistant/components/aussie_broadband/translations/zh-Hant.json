@@ -11,7 +11,7 @@
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "\u5bc6\u78bc"
                 },

@@ -1,5 +1,5 @@
 """Tests for the WLED config flow."""
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from wled import WLEDConnectionError
 
@@ -18,7 +18,7 @@ from tests.common import MockConfigEntry
 
 
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, mock_wled_config_flow: MagicMock, mock_setup_entry: None
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -43,7 +43,7 @@ async def test_full_user_flow_implementation(
 
 
 async def test_full_zeroconf_flow_implementation(
-    hass: HomeAssistant, mock_wled_config_flow: MagicMock, mock_setup_entry: None
+    hass: HomeAssistant, mock_wled_config_flow: MagicMock, mock_setup_entry: AsyncMock
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -51,6 +51,7 @@ async def test_full_zeroconf_flow_implementation(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -83,6 +84,38 @@ async def test_full_zeroconf_flow_implementation(
     assert result2["result"].unique_id == "aabbccddeeff"
 
 
+async def test_zeroconf_during_onboarding(
+    hass: HomeAssistant,
+    mock_wled_config_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_onboarding: MagicMock,
+) -> None:
+    """Test we create a config entry when discovered during onboarding."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="192.168.1.123",
+            addresses=["192.168.1.123"],
+            hostname="example.local.",
+            name="mock_name",
+            port=None,
+            properties={CONF_MAC: "aabbccddeeff"},
+            type="mock_type",
+        ),
+    )
+
+    assert result.get("title") == "WLED RGB Light"
+    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+
+    assert result.get("data") == {CONF_HOST: "192.168.1.123"}
+    assert "result" in result
+    assert result["result"].unique_id == "aabbccddeeff"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_onboarding.mock_calls) == 1
+
+
 async def test_connection_error(
     hass: HomeAssistant, mock_wled_config_flow: MagicMock
 ) -> None:
@@ -110,6 +143,7 @@ async def test_zeroconf_connection_error(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -168,6 +202,7 @@ async def test_zeroconf_without_mac_device_exists_abort(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -192,6 +227,7 @@ async def test_zeroconf_with_mac_device_exists_abort(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,
@@ -216,6 +252,7 @@ async def test_zeroconf_with_cct_channel_abort(
         context={"source": SOURCE_ZEROCONF},
         data=zeroconf.ZeroconfServiceInfo(
             host="192.168.1.123",
+            addresses=["192.168.1.123"],
             hostname="example.local.",
             name="mock_name",
             port=None,

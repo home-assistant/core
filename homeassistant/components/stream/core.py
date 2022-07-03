@@ -3,9 +3,9 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
-from collections.abc import Iterable
+from collections.abc import Callable, Coroutine, Iterable
 import datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from aiohttp import web
 import async_timeout
@@ -23,7 +23,7 @@ if TYPE_CHECKING:
 
     from . import Stream
 
-PROVIDERS = Registry()
+PROVIDERS: Registry[str, type[StreamOutput]] = Registry()
 
 
 @attr.s(slots=True)
@@ -118,6 +118,10 @@ class Segment:
         if self.hls_playlist_complete:
             return self.hls_playlist_template[0]
         if not self.hls_playlist_template:
+            # Logically EXT-X-DISCONTINUITY makes sense above the parts, but Apple's
+            # media stream validator seems to only want it before the segment
+            if last_stream_id != self.stream_id:
+                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
             # This is a placeholder where the rendered parts will be inserted
             self.hls_playlist_template.append("{}")
         if render_parts:
@@ -133,22 +137,19 @@ class Segment:
             # the first element to avoid an extra newline when we don't render any parts.
             # Append an empty string to create a trailing newline when we do render parts
             self.hls_playlist_parts.append("")
-            self.hls_playlist_template = []
-            # Logically EXT-X-DISCONTINUITY would make sense above the parts, but Apple's
-            # media stream validator seems to only want it before the segment
-            if last_stream_id != self.stream_id:
-                self.hls_playlist_template.append("#EXT-X-DISCONTINUITY")
+            self.hls_playlist_template = (
+                [] if last_stream_id == self.stream_id else ["#EXT-X-DISCONTINUITY"]
+            )
             # Add the remaining segment metadata
+            # The placeholder goes on the same line as the next element
             self.hls_playlist_template.extend(
                 [
-                    "#EXT-X-PROGRAM-DATE-TIME:"
+                    "{}#EXT-X-PROGRAM-DATE-TIME:"
                     + self.start_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3]
                     + "Z",
                     f"#EXTINF:{self.duration:.3f},\n./segment/{self.sequence}.m4s",
                 ]
             )
-            # The placeholder now goes on the same line as the first element
-            self.hls_playlist_template[0] = "{}" + self.hls_playlist_template[0]
 
         # Store intermediate playlist data in member variables for reuse
         self.hls_playlist_template = ["\n".join(self.hls_playlist_template)]
@@ -192,7 +193,10 @@ class IdleTimer:
     """
 
     def __init__(
-        self, hass: HomeAssistant, timeout: int, idle_callback: CALLBACK_TYPE
+        self,
+        hass: HomeAssistant,
+        timeout: int,
+        idle_callback: Callable[[], Coroutine[Any, Any, None]],
     ) -> None:
         """Initialize IdleTimer."""
         self._hass = hass
@@ -219,11 +223,12 @@ class IdleTimer:
         if self._unsub is not None:
             self._unsub()
 
+    @callback
     def fire(self, _now: datetime.datetime) -> None:
         """Invoke the idle timeout callback, called when the alarm fires."""
         self.idle = True
         self._unsub = None
-        self._callback()
+        self._hass.async_create_task(self._callback())
 
 
 class StreamOutput:
@@ -233,11 +238,13 @@ class StreamOutput:
         self,
         hass: HomeAssistant,
         idle_timer: IdleTimer,
+        stream_settings: StreamSettings,
         deque_maxlen: int | None = None,
     ) -> None:
         """Initialize a stream output."""
         self._hass = hass
         self.idle_timer = idle_timer
+        self.stream_settings = stream_settings
         self._event = asyncio.Event()
         self._part_event = asyncio.Event()
         self._segments: deque[Segment] = deque(maxlen=deque_maxlen)
@@ -320,7 +327,6 @@ class StreamOutput:
         """Handle cleanup."""
         self._event.set()
         self.idle_timer.clear()
-        self._segments = deque(maxlen=self._segments.maxlen)
 
 
 class StreamView(HomeAssistantView):
@@ -349,7 +355,7 @@ class StreamView(HomeAssistantView):
             raise web.HTTPNotFound()
 
         # Start worker if not already started
-        stream.start()
+        await stream.start()
 
         return await self.handle(request, stream, sequence, part_num)
 
@@ -394,6 +400,9 @@ class KeyFrameConverter:
 
         This is run by the worker thread and will only be called once per worker.
         """
+
+        if self._codec_context:
+            return
 
         # Keep import here so that we can import stream integration without installing reqs
         # pylint: disable=import-outside-toplevel

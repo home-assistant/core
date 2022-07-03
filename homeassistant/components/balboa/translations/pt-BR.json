@@ -11,6 +11,16 @@
             "user": {
                 "data": {
                     "host": "Nome do host"
+                },
+                "title": "Conecte-se ao dispositivo Wi-Fi Balboa"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "sync_time": "Mantenha o hor\u00e1rio do seu cliente Balboa Spa sincronizado com o Home Assistant"
                 }
             }
         }

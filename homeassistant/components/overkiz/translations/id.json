@@ -9,9 +9,11 @@
             "cannot_connect": "Gagal terhubung",
             "invalid_auth": "Autentikasi tidak valid",
             "server_in_maintenance": "Server sedang dalam masa pemeliharaan",
+            "too_many_attempts": "Terlalu banyak percobaan dengan token yang tidak valid, untuk sementara diblokir",
             "too_many_requests": "Terlalu banyak permintaan, coba lagi nanti.",
             "unknown": "Kesalahan yang tidak diharapkan"
         },
+        "flow_title": "Gateway: {gateway_id}",
         "step": {
             "user": {
                 "data": {

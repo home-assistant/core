@@ -9,9 +9,11 @@
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "server_in_maintenance": "A szerver karbantart\u00e1s miatt nem el\u00e9rhet\u0151",
+            "too_many_attempts": "T\u00fal sok pr\u00f3b\u00e1lkoz\u00e1s \u00e9rv\u00e9nytelen tokennel, ideiglenesen kitiltva",
             "too_many_requests": "T\u00fal sok a k\u00e9r\u00e9s, pr\u00f3b\u00e1lja meg k\u00e9s\u0151bb \u00fajra.",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
         },
+        "flow_title": "\u00c1tj\u00e1r\u00f3: {gateway_id}",
         "step": {
             "user": {
                 "data": {

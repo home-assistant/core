@@ -13,13 +13,7 @@ from homeassistant.helpers.aiohttp_client import (
 )
 
 from .const import CONF_REPOSITORIES, DOMAIN, LOGGER
-from .coordinator import (
-    DataUpdateCoordinators,
-    RepositoryCommitDataUpdateCoordinator,
-    RepositoryInformationDataUpdateCoordinator,
-    RepositoryIssueDataUpdateCoordinator,
-    RepositoryReleaseDataUpdateCoordinator,
-)
+from .coordinator import GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -37,30 +31,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     repositories: list[str] = entry.options[CONF_REPOSITORIES]
 
     for repository in repositories:
-        coordinators: DataUpdateCoordinators = {
-            "information": RepositoryInformationDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-            "release": RepositoryReleaseDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-            "issue": RepositoryIssueDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-            "commit": RepositoryCommitDataUpdateCoordinator(
-                hass=hass, entry=entry, client=client, repository=repository
-            ),
-        }
+        coordinator = GitHubDataUpdateCoordinator(
+            hass=hass,
+            client=client,
+            repository=repository,
+        )
 
-        await coordinators["information"].async_config_entry_first_refresh()
+        await coordinator.async_config_entry_first_refresh()
+        await coordinator.subscribe()
 
-        hass.data[DOMAIN][repository] = coordinators
+        hass.data[DOMAIN][repository] = coordinator
 
     async_cleanup_device_registry(hass=hass, entry=entry)
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
-
     return True
 
 
@@ -92,6 +77,10 @@ def async_cleanup_device_registry(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
+    repositories: dict[str, GitHubDataUpdateCoordinator] = hass.data[DOMAIN]
+    for coordinator in repositories.values():
+        coordinator.unsubscribe()
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data.pop(DOMAIN)
     return unload_ok

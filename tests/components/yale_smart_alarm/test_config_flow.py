@@ -38,7 +38,6 @@ async def test_form(hass: HomeAssistant) -> None:
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
         )
@@ -81,7 +80,6 @@ async def test_form_invalid_auth(
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
         )
@@ -101,7 +99,6 @@ async def test_form_invalid_auth(
             {
                 "username": "test-username",
                 "password": "test-password",
-                "name": "Yale Smart Alarm",
                 "area_id": "1",
             },
         )
@@ -115,61 +112,6 @@ async def test_form_invalid_auth(
         "name": "Yale Smart Alarm",
         "area_id": "1",
     }
-
-
-@pytest.mark.parametrize(
-    "p_input,p_output",
-    [
-        (
-            {
-                "username": "test-username",
-                "password": "test-password",
-                "name": "Yale Smart Alarm",
-                "area_id": "1",
-            },
-            {
-                "username": "test-username",
-                "password": "test-password",
-                "name": "Yale Smart Alarm",
-                "area_id": "1",
-            },
-        ),
-        (
-            {
-                "username": "test-username",
-                "password": "test-password",
-            },
-            {
-                "username": "test-username",
-                "password": "test-password",
-                "name": "Yale Smart Alarm",
-                "area_id": "1",
-            },
-        ),
-    ],
-)
-async def test_import_flow_success(
-    hass, p_input: dict[str, str], p_output: dict[str, str]
-):
-    """Test a successful import of yaml."""
-
-    with patch(
-        "homeassistant.components.yale_smart_alarm.config_flow.YaleSmartAlarmClient",
-    ), patch(
-        "homeassistant.components.yale_smart_alarm.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=p_input,
-        )
-        await hass.async_block_till_done()
-
-    assert result2["type"] == "create_entry"
-    assert result2["title"] == "test-username"
-    assert result2["data"] == p_output
-    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_reauth_flow(hass: HomeAssistant) -> None:

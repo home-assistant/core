@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__package__)
 
 PLATFORMS = [Platform.SENSOR]
 CONF_DSMR_VERSION = "dsmr_version"
+CONF_PROTOCOL = "protocol"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
 CONF_PRECISION = "precision"
 CONF_TIME_BETWEEN_UPDATE = "time_between_update"
@@ -32,10 +33,13 @@ DEFAULT_TIME_BETWEEN_UPDATE = 30
 
 DATA_TASK = "task"
 
-DEVICE_NAME_ENERGY = "Energy Meter"
+DEVICE_NAME_ELECTRICITY = "Electricity Meter"
 DEVICE_NAME_GAS = "Gas Meter"
 
 DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
+
+DSMR_PROTOCOL = "dsmr_protocol"
+RFXTRX_DSMR_PROTOCOL = "rfxtrx_dsmr_protocol"
 
 SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
@@ -242,9 +246,27 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
+        key=obis_references.BELGIUM_MAX_POWER_PER_PHASE,
+        name="Max power per phase",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
+        name="Max current per phase",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
         key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
         name="Energy Consumption (total)",
-        dsmr_versions={"5", "5B", "5L", "5S", "Q3D"},
+        dsmr_versions={"5L", "5S", "Q3D"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -267,7 +289,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key=obis_references.BELGIUM_HOURLY_GAS_METER_READING,
+        key=obis_references.BELGIUM_5MIN_GAS_METER_READING,
         name="Gas Consumption",
         dsmr_versions={"5B"},
         is_gas=True,

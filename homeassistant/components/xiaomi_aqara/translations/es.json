@@ -16,10 +16,9 @@
         "step": {
             "select": {
                 "data": {
-                    "select_ip": "IP del gateway"
+                    "select_ip": "Direcci\u00f3n IP"
                 },
-                "description": "Ejecuta la configuraci\u00f3n de nuevo si deseas conectar gateways adicionales",
-                "title": "Selecciona el Xiaomi Aqara Gateway que quieres conectar"
+                "description": "Ejecuta la configuraci\u00f3n de nuevo si deseas conectar gateways adicionales"
             },
             "settings": {
                 "data": {
@@ -27,7 +26,7 @@
                     "name": "Nombre del Gateway"
                 },
                 "description": "La clave (contrase\u00f1a) se puede obtener con este tutorial: https://www.domoticz.com/wiki/Xiaomi_Gateway_(Aqara)#Adding_the_Xiaomi_Gateway_to_Domoticz. Si no se proporciona la clave solo se podr\u00e1 acceder a los sensores",
-                "title": "Xiaomi Aqara Gateway, configuraciones opcionales"
+                "title": "Configuraciones opcionales"
             },
             "user": {
                 "data": {
@@ -35,8 +34,7 @@
                     "interface": "La interfaz de la red a usar",
                     "mac": "Direcci\u00f3n Mac (opcional)"
                 },
-                "description": "Con\u00e9ctate a tu Xiaomi Aqara Gateway, si las direcciones IP y mac se dejan vac\u00edas, se utiliza el auto-descubrimiento.",
-                "title": "Xiaomi Aqara Gateway"
+                "description": "Con\u00e9ctate a tu Xiaomi Aqara Gateway, si las direcciones IP y mac se dejan vac\u00edas, se utiliza el auto-descubrimiento."
             }
         }
     }

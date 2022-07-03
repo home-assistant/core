@@ -30,7 +30,7 @@ from .const import (
     ENTITY_CATEGORY_MAPPING,
 )
 
-PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT]
+PLATFORMS = [Platform.MEDIA_PLAYER, Platform.NUMBER, Platform.SELECT, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
@@ -120,10 +120,8 @@ class MusicCastDataUpdateCoordinator(DataUpdateCoordinator[MusicCastData]):
         return self.musiccast.data
 
 
-class MusicCastEntity(CoordinatorEntity):
+class MusicCastEntity(CoordinatorEntity[MusicCastDataUpdateCoordinator]):
     """Defines a base MusicCast entity."""
-
-    coordinator: MusicCastDataUpdateCoordinator
 
     def __init__(
         self,

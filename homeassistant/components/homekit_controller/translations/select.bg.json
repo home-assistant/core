@@ -1,0 +1,9 @@
+{
+    "state": {
+        "homekit_controller__ecobee_mode": {
+            "away": "\u041e\u0442\u0441\u044a\u0441\u0442\u0432\u0430",
+            "home": "\u0414\u043e\u043c",
+            "sleep": "\u0417\u0430\u0441\u043f\u0438\u0432\u0430\u043d\u0435"
+        }
+    }
+}

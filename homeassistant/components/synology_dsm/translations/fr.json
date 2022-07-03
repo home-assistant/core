@@ -7,7 +7,7 @@
         },
         "error": {
             "cannot_connect": "\u00c9chec de connexion",
-            "invalid_auth": "Authentification invalide",
+            "invalid_auth": "Authentification non valide",
             "missing_data": "Donn\u00e9es manquantes: veuillez r\u00e9essayer plus tard ou utilisez une autre configuration",
             "otp_failed": "\u00c9chec de l'authentification en deux \u00e9tapes, r\u00e9essayez avec un nouveau code d'acc\u00e8s",
             "unknown": "Erreur inattendue"
@@ -28,16 +28,7 @@
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
                 },
-                "description": "Voulez-vous configurer {name} ({host})?",
-                "title": "Synology DSM"
-            },
-            "reauth": {
-                "data": {
-                    "password": "Mot de passe",
-                    "username": "Nom d'utilisateur"
-                },
-                "description": "Raison: {details}",
-                "title": "Synology DSM R\u00e9-authentifier l'int\u00e9gration"
+                "description": "Voulez-vous configurer {name} ({host})\u00a0?"
             },
             "reauth_confirm": {
                 "data": {
@@ -54,8 +45,7 @@
                     "ssl": "Utilise un certificat SSL",
                     "username": "Nom d'utilisateur",
                     "verify_ssl": "V\u00e9rifier le certificat SSL"
-                },
-                "title": "Synology DSM"
+                }
             }
         }
     },
@@ -64,6 +54,7 @@
             "init": {
                 "data": {
                     "scan_interval": "Minutes entre les scans",
+                    "snap_profile_type": "Niveau de qualit\u00e9 des instantan\u00e9s de la cam\u00e9ra (0 : \u00e9lev\u00e9 1 : moyen 2 : faible)",
                     "timeout": "D\u00e9lai d'expiration (secondes)"
                 }
             }

@@ -7,18 +7,13 @@
             "cannot_connect": "Falha ao conectar",
             "unknown": "Erro inesperado"
         },
+        "flow_title": "{serial_number} ( {host} )",
         "step": {
             "user": {
                 "data": {
                     "host": "Nome do host"
-                }
-            }
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Configurar op\u00e7\u00f5es para o Tesla Wall Connector"
+                },
+                "title": "Configurar o conector de parede Tesla"
             }
         }
     }

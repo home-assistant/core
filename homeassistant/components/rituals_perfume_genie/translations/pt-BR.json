@@ -11,8 +11,10 @@
         "step": {
             "user": {
                 "data": {
+                    "email": "Email",
                     "password": "Senha"
-                }
+                },
+                "title": "Conecte-se \u00e0 sua conta Rituals"
             }
         }
     }

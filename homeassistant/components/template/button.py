@@ -63,7 +63,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the template button."""
-    if "coordinator" in discovery_info:
+    if not discovery_info or "coordinator" in discovery_info:
         raise PlatformNotReady(
             "The template button platform doesn't support trigger entities"
         )
@@ -78,6 +78,8 @@ async def async_setup_platform(
 class TemplateButtonEntity(TemplateEntity, ButtonEntity):
     """Representation of a template button."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -86,10 +88,11 @@ class TemplateButtonEntity(TemplateEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._command_press = Script(hass, config[CONF_PRESS], self._attr_name, DOMAIN)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
 
     async def async_press(self) -> None:
         """Press the button."""
-        await self._command_press.async_run(context=self._context)
+        await self.async_run_script(self._command_press, context=self._context)

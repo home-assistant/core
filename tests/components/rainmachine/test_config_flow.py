@@ -124,7 +124,7 @@ async def test_step_user(hass, config, setup_rainmachine):
         data=config,
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == "My RainMachine"
+    assert result["title"] == "12345"
     assert result["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
@@ -149,6 +149,7 @@ async def test_step_homekit_zeroconf_ip_already_exists(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -174,6 +175,7 @@ async def test_step_homekit_zeroconf_ip_change(hass, client, config_entry, sourc
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.2",
+                addresses=["192.168.1.2"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -202,6 +204,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
             context={"source": source},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -229,7 +232,7 @@ async def test_step_homekit_zeroconf_new_controller_when_some_exist(
         await hass.async_block_till_done()
 
     assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result2["title"] == "My RainMachine"
+    assert result2["title"] == "12345"
     assert result2["data"] == {
         CONF_IP_ADDRESS: "192.168.1.100",
         CONF_PASSWORD: "password",
@@ -249,6 +252,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass, client):
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
@@ -268,6 +272,7 @@ async def test_discovery_by_homekit_and_zeroconf_same_time(hass, client):
             context={"source": config_entries.SOURCE_HOMEKIT},
             data=zeroconf.ZeroconfServiceInfo(
                 host="192.168.1.100",
+                addresses=["192.168.1.100"],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,

@@ -11,8 +11,22 @@
             "user": {
                 "data": {
                     "api_key": "Chave da API",
+                    "language": "Idioma",
                     "latitude": "Latitude",
-                    "longitude": "Longitude"
+                    "longitude": "Longitude",
+                    "mode": "Modo",
+                    "name": "Nome"
+                },
+                "description": "Para gerar a chave de API, acesse https://openweathermap.org/appid"
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "language": "Idioma",
+                    "mode": "Modo"
                 }
             }
         }

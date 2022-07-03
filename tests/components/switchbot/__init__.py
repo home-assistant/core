@@ -1,7 +1,7 @@
 """Tests for the switchbot integration."""
 from unittest.mock import patch
 
-from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
+from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -38,15 +38,9 @@ USER_INPUT_INVALID = {
     CONF_MAC: "invalid-mac",
 }
 
-YAML_CONFIG = {
-    CONF_NAME: "test-name",
-    CONF_PASSWORD: "test-password",
-    CONF_MAC: "e7:89:43:99:99:99",
-    CONF_SENSOR_TYPE: "bot",
-}
 
-
-def _patch_async_setup_entry(return_value=True):
+def patch_async_setup_entry(return_value=True):
+    """Patch async setup entry to return True."""
     return patch(
         "homeassistant.components.switchbot.async_setup_entry",
         return_value=return_value,

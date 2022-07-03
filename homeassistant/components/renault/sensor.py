@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, Generic, cast
 
 from renault_api.kamereon.enums import ChargeState, PlugState
 from renault_api.kamereon.models import (
@@ -12,6 +12,7 @@ from renault_api.kamereon.models import (
     KamereonVehicleCockpitData,
     KamereonVehicleHvacStatusData,
     KamereonVehicleLocationData,
+    KamereonVehicleResStateData,
 )
 
 from homeassistant.components.sensor import (
@@ -44,18 +45,18 @@ from .renault_vehicle import RenaultVehicleProxy
 
 
 @dataclass
-class RenaultSensorRequiredKeysMixin:
+class RenaultSensorRequiredKeysMixin(Generic[T]):
     """Mixin for required keys."""
 
     data_key: str
-    entity_class: type[RenaultSensor]
+    entity_class: type[RenaultSensor[T]]
 
 
 @dataclass
 class RenaultSensorEntityDescription(
     SensorEntityDescription,
     RenaultDataEntityDescription,
-    RenaultSensorRequiredKeysMixin,
+    RenaultSensorRequiredKeysMixin[T],
 ):
     """Class describing Renault sensor entities."""
 
@@ -72,7 +73,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Renault entities from config entry."""
     proxy: RenaultHub = hass.data[DOMAIN][config_entry.entry_id]
-    entities: list[RenaultSensor] = [
+    entities: list[RenaultSensor[Any]] = [
         description.entity_class(vehicle, description)
         for vehicle in proxy.vehicles.values()
         for description in SENSOR_TYPES
@@ -86,7 +87,7 @@ async def async_setup_entry(
 class RenaultSensor(RenaultDataEntity[T], SensorEntity):
     """Mixin for sensor specific attributes."""
 
-    entity_description: RenaultSensorEntityDescription
+    entity_description: RenaultSensorEntityDescription[T]
 
     @property
     def data(self) -> StateType:
@@ -156,7 +157,7 @@ def _get_utc_value(entity: RenaultSensor[T]) -> datetime:
     return as_utc(original_dt)
 
 
-SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
+SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
     RenaultSensorEntityDescription(
         key="battery_level",
         coordinator="battery",
@@ -306,6 +307,24 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     RenaultSensorEntityDescription(
+        key="hvac_soc_threshold",
+        coordinator="hvac_status",
+        data_key="socThreshold",
+        entity_class=RenaultSensor[KamereonVehicleHvacStatusData],
+        name="HVAC SOC Threshold",
+        native_unit_of_measurement=PERCENTAGE,
+    ),
+    RenaultSensorEntityDescription(
+        key="hvac_last_activity",
+        coordinator="hvac_status",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        data_key="lastUpdateTime",
+        entity_class=RenaultSensor[KamereonVehicleHvacStatusData],
+        entity_registry_enabled_default=False,
+        name="HVAC Last Activity",
+        value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
         key="location_last_activity",
         coordinator="location",
         device_class=SensorDeviceClass.TIMESTAMP,
@@ -314,5 +333,20 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         name="Location Last Activity",
         value_lambda=_get_utc_value,
+    ),
+    RenaultSensorEntityDescription(
+        key="res_state",
+        coordinator="res_state",
+        data_key="details",
+        entity_class=RenaultSensor[KamereonVehicleResStateData],
+        name="Remote Engine Start",
+    ),
+    RenaultSensorEntityDescription(
+        key="res_state_code",
+        coordinator="res_state",
+        data_key="code",
+        entity_class=RenaultSensor[KamereonVehicleResStateData],
+        entity_registry_enabled_default=False,
+        name="Remote Engine Start Code",
     ),
 )

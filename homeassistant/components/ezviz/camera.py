@@ -7,18 +7,17 @@ from pyezviz.exceptions import HTTPError, InvalidHost, PyEzvizError
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg
-from homeassistant.components.camera import PLATFORM_SCHEMA, SUPPORT_STREAM, Camera
+from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
+from homeassistant.components.stream import CONF_USE_WALLCLOCK_AS_TIMESTAMPS
 from homeassistant.config_entries import (
-    SOURCE_DISCOVERY,
     SOURCE_IGNORE,
-    SOURCE_IMPORT,
+    SOURCE_INTEGRATION_DISCOVERY,
     ConfigEntry,
 )
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     ATTR_DIRECTION,
@@ -27,7 +26,6 @@ from .const import (
     ATTR_SERIAL,
     ATTR_SPEED,
     ATTR_TYPE,
-    CONF_CAMERAS,
     CONF_FFMPEG_ARGUMENTS,
     DATA_COORDINATOR,
     DEFAULT_CAMERA_USERNAME,
@@ -47,60 +45,7 @@ from .const import (
 from .coordinator import EzvizDataUpdateCoordinator
 from .entity import EzvizEntity
 
-CAMERA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): cv.string, vol.Required(CONF_PASSWORD): cv.string}
-)
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_CAMERAS, default={}): {cv.string: CAMERA_SCHEMA},
-    }
-)
-
 _LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: entity_platform.AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up a Ezviz IP Camera from platform config."""
-    _LOGGER.warning(
-        "Loading ezviz via platform config is deprecated, it will be automatically imported. Please remove it afterwards"
-    )
-
-    # Check if entry config exists and skips import if it does.
-    if hass.config_entries.async_entries(DOMAIN):
-        return
-
-    # Check if importing camera account.
-    if CONF_CAMERAS in config:
-        cameras_conf = config[CONF_CAMERAS]
-        for serial, camera in cameras_conf.items():
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN,
-                    context={"source": SOURCE_IMPORT},
-                    data={
-                        ATTR_SERIAL: serial,
-                        CONF_USERNAME: camera[CONF_USERNAME],
-                        CONF_PASSWORD: camera[CONF_PASSWORD],
-                    },
-                )
-            )
-
-    # Check if importing main ezviz cloud account.
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config,
-        )
-    )
 
 
 async def async_setup_entry(
@@ -151,7 +96,7 @@ async def async_setup_entry(
             hass.async_create_task(
                 hass.config_entries.flow.async_init(
                     DOMAIN,
-                    context={"source": SOURCE_DISCOVERY},
+                    context={"source": SOURCE_INTEGRATION_DISCOVERY},
                     data={
                         ATTR_SERIAL: camera,
                         CONF_IP_ADDRESS: value["local_ip"],
@@ -228,8 +173,6 @@ async def async_setup_entry(
 class EzvizCamera(EzvizEntity, Camera):
     """An implementation of a Ezviz security camera."""
 
-    coordinator: EzvizDataUpdateCoordinator
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -244,6 +187,7 @@ class EzvizCamera(EzvizEntity, Camera):
         """Initialize a Ezviz security camera."""
         super().__init__(coordinator, serial)
         Camera.__init__(self)
+        self.stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
         self._username = camera_username
         self._password = camera_password
         self._rtsp_stream = camera_rtsp_stream
@@ -252,18 +196,13 @@ class EzvizCamera(EzvizEntity, Camera):
         self._ffmpeg = get_ffmpeg_manager(hass)
         self._attr_unique_id = serial
         self._attr_name = self.data["name"]
+        if camera_password:
+            self._attr_supported_features = CameraEntityFeature.STREAM
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data["status"] != 2
-
-    @property
-    def supported_features(self) -> int:
-        """Return supported features."""
-        if self._password:
-            return SUPPORT_STREAM
-        return 0
 
     @property
     def is_on(self) -> bool:

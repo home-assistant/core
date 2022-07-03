@@ -34,7 +34,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Perform the setup for Xiaomi devices."""
-    entities = []
+    entities: list[XiaomiBinarySensor] = []
     gateway = hass.data[DOMAIN][GATEWAYS_KEY][config_entry.entry_id]
     for entity in gateway.devices["binary_sensor"]:
         model = entity["model"]
@@ -333,8 +333,7 @@ class XiaomiDoorSensor(XiaomiBinarySensor, RestoreEntity):
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
-        state = await self.async_get_last_state()
-        if state is None:
+        if (state := await self.async_get_last_state()) is None:
             return
 
         self._state = state.state == "on"
@@ -465,6 +464,11 @@ class XiaomiVibration(XiaomiBinarySensor):
         attrs.update(super().extra_state_attributes)
         return attrs
 
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
+
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         value = data.get(self._data_key)
@@ -499,6 +503,11 @@ class XiaomiButton(XiaomiBinarySensor):
         attrs = {ATTR_LAST_ACTION: self._last_action}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
@@ -546,7 +555,6 @@ class XiaomiCube(XiaomiBinarySensor):
         """Initialize the Xiaomi Cube."""
         self._hass = hass
         self._last_action = None
-        self._state = False
         if "proto" not in device or int(device["proto"][0:1]) == 1:
             data_key = "status"
         else:
@@ -559,6 +567,11 @@ class XiaomiCube(XiaomiBinarySensor):
         attrs = {ATTR_LAST_ACTION: self._last_action}
         attrs.update(super().extra_state_attributes)
         return attrs
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        self._state = False
 
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""

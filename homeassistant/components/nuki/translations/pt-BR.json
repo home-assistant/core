@@ -13,6 +13,7 @@
                 "data": {
                     "token": "Token de acesso"
                 },
+                "description": "A integra\u00e7\u00e3o Nuki precisa se autenticar novamente com sua ponte.",
                 "title": "Reautenticar Integra\u00e7\u00e3o"
             },
             "user": {

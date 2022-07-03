@@ -96,8 +96,12 @@ async def test_get_or_create_returns_same_entry(
     assert len(update_events) == 2
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry.id
+    assert update_events[1]["changes"] == {
+        "connections": {("mac", "12:34:56:ab:cd:ef")}
+    }
 
 
 async def test_requirement_for_identifier_or_connection(registry):
@@ -518,14 +522,19 @@ async def test_removing_config_entries(hass, registry, update_events):
     assert len(update_events) == 5
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry2.id
+    assert update_events[1]["changes"] == {"config_entries": {"123"}}
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry3.id
+    assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "update"
     assert update_events[3]["device_id"] == entry.id
+    assert update_events[3]["changes"] == {"config_entries": {"456", "123"}}
     assert update_events[4]["action"] == "remove"
     assert update_events[4]["device_id"] == entry3.id
+    assert "changes" not in update_events[4]
 
 
 async def test_deleted_device_removing_config_entries(hass, registry, update_events):
@@ -568,14 +577,19 @@ async def test_deleted_device_removing_config_entries(hass, registry, update_eve
     assert len(update_events) == 5
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry2.id
+    assert update_events[1]["changes"] == {"config_entries": {"123"}}
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry3.id
+    assert "changes" not in update_events[2]["device_id"]
     assert update_events[3]["action"] == "remove"
     assert update_events[3]["device_id"] == entry.id
+    assert "changes" not in update_events[3]
     assert update_events[4]["action"] == "remove"
     assert update_events[4]["device_id"] == entry3.id
+    assert "changes" not in update_events[4]
 
     registry.async_clear_config_entry("123")
     assert len(registry.devices) == 0
@@ -892,7 +906,7 @@ async def test_format_mac(registry):
         assert list(invalid_mac_entry.connections)[0][1] == invalid
 
 
-async def test_update(registry):
+async def test_update(hass, registry, update_events):
     """Verify that we can update some attributes of a device."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -939,6 +953,24 @@ async def test_update(registry):
     )
 
     assert registry.async_get(updated_entry.id) is not None
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[1]["changes"] == {
+        "area_id": None,
+        "disabled_by": None,
+        "identifiers": {("bla", "123"), ("hue", "456")},
+        "manufacturer": None,
+        "model": None,
+        "name_by_user": None,
+        "via_device_id": None,
+    }
 
 
 async def test_update_remove_config_entries(hass, registry, update_events):
@@ -989,17 +1021,22 @@ async def test_update_remove_config_entries(hass, registry, update_events):
     assert len(update_events) == 5
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry2.id
+    assert update_events[1]["changes"] == {"config_entries": {"123"}}
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry3.id
+    assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "update"
     assert update_events[3]["device_id"] == entry.id
+    assert update_events[3]["changes"] == {"config_entries": {"456", "123"}}
     assert update_events[4]["action"] == "remove"
     assert update_events[4]["device_id"] == entry3.id
+    assert "changes" not in update_events[4]
 
 
-async def test_update_sw_version(registry):
+async def test_update_sw_version(hass, registry, update_events):
     """Verify that we can update software version of a device."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -1016,8 +1053,18 @@ async def test_update_sw_version(registry):
     assert updated_entry != entry
     assert updated_entry.sw_version == sw_version
 
+    await hass.async_block_till_done()
 
-async def test_update_hw_version(registry):
+    assert len(update_events) == 2
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[1]["changes"] == {"sw_version": None}
+
+
+async def test_update_hw_version(hass, registry, update_events):
     """Verify that we can update hardware version of a device."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -1034,8 +1081,18 @@ async def test_update_hw_version(registry):
     assert updated_entry != entry
     assert updated_entry.hw_version == hw_version
 
+    await hass.async_block_till_done()
 
-async def test_update_suggested_area(registry, area_registry):
+    assert len(update_events) == 2
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[1]["changes"] == {"hw_version": None}
+
+
+async def test_update_suggested_area(hass, registry, area_registry, update_events):
     """Verify that we can update the suggested area version of a device."""
     entry = registry.async_get_or_create(
         config_entry_id="1234",
@@ -1060,6 +1117,26 @@ async def test_update_suggested_area(registry, area_registry):
     assert pool_area is not None
     assert updated_entry.area_id == pool_area.id
     assert len(area_registry.areas) == 1
+
+    await hass.async_block_till_done()
+
+    assert len(update_events) == 2
+    assert update_events[0]["action"] == "create"
+    assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
+    assert update_events[1]["action"] == "update"
+    assert update_events[1]["device_id"] == entry.id
+    assert update_events[1]["changes"] == {"area_id": None, "suggested_area": None}
+
+    # Do not save or fire the event if the suggested
+    # area does not result in a change of area
+    # but still update the actual entry
+    with patch.object(registry, "async_schedule_save") as mock_save_2:
+        updated_entry = registry.async_update_device(entry.id, suggested_area="Other")
+    assert len(update_events) == 2
+    assert mock_save_2.call_count == 0
+    assert updated_entry != entry
+    assert updated_entry.suggested_area == "Other"
 
 
 async def test_cleanup_device_registry(hass, registry):
@@ -1221,12 +1298,16 @@ async def test_restore_device(hass, registry, update_events):
     assert len(update_events) == 4
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "remove"
     assert update_events[1]["device_id"] == entry.id
+    assert "changes" not in update_events[1]
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry2.id
+    assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "create"
     assert update_events[3]["device_id"] == entry3.id
+    assert "changes" not in update_events[3]
 
 
 async def test_restore_simple_device(hass, registry, update_events):
@@ -1266,12 +1347,16 @@ async def test_restore_simple_device(hass, registry, update_events):
     assert len(update_events) == 4
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "remove"
     assert update_events[1]["device_id"] == entry.id
+    assert "changes" not in update_events[1]
     assert update_events[2]["action"] == "create"
     assert update_events[2]["device_id"] == entry2.id
+    assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "create"
     assert update_events[3]["device_id"] == entry3.id
+    assert "changes" not in update_events[3]
 
 
 async def test_restore_shared_device(hass, registry, update_events):
@@ -1358,18 +1443,31 @@ async def test_restore_shared_device(hass, registry, update_events):
     assert len(update_events) == 7
     assert update_events[0]["action"] == "create"
     assert update_events[0]["device_id"] == entry.id
+    assert "changes" not in update_events[0]
     assert update_events[1]["action"] == "update"
     assert update_events[1]["device_id"] == entry.id
+    assert update_events[1]["changes"] == {
+        "config_entries": {"123"},
+        "identifiers": {("entry_123", "0123")},
+    }
     assert update_events[2]["action"] == "remove"
     assert update_events[2]["device_id"] == entry.id
+    assert "changes" not in update_events[2]
     assert update_events[3]["action"] == "create"
     assert update_events[3]["device_id"] == entry.id
+    assert "changes" not in update_events[3]
     assert update_events[4]["action"] == "remove"
     assert update_events[4]["device_id"] == entry.id
+    assert "changes" not in update_events[4]
     assert update_events[5]["action"] == "create"
     assert update_events[5]["device_id"] == entry.id
-    assert update_events[1]["action"] == "update"
-    assert update_events[1]["device_id"] == entry.id
+    assert "changes" not in update_events[5]
+    assert update_events[6]["action"] == "update"
+    assert update_events[6]["device_id"] == entry.id
+    assert update_events[6]["changes"] == {
+        "config_entries": {"234"},
+        "identifiers": {("entry_234", "2345")},
+    }
 
 
 async def test_get_or_create_empty_then_set_default_values(hass, registry):

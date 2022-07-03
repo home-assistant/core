@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "already_configured": "Az eszk\u00f6z m\u00e1r konfigur\u00e1lva van",
-            "already_in_progress": "A konfigur\u00e1l\u00e1s m\u00e1r folyamatban van",
+            "already_in_progress": "A be\u00e1ll\u00edt\u00e1si folyamat m\u00e1r el lett kezdve",
             "cannot_connect": "Sikertelen csatlakoz\u00e1s",
             "not_konn_panel": "Nem felismert Konnected.io eszk\u00f6z",
             "unknown": "V\u00e1ratlan hiba t\u00f6rt\u00e9nt"
@@ -41,7 +41,7 @@
             "options_binary": {
                 "data": {
                     "inverse": "Invert\u00e1lja a nyitott/z\u00e1rt \u00e1llapotot",
-                    "name": "N\u00e9v (nem k\u00f6telez\u0151)",
+                    "name": "Elnevez\u00e9s",
                     "type": "Bin\u00e1ris \u00e9rz\u00e9kel\u0151 t\u00edpusa"
                 },
                 "description": "{zone} opci\u00f3k",
@@ -49,8 +49,8 @@
             },
             "options_digital": {
                 "data": {
-                    "name": "N\u00e9v (nem k\u00f6telez\u0151)",
-                    "poll_interval": "Lek\u00e9rdez\u00e9si id\u0151k\u00f6z (perc) (opcion\u00e1lis)",
+                    "name": "Elnevez\u00e9s",
+                    "poll_interval": "Lek\u00e9rdez\u00e9si id\u0151k\u00f6z (perc)",
                     "type": "\u00c9rz\u00e9kel\u0151 t\u00edpusa"
                 },
                 "description": "{zone} opci\u00f3k",
@@ -86,7 +86,7 @@
             },
             "options_misc": {
                 "data": {
-                    "api_host": "API host URL fel\u00fclb\u00edr\u00e1l\u00e1sa (opcion\u00e1lis)",
+                    "api_host": "API host URL fel\u00fclb\u00edr\u00e1l\u00e1sa",
                     "blink": "A panel LED villog\u00e1sa \u00e1llapotv\u00e1ltoz\u00e1skor",
                     "discovery": "V\u00e1laszoljon a h\u00e1l\u00f3zaton \u00e9rkez\u0151 felder\u00edt\u00e9si k\u00e9r\u00e9sekre",
                     "override_api_host": "Az alap\u00e9rtelmezett Home Assistant API host-URL fel\u00fcl\u00edr\u00e1sa"
@@ -97,11 +97,11 @@
             "options_switch": {
                 "data": {
                     "activation": "Kimenet bekapcsolt \u00e1llapotban",
-                    "momentary": "Impulzus id\u0151tartama (ms) (opcion\u00e1lis)",
+                    "momentary": "Impulzus id\u0151tartama (ms)",
                     "more_states": "Tov\u00e1bbi \u00e1llapotok konfigur\u00e1l\u00e1sa ehhez a z\u00f3n\u00e1hoz",
-                    "name": "N\u00e9v (nem k\u00f6telez\u0151)",
-                    "pause": "Sz\u00fcnet impulzusok k\u00f6z\u00f6tt (ms) (opcion\u00e1lis)",
-                    "repeat": "Ism\u00e9tl\u00e9si id\u0151k (-1 = v\u00e9gtelen) (opcion\u00e1lis)"
+                    "name": "Elnevez\u00e9s",
+                    "pause": "Sz\u00fcnet impulzusok k\u00f6z\u00f6tt (ms)",
+                    "repeat": "Ism\u00e9tl\u00e9si id\u0151k (-1 = v\u00e9gtelen)"
                 },
                 "description": "{zone} opci\u00f3k: \u00e1llapot {state}",
                 "title": "Kapcsolhat\u00f3 kimenet konfigur\u00e1l\u00e1sa"

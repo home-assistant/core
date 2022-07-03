@@ -1,0 +1,27 @@
+{
+    "state": {
+        "tomorrowio__health_concern": {
+            "good": "\u0425\u043e\u0440\u043e\u0448\u043e",
+            "hazardous": "\u041e\u043f\u0430\u0441\u043d\u043e",
+            "moderate": "\u0421\u0440\u0435\u0434\u043d\u0435",
+            "unhealthy": "\u0412\u0440\u0435\u0434\u043d\u043e",
+            "unhealthy_for_sensitive_groups": "\u0412\u0440\u0435\u0434\u043d\u043e \u0434\u043b\u044f \u0443\u044f\u0437\u0432\u0438\u043c\u044b\u0445 \u0433\u0440\u0443\u043f\u043f",
+            "very_unhealthy": "\u041e\u0447\u0435\u043d\u044c \u0432\u0440\u0435\u0434\u043d\u043e"
+        },
+        "tomorrowio__pollen_index": {
+            "high": "\u0412\u044b\u0441\u043e\u043a\u0438\u0439",
+            "low": "\u041d\u0438\u0437\u043a\u0438\u0439",
+            "medium": "\u0421\u0440\u0435\u0434\u043d\u0438\u0439",
+            "none": "\u041e\u0442\u0441\u0443\u0442\u0441\u0442\u0432\u0443\u0435\u0442",
+            "very_high": "\u041e\u0447\u0435\u043d\u044c \u0432\u044b\u0441\u043e\u043a\u0438\u0439",
+            "very_low": "\u041e\u0447\u0435\u043d\u044c \u043d\u0438\u0437\u043a\u0438\u0439"
+        },
+        "tomorrowio__precipitation_type": {
+            "freezing_rain": "\u041b\u0435\u0434\u044f\u043d\u043e\u0439 \u0434\u043e\u0436\u0434\u044c",
+            "ice_pellets": "\u041b\u0435\u0434\u044f\u043d\u0430\u044f \u043a\u0440\u0443\u043f\u0430",
+            "none": "\u0411\u0435\u0437 \u043e\u0441\u0430\u0434\u043a\u043e\u0432",
+            "rain": "\u0414\u043e\u0436\u0434\u044c",
+            "snow": "\u0421\u043d\u0435\u0433"
+        }
+    }
+}

@@ -20,6 +20,13 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 from tests.common import async_capture_events
 
 
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
+
+
 @pytest.fixture
 def ieee():
     """IEEE fixture."""
@@ -130,7 +137,7 @@ async def poll_control_device(zha_device_restored, zigpy_device_mock):
             0x0201,
             1,
             {
-                "local_temp",
+                "local_temperature",
                 "occupied_cooling_setpoint",
                 "occupied_heating_setpoint",
                 "unoccupied_cooling_setpoint",
@@ -510,7 +517,7 @@ async def test_poll_control_cluster_command(hass, poll_control_device):
     checkin_mock = AsyncMock()
     poll_control_ch = poll_control_device.channels.pools[0].all_channels["1:0x0020"]
     cluster = poll_control_ch.cluster
-    events = async_capture_events(hass, "zha_event")
+    events = async_capture_events(hass, zha_const.ZHA_EVENT)
 
     with mock.patch.object(poll_control_ch, "check_in_response", checkin_mock):
         tsn = 22
@@ -586,13 +593,23 @@ async def test_zll_device_groups(
     cluster = zigpy_zll_device.endpoints[1].lightlink
     channel = zha_channels.lightlink.LightLink(cluster, channel_pool)
 
+    get_group_identifiers_rsp = zigpy.zcl.clusters.lightlink.LightLink.commands_by_name[
+        "get_group_identifiers_rsp"
+    ].schema
+
     with patch.object(
-        cluster, "command", AsyncMock(return_value=[1, 0, []])
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=0, start_index=0, group_info_records=[]
+            )
+        ),
     ) as cmd_mock:
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0
@@ -603,12 +620,18 @@ async def test_zll_device_groups(
     group_1 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xABCD, 0x00)
     group_2 = zigpy.zcl.clusters.lightlink.GroupInfoRecord(0xAABB, 0x00)
     with patch.object(
-        cluster, "command", AsyncMock(return_value=[1, 0, [group_1, group_2]])
+        cluster,
+        "command",
+        AsyncMock(
+            return_value=get_group_identifiers_rsp(
+                total=2, start_index=0, group_info_records=[group_1, group_2]
+            )
+        ),
     ) as cmd_mock:
         await channel.async_configure()
         assert cmd_mock.await_count == 1
         assert (
-            cluster.server_commands[cmd_mock.await_args[0][0]][0]
+            cluster.server_commands[cmd_mock.await_args[0][0]].name
             == "get_group_identifiers"
         )
         assert cluster.bind.call_count == 0

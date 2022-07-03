@@ -14,17 +14,8 @@ from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import (
-    ATTR_ENABLED_DEFAULT,
-    DOMAIN,
-    SENSOR_PROCESS_DATA,
-    SENSOR_SETTINGS_DATA,
-)
-from .helper import (
-    PlenticoreDataFormatter,
-    ProcessDataUpdateCoordinator,
-    SettingDataUpdateCoordinator,
-)
+from .const import ATTR_ENABLED_DEFAULT, DOMAIN, SENSOR_PROCESS_DATA
+from .helper import PlenticoreDataFormatter, ProcessDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,38 +58,6 @@ async def async_setup_entry(
                 PlenticoreDataFormatter.get_method(fmt),
                 plenticore.device_info,
                 None,
-            )
-        )
-
-    available_settings_data = await plenticore.client.get_settings()
-    settings_data_update_coordinator = SettingDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=300),
-        plenticore,
-    )
-    for module_id, data_id, name, sensor_data, fmt in SENSOR_SETTINGS_DATA:
-        if module_id not in available_settings_data or data_id not in (
-            setting.id for setting in available_settings_data[module_id]
-        ):
-            _LOGGER.debug(
-                "Skipping non existing setting data %s/%s", module_id, data_id
-            )
-            continue
-
-        entities.append(
-            PlenticoreDataSensor(
-                settings_data_update_coordinator,
-                entry.entry_id,
-                entry.title,
-                module_id,
-                data_id,
-                name,
-                sensor_data,
-                PlenticoreDataFormatter.get_method(fmt),
-                plenticore.device_info,
-                EntityCategory.DIAGNOSTIC,
             )
         )
 

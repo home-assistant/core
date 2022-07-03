@@ -9,8 +9,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGBW_COLOR,
     ATTR_SUPPORTED_COLOR_MODES,
-    COLOR_MODE_BRIGHTNESS,
-    COLOR_MODE_RGBW,
+    ColorMode,
 )
 from homeassistant.const import (
     SERVICE_TURN_OFF,
@@ -40,6 +39,8 @@ def dimmer_fixture():
         is_on=True,
         supports_color=False,
         supports_white=False,
+        color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
+        effect_list=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
@@ -58,7 +59,7 @@ async def test_dimmer_init(dimmer, hass, config):
     assert state.name == "dimmerBox-brightness"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_BRIGHTNESS]
+    assert color_modes == [ColorMode.BRIGHTNESS]
 
     assert state.attributes[ATTR_BRIGHTNESS] == 65
     assert state.state == STATE_ON
@@ -211,6 +212,8 @@ def wlightboxs_fixture():
         is_on=None,
         supports_color=False,
         supports_white=False,
+        color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
+        effect_list=["NONE", "PL", "RELAX"],
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
@@ -229,7 +232,7 @@ async def test_wlightbox_s_init(wlightbox_s, hass, config):
     assert state.name == "wLightBoxS-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_BRIGHTNESS]
+    assert color_modes == [ColorMode.BRIGHTNESS]
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert state.state == STATE_UNKNOWN
@@ -311,6 +314,9 @@ def wlightbox_fixture():
         supports_white=True,
         white_value=None,
         rgbw_hex=None,
+        color_mode=blebox_uniapi.light.BleboxColorMode.RGBW,
+        effect="NONE",
+        effect_list=["NONE", "PL", "POLICE"],
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
@@ -329,7 +335,7 @@ async def test_wlightbox_init(wlightbox, hass, config):
     assert state.name == "wLightBox-color"
 
     color_modes = state.attributes[ATTR_SUPPORTED_COLOR_MODES]
-    assert color_modes == [COLOR_MODE_RGBW]
+    assert color_modes == [ColorMode.RGBW]
 
     assert ATTR_BRIGHTNESS not in state.attributes
     assert ATTR_RGBW_COLOR not in state.attributes
@@ -380,7 +386,7 @@ async def test_wlightbox_on_rgbw(wlightbox, hass, config):
 
     def turn_on(value):
         feature_mock.is_on = True
-        assert value == "c1d2f3c7"
+        assert value == [193, 210, 243, 199]
         feature_mock.white_value = 0xC7  # on
         feature_mock.rgbw_hex = "c1d2f3c7"
 

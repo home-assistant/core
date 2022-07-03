@@ -35,7 +35,6 @@ class CheckConfigView(HomeAssistantView):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command(
     {
         "type": "config/core/update",
@@ -50,6 +49,7 @@ class CheckConfigView(HomeAssistantView):
         vol.Optional("currency"): cv.currency,
     }
 )
+@websocket_api.async_response
 async def websocket_update_config(hass, connection, msg):
     """Handle update core config command."""
     data = dict(msg)
@@ -64,8 +64,8 @@ async def websocket_update_config(hass, connection, msg):
 
 
 @websocket_api.require_admin
-@websocket_api.async_response
 @websocket_api.websocket_command({"type": "config/core/detect"})
+@websocket_api.async_response
 async def websocket_detect_config(hass, connection, msg):
     """Detect core config."""
     session = async_get_clientsession(hass)

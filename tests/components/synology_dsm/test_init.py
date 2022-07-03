@@ -24,9 +24,9 @@ from tests.common import MockConfigEntry
 @pytest.mark.no_bypass_setup
 async def test_services_registered(hass: HomeAssistant):
     """Test if all services are registered."""
-    with patch(
-        "homeassistant.components.synology_dsm.SynoApi.async_setup", return_value=True
-    ), patch("homeassistant.components.synology_dsm.PLATFORMS", return_value=[]):
+    with patch("homeassistant.components.synology_dsm.common.SynologyDSM"), patch(
+        "homeassistant.components.synology_dsm.PLATFORMS", return_value=[]
+    ):
         entry = MockConfigEntry(
             domain=DOMAIN,
             data={

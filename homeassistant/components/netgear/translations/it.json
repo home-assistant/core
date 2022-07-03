@@ -11,12 +11,9 @@
                 "data": {
                     "host": "Host (Facoltativo)",
                     "password": "Password",
-                    "port": "Porta (Facoltativo)",
-                    "ssl": "Utilizza un certificato SSL",
                     "username": "Nome utente (Facoltativo)"
                 },
-                "description": "Host predefinito: {host}\nPorta predefinita: {port}\nNome utente predefinito: {username}",
-                "title": "Netgear"
+                "description": "Host predefinito: {host}\nNome utente predefinito: {username}"
             }
         }
     },
@@ -26,8 +23,7 @@
                 "data": {
                     "consider_home": "Considera il tempo in casa (secondi)"
                 },
-                "description": "Specifica le impostazioni opzionali",
-                "title": "Netgear"
+                "description": "Specifica le impostazioni opzionali"
             }
         }
     }

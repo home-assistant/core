@@ -1,10 +1,10 @@
 """Support for Insteon lights via PowerLinc Modem."""
-from pyinsteon.extended_property import ON_LEVEL
+from pyinsteon.config import ON_LEVEL
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +41,9 @@ async def async_setup_entry(
 class InsteonDimmerEntity(InsteonEntity, LightEntity):
     """A Class for an Insteon light entity."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     @property
     def brightness(self):
         """Return the brightness of this light between 0..255."""
@@ -51,18 +54,13 @@ class InsteonDimmerEntity(InsteonEntity, LightEntity):
         """Return the boolean response if the node is on."""
         return bool(self.brightness)
 
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_BRIGHTNESS
-
     async def async_turn_on(self, **kwargs):
         """Turn light on."""
         if ATTR_BRIGHTNESS in kwargs:
             brightness = int(kwargs[ATTR_BRIGHTNESS])
-        else:
+        elif self._insteon_device_group.group == 1:
             brightness = self.get_device_property(ON_LEVEL)
-        if brightness is not None:
+        if brightness:
             await self._insteon_device.async_on(
                 on_level=brightness, group=self._insteon_device_group.group
             )

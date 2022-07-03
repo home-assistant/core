@@ -11,7 +11,9 @@
                 "data": {
                     "latitude": "Latitude",
                     "longitude": "Longitude"
-                }
+                },
+                "description": "Monitore relat\u00f3rios baseados em usu\u00e1rio e CDC para um par de coordenadas.",
+                "title": "Configurar Flue Near You"
             }
         }
     }

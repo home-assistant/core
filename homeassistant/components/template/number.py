@@ -100,6 +100,8 @@ async def async_setup_platform(
 class TemplateNumber(TemplateEntity, NumberEntity):
     """Representation of a template number."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -108,6 +110,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
     ) -> None:
         """Initialize the number."""
         super().__init__(hass, config=config, unique_id=unique_id)
+        assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
         self._command_set_value = Script(
             hass, config[CONF_SET_VALUE], self._attr_name, DOMAIN
@@ -116,48 +119,50 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[ATTR_MIN]
         self._max_value_template = config[ATTR_MAX]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_value = None
-        self._attr_step = None
-        self._attr_min_value = None
-        self._attr_max_value = None
+        self._attr_native_value = None
+        self._attr_native_step = None
+        self._attr_native_min_value = None
+        self._attr_native_max_value = None
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.add_template_attribute(
-            "_attr_value",
+            "_attr_native_value",
             self._value_template,
             validator=vol.Coerce(float),
             none_on_template_error=True,
         )
         self.add_template_attribute(
-            "_attr_step",
+            "_attr_native_step",
             self._step_template,
             validator=vol.Coerce(float),
             none_on_template_error=True,
         )
         if self._min_value_template is not None:
             self.add_template_attribute(
-                "_attr_min_value",
+                "_attr_native_min_value",
                 self._min_value_template,
                 validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
         if self._max_value_template is not None:
             self.add_template_attribute(
-                "_attr_max_value",
+                "_attr_native_max_value",
                 self._max_value_template,
                 validator=vol.Coerce(float),
                 none_on_template_error=True,
             )
         await super().async_added_to_hass()
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
         if self._optimistic:
-            self._attr_value = value
+            self._attr_native_value = value
             self.async_write_ha_state()
-        await self._command_set_value.async_run(
-            {ATTR_VALUE: value}, context=self._context
+        await self.async_run_script(
+            self._command_set_value,
+            run_variables={ATTR_VALUE: value},
+            context=self._context,
         )
 
 
@@ -188,35 +193,35 @@ class TriggerNumberEntity(TriggerEntity, NumberEntity):
         )
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the currently selected option."""
         return vol.Any(vol.Coerce(float), None)(self._rendered.get(CONF_STATE))
 
     @property
-    def min_value(self) -> int:
+    def native_min_value(self) -> int:
         """Return the minimum value."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(ATTR_MIN, super().min_value)
+            self._rendered.get(ATTR_MIN, super().native_min_value)
         )
 
     @property
-    def max_value(self) -> int:
+    def native_max_value(self) -> int:
         """Return the maximum value."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(ATTR_MAX, super().max_value)
+            self._rendered.get(ATTR_MAX, super().native_max_value)
         )
 
     @property
-    def step(self) -> int:
+    def native_step(self) -> int:
         """Return the increment/decrement step."""
         return vol.Any(vol.Coerce(float), None)(
-            self._rendered.get(ATTR_STEP, super().step)
+            self._rendered.get(ATTR_STEP, super().native_step)
         )
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set value of the number."""
         if self._config[CONF_OPTIMISTIC]:
-            self._attr_value = value
+            self._attr_native_value = value
             self.async_write_ha_state()
         await self._command_set_value.async_run(
             {ATTR_VALUE: value}, context=self._context

@@ -2,15 +2,21 @@
 import logging
 from unittest.mock import patch
 
-from aiohwenergy import DisabledError
+from homewizard_energy.errors import DisabledError, RequestError, UnsupportedError
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homewizard.const import DOMAIN
 from homeassistant.const import CONF_IP_ADDRESS
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.data_entry_flow import (
+    RESULT_TYPE_ABORT,
+    RESULT_TYPE_CREATE_ENTRY,
+    RESULT_TYPE_FORM,
+)
 
 from .generator import get_mock_device
+
+from tests.common import MockConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +33,10 @@ async def test_manual_flow_works(hass, aioclient_mock):
     assert result["type"] == "form"
     assert result["step_id"] == "user"
 
-    with patch("aiohwenergy.HomeWizardEnergy", return_value=device,), patch(
+    with patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=device,
+    ), patch(
         "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
     ) as mock_setup_entry:
@@ -36,12 +45,12 @@ async def test_manual_flow_works(hass, aioclient_mock):
         )
 
     assert result["type"] == "create_entry"
-    assert result["title"] == f"{device.device.product_name} (aabbccddeeff)"
+    assert result["title"] == "P1 meter (aabbccddeeff)"
     assert result["data"][CONF_IP_ADDRESS] == "2.2.2.2"
 
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
-    assert len(device.initialize.mock_calls) == 1
+    assert len(device.device.mock_calls) == 1
     assert len(device.close.mock_calls) == 1
 
     assert len(mock_setup_entry.mock_calls) == 1
@@ -52,6 +61,7 @@ async def test_discovery_flow_works(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -65,7 +75,10 @@ async def test_discovery_flow_works(hass, aioclient_mock):
         },
     )
 
-    with patch("aiohwenergy.HomeWizardEnergy", return_value=get_mock_device()):
+    with patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=get_mock_device(),
+    ):
         flow = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
@@ -75,9 +88,25 @@ async def test_discovery_flow_works(hass, aioclient_mock):
     with patch(
         "homeassistant.components.homewizard.async_setup_entry",
         return_value=True,
+    ), patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=get_mock_device(),
     ):
         result = await hass.config_entries.flow.async_configure(
-            flow["flow_id"], user_input={}
+            flow["flow_id"], user_input=None
+        )
+    assert result["type"] == RESULT_TYPE_FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=get_mock_device(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            flow["flow_id"], user_input={"ip_address": "192.168.43.183"}
         )
 
     assert result["type"] == RESULT_TYPE_CREATE_ENTRY
@@ -88,11 +117,46 @@ async def test_discovery_flow_works(hass, aioclient_mock):
     assert result["result"].unique_id == "HWE-P1_aabbccddeeff"
 
 
+async def test_config_flow_imports_entry(aioclient_mock, hass):
+    """Test config flow accepts imported configuration."""
+
+    device = get_mock_device()
+
+    mock_entry = MockConfigEntry(domain="homewizard_energy", data={"host": "1.2.3.4"})
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=device,
+    ), patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ) as mock_setup_entry:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={
+                "source": config_entries.SOURCE_IMPORT,
+                "old_config_entry_id": mock_entry.entry_id,
+            },
+            data=mock_entry.data,
+        )
+
+    assert result["type"] == "create_entry"
+    assert result["title"] == "P1 meter (aabbccddeeff)"
+    assert result["data"][CONF_IP_ADDRESS] == "1.2.3.4"
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(device.device.mock_calls) == 1
+    assert len(device.close.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_discovery_disabled_api(hass, aioclient_mock):
     """Test discovery detecting disabled api."""
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -112,6 +176,19 @@ async def test_discovery_disabled_api(hass, aioclient_mock):
         data=service_info,
     )
 
+    assert result["type"] == RESULT_TYPE_FORM
+
+    with patch(
+        "homeassistant.components.homewizard.async_setup_entry",
+        return_value=True,
+    ), patch(
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
+        return_value=get_mock_device(),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={"ip_address": "192.168.43.183"}
+        )
+
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "api_not_enabled"
 
@@ -121,6 +198,7 @@ async def test_discovery_missing_data_in_service_info(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -149,6 +227,7 @@ async def test_discovery_invalid_api(hass, aioclient_mock):
 
     service_info = zeroconf.ZeroconfServiceInfo(
         host="192.168.43.183",
+        addresses=["192.168.43.183"],
         port=80,
         hostname="p1meter-ddeeff.local.",
         type="",
@@ -179,7 +258,7 @@ async def test_check_disabled_api(hass, aioclient_mock):
         raise DisabledError
 
     device = get_mock_device()
-    device.initialize.side_effect = mock_initialize
+    device.device.side_effect = mock_initialize
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -189,7 +268,7 @@ async def test_check_disabled_api(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
         return_value=device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -207,7 +286,7 @@ async def test_check_error_handling_api(hass, aioclient_mock):
         raise Exception()
 
     device = get_mock_device()
-    device.initialize.side_effect = mock_initialize
+    device.device.side_effect = mock_initialize
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -217,32 +296,7 @@ async def test_check_error_handling_api(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
-        return_value=device,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_IP_ADDRESS: "2.2.2.2"}
-        )
-
-    assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "unknown_error"
-
-
-async def test_check_detects_unexpected_api_response(hass, aioclient_mock):
-    """Test check detecting device endpoint failed fetching data."""
-
-    device = get_mock_device()
-    device.device = None
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == "form"
-    assert result["step_id"] == "user"
-
-    with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
         return_value=device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -256,8 +310,11 @@ async def test_check_detects_unexpected_api_response(hass, aioclient_mock):
 async def test_check_detects_invalid_api(hass, aioclient_mock):
     """Test check detecting device endpoint failed fetching data."""
 
+    def mock_initialize():
+        raise UnsupportedError
+
     device = get_mock_device()
-    device.device.api_version = "not_v1"
+    device.device.side_effect = mock_initialize
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -267,7 +324,7 @@ async def test_check_detects_invalid_api(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
         return_value=device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -278,10 +335,14 @@ async def test_check_detects_invalid_api(hass, aioclient_mock):
     assert result["reason"] == "unsupported_api_version"
 
 
-async def test_check_detects_unsuported_device(hass, aioclient_mock):
-    """Test check detecting device endpoint failed fetching data."""
+async def test_check_requesterror(hass, aioclient_mock):
+    """Test check detecting device endpoint failed fetching data due to a requesterror."""
 
-    device = get_mock_device(product_type="not_an_energy_device")
+    def mock_initialize():
+        raise RequestError
+
+    device = get_mock_device()
+    device.device.side_effect = mock_initialize
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -291,7 +352,7 @@ async def test_check_detects_unsuported_device(hass, aioclient_mock):
     assert result["step_id"] == "user"
 
     with patch(
-        "aiohwenergy.HomeWizardEnergy",
+        "homeassistant.components.homewizard.config_flow.HomeWizardEnergy",
         return_value=device,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -299,4 +360,4 @@ async def test_check_detects_unsuported_device(hass, aioclient_mock):
         )
 
     assert result["type"] == RESULT_TYPE_ABORT
-    assert result["reason"] == "device_not_supported"
+    assert result["reason"] == "unknown_error"

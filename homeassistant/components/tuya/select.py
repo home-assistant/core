@@ -18,6 +18,15 @@ from .const import DOMAIN, TUYA_DISCOVERY_NEW, DPCode, DPType, TuyaDeviceClass
 # default instructions set of each category end up being a select.
 # https://developer.tuya.com/en/docs/iot/standarddescription?id=K9i5ql6waswzq
 SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
+    # Multi-functional Sensor
+    # https://developer.tuya.com/en/docs/iot/categorydgnbj?id=Kaiuz3yorvzg3
+    "dgnbj": (
+        SelectEntityDescription(
+            key=DPCode.ALARM_VOLUME,
+            name="Volume",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Coffee maker
     # https://developer.tuya.com/en/docs/iot/categorykfj?id=Kaiuz2p12pc7f
     "kfj": (
@@ -247,12 +256,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         SelectEntityDescription(
             key=DPCode.COUNTDOWN,
             name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
         ),
         SelectEntityDescription(
             key=DPCode.COUNTDOWN_SET,
-            name="Countdown Setting",
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:timer-cog-outline",
         ),
@@ -272,6 +283,63 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             name="Mode",
             device_class=TuyaDeviceClass.CURTAIN_MODE,
             entity_category=EntityCategory.CONFIG,
+        ),
+    ),
+    # Humidifier
+    # https://developer.tuya.com/en/docs/iot/categoryjsq?id=Kaiuz1smr440b
+    "jsq": (
+        SelectEntityDescription(
+            key=DPCode.SPRAY_MODE,
+            name="Spray Mode",
+            device_class=TuyaDeviceClass.HUMIDIFIER_SPRAY_MODE,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:spray",
+        ),
+        SelectEntityDescription(
+            key=DPCode.LEVEL,
+            name="Spraying Level",
+            device_class=TuyaDeviceClass.HUMIDIFIER_LEVEL,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:spray",
+        ),
+        SelectEntityDescription(
+            key=DPCode.MOODLIGHTING,
+            name="Moodlighting",
+            device_class=TuyaDeviceClass.HUMIDIFIER_MOODLIGHTING,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:lightbulb-multiple",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+    ),
+    # Air Purifier
+    # https://developer.tuya.com/en/docs/iot/f?id=K9gf46h2s6dzm
+    "kj": (
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
+        ),
+        SelectEntityDescription(
+            key=DPCode.COUNTDOWN_SET,
+            name="Countdown",
+            device_class=TuyaDeviceClass.COUNTDOWN,
+            entity_category=EntityCategory.CONFIG,
+            icon="mdi:timer-cog-outline",
         ),
     ),
 }

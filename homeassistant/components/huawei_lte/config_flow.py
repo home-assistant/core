@@ -5,9 +5,9 @@ import logging
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from huawei_lte_api.AuthorizedConnection import AuthorizedConnection
 from huawei_lte_api.Client import Client
-from huawei_lte_api.Connection import GetResponseType
+from huawei_lte_api.Connection import Connection
+from huawei_lte_api.Session import GetResponseType
 from huawei_lte_api.exceptions import (
     LoginErrorPasswordWrongException,
     LoginErrorUsernamePasswordOverrunException,
@@ -89,12 +89,6 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
-    async def async_step_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
-        """Handle import initiated config flow."""
-        return await self.async_step_user(user_input)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
@@ -114,19 +108,17 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 user_input=user_input, errors=errors
             )
 
-        conn: AuthorizedConnection
-
         def logout() -> None:
             try:
-                conn.user.logout()
+                conn.user_session.user.logout()  # type: ignore[union-attr]
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.debug("Could not logout", exc_info=True)
 
-        def try_connect(user_input: dict[str, Any]) -> AuthorizedConnection:
+        def try_connect(user_input: dict[str, Any]) -> Connection:
             """Try connecting with given credentials."""
             username = user_input.get(CONF_USERNAME) or ""
             password = user_input.get(CONF_PASSWORD) or ""
-            conn = AuthorizedConnection(
+            conn = Connection(
                 user_input[CONF_URL],
                 username=username,
                 password=password,
@@ -183,14 +175,14 @@ class ConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(get_device_info)
         await self.hass.async_add_executor_job(logout)
 
+        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
+
         if not self.unique_id:
             if serial_number := info.get("SerialNumber"):
                 await self.async_set_unique_id(serial_number)
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured(updates=user_input)
             else:
                 await self._async_handle_discovery_without_unique_id()
-
-        user_input[CONF_MAC] = get_device_macs(info, wlan_settings)
 
         title = (
             self.context.get("title_placeholders", {}).get(CONF_NAME)

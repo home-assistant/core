@@ -2,7 +2,7 @@
 from logging import INFO
 from unittest.mock import patch
 
-from aurorapy.client import AuroraError
+from aurorapy.client import AuroraError, AuroraTimeoutError
 from serial.tools import list_ports_common
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -127,7 +127,7 @@ async def test_form_invalid_com_ports(hass):
 
     with patch(
         "aurorapy.client.AuroraSerialClient.connect",
-        side_effect=AuroraError("...No response after..."),
+        side_effect=AuroraTimeoutError("...No response after..."),
         return_value=None,
     ):
         result2 = await hass.config_entries.flow.async_configure(

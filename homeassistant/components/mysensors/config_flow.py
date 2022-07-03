@@ -22,7 +22,6 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 import homeassistant.helpers.config_validation as cv
 
-from . import DEFAULT_BAUD_RATE, DEFAULT_TCP_PORT, DEFAULT_VERSION, is_persistence_file
 from .const import (
     CONF_BAUD_RATE,
     CONF_DEVICE,
@@ -41,6 +40,17 @@ from .const import (
     ConfGatewayType,
 )
 from .gateway import MQTT_COMPONENT, is_serial_port, is_socket_address, try_connect
+
+DEFAULT_BAUD_RATE = 115200
+DEFAULT_TCP_PORT = 5003
+DEFAULT_VERSION = "1.4"
+
+
+def is_persistence_file(value: str) -> str:
+    """Validate that persistence file path ends in either .pickle or .json."""
+    if value.endswith((".json", ".pickle")):
+        return value
+    raise vol.Invalid(f"{value} does not end in either `.json` or `.pickle`")
 
 
 def _get_schema_common(user_input: dict[str, str]) -> dict:
@@ -104,31 +114,6 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Set up config flow."""
         self._gw_type: str | None = None
-
-    async def async_step_import(self, user_input: dict[str, Any]) -> FlowResult:
-        """Import a config entry.
-
-        This method is called by async_setup and it has already
-        prepared the dict to be compatible with what a user would have
-        entered from the frontend.
-        Therefore we process it as though it came from the frontend.
-        """
-        if user_input[CONF_DEVICE] == MQTT_COMPONENT:
-            user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_MQTT
-        else:
-            try:
-                await self.hass.async_add_executor_job(
-                    is_serial_port, user_input[CONF_DEVICE]
-                )
-            except vol.Invalid:
-                user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_TCP
-            else:
-                user_input[CONF_GATEWAY_TYPE] = CONF_GATEWAY_TYPE_SERIAL
-
-        result: FlowResult = await self.async_step_user(user_input=user_input)
-        if errors := result.get("errors"):
-            return self.async_abort(reason=next(iter(errors.values())))
-        return result
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
@@ -309,7 +294,7 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await self.hass.async_add_executor_job(
-                    verification_func, user_input.get(CONF_DEVICE)
+                    verification_func, user_input[CONF_DEVICE]
                 )
             except vol.Invalid:
                 errors[CONF_DEVICE] = (
@@ -335,10 +320,11 @@ class MySensorsConfigFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                         errors[CONF_PERSISTENCE_FILE] = "duplicate_persistence_file"
                         break
 
-        for other_entry in self._async_current_entries():
-            if _is_same_device(gw_type, user_input, other_entry):
-                errors["base"] = "already_configured"
-                break
+        if not errors:
+            for other_entry in self._async_current_entries():
+                if _is_same_device(gw_type, user_input, other_entry):
+                    errors["base"] = "already_configured"
+                    break
 
         # if no errors so far, try to connect
         if not errors and not await try_connect(self.hass, gw_type, user_input):

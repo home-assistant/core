@@ -16,10 +16,8 @@ from typing_extensions import Concatenate, ParamSpec
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_NOW,
     EVENT_CORE_CONFIG_UPDATE,
     EVENT_STATE_CHANGED,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     SUN_EVENT_SUNRISE,
     SUN_EVENT_SUNSET,
@@ -70,8 +68,8 @@ class TrackStates:
     """Class for keeping track of states being tracked.
 
     all_states: All states on the system are being tracked
-    entities: Entities to track
-    domains: Domains to track
+    entities: Lowercased entities to track
+    domains: Lowercased domains to track
     """
 
     all_states: bool
@@ -113,8 +111,8 @@ class TrackTemplateResult:
 
 
 def threaded_listener_factory(
-    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]  # type: ignore[misc]
-) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:  # type: ignore[misc]
+    async_factory: Callable[Concatenate[HomeAssistant, _P], Any]
+) -> Callable[Concatenate[HomeAssistant, _P], CALLBACK_TYPE]:
     """Convert an async event helper to a threaded one."""
 
     @ft.wraps(async_factory)
@@ -250,8 +248,19 @@ def async_track_state_change_event(
     """
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
+    return _async_track_state_change_event(hass, entity_ids, action)
 
-    entity_callbacks = hass.data.setdefault(TRACK_STATE_CHANGE_CALLBACKS, {})
+
+@bind_hass
+def _async_track_state_change_event(
+    hass: HomeAssistant,
+    entity_ids: str | Iterable[str],
+    action: Callable[[Event], Any],
+) -> CALLBACK_TYPE:
+    """async_track_state_change_event without lowercasing."""
+    entity_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
+        TRACK_STATE_CHANGE_CALLBACKS, {}
+    )
 
     if TRACK_STATE_CHANGE_LISTENER not in hass.data:
 
@@ -312,10 +321,10 @@ def _async_remove_indexed_listeners(
     data_key: str,
     listener_key: str,
     storage_keys: Iterable[str],
-    job: HassJob[Any],
+    job: HassJob[[Event], Any],
 ) -> None:
     """Remove a listener."""
-    callbacks = hass.data[data_key]
+    callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data[data_key]
 
     for storage_key in storage_keys:
         callbacks[storage_key].remove(job)
@@ -340,7 +349,9 @@ def async_track_entity_registry_updated_event(
     if not (entity_ids := _async_string_to_lower_list(entity_ids)):
         return _remove_empty_listener
 
-    entity_callbacks = hass.data.setdefault(TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {})
+    entity_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
+        TRACK_ENTITY_REGISTRY_UPDATED_CALLBACKS, {}
+    )
 
     if TRACK_ENTITY_REGISTRY_UPDATED_LISTENER not in hass.data:
 
@@ -394,7 +405,7 @@ def async_track_entity_registry_updated_event(
 
 @callback
 def _async_dispatch_domain_event(
-    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob[Any]]]
+    hass: HomeAssistant, event: Event, callbacks: dict[str, list[HassJob[[Event], Any]]]
 ) -> None:
     domain = split_entity_id(event.data["entity_id"])[0]
 
@@ -421,8 +432,19 @@ def async_track_state_added_domain(
     """Track state change events when an entity is added to domains."""
     if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
+    return _async_track_state_added_domain(hass, domains, action)
 
-    domain_callbacks = hass.data.setdefault(TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {})
+
+@bind_hass
+def _async_track_state_added_domain(
+    hass: HomeAssistant,
+    domains: str | Iterable[str],
+    action: Callable[[Event], Any],
+) -> CALLBACK_TYPE:
+    """async_track_state_added_domain without lowercasing."""
+    domain_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
+        TRACK_STATE_ADDED_DOMAIN_CALLBACKS, {}
+    )
 
     if TRACK_STATE_ADDED_DOMAIN_LISTENER not in hass.data:
 
@@ -474,7 +496,9 @@ def async_track_state_removed_domain(
     if not (domains := _async_string_to_lower_list(domains)):
         return _remove_empty_listener
 
-    domain_callbacks = hass.data.setdefault(TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {})
+    domain_callbacks: dict[str, list[HassJob[[Event], Any]]] = hass.data.setdefault(
+        TRACK_STATE_REMOVED_DOMAIN_CALLBACKS, {}
+    )
 
     if TRACK_STATE_REMOVED_DOMAIN_LISTENER not in hass.data:
 
@@ -560,7 +584,7 @@ class _TrackStateChangeFiltered:
         self._setup_entities_listener(track_states.domains, track_states.entities)
 
     @property
-    def listeners(self) -> dict:
+    def listeners(self) -> dict[str, bool | set[str]]:
         """State changes that will cause a re-render."""
         track_states = self._last_track_states
         return {
@@ -628,7 +652,7 @@ class _TrackStateChangeFiltered:
         if not entities:
             return
 
-        self._listeners[_ENTITIES_LISTENER] = async_track_state_change_event(
+        self._listeners[_ENTITIES_LISTENER] = _async_track_state_change_event(
             self.hass, entities, self._action
         )
 
@@ -645,7 +669,7 @@ class _TrackStateChangeFiltered:
         if not domains:
             return
 
-        self._listeners[_DOMAINS_LISTENER] = async_track_state_added_domain(
+        self._listeners[_DOMAINS_LISTENER] = _async_track_state_added_domain(
             self.hass, domains, self._state_added
         )
 
@@ -855,7 +879,7 @@ class _TrackTemplateResultInfo:
         )
 
     @property
-    def listeners(self) -> dict:
+    def listeners(self) -> dict[str, bool | set[str]]:
         """State changes that will cause a re-render."""
         assert self._track_state_changes
         return {
@@ -1219,7 +1243,7 @@ def async_track_same_state(
     else:
         async_remove_state_for_cancel = async_track_state_change_event(
             hass,
-            [entity_ids] if isinstance(entity_ids, str) else entity_ids,
+            entity_ids,
             state_for_cancel_listener,
         )
 
@@ -1233,7 +1257,7 @@ track_same_state = threaded_listener_factory(async_track_same_state)
 @bind_hass
 def async_track_point_in_time(
     hass: HomeAssistant,
-    action: HassJob[Awaitable[None] | None]
+    action: HassJob[[datetime], Awaitable[None] | None]
     | Callable[[datetime], Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
@@ -1255,31 +1279,29 @@ track_point_in_time = threaded_listener_factory(async_track_point_in_time)
 @bind_hass
 def async_track_point_in_utc_time(
     hass: HomeAssistant,
-    action: HassJob[Awaitable[None] | None]
+    action: HassJob[[datetime], Awaitable[None] | None]
     | Callable[[datetime], Awaitable[None] | None],
     point_in_time: datetime,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
+    expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
 
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
     cancel_callback: asyncio.TimerHandle | None = None
 
     @callback
-    def run_action(job: HassJob[Awaitable[None] | None]) -> None:
+    def run_action(job: HassJob[[datetime], Awaitable[None] | None]) -> None:
         """Call the action."""
         nonlocal cancel_callback
-
-        now = time_tracker_utcnow()
-
         # Depending on the available clock support (including timer hardware
         # and the OS kernel) it can happen that we fire a little bit too early
         # as measured by utcnow(). That is bad when callbacks have assumptions
         # about the current time. Thus, we rearm the timer for the remaining
         # time.
-        if (delta := (utc_point_in_time - now).total_seconds()) > 0:
+        if (delta := (expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
             cancel_callback = hass.loop.call_later(delta, run_action, job)
@@ -1308,7 +1330,7 @@ track_point_in_utc_time = threaded_listener_factory(async_track_point_in_utc_tim
 def async_call_later(
     hass: HomeAssistant,
     delay: float | timedelta,
-    action: HassJob[Awaitable[None] | None]
+    action: HassJob[[datetime], Awaitable[None] | None]
     | Callable[[datetime], Awaitable[None] | None],
 ) -> CALLBACK_TYPE:
     """Add a listener that is called in <delay>."""
@@ -1328,8 +1350,8 @@ def async_track_time_interval(
     interval: timedelta,
 ) -> CALLBACK_TYPE:
     """Add a listener that fires repetitively at every timedelta interval."""
-    remove = None
-    interval_listener_job = None
+    remove: CALLBACK_TYPE
+    interval_listener_job: HassJob[[datetime], None]
 
     job = HassJob(action)
 
@@ -1344,7 +1366,7 @@ def async_track_time_interval(
         nonlocal interval_listener_job
 
         remove = async_track_point_in_utc_time(
-            hass, interval_listener_job, next_interval()  # type: ignore
+            hass, interval_listener_job, next_interval()
         )
         hass.async_run_hass_job(job, now)
 
@@ -1353,7 +1375,7 @@ def async_track_time_interval(
 
     def remove_listener() -> None:
         """Remove interval listener."""
-        remove()  # type: ignore
+        remove()
 
     return remove_listener
 
@@ -1366,7 +1388,7 @@ class SunListener:
     """Helper class to help listen to sun events."""
 
     hass: HomeAssistant = attr.ib()
-    job: HassJob[Awaitable[None] | None] = attr.ib()
+    job: HassJob[[], Awaitable[None] | None] = attr.ib()
     event: str = attr.ib()
     offset: timedelta | None = attr.ib()
     _unsub_sun: CALLBACK_TYPE | None = attr.ib(default=None)
@@ -1450,6 +1472,7 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
 time_tracker_utcnow = dt_util.utcnow
+time_tracker_timestamp = time.time
 
 
 @callback
@@ -1463,18 +1486,17 @@ def async_track_utc_time_change(
     local: bool = False,
 ) -> CALLBACK_TYPE:
     """Add a listener that will fire if time matches a pattern."""
-    job = HassJob(action)
     # We do not have to wrap the function with time pattern matching logic
     # if no pattern given
     if all(val is None for val in (hour, minute, second)):
+        # Previously this relied on EVENT_TIME_FIRED
+        # which meant it would not fire right away because
+        # the caller would always be misaligned with the call
+        # time vs the fire time by < 1s. To preserve this
+        # misalignment we use async_track_time_interval here
+        return async_track_time_interval(hass, action, timedelta(seconds=1))
 
-        @callback
-        def time_change_listener(event: Event) -> None:
-            """Fire every time event that comes in."""
-            hass.async_run_hass_job(job, cast(datetime, event.data[ATTR_NOW]))
-
-        return hass.bus.async_listen(EVENT_TIME_CHANGED, time_change_listener)
-
+    job = HassJob(action)
     matching_seconds = dt_util.parse_time_expression(second, 0, 59)
     matching_minutes = dt_util.parse_time_expression(minute, 0, 59)
     matching_hours = dt_util.parse_time_expression(hour, 0, 23)
@@ -1535,17 +1557,17 @@ track_time_change = threaded_listener_factory(async_track_time_change)
 
 
 def process_state_match(
-    parameter: None | str | Iterable[str],
+    parameter: None | str | Iterable[str], invert: bool = False
 ) -> Callable[[str | None], bool]:
     """Convert parameter to function that matches input against parameter."""
     if parameter is None or parameter == MATCH_ALL:
-        return lambda _: True
+        return lambda _: not invert
 
     if isinstance(parameter, str) or not hasattr(parameter, "__iter__"):
-        return lambda state: state == parameter
+        return lambda state: invert is not (state == parameter)
 
     parameter_set = set(parameter)
-    return lambda state: state in parameter_set
+    return lambda state: invert is not (state in parameter_set)
 
 
 @callback

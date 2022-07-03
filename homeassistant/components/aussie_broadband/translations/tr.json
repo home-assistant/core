@@ -11,7 +11,7 @@
             "unknown": "Beklenmeyen hata"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Parola"
                 },

@@ -24,6 +24,23 @@ COMMAND = "command"
 COMMAND_SINGLE = "single"
 
 
+@pytest.fixture(autouse=True)
+def required_platforms_only():
+    """Only setup the required platforms and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.BINARY_SENSOR,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+            Platform.SENSOR,
+            Platform.SIREN,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 async def device_ias(hass, zigpy_device_mock, zha_device_joined_restored):
     """IAS device fixture."""
@@ -58,31 +75,40 @@ async def test_get_actions(hass, device_ias):
     )
 
     expected_actions = [
-        {"domain": DOMAIN, "type": "squawk", "device_id": reg_device.id},
-        {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id},
+        {
+            "domain": DOMAIN,
+            "type": "squawk",
+            "device_id": reg_device.id,
+            "metadata": {},
+        },
+        {"domain": DOMAIN, "type": "warn", "device_id": reg_device.id, "metadata": {}},
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_warningmode",
+            "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_sirenlevel",
+            "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobelevel",
+            "metadata": {"secondary": True},
         },
         {
             "domain": Platform.SELECT,
             "type": "select_option",
             "device_id": reg_device.id,
             "entity_id": "select.fakemanufacturer_fakemodel_e769900a_ias_wd_strobe",
+            "metadata": {"secondary": True},
         },
     ]
 
@@ -140,3 +166,13 @@ async def test_action(hass, device_ias):
         assert calls[0].domain == DOMAIN
         assert calls[0].service == "warning_device_warn"
         assert calls[0].data["ieee"] == ieee_address
+
+
+async def test_invalid_zha_event_type(hass, device_ias):
+    """Test that unexpected types are not passed to `zha_send_event`."""
+    zigpy_device, zha_device = device_ias
+    channel = zha_device.channels.pools[0].client_channels["1:0x0006"]
+
+    # `zha_send_event` accepts only zigpy responses, lists, and dicts
+    with pytest.raises(TypeError):
+        channel.zha_send_event(COMMAND_SINGLE, 123)

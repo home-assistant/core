@@ -14,7 +14,7 @@ class MockAioSession:
         self.publish = AsyncMock()
         self.send_message = AsyncMock()
 
-    def create_client(self, *args, **kwargs):  # pylint: disable=no-self-use
+    def create_client(self, *args, **kwargs):
         """Create a mocked client."""
         return MagicMock(
             __aenter__=AsyncMock(

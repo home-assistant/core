@@ -11,7 +11,7 @@
             "unknown": "Unerwarteter Fehler"
         },
         "step": {
-            "reauth": {
+            "reauth_confirm": {
                 "data": {
                     "password": "Passwort"
                 },

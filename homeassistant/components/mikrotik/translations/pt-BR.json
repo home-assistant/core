@@ -21,5 +21,16 @@
                 "title": "Configurar roteador Mikrotik"
             }
         }
+    },
+    "options": {
+        "step": {
+            "device_tracker": {
+                "data": {
+                    "arp_ping": "Habilitar ping ARP",
+                    "detection_time": "Considere o tempo para definir em casa",
+                    "force_dhcp": "For\u00e7ar varredura usando DHCP"
+                }
+            }
+        }
     }
 }
