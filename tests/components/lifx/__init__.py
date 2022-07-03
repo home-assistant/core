@@ -120,6 +120,12 @@ def _mocked_bulb_new_firmware() -> Light:
     return bulb
 
 
+def _mocked_relay() -> Light:
+    bulb = _mocked_bulb()
+    bulb.product = 70  # LIFX Switch
+    return bulb
+
+
 def _patch_device(device: Light | None = None, no_device: bool = False):
     """Patch out discovery."""
 

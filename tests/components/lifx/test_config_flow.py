@@ -20,6 +20,7 @@ from . import (
     MODULE,
     SERIAL,
     _mocked_failing_bulb,
+    _mocked_relay,
     _patch_config_flow_try_connect,
     _patch_discovery,
 )
@@ -485,3 +486,23 @@ async def test_discovered_by_dhcp_updates_ip(hass):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+async def test_refuse_relays(hass: HomeAssistant):
+    """Test we refuse to setup relays."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] == "form"
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with _patch_discovery(device=_mocked_relay()), _patch_config_flow_try_connect(
+        device=_mocked_relay()
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: IP_ADDRESS}
+        )
+        await hass.async_block_till_done()
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}
