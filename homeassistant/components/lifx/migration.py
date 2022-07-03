@@ -31,9 +31,11 @@ async def async_migrate_legacy_entries(
         device_registry, legacy_entry.entry_id
     ):
         for domain, serial in dev_entry.identifiers:
-            if domain != DOMAIN or serial in existing_serials:
-                continue
-            if host := discovered_hosts_by_serial.get(serial):
+            if (
+                domain == DOMAIN
+                and serial not in existing_serials
+                and (host := discovered_hosts_by_serial.get(serial))
+            ):
                 async_init_discovery_flow(hass, host, serial)
 
     remaining_devices = dr.async_entries_for_config_entry(
