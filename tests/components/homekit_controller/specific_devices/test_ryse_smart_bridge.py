@@ -45,15 +45,15 @@ async def test_ryse_smart_bridge_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.master_bath_south",
-                            friendly_name="Master Bath South",
+                            entity_id="cover.master_bath_south_ryse_shade",
+                            friendly_name="Master Bath South RYSE Shade",
                             unique_id="homekit-00:00:00:00:00:00-2-48",
                             supported_features=RYSE_SUPPORTED_FEATURES,
                             state="closed",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.master_bath_south_battery",
-                            friendly_name="Master Bath South Battery",
+                            entity_id="sensor.master_bath_south_ryse_shade_battery",
+                            friendly_name="Master Bath South RYSE Shade Battery",
                             unique_id="homekit-00:00:00:00:00:00-2-64",
                             unit_of_measurement=PERCENTAGE,
                             state="100",
@@ -71,15 +71,15 @@ async def test_ryse_smart_bridge_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.ryse_smartshade",
-                            friendly_name="RYSE SmartShade",
+                            entity_id="cover.ryse_smartshade_ryse_shade",
+                            friendly_name="RYSE SmartShade RYSE Shade",
                             unique_id="homekit-00:00:00:00:00:00-3-48",
                             supported_features=RYSE_SUPPORTED_FEATURES,
                             state="open",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.ryse_smartshade_battery",
-                            friendly_name="RYSE SmartShade Battery",
+                            entity_id="sensor.ryse_smartshade_ryse_shade_battery",
+                            friendly_name="RYSE SmartShade RYSE Shade Battery",
                             unique_id="homekit-00:00:00:00:00:00-3-64",
                             unit_of_measurement=PERCENTAGE,
                             state="100",
@@ -120,15 +120,15 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.lr_left",
-                            friendly_name="LR Left",
+                            entity_id="cover.lr_left_ryse_shade",
+                            friendly_name="LR Left RYSE Shade",
                             unique_id="homekit-00:00:00:00:00:00-2-48",
                             supported_features=RYSE_SUPPORTED_FEATURES,
                             state="closed",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.lr_left_battery",
-                            friendly_name="LR Left Battery",
+                            entity_id="sensor.lr_left_ryse_shade_battery",
+                            friendly_name="LR Left RYSE Shade Battery",
                             unique_id="homekit-00:00:00:00:00:00-2-64",
                             unit_of_measurement=PERCENTAGE,
                             state="89",
@@ -146,15 +146,15 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.lr_right",
-                            friendly_name="LR Right",
+                            entity_id="cover.lr_right_ryse_shade",
+                            friendly_name="LR Right RYSE Shade",
                             unique_id="homekit-00:00:00:00:00:00-3-48",
                             supported_features=RYSE_SUPPORTED_FEATURES,
                             state="closed",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.lr_right_battery",
-                            friendly_name="LR Right Battery",
+                            entity_id="sensor.lr_right_ryse_shade_battery",
+                            friendly_name="LR Right RYSE Shade Battery",
                             unique_id="homekit-00:00:00:00:00:00-3-64",
                             unit_of_measurement=PERCENTAGE,
                             state="100",
@@ -172,15 +172,15 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.br_left",
-                            friendly_name="BR Left",
+                            entity_id="cover.br_left_ryse_shade",
+                            friendly_name="BR Left RYSE Shade",
                             unique_id="homekit-00:00:00:00:00:00-4-48",
                             supported_features=RYSE_SUPPORTED_FEATURES,
                             state="open",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.br_left_battery",
-                            friendly_name="BR Left Battery",
+                            entity_id="sensor.br_left_ryse_shade_battery",
+                            friendly_name="BR Left RYSE Shade Battery",
                             unique_id="homekit-00:00:00:00:00:00-4-64",
                             unit_of_measurement=PERCENTAGE,
                             state="100",
@@ -198,15 +198,15 @@ async def test_ryse_smart_bridge_four_shades_setup(hass):
                     devices=[],
                     entities=[
                         EntityTestInfo(
-                            entity_id="cover.rzss",
-                            friendly_name="RZSS",
+                            entity_id="cover.rzss_ryse_shade",
+                            friendly_name="RZSS RYSE Shade",
                             unique_id="homekit-00:00:00:00:00:00-5-48",
                             supported_features=RYSE_SUPPORTED_FEATURES,
                             state="open",
                         ),
                         EntityTestInfo(
-                            entity_id="sensor.rzss_battery",
-                            friendly_name="RZSS Battery",
+                            entity_id="sensor.rzss_ryse_shade_battery",
+                            friendly_name="RZSS RYSE Shade Battery",
                             unique_id="homekit-00:00:00:00:00:00-5-64",
                             unit_of_measurement=PERCENTAGE,
                             state="0",
