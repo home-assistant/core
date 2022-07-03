@@ -35,12 +35,12 @@ class StarlineLock(StarlineEntity, LockEntity):
         super().__init__(account, device, "lock", "Security")
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._device.online
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, bool]:
         """Return the state attributes of the lock.
 
         Possible dictionary keys:
@@ -61,7 +61,7 @@ class StarlineLock(StarlineEntity, LockEntity):
         return self._device.alarm_state
 
     @property
-    def icon(self):
+    def icon(self) -> str:
         """Icon to use in the frontend, if any."""
         return (
             "mdi:shield-check-outline" if self.is_locked else "mdi:shield-alert-outline"

@@ -505,18 +505,6 @@ async def test_reauth_multiple_config_entries(
     assert entry.data.get("extra_data")
 
 
-async def test_reauth_missing_config_entry(hass, setup_platform):
-    """Test the reauth flow invoked missing existing data."""
-    await setup_platform()
-
-    # Invoke the reauth flow with no existing data
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=None
-    )
-    assert result["type"] == "abort"
-    assert result["reason"] == "missing_configuration"
-
-
 @pytest.mark.parametrize(
     "nest_test_config,auth_implementation", [(TEST_CONFIG_HYBRID, APP_AUTH_DOMAIN)]
 )

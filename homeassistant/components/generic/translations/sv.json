@@ -6,6 +6,7 @@
         "step": {
             "user": {
                 "data": {
+                    "authentication": "Autentiseringen",
                     "username": "Anv\u00e4ndarnamn"
                 }
             }
@@ -15,6 +16,7 @@
         "step": {
             "init": {
                 "data": {
+                    "authentication": "Autentiseringen",
                     "username": "Anv\u00e4ndarnamn"
                 }
             }

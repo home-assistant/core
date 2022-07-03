@@ -73,6 +73,7 @@ PATH_CONFIG = ".config_entries.json"
 SAVE_DELAY = 1
 
 _T = TypeVar("_T", bound="ConfigEntryState")
+_R = TypeVar("_R")
 
 
 class ConfigEntryState(Enum):
@@ -193,6 +194,7 @@ class ConfigEntry:
         "_async_cancel_retry_setup",
         "_on_unload",
         "reload_lock",
+        "_pending_tasks",
     )
 
     def __init__(
@@ -285,6 +287,8 @@ class ConfigEntry:
         # Reload lock to prevent conflicting reloads
         self.reload_lock = asyncio.Lock()
 
+        self._pending_tasks: list[asyncio.Future[Any]] = []
+
     async def async_setup(
         self,
         hass: HomeAssistant,
@@ -366,7 +370,7 @@ class ConfigEntry:
                 self.domain,
                 auth_message,
             )
-            self._async_process_on_unload()
+            await self._async_process_on_unload()
             self.async_start_reauth(hass)
             result = False
         except ConfigEntryNotReady as ex:
@@ -406,7 +410,7 @@ class ConfigEntry:
                     EVENT_HOMEASSISTANT_STARTED, setup_again
                 )
 
-            self._async_process_on_unload()
+            await self._async_process_on_unload()
             return
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -494,7 +498,7 @@ class ConfigEntry:
                 self.state = ConfigEntryState.NOT_LOADED
                 self.reason = None
 
-            self._async_process_on_unload()
+            await self._async_process_on_unload()
 
             # https://github.com/python/mypy/issues/11839
             return result  # type: ignore[no-any-return]
@@ -619,12 +623,17 @@ class ConfigEntry:
             self._on_unload = []
         self._on_unload.append(func)
 
-    @callback
-    def _async_process_on_unload(self) -> None:
-        """Process the on_unload callbacks."""
+    async def _async_process_on_unload(self) -> None:
+        """Process the on_unload callbacks and wait for pending tasks."""
         if self._on_unload is not None:
             while self._on_unload:
                 self._on_unload.pop()()
+
+        while self._pending_tasks:
+            pending = [task for task in self._pending_tasks if not task.done()]
+            self._pending_tasks.clear()
+            if pending:
+                await asyncio.gather(*pending)
 
     @callback
     def async_start_reauth(self, hass: HomeAssistant) -> None:
@@ -647,6 +656,22 @@ class ConfigEntry:
                 data=self.data,
             )
         )
+
+    @callback
+    def async_create_task(
+        self, hass: HomeAssistant, target: Coroutine[Any, Any, _R]
+    ) -> asyncio.Task[_R]:
+        """Create a task from within the eventloop.
+
+        This method must be run in the event loop.
+
+        target: target to call.
+        """
+        task = hass.async_create_task(target)
+
+        self._pending_tasks.append(task)
+
+        return task
 
 
 current_entry: ContextVar[ConfigEntry | None] = ContextVar(

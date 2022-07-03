@@ -130,7 +130,7 @@ class VeSyncFanHA(VeSyncDevice, FanEntity):
         return self.smartfan.uuid
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr = {}
 

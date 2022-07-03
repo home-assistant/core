@@ -11,6 +11,7 @@ from pyunifiprotect.data import (
     Event,
     Light,
     MountType,
+    ProtectAdoptableDeviceModel,
     ProtectModelWithId,
     Sensor,
 )
@@ -23,10 +24,11 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import DISPATCH_ADOPT, DOMAIN
 from .data import ProtectData
 from .entity import (
     EventThumbnailMixin,
@@ -35,7 +37,7 @@ from .entity import (
     async_all_device_entities,
 )
 from .models import PermRequired, ProtectRequiredKeysMixin
-from .utils import async_get_is_highfps
+from .utils import async_dispatch_id as _ufpd
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_DOOR = "door"
@@ -103,7 +105,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         icon="mdi:video-high-definition",
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_required_field="feature_flags.has_highfps",
-        ufp_value_fn=async_get_is_highfps,
+        ufp_value="is_high_fps_enabled",
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
@@ -148,7 +150,7 @@ CAMERA_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
-        key="motion",
+        key="motion_enabled",
         name="Detections: Motion",
         icon="mdi:run-fast",
         ufp_value="recording_settings.enable_motion_detection",
@@ -269,7 +271,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         ufp_perm=PermRequired.NO_WRITE,
     ),
     ProtectBinaryEntityDescription(
-        key="motion",
+        key="motion_enabled",
         name="Motion Detection",
         icon="mdi:walk",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -365,6 +367,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data: ProtectData = hass.data[DOMAIN][entry.entry_id]
+
+    async def _add_new_device(device: ProtectAdoptableDeviceModel) -> None:
+        entities: list[ProtectDeviceEntity] = async_all_device_entities(
+            data,
+            ProtectDeviceBinarySensor,
+            camera_descs=CAMERA_SENSORS,
+            light_descs=LIGHT_SENSORS,
+            sense_descs=SENSE_SENSORS,
+            lock_descs=DOORLOCK_SENSORS,
+            viewer_descs=VIEWER_SENSORS,
+            ufp_device=device,
+        )
+        if device.is_adopted and isinstance(device, Camera):
+            entities += _async_motion_entities(data, ufp_device=device)
+        async_add_entities(entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
+
     entities: list[ProtectDeviceEntity] = async_all_device_entities(
         data,
         ProtectDeviceBinarySensor,
@@ -383,15 +405,22 @@ async def async_setup_entry(
 @callback
 def _async_motion_entities(
     data: ProtectData,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     entities: list[ProtectDeviceEntity] = []
-    for device in data.api.bootstrap.cameras.values():
+    devices = (
+        data.api.bootstrap.cameras.values() if ufp_device is None else [ufp_device]
+    )
+    for device in devices:
+        if not device.is_adopted:
+            continue
+
         for description in MOTION_SENSORS:
             entities.append(ProtectEventBinarySensor(data, device, description))
             _LOGGER.debug(
                 "Adding binary sensor entity %s for %s",
                 description.name,
-                device.name,
+                device.display_name,
             )
 
     return entities
@@ -468,9 +497,9 @@ class ProtectDiskBinarySensor(ProtectNVREntity, BinarySensorEntity):
         slot = self._disk.slot
         self._attr_available = False
 
-        if self.device.system_info.ustorage is None:
-            return
-
+        # should not be possible since it would require user to
+        # _downgrade_ to make ustorage disppear
+        assert self.device.system_info.ustorage is not None
         for disk in self.device.system_info.ustorage.disks:
             if disk.slot == slot:
                 self._disk = disk

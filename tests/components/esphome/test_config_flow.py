@@ -12,7 +12,7 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
+from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import CONF_NOISE_PSK, DOMAIN, DomainData
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.data_entry_flow import (
@@ -532,3 +532,61 @@ async def test_reauth_confirm_invalid(hass, mock_client, mock_zeroconf):
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"]
     assert result["errors"]["base"] == "invalid_psk"
+
+
+async def test_discovery_dhcp_updates_host(hass, mock_client):
+    """Test dhcp discovery updates host and aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+    entry.add_to_hass(hass)
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info.name = "test8266"
+    domain_data = DomainData.get(hass)
+    domain_data.set_entry_data(entry, mock_entry_data)
+
+    service_info = dhcp.DhcpServiceInfo(
+        ip="192.168.43.184",
+        hostname="test8266",
+        macaddress="00:00:00:00:00:00",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.unique_id == "test8266"
+    assert entry.data[CONF_HOST] == "192.168.43.184"
+
+
+async def test_discovery_dhcp_no_changes(hass, mock_client):
+    """Test dhcp discovery updates host and aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.43.183", CONF_PORT: 6053, CONF_PASSWORD: ""},
+    )
+    entry.add_to_hass(hass)
+
+    mock_entry_data = MagicMock()
+    mock_entry_data.device_info.name = "test8266"
+    domain_data = DomainData.get(hass)
+    domain_data.set_entry_data(entry, mock_entry_data)
+
+    service_info = dhcp.DhcpServiceInfo(
+        ip="192.168.43.183",
+        hostname="test8266",
+        macaddress="00:00:00:00:00:00",
+    )
+    result = await hass.config_entries.flow.async_init(
+        "esphome", context={"source": config_entries.SOURCE_DHCP}, data=service_info
+    )
+
+    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["reason"] == "already_configured"
+
+    assert entry.unique_id == "test8266"
+    assert entry.data[CONF_HOST] == "192.168.43.183"

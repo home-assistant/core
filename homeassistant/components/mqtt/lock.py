@@ -28,8 +28,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -103,9 +103,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT lock through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, lock.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, lock.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -189,12 +187,12 @@ class MqttLock(MqttEntity, LockEntity):
         return self._state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in self._config else 0
 

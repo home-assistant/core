@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Pulito",
             "dirty": "Sporco"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Chiuso",
+            "open": "Aperto",
+            "tilt": "Inclinazione"
         }
     }
 }

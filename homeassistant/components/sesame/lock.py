@@ -82,7 +82,7 @@ class SesameDevice(LockEntity):
         self._responsive = status["responsive"]
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {
             ATTR_DEVICE_ID: self._device_id,

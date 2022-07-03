@@ -13,6 +13,7 @@
             },
             "manual_connection": {
                 "data": {
+                    "protocol": "Protokoll",
                     "username": "Anv\u00e4ndarnamn"
                 }
             }

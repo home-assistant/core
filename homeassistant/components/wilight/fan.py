@@ -13,6 +13,7 @@ from pywilight.const import (
     WL_SPEED_LOW,
     WL_SPEED_MEDIUM,
 )
+from pywilight.wilight_device import Device as PyWiLightDevice
 
 from homeassistant.components.fan import DIRECTION_FORWARD, FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
@@ -24,6 +25,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import DOMAIN, WiLightDevice
+from .parent_device import WiLightParent
 
 ORDERED_NAMED_FAN_SPEEDS = [WL_SPEED_LOW, WL_SPEED_MEDIUM, WL_SPEED_HIGH]
 
@@ -32,10 +34,11 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up WiLight lights from a config entry."""
-    parent = hass.data[DOMAIN][entry.entry_id]
+    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
 
     # Handle a discovered WiLight device.
     entities = []
+    assert parent.api
     for item in parent.api.items:
         if item["type"] != ITEM_FAN:
             continue
@@ -43,8 +46,7 @@ async def async_setup_entry(
         item_name = item["name"]
         if item["sub_type"] != FAN_V1:
             continue
-        entity = WiLightFan(parent.api, index, item_name)
-        entities.append(entity)
+        entities.append(WiLightFan(parent.api, index, item_name))
 
     async_add_entities(entities)
 
@@ -52,18 +54,15 @@ async def async_setup_entry(
 class WiLightFan(WiLightDevice, FanEntity):
     """Representation of a WiLights fan."""
 
+    _attr_icon = "mdi:fan"
+    _attr_speed_count = len(ORDERED_NAMED_FAN_SPEEDS)
     _attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.DIRECTION
 
-    def __init__(self, api_device, index, item_name):
+    def __init__(self, api_device: PyWiLightDevice, index: str, item_name: str) -> None:
         """Initialize the device."""
         super().__init__(api_device, index, item_name)
         # Initialize the WiLights fan.
         self._direction = WL_DIRECTION_FORWARD
-
-    @property
-    def icon(self):
-        """Return the icon of device based on its type."""
-        return "mdi:fan"
 
     @property
     def is_on(self) -> bool:
@@ -82,11 +81,6 @@ class WiLightFan(WiLightDevice, FanEntity):
         if (wl_speed := self._status.get("speed")) is None:
             return None
         return ordered_list_item_to_percentage(ORDERED_NAMED_FAN_SPEEDS, wl_speed)
-
-    @property
-    def speed_count(self) -> int:
-        """Return the number of speeds the fan supports."""
-        return len(ORDERED_NAMED_FAN_SPEEDS)
 
     @property
     def current_direction(self) -> str:
@@ -130,6 +124,6 @@ class WiLightFan(WiLightDevice, FanEntity):
             wl_direction = WL_DIRECTION_FORWARD
         await self._client.set_fan_direction(self._index, wl_direction)
 
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._client.set_fan_direction(self._index, WL_DIRECTION_OFF)

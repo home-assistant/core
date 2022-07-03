@@ -58,7 +58,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         return self._changed_by
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, int]:
         """Return the state attributes."""
         attributes = {ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times}
         return attributes

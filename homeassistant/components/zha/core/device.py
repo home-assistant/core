@@ -276,7 +276,7 @@ class ZHADevice(LogMixin):
     @property
     def skip_configuration(self) -> bool:
         """Return true if the device should not issue configuration related commands."""
-        return self._zigpy_device.skip_configuration or self.is_coordinator
+        return self._zigpy_device.skip_configuration or bool(self.is_coordinator)
 
     @property
     def gateway(self):
@@ -819,7 +819,7 @@ class ZHADevice(LogMixin):
                 fmt = f"{log_msg[1]} completed: %s"
             zdo.debug(fmt, *(log_msg[2] + (outcome,)))
 
-    def log(self, level: int, msg: str, *args: Any, **kwargs: dict) -> None:
+    def log(self, level: int, msg: str, *args: Any, **kwargs: Any) -> None:
         """Log a message."""
         msg = f"[%s](%s): {msg}"
         args = (self.nwk, self.model) + args

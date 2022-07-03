@@ -8,7 +8,6 @@ from typing import Any, cast
 
 import ciso8601
 from fnvhash import fnv1a_32
-import orjson
 from sqlalchemy import (
     JSON,
     BigInteger,
@@ -39,7 +38,12 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_STATE,
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
-from homeassistant.helpers.json import JSON_DUMP, json_bytes
+from homeassistant.helpers.json import (
+    JSON_DECODE_EXCEPTIONS,
+    JSON_DUMP,
+    json_bytes,
+    json_loads,
+)
 import homeassistant.util.dt as dt_util
 
 from .const import ALL_DOMAIN_EXCLUDE_ATTRS
@@ -188,15 +192,15 @@ class Events(Base):  # type: ignore[misc,valid-type]
         try:
             return Event(
                 self.event_type,
-                orjson.loads(self.event_data) if self.event_data else {},
+                json_loads(self.event_data) if self.event_data else {},
                 EventOrigin(self.origin)
                 if self.origin
                 else EVENT_ORIGIN_ORDER[self.origin_idx],
                 process_timestamp(self.time_fired),
                 context=context,
             )
-        except ValueError:
-            # When orjson.loads fails
+        except JSON_DECODE_EXCEPTIONS:
+            # When json_loads fails
             _LOGGER.exception("Error converting to event: %s", self)
             return None
 
@@ -243,8 +247,8 @@ class EventData(Base):  # type: ignore[misc,valid-type]
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], orjson.loads(self.shared_data))
-        except ValueError:
+            return cast(dict[str, Any], json_loads(self.shared_data))
+        except JSON_DECODE_EXCEPTIONS:
             _LOGGER.exception("Error converting row to event data: %s", self)
             return {}
 
@@ -330,9 +334,9 @@ class States(Base):  # type: ignore[misc,valid-type]
             parent_id=self.context_parent_id,
         )
         try:
-            attrs = orjson.loads(self.attributes) if self.attributes else {}
-        except ValueError:
-            # When orjson.loads fails
+            attrs = json_loads(self.attributes) if self.attributes else {}
+        except JSON_DECODE_EXCEPTIONS:
+            # When json_loads fails
             _LOGGER.exception("Error converting row to state: %s", self)
             return None
         if self.last_changed is None or self.last_changed == self.last_updated:
@@ -402,15 +406,15 @@ class StateAttributes(Base):  # type: ignore[misc,valid-type]
 
     @staticmethod
     def hash_shared_attrs_bytes(shared_attrs_bytes: bytes) -> int:
-        """Return the hash of orjson encoded shared attributes."""
+        """Return the hash of json encoded shared attributes."""
         return cast(int, fnv1a_32(shared_attrs_bytes))
 
     def to_native(self) -> dict[str, Any]:
         """Convert to an HA state object."""
         try:
-            return cast(dict[str, Any], orjson.loads(self.shared_attrs))
-        except ValueError:
-            # When orjson.loads fails
+            return cast(dict[str, Any], json_loads(self.shared_attrs))
+        except JSON_DECODE_EXCEPTIONS:
+            # When json_loads fails
             _LOGGER.exception("Error converting row to state attributes: %s", self)
             return {}
 

@@ -4,7 +4,6 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import functools
-import json
 import logging
 import re
 import time
@@ -17,6 +16,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -117,7 +117,7 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                payload = json.loads(payload)
+                payload = json_loads(payload)
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return

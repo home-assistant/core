@@ -1,4 +1,6 @@
 """Nuki.io lock platform."""
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -65,23 +67,22 @@ class NukiDeviceEntity(NukiEntity, LockEntity, ABC):
     _attr_supported_features = LockEntityFeature.OPEN
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the lock."""
         return self._nuki_device.name
 
     @property
-    def unique_id(self) -> str:
+    def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._nuki_device.nuki_id
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
-        data = {
+        return {
             ATTR_BATTERY_CRITICAL: self._nuki_device.battery_critical,
             ATTR_NUKI_ID: self._nuki_device.nuki_id,
         }
-        return data
 
     @property
     def available(self) -> bool:
@@ -123,7 +124,7 @@ class NukiLockEntity(NukiDeviceEntity):
         """Open the door latch."""
         self._nuki_device.unlatch()
 
-    def lock_n_go(self, unlatch):
+    def lock_n_go(self, unlatch: bool) -> None:
         """Lock and go.
 
         This will first unlock the door, then wait for 20 seconds (or another
@@ -157,10 +158,10 @@ class NukiOpenerEntity(NukiDeviceEntity):
         """Buzz open the door."""
         self._nuki_device.electric_strike_actuation()
 
-    def lock_n_go(self, unlatch):
+    def lock_n_go(self, unlatch: bool) -> None:
         """Stub service."""
 
-    def set_continuous_mode(self, enable):
+    def set_continuous_mode(self, enable: bool) -> None:
         """Continuous Mode.
 
         This feature will cause the door to automatically open when anyone

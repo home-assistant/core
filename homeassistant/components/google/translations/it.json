@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "L'account \u00e8 gi\u00e0 configurato",
             "already_in_progress": "Il flusso di configurazione \u00e8 gi\u00e0 in corso",
+            "cannot_connect": "Impossibile connettersi",
             "code_expired": "Il codice di autenticazione \u00e8 scaduto o la configurazione delle credenziali non \u00e8 valida, riprova.",
             "invalid_access_token": "Token di accesso non valido",
             "missing_configuration": "Il componente non \u00e8 configurato. Segui la documentazione.",

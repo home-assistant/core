@@ -293,6 +293,7 @@ class ThermostatChannel(ZigbeeChannel):
             return bool(self.occupancy)
         except ZigbeeException as ex:
             self.debug("Couldn't read 'occupancy' attribute: %s", ex)
+            return None
 
     async def write_attributes(self, data, **kwargs):
         """Write attributes helper."""

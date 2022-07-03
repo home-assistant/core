@@ -6,6 +6,7 @@
         "abort": {
             "already_configured": "Konto jest ju\u017c skonfigurowane",
             "already_in_progress": "Konfiguracja jest ju\u017c w toku",
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
             "code_expired": "Kod uwierzytelniaj\u0105cy wygas\u0142 lub konfiguracja po\u015bwiadcze\u0144 jest nieprawid\u0142owa, spr\u00f3buj ponownie.",
             "invalid_access_token": "Niepoprawny token dost\u0119pu",
             "missing_configuration": "Komponent nie jest skonfigurowany. Post\u0119puj zgodnie z dokumentacj\u0105.",

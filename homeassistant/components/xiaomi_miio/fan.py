@@ -304,7 +304,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return self._state_attrs
 
@@ -334,7 +334,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.off

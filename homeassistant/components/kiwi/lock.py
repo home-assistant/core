@@ -83,7 +83,7 @@ class KiwiLock(LockEntity):
         }
 
     @property
-    def name(self):
+    def name(self) -> str | None:
         """Return the name of the lock."""
         name = self._sensor.get("name")
         specifier = self._sensor["address"].get("specifier")
@@ -95,7 +95,7 @@ class KiwiLock(LockEntity):
         return self._state == STATE_LOCKED
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return self._device_attrs
 

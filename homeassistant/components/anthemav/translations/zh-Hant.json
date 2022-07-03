@@ -1,0 +1,19 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210"
+        },
+        "error": {
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "cannot_receive_deviceinfo": "\u63a5\u6536 MAC \u4f4d\u5740\u5931\u6557\uff0c\u8acb\u78ba\u5b9a\u88dd\u7f6e\u70ba\u958b\u555f\u72c0Address. Make sure the device is turned on"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef",
+                    "port": "\u901a\u8a0a\u57e0"
+                }
+            }
+        }
+    }
+}
