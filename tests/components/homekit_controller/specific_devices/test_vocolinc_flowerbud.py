@@ -34,8 +34,8 @@ async def test_vocolinc_flowerbud_setup(hass):
             devices=[],
             entities=[
                 EntityTestInfo(
-                    entity_id="humidifier.vocolinc_flowerbud_0d324b_flowerbud",
-                    friendly_name="VOCOlinc-Flowerbud-0d324b FLOWERBUD",
+                    entity_id="humidifier.vocolinc_flowerbud_0d324b",
+                    friendly_name="VOCOlinc-Flowerbud-0d324b",
                     unique_id="homekit-AM01121849000327-30",
                     supported_features=SUPPORT_MODES,
                     capabilities={
