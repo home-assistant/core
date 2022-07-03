@@ -1,8 +1,9 @@
 """Support for LIFX."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterable
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import socket
 from typing import Any
@@ -19,10 +20,10 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, TARGET_ANY
@@ -61,6 +62,7 @@ DATA_LIFX_MANAGER = "lifx_manager"
 PLATFORMS = [Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
 
+DISCOVERY_COOLDOWN = 5
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -96,14 +98,27 @@ async def async_legacy_migration(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
     hass.data[DOMAIN] = {}
+    discovery_lock = asyncio.Lock()
 
     async def _async_discovery(*_: Any) -> None:
-        if discovered := await async_discover_devices(hass):
-            if legacy_entry := async_get_legacy_entry(hass):
-                await async_legacy_migration(hass, legacy_entry, discovered)
-            async_trigger_discovery(hass, discovered)
+        async with discovery_lock:
+            if discovered := await async_discover_devices(hass):
+                if legacy_entry := async_get_legacy_entry(hass):
+                    await async_legacy_migration(hass, legacy_entry, discovered)
+                async_trigger_discovery(hass, discovered)
 
-    await _async_discovery()
+    @callback
+    def _async_delayed_discovery(now: datetime) -> None:
+        """Start an untracked task to discover devices.
+
+        We do not want the discovery task to block startup.
+        """
+        asyncio.create_task(_async_discovery())
+
+    # Let the system settle a bit before starting discovery
+    # to reduce the risk we miss devices because the event
+    # loop is blocked at startup.
+    async_call_later(hass, DISCOVERY_COOLDOWN, _async_delayed_discovery)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
     async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
     return True
