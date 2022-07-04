@@ -360,7 +360,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     def supported_features(self):
         """Return the list of supported features."""
         _LOGGER.debug("Supported Tado capabilities for %s: %s", self.zone_name, self._current_capabilities)
-        return self._current_capabilities["support_flags"]
+        return self._support_flags
 
     @property
     def name(self):
@@ -418,7 +418,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def fan_modes(self):
         """List of available fan modes."""
-        return self._current_capabilities["fan_speeds"]
+        return self._supported_fan_speeds
 
     def set_fan_mode(self, fan_mode: str):
         """Turn fan on/off."""
@@ -550,8 +550,8 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
     @property
     def swing_modes(self):
         """Swing modes for the device."""
-        if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
-            return self._current_capabilities["swing_modes"]
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
+            return self._supported_swing_modes
         return None
 
     @property
@@ -739,27 +739,27 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         fan_speed_to_send = None
         temperature_to_send = self._target_temp
 
-        if self._current_capabilities["support_flags"] & ClimateEntityFeature.FAN_MODE:
-            if TADO_TO_HA_FAN_MODE_MAP[self._current_tado_fan_speed] in self._current_capabilities["fan_speeds"]:
+        if self._support_flags & ClimateEntityFeature.FAN_MODE:
+            if TADO_TO_HA_FAN_MODE_MAP[self._current_tado_fan_speed] in self._supported_fan_speeds:
                 fan_speed_to_send = self._current_tado_fan_speed
             else:
-                fan_speed_to_send = HA_TO_TADO_FAN_MODE_MAP[self._current_capabilities["fan_speeds"][0]]
+                fan_speed_to_send = HA_TO_TADO_FAN_MODE_MAP[self._supported_fan_speeds[0]]
 
-        if self._current_capabilities["support_flags"] & ClimateEntityFeature.SWING_MODE:
-            if SWING_VERTICAL in self._current_capabilities["swing_modes"]:
+        if self._support_flags & ClimateEntityFeature.SWING_MODE:
+            if SWING_VERTICAL in self._supported_swing_modes:
                 vertical_swing = self._current_tado_vertical_swing_mode or TADO_SWING_OFF
-            if SWING_HORIZONTAL in self._current_capabilities["swing_modes"]:
+            if SWING_HORIZONTAL in self._supported_swing_modes:
                 horizontal_swing = self._current_tado_horizontal_swing_mode or TADO_SWING_OFF
 
         # Tado will refuse any HVAC changes if a "light" mode is listed as a
         # capability but not provided with every HVAC change
         # Todo: Allow light mode to be adjusted by the end user.
-        if self._current_capabilities["light_modes"]:
-            light_mode = self._current_tado_light_mode or self._current_capabilities["light_modes"][0]
+        if self._supported_tado_light_modes:
+            light_mode = self._current_tado_light_mode or self._supported_tado_light_modes[0]
 
         # Tado only accepts certain settings in some HVAC modes.
         # Here we reset any forbidden settings so our requests won't be rejected.
-        if not self._current_capabilities["support_flags"] & ClimateEntityFeature.TARGET_TEMPERATURE:
+        if not self._support_flags & ClimateEntityFeature.TARGET_TEMPERATURE:
             temperature_to_send = None
 
         self._tado.set_zone_overlay(
