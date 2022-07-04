@@ -33,8 +33,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.google_assistant.http",
     "homeassistant.components.google_assistant.report_state",
     "homeassistant.components.google_assistant.trait",
-    "homeassistant.components.gree.climate",
-    "homeassistant.components.gree.switch",
     "homeassistant.components.harmony",
     "homeassistant.components.harmony.config_flow",
     "homeassistant.components.harmony.data",
