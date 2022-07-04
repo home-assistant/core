@@ -21,7 +21,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -164,7 +168,7 @@ def _get_client(hass: HomeAssistant, data: dict[str, Any]) -> TransmissionClient
 class TransmissionClient:
     """Transmission Client Object."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Transmission RPC API."""
         self.hass = hass
         self.config_entry = config_entry
@@ -175,6 +179,8 @@ class TransmissionClient:
     @property
     def api(self) -> TransmissionData:
         """Return the TransmissionData object."""
+        if not self._tm_data:
+            raise HomeAssistantError("Transmission client not initialised")
         return self._tm_data
 
     async def async_setup(self) -> None:
