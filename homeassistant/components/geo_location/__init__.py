@@ -54,6 +54,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeolocationEvent(Entity):
     """Base class for an external event with an associated geolocation."""
 
+    # Entity Properties
+    _attr_source: str
+    _attr_distance: float | None
+    _attr_latitude: float | None
+    _attr_longitude: float | None
+
     @final
     @property
     def state(self) -> float | None:
@@ -65,21 +71,29 @@ class GeolocationEvent(Entity):
     @property
     def source(self) -> str:
         """Return source value of this external event."""
+        if hasattr(self, "_attr_source"):
+            return self._attr_source
         raise NotImplementedError
 
     @property
     def distance(self) -> float | None:
         """Return distance value of this external event."""
+        if hasattr(self, "_attr_distance"):
+            return self._attr_distance
         return None
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of this external event."""
+        if hasattr(self, "_attr_latitude"):
+            return self._attr_latitude
         return None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
+        if hasattr(self, "_attr_longitude"):
+            return self._attr_longitude
         return None
 
     @final
