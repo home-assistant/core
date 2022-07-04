@@ -215,10 +215,10 @@ def _async_register_button_devices(
     config_entry_id: str,
     bridge_device,
     button_devices_by_id: dict[int, dict],
-) -> dict[str, dr.DeviceEntry]:
+) -> dict[str, dict]:
     """Register button devices (Pico Remotes) in the device registry."""
     device_registry = dr.async_get(hass)
-    button_devices_by_dr_id = {}
+    button_devices_by_dr_id: dict[str, dict] = {}
     seen = set()
 
     for device in button_devices_by_id.values():
@@ -226,7 +226,7 @@ def _async_register_button_devices(
             continue
         seen.add(device["serial"])
         area, name = _area_and_name_from_name(device["name"])
-        device_args = {
+        device_args: dict[str, Any] = {
             "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
@@ -246,7 +246,8 @@ def _async_register_button_devices(
 def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
     """Return the area and name from the devices internal name."""
     if "_" in device_name:
-        return device_name.split("_", 1)
+        area_device_name = device_name.split("_", 1)
+        return area_device_name[0], area_device_name[1]
     return UNASSIGNED_AREA, device_name
 
 
@@ -382,13 +383,13 @@ class LutronCasetaDevice(Entity):
 class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
     """A lutron_caseta entity that can update by syncing data from the bridge."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
 
 
-def _id_to_identifier(lutron_id: str) -> None:
+def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
     """Convert a lutron caseta identifier to a device identifier."""
     return (DOMAIN, lutron_id)
 
