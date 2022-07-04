@@ -326,7 +326,7 @@ class MQTT:
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
-        self._await_on_unload: list[Awaitable] = []
+        self._sync_acks: set[int] = set()
         self._cleanup_on_unload: list[Callable] = []
 
         self._pending_operations: dict[str, asyncio.Event] = {}
@@ -431,9 +431,14 @@ class MQTT:
             # Do not disconnect, we want the broker to always publish will
             self._mqttc.loop_stop()
 
-        # wait for unsubscriptions to complete
-        await asyncio.gather(*self._await_on_unload)
-        self._await_on_unload = []
+        # wait for ACK-s to be processes (unsubscribe only)
+        async with self._paho_lock:
+            tasks = [
+                self.hass.async_create_task(self._wait_for_mid(mid))
+                for mid in self._sync_acks
+            ]
+        await asyncio.gather(*tasks)
+
         # stop the MQTT loop
         await self.hass.async_add_executor_job(stop)
 
@@ -472,9 +477,7 @@ class MQTT:
 
             # Only unsubscribe if currently connected
             if self.connected:
-                self._await_on_unload.append(
-                    self.hass.async_create_task(self._async_unsubscribe(topic))
-                )
+                self.hass.async_create_task(self._async_unsubscribe(topic))
 
         return async_remove
 
@@ -483,18 +486,20 @@ class MQTT:
 
         This method is a coroutine.
         """
+
+        def _client_unsubscribe(topic: str) -> None:
+            result: int | None = None
+            result, mid = self._mqttc.unsubscribe(topic)
+            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
+            _raise_on_error(result)
+            self._sync_acks.add(mid)
+
         if any(other.topic == topic for other in self.subscriptions):
             # Other subscriptions on topic remaining - don't unsubscribe.
             return
 
         async with self._paho_lock:
-            result: int | None = None
-            result, mid = await self.hass.async_add_executor_job(
-                self._mqttc.unsubscribe, topic
-            )
-            _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
-            _raise_on_error(result)
-        await self._wait_for_mid(mid)
+            await self.hass.async_add_executor_job(_client_unsubscribe, topic)
 
     async def _async_perform_subscriptions(
         self, subscriptions: Iterable[tuple[str, int]]
@@ -675,6 +680,10 @@ class MQTT:
             )
         finally:
             del self._pending_operations[mid]
+            # Cleanup ACK sync buffer
+            async with self._paho_lock:
+                if mid in self._sync_acks:
+                    self._sync_acks.remove(mid)
 
     async def _discovery_cooldown(self):
         now = time.time()
