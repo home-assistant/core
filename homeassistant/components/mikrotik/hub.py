@@ -288,7 +288,6 @@ class MikrotikDataUpdateCoordinator(DataUpdateCoordinator):
             self.hass,
             _LOGGER,
             name=f"{DOMAIN} - {self.host}",
-            update_method=self._async_update_data,
             update_interval=timedelta(seconds=10),
         )
 
