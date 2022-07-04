@@ -178,7 +178,7 @@ aiohttp_cors==0.7.0
 aiohue==4.4.2
 
 # homeassistant.components.imap
-aioimaplib==0.9.0
+aioimaplib==1.0.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -1236,7 +1236,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.1
+pillow==9.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3

@@ -115,14 +115,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload AdGuard Home config entry."""
-    hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
-    hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
-    hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
-    hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
-    hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
-
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
+        hass.data[DOMAIN].pop(entry.entry_id)
+    if not hass.data[DOMAIN]:
+        hass.services.async_remove(DOMAIN, SERVICE_ADD_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_REMOVE_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_ENABLE_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_DISABLE_URL)
+        hass.services.async_remove(DOMAIN, SERVICE_REFRESH)
         del hass.data[DOMAIN]
 
     return unload_ok
