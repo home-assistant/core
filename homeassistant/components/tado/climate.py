@@ -652,7 +652,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             self._current_tado_horizontal_swing_mode = horizontal_swing
 
         if vertical_swing:
-            self._current_tado_horizontal_swing_mode = vertical_swing
+            self._current_tado_vertical_swing_mode = vertical_swing
 
         self._normalize_target_temp_for_hvac_mode()
 
