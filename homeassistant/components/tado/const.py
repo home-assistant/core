@@ -18,7 +18,6 @@ from homeassistant.components.climate.const import (
     SWING_VERTICAL,
     SWING_HORIZONTAL,
     PRESET_AWAY,
-    ClimateEntityFeature,
     PRESET_HOME,
     HVACAction,
     HVACMode,
