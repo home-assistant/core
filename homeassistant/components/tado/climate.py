@@ -212,6 +212,15 @@ def create_climate_entity(tado, name: str, zone_id: int, device_info: dict):
 
     else:
         supported_hvac_modes.append(HVACMode.HEAT)
+        hvac_capability_map.update({
+            CONST_MODE_HEAT: {
+                "temperatures": capabilities[CONST_MODE_HEAT]["temperatures"],
+                "light_modes": None,
+                "fan_speeds": [],
+                "swing_modes": None,
+                "support_flags": (ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE),
+            }
+        })
 
     if CONST_MODE_HEAT in capabilities:
         heat_temperatures = capabilities[CONST_MODE_HEAT]["temperatures"]
