@@ -2,7 +2,7 @@
     "config": {
         "abort": {
             "reauth_successful": "Re-authentication was successful",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "already_configured": "Service is already configured"
         },
         "error": {
             "cannot_connect": "Failed to connect",
