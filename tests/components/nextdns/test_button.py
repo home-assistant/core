@@ -31,7 +31,7 @@ async def test_button_press(hass):
     now = dt_util.utcnow()
     with patch(
         "homeassistant.components.nextdns.NextDns.clear_logs"
-    ) as mock_restart, patch("homeassistant.core.dt_util.utcnow", return_value=now):
+    ) as mock_clear_logs, patch("homeassistant.core.dt_util.utcnow", return_value=now):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             "press",
@@ -40,7 +40,7 @@ async def test_button_press(hass):
         )
         await hass.async_block_till_done()
 
-    mock_restart.assert_called_once()
+    mock_clear_logs.assert_called_once()
 
     state = hass.states.get("button.fake_profile_clear_logs")
     assert state
