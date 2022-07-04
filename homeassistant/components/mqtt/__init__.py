@@ -25,6 +25,10 @@ from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callb
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
+
+# MqttServiceInfo only for backwards compatibility, do not use this
+# as you'll get the whole MQTT integration via import.
+from homeassistant.helpers.discovery.mqtt import MqttServiceInfo  # noqa: F401
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.reload import (
     async_integration_yaml_config,
@@ -84,10 +88,6 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     ReceivePayloadType,
 )
-
-# MqttServiceInfo only for backwards compatibility, do not use this
-# as you'll get the whole MQTT integration via import.
-from .service_info import MqttServiceInfo  # noqa: F401
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
