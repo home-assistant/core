@@ -1,7 +1,7 @@
 """Base entity for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable
 from typing import TYPE_CHECKING, Any
 
 import async_timeout
@@ -16,36 +16,27 @@ from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
 
 
-def api_call(
-    function: Callable[
-        [Any, SensiboDevice, float, float], Coroutine[Any, Any, dict[str, Any]]
-    ]
-) -> Callable:
+def api_call_decorator(function: Callable) -> Callable:
     """Decorate api calls."""
 
     async def wrap_api_call(*args: Any, **kwargs: Any) -> None:
         """Wrap services for api calls."""
-        result: dict[str, Any] = {"status": None}
-        print(args)
-        print(kwargs)
+        res: dict[str, Any] = {"status": None}
         try:
             async with async_timeout.timeout(TIMEOUT):
-                result = await function(
-                    args[0], kwargs["device_data"], kwargs["key"], kwargs["value"]
-                )
+                res = await function(*args, **kwargs)
         except SENSIBO_ERRORS as err:
             raise HomeAssistantError from err
 
-        LOGGER.debug("Result: %s", result)
-        if (
-            result.get("status") != "success"
-            and result.get("result", {}).get("status") != "Success"
-        ):
-            raise HomeAssistantError(
-                f"Could not execute service for {args[0]}: {result['status']}"
-            )
-        setattr(kwargs["device_data"], kwargs["key"], kwargs["value"])
-        args[0].async_write_ha_state()
+        LOGGER.debug("Result: %s", res)
+        LOGGER.debug("Entity: %s", args[0])
+        LOGGER.debug("Arguments: %s", kwargs)
+        entity: SensiboDeviceBaseEntity = args[0]
+        if not res:
+            raise HomeAssistantError(f"Could not execute service for {entity.name}")
+        if kwargs.get("key") is not None and kwargs.get("value") is not None:
+            setattr(entity.device_data, kwargs["key"], kwargs["value"])
+            entity.async_write_ha_state()
 
     return wrap_api_call
 
@@ -92,60 +83,6 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
             hw_version=self.device_data.fw_type,
             suggested_area=self.device_data.name,
         )
-
-    async def async_send_command(
-        self, command: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Send command to Sensibo api."""
-        try:
-            async with async_timeout.timeout(TIMEOUT):
-                result = await self.async_send_api_call(command, params)
-        except SENSIBO_ERRORS as err:
-            raise HomeAssistantError(
-                f"Failed to send command {command} for device {self.name} to Sensibo servers: {err}"
-            ) from err
-
-        LOGGER.debug("Result: %s", result)
-        return result
-
-    async def async_send_api_call(
-        self, command: str, params: dict[str, Any] | None = None
-    ) -> dict[str, Any]:
-        """Send api call."""
-        result: dict[str, Any] = {"status": None}
-        if command == "set_calibration":
-            if TYPE_CHECKING:
-                assert params is not None
-            result = await self._client.async_set_calibration(
-                self._device_id,
-                params["data"],
-            )
-        if command == "set_ac_state":
-            if TYPE_CHECKING:
-                assert params is not None
-            result = await self._client.async_set_ac_state_property(
-                self._device_id,
-                params["name"],
-                params["value"],
-                params["ac_states"],
-                params["assumed_state"],
-            )
-        if command == "set_timer":
-            if TYPE_CHECKING:
-                assert params is not None
-            result = await self._client.async_set_timer(self._device_id, params)
-        if command == "del_timer":
-            result = await self._client.async_del_timer(self._device_id)
-        if command == "set_pure_boost":
-            if TYPE_CHECKING:
-                assert params is not None
-            result = await self._client.async_set_pureboost(
-                self._device_id,
-                params,
-            )
-        if command == "reset_filter":
-            result = await self._client.async_reset_filter(self._device_id)
-        return result
 
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):

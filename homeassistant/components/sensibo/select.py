@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import SensiboDevice
 
@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity
+from .entity import SensiboDeviceBaseEntity, api_call_decorator
 
 PARALLEL_UPDATES = 0
 
@@ -107,20 +107,26 @@ class SensiboSelect(SensiboDeviceBaseEntity, SelectEntity):
                 f"Current mode {self.device_data.hvac_mode} doesn't support setting {self.entity_description.name}"
             )
 
-        params = {
+        await self.api_call(
+            device_data=self.device_data,
+            key=self.entity_description.data_key,
+            value=option,
+        )
+
+    @api_call_decorator
+    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
+        """Make service call to api."""
+        data = {
             "name": self.entity_description.key,
-            "value": option,
+            "value": value,
             "ac_states": self.device_data.ac_states,
             "assumed_state": False,
         }
-        result = await self.async_send_command("set_ac_state", params)
-
-        if result["result"]["status"] == "Success":
-            setattr(self.device_data, self.entity_description.data_key, option)
-            self.async_write_ha_state()
-            return
-
-        failure = result["result"]["failureReason"]
-        raise HomeAssistantError(
-            f"Could not set state for device {self.name} due to reason {failure}"
+        result = await self._client.async_set_ac_state_property(
+            self._device_id,
+            data["name"],
+            data["value"],
+            data["ac_states"],
+            data["assumed_state"],
         )
+        return bool(result.get("result", {}).get("status") == "Success")

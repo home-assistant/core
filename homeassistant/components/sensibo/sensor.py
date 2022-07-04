@@ -63,7 +63,7 @@ class SensiboMotionSensorEntityDescription(
 class SensiboDeviceSensorEntityDescription(
     SensorEntityDescription, DeviceBaseEntityDescriptionMixin
 ):
-    """Describes Sensibo Motion sensor entity."""
+    """Describes Sensibo Device sensor entity."""
 
 
 FILTER_LAST_RESET_DESCRIPTION = SensiboDeviceSensorEntityDescription(
