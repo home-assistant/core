@@ -155,12 +155,16 @@ class HomeKitEntity(Entity):
         device_name = self._char_name or self.default_name
         folded_device_name = folded_name(device_name or "")
         folded_accessory_name = folded_name(accessory_name)
-        if (
-            device_name
-            and folded_accessory_name not in folded_device_name
-            and folded_device_name not in folded_accessory_name
-        ):
-            return f"{accessory_name} {device_name}"
+        if device_name:
+            # Sometimes the device name includes the accessory
+            # name already like My ecobee Occupancy / My ecobee
+            if folded_device_name.startswith(folded_accessory_name):
+                return device_name
+            if (
+                folded_accessory_name not in folded_device_name
+                and folded_device_name not in folded_accessory_name
+            ):
+                return f"{accessory_name} {device_name}"
         return accessory_name
 
     @property
