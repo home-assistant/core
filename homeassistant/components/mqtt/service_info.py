@@ -1,6 +1,6 @@
 """Support for MQTT message handling.
 
-This module much remain lightweight as core imports
+This module must remain lightweight as core imports
 it for discovery.
 """
 
