@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
 
-    from .discovery.mqtt import MqttServiceInfo
+    from .service_info.mqtt import MqttServiceInfo
 
 _R = TypeVar("_R", bound="Awaitable[bool] | bool")
 DiscoveryFunctionType = Callable[[HomeAssistant], _R]
