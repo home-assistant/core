@@ -204,3 +204,39 @@ async def test_zeroconf_device_exists_abort(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].data[CONF_HOST] == "127.0.0.2"
+
+
+async def test_zeroconf_during_onboarding(
+    hass: HomeAssistant,
+    mock_elgato_config_flow: MagicMock,
+    mock_setup_entry: AsyncMock,
+    mock_onboarding: MagicMock,
+) -> None:
+    """Test the zeroconf creates an entry during onboarding."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=zeroconf.ZeroconfServiceInfo(
+            host="127.0.0.1",
+            addresses=["127.0.0.1"],
+            hostname="example.local.",
+            name="mock_name",
+            port=9123,
+            properties={"id": "AA:BB:CC:DD:EE:FF"},
+            type="mock_type",
+        ),
+    )
+
+    assert result.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result.get("title") == "CN11A1A00001"
+    assert result.get("data") == {
+        CONF_HOST: "127.0.0.1",
+        CONF_MAC: "AA:BB:CC:DD:EE:FF",
+        CONF_PORT: 9123,
+    }
+    assert "result" in result
+    assert result["result"].unique_id == "CN11A1A00001"
+
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_elgato_config_flow.info.mock_calls) == 1
+    assert len(mock_onboarding.mock_calls) == 1

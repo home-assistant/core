@@ -20,6 +20,13 @@ from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 from tests.common import async_capture_events
 
 
+@pytest.fixture(autouse=True)
+def disable_platform_only():
+    """Disable platforms to speed up tests."""
+    with patch("homeassistant.components.zha.PLATFORMS", []):
+        yield
+
+
 @pytest.fixture
 def ieee():
     """IEEE fixture."""

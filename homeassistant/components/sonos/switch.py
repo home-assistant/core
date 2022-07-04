@@ -39,6 +39,7 @@ ATTR_INCLUDE_LINKED_ZONES = "include_linked_zones"
 
 ATTR_CROSSFADE = "cross_fade"
 ATTR_LOUDNESS = "loudness"
+ATTR_MUSIC_PLAYBACK_FULL_VOLUME = "surround_mode"
 ATTR_NIGHT_SOUND = "night_mode"
 ATTR_SPEECH_ENHANCEMENT = "dialog_level"
 ATTR_STATUS_LIGHT = "status_light"
@@ -50,6 +51,7 @@ ALL_FEATURES = (
     ATTR_TOUCH_CONTROLS,
     ATTR_CROSSFADE,
     ATTR_LOUDNESS,
+    ATTR_MUSIC_PLAYBACK_FULL_VOLUME,
     ATTR_NIGHT_SOUND,
     ATTR_SPEECH_ENHANCEMENT,
     ATTR_SUB_ENABLED,
@@ -67,6 +69,7 @@ POLL_REQUIRED = (
 FRIENDLY_NAMES = {
     ATTR_CROSSFADE: "Crossfade",
     ATTR_LOUDNESS: "Loudness",
+    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "Surround Music Full Volume",
     ATTR_NIGHT_SOUND: "Night Sound",
     ATTR_SPEECH_ENHANCEMENT: "Speech Enhancement",
     ATTR_STATUS_LIGHT: "Status Light",
@@ -77,6 +80,7 @@ FRIENDLY_NAMES = {
 
 FEATURE_ICONS = {
     ATTR_LOUDNESS: "mdi:bullhorn-variant",
+    ATTR_MUSIC_PLAYBACK_FULL_VOLUME: "mdi:music-note-plus",
     ATTR_NIGHT_SOUND: "mdi:chat-sleep",
     ATTR_SPEECH_ENHANCEMENT: "mdi:ear-hearing",
     ATTR_CROSSFADE: "mdi:swap-horizontal",

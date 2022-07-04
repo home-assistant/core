@@ -404,10 +404,10 @@ class SensorEntity(Entity):
                     value = value.astimezone(timezone.utc)
 
                 return value.isoformat(timespec="seconds")
-            except (AttributeError, TypeError) as err:
+            except (AttributeError, OverflowError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid datetime: {self.entity_id} has a timestamp device class "
-                    f"but does not provide a datetime state but {type(value)}"
+                    f"Invalid datetime: {self.entity_id} has timestamp device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
         # Received a date value
@@ -419,8 +419,8 @@ class SensorEntity(Entity):
                 return value.isoformat()
             except (AttributeError, TypeError) as err:
                 raise ValueError(
-                    f"Invalid date: {self.entity_id} has a date device class "
-                    f"but does not provide a date state but {type(value)}"
+                    f"Invalid date: {self.entity_id} has date device class "
+                    f"but provides state {value}:{type(value)} resulting in '{err}'"
                 ) from err
 
         if (

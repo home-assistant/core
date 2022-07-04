@@ -81,9 +81,7 @@ async def async_setup_entry(
     """Set up MQTT camera through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
     config_entry.async_on_unload(
-        await async_setup_platform_discovery(
-            hass, camera.DOMAIN, PLATFORM_SCHEMA_MODERN
-        )
+        await async_setup_platform_discovery(hass, camera.DOMAIN)
     )
     # setup for discovery
     setup = functools.partial(

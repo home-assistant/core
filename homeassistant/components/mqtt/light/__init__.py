@@ -112,7 +112,7 @@ async def async_setup_entry(
     """Set up MQTT lights configured under the light platform key (deprecated)."""
     # load and initialize platform config from configuration.yaml
     config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, light.DOMAIN, PLATFORM_SCHEMA_MODERN)
+        await async_setup_platform_discovery(hass, light.DOMAIN)
     )
     # setup for discovery
     setup = functools.partial(

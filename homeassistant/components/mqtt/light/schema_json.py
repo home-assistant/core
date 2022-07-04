@@ -1,6 +1,5 @@
 """Support for MQTT JSON lights."""
 from contextlib import suppress
-import json
 import logging
 
 import voluptuous as vol
@@ -46,6 +45,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 import homeassistant.util.color as color_util
@@ -317,7 +317,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
         @log_messages(self.hass, self.entity_id)
         def state_received(msg):
             """Handle new MQTT messages."""
-            values = json.loads(msg.payload)
+            values = json_loads(msg.payload)
 
             if values["state"] == "ON":
                 self._state = True
@@ -644,7 +644,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
-            json.dumps(message),
+            json_dumps(message),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],
@@ -669,7 +669,7 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
 
         await self.async_publish(
             self._topic[CONF_COMMAND_TOPIC],
-            json.dumps(message),
+            json_dumps(message),
             self._config[CONF_QOS],
             self._config[CONF_RETAIN],
             self._config[CONF_ENCODING],

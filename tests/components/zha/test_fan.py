@@ -51,6 +51,22 @@ IEEE_GROUPABLE_DEVICE = "01:2d:6f:00:0a:90:69:e8"
 IEEE_GROUPABLE_DEVICE2 = "02:2d:6f:00:0a:90:69:e8"
 
 
+@pytest.fixture(autouse=True)
+def fan_platform_only():
+    """Only setup the fan and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.FAN,
+            Platform.LIGHT,
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SELECT,
+        ),
+    ):
+        yield
+
+
 @pytest.fixture
 def zigpy_device(zigpy_device_mock):
     """Device tracker zigpy device."""

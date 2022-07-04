@@ -87,7 +87,7 @@ EVENT_COLUMNS_FOR_STATE_SELECT = [
 ]
 
 EMPTY_STATE_COLUMNS = (
-    literal(value=None, type_=sqlalchemy.String).label("state_id"),
+    literal(value=0, type_=sqlalchemy.Integer).label("state_id"),
     literal(value=None, type_=sqlalchemy.String).label("state"),
     literal(value=None, type_=sqlalchemy.String).label("entity_id"),
     literal(value=None, type_=sqlalchemy.String).label("icon"),

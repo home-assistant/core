@@ -1,6 +1,4 @@
 """Support for a State MQTT vacuum."""
-import json
-
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
@@ -21,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.json import json_dumps, json_loads
 
 from .. import subscription
 from ..config import MQTT_BASE_SCHEMA
@@ -203,7 +202,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         @log_messages(self.hass, self.entity_id)
         def state_message_received(msg):
             """Handle state MQTT message."""
-            payload = json.loads(msg.payload)
+            payload = json_loads(msg.payload)
             if STATE in payload and (
                 payload[STATE] in POSSIBLE_STATES or payload[STATE] is None
             ):
@@ -347,7 +346,7 @@ class MqttStateVacuum(MqttEntity, StateVacuumEntity):
         if params:
             message = {"command": command}
             message.update(params)
-            message = json.dumps(message)
+            message = json_dumps(message)
         else:
             message = command
         await self.async_publish(

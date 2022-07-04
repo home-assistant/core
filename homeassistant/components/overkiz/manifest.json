@@ -3,7 +3,7 @@
   "name": "Overkiz (by Somfy)",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
-  "requirements": ["pyoverkiz==1.4.0"],
+  "requirements": ["pyoverkiz==1.4.2"],
   "zeroconf": [
     {
       "type": "_kizbox._tcp.local.",
@@ -24,6 +24,7 @@
     "flexom": "Bouygues Flexom",
     "hi_kumo": "Hitachi Hi Kumo",
     "nexity": "Nexity Eugénie",
-    "rexel": "Rexel Energeasy Connect"
+    "rexel": "Rexel Energeasy Connect",
+    "somfy": "Somfy"
   }
 }

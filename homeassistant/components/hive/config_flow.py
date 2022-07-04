@@ -1,4 +1,5 @@
 """Config Flow for Hive."""
+from __future__ import annotations
 
 from apyhiveapi import Auth
 from apyhiveapi.helper.hive_exceptions import (
@@ -13,7 +14,7 @@ from homeassistant import config_entries
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
 
-from .const import CONF_CODE, CONFIG_ENTRY_VERSION, DOMAIN
+from .const import CONF_CODE, CONF_DEVICE_NAME, CONFIG_ENTRY_VERSION, DOMAIN
 
 
 class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -28,6 +29,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self.tokens = {}
         self.entry = None
         self.device_registration = False
+        self.device_name = "Home Assistant"
 
     async def async_step_user(self, user_input=None):
         """Prompt user input. Create or edit entry."""
@@ -59,7 +61,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_2fa()
 
             if not errors:
-                # Complete the entry setup.
+                # Complete the entry.
                 try:
                     return await self.async_setup_hive_entry()
                 except UnknownHiveError:
@@ -88,14 +90,35 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "no_internet_available"
 
             if not errors:
-                try:
-                    self.device_registration = True
+                if self.context["source"] == config_entries.SOURCE_REAUTH:
                     return await self.async_setup_hive_entry()
-                except UnknownHiveError:
-                    errors["base"] = "unknown"
+                self.device_registration = True
+                return await self.async_step_configuration()
 
         schema = vol.Schema({vol.Required(CONF_CODE): str})
         return self.async_show_form(step_id="2fa", data_schema=schema, errors=errors)
+
+    async def async_step_configuration(self, user_input=None):
+        """Handle hive configuration step."""
+        errors = {}
+
+        if user_input:
+            if self.device_registration:
+                self.device_name = user_input["device_name"]
+                await self.hive_auth.device_registration(user_input["device_name"])
+                self.data["device_data"] = await self.hive_auth.get_device_data()
+
+            try:
+                return await self.async_setup_hive_entry()
+            except UnknownHiveError:
+                errors["base"] = "unknown"
+
+        schema = vol.Schema(
+            {vol.Optional(CONF_DEVICE_NAME, default=self.device_name): str}
+        )
+        return self.async_show_form(
+            step_id="configuration", data_schema=schema, errors=errors
+        )
 
     async def async_setup_hive_entry(self):
         """Finish setup and create the config entry."""
@@ -104,9 +127,6 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             raise UnknownHiveError
 
         # Setup the config entry
-        if self.device_registration:
-            await self.hive_auth.device_registration("Home Assistant")
-            self.data["device_data"] = await self.hive_auth.getDeviceData()
         self.data["tokens"] = self.tokens
         if self.context["source"] == config_entries.SOURCE_REAUTH:
             self.hass.config_entries.async_update_entry(
@@ -130,7 +150,9 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> HiveOptionsFlowHandler:
         """Hive options callback."""
         return HiveOptionsFlowHandler(config_entry)
 
@@ -138,7 +160,7 @@ class HiveFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 class HiveOptionsFlowHandler(config_entries.OptionsFlow):
     """Config flow options for Hive."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Hive options flow."""
         self.hive = None
         self.config_entry = config_entry

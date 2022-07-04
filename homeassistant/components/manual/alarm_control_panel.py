@@ -302,7 +302,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Whether the code is required for arm actions."""
         return self._code_arm_required
 
-    def alarm_disarm(self, code=None):
+    def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if not self._validate_code(code, STATE_ALARM_DISARMED):
             return
@@ -311,7 +311,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         self._state_ts = dt_util.utcnow()
         self.schedule_update_ha_state()
 
-    def alarm_arm_home(self, code=None):
+    def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_HOME
@@ -320,7 +320,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_HOME)
 
-    def alarm_arm_away(self, code=None):
+    def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_AWAY
@@ -329,7 +329,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_AWAY)
 
-    def alarm_arm_night(self, code=None):
+    def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_NIGHT
@@ -338,7 +338,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_NIGHT)
 
-    def alarm_arm_vacation(self, code=None):
+    def alarm_arm_vacation(self, code: str | None = None) -> None:
         """Send arm vacation command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_VACATION
@@ -347,7 +347,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_VACATION)
 
-    def alarm_arm_custom_bypass(self, code=None):
+    def alarm_arm_custom_bypass(self, code: str | None = None) -> None:
         """Send arm custom bypass command."""
         if self._code_arm_required and not self._validate_code(
             code, STATE_ALARM_ARMED_CUSTOM_BYPASS
@@ -356,7 +356,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
 
         self._update_state(STATE_ALARM_ARMED_CUSTOM_BYPASS)
 
-    def alarm_trigger(self, code=None):
+    def alarm_trigger(self, code: str | None = None) -> None:
         """
         Send alarm trigger command.
 
@@ -428,7 +428,7 @@ class ManualAlarm(alarm.AlarmControlPanelEntity, RestoreEntity):
         """Update state at a scheduled point in time."""
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():

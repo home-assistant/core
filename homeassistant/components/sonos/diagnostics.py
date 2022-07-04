@@ -136,4 +136,8 @@ async def async_generate_speaker_info(
     payload["media"] = await async_generate_media_info(hass, speaker)
     payload["activity_stats"] = speaker.activity_stats.report()
     payload["event_stats"] = speaker.event_stats.report()
+    payload["zone_group_state_stats"] = {
+        "processed": speaker.soco.zone_group_state.processed_count,
+        "total_requests": speaker.soco.zone_group_state.total_requests,
+    }
     return payload

@@ -287,7 +287,6 @@ async def get_deconz_session(
         config[CONF_HOST],
         config[CONF_PORT],
         config[CONF_API_KEY],
-        legacy_add_device=False,
     )
     try:
         async with async_timeout.timeout(10):

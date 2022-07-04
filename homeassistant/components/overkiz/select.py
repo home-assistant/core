@@ -50,6 +50,17 @@ def _select_option_memorized_simple_volume(
     return execute_command(OverkizCommand.SET_MEMORIZED_SIMPLE_VOLUME, option)
 
 
+def _select_option_active_zone(
+    option: str, execute_command: Callable[..., Awaitable[None]]
+) -> Awaitable[None]:
+    """Change the selected option for Active Zone(s)."""
+    # Turn alarm off when empty zone is selected
+    if option == "":
+        return execute_command(OverkizCommand.ALARM_OFF)
+
+    return execute_command(OverkizCommand.ALARM_ZONE_ON, option)
+
+
 SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
     OverkizSelectDescription(
         key=OverkizState.CORE_OPEN_CLOSED_PEDESTRIAN,
@@ -82,6 +93,14 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
             OverkizCommand.SET_OPERATING_MODE, option
         ),
         entity_category=EntityCategory.CONFIG,
+    ),
+    # StatefulAlarmController
+    OverkizSelectDescription(
+        key=OverkizState.CORE_ACTIVE_ZONES,
+        name="Active Zones",
+        icon="mdi:shield-lock",
+        options=["", "A", "B", "C", "A,B", "B,C", "A,C", "A,B,C"],
+        select_option=_select_option_active_zone,
     ),
 ]
 

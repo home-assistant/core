@@ -9,8 +9,8 @@
             "is_closing": "{entity_name} st\u00e4ngs",
             "is_open": "{entity_name} \u00e4r \u00f6ppen",
             "is_opening": "{entity_name} \u00f6ppnas",
-            "is_position": "Aktuell position f\u00f6r {entity_name} \u00e4r",
-            "is_tilt_position": "Aktuell {entity_name} lutningsposition \u00e4r"
+            "is_position": "Nuvarande position f\u00f6r {entity_name} \u00e4r",
+            "is_tilt_position": "Nuvarande {entity_name} lutningsposition \u00e4r"
         },
         "trigger_type": {
             "closed": "{entity_name} st\u00e4ngd",

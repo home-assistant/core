@@ -5,9 +5,10 @@ from collections.abc import Iterable
 from datetime import datetime as dt
 
 import sqlalchemy
-from sqlalchemy import select, union_all
+from sqlalchemy import lambda_stmt, select, union_all
 from sqlalchemy.orm import Query
-from sqlalchemy.sql.selectable import CTE, CompoundSelect, Select
+from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.sql.selectable import CTE, CompoundSelect
 
 from homeassistant.components.recorder.db_schema import EventData, Events, States
 
@@ -93,21 +94,23 @@ def entities_devices_stmt(
     entity_ids: list[str],
     json_quoted_entity_ids: list[str],
     json_quoted_device_ids: list[str],
-) -> Select:
+) -> StatementLambdaElement:
     """Generate a logbook query for multiple entities."""
-    stmt = _apply_entities_devices_context_union(
-        select_events_without_states(start_day, end_day, event_types).where(
-            _apply_event_entity_id_device_id_matchers(
-                json_quoted_entity_ids, json_quoted_device_ids
-            )
-        ),
-        start_day,
-        end_day,
-        event_types,
-        entity_ids,
-        json_quoted_entity_ids,
-        json_quoted_device_ids,
-    ).order_by(Events.time_fired)
+    stmt = lambda_stmt(
+        lambda: _apply_entities_devices_context_union(
+            select_events_without_states(start_day, end_day, event_types).where(
+                _apply_event_entity_id_device_id_matchers(
+                    json_quoted_entity_ids, json_quoted_device_ids
+                )
+            ),
+            start_day,
+            end_day,
+            event_types,
+            entity_ids,
+            json_quoted_entity_ids,
+            json_quoted_device_ids,
+        ).order_by(Events.time_fired)
+    )
     return stmt
 
 

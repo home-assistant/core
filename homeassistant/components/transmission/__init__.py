@@ -20,7 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -85,8 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     client = TransmissionClient(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
-    if not await client.async_setup():
-        return False
+    await client.async_setup()
 
     return True
 
@@ -152,15 +151,15 @@ class TransmissionClient:
         """Return the TransmissionData object."""
         return self._tm_data
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
         try:
             self.tm_api = await get_api(self.hass, self.config_entry.data)
         except CannotConnect as error:
             raise ConfigEntryNotReady from error
-        except (AuthenticationError, UnknownError):
-            return False
+        except (AuthenticationError, UnknownError) as error:
+            raise ConfigEntryAuthFailed from error
 
         self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
 
@@ -261,8 +260,6 @@ class TransmissionClient:
         )
 
         self.config_entry.add_update_listener(self.async_options_updated)
-
-        return True
 
     def add_options(self):
         """Add options for entry."""
