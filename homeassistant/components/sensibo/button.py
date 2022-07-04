@@ -1,24 +1,44 @@
 """Button platform for Sensibo integration."""
 from __future__ import annotations
 
+from dataclasses import dataclass
+from typing import Any
+
+from pysensibo.model import SensiboDevice
+
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity
+from .entity import SensiboDeviceBaseEntity, api_call_decorator
 
 PARALLEL_UPDATES = 0
 
-DEVICE_BUTTON_TYPES: ButtonEntityDescription = ButtonEntityDescription(
+
+@dataclass
+class SensiboEntityDescriptionMixin:
+    """Mixin values for Sensibo entities."""
+
+    data_key: str
+
+
+@dataclass
+class SensiboButtonEntityDescription(
+    ButtonEntityDescription, SensiboEntityDescriptionMixin
+):
+    """Class describing Sensibo Button entities."""
+
+
+DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
     key="reset_filter",
     name="Reset filter",
     icon="mdi:air-filter",
     entity_category=EntityCategory.CONFIG,
+    data_key="filter_clean",
 )
 
 
@@ -42,13 +62,13 @@ async def async_setup_entry(
 class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
     """Representation of a Sensibo Device Binary Sensor."""
 
-    entity_description: ButtonEntityDescription
+    entity_description: SensiboButtonEntityDescription
 
     def __init__(
         self,
         coordinator: SensiboDataUpdateCoordinator,
         device_id: str,
-        entity_description: ButtonEntityDescription,
+        entity_description: SensiboButtonEntityDescription,
     ) -> None:
         """Initiate Sensibo Device Button."""
         super().__init__(
@@ -60,8 +80,16 @@ class SensiboDeviceButton(SensiboDeviceBaseEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Press the button."""
-        result = await self.async_send_command("reset_filter")
-        if result["status"] == "success":
-            await self.coordinator.async_request_refresh()
-            return
-        raise HomeAssistantError(f"Could not set calibration for device {self.name}")
+        await self.api_call(
+            device_data=self.device_data,
+            key=self.entity_description.data_key,
+            value=False,
+        )
+
+    @api_call_decorator
+    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
+        """Make service call to api."""
+        result = await self._client.async_reset_filter(
+            self._device_id,
+        )
+        return bool(result.get("status") == "success")

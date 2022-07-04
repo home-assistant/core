@@ -15,7 +15,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity, api_call
+from .entity import SensiboDeviceBaseEntity, api_call_decorator
 
 PARALLEL_UPDATES = 0
 
@@ -100,17 +100,16 @@ class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set value for calibration."""
-        await self.make_api_call(
+        await self.api_call(
             device_data=self.device_data, key=self.entity_description.key, value=value
         )
 
-    @api_call
-    async def make_api_call(
-        self, device_data: SensiboDevice, key: float, value: float
-    ) -> dict[str, Any]:
+    @api_call_decorator
+    async def api_call(self, device_data: SensiboDevice, key: Any, value: Any) -> bool:
         """Make service call to api."""
         data = {self.entity_description.remote_key: value}
-        return await self._client.async_set_calibration(
+        result = await self._client.async_set_calibration(
             self._device_id,
             data,
         )
+        return bool(result.get("status") == "success")
