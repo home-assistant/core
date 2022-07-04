@@ -19,6 +19,8 @@ from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
 
+ATTR_COOKIES_FILEPATH = "cookies_txt_filepath"
+
 CONF_CUSTOMIZE_ENTITIES = "customize"
 CONF_DEFAULT_STREAM_QUERY = "default_query"
 
@@ -51,7 +53,12 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_PLAY_MEDIA,
         play_media,
-        schema=cv.make_entity_service_schema(MEDIA_PLAYER_PLAY_MEDIA_SCHEMA),
+        schema=cv.make_entity_service_schema(
+            {
+                **MEDIA_PLAYER_PLAY_MEDIA_SCHEMA,
+                vol.Optional(ATTR_COOKIES_FILEPATH, default=""): cv.string,
+            }
+        ),
     )
 
     return True
@@ -99,7 +106,10 @@ class MediaExtractor:
 
     def get_stream_selector(self):
         """Return format selector for the media URL."""
-        ydl = YoutubeDL({"quiet": True, "logger": _LOGGER})
+        cookies_txt_filepath = self.call_data.get(ATTR_COOKIES_FILEPATH)
+        ydl = YoutubeDL(
+            {"quiet": True, "logger": _LOGGER, "cookiefile": cookies_txt_filepath}
+        )
 
         try:
             all_media = ydl.extract_info(self.get_media_url(), process=False)
@@ -141,7 +151,11 @@ class MediaExtractor:
             _LOGGER.error("Wrong query format: %s", stream_query)
             return
         else:
-            data = {k: v for k, v in self.call_data.items() if k != ATTR_ENTITY_ID}
+            data = {
+                k: v
+                for k, v in self.call_data.items()
+                if k not in (ATTR_ENTITY_ID, ATTR_COOKIES_FILEPATH)
+            }
             data[ATTR_MEDIA_CONTENT_ID] = stream_url
 
             if entity_id:

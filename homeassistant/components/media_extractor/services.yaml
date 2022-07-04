@@ -5,6 +5,13 @@ play_media:
     entity:
       domain: media_player
   fields:
+    cookies_txt_filepath:
+      name: cookies.txt filepath
+      description: provided exported cookies.txt to supply youtube-dl for authorized streaming
+      required: false
+      example: "config/twitch.tv_cookies.txt"
+      selector:
+        text:
     media_content_id:
       name: Media content ID
       description: The ID of the content to play. Platform dependent.
