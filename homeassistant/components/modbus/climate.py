@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import struct
-from typing import Any, cast, Optional
+from typing import Any, Optional, cast
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
@@ -233,7 +233,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         self.async_write_ha_state()
 
     async def _async_read_register(
-        self, register_type: str, register: int, raw: Optional[bool] = False
+        self, register_type: str, register: int, raw: bool | None = False
     ) -> float | None:
         """Read register using the Modbus hub slave."""
         result = await self._hub.async_pymodbus_call(
@@ -254,11 +254,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             # the object's state
             self._attr_available = True
             return int(result.registers[0])
-        else:
-            # The regular handling of the value
-            self._value = self.unpack_structure_result(result.registers)
-            if not self._value:
-                self._attr_available = False
-                return None
-            self._attr_available = True
-            return float(self._value)
+
+        # The regular handling of the value
+        self._value = self.unpack_structure_result(result.registers)
+        if not self._value:
+            self._attr_available = False
+            return None
+        self._attr_available = True
+        return float(self._value)
