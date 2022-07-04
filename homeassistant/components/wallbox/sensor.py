@@ -147,10 +147,7 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox sensor entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
-    is_quasar = coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY].startswith("QSX")
-    
-    if not is_quasar: 
-        del SENSOR_TYPES[CHARGER_ADDED_DISCHARGED_ENERGY_KEY]
+
     async_add_entities(
         [
             WallboxSensor(coordinator, entry, description)
@@ -158,7 +155,6 @@ async def async_setup_entry(
             if (description := SENSOR_TYPES.get(ent))
         ]
     )
-
 
 class WallboxSensor(WallboxEntity, SensorEntity):
     """Representation of the Wallbox portal."""

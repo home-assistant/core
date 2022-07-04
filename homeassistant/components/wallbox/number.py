@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import InvalidAuth, WallboxCoordinator, WallboxEntity
 from .const import (
+    BIDIRECTIONAL_MODEL_PREFIXES,
     CHARGER_DATA_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
@@ -72,7 +73,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
-        self._is_quasar = coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY].startswith("QSX")
+        self._is_bidirectional = any(coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:3] in model for model in BIDIRECTIONAL_MODEL_PREFIXES)
 
     @property
     def native_max_value(self) -> float:
@@ -82,7 +83,7 @@ class WallboxNumber(WallboxEntity, NumberEntity):
     @property
     def native_min_value(self) -> float:
         """Return the minimum available current based on charger type - Quasar can discharge"""
-        return (self.max_value*-1) if self._is_quasar else 6
+        return (self.max_value*-1) if self._is_bidirectional else 6
 
     @property
     def native_value(self) -> float | None:
