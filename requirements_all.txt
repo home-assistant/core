@@ -1993,7 +1993,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.8
+pyunifiprotect==4.0.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2077,7 +2077,7 @@ restrictedpython==5.2
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.62
+rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
