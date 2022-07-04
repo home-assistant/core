@@ -49,7 +49,9 @@ async def async_setup_entry(
         if isinstance(device, Camera) and device.feature_flags.has_speaker:
             async_add_entities([ProtectMediaPlayer(data, device)])
 
-    async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, _ufpd(entry, DISPATCH_ADOPT), _add_new_device)
+    )
 
     entities = []
     for device in data.api.bootstrap.cameras.values():

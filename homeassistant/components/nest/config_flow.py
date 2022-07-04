@@ -218,10 +218,10 @@ class NestFlowHandler(
             return await self.async_step_finish()
         return await self.async_step_pubsub()
 
-    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         assert self.config_mode != ConfigMode.LEGACY, "Step only supported for SDM API"
-        self._data.update(user_input)
+        self._data.update(entry_data)
 
         return await self.async_step_reauth_confirm()
 

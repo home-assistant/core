@@ -102,7 +102,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
-    """Remove a enphase_envoy config entry from a device."""
+    """Remove an enphase_envoy config entry from a device."""
     dev_ids = {dev_id[1] for dev_id in device_entry.identifiers if dev_id[0] == DOMAIN}
     data: dict = hass.data[DOMAIN][config_entry.entry_id]
     coordinator: DataUpdateCoordinator = data[COORDINATOR]

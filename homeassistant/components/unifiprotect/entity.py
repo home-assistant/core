@@ -215,7 +215,7 @@ class ProtectDeviceEntity(Entity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_device_id(
-                self.device.id, self._async_updated_event
+                self.device.mac, self._async_updated_event
             )
         )
 
