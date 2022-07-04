@@ -63,7 +63,7 @@ class NetioSwitch(NetioDeviceEntity, SwitchEntity):
         return "_".join(
             [
                 DOMAIN,
-                self.pdu.get_device_serial_number(),
+                self.pdu.serial_number,
                 "outlet",
                 str(self._outlet),
             ]
@@ -92,13 +92,11 @@ class NetioSwitch(NetioDeviceEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
         await self.hass.async_add_executor_job(self.pdu.output_on, self._outlet)
-        # self.schedule_update_ha_state()
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
         await self.hass.async_add_executor_job(self.pdu.output_off, self._outlet)
-        # self.schedule_update_ha_state()
         await self.coordinator.async_request_refresh()
 
     @callback

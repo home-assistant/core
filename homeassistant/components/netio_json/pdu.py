@@ -6,27 +6,30 @@ import logging
 
 from Netio import Netio
 from Netio.exceptions import AuthError, CommunicationError
-
-# import asyncio
 import aiohttp
 import async_timeout
 from requests.exceptions import ConnectionError as requestsConnectionError
 
 from homeassistant import core
-from homeassistant.config_entries import ConfigEntry  # SOURCE_IMPORT,
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import (
+from .const import (  # API_AGENT_UPTIME,
+    API_AGENT,
+    API_AGENT_DEVICENAME,
+    API_AGENT_MAC,
+    API_AGENT_MODEL,
+    API_AGENT_NUMINPUTS,
+    API_AGENT_NUMOUTPUTS,
+    API_AGENT_SERIALNUMBER,
+    API_AGENT_VERSION,
     API_GLOBAL_ENERGY_START,
     API_GLOBAL_MEASURE,
     API_OUTLET,
     DOMAIN,
     SCAN_INTERVAL,
 )
-
-# import async_timeout
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,8 +55,7 @@ async def validate_pdu_connection(
     auth = aiohttp.BasicAuth(username, password)
     async with aiohttp.ClientSession() as session:
         try:
-            async with session.get(config_url, auth=auth) as resp:
-                _LOGGER.warning(resp.status)
+            resp = await session.get(config_url, auth=auth)
         except aiohttp.ClientConnectionError as ex:
             _LOGGER.warning("Failed to connect: %s", ex)
             raise CannotConnect from ex
@@ -64,6 +66,7 @@ async def validate_pdu_connection(
             raise CannotConnect from ex
 
     if 401 <= resp.status <= 403:
+        _LOGGER.warning("Failed to authenticate")
         raise InvalidAuth(resp.status)
     return True
 
@@ -75,20 +78,22 @@ class NetioPDU:
         """Initialize the system."""
         self.config_entry = config_entry
         self.hass = hass
-        self.host: str = self.config_entry.data["host"]
-        self.config_url: str = _get_config_url(self.host, self.config_entry.data["ssl"])
-        self.read_only: bool = self.config_entry.data["ro"]
-        self.model: str | None = None
-        self.device_name: str | None = None
+        self._host: str = self.config_entry.data["host"]
+        self._config_url: str = _get_config_url(
+            self.host, self.config_entry.data["ssl"]
+        )
+        self._read_only: bool = self.config_entry.data["ro"]
+        self._model: str | None = None
+        self._device_name: str | None = None
         self._mac: str | None = None
         self._serial_number: str | None = None
         self._num_output: int | None = None
         self._num_input: int | None = None
-        self.sw_version: str | None = None
-        self.energy_start: datetime | None = None
-        if self.read_only:
+        self._sw_version: str | None = None
+        self._energy_start: datetime | None = None
+        if self._read_only:
             self.pdu = Netio(
-                self.config_url,
+                self._config_url,
                 auth_r=(
                     f"{self.config_entry.data['username']}",
                     f"{self.config_entry.data['password']}",
@@ -98,7 +103,7 @@ class NetioPDU:
             )
         else:
             self.pdu = Netio(
-                self.config_url,
+                self._config_url,
                 auth_rw=(
                     f"{self.config_entry.data['username']}",
                     f"{self.config_entry.data['password']}",
@@ -107,6 +112,41 @@ class NetioPDU:
                 skip_init=True,
             )
         hass.data.setdefault(DOMAIN, {})[self.config_entry.entry_id] = self
+
+    @property
+    def serial_number(self) -> str:
+        """Return the devices serial number."""
+        return str(self._serial_number)
+
+    @property
+    def host(self) -> str:
+        """Return the device hostname."""
+        return self._host
+
+    @property
+    def read_only(self) -> bool:
+        """Return the read_only state of this connection."""
+        return self._read_only
+
+    @property
+    def sw_version(self) -> str:
+        """Return the software version of the PDU."""
+        return str(self._sw_version)
+
+    @property
+    def energy_start(self) -> datetime | None:
+        """Return the last reset moment of the PDU."""
+        return self._energy_start
+
+    @property
+    def model(self) -> str:
+        """Return the PDU model string."""
+        return str(self._model)
+
+    @property
+    def device_name(self) -> str:
+        """Return the PDU device name."""
+        return str(self._device_name)
 
     async def async_initialize_pdu(self) -> None:
         """Initialize connection with the NetIO PDU."""
@@ -118,14 +158,14 @@ class NetioPDU:
             raise ConnectionError(ex) from ex
 
         info = await self.hass.async_add_executor_job(self.pdu.get_info)
-        self.model = self._get_device_model(info["Agent"]["Model"])
-        self.device_name = info["Agent"]["DeviceName"]
-        self._mac = info["Agent"]["MAC"]
-        self._serial_number = info["Agent"]["SerialNumber"]
-        self._num_output = info["Agent"]["NumOutputs"]
-        self._num_input = info["Agent"]["NumInputs"]
-        self.sw_version = info["Agent"]["Version"]
-        self.energy_start = datetime.strptime(
+        self._model = self._get_device_model(info[API_AGENT][API_AGENT_MODEL])
+        self._device_name = info[API_AGENT][API_AGENT_DEVICENAME]
+        self._mac = info[API_AGENT][API_AGENT_MAC]
+        self._serial_number = info[API_AGENT][API_AGENT_SERIALNUMBER]
+        self._num_output = info[API_AGENT][API_AGENT_NUMOUTPUTS]
+        self._num_input = info[API_AGENT][API_AGENT_NUMINPUTS]
+        self._sw_version = info[API_AGENT][API_AGENT_VERSION]
+        self._energy_start = datetime.strptime(
             info[API_GLOBAL_MEASURE][API_GLOBAL_ENERGY_START], "%Y-%m-%dT%H:%M:%S%z"
         )
 
@@ -154,27 +194,15 @@ class NetioPDU:
 
     def output_off(self, output: int) -> None:
         """Turn an output off."""
-        if self.read_only:
+        if self._read_only:
             raise NotImplementedError("Device is configured as Read Only")
         self.pdu.set_output(output, Netio.ACTION.OFF)
 
     def output_on(self, output: int) -> None:
         """Turn an output on."""
-        if self.read_only:
+        if self._read_only:
             raise NotImplementedError("Device is configured as Read Only")
         self.pdu.set_output(output, Netio.ACTION.ON)
-
-    # async def get_outlet(self, outlet: int, key: str) -> str | int | float | None:
-    #     """Return Outlet values."""
-    #     try:
-    #         info = await self.hass.async_add_executor_job(self.pdu.get_output, outlet)
-    #         return getattr(info, key)
-    #     except KeyError:
-    #         return None
-
-    def get_device_serial_number(self) -> str:
-        """Return the devices serial number."""
-        return str(self._serial_number)
 
     def _get_device_model(self, model: str) -> str:
         """Return the full device model name."""

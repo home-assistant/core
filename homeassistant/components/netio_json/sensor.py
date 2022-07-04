@@ -4,7 +4,7 @@ from __future__ import annotations
 import datetime
 import logging
 
-from homeassistant.components.sensor import (  # SensorStateClass,
+from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
@@ -44,9 +44,6 @@ from .const import (  # API_GLOBAL_REVERSE_ENERGY,; API_OUTLET_REVERSE_ENERGY,
 )
 from .pdu import NetioPDUCoordinator
 
-# from homeassistant.helpers.update_coordinator import CoordinatorEntity
-
-
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -68,11 +65,6 @@ async def async_setup_entry(
     # coordinator.async_refresh() instead
     await coordinator.async_config_entry_first_refresh()
 
-    # try:
-    #     # version = await pdu.version()
-    #     await pdu.ready()
-    # except Exception as exception:
-    #     raise PlatformNotReady from exception
     if not coordinator.pdu.ready():
         raise PlatformNotReady
 
@@ -93,6 +85,8 @@ async def async_setup_entry(
         sensors.append(
             NetioOutletPowerfactorSensor(coordinator, config_entry, output + 1)
         )
+        # NetIO Python library doesn't support Phase on outlets, even if the API itself does.
+        # have it ready here if it ever does
         # sensors.append(NetioOutletPhaseSensor(coordinator, config_entry, output + 1))
 
     async_add_entities(sensors, True)
@@ -114,7 +108,7 @@ class NetioSensor(NetioDeviceEntity, SensorEntity):
         """Initialize NetIO PDU sensor."""
         self._state: int | str | float | None = None
         self._unit_of_measurement = unit_of_measurement
-        self.measurement = measurement
+        self._measurement = measurement
         self._key: str
 
         super().__init__(coordinator, config_entry, name, icon, enabled_default)
@@ -125,9 +119,9 @@ class NetioSensor(NetioDeviceEntity, SensorEntity):
         return "_".join(
             [
                 DOMAIN,
-                self.pdu.get_device_serial_number(),
+                self.pdu.serial_number,
                 "sensor",
-                self.measurement,
+                self._measurement,
             ]
         )
 
@@ -179,11 +173,11 @@ class NetioOutletSensor(NetioSensor):
         return "_".join(
             [
                 DOMAIN,
-                self.pdu.host,
+                self.pdu.serial_number,
                 "outlet",
                 str(self._outlet),
                 "sensor",
-                self.measurement,
+                self._measurement,
             ]
         )
 

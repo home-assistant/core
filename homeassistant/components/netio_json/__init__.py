@@ -14,9 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import DATA_NETIO_CLIENT, DOMAIN
 from .pdu import NetioPDU, NetioPDUCoordinator
 
-# from Netio.exceptions import NetioException
-
-
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH]
 
 _LOGGER = logging.getLogger(__name__)
@@ -33,11 +30,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await pdu.async_initialize_pdu()
     except ConnectionError as ex:
         raise ConfigEntryNotReady(f"{pdu.host}: {ex}") from ex
-    # except Exception as ex:
-    #     template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-    #     message = template.format(type(ex).__name__, ex.args)
-    #     _LOGGER.warning(message)
-    #     raise ConfigEntryNotReady(f"ERROR for NetIO PDU {pdu.host}: ") from ex
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True
@@ -92,26 +84,6 @@ class NetioEntity(CoordinatorEntity, Entity):
         """Return True if entity is available."""
         return self._available
 
-    # async def async_update(self) -> None:
-    #     """Update NetIO PDU entity."""
-    #     if not self.enabled:
-    #         return
-
-    #     try:
-    #         await self._pdu_update()
-    #         self._available = True
-    #     except NetioException:
-    #         if self._available:
-    #             _LOGGER.debug(
-    #                 "An error occurred while updating NetIO PDU sensor",
-    #                 exc_info=True,
-    #             )
-    #         self._available = False
-
-    async def _pdu_update(self) -> None:
-        """Update NetIO PDU entity."""
-        raise NotImplementedError()
-
 
 class NetioDeviceEntity(NetioEntity):
     """Defines a base NetIO PDU Device entity."""
@@ -122,7 +94,7 @@ class NetioDeviceEntity(NetioEntity):
 
         return DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, self.pdu.host, self.pdu.get_device_serial_number())},  # type: ignore[arg-type]
+            identifiers={(DOMAIN, self.pdu.host, self.pdu.serial_number)},  # type: ignore[arg-type]
             default_name="NetIO PDU",
             manufacturer="NetIO",
             name=self.pdu.device_name,
@@ -131,13 +103,7 @@ class NetioDeviceEntity(NetioEntity):
             configuration_url=f"http://{self.pdu.host}/",
         )
 
-    async def _pdu_update(self) -> None:
-        """Update NetIO PDU entity."""
-        raise NotImplementedError()
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         raise NotImplementedError()
-        # self._attr_is_on = self.coordinator.data[self.idx]["state"]
-        # self.async_write_ha_state()
