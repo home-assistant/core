@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pysensibo.model import SensiboDevice
 
@@ -14,12 +14,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import SensiboDataUpdateCoordinator
-from .entity import SensiboDeviceBaseEntity
+from .entity import SensiboDeviceBaseEntity, api_call_decorator
 
 PARALLEL_UPDATES = 0
 
@@ -144,32 +143,20 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        params = build_params(self.entity_description.command_on, self.device_data)
-        result = await self.async_send_command(
-            self.entity_description.command_on, params
-        )
-
-        if result["status"] == "success":
-            setattr(self.device_data, self.entity_description.data_key, True)
-            self.async_write_ha_state()
-            return await self.coordinator.async_request_refresh()
-        raise HomeAssistantError(
-            f"Could not execute {self.entity_description.command_on} for device {self.name}"
+        await self.api_call(
+            device_data=self.device_data,
+            key=self.entity_description.key,
+            value=True,
+            command=self.entity_description.command_on,
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        params = build_params(self.entity_description.command_on, self.device_data)
-        result = await self.async_send_command(
-            self.entity_description.command_off, params
-        )
-
-        if result["status"] == "success":
-            setattr(self.device_data, self.entity_description.data_key, False)
-            self.async_write_ha_state()
-            return await self.coordinator.async_request_refresh()
-        raise HomeAssistantError(
-            f"Could not execute {self.entity_description.command_off} for device {self.name}"
+        await self.api_call(
+            device_data=self.device_data,
+            key=self.entity_description.key,
+            value=False,
+            command=self.entity_description.command_off,
         )
 
     @property
@@ -178,3 +165,22 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         if self.entity_description.extra_fn:
             return self.entity_description.extra_fn(self.device_data)
         return None
+
+    @api_call_decorator
+    async def api_call(
+        self, device_data: SensiboDevice, key: Any, value: Any, command: str
+    ) -> bool:
+        """Make service call to api."""
+        result = {}
+        data = build_params(command, self.device_data)
+        if command == "set_timer":
+            if TYPE_CHECKING:
+                assert data is not None
+            result = await self._client.async_set_timer(self._device_id, data)
+        if command == "del_timer":
+            result = await self._client.async_del_timer(self._device_id)
+        if command == "set_pure_boost":
+            if TYPE_CHECKING:
+                assert data is not None
+            result = await self._client.async_set_pureboost(self._device_id, data)
+        return bool(result.get("status") == "success")
