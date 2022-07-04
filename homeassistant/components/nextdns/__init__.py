@@ -131,7 +131,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = ["button", "sensor"]
 COORDINATORS = [
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
