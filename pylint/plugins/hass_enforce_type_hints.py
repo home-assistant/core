@@ -1124,7 +1124,6 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
             ],
         ),
     ],
-    # "device_tracker": [],  # ignored as does not provide classes
     "fan": [
         ClassTypeHintMatch(
             base_class="Entity",
