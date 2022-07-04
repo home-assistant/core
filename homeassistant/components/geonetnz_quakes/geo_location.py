@@ -86,8 +86,6 @@ class GeonetnzQuakesEvent(GeolocationEvent):
         self._external_id = external_id
         self._attr_unique_id = f"{integration_id}_{external_id}"
         self._attr_unit_of_measurement = LENGTH_KILOMETERS
-        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
-            self._attr_unit_of_measurement = LENGTH_MILES
         self._depth = None
         self._locality = None
         self._magnitude = None
@@ -99,6 +97,8 @@ class GeonetnzQuakesEvent(GeolocationEvent):
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
+        if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
+            self._attr_unit_of_measurement = LENGTH_MILES
         self._remove_signal_delete = async_dispatcher_connect(
             self.hass,
             f"geonetnz_quakes_delete_{self._external_id}",
