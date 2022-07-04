@@ -83,7 +83,7 @@ def save_json(
             # For backwards compatibility, if they pass in the
             # default json encoder we use _orjson_default_encoder
             # which is the orjson equivalent to the default encoder.
-            if encoder == DefaultHASSJSONEncoder:
+            if encoder is DefaultHASSJSONEncoder:
                 dump = _orjson_default_encoder
                 json_data = _orjson_default_encoder(data)
             # If they pass a custom encoder that is not the
