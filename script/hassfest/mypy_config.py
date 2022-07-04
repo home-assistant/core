@@ -48,8 +48,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.sensor",
     "homeassistant.components.sonos.speaker",
     "homeassistant.components.sonos.statistics",
-    "homeassistant.components.template.number",
-    "homeassistant.components.template.sensor",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

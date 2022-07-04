@@ -14,6 +14,7 @@ from homeassistant.components.number.const import (
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
+    DEFAULT_STEP,
     DOMAIN as NUMBER_DOMAIN,
 )
 from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_STATE, CONF_UNIQUE_ID
@@ -120,9 +121,9 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._max_value_template = config[ATTR_MAX]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
         self._attr_native_value = None
-        self._attr_native_step = None
-        self._attr_native_min_value = None
-        self._attr_native_max_value = None
+        self._attr_native_step = DEFAULT_STEP
+        self._attr_native_min_value = DEFAULT_MIN_VALUE
+        self._attr_native_max_value = DEFAULT_MAX_VALUE
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
