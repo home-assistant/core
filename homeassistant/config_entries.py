@@ -30,13 +30,10 @@ from .util.decorator import Registry
 if TYPE_CHECKING:
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
-
-    # Avoid importing the whole MQTT integration by
-    # only importing mqtt.service_info
-    from .components.mqtt.service_info import MqttServiceInfo
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
+    from .helpers.discovery.mqtt import MqttServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 

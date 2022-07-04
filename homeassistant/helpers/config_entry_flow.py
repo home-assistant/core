@@ -16,12 +16,10 @@ if TYPE_CHECKING:
     import asyncio
 
     from homeassistant.components.dhcp import DhcpServiceInfo
-
-    # Avoid importing the whole MQTT integration by
-    # only importing mqtt.service_info
-    from homeassistant.components.mqtt.service_info import MqttServiceInfo
     from homeassistant.components.ssdp import SsdpServiceInfo
     from homeassistant.components.zeroconf import ZeroconfServiceInfo
+
+    from .discovery.mqtt import MqttServiceInfo
 
 _R = TypeVar("_R", bound="Awaitable[bool] | bool")
 DiscoveryFunctionType = Callable[[HomeAssistant], _R]

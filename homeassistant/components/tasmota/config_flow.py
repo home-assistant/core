@@ -7,8 +7,8 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.mqtt import valid_subscribe_topic
-from homeassistant.components.mqtt.service_info import MqttServiceInfo
 from homeassistant.data_entry_flow import FlowResult
+from homeassistant.helpers.discovery.mqtt import MqttServiceInfo
 
 from .const import CONF_DISCOVERY_PREFIX, DEFAULT_PREFIX, DOMAIN
 
