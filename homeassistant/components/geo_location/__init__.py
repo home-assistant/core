@@ -55,7 +55,7 @@ class GeolocationEvent(Entity):
     """Base class for an external event with an associated geolocation."""
 
     @property
-    def state(self) -> float | None:
+    def state(self):
         """Return the state of the sensor."""
         if self.distance is not None:
             return round(self.distance, 1)
