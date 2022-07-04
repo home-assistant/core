@@ -173,7 +173,9 @@ class UsgsEarthquakesFeedEntityManager:
         await self._feed_manager.update()
         _LOGGER.debug("Feed entity manager updated")
 
-    def get_entry(self, external_id) -> UsgsEarthquakeHazardsProgramFeedEntry | None:
+    def get_entry(
+        self, external_id: str
+    ) -> UsgsEarthquakeHazardsProgramFeedEntry | None:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
