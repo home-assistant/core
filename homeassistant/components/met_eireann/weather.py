@@ -56,7 +56,7 @@ class MetEireannWeather(CoordinatorEntity, WeatherEntity):
     """Implementation of a Met Éireann weather condition."""
 
     _attr_native_precipitation_unit = LENGTH_MILLIMETERS
-    _attr_native_pressureunit = PRESSURE_HPA
+    _attr_native_pressure_unit = PRESSURE_HPA
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_wind_speed_unit = SPEED_METERS_PER_SECOND
 
