@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
+from zigpy.exceptions import ZigbeeException
 import zigpy.zcl
 
 from homeassistant.core import callback
@@ -73,7 +74,7 @@ class OppleRemote(ZigbeeChannel):
                 "trigger_indicator": True,
             }
         elif self.cluster.endpoint.model == "lumi.motion.ac01":
-            self.ZCL_INIT_ATTRS = {  # pylint: disable=invalid-name
+            self.ZCL_INIT_ATTRS = {
                 "presence": True,
                 "monitoring_mode": True,
                 "motion_sensitivity": True,

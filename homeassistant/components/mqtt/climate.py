@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import functools
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -50,8 +51,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -391,9 +392,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT climate device through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, climate.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, climate.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -756,29 +755,29 @@ class MqttClimate(MqttEntity, ClimateEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def temperature_unit(self):
+    def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        if self._config.get(CONF_TEMPERATURE_UNIT):
-            return self._config.get(CONF_TEMPERATURE_UNIT)
+        if unit := self._config.get(CONF_TEMPERATURE_UNIT):
+            return unit
         return self.hass.config.units.temperature_unit
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temp
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temp
 
     @property
-    def target_temperature_low(self):
+    def target_temperature_low(self) -> float | None:
         """Return the low target temperature we try to reach."""
         return self._target_temp_low
 
     @property
-    def target_temperature_high(self):
+    def target_temperature_high(self) -> float | None:
         """Return the high target temperature we try to reach."""
         return self._target_temp_high
 
@@ -798,7 +797,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         return self._config[CONF_MODE_LIST]
 
     @property
-    def target_temperature_step(self):
+    def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return self._config[CONF_TEMP_STEP]
 
@@ -815,7 +814,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         return PRESET_NONE
 
     @property
-    def preset_modes(self) -> list:
+    def preset_modes(self) -> list[str]:
         """Return preset modes."""
         presets = []
         presets.extend(self._preset_modes)
@@ -836,17 +835,17 @@ class MqttClimate(MqttEntity, ClimateEntity):
         return presets
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool | None:
         """Return true if away mode is on."""
         return self._aux
 
     @property
-    def fan_mode(self):
+    def fan_mode(self) -> str | None:
         """Return the fan setting."""
         return self._current_fan_mode
 
     @property
-    def fan_modes(self):
+    def fan_modes(self) -> list[str]:
         """Return the list of available fan modes."""
         return self._config[CONF_FAN_MODE_LIST]
 
@@ -873,10 +872,9 @@ class MqttClimate(MqttEntity, ClimateEntity):
                 payload = self._command_templates[cmnd_template](temp)
                 await self._publish(cmnd_topic, payload)
 
-    async def async_set_temperature(self, **kwargs):
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
-        if kwargs.get(ATTR_HVAC_MODE) is not None:
-            operation_mode = kwargs.get(ATTR_HVAC_MODE)
+        if (operation_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
             await self.async_set_hvac_mode(operation_mode)
 
         await self._set_temperature(
@@ -906,7 +904,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
         # Always optimistic?
         self.async_write_ha_state()
 
-    async def async_set_swing_mode(self, swing_mode):
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         if self._send_if_off or self._current_operation != HVACMode.OFF:
@@ -919,7 +917,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._current_swing_mode = swing_mode
             self.async_write_ha_state()
 
-    async def async_set_fan_mode(self, fan_mode):
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target temperature."""
         # CONF_SEND_IF_OFF is deprecated, support will be removed with release 2022.9
         if self._send_if_off or self._current_operation != HVACMode.OFF:
@@ -930,7 +928,7 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._current_fan_mode = fan_mode
             self.async_write_ha_state()
 
-    async def async_set_hvac_mode(self, hvac_mode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if hvac_mode == HVACMode.OFF:
             await self._publish(
@@ -947,12 +945,12 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self.async_write_ha_state()
 
     @property
-    def swing_mode(self):
+    def swing_mode(self) -> str | None:
         """Return the swing setting."""
         return self._current_swing_mode
 
     @property
-    def swing_modes(self):
+    def swing_modes(self) -> list[str]:
         """List of available swing modes."""
         return self._config[CONF_SWING_MODE_LIST]
 
@@ -1029,16 +1027,16 @@ class MqttClimate(MqttEntity, ClimateEntity):
             self._aux = state
             self.async_write_ha_state()
 
-    async def async_turn_aux_heat_on(self):
+    async def async_turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
         await self._set_aux_heat(True)
 
-    async def async_turn_aux_heat_off(self):
+    async def async_turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
         await self._set_aux_heat(False)
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Return the list of supported features."""
         support = 0
 
@@ -1085,18 +1083,18 @@ class MqttClimate(MqttEntity, ClimateEntity):
         return support
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._config[CONF_TEMP_MIN]
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self._config[CONF_TEMP_MAX]
 
     @property
-    def precision(self):
+    def precision(self) -> float:
         """Return the precision of the system."""
-        if self._config.get(CONF_PRECISION) is not None:
-            return self._config.get(CONF_PRECISION)
+        if (precision := self._config.get(CONF_PRECISION)) is not None:
+            return precision
         return super().precision

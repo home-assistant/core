@@ -51,6 +51,7 @@ DEFAULT_ON_PERCENTAGE = 50
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.FAN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.FAN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.FAN)
 
 
 async def async_setup_entry(
@@ -247,20 +248,14 @@ IKEA_NAME_TO_PRESET_MODE = {v: k for k, v in IKEA_PRESET_MODES_TO_NAME.items()}
 IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
 
 
-@STRICT_MATCH(
-    channel_names=CHANNEL_FAN,
-    manufacturers={
-        "IKEA of Sweden",
-    },
-    models={"STARKVIND Air purifier"},
-)
+@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
 class IkeaFan(BaseFan, ZhaEntity):
     """Representation of a ZHA fan."""
 
     def __init__(self, unique_id, zha_device, channels, **kwargs):
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._fan_channel = self.cluster_channels.get(CHANNEL_FAN)
+        self._fan_channel = self.cluster_channels.get("ikea_airpurifier")
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -281,12 +276,9 @@ class IkeaFan(BaseFan, ZhaEntity):
 
     async def async_set_percentage(self, percentage: int | None) -> None:
         """Set the speed percenage of the fan."""
-        if percentage == 0:
-            fan_mode = 0
-        else:
-            fan_mode = math.ceil(
-                percentage_to_ranged_value(IKEA_SPEED_RANGE, percentage)
-            )
+        if percentage is None:
+            percentage = 0
+        fan_mode = math.ceil(percentage_to_ranged_value(IKEA_SPEED_RANGE, percentage))
         await self._async_set_fan_mode(fan_mode)
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
@@ -317,8 +309,14 @@ class IkeaFan(BaseFan, ZhaEntity):
     async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
         """Turn the entity on."""
         if percentage is None:
-            percentage = IKEA_NAME_TO_PRESET_MODE[PRESET_MODE_AUTO]
-        await self._async_set_fan_mode(IKEA_NAME_TO_PRESET_MODE[PRESET_MODE_AUTO])
+            percentage = (100 / self.speed_count) * IKEA_NAME_TO_PRESET_MODE[
+                PRESET_MODE_AUTO
+            ]
+        await self.async_set_percentage(percentage)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        await self.async_set_percentage(0)
 
     @callback
     def async_set_state(self, attr_id, attr_name, value):

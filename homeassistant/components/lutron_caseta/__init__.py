@@ -215,10 +215,10 @@ def _async_register_button_devices(
     config_entry_id: str,
     bridge_device,
     button_devices_by_id: dict[int, dict],
-) -> dict[str, dr.DeviceEntry]:
+) -> dict[str, dict]:
     """Register button devices (Pico Remotes) in the device registry."""
     device_registry = dr.async_get(hass)
-    button_devices_by_dr_id = {}
+    button_devices_by_dr_id: dict[str, dict] = {}
     seen = set()
 
     for device in button_devices_by_id.values():
@@ -226,7 +226,7 @@ def _async_register_button_devices(
             continue
         seen.add(device["serial"])
         area, name = _area_and_name_from_name(device["name"])
-        device_args = {
+        device_args: dict[str, Any] = {
             "name": f"{area} {name}",
             "manufacturer": MANUFACTURER,
             "config_entry_id": config_entry_id,
@@ -246,8 +246,21 @@ def _async_register_button_devices(
 def _area_and_name_from_name(device_name: str) -> tuple[str, str]:
     """Return the area and name from the devices internal name."""
     if "_" in device_name:
-        return device_name.split("_", 1)
+        area_device_name = device_name.split("_", 1)
+        return area_device_name[0], area_device_name[1]
     return UNASSIGNED_AREA, device_name
+
+
+@callback
+def async_get_lip_button(device_type: str, leap_button: int) -> int | None:
+    """Get the LIP button for a given LEAP button."""
+    if (
+        lip_buttons_name_to_num := DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    ) is None or (
+        leap_button_num_to_name := LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP.get(device_type)
+    ) is None:
+        return None
+    return lip_buttons_name_to_num[leap_button_num_to_name[leap_button]]
 
 
 @callback
@@ -271,21 +284,8 @@ def _async_subscribe_pico_remote_events(
 
         type_ = device["type"]
         area, name = _area_and_name_from_name(device["name"])
-        button_number = device["button_number"]
-        # The original implementation used LIP instead of LEAP
-        # so we need to convert the button number to maintain compat
-        sub_type_to_lip_button = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[type_]
-        leap_button_to_sub_type = LEAP_TO_DEVICE_TYPE_SUBTYPE_MAP[type_]
-        if (sub_type := leap_button_to_sub_type.get(button_number)) is None:
-            _LOGGER.error(
-                "Unknown LEAP button number %s is not in %s for %s (%s)",
-                button_number,
-                leap_button_to_sub_type,
-                name,
-                type_,
-            )
-            return
-        lip_button_number = sub_type_to_lip_button[sub_type]
+        leap_button_number = device["button_number"]
+        lip_button_number = async_get_lip_button(type_, leap_button_number)
         hass_device = dev_reg.async_get_device({(DOMAIN, device["serial"])})
 
         hass.bus.async_fire(
@@ -294,7 +294,7 @@ def _async_subscribe_pico_remote_events(
                 ATTR_SERIAL: device["serial"],
                 ATTR_TYPE: type_,
                 ATTR_BUTTON_NUMBER: lip_button_number,
-                ATTR_LEAP_BUTTON_NUMBER: button_number,
+                ATTR_LEAP_BUTTON_NUMBER: leap_button_number,
                 ATTR_DEVICE_NAME: name,
                 ATTR_DEVICE_ID: hass_device.id,
                 ATTR_AREA_NAME: area,
@@ -382,13 +382,13 @@ class LutronCasetaDevice(Entity):
 class LutronCasetaDeviceUpdatableEntity(LutronCasetaDevice):
     """A lutron_caseta entity that can update by syncing data from the bridge."""
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update when forcing a refresh of the device."""
         self._device = self._smartbridge.get_device_by_id(self.device_id)
         _LOGGER.debug(self._device)
 
 
-def _id_to_identifier(lutron_id: str) -> None:
+def _id_to_identifier(lutron_id: str) -> tuple[str, str]:
     """Convert a lutron caseta identifier to a device identifier."""
     return (DOMAIN, lutron_id)
 

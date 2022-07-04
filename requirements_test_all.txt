@@ -93,6 +93,9 @@ aio_geojson_geonetnz_volcano==0.6
 # homeassistant.components.nsw_rural_fire_service_feed
 aio_geojson_nsw_rfs_incidents==0.4
 
+# homeassistant.components.usgs_earthquakes_feed
+aio_geojson_usgs_earthquakes==0.1
+
 # homeassistant.components.gdacs
 aio_georss_gdacs==0.7
 
@@ -266,6 +269,9 @@ ambiclimate==0.2.1
 # homeassistant.components.androidtv
 androidtv[async]==0.0.67
 
+# homeassistant.components.anthemav
+anthemav==1.3.2
+
 # homeassistant.components.apprise
 apprise==0.9.9
 
@@ -311,7 +317,7 @@ bellows==0.31.0
 bimmer_connected==0.9.6
 
 # homeassistant.components.blebox
-blebox_uniapi==1.3.3
+blebox_uniapi==2.0.1
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -499,9 +505,6 @@ gcal-sync==0.10.0
 # homeassistant.components.geocaching
 geocachingapi==0.2.1
 
-# homeassistant.components.usgs_earthquakes_feed
-geojson_client==0.6
-
 # homeassistant.components.aprs
 geopy==2.1.0
 
@@ -559,7 +562,7 @@ guppy3==3.1.2
 
 # homeassistant.components.generic
 # homeassistant.components.stream
-ha-av==10.0.0b3
+ha-av==10.0.0b4
 
 # homeassistant.components.ffmpeg
 ha-ffmpeg==3.0.2
@@ -595,7 +598,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220624.0
+home-assistant-frontend==20220630.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -637,7 +640,7 @@ influxdb==5.3.1
 insteon-frontend-home-assistant==0.1.1
 
 # homeassistant.components.intellifire
-intellifire4py==1.0.2
+intellifire4py==2.0.1
 
 # homeassistant.components.iotawatt
 iotawattpy==0.1.0
@@ -671,6 +674,9 @@ librouteros==3.2.0
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
+
+# homeassistant.components.life360
+life360==4.1.1
 
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
@@ -756,6 +762,9 @@ nexia==2.0.1
 # homeassistant.components.discord
 nextcord==2.0.0a8
 
+# homeassistant.components.nextdns
+nextdns==1.0.0
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
@@ -776,7 +785,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.22.4
+numpy==1.23.0
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -791,7 +800,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.0
+onvif-zeep-async==1.2.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -841,7 +850,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.1
+pillow==9.2.0
 
 # homeassistant.components.plex
 plexapi==4.11.2
@@ -911,7 +920,7 @@ pyMetEireann==2021.8.0
 pyMetno==0.9.0
 
 # homeassistant.components.rfxtrx
-pyRFXtrx==0.29.0
+pyRFXtrx==0.30.0
 
 # homeassistant.components.tibber
 pyTibber==0.22.3
@@ -938,7 +947,7 @@ pyatag==0.3.5.3
 pyatmo==6.2.4
 
 # homeassistant.components.apple_tv
-pyatv==0.10.0
+pyatv==0.10.2
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.0.15
@@ -1328,7 +1337,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.8
+pyunifiprotect==4.0.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1382,7 +1391,7 @@ renault-api==0.1.11
 restrictedpython==5.2
 
 # homeassistant.components.rflink
-rflink==0.0.62
+rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
@@ -1518,6 +1527,9 @@ tailscale==0.2.0
 # homeassistant.components.tellduslive
 tellduslive==0.10.11
 
+# homeassistant.components.lg_soundbar
+temescal==0.5
+
 # homeassistant.components.powerwall
 tesla-powerwall==0.3.18
 
@@ -1584,7 +1596,7 @@ vehicle==0.4.0
 velbus-aio==2022.6.2
 
 # homeassistant.components.venstar
-venstarcolortouch==0.16
+venstarcolortouch==0.17
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.3.2

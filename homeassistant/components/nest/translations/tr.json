@@ -23,7 +23,7 @@
             "subscriber_error": "Bilinmeyen abone hatas\u0131, g\u00fcnl\u00fcklere bak\u0131n\u0131z",
             "timeout": "Zaman a\u015f\u0131m\u0131 do\u011frulama kodu",
             "unknown": "Beklenmeyen hata",
-            "wrong_project_id": "L\u00fctfen ge\u00e7erli bir Bulut Projesi Kimli\u011fi girin (bulunan Ayg\u0131t Eri\u015fimi Proje Kimli\u011fi)"
+            "wrong_project_id": "L\u00fctfen ge\u00e7erli bir Bulut Projesi Kimli\u011fi girin (Cihaz Eri\u015fimi Proje Kimli\u011fi ile ayn\u0131yd\u0131)"
         },
         "step": {
             "auth": {

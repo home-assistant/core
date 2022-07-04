@@ -93,11 +93,11 @@ class HomeKitNumber(CharacteristicEntity, NumberEntity):
         super().__init__(conn, info, char)
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the name of the device if any."""
-        if prefix := super().name:
-            return f"{prefix} {self.entity_description.name}"
-        return self.entity_description.name
+        if name := self.accessory.name:
+            return f"{name} {self.entity_description.name}"
+        return f"{self.entity_description.name}"
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""

@@ -1,4 +1,4 @@
-"""The Energy websocket API."""
+"""The Recorder websocket API."""
 from __future__ import annotations
 
 import logging

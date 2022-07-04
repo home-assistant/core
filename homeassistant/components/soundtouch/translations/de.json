@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Ger\u00e4t ist bereits konfiguriert"
+        },
+        "error": {
+            "cannot_connect": "Verbindung fehlgeschlagen"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            },
+            "zeroconf_confirm": {
+                "description": "Du bist im Begriff, das SoundTouch-Ger\u00e4t mit dem Namen `{name}` zu Home Assistant hinzuzuf\u00fcgen.",
+                "title": "Best\u00e4tige das Hinzuf\u00fcgen des Bose SoundTouch-Ger\u00e4ts"
+            }
+        }
+    }
+}

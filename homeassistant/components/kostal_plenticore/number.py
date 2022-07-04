@@ -105,9 +105,9 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
 
         # overwrite from retrieved setting data
         if setting_data.min is not None:
-            self._attr_min_value = self._formatter(setting_data.min)
+            self._attr_native_min_value = self._formatter(setting_data.min)
         if setting_data.max is not None:
-            self._attr_max_value = self._formatter(setting_data.max)
+            self._attr_native_max_value = self._formatter(setting_data.max)
 
     @property
     def module_id(self) -> str:
@@ -140,7 +140,7 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
         await super().async_will_remove_from_hass()
 
     @property
-    def value(self) -> float | None:
+    def native_value(self) -> float | None:
         """Return the current value."""
         if self.available:
             raw_value = self.coordinator.data[self.module_id][self.data_id]
@@ -148,7 +148,7 @@ class PlenticoreDataNumber(CoordinatorEntity, NumberEntity, ABC):
 
         return None
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         str_value = self._formatter_back(value)
         await self.coordinator.async_write_data(

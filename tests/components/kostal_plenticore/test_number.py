@@ -31,8 +31,8 @@ def mock_number_description() -> PlenticoreNumberEntityDescription:
         key="mock key",
         module_id="moduleid",
         data_id="dataid",
-        min_value=0,
-        max_value=1000,
+        native_min_value=0,
+        native_max_value=1000,
         fmt_from="format_round",
         fmt_to="format_round_back",
     )
@@ -136,7 +136,7 @@ async def test_set_value(
         mock_coordinator, "42", "scb", None, mock_number_description, mock_setting_data
     )
 
-    await entity.async_set_value(42)
+    await entity.async_set_native_value(42)
 
     mock_coordinator.async_write_data.assert_called_once_with(
         "moduleid", {"dataid": "42"}

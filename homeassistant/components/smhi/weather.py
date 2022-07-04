@@ -136,7 +136,7 @@ class SmhiWeather(WeatherEntity):
         """Initialize the SMHI weather entity."""
 
         self._attr_name = name
-        self._attr_unique_id = f"smhi-{latitude}-{longitude}"
+        self._attr_unique_id = f"{latitude}, {longitude}"
         self._forecasts: list[SmhiForecast] | None = None
         self._fail_count = 0
         self._smhi_api = Smhi(longitude, latitude, session=session)

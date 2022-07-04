@@ -240,10 +240,25 @@ class NetgearRouter:
                 self._api.allow_block_device, mac, allow_block
             )
 
+    async def async_get_utilization(self) -> dict[str, Any] | None:
+        """Get the system information about utilization of the router."""
+        async with self._api_lock:
+            return await self.hass.async_add_executor_job(self._api.get_system_info)
+
     async def async_reboot(self) -> None:
         """Reboot the router."""
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._api.reboot)
+
+    async def async_check_new_firmware(self) -> dict[str, Any] | None:
+        """Check for new firmware of the router."""
+        async with self._api_lock:
+            return await self.hass.async_add_executor_job(self._api.check_new_firmware)
+
+    async def async_update_new_firmware(self) -> None:
+        """Update the router to the latest firmware."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._api.update_new_firmware)
 
     @property
     def port(self) -> int:

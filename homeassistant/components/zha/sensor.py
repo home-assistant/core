@@ -818,7 +818,7 @@ class TimeLeft(Sensor, id_suffix="time_left"):
     models={"STARKVIND Air purifier"},
 )
 class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
-    """Sensor that displays device run time (in minuts)."""
+    """Sensor that displays device run time (in minutes)."""
 
     SENSOR_ATTR = "device_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
@@ -834,7 +834,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     models={"STARKVIND Air purifier"},
 )
 class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
-    """Sensor that displays run time of the current filter (in minuts)."""
+    """Sensor that displays run time of the current filter (in minutes)."""
 
     SENSOR_ATTR = "filter_run_time"
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
