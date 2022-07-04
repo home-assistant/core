@@ -56,9 +56,9 @@ class GeolocationEvent(Entity):
 
     # Entity Properties
     _attr_source: str
-    _attr_distance: float | None
-    _attr_latitude: float | None
-    _attr_longitude: float | None
+    _attr_distance: float | None = None
+    _attr_latitude: float | None = None
+    _attr_longitude: float | None = None
 
     @final
     @property
@@ -71,30 +71,22 @@ class GeolocationEvent(Entity):
     @property
     def source(self) -> str:
         """Return source value of this external event."""
-        if hasattr(self, "_attr_source"):
-            return self._attr_source
-        raise NotImplementedError
+        return self._attr_source
 
     @property
     def distance(self) -> float | None:
         """Return distance value of this external event."""
-        if hasattr(self, "_attr_distance"):
-            return self._attr_distance
-        return None
+        return self._attr_distance
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of this external event."""
-        if hasattr(self, "_attr_latitude"):
-            return self._attr_latitude
-        return None
+        return self._attr_latitude
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
-        if hasattr(self, "_attr_longitude"):
-            return self._attr_longitude
-        return None
+        return self._attr_longitude
 
     @final
     @property
