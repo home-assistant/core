@@ -120,7 +120,6 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         self._min_value_template = config[ATTR_MIN]
         self._max_value_template = config[ATTR_MAX]
         self._attr_assumed_state = self._optimistic = config[CONF_OPTIMISTIC]
-        self._attr_native_value = None
         self._attr_native_step = DEFAULT_STEP
         self._attr_native_min_value = DEFAULT_MIN_VALUE
         self._attr_native_max_value = DEFAULT_MAX_VALUE
