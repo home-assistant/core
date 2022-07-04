@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import struct
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import ClimateEntityFeature, HVACMode
