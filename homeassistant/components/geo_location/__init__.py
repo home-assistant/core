@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
-from typing import final
+from typing import Any, final
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
@@ -54,8 +54,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeolocationEvent(Entity):
     """Base class for an external event with an associated geolocation."""
 
+    # Entity Properties
+    _attr_source: str
+    _attr_distance: float | None
+    _attr_latitude: float | None
+    _attr_longitude: float | None
+
+    @final
     @property
-    def state(self):
+    def state(self) -> float | None:
         """Return the state of the sensor."""
         if self.distance is not None:
             return round(self.distance, 1)
@@ -64,32 +71,38 @@ class GeolocationEvent(Entity):
     @property
     def source(self) -> str:
         """Return source value of this external event."""
+        if hasattr(self, "_attr_source"):
+            return self._attr_source
         raise NotImplementedError
 
     @property
     def distance(self) -> float | None:
         """Return distance value of this external event."""
+        if hasattr(self, "_attr_distance"):
+            return self._attr_distance
         return None
 
     @property
     def latitude(self) -> float | None:
         """Return latitude value of this external event."""
+        if hasattr(self, "_attr_latitude"):
+            return self._attr_latitude
         return None
 
     @property
     def longitude(self) -> float | None:
         """Return longitude value of this external event."""
+        if hasattr(self, "_attr_longitude"):
+            return self._attr_longitude
         return None
 
     @final
     @property
-    def state_attributes(self):
+    def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of this external event."""
-        data = {}
+        data: dict[str, Any] = {ATTR_SOURCE: self.source}
         if self.latitude is not None:
             data[ATTR_LATITUDE] = round(self.latitude, 5)
         if self.longitude is not None:
             data[ATTR_LONGITUDE] = round(self.longitude, 5)
-        if self.source is not None:
-            data[ATTR_SOURCE] = self.source
         return data
