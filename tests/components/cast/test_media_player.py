@@ -311,7 +311,7 @@ async def test_internal_discovery_callback_fill_out_group_fail(
         await hass.async_block_till_done()
 
         # when called with incomplete info, it should use HTTP to get missing
-        discover = signal.mock_calls[0][1][0]
+        discover = signal.mock_calls[-1][1][0]
         assert discover == full_info
         get_multizone_status_mock.assert_called_once()
 
@@ -352,7 +352,7 @@ async def test_internal_discovery_callback_fill_out_group(
         await hass.async_block_till_done()
 
         # when called with incomplete info, it should use HTTP to get missing
-        discover = signal.mock_calls[0][1][0]
+        discover = signal.mock_calls[-1][1][0]
         assert discover == full_info
         get_multizone_status_mock.assert_called_once()
 
@@ -423,23 +423,25 @@ async def test_internal_discovery_callback_fill_out_cast_type_manufacturer(
         # when called with incomplete info, it should use HTTP to get missing
         get_cast_type_mock.assert_called_once()
         assert get_cast_type_mock.call_count == 1
-        discover = signal.mock_calls[0][1][0]
+        discover = signal.mock_calls[2][1][0]
         assert discover == full_info
         assert "Fetched cast details for unknown model 'Chromecast'" in caplog.text
 
+        signal.reset_mock()
         # Call again, the model name should be fetched from cache
         discover_cast(FAKE_MDNS_SERVICE, info)
         await hass.async_block_till_done()
         assert get_cast_type_mock.call_count == 1  # No additional calls
-        discover = signal.mock_calls[1][1][0]
+        discover = signal.mock_calls[0][1][0]
         assert discover == full_info
 
+        signal.reset_mock()
         # Call for another model, need to call HTTP again
         get_cast_type_mock.return_value = full_info2.cast_info
         discover_cast(FAKE_MDNS_SERVICE, info2)
         await hass.async_block_till_done()
         assert get_cast_type_mock.call_count == 2
-        discover = signal.mock_calls[2][1][0]
+        discover = signal.mock_calls[0][1][0]
         assert discover == full_info2
 
 
