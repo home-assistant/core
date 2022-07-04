@@ -78,7 +78,7 @@ async def async_setup_entry(
                 LaCrosseViewSensor(
                     coordinator=coordinator,
                     description=LaCrosseSensorEntityDescription(
-                        key=f"{i} {field}",
+                        key=str(i),
                         device_class="temperature" if field == "Temperature" else None,
                         name=f"{sensor.name} {sub(r'(?<!^)(?=[A-Z])', ' ', field)}"
                         if field
@@ -92,6 +92,7 @@ async def async_setup_entry(
                             sensor.data[field]["unit"], None
                         ),
                     ),
+                    field=field,
                 )
             )
 
@@ -104,23 +105,28 @@ class LaCrosseViewSensor(
     """LaCrosse View sensor."""
 
     sensor_index: int = 0
+    field: str
     entity_description: LaCrosseSensorEntityDescription
 
     def __init__(
         self,
         description: LaCrosseSensorEntityDescription,
         coordinator: DataUpdateCoordinator[list[Sensor]],
+        field: str,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        sensor = self.coordinator.data[int(description.key.split(" ")[0])]
+        sensor = self.coordinator.data[int(description.key)]
+
+        self.sensor_index = int(description.key)
+        self.field = field
 
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.data[0].location.id}-{description.key}"
-        self._attr_name = f"{coordinator.data[0].location.name} {description.name}"
-        self._attr_icon = ICON_LIST.get(
-            description.key.split(" ")[1], "mdi:thermometer"
+        self._attr_unique_id = (
+            f"{coordinator.data[0].location.id}-{int(description.key)}"
         )
+        self._attr_name = f"{coordinator.data[0].location.name} {description.name}"
+        self._attr_icon = ICON_LIST.get(field, "mdi:thermometer")
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
             "name": sensor.name.split(" ")[0],
@@ -133,6 +139,6 @@ class LaCrosseViewSensor(
     def native_value(self) -> float:
         """Return the sensor value."""
         return self.entity_description.value_fn(
-            self.coordinator.data[int(self.entity_description.key.split(" ")[0])],
-            self.entity_description.key.split(" ")[1],
+            self.coordinator.data[self.sensor_index],
+            self.field,
         )

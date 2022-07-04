@@ -41,7 +41,7 @@ async def test_form(hass: HomeAssistant) -> None:
         result3 = await hass.config_entries.flow.async_configure(
             result2["flow_id"],
             {
-                "location": "1 Test",
+                "location": "1",
             },
         )
         await hass.async_block_till_done()
@@ -86,6 +86,27 @@ async def test_form_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     with patch("lacrosse_view.LaCrosse.login", side_effect=LoginError):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "username": "test-username",
+                "password": "test-password",
+            },
+        )
+
+    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
+
+
+async def test_form_login_first(hass: HomeAssistant) -> None:
+    """Test we handle invalid auth."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
+        "lacrosse_view.LaCrosse.get_locations", side_effect=LoginError
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {

@@ -1,5 +1,5 @@
 """Test the LaCrosse View initialization."""
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import patch
 
 from lacrosse_view import HTTPError, LoginError
@@ -7,10 +7,11 @@ from lacrosse_view import HTTPError, LoginError
 from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.util.dt import utcnow
 
 from . import MOCK_ENTRY_DATA, TEST_SENSOR
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -76,26 +77,29 @@ async def test_new_token(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
+    with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
         "lacrosse_view.LaCrosse.get_sensors",
         return_value=[TEST_SENSOR],
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
+        login.assert_called_once()
 
-    assert hass.data[DOMAIN][config_entry.entry_id]["last_update"]
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
 
-    one_hour_before = datetime.utcnow() - timedelta(hours=1)
+    one_hour_before = utcnow() - timedelta(hours=1)
     hass.data[DOMAIN][config_entry.entry_id]["last_update"] = one_hour_before
 
-    with patch("lacrosse_view.LaCrosse.login", return_value=True), patch(
+    one_hour_after = utcnow() + timedelta(hours=1)
+
+    with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
         "lacrosse_view.LaCrosse.get_sensors",
         return_value=[TEST_SENSOR],
     ):
-        await hass.data[DOMAIN][config_entry.entry_id]["coordinator"].async_refresh()
+        async_fire_time_changed(hass, one_hour_after)
+        await hass.async_block_till_done()
 
-    assert hass.data[DOMAIN][config_entry.entry_id]["last_update"] != one_hour_before
+        login.assert_called_once()
