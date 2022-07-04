@@ -430,7 +430,8 @@ async def async_attach_trigger(
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
-    assert device
+    if not device:
+        raise ValueError(f"Device {config[CONF_DEVICE_ID]} not found in registry")
     assert device.model
     device_type = _device_model_to_type(device.model)
     _, serial = list(device.identifiers)[0]
