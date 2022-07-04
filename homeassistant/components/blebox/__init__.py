@@ -23,6 +23,7 @@ PLATFORMS = [
     Platform.AIR_QUALITY,
     Platform.LIGHT,
     Platform.CLIMATE,
+    Platform.BUTTON,
 ]
 
 PARALLEL_UPDATES = 0
