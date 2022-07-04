@@ -3,8 +3,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
-from dataclasses import dataclass
-import datetime as dt
 import logging
 from typing import Any, cast
 
@@ -24,7 +22,6 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
-from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -87,6 +84,10 @@ from .models import (  # noqa: F401
     ReceiveMessage,
     ReceivePayloadType,
 )
+
+# MqttServiceInfo only for backwards compatibility, do not use this
+# as you'll get the whole MQTT integration via import.
+from .service_info import MqttServiceInfo  # noqa: F401
 from .util import _VALID_QOS_SCHEMA, valid_publish_topic, valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
@@ -138,18 +139,6 @@ MQTT_PUBLISH_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
-
-
-@dataclass
-class MqttServiceInfo(BaseServiceInfo):
-    """Prepared info from mqtt entries."""
-
-    topic: str
-    payload: ReceivePayloadType
-    qos: int
-    retain: bool
-    subscribed_topic: str
-    timestamp: dt.datetime
 
 
 async def _async_setup_discovery(
