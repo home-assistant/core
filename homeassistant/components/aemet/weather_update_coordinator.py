@@ -44,13 +44,13 @@ import async_timeout
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
 )
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
@@ -406,10 +406,10 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._get_precipitation_prob_day(
                 day
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature_day(day),
-            ATTR_FORECAST_TEMP_LOW: self._get_temperature_low_day(day),
+            ATTR_FORECAST_NATIVE_TEMP: self._get_temperature_day(day),
+            ATTR_FORECAST_NATIVE_TEMP_LOW: self._get_temperature_low_day(day),
             ATTR_FORECAST_TIME: dt_util.as_utc(date).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed_day(day),
+            ATTR_FORECAST_NATIVE_WIND_SPEED: self._get_wind_speed_day(day),
             ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing_day(day),
         }
 
@@ -421,13 +421,13 @@ class WeatherUpdateCoordinator(DataUpdateCoordinator):
 
         return {
             ATTR_FORECAST_CONDITION: condition,
-            ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(day, hour),
+            ATTR_FORECAST_NATIVE_PRECIPITATION: self._calc_precipitation(day, hour),
             ATTR_FORECAST_PRECIPITATION_PROBABILITY: self._calc_precipitation_prob(
                 day, hour
             ),
-            ATTR_FORECAST_TEMP: self._get_temperature(day, hour),
+            ATTR_FORECAST_NATIVE_TEMP: self._get_temperature(day, hour),
             ATTR_FORECAST_TIME: dt_util.as_utc(forecast_dt).isoformat(),
-            ATTR_FORECAST_WIND_SPEED: self._get_wind_speed(day, hour),
+            ATTR_FORECAST_NATIVE_WIND_SPEED: self._get_wind_speed(day, hour),
             ATTR_FORECAST_WIND_BEARING: self._get_wind_bearing(day, hour),
         }
 
