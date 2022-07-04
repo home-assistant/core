@@ -287,14 +287,20 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         self._device_info = device_info
         self._device_id = self._device_info["shortSerialNo"]
 
-        self._ac_device = zone_type == TYPE_AIR_CONDITIONING
-        self._supported_hvac_modes = supported_hvac_modes
-        self._hvac_capability_map = hvac_capability_map
-
-        self._available = False
+        self._current_tado_fan_speed = CONST_FAN_OFF
+        self._current_tado_hvac_mode = CONST_MODE_OFF
+        self._current_tado_hvac_action = HVACAction.OFF
+        self._current_tado_swing_mode = TADO_SWING_OFF
+        self._current_tado_vertical_swing_mode = TADO_SWING_OFF
+        self._current_tado_horizontal_swing_mode = TADO_SWING_OFF
+        self._current_tado_light_mode = TADO_LIGHT_OFF
 
         self._cur_temp = None
         self._cur_humidity = None
+
+        self._ac_device = zone_type == TYPE_AIR_CONDITIONING
+        self._supported_hvac_modes = supported_hvac_modes
+        self._hvac_capability_map = hvac_capability_map
 
         self._heat_min_temp = heat_min_temp
         self._heat_max_temp = heat_max_temp
@@ -306,15 +312,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
         self._target_temp = None
 
-        self._current_tado_fan_speed = CONST_FAN_OFF
-        self._current_tado_hvac_mode = CONST_MODE_OFF
-        self._current_tado_hvac_action = HVACAction.OFF
-
-        self._current_tado_swing_mode = TADO_SWING_OFF
-        self._current_tado_vertical_swing_mode = TADO_SWING_OFF
-        self._current_tado_horizontal_swing_mode = TADO_SWING_OFF
-
-        self._current_tado_light_mode = TADO_LIGHT_OFF
+        self._available = False
 
         self._tado_zone_data = None
 
@@ -625,7 +623,27 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     def _current_capabilities(self):
+        """Map of all available capabilities for the currently active Tado HVAC mode"""
         return self._hvac_capability_map[self._current_tado_hvac_mode]
+
+    @property
+    def _support_flags(self) -> int:
+        """Support flags for the currently active Tado HVAC mode"""
+        return self._current_capabilities["support_flags"]
+
+    @property
+    def _supported_fan_speeds(self) -> list or None:
+        """Fan speeds available for the current Tado HVAC mode"""
+        return self._current_capabilities["fan_speeds"]
+
+    @property
+    def _supported_swing_modes(self) -> list or None:
+        """Swing modes available for the current Tado HVAC mode"""
+        return self._current_capabilities["swing_modes"]
+
+    @property
+    def _supported_tado_light_modes(self) -> list or None:
+        return self._current_capabilities["light_modes"]
 
     def _control_hvac(
         self,
@@ -637,7 +655,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
         duration=None,
         overlay_mode=None,
     ):
-        """Send new target temperature to Tado."""
+
 
         if hvac_mode:
             self._current_tado_hvac_mode = hvac_mode
