@@ -386,10 +386,12 @@ async def async_attach_trigger(
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
+    assert device
+    assert device.model
     device_type = _device_model_to_type(device.model)
     _, serial = list(device.identifiers)[0]
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device_type)
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    schema = DEVICE_TYPE_SCHEMA_MAP[device_type]
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[device_type]
     config = schema(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
