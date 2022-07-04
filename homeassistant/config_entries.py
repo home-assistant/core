@@ -33,7 +33,7 @@ if TYPE_CHECKING:
     from .components.ssdp import SsdpServiceInfo
     from .components.usb import UsbServiceInfo
     from .components.zeroconf import ZeroconfServiceInfo
-    from .helpers.discovery.mqtt import MqttServiceInfo
+    from .helpers.service_info.mqtt import MqttServiceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
