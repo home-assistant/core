@@ -7,7 +7,7 @@ play_media:
   fields:
     cookies_txt_filepath:
       name: cookies.txt filepath
-      description: provided exported cookies.txt to supply youtube-dl for authorized streaming
+      description: a cookies.txt file to authenticate streaming
       required: false
       example: "config/twitch.tv_cookies.txt"
       selector:
