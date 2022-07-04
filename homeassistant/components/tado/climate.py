@@ -643,6 +643,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
 
     @property
     def _supported_tado_light_modes(self) -> list or None:
+        """A list of possible 'light' states from Tado."""
         return self._current_capabilities["light_modes"]
 
     def _control_hvac(
