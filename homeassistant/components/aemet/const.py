@@ -18,10 +18,6 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SNOWY,
     ATTR_CONDITION_SUNNY,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_NATIVE_PRECIPITATION,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
     ATTR_FORECAST_TEMP,
@@ -163,13 +159,13 @@ CONDITIONS_MAP = {
 
 FORECAST_MONITORED_CONDITIONS = [
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_TEMP,
+    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_WIND_SPEED,
 ]
 MONITORED_CONDITIONS = [
     ATTR_API_CONDITION,
@@ -210,7 +206,7 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         name="Condition",
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_NATIVE_PRECIPITATION,
+        key=ATTR_FORECAST_PRECIPITATION,
         name="Precipitation",
         native_unit_of_measurement=PRECIPITATION_MILLIMETERS_PER_HOUR,
     ),
@@ -220,13 +216,13 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_NATIVE_TEMP,
+        key=ATTR_FORECAST_TEMP,
         name="Temperature",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_NATIVE_TEMP_LOW,
+        key=ATTR_FORECAST_TEMP_LOW,
         name="Temperature Low",
         native_unit_of_measurement=TEMP_CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
@@ -242,17 +238,11 @@ FORECAST_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         native_unit_of_measurement=DEGREE,
     ),
     SensorEntityDescription(
-        key=ATTR_FORECAST_NATIVE_WIND_SPEED,
+        key=ATTR_FORECAST_WIND_SPEED,
         name="Wind speed",
         native_unit_of_measurement=SPEED_KILOMETERS_PER_HOUR,
     ),
 )
-RENAMED_FORECAST_SENSOR_KEYS = {
-    ATTR_FORECAST_PRECIPITATION: ATTR_FORECAST_NATIVE_PRECIPITATION,
-    ATTR_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
-    ATTR_FORECAST_TEMP_LOW: ATTR_FORECAST_NATIVE_TEMP_LOW,
-    ATTR_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
-}
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_CONDITION,

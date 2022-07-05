@@ -45,13 +45,17 @@ async def async_setup_entry(
     entities.extend(
         [
             AemetForecastSensor(
-                f"{domain_data[ENTRY_NAME]} {mode} Forecast",
-                f"{unique_id}-forecast-{mode}",
+                name_prefix,
+                unique_id_prefix,
                 weather_coordinator,
                 mode,
                 description,
             )
             for mode in FORECAST_MODES
+            if (
+                (name_prefix := f"{domain_data[ENTRY_NAME]} {mode} Forecast")
+                and (unique_id_prefix := f"{unique_id}-forecast-{mode}")
+            )
             for description in FORECAST_SENSOR_TYPES
             if description.key in FORECAST_MONITORED_CONDITIONS
         ]
@@ -85,14 +89,14 @@ class AemetSensor(AbstractAemetSensor):
     def __init__(
         self,
         name,
-        unique_id_prefix,
+        unique_id,
         weather_coordinator: WeatherUpdateCoordinator,
         description: SensorEntityDescription,
     ):
         """Initialize the sensor."""
         super().__init__(
             name=name,
-            unique_id=f"{unique_id_prefix}-{description.key}",
+            unique_id=f"{unique_id}-{description.key}",
             coordinator=weather_coordinator,
             description=description,
         )
@@ -109,7 +113,7 @@ class AemetForecastSensor(AbstractAemetSensor):
     def __init__(
         self,
         name,
-        unique_id_prefix,
+        unique_id,
         weather_coordinator: WeatherUpdateCoordinator,
         forecast_mode,
         description: SensorEntityDescription,
@@ -117,7 +121,7 @@ class AemetForecastSensor(AbstractAemetSensor):
         """Initialize the sensor."""
         super().__init__(
             name=name,
-            unique_id=f"{unique_id_prefix}-{description.key}",
+            unique_id=f"{unique_id}-{description.key}",
             coordinator=weather_coordinator,
             description=description,
         )
