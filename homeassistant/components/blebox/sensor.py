@@ -5,7 +5,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_UNIT_MAP
+from ...const import TEMP_CELSIUS
+
+BLEBOX_TO_UNIT_MAP = {"celsius": TEMP_CELSIUS}
 
 BLEBOX_TO_SENSOR_DEVICE_CLASS = {"temperature": SensorDeviceClass.TEMPERATURE}
 
