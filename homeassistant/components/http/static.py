@@ -10,6 +10,10 @@ from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 
+from homeassistant.core import HomeAssistant
+
+from .const import KEY_HASS
+
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADERS: Final[Mapping[str, str]] = {
     hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
@@ -19,7 +23,7 @@ CACHE_HEADERS: Final[Mapping[str, str]] = {
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
-    async def _handle(self, request: Request) -> StreamResponse:
+    def _get_file_path(self, request: Request) -> Path | None:
         rel_url = request.match_info["filename"]
         try:
             filename = Path(rel_url)
@@ -41,11 +45,17 @@ class CachingStaticResource(StaticResource):
 
         # on opening a dir, load its contents if allowed
         if filepath.is_dir():
-            return await super()._handle(request)
+            return None
         if filepath.is_file():
+            return filepath
+        raise HTTPNotFound
+
+    async def _handle(self, request: Request) -> StreamResponse:
+        hass: HomeAssistant = request.app[KEY_HASS]
+        if filepath := await hass.async_add_executor_job(self._get_file_path, request):
             return FileResponse(
                 filepath,
                 chunk_size=self._chunk_size,
                 headers=CACHE_HEADERS,
             )
-        raise HTTPNotFound
+        return await super()._handle(request)
