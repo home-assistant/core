@@ -32,6 +32,9 @@ def create_thermostat_service(accessory):
     char = service.add_char(CharacteristicsTypes.HEATING_COOLING_CURRENT)
     char.value = 0
 
+    char = service.add_char(CharacteristicsTypes.FAN_STATE_TARGET)
+    char.value = 0
+
     char = service.add_char(CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD)
     char.minValue = 15
     char.maxValue = 40
