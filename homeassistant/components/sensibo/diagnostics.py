@@ -31,6 +31,6 @@ TO_REDACT = {
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> dict[str, Any]:
-    """Return diagnostics for a config entry."""
+    """Return diagnostics for Sensibo config entry."""
     coordinator: SensiboDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     return async_redact_data(coordinator.data.raw, TO_REDACT)
