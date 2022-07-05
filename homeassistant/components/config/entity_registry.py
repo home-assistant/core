@@ -1,5 +1,5 @@
 """HTTP views to interact with the entity registry."""
-from typing import Any
+from __future__ import annotations
 
 import voluptuous as vol
 
@@ -7,6 +7,11 @@ from homeassistant import config_entries
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.const import ERR_NOT_FOUND
 from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api.messages import (
+    IDEN_JSON_TEMPLATE,
+    IDEN_TEMPLATE,
+    message_to_json,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -18,12 +23,12 @@ from homeassistant.helpers import (
 async def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
 
-    cached_list_entities: list[dict[str, Any]] = []
+    cached_list_entities: str | None = None
 
     @callback
     def _async_clear_list_entities_cache(event: Event) -> None:
         nonlocal cached_list_entities
-        cached_list_entities.clear()
+        cached_list_entities = None
 
     @websocket_api.websocket_command(
         {vol.Required("type"): "config/entity_registry/list"}
@@ -32,13 +37,16 @@ async def async_setup(hass: HomeAssistant) -> bool:
     def websocket_list_entities(hass, connection, msg):
         """Handle list registry entries command."""
         nonlocal cached_list_entities
-        registry = er.async_get(hass)
         if not cached_list_entities:
-            cached_list_entities = [
-                _entry_dict(entry) for entry in registry.entities.values()
-            ]
+            registry = er.async_get(hass)
+            cached_list_entities = message_to_json(
+                websocket_api.result_message(
+                    IDEN_TEMPLATE,
+                    [_entry_dict(entry) for entry in registry.entities.values()],
+                )
+            )
         connection.send_message(
-            websocket_api.result_message(msg["id"], cached_list_entities)
+            cached_list_entities.replace(IDEN_JSON_TEMPLATE, str(msg["id"]), 1)
         )
 
     hass.bus.async_listen(
