@@ -41,12 +41,12 @@ class UniFiBase(Entity):
             self.entity_id,
             self.key,
         )
-        signals: dict[str, Callable[..., Any]] = {
-            self.controller.signal_reachable: self.async_signal_reachable_callback,
-            self.controller.signal_options_update: self.options_updated,
-            self.controller.signal_remove: self.remove_item,
-        }
-        for (signal, method) in signals.items():
+        signals: tuple[tuple[str, Callable[..., Any]], ...] = (
+            (self.controller.signal_reachable, self.async_signal_reachable_callback),
+            (self.controller.signal_options_update, self.options_updated),
+            (self.controller.signal_remove, self.remove_item),
+        )
+        for signal, method in signals:
             self.async_on_remove(async_dispatcher_connect(self.hass, signal, method))
         self._item.register_callback(self.async_update_callback)
 
