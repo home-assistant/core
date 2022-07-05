@@ -12,12 +12,12 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import template
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import TemplateVarsType
 
 _SENTINEL = object()
 
 PublishPayloadType = Union[str, bytes, int, float, None]
+ReceivePayloadType = Union[str, bytes]
 
 
 @attr.s(slots=True, frozen=True)

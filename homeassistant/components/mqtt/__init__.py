@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable
+from dataclasses import dataclass
+import datetime as dt
 import logging
 from typing import Any, cast
 
@@ -22,6 +24,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import Event, HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.exceptions import TemplateError, Unauthorized
 from homeassistant.helpers import config_validation as cv, event, template
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -31,10 +34,6 @@ from homeassistant.helpers.reload import (
     async_reload_integration_platforms,
 )
 from homeassistant.helpers.service import async_register_admin_service
-
-# MqttServiceInfo only for backwards compatibility, do not use this
-# as you'll get the whole MQTT integration via import.
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo  # noqa: F401
 from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
@@ -139,6 +138,18 @@ MQTT_PUBLISH_SCHEMA = vol.All(
     ),
     cv.has_at_least_one_key(ATTR_TOPIC, ATTR_TOPIC_TEMPLATE),
 )
+
+
+@dataclass
+class MqttServiceInfo(BaseServiceInfo):
+    """Prepared info from mqtt entries."""
+
+    topic: str
+    payload: ReceivePayloadType
+    qos: int
+    retain: bool
+    subscribed_topic: str
+    timestamp: dt.datetime
 
 
 async def _async_setup_discovery(
@@ -427,7 +438,7 @@ async def async_setup_entry(  # noqa: C901
                 blocking=False,
             )
 
-    await async_forward_entry_setup_and_setup_discovery(entry)
+    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
 
     return True
 
