@@ -26,7 +26,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_VALUE_TEMPLATE,
 )
-from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -69,7 +69,6 @@ from .const import (
     DOMAIN,
     MQTT_CONNECTED,
     MQTT_DISCONNECTED,
-    MQTT_RELOADED,
 )
 from .debug_info import log_message, log_messages
 from .discovery import (
@@ -261,34 +260,27 @@ class SetupEntity(Protocol):
         """Define setup_entities type."""
 
 
-async def async_setup_platform_discovery(
+async def async_discover_yaml_entities(
     hass: HomeAssistant, platform_domain: str
-) -> CALLBACK_TYPE:
-    """Set up platform discovery for manual config."""
-
-    async def _async_discover_entities() -> None:
-        """Discover entities for a platform."""
-        if DATA_MQTT_UPDATED_CONFIG in hass.data:
-            # The platform has been reloaded
-            config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
-        else:
-            config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
-        if not config_yaml:
-            return
-        if platform_domain not in config_yaml:
-            return
-        await asyncio.gather(
-            *(
-                discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
-                for config in await async_get_platform_config_from_yaml(
-                    hass, platform_domain, config_yaml
-                )
+) -> None:
+    """Discover entities for a platform."""
+    if DATA_MQTT_UPDATED_CONFIG in hass.data:
+        # The platform has been reloaded
+        config_yaml = hass.data[DATA_MQTT_UPDATED_CONFIG]
+    else:
+        config_yaml = hass.data.get(DATA_MQTT_CONFIG, {})
+    if not config_yaml:
+        return
+    if platform_domain not in config_yaml:
+        return
+    await asyncio.gather(
+        *(
+            discovery.async_load_platform(hass, platform_domain, DOMAIN, config, {})
+            for config in await async_get_platform_config_from_yaml(
+                hass, platform_domain, config_yaml
             )
         )
-
-    unsub = async_dispatcher_connect(hass, MQTT_RELOADED, _async_discover_entities)
-    await _async_discover_entities()
-    return unsub
+    )
 
 
 async def async_get_platform_config_from_yaml(
@@ -363,7 +355,7 @@ class MqttAttributes(Entity):
 
     def __init__(self, config: dict) -> None:
         """Initialize the JSON attributes mixin."""
-        self._attributes: dict | None = None
+        self._attributes: dict[str, Any] | None = None
         self._attributes_sub_state = None
         self._attributes_config = config
 
@@ -434,7 +426,7 @@ class MqttAttributes(Entity):
         )
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         return self._attributes
 

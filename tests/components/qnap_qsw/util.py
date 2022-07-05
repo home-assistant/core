@@ -12,6 +12,8 @@ from aioqsw.const import (
     API_COMMIT_CPSS,
     API_COMMIT_ISS,
     API_DATE,
+    API_DESCRIPTION,
+    API_DOWNLOAD_URL,
     API_ERROR_CODE,
     API_ERROR_MESSAGE,
     API_FAN1_SPEED,
@@ -20,6 +22,7 @@ from aioqsw.const import (
     API_MAX_SWITCH_TEMP,
     API_MESSAGE,
     API_MODEL,
+    API_NEWER,
     API_NUMBER,
     API_PORT_NUM,
     API_PRODUCT,
@@ -90,6 +93,24 @@ FIRMWARE_INFO_MOCK = {
     },
 }
 
+FIRMWARE_UPDATE_CHECK_MOCK = {
+    API_ERROR_CODE: 200,
+    API_ERROR_MESSAGE: "OK",
+    API_RESULT: {
+        API_VERSION: "1.2.0",
+        API_NUMBER: "29649",
+        API_BUILD_NUMBER: "20220128",
+        API_DATE: "Fri, 28 Jan 2022 01:17:39 +0800",
+        API_DESCRIPTION: "",
+        API_DOWNLOAD_URL: [
+            "https://download.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
+            "https://eu1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
+            "https://us1.qnap.com/Storage/Networking/QSW408FW/QSW-M408AC3-FW.v1.2.0_S20220128_29649.img",
+        ],
+        API_NEWER: False,
+    },
+}
+
 SYSTEM_COMMAND_MOCK = {
     API_ERROR_CODE: 200,
     API_ERROR_MESSAGE: "OK",
@@ -147,6 +168,9 @@ async def async_init_integration(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_info",
         return_value=FIRMWARE_INFO_MOCK,
     ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_firmware_update_check",
+        return_value=FIRMWARE_UPDATE_CHECK_MOCK,
+    ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_system_board",
         return_value=SYSTEM_BOARD_MOCK,
     ), patch(
@@ -155,6 +179,9 @@ async def async_init_integration(
     ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.get_system_time",
         return_value=SYSTEM_TIME_MOCK,
+    ), patch(
+        "homeassistant.components.qnap_qsw.QnapQswApi.get_users_verification",
+        return_value=USERS_VERIFICATION_MOCK,
     ), patch(
         "homeassistant.components.qnap_qsw.QnapQswApi.post_users_login",
         return_value=USERS_LOGIN_MOCK,

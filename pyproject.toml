@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2022.7.0.dev0"
+version     = "2022.8.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -45,7 +45,7 @@ dependencies    = [
     "pip>=21.0,<22.2",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
-    "requests==2.28.0",
+    "requests==2.28.1",
     "typing-extensions>=3.10.0.2,<5.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.5.0",
@@ -109,7 +109,6 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "pylint_strict_informational",
     "hass_constructor",
     "hass_enforce_type_hints",
     "hass_imports",
@@ -122,6 +121,9 @@ extension-pkg-allow-list = [
     "ciso8601",
     "orjson",
     "cv2",
+]
+fail-on = [
+    "I",
 ]
 
 [tool.pylint.BASIC]

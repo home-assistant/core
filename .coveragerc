@@ -210,8 +210,6 @@ omit =
     homeassistant/components/denonavr/media_player.py
     homeassistant/components/denonavr/receiver.py
     homeassistant/components/deutsche_bahn/sensor.py
-    homeassistant/components/devolo_home_control/cover.py
-    homeassistant/components/devolo_home_control/light.py
     homeassistant/components/devolo_home_control/sensor.py
     homeassistant/components/devolo_home_control/switch.py
     homeassistant/components/digital_ocean/*
@@ -277,6 +275,7 @@ omit =
     homeassistant/components/elmax/__init__.py
     homeassistant/components/elmax/common.py
     homeassistant/components/elmax/const.py
+    homeassistant/components/elmax/binary_sensor.py
     homeassistant/components/elmax/switch.py
     homeassistant/components/elv/*
     homeassistant/components/emby/media_player.py
@@ -556,6 +555,7 @@ omit =
     homeassistant/components/insteon/utils.py
     homeassistant/components/intellifire/__init__.py
     homeassistant/components/intellifire/coordinator.py
+    homeassistant/components/intellifire/climate.py
     homeassistant/components/intellifire/binary_sensor.py
     homeassistant/components/intellifire/sensor.py
     homeassistant/components/intellifire/switch.py
@@ -641,8 +641,8 @@ omit =
     homeassistant/components/lg_soundbar/media_player.py
     homeassistant/components/life360/__init__.py
     homeassistant/components/life360/const.py
+    homeassistant/components/life360/coordinator.py
     homeassistant/components/life360/device_tracker.py
-    homeassistant/components/life360/helpers.py
     homeassistant/components/lifx/__init__.py
     homeassistant/components/lifx/const.py
     homeassistant/components/lifx/light.py
@@ -717,7 +717,6 @@ omit =
     homeassistant/components/microsoft/tts.py
     homeassistant/components/miflora/sensor.py
     homeassistant/components/mikrotik/hub.py
-    homeassistant/components/mikrotik/device_tracker.py
     homeassistant/components/mill/climate.py
     homeassistant/components/mill/const.py
     homeassistant/components/mill/sensor.py

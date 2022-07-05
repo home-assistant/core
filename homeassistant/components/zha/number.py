@@ -523,3 +523,17 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
     _attr_native_max_value: float = 0x257
     _attr_unit_of_measurement: str | None = UNITS[72]
     _zcl_attribute: str = "timer_duration"
+
+
+@CONFIG_DIAGNOSTIC_MATCH(
+    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
+)
+class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
+    """Representation of a ZHA timer duration configuration entity."""
+
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_icon: str = ICONS[14]
+    _attr_native_min_value: float = 0x00
+    _attr_native_max_value: float = 0xFFFFFFFF
+    _attr_unit_of_measurement: str | None = UNITS[72]
+    _zcl_attribute: str = "filter_life_time"
