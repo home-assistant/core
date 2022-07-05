@@ -23,7 +23,6 @@
             },
             "reauth_confirm": {
                 "data": {
-                    "panel_id": "Panel ID",
                     "panel_pin": "Panel Pin",
                     "password": "Password",
                     "username": "Username"
