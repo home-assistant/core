@@ -1,13 +1,13 @@
 """Test the LaCrosse View initialization."""
-from datetime import timedelta
+from datetime import datetime, timedelta
 from unittest.mock import patch
 
+from freezegun import freeze_time
 from lacrosse_view import HTTPError, LoginError
 
 from homeassistant.components.lacrosse_view.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.util.dt import utcnow
 
 from . import MOCK_ENTRY_DATA, TEST_SENSOR
 
@@ -90,15 +90,12 @@ async def test_new_token(hass: HomeAssistant) -> None:
     assert len(entries) == 1
     assert entries[0].state == ConfigEntryState.LOADED
 
-    one_hour_before = utcnow() - timedelta(hours=1)
-    hass.data[DOMAIN][config_entry.entry_id]["last_update"] = one_hour_before
-
-    one_hour_after = utcnow() + timedelta(hours=1)
+    one_hour_after = datetime.utcnow() + timedelta(hours=1)
 
     with patch("lacrosse_view.LaCrosse.login", return_value=True) as login, patch(
         "lacrosse_view.LaCrosse.get_sensors",
         return_value=[TEST_SENSOR],
-    ):
+    ), freeze_time(one_hour_after):
         async_fire_time_changed(hass, one_hour_after)
         await hass.async_block_till_done()
 

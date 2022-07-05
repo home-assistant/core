@@ -11,7 +11,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from homeassistant.util.dt import utcnow
 
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
@@ -23,7 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async def get_data() -> list[Sensor]:
         """Get the data from the LaCrosse View."""
-        now = utcnow()
+        now = datetime.utcnow()
 
         if hass.data[DOMAIN][entry.entry_id]["last_update"] < now - timedelta(
             minutes=59
@@ -36,18 +35,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         yesterday = yesterday.replace(hour=18, minute=0, second=0, microsecond=0)
         yesterday_timestamp = datetime.timestamp(yesterday)
 
-        sensor_data: list[Sensor] = await api.get_sensors(
+        return await api.get_sensors(  # type: ignore[no-any-return]
             location=Location(id=entry.data["id"], name=entry.data["name"]),
             tz=hass.config.time_zone,
             start=int(yesterday_timestamp),
             end=int(datetime.timestamp(now)),
         )
 
-        return sensor_data
-
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
         "api": LaCrosse(async_get_clientsession(hass)),
-        "last_update": utcnow(),
+        "last_update": datetime.utcnow(),
     }
     api = hass.data[DOMAIN][entry.entry_id]["api"]
 
@@ -56,17 +53,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except LoginError as error:
         raise ConfigEntryNotReady from error
 
-    async def async_update_data() -> list[Sensor]:
-        """Fetch data from API."""
-        data: list[Sensor] = await get_data()
-
-        return data
-
     coordinator = DataUpdateCoordinator(
         hass,
         LOGGER,
         name="LaCrosse View",
-        update_method=async_update_data,
+        update_method=get_data,
         update_interval=timedelta(seconds=SCAN_INTERVAL),
     )
 

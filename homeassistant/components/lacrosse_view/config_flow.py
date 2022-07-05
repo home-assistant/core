@@ -32,10 +32,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> list[Loca
 
     try:
         await api.login(data["username"], data["password"])
-    except LoginError as error:
-        raise InvalidAuth from error
 
-    try:
         locations: list[Location] = await api.get_locations()
     except LoginError as error:
         raise InvalidAuth from error

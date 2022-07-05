@@ -27,7 +27,7 @@ from .const import DOMAIN, LOGGER
 class LaCrosseSensorEntityDescriptionMixin:
     """Mixin for required keys."""
 
-    value_fn: Callable[[Sensor, str], float]
+    value_fn: Callable[[], float]
 
 
 @dataclass
@@ -80,12 +80,14 @@ async def async_setup_entry(
                     description=LaCrosseSensorEntityDescription(
                         key=str(i),
                         device_class="temperature" if field == "Temperature" else None,
+                        # The regex is to convert CamelCase to Human Case
+                        # e.g. "RelativeHumidity" -> "Relative Humidity"
                         name=f"{sensor.name} {sub(r'(?<!^)(?=[A-Z])', ' ', field)}"
                         if field
                         != sensor.name  # If the name is the same as the field, don't include it.
                         else sub(r"(?<!^)(?=[A-Z])", " ", field),
                         state_class=SensorStateClass.MEASUREMENT,
-                        value_fn=lambda sensor, field: float(
+                        value_fn=lambda sensor=sensor, field=field: float(  # type: ignore[misc]
                             sensor.data[field]["values"][-1]["s"]
                         ),
                         native_unit_of_measurement=UNIT_LIST.get(
@@ -104,8 +106,6 @@ class LaCrosseViewSensor(
 ):
     """LaCrosse View sensor."""
 
-    sensor_index: int = 0
-    field: str
     entity_description: LaCrosseSensorEntityDescription
 
     def __init__(
@@ -118,14 +118,9 @@ class LaCrosseViewSensor(
         super().__init__(coordinator)
         sensor = self.coordinator.data[int(description.key)]
 
-        self.sensor_index = int(description.key)
-        self.field = field
-
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.data[0].location.id}-{int(description.key)}"
-        )
-        self._attr_name = f"{coordinator.data[0].location.name} {description.name}"
+        self._attr_unique_id = f"{sensor.location.id}-{description.key}-{field}"
+        self._attr_name = f"{sensor.location.name} {description.name}"
         self._attr_icon = ICON_LIST.get(field, "mdi:thermometer")
         self._attr_device_info = {
             "identifiers": {(DOMAIN, sensor.sensor_id)},
@@ -138,7 +133,4 @@ class LaCrosseViewSensor(
     @property
     def native_value(self) -> float:
         """Return the sensor value."""
-        return self.entity_description.value_fn(
-            self.coordinator.data[self.sensor_index],
-            self.field,
-        )
+        return self.entity_description.value_fn()
