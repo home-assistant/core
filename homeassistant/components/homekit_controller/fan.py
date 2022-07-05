@@ -31,26 +31,26 @@ DIRECTION_TO_HK = {
 HK_DIRECTION_TO_HA = {v: k for (k, v) in DIRECTION_TO_HK.items()}
 
 
-class HomeKitFan(HomeKitEntity, FanEntity):
+class BaseHomeKitFan(HomeKitEntity, FanEntity):
     """Representation of a Homekit fan."""
 
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
 
+    def get_characteristic_types(self) -> list[str]:
+        """Define the homekit characteristics the entity cares about."""
+        return [
+            CharacteristicsTypes.SWING_MODE,
+            CharacteristicsTypes.ROTATION_DIRECTION,
+            CharacteristicsTypes.ROTATION_SPEED,
+            self.on_characteristic,
+        ]
+
     @property
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self.service.value(self.on_characteristic) == 1
-
-    def get_characteristic_types(self) -> list[str]:
-        """Define the homekit characteristics the entity cares about."""
-        return [
-            self.on_characteristic,
-            CharacteristicsTypes.ROTATION_SPEED,
-            CharacteristicsTypes.SWING_MODE,
-            CharacteristicsTypes.ROTATION_DIRECTION,
-        ]
 
     @property
     def _speed_range(self) -> tuple[int, int]:
@@ -66,14 +66,6 @@ class HomeKitFan(HomeKitEntity, FanEntity):
     def _max_speed(self) -> int:
         """Return the minimum speed."""
         return round(self.service[CharacteristicsTypes.ROTATION_SPEED].maxValue or 100)
-
-    @property
-    def speed_count(self) -> int:
-        """Speed count for the fan."""
-        return round(
-            min(self._max_speed, 100)
-            / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
-        )
 
     @property
     def percentage(self) -> int:
@@ -100,7 +92,7 @@ class HomeKitFan(HomeKitEntity, FanEntity):
     @property
     def supported_features(self) -> int:
         """Flag supported features."""
-        features = super().supported_features
+        features = 0
 
         if self.service.has(CharacteristicsTypes.ROTATION_DIRECTION):
             features |= FanEntityFeature.DIRECTION
@@ -113,16 +105,18 @@ class HomeKitFan(HomeKitEntity, FanEntity):
 
         return features
 
+    @property
+    def speed_count(self) -> int:
+        """Speed count for the fan."""
+        return round(
+            min(self._max_speed, 100)
+            / max(1, self.service[CharacteristicsTypes.ROTATION_SPEED].minStep or 0)
+        )
+
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.async_put_characteristics(
             {CharacteristicsTypes.ROTATION_DIRECTION: DIRECTION_TO_HK[direction]}
-        )
-
-    async def async_oscillate(self, oscillating: bool) -> None:
-        """Oscillate the fan."""
-        await self.async_put_characteristics(
-            {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
     async def async_set_percentage(self, percentage: int) -> None:
@@ -136,6 +130,12 @@ class HomeKitFan(HomeKitEntity, FanEntity):
                     percentage_to_ranged_value(self._speed_range, percentage)
                 )
             }
+        )
+
+    async def async_oscillate(self, oscillating: bool) -> None:
+        """Oscillate the fan."""
+        await self.async_put_characteristics(
+            {CharacteristicsTypes.SWING_MODE: 1 if oscillating else 0}
         )
 
     async def async_turn_on(
@@ -166,13 +166,13 @@ class HomeKitFan(HomeKitEntity, FanEntity):
         await self.async_put_characteristics({self.on_characteristic: False})
 
 
-class HomeKitFanV1(HomeKitFan):
+class HomeKitFanV1(BaseHomeKitFan):
     """Implement fan support for public.hap.service.fan."""
 
     on_characteristic = CharacteristicsTypes.ON
 
 
-class HomeKitFanV2(HomeKitFan):
+class HomeKitFanV2(BaseHomeKitFan):
     """Implement fan support for public.hap.service.fanv2."""
 
     on_characteristic = CharacteristicsTypes.ACTIVE
