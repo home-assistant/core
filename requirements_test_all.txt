@@ -681,10 +681,6 @@ life360==4.1.1
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
 
-# homeassistant.components.http
-# homeassistant.components.recorder
-lru-dict==1.1.7
-
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
 
