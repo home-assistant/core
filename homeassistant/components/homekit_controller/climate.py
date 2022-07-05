@@ -110,6 +110,8 @@ async def async_setup_entry(
 class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     """The base HomeKit Controller climate entity."""
 
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -140,11 +142,6 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
         await self.async_put_characteristics(
             {CharacteristicsTypes.FAN_STATE_TARGET: int(fan_mode == FAN_AUTO)}
         )
-
-    @property
-    def temperature_unit(self) -> str:
-        """Return the unit of measurement."""
-        return TEMP_CELSIUS
 
     @property
     def supported_features(self) -> int:
