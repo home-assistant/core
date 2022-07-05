@@ -59,7 +59,9 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
 
     with patch(
         "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS],
+        return_value={
+            ip_address(banned_ip): IpBan(banned_ip) for banned_ip in BANNED_IPS
+        },
     ):
         client = await aiohttp_client(app)
 
@@ -95,7 +97,7 @@ async def test_access_from_supervisor_ip(
     mock_real_ip(app)(remote_addr)
 
     with patch(
-        "homeassistant.components.http.ban.async_load_ip_bans_config", return_value=[]
+        "homeassistant.components.http.ban.async_load_ip_bans_config", return_value={}
     ):
         client = await aiohttp_client(app)
 
@@ -150,7 +152,9 @@ async def test_ip_bans_file_creation(hass, aiohttp_client):
 
     with patch(
         "homeassistant.components.http.ban.async_load_ip_bans_config",
-        return_value=[IpBan(banned_ip) for banned_ip in BANNED_IPS],
+        return_value={
+            ip_address(banned_ip): IpBan(banned_ip) for banned_ip in BANNED_IPS
+        },
     ):
         client = await aiohttp_client(app)
 

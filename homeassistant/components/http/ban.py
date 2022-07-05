@@ -62,18 +62,18 @@ async def ban_middleware(
     request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
 ) -> StreamResponse:
     """IP Ban middleware."""
-    if KEY_BANNED_IPS not in request.app:
+    ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] | None = request.app.get(
+        KEY_BANNED_IPS
+    )
+    if ip_bans_lookup is None:
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
-    # Verify if IP is not banned
-    ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
-    is_banned = any(
-        ip_ban.ip_address == ip_address_ for ip_ban in request.app[KEY_BANNED_IPS]
-    )
-
-    if is_banned:
-        raise HTTPForbidden()
+    if ip_bans_lookup:
+        # Verify if IP is not banned
+        ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
+        if ip_address_ in ip_bans_lookup:
+            raise HTTPForbidden()
 
     try:
         return await handler(request)
@@ -146,8 +146,7 @@ async def process_wrong_login(request: Request) -> None:
         request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr]
         >= request.app[KEY_LOGIN_THRESHOLD]
     ):
-        new_ban = IpBan(remote_addr)
-        request.app[KEY_BANNED_IPS].append(new_ban)
+        new_ban = request.app[KEY_BANNED_IPS][remote_addr] = IpBan(remote_addr)
 
         await hass.async_add_executor_job(
             update_ip_bans_config, hass.config.path(IP_BANS_FILE), new_ban
@@ -199,27 +198,30 @@ class IpBan:
         self.banned_at = banned_at or dt_util.utcnow()
 
 
-async def async_load_ip_bans_config(hass: HomeAssistant, path: str) -> list[IpBan]:
+async def async_load_ip_bans_config(
+    hass: HomeAssistant, path: str
+) -> dict[IPv4Address | IPv6Address, IpBan]:
     """Load list of banned IPs from config file."""
-    ip_list: list[IpBan] = []
+    ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
 
     try:
         list_ = await hass.async_add_executor_job(load_yaml_config_file, path)
     except FileNotFoundError:
-        return ip_list
+        return ip_bans_lookup
     except HomeAssistantError as err:
         _LOGGER.error("Unable to load %s: %s", path, str(err))
-        return ip_list
+        return ip_bans_lookup
 
     for ip_ban, ip_info in list_.items():
         try:
             ip_info = SCHEMA_IP_BAN_ENTRY(ip_info)
-            ip_list.append(IpBan(ip_ban, ip_info["banned_at"]))
+            ban = IpBan(ip_ban, ip_info["banned_at"])
+            ip_bans_lookup[ban.ip_address] = ban
         except vol.Invalid as err:
             _LOGGER.error("Failed to load IP ban %s: %s", ip_info, err)
             continue
 
-    return ip_list
+    return ip_bans_lookup
 
 
 def update_ip_bans_config(path: str, ip_ban: IpBan) -> None:
