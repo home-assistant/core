@@ -1,5 +1,6 @@
 """Decorator service for the media_player.play_media service."""
 import logging
+from os.path import exists
 
 import voluptuous as vol
 from youtube_dl import YoutubeDL
@@ -107,6 +108,14 @@ class MediaExtractor:
     def get_stream_selector(self):
         """Return format selector for the media URL."""
         cookies_txt_filepath = self.call_data.get(ATTR_COOKIES_FILEPATH)
+
+        if cookies_txt_filepath and not exists(cookies_txt_filepath):
+            _LOGGER.warning(
+                "Cookies file not found at filepath: %s", cookies_txt_filepath
+            )
+        elif cookies_txt_filepath:
+            _LOGGER.info("Cookies file found: %s", cookies_txt_filepath)
+
         ydl = YoutubeDL(
             {"quiet": True, "logger": _LOGGER, "cookiefile": cookies_txt_filepath}
         )
