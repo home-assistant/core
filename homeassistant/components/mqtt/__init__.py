@@ -31,10 +31,6 @@ from homeassistant.helpers.reload import (
     async_reload_integration_platforms,
 )
 from homeassistant.helpers.service import async_register_admin_service
-
-# MqttServiceInfo only for backwards compatibility, do not use this
-# as you'll get the whole MQTT integration via import.
-from homeassistant.helpers.service_info.mqtt import MqttServiceInfo  # noqa: F401
 from homeassistant.helpers.typing import ConfigType
 
 # Loading the config flow file will register the flow
