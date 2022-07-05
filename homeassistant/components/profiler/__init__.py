@@ -55,6 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     domain_data = hass.data[DOMAIN] = {}
 
     async def _async_run_profile(call: ServiceCall) -> None:
+        _LOGGER.warning("Modules: %s", sys.modules)
         async with lock:
             await _async_generate_profile(hass, call)
 
