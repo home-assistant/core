@@ -1,6 +1,8 @@
 """Support for Mikrotik routers as device tracker."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.device_tracker.config_entry import ScannerEntity
 from homeassistant.components.device_tracker.const import (
     DOMAIN as DEVICE_TRACKER,
@@ -14,7 +16,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
-from .hub import MikrotikDataUpdateCoordinator
+from .hub import Device, MikrotikDataUpdateCoordinator
 
 # These are normalized to ATTR_IP and ATTR_MAC to conform
 # to device_tracker
@@ -27,7 +29,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for Mikrotik component."""
-    hub = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: MikrotikDataUpdateCoordinator = hass.data[DOMAIN][
+        config_entry.entry_id
+    ]
 
     tracked: dict[str, MikrotikDataUpdateCoordinatorTracker] = {}
 
@@ -42,47 +46,53 @@ async def async_setup_entry(
         ):
 
             if (
-                entity.unique_id in hub.api.devices
-                or entity.unique_id not in hub.api.all_devices
+                entity.unique_id in coordinator.api.devices
+                or entity.unique_id not in coordinator.api.all_devices
             ):
                 continue
-            hub.api.restore_device(entity.unique_id)
+            coordinator.api.restore_device(entity.unique_id)
 
     @callback
-    def update_hub():
+    def update_hub() -> None:
         """Update the status of the device."""
-        update_items(hub, async_add_entities, tracked)
+        update_items(coordinator, async_add_entities, tracked)
 
-    config_entry.async_on_unload(hub.async_add_listener(update_hub))
+    config_entry.async_on_unload(coordinator.async_add_listener(update_hub))
 
     update_hub()
 
 
 @callback
-def update_items(hub, async_add_entities, tracked):
+def update_items(
+    coordinator: MikrotikDataUpdateCoordinator,
+    async_add_entities: AddEntitiesCallback,
+    tracked: dict[str, MikrotikDataUpdateCoordinatorTracker],
+):
     """Update tracked device state from the hub."""
-    new_tracked = []
-    for mac, device in hub.api.devices.items():
+    new_tracked: list[MikrotikDataUpdateCoordinatorTracker] = []
+    for mac, device in coordinator.api.devices.items():
         if mac not in tracked:
-            tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, hub)
+            tracked[mac] = MikrotikDataUpdateCoordinatorTracker(device, coordinator)
             new_tracked.append(tracked[mac])
 
     if new_tracked:
         async_add_entities(new_tracked)
 
 
-class MikrotikDataUpdateCoordinatorTracker(CoordinatorEntity, ScannerEntity):
+class MikrotikDataUpdateCoordinatorTracker(
+    CoordinatorEntity[MikrotikDataUpdateCoordinator], ScannerEntity
+):
     """Representation of network device."""
 
-    coordinator: MikrotikDataUpdateCoordinator
-
-    def __init__(self, device, hub):
+    def __init__(
+        self, device: Device, coordinator: MikrotikDataUpdateCoordinator
+    ) -> None:
         """Initialize the tracked device."""
-        super().__init__(hub)
+        super().__init__(coordinator)
         self.device = device
 
     @property
-    def is_connected(self):
+    def is_connected(self) -> bool:
         """Return true if the client is connected to the network."""
         if (
             self.device.last_seen
@@ -93,7 +103,7 @@ class MikrotikDataUpdateCoordinatorTracker(CoordinatorEntity, ScannerEntity):
         return False
 
     @property
-    def source_type(self):
+    def source_type(self) -> str:
         """Return the source type of the client."""
         return SOURCE_TYPE_ROUTER
 
@@ -124,7 +134,7 @@ class MikrotikDataUpdateCoordinatorTracker(CoordinatorEntity, ScannerEntity):
         return self.device.mac
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         if self.is_connected:
             return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
