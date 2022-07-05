@@ -10,6 +10,7 @@ from aiohomekit.model.services import ServicesTypes
 
 from homeassistant.components.climate.const import (
     DOMAIN,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
@@ -144,6 +145,32 @@ async def test_climate_change_thermostat_state(hass, utcnow):
         ServicesTypes.THERMOSTAT,
         {
             CharacteristicsTypes.HEATING_COOLING_TARGET: 0,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "on"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.FAN_STATE_TARGET: 0,
+        },
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {"entity_id": "climate.testdevice", "fan_mode": "auto"},
+        blocking=True,
+    )
+    helper.async_assert_service_values(
+        ServicesTypes.THERMOSTAT,
+        {
+            CharacteristicsTypes.FAN_STATE_TARGET: 1,
         },
     )
 
