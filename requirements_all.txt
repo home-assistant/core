@@ -339,9 +339,6 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
-# homeassistant.components.http
-async-lru==1.0.3
-
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
@@ -977,6 +974,7 @@ logi_circle==0.2.3
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
+# homeassistant.components.http
 # homeassistant.components.recorder
 lru-dict==1.1.7
 

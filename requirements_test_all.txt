@@ -290,9 +290,6 @@ aprslib==0.7.0
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.12.0
 
-# homeassistant.components.http
-async-lru==1.0.3
-
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
@@ -690,6 +687,7 @@ life360==4.1.1
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
 
+# homeassistant.components.http
 # homeassistant.components.recorder
 lru-dict==1.1.7
 
