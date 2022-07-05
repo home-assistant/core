@@ -604,7 +604,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220630.0
+home-assistant-frontend==20220705.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -983,7 +983,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==95
+pydeconz==96
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1226,7 +1226,7 @@ pyruckus==0.12
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.17
+pysensibo==1.0.18
 
 # homeassistant.components.serial
 # homeassistant.components.zha
