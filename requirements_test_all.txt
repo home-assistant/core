@@ -1223,7 +1223,7 @@ pyruckus==0.12
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.17
+pysensibo==1.0.18
 
 # homeassistant.components.serial
 # homeassistant.components.zha
