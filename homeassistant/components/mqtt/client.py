@@ -353,7 +353,7 @@ class MQTT:
         )
 
     def cleanup(self):
-        """Clean up listers."""
+        """Clean up listeners."""
         while self._cleanup_on_unload:
             self._cleanup_on_unload.pop()()
 
