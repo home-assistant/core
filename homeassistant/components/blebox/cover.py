@@ -16,11 +16,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
-
 BLEBOX_TO_COVER_DEVICE_CLASSES = {
-    "shutter": CoverDeviceClass.SHUTTER,
-    "gatebox": CoverDeviceClass.DOOR,
     "gate": CoverDeviceClass.GATE,
+    "gatebox": CoverDeviceClass.DOOR,
+    "shutter": CoverDeviceClass.SHUTTER,
 }
 
 
