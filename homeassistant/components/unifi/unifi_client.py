@@ -6,7 +6,7 @@ from .unifi_entity_base import UniFiBase
 
 
 class UniFiClientBase(UniFiBase):
-    """Base class for UniFi clients."""
+    """Base class for UniFi clients (without device info)."""
 
     def __init__(self, client, controller) -> None:
         """Set up client."""
