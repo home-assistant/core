@@ -7,7 +7,7 @@ import sys
 import threading
 import time
 import traceback
-from typing import TYPE_CHECKING, Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -123,12 +123,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for thread in threading.enumerate():
             if thread == main_thread:
                 continue
-            if TYPE_CHECKING:
-                assert thread.ident is not None
+            ident = cast(int, thread.ident)
             _LOGGER.critical(
                 "Thread [%s]: %s",
                 thread.name,
-                "".join(traceback.format_stack(frames.get(thread.ident))).strip(),
+                "".join(traceback.format_stack(frames.get(ident))).strip(),
             )
 
     async def _async_dump_scheduled(call: ServiceCall) -> None:
