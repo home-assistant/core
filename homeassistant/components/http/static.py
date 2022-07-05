@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
@@ -18,23 +19,49 @@ CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADERS: Final[Mapping[str, str]] = {
     hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
 }
+CACHE_SIZE = 512
+
+
+@lru_cache(maxsize=CACHE_SIZE)
+async def _async_get_file_path(
+    hass: HomeAssistant, filename: str, directory: Path, follow_symlinks: bool
+) -> Path | None:
+    """Return file path."""
+    return await hass.async_add_executor_job(
+        _get_file_path, filename, directory, follow_symlinks
+    )
+
+
+def _get_file_path(
+    filename: str, directory: Path, follow_symlinks: bool
+) -> Path | None:
+    filepath = directory.joinpath(filename).resolve()
+    if not follow_symlinks:
+        filepath.relative_to(directory)
+    # on opening a dir, load its contents if allowed
+    if filepath.is_dir():
+        return None
+    if filepath.is_file():
+        return filepath
+    raise HTTPNotFound
 
 
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
-    def _get_file_path(self, request: Request) -> Path | None:
+    async def _handle(self, request: Request) -> StreamResponse:
         rel_url = request.match_info["filename"]
+        hass: HomeAssistant = request.app[KEY_HASS]
+        filename = Path(rel_url)
+        if filename.anchor:
+            # rel_url is an absolute name like
+            # /static/\\machine_name\c$ or /static/D:\path
+            # where the static dir is totally different
+            raise HTTPForbidden()
         try:
-            filename = Path(rel_url)
-            if filename.anchor:
-                # rel_url is an absolute name like
-                # /static/\\machine_name\c$ or /static/D:\path
-                # where the static dir is totally different
-                raise HTTPForbidden()
-            filepath = self._directory.joinpath(filename).resolve()
-            if not self._follow_symlinks:
-                filepath.relative_to(self._directory)
+            filepath = await _async_get_file_path(
+                hass, filename, self._directory, self._follow_symlinks
+            )
         except (ValueError, FileNotFoundError) as error:
             # relatively safe
             raise HTTPNotFound() from error
@@ -43,16 +70,7 @@ class CachingStaticResource(StaticResource):
             request.app.logger.exception(error)
             raise HTTPNotFound() from error
 
-        # on opening a dir, load its contents if allowed
-        if filepath.is_dir():
-            return None
-        if filepath.is_file():
-            return filepath
-        raise HTTPNotFound
-
-    async def _handle(self, request: Request) -> StreamResponse:
-        hass: HomeAssistant = request.app[KEY_HASS]
-        if filepath := await hass.async_add_executor_job(self._get_file_path, request):
+        if filepath:
             return FileResponse(
                 filepath,
                 chunk_size=self._chunk_size,
