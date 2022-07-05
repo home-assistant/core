@@ -108,7 +108,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.toon",
     "homeassistant.components.toon.config_flow",
     "homeassistant.components.toon.models",
-    "homeassistant.components.unifi.config_flow",
     "homeassistant.components.withings",
     "homeassistant.components.withings.binary_sensor",
     "homeassistant.components.withings.common",
