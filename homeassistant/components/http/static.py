@@ -10,6 +10,10 @@ from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
 
+from homeassistant.core import HomeAssistant
+
+from .const import KEY_HASS
+
 CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADERS: Final[Mapping[str, str]] = {
     hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
@@ -21,6 +25,7 @@ class CachingStaticResource(StaticResource):
 
     async def _handle(self, request: Request) -> StreamResponse:
         rel_url = request.match_info["filename"]
+        hass: HomeAssistant = request.app[KEY_HASS]
         try:
             filename = Path(rel_url)
             if filename.anchor:
@@ -28,7 +33,9 @@ class CachingStaticResource(StaticResource):
                 # /static/\\machine_name\c$ or /static/D:\path
                 # where the static dir is totally different
                 raise HTTPForbidden()
-            filepath = self._directory.joinpath(filename).resolve()
+            filepath = await hass.async_add_executor_job(
+                self._directory.joinpath(filename).resolve
+            )
             if not self._follow_symlinks:
                 filepath.relative_to(self._directory)
         except (ValueError, FileNotFoundError) as error:
