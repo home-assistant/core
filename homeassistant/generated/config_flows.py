@@ -235,6 +235,7 @@ FLOWS = {
         "netatmo",
         "netgear",
         "nexia",
+        "nextdns",
         "nfandroidtv",
         "nightscout",
         "nina",

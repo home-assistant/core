@@ -317,7 +317,7 @@ bellows==0.31.0
 bimmer_connected==0.9.6
 
 # homeassistant.components.blebox
-blebox_uniapi==2.0.0
+blebox_uniapi==2.0.1
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -762,6 +762,9 @@ nexia==2.0.1
 # homeassistant.components.discord
 nextcord==2.0.0a8
 
+# homeassistant.components.nextdns
+nextdns==1.0.0
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
@@ -847,7 +850,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.1
+pillow==9.2.0
 
 # homeassistant.components.plex
 plexapi==4.11.2
@@ -1334,7 +1337,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.8
+pyunifiprotect==4.0.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1388,7 +1391,7 @@ renault-api==0.1.11
 restrictedpython==5.2
 
 # homeassistant.components.rflink
-rflink==0.0.62
+rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
