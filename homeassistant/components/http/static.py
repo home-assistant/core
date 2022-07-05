@@ -23,7 +23,7 @@ CACHE_HEADERS: Final[Mapping[str, str]] = {
 class CachingStaticResource(StaticResource):
     """Static Resource handler that will add cache headers."""
 
-    def _get_file_path(self, request: Request) -> Path | None:
+    def _get_file_path(self, request: Request) -> tuple[bool, Path]:
         rel_url = request.match_info["filename"]
         try:
             filename = Path(rel_url)
@@ -45,14 +45,17 @@ class CachingStaticResource(StaticResource):
 
         # on opening a dir, load its contents if allowed
         if filepath.is_dir():
-            return None
+            return False, filepath
         if filepath.is_file():
-            return filepath
+            return True, filepath
         raise HTTPNotFound
 
     async def _handle(self, request: Request) -> StreamResponse:
         hass: HomeAssistant = request.app[KEY_HASS]
-        if filepath := await hass.async_add_executor_job(self._get_file_path, request):
+        is_file, filepath = await hass.async_add_executor_job(
+            self._get_file_path, request
+        )
+        if is_file:
             return FileResponse(
                 filepath,
                 chunk_size=self._chunk_size,
