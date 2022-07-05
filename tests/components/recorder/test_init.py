@@ -25,7 +25,7 @@ from homeassistant.components.recorder import (
     get_instance,
 )
 from homeassistant.components.recorder.const import DATA_INSTANCE, KEEPALIVE_TIME
-from homeassistant.components.recorder.models import (
+from homeassistant.components.recorder.db_schema import (
     SCHEMA_VERSION,
     EventData,
     Events,
@@ -33,8 +33,8 @@ from homeassistant.components.recorder.models import (
     StateAttributes,
     States,
     StatisticsRuns,
-    process_timestamp,
 )
+from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.services import (
     SERVICE_DISABLE,
     SERVICE_ENABLE,

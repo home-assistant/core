@@ -1,6 +1,8 @@
 """Fan support for switch entities."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.fan import FanEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ENTITY_ID
@@ -53,7 +55,7 @@ class FanSwitch(BaseToggleEntity, FanEntity):
         self,
         percentage: int | None = None,
         preset_mode: str | None = None,
-        **kwargs,
+        **kwargs: Any,
     ) -> None:
         """Turn on the fan.
 

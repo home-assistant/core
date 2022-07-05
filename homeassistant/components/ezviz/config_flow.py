@@ -1,4 +1,6 @@
 """Config flow for ezviz."""
+from __future__ import annotations
+
 import logging
 
 from pyezviz.client import EzvizClient
@@ -12,7 +14,7 @@ from pyezviz.exceptions import (
 from pyezviz.test_cam_rtsp import TestRTSPAuth
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_CUSTOMIZE,
     CONF_IP_ADDRESS,
@@ -164,7 +166,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(config_entry: ConfigEntry) -> EzvizOptionsFlowHandler:
         """Get the options flow for this handler."""
         return EzvizOptionsFlowHandler(config_entry)
 
@@ -311,7 +313,7 @@ class EzvizConfigFlow(ConfigFlow, domain=DOMAIN):
 class EzvizOptionsFlowHandler(OptionsFlow):
     """Handle Ezviz client options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
         self.config_entry = config_entry
 

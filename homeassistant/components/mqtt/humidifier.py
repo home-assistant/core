@@ -1,9 +1,9 @@
 """Support for MQTT humidifiers."""
 from __future__ import annotations
 
-import asyncio
 import functools
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -46,7 +46,7 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
@@ -173,7 +173,11 @@ async def async_setup_platform(
     """Set up MQTT humidifier configured under the fan platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, humidifier.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        humidifier.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -184,14 +188,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT humidifier through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, humidifier.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )  # setup for discovery
+    await async_discover_yaml_entities(hass, humidifier.DOMAIN)
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
@@ -410,7 +408,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
@@ -434,10 +432,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
         """Return the current mode."""
         return self._mode
 
-    async def async_turn_on(
-        self,
-        **kwargs,
-    ) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the entity.
 
         This method is a coroutine.
@@ -454,7 +449,7 @@ class MqttHumidifier(MqttEntity, HumidifierEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the entity.
 
         This method is a coroutine.

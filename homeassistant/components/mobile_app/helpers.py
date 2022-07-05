@@ -13,7 +13,7 @@ from nacl.secret import SecretBox
 from homeassistant.const import ATTR_DEVICE_ID, CONTENT_TYPE_JSON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import JSONEncoder, json_loads
 
 from .const import (
     ATTR_APP_DATA,
@@ -85,7 +85,7 @@ def _decrypt_payload_helper(
     key_bytes = get_key_bytes(key, keylen)
 
     msg_bytes = decrypt(ciphertext, key_bytes)
-    message = json.loads(msg_bytes.decode("utf-8"))
+    message = json_loads(msg_bytes)
     _LOGGER.debug("Successfully decrypted mobile_app payload")
     return message
 

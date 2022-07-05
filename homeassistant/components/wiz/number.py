@@ -48,9 +48,9 @@ async def _async_set_ratio(device: wizlight, ratio: int) -> None:
 NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     WizNumberEntityDescription(
         key="effect_speed",
-        min_value=10,
-        max_value=200,
-        step=1,
+        native_min_value=10,
+        native_max_value=200,
+        native_step=1,
         icon="mdi:speedometer",
         name="Effect Speed",
         value_fn=lambda device: cast(Optional[int], device.state.get_speed()),
@@ -59,9 +59,9 @@ NUMBERS: tuple[WizNumberEntityDescription, ...] = (
     ),
     WizNumberEntityDescription(
         key="dual_head_ratio",
-        min_value=0,
-        max_value=100,
-        step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
         icon="mdi:floor-lamp-dual",
         name="Dual Head Ratio",
         value_fn=lambda device: cast(Optional[int], device.state.get_ratio()),
@@ -113,9 +113,9 @@ class WizSpeedNumber(WizEntity, NumberEntity):
     def _async_update_attrs(self) -> None:
         """Handle updating _attr values."""
         if (value := self.entity_description.value_fn(self._device)) is not None:
-            self._attr_value = float(value)
+            self._attr_native_value = float(value)
 
-    async def async_set_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Set the speed value."""
         await self.entity_description.set_value_fn(self._device, int(value))
         await self.coordinator.async_request_refresh()

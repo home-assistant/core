@@ -745,6 +745,12 @@ async def test_filter_continuous_sensor_values(
     entity_id_third = "light.bla"
     hass.states.async_set(entity_id_third, STATE_OFF, {"unit_of_measurement": "foo"})
     hass.states.async_set(entity_id_third, STATE_ON, {"unit_of_measurement": "foo"})
+    entity_id_proximity = "proximity.bla"
+    hass.states.async_set(entity_id_proximity, STATE_OFF)
+    hass.states.async_set(entity_id_proximity, STATE_ON)
+    entity_id_counter = "counter.bla"
+    hass.states.async_set(entity_id_counter, STATE_OFF)
+    hass.states.async_set(entity_id_counter, STATE_ON)
 
     await async_wait_recording_done(hass)
 
@@ -2037,7 +2043,7 @@ async def test_include_events_domain_glob(hass, hass_client, recorder_mock):
     _assert_entry(entries[3], name="included", entity_id=entity_id3)
 
 
-async def test_include_exclude_events(hass, hass_client, recorder_mock):
+async def test_include_exclude_events_no_globs(hass, hass_client, recorder_mock):
     """Test if events are filtered if include and exclude is configured."""
     entity_id = "switch.bla"
     entity_id2 = "sensor.blu"
@@ -2082,13 +2088,15 @@ async def test_include_exclude_events(hass, hass_client, recorder_mock):
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 4
+    assert len(entries) == 6
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
-    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
-    _assert_entry(entries[3], name="keep", entity_id=entity_id4, state="10")
+    _assert_entry(entries[1], name="bla", entity_id=entity_id, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[3], name="bla", entity_id=entity_id, state="20")
+    _assert_entry(entries[4], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[5], name="keep", entity_id=entity_id4, state="10")
 
 
 async def test_include_exclude_events_with_glob_filters(
@@ -2145,13 +2153,16 @@ async def test_include_exclude_events_with_glob_filters(
     client = await hass_client()
     entries = await _async_fetch_logbook(client)
 
-    assert len(entries) == 4
+    assert len(entries) == 7
     _assert_entry(
         entries[0], name="Home Assistant", message="started", domain=ha.DOMAIN
     )
-    _assert_entry(entries[1], name="blu", entity_id=entity_id2, state="10")
-    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="20")
-    _assert_entry(entries[3], name="included", entity_id=entity_id4, state="30")
+    _assert_entry(entries[1], name="bla", entity_id=entity_id, state="10")
+    _assert_entry(entries[2], name="blu", entity_id=entity_id2, state="10")
+    _assert_entry(entries[3], name="bla", entity_id=entity_id, state="20")
+    _assert_entry(entries[4], name="blu", entity_id=entity_id2, state="20")
+    _assert_entry(entries[5], name="included", entity_id=entity_id4, state="30")
+    _assert_entry(entries[6], name="included", entity_id=entity_id5, state="30")
 
 
 async def test_empty_config(hass, hass_client, recorder_mock):

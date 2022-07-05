@@ -75,10 +75,15 @@ class SystemBridgeDataUpdateCoordinator(
             hass, LOGGER, name=DOMAIN, update_interval=timedelta(seconds=30)
         )
 
-    def update_listeners(self) -> None:
-        """Call update on all listeners."""
-        for update_callback in self._listeners:
-            update_callback()
+    def is_ready(self) -> bool:
+        """Return if the data is ready."""
+        if self.data is None:
+            return False
+        for module in MODULES:
+            if getattr(self.data, module) is None:
+                self.logger.debug("%s - Module %s is None", self.title, module)
+                return False
+        return True
 
     async def async_get_data(
         self,
@@ -113,7 +118,7 @@ class SystemBridgeDataUpdateCoordinator(
                 self.unsub()
                 self.unsub = None
             self.last_update_success = False
-            self.update_listeners()
+            self.async_update_listeners()
         except (ConnectionClosedException, ConnectionResetError) as exception:
             self.logger.info(
                 "Websocket connection closed for %s. Will retry: %s",
@@ -124,7 +129,7 @@ class SystemBridgeDataUpdateCoordinator(
                 self.unsub()
                 self.unsub = None
             self.last_update_success = False
-            self.update_listeners()
+            self.async_update_listeners()
         except ConnectionErrorException as exception:
             self.logger.warning(
                 "Connection error occurred for %s. Will retry: %s",
@@ -135,7 +140,7 @@ class SystemBridgeDataUpdateCoordinator(
                 self.unsub()
                 self.unsub = None
             self.last_update_success = False
-            self.update_listeners()
+            self.async_update_listeners()
 
     async def _setup_websocket(self) -> None:
         """Use WebSocket for updates."""
@@ -151,7 +156,7 @@ class SystemBridgeDataUpdateCoordinator(
                 self.unsub()
                 self.unsub = None
             self.last_update_success = False
-            self.update_listeners()
+            self.async_update_listeners()
         except ConnectionErrorException as exception:
             self.logger.warning(
                 "Connection error occurred for %s. Will retry: %s",
@@ -159,7 +164,7 @@ class SystemBridgeDataUpdateCoordinator(
                 exception,
             )
             self.last_update_success = False
-            self.update_listeners()
+            self.async_update_listeners()
         except asyncio.TimeoutError as exception:
             self.logger.warning(
                 "Timed out waiting for %s. Will retry: %s",
@@ -167,11 +172,11 @@ class SystemBridgeDataUpdateCoordinator(
                 exception,
             )
             self.last_update_success = False
-            self.update_listeners()
+            self.async_update_listeners()
 
         self.hass.async_create_task(self._listen_for_data())
         self.last_update_success = True
-        self.update_listeners()
+        self.async_update_listeners()
 
         async def close_websocket(_) -> None:
             """Close WebSocket connection."""

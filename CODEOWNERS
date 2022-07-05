@@ -74,6 +74,8 @@ build.json @home-assistant/supervisor
 /tests/components/analytics/ @home-assistant/core @ludeeus
 /homeassistant/components/androidtv/ @JeffLIrion @ollo69
 /tests/components/androidtv/ @JeffLIrion @ollo69
+/homeassistant/components/anthemav/ @hyralex
+/tests/components/anthemav/ @hyralex
 /homeassistant/components/apache_kafka/ @bachya
 /tests/components/apache_kafka/ @bachya
 /homeassistant/components/api/ @home-assistant/core
@@ -129,8 +131,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @bbx-jp
-/tests/components/blebox/ @bbx-a @bbx-jp
+/homeassistant/components/blebox/ @bbx-a @riokuu
+/tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blueprint/ @home-assistant/core
@@ -273,6 +275,7 @@ build.json @home-assistant/supervisor
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
 /homeassistant/components/eight_sleep/ @mezz64 @raman325
+/tests/components/eight_sleep/ @mezz64 @raman325
 /homeassistant/components/elgato/ @frenck
 /tests/components/elgato/ @frenck
 /homeassistant/components/elkm1/ @gwww @bdraco
@@ -284,6 +287,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/emoncms/ @borpin
 /homeassistant/components/emonitor/ @bdraco
 /tests/components/emonitor/ @bdraco
+/homeassistant/components/emulated_hue/ @bdraco
+/tests/components/emulated_hue/ @bdraco
 /homeassistant/components/emulated_kasa/ @kbickar
 /tests/components/emulated_kasa/ @kbickar
 /homeassistant/components/energy/ @home-assistant/core
@@ -328,7 +333,6 @@ build.json @home-assistant/supervisor
 /tests/components/firmata/ @DaAwesomeP
 /homeassistant/components/fivem/ @Sander0542
 /tests/components/fivem/ @Sander0542
-/homeassistant/components/fixer/ @fabaff
 /homeassistant/components/fjaraskupan/ @elupus
 /tests/components/fjaraskupan/ @elupus
 /homeassistant/components/flick_electric/ @ZephireNZ
@@ -447,6 +451,8 @@ build.json @home-assistant/supervisor
 /tests/components/home_plus_control/ @chemaaa
 /homeassistant/components/homeassistant/ @home-assistant/core
 /tests/components/homeassistant/ @home-assistant/core
+/homeassistant/components/homeassistant_yellow/ @home-assistant/core
+/tests/components/homeassistant_yellow/ @home-assistant/core
 /homeassistant/components/homekit/ @bdraco
 /tests/components/homekit/ @bdraco
 /homeassistant/components/homekit_controller/ @Jc2k @bdraco
@@ -476,8 +482,6 @@ build.json @home-assistant/supervisor
 /tests/components/hyperion/ @dermotduffy
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
-/homeassistant/components/ialarm_xr/ @bigmoby
-/tests/components/ialarm_xr/ @bigmoby
 /homeassistant/components/iammeter/ @lewei50
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
@@ -570,6 +574,7 @@ build.json @home-assistant/supervisor
 /tests/components/lcn/ @alengwenus
 /homeassistant/components/lg_netcast/ @Drafteed
 /homeassistant/components/life360/ @pnbruckner
+/tests/components/life360/ @pnbruckner
 /homeassistant/components/lifx/ @Djelibeybi
 /homeassistant/components/light/ @home-assistant/core
 /tests/components/light/ @home-assistant/core
@@ -625,8 +630,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
-/homeassistant/components/metoffice/ @MrHarcombe
-/tests/components/metoffice/ @MrHarcombe
+/homeassistant/components/metoffice/ @MrHarcombe @avee87
+/tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
@@ -693,6 +698,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nextbus/ @vividboarder
 /tests/components/nextbus/ @vividboarder
 /homeassistant/components/nextcloud/ @meichthys
+/homeassistant/components/nextdns/ @bieniu
+/tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
 /tests/components/nfandroidtv/ @tkdrob
 /homeassistant/components/nightscout/ @marciogranzotto
@@ -826,7 +833,8 @@ build.json @home-assistant/supervisor
 /tests/components/rachio/ @bdraco
 /homeassistant/components/radio_browser/ @frenck
 /tests/components/radio_browser/ @frenck
-/homeassistant/components/radiotherm/ @vinnyfuria
+/homeassistant/components/radiotherm/ @bdraco @vinnyfuria
+/tests/components/radiotherm/ @bdraco @vinnyfuria
 /homeassistant/components/rainbird/ @konikvranik
 /homeassistant/components/raincloud/ @vanstinator
 /homeassistant/components/rainforest_eagle/ @gtdiehl @jcalbert @hastarin
@@ -926,6 +934,8 @@ build.json @home-assistant/supervisor
 /tests/components/sighthound/ @robmarkcole
 /homeassistant/components/signal_messenger/ @bbernhard
 /tests/components/signal_messenger/ @bbernhard
+/homeassistant/components/simplepush/ @engrbm87
+/tests/components/simplepush/ @engrbm87
 /homeassistant/components/simplisafe/ @bachya
 /tests/components/simplisafe/ @bachya
 /homeassistant/components/sinch/ @bendikrb
@@ -933,6 +943,8 @@ build.json @home-assistant/supervisor
 /tests/components/siren/ @home-assistant/core @raman325
 /homeassistant/components/sisyphus/ @jkeljo
 /homeassistant/components/sky_hub/ @rogerselwyn
+/homeassistant/components/skybell/ @tkdrob
+/tests/components/skybell/ @tkdrob
 /homeassistant/components/slack/ @bachya @tkdrob
 /tests/components/slack/ @bachya @tkdrob
 /homeassistant/components/sleepiq/ @mfugate1 @kbickar
@@ -963,14 +975,14 @@ build.json @home-assistant/supervisor
 /tests/components/solax/ @squishykid
 /homeassistant/components/soma/ @ratsept @sebfortier2288
 /tests/components/soma/ @ratsept @sebfortier2288
-/homeassistant/components/somfy/ @tetienne
-/tests/components/somfy/ @tetienne
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
 /tests/components/songpal/ @rytilahti @shenxn
 /homeassistant/components/sonos/ @cgtobi @jjlawren
 /tests/components/sonos/ @cgtobi @jjlawren
+/homeassistant/components/soundtouch/ @kroimon
+/tests/components/soundtouch/ @kroimon
 /homeassistant/components/spaceapi/ @fabaff
 /tests/components/spaceapi/ @fabaff
 /homeassistant/components/speedtestdotnet/ @rohankapoorcom @engrbm87
@@ -1067,8 +1079,8 @@ build.json @home-assistant/supervisor
 /tests/components/tomorrowio/ @raman325 @lymanepp
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
-/homeassistant/components/tplink/ @rytilahti @thegardenmonkey @bdraco
-/tests/components/tplink/ @rytilahti @thegardenmonkey @bdraco
+/homeassistant/components/tplink/ @rytilahti @thegardenmonkey
+/tests/components/tplink/ @rytilahti @thegardenmonkey
 /homeassistant/components/traccar/ @ludeeus
 /tests/components/traccar/ @ludeeus
 /homeassistant/components/trace/ @home-assistant/core
@@ -1159,8 +1171,8 @@ build.json @home-assistant/supervisor
 /tests/components/watttime/ @bachya
 /homeassistant/components/waze_travel_time/ @eifinger
 /tests/components/waze_travel_time/ @eifinger
-/homeassistant/components/weather/ @fabaff
-/tests/components/weather/ @fabaff
+/homeassistant/components/weather/ @home-assistant/core
+/tests/components/weather/ @home-assistant/core
 /homeassistant/components/webhook/ @home-assistant/core
 /tests/components/webhook/ @home-assistant/core
 /homeassistant/components/webostv/ @bendavid @thecode

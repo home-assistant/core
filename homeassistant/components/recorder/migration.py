@@ -22,7 +22,7 @@ from sqlalchemy.sql.expression import true
 from homeassistant.core import HomeAssistant
 
 from .const import SupportedDialect
-from .models import (
+from .db_schema import (
     SCHEMA_VERSION,
     TABLE_STATES,
     Base,
@@ -31,8 +31,8 @@ from .models import (
     StatisticsMeta,
     StatisticsRuns,
     StatisticsShortTerm,
-    process_timestamp,
 )
+from .models import process_timestamp
 from .statistics import (
     delete_statistics_duplicates,
     delete_statistics_meta_duplicates,
@@ -715,14 +715,13 @@ def _apply_update(  # noqa: C901
         if engine.dialect.name == SupportedDialect.MYSQL:
             # Ensure the row format is dynamic or the index
             # unique will be too large
-            with session_scope(session=session_maker()) as session:
-                connection = session.connection()
-                # This is safe to run multiple times and fast since the table is small
-                connection.execute(
-                    text(
-                        "ALTER TABLE statistics_meta ENGINE=InnoDB, ROW_FORMAT=DYNAMIC"
+            with contextlib.suppress(SQLAlchemyError):
+                with session_scope(session=session_maker()) as session:
+                    connection = session.connection()
+                    # This is safe to run multiple times and fast since the table is small
+                    connection.execute(
+                        text("ALTER TABLE statistics_meta ROW_FORMAT=DYNAMIC")
                     )
-                )
         try:
             _create_index(
                 session_maker, "statistics_meta", "ix_statistics_meta_statistic_id"

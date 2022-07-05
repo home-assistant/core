@@ -1,0 +1,31 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Urz\u0105dzenie jest ju\u017c skonfigurowane"
+        },
+        "error": {
+            "cannot_connect": "Nie mo\u017cna nawi\u0105za\u0107 po\u0142\u0105czenia",
+            "unknown": "Nieoczekiwany b\u0142\u0105d"
+        },
+        "flow_title": "{name} {model} ({host})",
+        "step": {
+            "confirm": {
+                "description": "Czy chcesz skonfigurowa\u0107 {name} {model} ({host})?"
+            },
+            "user": {
+                "data": {
+                    "host": "Nazwa hosta lub adres IP"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Ustaw podtrzymanie podczas ustawiania temperatury."
+                }
+            }
+        }
+    }
+}

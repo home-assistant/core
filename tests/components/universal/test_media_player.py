@@ -422,6 +422,12 @@ async def test_active_child_state(hass, mock_states):
     await ump.async_update()
     assert mock_states.mock_mp_1.entity_id == ump._child_state.entity_id
 
+    mock_states.mock_mp_1._state = STATE_PAUSED
+    mock_states.mock_mp_1.async_schedule_update_ha_state()
+    await hass.async_block_till_done()
+    await ump.async_update()
+    assert mock_states.mock_mp_2.entity_id == ump._child_state.entity_id
+
     mock_states.mock_mp_1._state = STATE_OFF
     mock_states.mock_mp_1.async_schedule_update_ha_state()
     await hass.async_block_till_done()
