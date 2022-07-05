@@ -141,7 +141,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
-        if self.service.has(CharacteristicsTypes.FAN_STATE_CURRENT):
+        if self.service.has(CharacteristicsTypes.FAN_STATE_TARGET):
             return [FAN_ON, FAN_AUTO]
         return None
 
@@ -149,7 +149,7 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         return CURRENT_FAN_STATE_HOMEKIT_TO_HASS.get(
-            self.service.value(CharacteristicsTypes.FAN_STATE_CURRENT)
+            self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
