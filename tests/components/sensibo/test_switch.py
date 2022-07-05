@@ -247,4 +247,8 @@ async def test_build_params(
         "geoIntegration": False,
         "primeIntegration": False,
     }
-    assert build_params("incorrect_command", get_data.parsed["ABC999111"]) is None
+
+    assert build_params("del_timer", get_data.parsed["ABC999111"]) is None
+
+    with pytest.raises(ValueError):
+        build_params("no_command", get_data.parsed["ABC999111"])

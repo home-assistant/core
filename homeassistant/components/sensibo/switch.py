@@ -78,6 +78,8 @@ def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | N
             "acState": {**device_data.ac_states, "on": new_state},
         }
         return params
+    if command == "del_timer":
+        return None
     if command == "set_pure_boost":
         new_state = bool(device_data.pure_boost_enabled is False)
         params = {"enabled": new_state}
@@ -88,7 +90,7 @@ def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | N
             params["geoIntegration"] = False
             params["primeIntegration"] = False
         return params
-    return None
+    raise ValueError("No correct command given")
 
 
 async def async_setup_entry(
