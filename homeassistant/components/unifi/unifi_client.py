@@ -46,7 +46,7 @@ class UniFiClientBase(UniFiBase):
 
 
 class UniFiClient(UniFiClientBase):
-    """Base class for UniFi clients (with device class)."""
+    """Base class for UniFi clients (with device info)."""
 
     @property
     def device_info(self) -> DeviceInfo:
