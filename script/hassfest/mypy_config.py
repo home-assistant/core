@@ -111,7 +111,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.unifi",
     "homeassistant.components.unifi.config_flow",
     "homeassistant.components.unifi.device_tracker",
-    "homeassistant.components.unifi.diagnostics",
     "homeassistant.components.unifi.unifi_entity_base",
     "homeassistant.components.withings",
     "homeassistant.components.withings.binary_sensor",
