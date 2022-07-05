@@ -526,11 +526,7 @@ class TimerDurationMinutes(ZHANumberConfigurationEntity, id_suffix="timer_durati
 
 
 @CONFIG_DIAGNOSTIC_MATCH(
-    channel_names="ikea_manufacturer",
-    manufacturers={
-        "IKEA of Sweden",
-    },
-    models={"STARKVIND Air purifier"},
+    channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"}
 )
 class FilterLifeTime(ZHANumberConfigurationEntity, id_suffix="filter_life_time"):
     """Representation of a ZHA timer duration configuration entity."""
