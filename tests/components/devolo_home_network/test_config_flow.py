@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from .const import DISCOVERY_INFO, DISCOVERY_INFO_WRONG_DEVICE, IP
+from .mock import MockDevice
 
 
 async def test_form(hass: HomeAssistant, info: dict[str, Any]):
@@ -167,10 +168,12 @@ async def test_abort_if_configued(hass: HomeAssistant):
     assert result3["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_validate_input(hass: HomeAssistant):
     """Test input validation."""
-    info = await config_flow.validate_input(hass, {CONF_IP_ADDRESS: IP})
-    assert SERIAL_NUMBER in info
-    assert TITLE in info
+    with patch(
+        "homeassistant.components.devolo_home_network.config_flow.Device",
+        new=MockDevice,
+    ):
+        info = await config_flow.validate_input(hass, {CONF_IP_ADDRESS: IP})
+        assert SERIAL_NUMBER in info
+        assert TITLE in info
