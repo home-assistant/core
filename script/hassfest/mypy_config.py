@@ -47,7 +47,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.icloud.device_tracker",
     "homeassistant.components.icloud.sensor",
     "homeassistant.components.influxdb",
-    "homeassistant.components.input_datetime",
     "homeassistant.components.izone.climate",
     "homeassistant.components.konnected",
     "homeassistant.components.konnected.config_flow",
