@@ -10,10 +10,6 @@ from . import BleBoxEntity, create_blebox_entities
 
 SCAN_INTERVAL = timedelta(seconds=5)
 
-BLEBOX_TO_SWITCH_DEVICE_CLASSES = {
-    "relay": SwitchDeviceClass.SWITCH,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -32,7 +28,7 @@ class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
     def __init__(self, feature):
         """Initialize a BleBox switch feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_SWITCH_DEVICE_CLASSES[feature.device_class]
+        self._attr_device_class = SwitchDeviceClass.SWITCH
 
     @property
     def is_on(self):

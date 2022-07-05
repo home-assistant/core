@@ -8,10 +8,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
 
-BLEBOX_TO_BUTTON_DEVICE_CLASSES = {
-    "button": ButtonDeviceClass.UPDATE,
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -30,7 +26,7 @@ class BleBoxButtonEntity(BleBoxEntity, ButtonEntity):
     def __init__(self, feature):
         """Initialize a BleBox button feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_BUTTON_DEVICE_CLASSES["button"]
+        self._attr_device_class = ButtonDeviceClass.UPDATE
         self._attr_icon = self.get_icon()
 
     def get_icon(self):
