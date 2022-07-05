@@ -1,9 +1,5 @@
 """Constants for the BleBox devices integration."""
 
-from homeassistant.components.button import ButtonDeviceClass
-from homeassistant.components.cover import CoverDeviceClass
-from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     STATE_CLOSED,
     STATE_CLOSING,
@@ -23,14 +19,6 @@ CANNOT_CONNECT = "cannot_connect"
 UNSUPPORTED_VERSION = "unsupported_version"
 UNKNOWN = "unknown"
 
-BLEBOX_TO_HASS_DEVICE_CLASSES = {
-    "shutter": CoverDeviceClass.SHUTTER,
-    "gatebox": CoverDeviceClass.DOOR,
-    "gate": CoverDeviceClass.GATE,
-    "relay": SwitchDeviceClass.SWITCH,
-    "temperature": SensorDeviceClass.TEMPERATURE,
-    "button": ButtonDeviceClass.UPDATE,
-}
 
 BLEBOX_TO_HASS_COVER_STATES = {
     None: None,

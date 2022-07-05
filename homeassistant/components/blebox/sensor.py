@@ -1,11 +1,13 @@
 """BleBox sensor entities."""
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES, BLEBOX_TO_UNIT_MAP
+from .const import BLEBOX_TO_UNIT_MAP
+
+BLEBOX_TO_SENSOR_DEVICE_CLASS = {"temperature": SensorDeviceClass.TEMPERATURE}
 
 
 async def async_setup_entry(
@@ -27,7 +29,7 @@ class BleBoxSensorEntity(BleBoxEntity, SensorEntity):
         """Initialize a BleBox sensor feature."""
         super().__init__(feature)
         self._attr_native_unit_of_measurement = BLEBOX_TO_UNIT_MAP[feature.unit]
-        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
+        self._attr_device_class = BLEBOX_TO_SENSOR_DEVICE_CLASS[feature.device_class]
 
     @property
     def native_value(self):

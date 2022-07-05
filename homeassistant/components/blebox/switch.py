@@ -1,15 +1,18 @@
 """BleBox switch implementation."""
 from datetime import timedelta
 
-from homeassistant.components.switch import SwitchEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
-from .const import BLEBOX_TO_HASS_DEVICE_CLASSES
 
 SCAN_INTERVAL = timedelta(seconds=5)
+
+BLEBOX_TO_SWITCH_DEVICE_CLASSES = {
+    "relay": SwitchDeviceClass.SWITCH,
+}
 
 
 async def async_setup_entry(
@@ -29,7 +32,7 @@ class BleBoxSwitchEntity(BleBoxEntity, SwitchEntity):
     def __init__(self, feature):
         """Initialize a BleBox switch feature."""
         super().__init__(feature)
-        self._attr_device_class = BLEBOX_TO_HASS_DEVICE_CLASSES[feature.device_class]
+        self._attr_device_class = BLEBOX_TO_SWITCH_DEVICE_CLASSES[feature.device_class]
 
     @property
     def is_on(self):
