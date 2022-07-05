@@ -339,6 +339,9 @@ asmog==0.0.6
 # homeassistant.components.asterisk_mbox
 asterisk_mbox==0.5.0
 
+# homeassistant.components.http
+async-lru==1.0.3
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv

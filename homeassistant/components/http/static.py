@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
@@ -10,6 +9,7 @@ from aiohttp import hdrs
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
+from async_lru import alru_cache
 
 from homeassistant.core import HomeAssistant
 
@@ -22,7 +22,7 @@ CACHE_HEADERS: Final[Mapping[str, str]] = {
 CACHE_SIZE = 512
 
 
-@lru_cache(maxsize=CACHE_SIZE)
+@alru_cache(maxsize=CACHE_SIZE)  # type: ignore[misc]
 async def _async_get_file_path(
     hass: HomeAssistant, filename: str, directory: Path, follow_symlinks: bool
 ) -> Path | None:
