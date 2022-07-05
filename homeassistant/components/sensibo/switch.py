@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from pysensibo.model import SensiboDevice
 
@@ -69,30 +69,6 @@ PURE_SWITCH_TYPES: tuple[SensiboDeviceSwitchEntityDescription, ...] = (
 )
 
 
-def build_params(command: str, device_data: SensiboDevice) -> dict[str, Any] | None:
-    """Build params for toggle switch."""
-    if command == "set_timer":
-        new_state = bool(device_data.ac_states["on"] is False)
-        params = {
-            "minutesFromNow": 60,
-            "acState": {**device_data.ac_states, "on": new_state},
-        }
-        return params
-    if command == "del_timer":
-        return None
-    if command == "set_pure_boost":
-        new_state = bool(device_data.pure_boost_enabled is False)
-        params = {"enabled": new_state}
-        if device_data.pure_measure_integration is None:
-            params["sensitivity"] = "N"
-            params["measurementsIntegration"] = True
-            params["acIntegration"] = False
-            params["geoIntegration"] = False
-            params["primeIntegration"] = False
-        return params
-    raise ValueError("No correct command given")
-
-
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -144,21 +120,33 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.api_call(
-            device_data=self.device_data,
-            key=self.entity_description.key,
-            value=True,
-            command=self.entity_description.command_on,
-        )
+        if self.entity_description.key == "timer_on_switch":
+            await self.turn_on_timer(
+                device_data=self.device_data,
+                key=self.entity_description.data_key,
+                value=True,
+            )
+        if self.entity_description.key == "pure_boost_switch":
+            await self.turn_on_off_pure_boost(
+                device_data=self.device_data,
+                key=self.entity_description.data_key,
+                value=True,
+            )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.api_call(
-            device_data=self.device_data,
-            key=self.entity_description.key,
-            value=False,
-            command=self.entity_description.command_off,
-        )
+        if self.entity_description.key == "timer_on_switch":
+            await self.turn_off_timer(
+                device_data=self.device_data,
+                key=self.entity_description.data_key,
+                value=True,
+            )
+        if self.entity_description.key == "pure_boost_switch":
+            await self.turn_on_off_pure_boost(
+                device_data=self.device_data,
+                key=self.entity_description.data_key,
+                value=True,
+            )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
@@ -168,20 +156,41 @@ class SensiboDeviceSwitch(SensiboDeviceBaseEntity, SwitchEntity):
         return None
 
     @api_call_decorator
-    async def api_call(
-        self, device_data: SensiboDevice, key: Any, value: Any, command: str
+    async def turn_on_timer(
+        self, device_data: SensiboDevice, key: Any, value: Any
     ) -> bool:
-        """Make service call to api."""
+        """Make service call to api for setting timer."""
         result = {}
-        data = build_params(command, self.device_data)
-        if command == "set_timer":
-            if TYPE_CHECKING:
-                assert data is not None
-            result = await self._client.async_set_timer(self._device_id, data)
-        if command == "del_timer":
-            result = await self._client.async_del_timer(self._device_id)
-        if command == "set_pure_boost":
-            if TYPE_CHECKING:
-                assert data is not None
-            result = await self._client.async_set_pureboost(self._device_id, data)
+        new_state = bool(device_data.ac_states["on"] is False)
+        data = {
+            "minutesFromNow": 60,
+            "acState": {**device_data.ac_states, "on": new_state},
+        }
+        result = await self._client.async_set_timer(self._device_id, data)
+        return bool(result.get("status") == "success")
+
+    @api_call_decorator
+    async def turn_off_timer(
+        self, device_data: SensiboDevice, key: Any, value: Any
+    ) -> bool:
+        """Make service call to api for deleting timer."""
+        result = {}
+        result = await self._client.async_del_timer(self._device_id)
+        return bool(result.get("status") == "success")
+
+    @api_call_decorator
+    async def turn_on_off_pure_boost(
+        self, device_data: SensiboDevice, key: Any, value: Any
+    ) -> bool:
+        """Make service call to api for setting Pure Boost."""
+        result = {}
+        new_state = bool(device_data.pure_boost_enabled is False)
+        data: dict[str, Any] = {"enabled": new_state}
+        if device_data.pure_measure_integration is None:
+            data["sensitivity"] = "N"
+            data["measurementsIntegration"] = True
+            data["acIntegration"] = False
+            data["geoIntegration"] = False
+            data["primeIntegration"] = False
+        result = await self._client.async_set_pureboost(self._device_id, data)
         return bool(result.get("status") == "success")
