@@ -16,8 +16,6 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.cloud.client",
-    "homeassistant.components.cloud.http_api",
     "homeassistant.components.evohome",
     "homeassistant.components.evohome.climate",
     "homeassistant.components.lovelace",
