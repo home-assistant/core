@@ -60,7 +60,9 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @property
     def _min_speed(self) -> int:
         """Return the minimum speed."""
-        return round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0)
+        return (
+            round(self.service[CharacteristicsTypes.ROTATION_SPEED].minValue or 0) + 1
+        )
 
     @property
     def _max_speed(self) -> int:
