@@ -5,8 +5,11 @@ import asyncio
 from collections.abc import Callable
 import datetime
 import logging
-from typing import Any
+from types import MappingProxyType
+from typing import Any, cast
 
+from aiohomekit import Controller
+from aiohomekit.controller.controller import IpPairing
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -16,8 +19,9 @@ from aiohomekit.model import Accessories, Accessory
 from aiohomekit.model.characteristics import Characteristic
 from aiohomekit.model.services import Service
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE
-from homeassistant.core import CALLBACK_TYPE, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
@@ -60,7 +64,12 @@ def valid_serial_number(serial: str) -> bool:
 class HKDevice:
     """HomeKit device."""
 
-    def __init__(self, hass, config_entry, pairing_data) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        pairing_data: MappingProxyType[str, Any],
+    ) -> None:
         """Initialise a generic HomeKit device."""
 
         self.hass = hass
@@ -70,8 +79,13 @@ class HKDevice:
         # don't want to mutate a dict owned by a config entry.
         self.pairing_data = pairing_data.copy()
 
-        self.pairing = hass.data[CONTROLLER].load_pairing(
-            self.pairing_data["AccessoryPairingID"], self.pairing_data
+        controller: Controller = hass.data[CONTROLLER]
+
+        self.pairing = cast(
+            IpPairing,
+            controller.load_pairing(
+                self.pairing_data["AccessoryPairingID"], self.pairing_data
+            ),
         )
 
         self.accessories = None
