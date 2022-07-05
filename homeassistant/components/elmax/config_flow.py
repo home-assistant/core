@@ -190,10 +190,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             # Handle authentication, make sure the panel we are re-authenticating against is listed among results
             # and verify its pin is correct.
+            reauth_panel_id = self._entry.data[CONF_ELMAX_PANEL_ID]
             try:
                 # Test login.
                 client = await self._async_login(username=username, password=password)
-                reauth_panel_id = self._entry.data[CONF_ELMAX_PANEL_ID]
                 # Make sure the panel we are authenticating to is still available.
                 panels = [
                     p
@@ -203,13 +203,24 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 if len(panels) < 1:
                     raise NoOnlinePanelsError()
 
-                # Verify the pin is still valid.from
+                # Verify the pin is still valid.
                 await client.get_panel_status(
                     control_panel_id=self._entry.data[CONF_ELMAX_PANEL_ID],
                     pin=panel_pin,
                 )
 
-                # If it is, proceed with configuration update.
+            except ElmaxBadLoginError:
+                _LOGGER.error(
+                    "Wrong credentials or failed login while re-authenticating"
+                )
+                errors["base"] = "invalid_auth"
+            except NoOnlinePanelsError:
+                errors["base"] = "reauth_panel_disappeared"
+            except ElmaxBadPinError:
+                errors["base"] = "invalid_pin"
+
+            # If all went right, update the config entry
+            if not errors:
                 self.hass.config_entries.async_update_entry(
                     self._entry,
                     data={
@@ -222,20 +233,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.hass.config_entries.async_reload(self._entry.entry_id)
                 return self.async_abort(reason="reauth_successful")
 
-            except ElmaxBadLoginError:
-                _LOGGER.error(
-                    "Wrong credentials or failed login while re-authenticating"
-                )
-                errors["base"] = "invalid_auth"
-            except NoOnlinePanelsError:
-                _LOGGER.warning(
-                    "Panel ID %s is no longer associated to this user",
-                    reauth_panel_id,
-                )
-                errors["base"] = "reauth_panel_disappeared"
-            except ElmaxBadPinError:
-                errors["base"] = "invalid_pin"
-
+        # Otherwise start over and show the relative error message
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=REAUTH_FORM_SCHEMA, errors=errors
         )
