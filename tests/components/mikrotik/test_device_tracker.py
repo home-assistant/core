@@ -18,8 +18,8 @@ from . import (
     MOCK_DATA,
     MOCK_OPTIONS,
     WIRELESS_DATA,
+    setup_mikrotik_entry,
 )
-from .test_hub import setup_mikrotik_entry
 
 from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
