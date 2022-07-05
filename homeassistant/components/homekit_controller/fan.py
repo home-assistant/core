@@ -34,21 +34,14 @@ HK_DIRECTION_TO_HA = {v: k for (k, v) in DIRECTION_TO_HK.items()}
 class BaseHomeKitFan(HomeKitEntity, FanEntity):
     """The base HomeKit Controller Fan Entity."""
 
-    speed_read_characteristic: str
-    speed_write_characteristic: str
+    speed_characteristic: str
 
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         chars = []
 
-        if self.speed_read_characteristic:
-            chars.append(self.speed_read_characteristic)
-
-        if (
-            self.speed_write_characteristic
-            and self.speed_read_characteristic != self.speed_write_characteristic
-        ):
-            chars.append(self.speed_write_characteristic)
+        if self.speed_characteristic:
+            chars.append(self.speed_characteristic)
 
         return chars
 
@@ -60,19 +53,19 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
     @property
     def _min_speed(self) -> int:
         """Return the minimum speed."""
-        return round(self.service[self.speed_read_characteristic].minValue or 0)
+        return round(self.service[self.speed_characteristic].minValue or 0)
 
     @property
     def _max_speed(self) -> int:
         """Return the minimum speed."""
-        return round(self.service[self.speed_read_characteristic].maxValue or 100)
+        return round(self.service[self.speed_characteristic].maxValue or 100)
 
     @property
     def speed_count(self) -> int:
         """Speed count for the fan."""
         return round(
             min(self._max_speed, 100)
-            / max(1, self.service[self.speed_read_characteristic].minStep or 0)
+            / max(1, self.service[self.speed_characteristic].minStep or 0)
         )
 
     @property
@@ -82,7 +75,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
             return 0
 
         return ranged_value_to_percentage(
-            self._speed_range, self.service.value(self.speed_read_characteristic)
+            self._speed_range, self.service.value(self.speed_characteristic)
         )
 
     @property
@@ -90,7 +83,7 @@ class BaseHomeKitFan(HomeKitEntity, FanEntity):
         """Flag supported features."""
         features = 0
 
-        if self.service.has(self.speed_read_characteristic):
+        if self.service.has(self.speed_characteristic):
             features |= FanEntityFeature.SET_SPEED
 
         return features
@@ -102,8 +95,7 @@ class HomeKitFan(BaseHomeKitFan):
     # This must be set in subclasses to the name of a boolean characteristic
     # that controls whether the fan is on or off.
     on_characteristic: str
-    speed_read_characteristic = CharacteristicsTypes.ROTATION_SPEED
-    speed_write_characteristic = CharacteristicsTypes.ROTATION_SPEED
+    speed_characteristic = CharacteristicsTypes.ROTATION_SPEED
 
     @property
     def is_on(self) -> bool:
@@ -162,7 +154,7 @@ class HomeKitFan(BaseHomeKitFan):
 
         await self.async_put_characteristics(
             {
-                self.speed_write_characteristic: round(
+                self.speed_characteristic: round(
                     percentage_to_ranged_value(self._speed_range, percentage)
                 )
             }
@@ -184,7 +176,7 @@ class HomeKitFan(BaseHomeKitFan):
             percentage is not None
             and self.supported_features & FanEntityFeature.SET_SPEED
         ):
-            characteristics[self.speed_write_characteristic] = round(
+            characteristics[self.speed_characteristic] = round(
                 percentage_to_ranged_value(self._speed_range, percentage)
             )
 
@@ -211,9 +203,15 @@ class HomeKitFanV2(HomeKitFan):
 class EcobeeFan(BaseHomeKitFan):
     """Implement fan support for ecobee fans."""
 
-    speed_read_characteristic = CharacteristicsTypes.VENDOR_ECOBEE_FAN_READ_SPEED
-    speed_write_characteristic = CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED
+    speed_characteristic = CharacteristicsTypes.VENDOR_ECOBEE_FAN_WRITE_SPEED
     default_percentage = 50
+
+    @property
+    def percentage(self) -> int:
+        """Return the current speed percentage."""
+        return ranged_value_to_percentage(
+            self._speed_range, self.service.value(self.speed_characteristic)
+        )
 
     @property
     def is_on(self) -> bool:
@@ -236,9 +234,9 @@ class EcobeeFan(BaseHomeKitFan):
 
         if value != other_value:
             await self.async_put_characteristics(
-                {self.speed_write_characteristic: other_value}
+                {self.speed_characteristic: other_value}
             )
-        await self.async_put_characteristics({self.speed_write_characteristic: value})
+        await self.async_put_characteristics({self.speed_characteristic: value})
 
     async def async_turn_on(
         self,
@@ -279,10 +277,9 @@ async def async_setup_entry(
     def async_add_service(service: Service) -> bool:
         entities: list[BaseHomeKitFan] = []
         info = {"aid": service.accessory.aid, "iid": service.iid}
-
         if entity_class := ENTITY_TYPES.get(service.type):
             entities.append(entity_class(conn, info))
-        if not entity_class:
+        else:
             for char in FAN_ENTITY_CHARS.intersection(service.characteristics_by_type):
                 cls = FAN_ENTITY_CLASSES[char]
                 entities.append(cls(conn, info))
