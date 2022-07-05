@@ -312,7 +312,7 @@ async def async_setup_entry_helper(
         """Discover and add an MQTT entity, automation or tag."""
         if not mqtt_config_entry_enabled(hass):
             _LOGGER.warning(
-                "MQTT integration was disabled, skipped setup of discovery item "
+                "MQTT integration is disabled, skipping setup of discovered item "
                 "MQTT %s, payload %s",
                 domain,
                 discovery_payload,
@@ -344,19 +344,11 @@ async def async_setup_platform_helper(
     async_add_entities: AddEntitiesCallback,
     async_setup_entities: SetupEntity,
 ) -> None:
-    """Return true if platform setup should be aborted."""
-    if (entry_status := mqtt_config_entry_enabled(hass)) is None:
+    """Help to set up the platform for manual configured MQTT entities."""
+    if not (entry_status := mqtt_config_entry_enabled(hass)):
         _LOGGER.warning(
-            "MQTT integration is not setup, skipping setup of manually configured "
-            "MQTT %s",
-            platform_domain,
-        )
-        return
-    if entry_status is False:
-        # do not setup entities for a disabled platform
-        _LOGGER.info(
-            "MQTT integration is disabled, skipping setup of manually configured "
-            "MQTT %s",
+            "MQTT integration is %s, skipping setup of manually configured MQTT %s",
+            "not setup" if entry_status is None else "disabled",
             platform_domain,
         )
         return

@@ -26,7 +26,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .. import subscription
 from ..config import MQTT_RO_SCHEMA
-from ..const import CONF_QOS, CONF_STATE_TOPIC, MQTT_DATA_DEVICE_TRACKER_LEGACY
+from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
 from ..mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
@@ -35,7 +35,6 @@ from ..mixins import (
     async_setup_entry_helper,
 )
 from ..models import MqttValueTemplate
-from .schema_yaml import async_setup_scanner_from_yaml
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
@@ -73,11 +72,6 @@ async def async_setup_entry_from_discovery(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
     await async_setup_entry_helper(hass, device_tracker.DOMAIN, setup, DISCOVERY_SCHEMA)
-    # (re)load legacy service
-    if MQTT_DATA_DEVICE_TRACKER_LEGACY in hass.data:
-        await async_setup_scanner_from_yaml(
-            hass, **hass.data[MQTT_DATA_DEVICE_TRACKER_LEGACY]
-        )
 
 
 async def _async_setup_entity(

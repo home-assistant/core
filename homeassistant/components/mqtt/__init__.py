@@ -64,7 +64,6 @@ from .const import (  # noqa: F401
     CONF_TOPIC,
     CONF_WILL_MESSAGE,
     CONFIG_ENTRY_IS_SETUP,
-    DATA_CONFIG_ENTRY_LOCK,
     DATA_MQTT,
     DATA_MQTT_CONFIG,
     DATA_MQTT_RELOAD_DISPATCHERS,
@@ -390,7 +389,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # setup platforms and discovery
-    hass.data[DATA_CONFIG_ENTRY_LOCK] = asyncio.Lock()
     hass.data[CONFIG_ENTRY_IS_SETUP] = set()
 
     async def async_setup_reload_service() -> None:
@@ -461,7 +459,6 @@ async def async_reload_manual_mqtt_items(hass: HomeAssistant) -> None:
         {},
         blocking=True,
     )
-    await hass.async_block_till_done()
 
 
 @websocket_api.websocket_command(
@@ -586,27 +583,23 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         SERVICE_DUMP,
     )
 
-    # Unload the MQTT platforms
-    async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-        # Stop the discovery
-        await discovery.async_stop(hass)
-        connection: MQTT = hass.data[DATA_MQTT]
-        # Unload the platforms
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_unload(entry, component)
-                for component in PLATFORMS
-            )
+    # Stop the discovery
+    await discovery.async_stop(hass)
+    mqtt_client: MQTT = hass.data[DATA_MQTT]
+    # Unload the platforms
+    await asyncio.gather(
+        *(
+            hass.config_entries.async_forward_entry_unload(entry, component)
+            for component in PLATFORMS
         )
-        await hass.async_block_till_done()
-        # Unsubscribe reload dispatchers
-        while reload_dispatchers := hass.data.setdefault(
-            DATA_MQTT_RELOAD_DISPATCHERS, []
-        ):
-            reload_dispatchers.pop()()
-        hass.data[CONFIG_ENTRY_IS_SETUP] = set()
-        # Cleanup listeners
-        connection.cleanup()
+    )
+    await hass.async_block_till_done()
+    # Unsubscribe reload dispatchers
+    while reload_dispatchers := hass.data.setdefault(DATA_MQTT_RELOAD_DISPATCHERS, []):
+        reload_dispatchers.pop()()
+    hass.data[CONFIG_ENTRY_IS_SETUP] = set()
+    # Cleanup listeners
+    mqtt_client.cleanup()
 
     # Trigger reload manual MQTT items at entry setup
     # Reload the legacy yaml platform
@@ -614,11 +607,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if (mqtt_entry_status := mqtt_config_entry_enabled(hass)) is False:
         # The entry is disabled reload legacy manual items when the entry is enabled again
         hass.data[DATA_MQTT_RELOAD_NEEDED] = True
-        # Stop the loop
-        await connection.async_disconnect()
     elif mqtt_entry_status is True:
         # The entry is reloaded:
         # Trigger re-fetching the yaml config at entry setup
         hass.data[DATA_MQTT_RELOAD_ENTRY] = True
+    # Stop the loop
+    await mqtt_client.async_disconnect()
 
     return True

@@ -2807,7 +2807,7 @@ async def test_disabling_and_enabling_entry(hass, tmp_path, caplog):
         # Assert that the discovery was still received
         # but kipped the setup
         assert (
-            "MQTT integration was disabled, skipped setup of discovery item MQTT light"
+            "MQTT integration is disabled, skipping setup of manually configured MQTT light"
             in caplog.text
         )
 

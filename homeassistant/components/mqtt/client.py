@@ -326,7 +326,7 @@ class MQTT:
         self._last_subscribe = time.time()
         self._mqttc: mqtt.Client = None
         self._paho_lock = asyncio.Lock()
-        self._sync_acks: set[int] = set()
+        self._pending_acks: set[int] = set()
         self._cleanup_on_unload: list[Callable] = []
 
         self._pending_operations: dict[str, asyncio.Event] = {}
@@ -435,7 +435,7 @@ class MQTT:
         async with self._paho_lock:
             tasks = [
                 self.hass.async_create_task(self._wait_for_mid(mid))
-                for mid in self._sync_acks
+                for mid in self._pending_acks
             ]
         await asyncio.gather(*tasks)
 
@@ -492,7 +492,7 @@ class MQTT:
             result, mid = self._mqttc.unsubscribe(topic)
             _LOGGER.debug("Unsubscribing from %s, mid: %s", topic, mid)
             _raise_on_error(result)
-            self._sync_acks.add(mid)
+            self._pending_acks.add(mid)
 
         if any(other.topic == topic for other in self.subscriptions):
             # Other subscriptions on topic remaining - don't unsubscribe.
@@ -682,8 +682,8 @@ class MQTT:
             del self._pending_operations[mid]
             # Cleanup ACK sync buffer
             async with self._paho_lock:
-                if mid in self._sync_acks:
-                    self._sync_acks.remove(mid)
+                if mid in self._pending_acks:
+                    self._pending_acks.remove(mid)
 
     async def _discovery_cooldown(self):
         now = time.time()
