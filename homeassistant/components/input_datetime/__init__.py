@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import datetime as py_datetime
 import logging
+from typing import cast
 
 import voluptuous as vol
 
@@ -234,16 +235,15 @@ class InputDatetime(RestoreEntity):
             return
 
         if self.has_date and self.has_time:
-            current_datetime = dt_util.parse_datetime(initial)
-            assert current_datetime is not None  # has been validated by valid_initial
+            current_datetime = cast(
+                py_datetime.datetime, dt_util.parse_datetime(initial)
+            )
         elif self.has_date:
-            date = dt_util.parse_date(initial)
-            assert date is not None  # has been validated by valid_initial
+            date = cast(py_datetime.date, dt_util.parse_date(initial))
             current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
         else:
-            time = dt_util.parse_time(initial)
-            assert time is not None  # has been validated by valid_initial
+            time = cast(py_datetime.time, dt_util.parse_time(initial))
             current_datetime = py_datetime.datetime.combine(
                 py_datetime.date.today(), time
             )
