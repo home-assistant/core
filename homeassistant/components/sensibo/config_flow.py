@@ -10,14 +10,14 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.const import CONF_API_KEY
 from homeassistant.data_entry_flow import FlowResult
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.selector import TextSelector
 
 from .const import DEFAULT_NAME, DOMAIN
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_API_KEY): TextSelector(),
     }
 )
 
