@@ -3,9 +3,10 @@ from __future__ import annotations
 
 import logging
 
-from apcaccess.status import ALL_UNITS
 import voluptuous as vol
+from apcaccess.status import ALL_UNITS
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
     SensorDeviceClass,
@@ -28,10 +29,8 @@ from homeassistant.const import (
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-
 from . import DOMAIN, APCUPSdData
 
 _LOGGER = logging.getLogger(__name__)
@@ -421,19 +420,19 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the configurations from YAML to config flows."""
-    # This is the second step of YAML config imports, first see the comments in async_setup() of __init__.py to get
-    # an idea of how we import the YAML configs.
+    # This is the second step of YAML config imports, first see the comments in
+    # async_setup() of __init__.py to get an idea of how we import the YAML configs.
 
-    # Here we retrieve the partial YAML configs from the special entry id, if it does not exist it means it's already
-    # been imported.
+    # Here we retrieve the partial YAML configs from the special entry id, if it does
+    # not exist it means it's already been imported.
     if (conf := hass.data[DOMAIN].get(SOURCE_IMPORT)) is None:
         return
 
     # Remove the entry since it's no longer needed.
     hass.data[DOMAIN].pop(SOURCE_IMPORT)
 
-    # Our config flow allows an extra field CONF_RESOURCES and will import properly as options (although not shown in UI
-    # during config setup).
+    # Our config flow allows an extra field CONF_RESOURCES and will import properly as
+    # options (although not shown in UI during config setup).
     conf[CONF_RESOURCES] = [res.upper() for res in config[CONF_RESOURCES]]
 
     _LOGGER.warning(
@@ -463,7 +462,8 @@ async def async_setup_entry(
     # Get all available resources.
     available_resources = (resource for resource in data_service.status.keys())
 
-    # We try to get the user-specified resources from options and default to integrating all available resources.
+    # We try to get the user-specified resources from options and default to integrating
+    # all available resources.
     specified_resources = set(
         config_entry.options.get(CONF_RESOURCES, available_resources)
     )

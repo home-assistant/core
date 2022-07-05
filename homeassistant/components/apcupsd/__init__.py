@@ -1,17 +1,17 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 from typing import Final
 
-from apcaccess import status
 import voluptuous as vol
+from apcaccess import status
 
+import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import Throttle
 
@@ -38,7 +38,8 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 def _async_get_imported_entry(hass: HomeAssistant) -> ConfigEntry | None:
-    """Return the config entry imported from YAML configurations, None is returned if not found."""
+    """Return the config entry imported from YAML configurations, None is returned if
+    not found."""
     for entry in hass.config_entries.async_entries(DOMAIN):
         if entry.source == SOURCE_IMPORT:
             return entry
@@ -69,10 +70,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         #       - resource_1
         #       - resource_2
         #       - ...
-        # Here at the integration set up we do not have the entire information to be imported to config flow yet.
-        # So we temporarily store the configuration to hass.data[DOMAIN] under a special entry_id SOURCE_IMPORT (which
-        # shouldn't conflict with other entry ids). Later when the sensor platform setup is called we gather the
-        # resources information and from there we start the actual config entry imports.
+        # Here at the integration set up we do not have the entire information to be
+        # imported to config flow yet. So we temporarily store the configuration to
+        # hass.data[DOMAIN] under a special entry_id SOURCE_IMPORT (which shouldn't
+        # conflict with other entry ids). Later when the sensor platform setup is called
+        # we gather the resources information and from there we start the actual config
+        # entry imports.
         hass.data.setdefault(DOMAIN, {})
         hass.data[DOMAIN][SOURCE_IMPORT] = conf
 
