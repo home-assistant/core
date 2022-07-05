@@ -462,18 +462,14 @@ class HKDevice:
             for service in accessory.services:
                 iid = service.iid
 
-                # TODO: track by platform as well as we have a fan and a climate entity
-                # for ecobee thermostats
-                # if (aid, None, iid) in self.entities:
-                # Don't add the same entity again
-                # continue
+                if (aid, None, iid) in self.entities:
+                    # Don't add the same entity again
+                    continue
 
                 for listener in callbacks:
                     if listener(service):
                         self.entities.append((aid, None, iid))
-                        # TODO: track by platform as well as we have a fan and a climate entity
-                        # for ecobee thermostats
-                        # break
+                        break
 
     async def async_load_platform(self, platform: str) -> None:
         """Load a single platform idempotently."""
@@ -495,9 +491,9 @@ class HKDevice:
         for accessory in self.entity_map.accessories:
             for service in accessory.services:
                 if service.type in HOMEKIT_ACCESSORY_DISPATCH:
-                    for platform in HOMEKIT_ACCESSORY_DISPATCH[service.type]:
-                        if platform not in self.platforms:
-                            tasks.append(self.async_load_platform(platform))
+                    platform = HOMEKIT_ACCESSORY_DISPATCH[service.type]
+                    if platform not in self.platforms:
+                        tasks.append(self.async_load_platform(platform))
 
                 for char in service.characteristics:
                     if char.type in CHARACTERISTIC_PLATFORMS:
