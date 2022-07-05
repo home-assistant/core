@@ -21,7 +21,6 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]",
-          "panel_id": "Panel ID",
           "panel_pin": "Panel Pin"
         }
       }
