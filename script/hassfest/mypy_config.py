@@ -108,7 +108,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.toon",
     "homeassistant.components.toon.config_flow",
     "homeassistant.components.toon.models",
-    "homeassistant.components.unifi",
     "homeassistant.components.unifi.config_flow",
     "homeassistant.components.unifi.device_tracker",
     "homeassistant.components.unifi.unifi_entity_base",
