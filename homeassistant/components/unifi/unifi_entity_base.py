@@ -1,14 +1,17 @@
 """Base class for UniFi Network entities."""
+from __future__ import annotations
+
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 
-from .controller import UniFiController
+if TYPE_CHECKING:
+    from .controller import UniFiController
 
 _LOGGER = logging.getLogger(__name__)
 
