@@ -9,7 +9,7 @@ from aiohttp import hdrs
 from aiohttp.web import FileResponse, Request, StreamResponse
 from aiohttp.web_exceptions import HTTPForbidden, HTTPNotFound
 from aiohttp.web_urldispatcher import StaticResource
-from async_lru import alru_cache
+from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.core import HomeAssistant
 
@@ -19,17 +19,7 @@ CACHE_TIME: Final = 31 * 86400  # = 1 month
 CACHE_HEADERS: Final[Mapping[str, str]] = {
     hdrs.CACHE_CONTROL: f"public, max-age={CACHE_TIME}"
 }
-CACHE_SIZE = 512
-
-
-@alru_cache(maxsize=CACHE_SIZE)  # type: ignore[misc]
-async def _async_get_file_path(
-    hass: HomeAssistant, filename: str, directory: Path, follow_symlinks: bool
-) -> Path | None:
-    """Return file path."""
-    return await hass.async_add_executor_job(
-        _get_file_path, filename, directory, follow_symlinks
-    )
+PATH_CACHE = LRU(512)
 
 
 def _get_file_path(
@@ -59,9 +49,11 @@ class CachingStaticResource(StaticResource):
             # where the static dir is totally different
             raise HTTPForbidden()
         try:
-            filepath = await _async_get_file_path(
-                hass, filename, self._directory, self._follow_symlinks
-            )
+            key = (filename, self._directory, self._follow_symlinks)
+            if (filepath := PATH_CACHE.get(key)) is None:
+                filepath = PATH_CACHE[key] = await hass.async_add_executor_job(
+                    _get_file_path, filename, self._directory, self._follow_symlinks
+                )
         except (ValueError, FileNotFoundError) as error:
             # relatively safe
             raise HTTPNotFound() from error
