@@ -102,7 +102,7 @@ class IssueRegistry:
 
         if isinstance(data, dict):
             for issue in data["issues"]:
-                issue[(issue["domain"], issue["issue_id"])] = IssueEntry(
+                issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
                     dismissed_version_major=issue["dismissed_version_major"],
                     dismissed_version_minor=issue["dismissed_version_minor"],
                     dismissed_version_patch=issue["dismissed_version_patch"],
