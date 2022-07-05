@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
@@ -429,10 +430,16 @@ async def async_attach_trigger(
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
-    device = device_registry.async_get(config[CONF_DEVICE_ID])
+    if (
+        not (device := device_registry.async_get(config[CONF_DEVICE_ID]))
+        or not device.model
+    ):
+        raise HomeAssistantError(
+            f"Cannot attach trigger {config} because device with id {config[CONF_DEVICE_ID]} is missing or invalid"
+        )
     device_type = _device_model_to_type(device.model)
     _, serial = list(device.identifiers)[0]
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device_type)
+    schema = DEVICE_TYPE_SCHEMA_MAP[device_type]
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP[device_type]
     config = schema(config)
     event_config = {
