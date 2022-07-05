@@ -50,7 +50,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.device",
     "homeassistant.components.onvif.sensor",
     "homeassistant.components.plex.media_player",
-    "homeassistant.components.profiler",
     "homeassistant.components.sonos",
     "homeassistant.components.sonos.alarms",
     "homeassistant.components.sonos.binary_sensor",
