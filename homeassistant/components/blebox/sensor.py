@@ -1,11 +1,11 @@
 """BleBox sensor entities."""
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BleBoxEntity, create_blebox_entities
-from ...const import TEMP_CELSIUS
 
 BLEBOX_TO_UNIT_MAP = {"celsius": TEMP_CELSIUS}
 
