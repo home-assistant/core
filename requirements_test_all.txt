@@ -281,6 +281,9 @@ aprslib==0.7.0
 # homeassistant.components.arcam_fmj
 arcam-fmj==0.12.0
 
+# homeassistant.components.http
+async-lru==1.0.3
+
 # homeassistant.components.dlna_dmr
 # homeassistant.components.dlna_dms
 # homeassistant.components.samsungtv
