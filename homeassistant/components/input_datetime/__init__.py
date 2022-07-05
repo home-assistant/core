@@ -235,19 +235,15 @@ class InputDatetime(RestoreEntity):
 
         if self.has_date and self.has_time:
             current_datetime = dt_util.parse_datetime(initial)
-            if current_datetime is None:
-                raise ValueError(f"Unable to parse datetime from {initial}")
-
+            assert current_datetime is not None  # has been validated by valid_initial
         elif self.has_date:
             date = dt_util.parse_date(initial)
-            if date is None:
-                raise ValueError(f"Unable to parse date from {initial}")
+            assert date is not None  # has been validated by valid_initial
             current_datetime = py_datetime.datetime.combine(date, DEFAULT_TIME)
 
         else:
             time = dt_util.parse_time(initial)
-            if time is None:
-                raise ValueError(f"Unable to parse date from {initial}")
+            assert time is not None  # has been validated by valid_initial
             current_datetime = py_datetime.datetime.combine(
                 py_datetime.date.today(), time
             )
