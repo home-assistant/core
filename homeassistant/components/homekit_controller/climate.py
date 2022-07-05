@@ -1,7 +1,6 @@
 """Support for Homekit climate devices."""
 from __future__ import annotations
 
-import enum
 import logging
 from typing import Any, Final
 
@@ -76,21 +75,6 @@ TARGET_HEATER_COOLER_STATE_HOMEKIT_TO_HASS = {
 }
 
 
-class TargetFanState(enum.IntEnum):
-    """Target Fan State."""
-
-    MANUAL = 0
-    AUTO = 1
-
-
-CURRENT_FAN_STATE_HOMEKIT_TO_HASS = {
-    TargetFanState.MANUAL: FAN_ON,
-    TargetFanState.AUTO: FAN_AUTO,
-}
-CURRENT_FAN_STATE_HASS_TO_HOMEKIT = {
-    v: k for k, v in CURRENT_FAN_STATE_HOMEKIT_TO_HASS.items()
-}
-
 # Map of hass operation modes to homekit modes
 MODE_HASS_TO_HOMEKIT = {v: k for k, v in MODE_HOMEKIT_TO_HASS.items()}
 
@@ -148,16 +132,13 @@ class HomeKitBaseClimateEntity(HomeKitEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
-        return CURRENT_FAN_STATE_HOMEKIT_TO_HASS.get(
-            self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
-        )
+        fan_mode = self.service.value(CharacteristicsTypes.FAN_STATE_TARGET)
+        return FAN_AUTO if fan_mode else FAN_ON
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Turn fan to manual/auto."""
-        if (value := CURRENT_FAN_STATE_HASS_TO_HOMEKIT.get(fan_mode)) is None:
-            raise ValueError(f"{fan_mode} is not a valid fan mode")
         await self.async_put_characteristics(
-            {CharacteristicsTypes.FAN_STATE_TARGET: value}
+            {CharacteristicsTypes.FAN_STATE_TARGET: int(fan_mode == FAN_AUTO)}
         )
 
     @property
