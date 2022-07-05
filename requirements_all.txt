@@ -178,7 +178,7 @@ aiohttp_cors==0.7.0
 aiohue==4.4.2
 
 # homeassistant.components.imap
-aioimaplib==0.9.0
+aioimaplib==1.0.0
 
 # homeassistant.components.apache_kafka
 aiokafka==0.6.0
@@ -402,7 +402,7 @@ bimmer_connected==0.9.6
 bizkaibus==0.1.1
 
 # homeassistant.components.blebox
-blebox_uniapi==2.0.0
+blebox_uniapi==2.0.1
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -1094,6 +1094,9 @@ nextcloudmonitor==1.1.0
 # homeassistant.components.discord
 nextcord==2.0.0a8
 
+# homeassistant.components.nextdns
+nextdns==1.0.0
+
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
 
@@ -1150,7 +1153,7 @@ ondilo==0.2.0
 onkyo-eiscp==1.2.7
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.0
+onvif-zeep-async==1.2.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -1236,7 +1239,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.1
+pillow==9.2.0
 
 # homeassistant.components.dominos
 pizzapi==0.0.3
@@ -1993,7 +1996,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.8
+pyunifiprotect==4.0.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -2077,7 +2080,7 @@ restrictedpython==5.2
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.62
+rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2
