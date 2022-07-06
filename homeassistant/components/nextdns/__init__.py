@@ -20,7 +20,7 @@ from nextdns import (
 from nextdns.model import NextDnsData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -131,7 +131,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 COORDINATORS = [
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
