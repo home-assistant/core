@@ -1,7 +1,7 @@
 """Support for media browsing."""
 from __future__ import annotations
 
-from typing import NamedTuple
+from typing import TYPE_CHECKING, NamedTuple
 
 from xbox.webapi.api.client import XboxLiveClient
 from xbox.webapi.api.provider.catalog.const import HOME_APP_IDS, SYSTEM_PFN_ID_MAP
@@ -65,6 +65,8 @@ async def build_item_response(
             can_expand=True,
             children=[],
         )
+        if TYPE_CHECKING:
+            assert library_info.children is not None
 
         # Add Home
         id_type = AlternateIdType.LEGACY_XBOX_PRODUCT_ID
@@ -84,7 +86,7 @@ async def build_item_response(
                 title="Home",
                 can_play=True,
                 can_expand=False,
-                thumbnail=home_thumb.uri,
+                thumbnail=None if home_thumb is None else home_thumb.uri,
             )
         )
 
@@ -107,7 +109,7 @@ async def build_item_response(
                     title="Live TV",
                     can_play=True,
                     can_expand=False,
-                    thumbnail=tv_thumb.uri,
+                    thumbnail=None if tv_thumb is None else tv_thumb.uri,
                 )
             )
 
