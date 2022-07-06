@@ -3,12 +3,11 @@ from __future__ import annotations
 
 from collections import Counter
 from datetime import timedelta
-import enum
 import functools
 import itertools
 import logging
 import random
-from typing import Any
+from typing import TYPE_CHECKING, Any, cast
 
 from zigpy.zcl.clusters.general import Identify, LevelControl, OnOff
 from zigpy.zcl.clusters.lighting import Color
@@ -17,16 +16,17 @@ from zigpy.zcl.foundation import Status
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP,
     ATTR_EFFECT,
     ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
     ATTR_MAX_MIREDS,
     ATTR_MIN_MIREDS,
-    SUPPORT_BRIGHTNESS,
-    SUPPORT_COLOR,
-    SUPPORT_COLOR_TEMP,
-    LightEntityFeature,
+    ATTR_SUPPORTED_COLOR_MODES,
+    ColorMode,
+    brightness_supported,
+    filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -62,8 +62,10 @@ from .core.const import (
 )
 from .core.helpers import LogMixin, async_get_zha_config_value
 from .core.registries import ZHA_ENTITIES
-from .core.typing import ZhaDeviceType
 from .entity import ZhaEntity, ZhaGroupEntity
+
+if TYPE_CHECKING:
+    from .core.device import ZHADevice
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -72,6 +74,7 @@ CAPABILITIES_COLOR_XY = 0x08
 CAPABILITIES_COLOR_TEMP = 0x10
 
 DEFAULT_TRANSITION = 1
+DEFAULT_MIN_BRIGHTNESS = 2
 
 UPDATE_COLORLOOP_ACTION = 0x1
 UPDATE_COLORLOOP_DIRECTION = 0x2
@@ -86,22 +89,12 @@ GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.LIGHT)
 PARALLEL_UPDATES = 0
 SIGNAL_LIGHT_GROUP_STATE_CHANGED = "zha_light_group_state_changed"
 
+COLOR_MODES_GROUP_LIGHT = {ColorMode.COLOR_TEMP, ColorMode.HS}
 SUPPORT_GROUP_LIGHT = (
-    SUPPORT_BRIGHTNESS
-    | SUPPORT_COLOR_TEMP
-    | LightEntityFeature.EFFECT
-    | LightEntityFeature.FLASH
-    | SUPPORT_COLOR
-    | LightEntityFeature.TRANSITION
+    light.LightEntityFeature.EFFECT
+    | light.LightEntityFeature.FLASH
+    | light.LightEntityFeature.TRANSITION
 )
-
-
-class LightColorMode(enum.IntEnum):
-    """ZCL light color mode enum."""
-
-    HS_COLOR = 0x00
-    XY_COLOR = 0x01
-    COLOR_TEMP = 0x02
 
 
 async def async_setup_entry(
@@ -126,12 +119,14 @@ class BaseLight(LogMixin, light.LightEntity):
     """Operations common to all light entities."""
 
     _FORCE_ON = False
+    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 0
 
     def __init__(self, *args, **kwargs):
         """Initialize the light."""
         super().__init__(*args, **kwargs)
         self._available: bool = False
         self._brightness: int | None = None
+        self._off_with_transition: bool = False
         self._off_brightness: int | None = None
         self._hs_color: tuple[float, float] | None = None
         self._color_temp: int | None = None
@@ -146,11 +141,15 @@ class BaseLight(LogMixin, light.LightEntity):
         self._color_channel = None
         self._identify_channel = None
         self._default_transition = None
+        self._color_mode = ColorMode.UNKNOWN  # Set by sub classes
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return state attributes."""
-        attributes = {"off_brightness": self._off_brightness}
+        attributes = {
+            "off_with_transition": self._off_with_transition,
+            "off_brightness": self._off_brightness,
+        }
         return attributes
 
     @property
@@ -159,6 +158,11 @@ class BaseLight(LogMixin, light.LightEntity):
         if self._state is None:
             return False
         return self._state
+
+    @property
+    def color_mode(self):
+        """Return the color mode of this light."""
+        return self._color_mode
 
     @property
     def brightness(self):
@@ -226,17 +230,53 @@ class BaseLight(LogMixin, light.LightEntity):
         effect = kwargs.get(light.ATTR_EFFECT)
         flash = kwargs.get(light.ATTR_FLASH)
 
-        if brightness is None and self._off_brightness is not None:
+        # If the light is currently off but a turn_on call with a color/temperature is sent,
+        # the light needs to be turned on first at a low brightness level where the light is immediately transitioned
+        # to the correct color. Afterwards, the transition is only from the low brightness to the new brightness.
+        # Otherwise, the transition is from the color the light had before being turned on to the new color.
+        # This can look especially bad with transitions longer than a second.
+        color_provided_from_off = (
+            not self._state
+            and brightness_supported(self._attr_supported_color_modes)
+            and (light.ATTR_COLOR_TEMP in kwargs or light.ATTR_HS_COLOR in kwargs)
+        )
+        final_duration = duration
+        if color_provided_from_off:
+            # Set the duration for the color changing commands to 0.
+            duration = 0
+
+        if (
+            brightness is None
+            and (self._off_with_transition or color_provided_from_off)
+            and self._off_brightness is not None
+        ):
             brightness = self._off_brightness
 
+        if brightness is not None:
+            level = min(254, brightness)
+        else:
+            level = self._brightness or 254
+
         t_log = {}
+
+        if color_provided_from_off:
+            # If the light is currently off, we first need to turn it on at a low brightness level with no transition.
+            # After that, we set it to the desired color/temperature with no transition.
+            result = await self._level_channel.move_to_level_with_on_off(
+                DEFAULT_MIN_BRIGHTNESS, self._DEFAULT_COLOR_FROM_OFF_TRANSITION
+            )
+            t_log["move_to_level_with_on_off"] = result
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+                self.debug("turned on: %s", t_log)
+                return
+            # Currently only setting it to "on", as the correct level state will be set at the second move_to_level call
+            self._state = True
+
         if (
-            brightness is not None or transition
-        ) and self._supported_features & light.SUPPORT_BRIGHTNESS:
-            if brightness is not None:
-                level = min(254, brightness)
-            else:
-                level = self._brightness or 254
+            (brightness is not None or transition)
+            and not color_provided_from_off
+            and brightness_supported(self._attr_supported_color_modes)
+        ):
             result = await self._level_channel.move_to_level_with_on_off(
                 level, duration
             )
@@ -248,7 +288,11 @@ class BaseLight(LogMixin, light.LightEntity):
             if level:
                 self._brightness = level
 
-        if brightness is None or (self._FORCE_ON and brightness):
+        if (
+            brightness is None
+            and not color_provided_from_off
+            or (self._FORCE_ON and brightness)
+        ):
             # since some lights don't always turn on with move_to_level_with_on_off,
             # we should call the on command on the on_off cluster if brightness is not 0.
             result = await self._on_off_channel.on()
@@ -257,23 +301,19 @@ class BaseLight(LogMixin, light.LightEntity):
                 self.debug("turned on: %s", t_log)
                 return
             self._state = True
-        if (
-            light.ATTR_COLOR_TEMP in kwargs
-            and self.supported_features & light.SUPPORT_COLOR_TEMP
-        ):
+
+        if light.ATTR_COLOR_TEMP in kwargs:
             temperature = kwargs[light.ATTR_COLOR_TEMP]
             result = await self._color_channel.move_to_color_temp(temperature, duration)
             t_log["move_to_color_temp"] = result
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
+            self._color_mode = ColorMode.COLOR_TEMP
             self._color_temp = temperature
             self._hs_color = None
 
-        if (
-            light.ATTR_HS_COLOR in kwargs
-            and self.supported_features & light.SUPPORT_COLOR
-        ):
+        if light.ATTR_HS_COLOR in kwargs:
             hs_color = kwargs[light.ATTR_HS_COLOR]
             xy_color = color_util.color_hs_to_xy(*hs_color)
             result = await self._color_channel.move_to_color(
@@ -283,13 +323,22 @@ class BaseLight(LogMixin, light.LightEntity):
             if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
                 self.debug("turned on: %s", t_log)
                 return
+            self._color_mode = ColorMode.HS
             self._hs_color = hs_color
             self._color_temp = None
 
-        if (
-            effect == light.EFFECT_COLORLOOP
-            and self.supported_features & light.LightEntityFeature.EFFECT
-        ):
+        if color_provided_from_off:
+            # The light is has the correct color, so we can now transition it to the correct brightness level.
+            result = await self._level_channel.move_to_level(level, final_duration)
+            t_log["move_to_level_if_color"] = result
+            if isinstance(result, Exception) or result[1] is not Status.SUCCESS:
+                self.debug("turned on: %s", t_log)
+                return
+            self._state = bool(level)
+            if level:
+                self._brightness = level
+
+        if effect == light.EFFECT_COLORLOOP:
             result = await self._color_channel.color_loop_set(
                 UPDATE_COLORLOOP_ACTION
                 | UPDATE_COLORLOOP_DIRECTION
@@ -302,9 +351,7 @@ class BaseLight(LogMixin, light.LightEntity):
             t_log["color_loop_set"] = result
             self._effect = light.EFFECT_COLORLOOP
         elif (
-            self._effect == light.EFFECT_COLORLOOP
-            and effect != light.EFFECT_COLORLOOP
-            and self.supported_features & light.LightEntityFeature.EFFECT
+            self._effect == light.EFFECT_COLORLOOP and effect != light.EFFECT_COLORLOOP
         ):
             result = await self._color_channel.color_loop_set(
                 UPDATE_COLORLOOP_ACTION,
@@ -316,15 +363,13 @@ class BaseLight(LogMixin, light.LightEntity):
             t_log["color_loop_set"] = result
             self._effect = None
 
-        if (
-            flash is not None
-            and self._supported_features & light.LightEntityFeature.FLASH
-        ):
+        if flash is not None:
             result = await self._identify_channel.trigger_effect(
                 FLASH_EFFECTS[flash], EFFECT_DEFAULT_VARIANT
             )
             t_log["trigger_effect"] = result
 
+        self._off_with_transition = False
         self._off_brightness = None
         self.debug("turned on: %s", t_log)
         self.async_write_ha_state()
@@ -332,7 +377,7 @@ class BaseLight(LogMixin, light.LightEntity):
     async def async_turn_off(self, **kwargs):
         """Turn the entity off."""
         duration = kwargs.get(light.ATTR_TRANSITION)
-        supports_level = self.supported_features & light.SUPPORT_BRIGHTNESS
+        supports_level = brightness_supported(self._attr_supported_color_modes)
 
         if duration and supports_level:
             result = await self._level_channel.move_to_level_with_on_off(
@@ -345,8 +390,9 @@ class BaseLight(LogMixin, light.LightEntity):
             return
         self._state = False
 
-        if duration and supports_level:
+        if supports_level:
             # store current brightness so that the next turn_on uses it.
+            self._off_with_transition = bool(duration)
             self._off_brightness = self._brightness
 
         self.async_write_ha_state()
@@ -356,12 +402,13 @@ class BaseLight(LogMixin, light.LightEntity):
 class Light(BaseLight, ZhaEntity):
     """Representation of a ZHA or ZLL light."""
 
+    _attr_supported_color_modes: set[ColorMode]
     _REFRESH_INTERVAL = (45, 75)
 
-    def __init__(self, unique_id, zha_device: ZhaDeviceType, channels, **kwargs):
+    def __init__(self, unique_id, zha_device: ZHADevice, channels, **kwargs):
         """Initialize the ZHA light."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._on_off_channel = self.cluster_channels.get(CHANNEL_ON_OFF)
+        self._on_off_channel = self.cluster_channels[CHANNEL_ON_OFF]
         self._state = bool(self._on_off_channel.on_off)
         self._level_channel = self.cluster_channels.get(CHANNEL_LEVEL)
         self._color_channel = self.cluster_channels.get(CHANNEL_COLOR)
@@ -372,19 +419,20 @@ class Light(BaseLight, ZhaEntity):
         self._cancel_refresh_handle = None
         effect_list = []
 
+        self._attr_supported_color_modes = {ColorMode.ONOFF}
         if self._level_channel:
-            self._supported_features |= light.SUPPORT_BRIGHTNESS
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
             self._supported_features |= light.LightEntityFeature.TRANSITION
             self._brightness = self._level_channel.current_level
 
         if self._color_channel:
             color_capabilities = self._color_channel.color_capabilities
             if color_capabilities & CAPABILITIES_COLOR_TEMP:
-                self._supported_features |= light.SUPPORT_COLOR_TEMP
+                self._attr_supported_color_modes.add(ColorMode.COLOR_TEMP)
                 self._color_temp = self._color_channel.color_temperature
 
             if color_capabilities & CAPABILITIES_COLOR_XY:
-                self._supported_features |= light.SUPPORT_COLOR
+                self._attr_supported_color_modes.add(ColorMode.HS)
                 curr_x = self._color_channel.current_x
                 curr_y = self._color_channel.current_y
                 if curr_x is not None and curr_y is not None:
@@ -399,6 +447,17 @@ class Light(BaseLight, ZhaEntity):
                 effect_list.append(light.EFFECT_COLORLOOP)
                 if self._color_channel.color_loop_active == 1:
                     self._effect = light.EFFECT_COLORLOOP
+        self._attr_supported_color_modes = filter_supported_color_modes(
+            self._attr_supported_color_modes
+        )
+        if len(self._attr_supported_color_modes) == 1:
+            self._color_mode = next(iter(self._attr_supported_color_modes))
+        else:  # Light supports color_temp + hs, determine which mode the light is in
+            assert self._color_channel
+            if self._color_channel.color_mode == Color.ColorMode.Color_temperature:
+                self._color_mode = ColorMode.COLOR_TEMP
+            else:
+                self._color_mode = ColorMode.HS
 
         if self._identify_channel:
             self._supported_features |= light.LightEntityFeature.FLASH
@@ -444,6 +503,7 @@ class Light(BaseLight, ZhaEntity):
 
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect entity object when removed."""
+        assert self._cancel_refresh_handle
         self._cancel_refresh_handle()
         await super().async_will_remove_from_hass()
 
@@ -453,8 +513,12 @@ class Light(BaseLight, ZhaEntity):
         self._state = last_state.state == STATE_ON
         if "brightness" in last_state.attributes:
             self._brightness = last_state.attributes["brightness"]
+        if "off_with_transition" in last_state.attributes:
+            self._off_with_transition = last_state.attributes["off_with_transition"]
         if "off_brightness" in last_state.attributes:
             self._off_brightness = last_state.attributes["off_brightness"]
+        if "color_mode" in last_state.attributes:
+            self._color_mode = ColorMode(last_state.attributes["color_mode"])
         if "color_temp" in last_state.attributes:
             self._color_temp = last_state.attributes["color_temp"]
         if "hs_color" in last_state.attributes:
@@ -493,12 +557,14 @@ class Light(BaseLight, ZhaEntity):
             )
 
             if (color_mode := results.get("color_mode")) is not None:
-                if color_mode == LightColorMode.COLOR_TEMP:
+                if color_mode == Color.ColorMode.Color_temperature:
+                    self._color_mode = ColorMode.COLOR_TEMP
                     color_temp = results.get("color_temperature")
                     if color_temp is not None and color_mode:
                         self._color_temp = color_temp
                         self._hs_color = None
                 else:
+                    self._color_mode = ColorMode.HS
                     color_x = results.get("current_x")
                     color_y = results.get("current_y")
                     if color_x is not None and color_y is not None:
@@ -552,6 +618,17 @@ class ForceOnLight(Light):
     _FORCE_ON = True
 
 
+@STRICT_MATCH(
+    channel_names=CHANNEL_ON_OFF,
+    aux_channels={CHANNEL_COLOR, CHANNEL_LEVEL},
+    manufacturers={"Sengled"},
+)
+class SengledLight(Light):
+    """Representation of a Sengled light which does not react to move_to_color_temp with 0 as a transition."""
+
+    _DEFAULT_COLOR_FROM_OFF_TRANSITION = 1
+
+
 @GROUP_MATCH()
 class LightGroup(BaseLight, ZhaGroupEntity):
     """Representation of a light group."""
@@ -573,6 +650,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             CONF_DEFAULT_LIGHT_TRANSITION,
             0,
         )
+        self._color_mode = None
 
     async def async_added_to_hass(self):
         """Run when about to be added to hass."""
@@ -632,6 +710,29 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             # Report the most common effect.
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
+
+        self._attr_color_mode = None
+        all_color_modes = list(
+            helpers.find_state_attributes(on_states, ATTR_COLOR_MODE)
+        )
+        if all_color_modes:
+            # Report the most common color mode, select brightness and onoff last
+            color_mode_count = Counter(itertools.chain(all_color_modes))
+            if ColorMode.ONOFF in color_mode_count:
+                color_mode_count[ColorMode.ONOFF] = -1
+            if ColorMode.BRIGHTNESS in color_mode_count:
+                color_mode_count[ColorMode.BRIGHTNESS] = 0
+            self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+
+        self._attr_supported_color_modes = None
+        all_supported_color_modes = list(
+            helpers.find_state_attributes(states, ATTR_SUPPORTED_COLOR_MODES)
+        )
+        if all_supported_color_modes:
+            # Merge all color modes.
+            self._attr_supported_color_modes = cast(
+                set[str], set().union(*all_supported_color_modes)
+            )
 
         self._supported_features = 0
         for support in helpers.find_state_attributes(states, ATTR_SUPPORTED_FEATURES):

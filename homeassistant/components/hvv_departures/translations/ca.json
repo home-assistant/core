@@ -36,7 +36,7 @@
             "init": {
                 "data": {
                     "filter": "Selecciona l\u00ednies",
-                    "offset": "\u00d2fset (minuts)",
+                    "offset": "Desfasament (minuts)",
                     "real_time": "Utilitza dades en temps real"
                 },
                 "description": "Canvia les opcions d'aquest sensor de sortides",

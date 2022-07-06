@@ -136,6 +136,8 @@ async def async_setup_platform(
 class LightTemplate(TemplateEntity, LightEntity):
     """Representation of a templated Light, including dimmable."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,

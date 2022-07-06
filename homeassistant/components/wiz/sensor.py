@@ -8,7 +8,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.const import POWER_WATT, SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,6 +30,17 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 )
 
 
+POWER_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key="power",
+        name="Current Power",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=POWER_WATT,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -37,9 +48,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up the wiz sensor."""
     wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
+    entities = [
         WizSensor(wiz_data, entry.title, description) for description in SENSORS
-    )
+    ]
+    if wiz_data.coordinator.data is not None:
+        entities.extend(
+            [
+                WizPowerSensor(wiz_data, entry.title, description)
+                for description in POWER_SENSORS
+            ]
+        )
+    async_add_entities(entities)
 
 
 class WizSensor(WizEntity, SensorEntity):
@@ -63,3 +82,16 @@ class WizSensor(WizEntity, SensorEntity):
         self._attr_native_value = self._device.state.pilotResult.get(
             self.entity_description.key
         )
+
+
+class WizPowerSensor(WizSensor):
+    """Defines a WiZ power sensor."""
+
+    @callback
+    def _async_update_attrs(self) -> None:
+        """Handle updating _attr values."""
+        # Newer firmwares will have the power in their state
+        watts_push = self._device.state.get_power()
+        # Older firmwares will be polled and in the coordinator data
+        watts_poll = self.coordinator.data
+        self._attr_native_value = watts_poll if watts_push is None else watts_push

@@ -1,8 +1,6 @@
 """Support for Tuya buttons."""
 from __future__ import annotations
 
-from typing import Any
-
 from tuya_iot import TuyaDevice, TuyaDeviceManager
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -109,6 +107,6 @@ class TuyaButtonEntity(TuyaEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{super().unique_id}{description.key}"
 
-    def press(self, **kwargs: Any) -> None:
+    def press(self) -> None:
         """Press the button."""
         self._send_command([{"code": self.entity_description.key, "value": True}])

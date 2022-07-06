@@ -4,8 +4,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import GlancesData
 from .const import DATA_UPDATED, DOMAIN, SENSOR_TYPES, GlancesSensorEntityDescription
 
 
@@ -67,11 +69,11 @@ class GlancesSensor(SensorEntity):
 
     def __init__(
         self,
-        glances_data,
-        name,
-        sensor_name_prefix,
+        glances_data: GlancesData,
+        name: str,
+        sensor_name_prefix: str,
         description: GlancesSensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the sensor."""
         self.glances_data = glances_data
         self._sensor_name_prefix = sensor_name_prefix
@@ -80,6 +82,11 @@ class GlancesSensor(SensorEntity):
 
         self.entity_description = description
         self._attr_name = f"{name} {sensor_name_prefix} {description.name_suffix}"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, glances_data.config_entry.entry_id)},
+            manufacturer="Glances",
+            name=name,
+        )
 
     @property
     def unique_id(self):

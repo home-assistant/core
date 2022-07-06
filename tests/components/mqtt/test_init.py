@@ -22,6 +22,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EVENT_HOMEASSISTANT_STOP,
     TEMP_CELSIUS,
+    Platform,
 )
 import homeassistant.core as ha
 from homeassistant.core import CoreState, HomeAssistant, callback
@@ -49,6 +50,16 @@ class RecordCallsPartial(partial):
     """Wrapper class for partial."""
 
     __name__ = "RecordCallPartialTest"
+
+
+@pytest.fixture(autouse=True)
+def sensor_platforms_only():
+    """Only setup the sensor platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS",
+        [Platform.SENSOR, Platform.BINARY_SENSOR],
+    ):
+        yield
 
 
 @pytest.fixture(autouse=True)
@@ -1301,6 +1312,20 @@ async def test_publish_error(hass, caplog):
         assert "Failed to connect to MQTT server: Out of memory." in caplog.text
 
 
+async def test_subscribe_error(
+    hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
+):
+    """Test publish error."""
+    await mqtt_mock_entry_no_yaml_config()
+    mqtt_client_mock.on_connect(mqtt_client_mock, None, None, 0)
+    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError):
+        # simulate client is not connected error before subscribing
+        mqtt_client_mock.subscribe.side_effect = lambda *args: (4, None)
+        await mqtt.async_subscribe(hass, "some-topic", lambda *args: 0)
+        await hass.async_block_till_done()
+
+
 async def test_handle_message_callback(
     hass, caplog, mqtt_mock_entry_no_yaml_config, mqtt_client_mock
 ):
@@ -1362,50 +1387,35 @@ async def test_setup_override_configuration(hass, caplog, tmp_path):
             assert calls_username_password_set[0][1] == "somepassword"
 
 
-async def test_setup_manual_mqtt_with_platform_key(hass, caplog, tmp_path):
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
+async def test_setup_manual_mqtt_with_platform_key(hass, caplog):
     """Test set up a manual MQTT item with a platform key."""
     config = {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(
-            hass,
-            caplog,
-            tmp_path,
-            "light",
-            config,
-        )
+        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
         "Invalid config for [mqtt]: [platform] is an invalid option for [mqtt]"
         in caplog.text
     )
 
 
-async def test_setup_manual_mqtt_with_invalid_config(hass, caplog, tmp_path):
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
+async def test_setup_manual_mqtt_with_invalid_config(hass, caplog):
     """Test set up a manual MQTT item with an invalid config."""
     config = {"name": "test"}
     with pytest.raises(AssertionError):
-        await help_test_setup_manual_entity_from_yaml(
-            hass,
-            caplog,
-            tmp_path,
-            "light",
-            config,
-        )
+        await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert (
         "Invalid config for [mqtt]: required key not provided @ data['mqtt']['light'][0]['command_topic']."
         " Got None. (See ?, line ?)" in caplog.text
     )
 
 
-async def test_setup_manual_mqtt_empty_platform(hass, caplog, tmp_path):
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
+async def test_setup_manual_mqtt_empty_platform(hass, caplog):
     """Test set up a manual MQTT platform without items."""
-    config = None
-    await help_test_setup_manual_entity_from_yaml(
-        hass,
-        caplog,
-        tmp_path,
-        "light",
-        config,
-    )
+    config = []
+    await help_test_setup_manual_entity_from_yaml(hass, "light", config)
     assert "voluptuous.error.MultipleInvalid" not in caplog.text
 
 
@@ -1428,6 +1438,7 @@ async def test_setup_mqtt_client_protocol(hass):
 
 
 @patch("homeassistant.components.mqtt.client.TIMEOUT_ACK", 0.2)
+@patch("homeassistant.components.mqtt.PLATFORMS", [])
 async def test_handle_mqtt_timeout_on_callback(hass, caplog):
     """Test publish without receiving an ACK callback."""
     mid = 0
@@ -1768,9 +1779,12 @@ async def test_mqtt_subscribes_topics_on_connect(
 
     assert mqtt_client_mock.disconnect.call_count == 0
 
-    expected = {"topic/test": 0, "home/sensor": 2, "still/pending": 1}
-    calls = {call[1][1]: call[1][2] for call in hass.add_job.mock_calls}
-    assert calls == expected
+    assert len(hass.add_job.mock_calls) == 1
+    assert set(hass.add_job.mock_calls[0][1][1]) == {
+        ("home/sensor", 2),
+        ("still/pending", 1),
+        ("topic/test", 0),
+    }
 
 
 async def test_setup_entry_with_config_override(
@@ -1786,13 +1800,12 @@ async def test_setup_entry_with_config_override(
     # mqtt present in yaml config
     assert await async_setup_component(hass, mqtt.DOMAIN, {})
     await hass.async_block_till_done()
-    await mqtt_mock_entry_with_yaml_config()
 
     # User sets up a config entry
     entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
     entry.add_to_hass(hass)
-    with patch("homeassistant.components.mqtt.PLATFORMS", []):
-        assert await hass.config_entries.async_setup(entry.entry_id)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     # Discover a device to verify the entry was setup correctly
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data)
@@ -2038,6 +2051,7 @@ async def test_mqtt_ws_get_device_debug_info(
     assert response["result"] == expected_result
 
 
+@patch("homeassistant.components.mqtt.PLATFORMS", [Platform.CAMERA])
 async def test_mqtt_ws_get_device_debug_info_binary(
     hass, device_reg, hass_ws_client, mqtt_mock_entry_no_yaml_config
 ):

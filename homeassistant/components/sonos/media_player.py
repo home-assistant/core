@@ -44,8 +44,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from . import media_browser
+from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -67,6 +68,7 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
+LONG_SERVICE_TIMEOUT = 30.0
 VOLUME_INCREMENT = 2
 
 REPEAT_TO_SONOS = {
@@ -580,36 +582,44 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             if result.shuffle:
                 self.set_shuffle(True)
             if enqueue == MediaPlayerEnqueue.ADD:
-                plex_plugin.add_to_queue(result.media)
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
-                new_pos = plex_plugin.add_to_queue(result.media, position=pos)
+                new_pos = plex_plugin.add_to_queue(
+                    result.media, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
-                plex_plugin.add_to_queue(result.media)
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
             return
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
             if enqueue == MediaPlayerEnqueue.ADD:
-                share_link.add_share_link_to_queue(media_id)
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
             elif enqueue in (
                 MediaPlayerEnqueue.NEXT,
                 MediaPlayerEnqueue.PLAY,
             ):
                 pos = (self.media.queue_position or 0) + 1
-                new_pos = share_link.add_share_link_to_queue(media_id, position=pos)
+                new_pos = share_link.add_share_link_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
                 if enqueue == MediaPlayerEnqueue.PLAY:
                     soco.play_from_queue(new_pos - 1)
             elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
-                share_link.add_share_link_to_queue(media_id)
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
                 soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             # If media ID is a relative URL, we serve it from HA.
@@ -753,21 +763,37 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
     async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
-        async with self.hass.data[DATA_SONOS].topology_condition:
-            speakers = []
-            for entity_id in group_members:
-                if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(
-                    entity_id
-                ):
-                    speakers.append(speaker)
-                else:
-                    raise HomeAssistantError(
-                        f"Not a known Sonos entity_id: {entity_id}"
-                    )
+        speakers = []
+        for entity_id in group_members:
+            if speaker := self.hass.data[DATA_SONOS].entity_id_mappings.get(entity_id):
+                speakers.append(speaker)
+            else:
+                raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
 
-            await self.hass.async_add_executor_job(self.speaker.join, speakers)
+        await SonosSpeaker.join_multi(self.hass, self.speaker, speakers)
 
     async def async_unjoin_player(self):
-        """Remove this player from any group."""
-        async with self.hass.data[DATA_SONOS].topology_condition:
-            await self.hass.async_add_executor_job(self.speaker.unjoin)
+        """Remove this player from any group.
+
+        Coalesces all calls within 0.5s to allow use of SonosSpeaker.unjoin_multi()
+        which optimizes the order in which speakers are removed from their groups.
+        Removing coordinators last better preserves playqueues on the speakers.
+        """
+        sonos_data = self.hass.data[DATA_SONOS]
+        household_id = self.speaker.household_id
+
+        async def async_process_unjoin(now: datetime.datetime) -> None:
+            """Process the unjoin with all remove requests within the coalescing period."""
+            unjoin_data = sonos_data.unjoin_data.pop(household_id)
+            await SonosSpeaker.unjoin_multi(self.hass, unjoin_data.speakers)
+            unjoin_data.event.set()
+
+        if unjoin_data := sonos_data.unjoin_data.get(household_id):
+            unjoin_data.speakers.append(self.speaker)
+        else:
+            unjoin_data = sonos_data.unjoin_data[household_id] = UnjoinData(
+                speakers=[self.speaker]
+            )
+            async_call_later(self.hass, 0.5, async_process_unjoin)
+
+        await unjoin_data.event.wait()

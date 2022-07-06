@@ -6,11 +6,8 @@ from typing import Any
 
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.ancillary_control import (
-    ANCILLARY_CONTROL_EMERGENCY,
-    ANCILLARY_CONTROL_FIRE,
-    ANCILLARY_CONTROL_INVALID_CODE,
-    ANCILLARY_CONTROL_PANIC,
     AncillaryControl,
+    AncillaryControlAction,
 )
 from pydeconz.models.sensor.switch import Switch
 
@@ -33,10 +30,10 @@ CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"
 
 SUPPORTED_DECONZ_ALARM_EVENTS = {
-    ANCILLARY_CONTROL_EMERGENCY,
-    ANCILLARY_CONTROL_FIRE,
-    ANCILLARY_CONTROL_INVALID_CODE,
-    ANCILLARY_CONTROL_PANIC,
+    AncillaryControlAction.EMERGENCY,
+    AncillaryControlAction.FIRE,
+    AncillaryControlAction.INVALID_CODE,
+    AncillaryControlAction.PANIC,
 }
 
 
@@ -183,7 +180,7 @@ class DeconzAlarmEvent(DeconzEventBase):
             CONF_ID: self.event_id,
             CONF_UNIQUE_ID: self.serial,
             CONF_DEVICE_ID: self.device_id,
-            CONF_EVENT: self._device.action,
+            CONF_EVENT: self._device.action.value,
         }
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_ALARM_EVENT, data)

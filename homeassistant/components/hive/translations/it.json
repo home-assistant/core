@@ -20,6 +20,13 @@
                 "description": "Inserisci il tuo codice di autenticazione Hive. \n\n Inserisci il codice 0000 per richiedere un altro codice.",
                 "title": "Autenticazione a due fattori di Hive."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Nome del dispositivo"
+                },
+                "description": "Inserisci la tua configurazione Hive ",
+                "title": "Configurazione Hive."
+            },
             "reauth": {
                 "data": {
                     "password": "Password",
@@ -34,7 +41,7 @@
                     "scan_interval": "Intervallo di scansione (secondi)",
                     "username": "Nome utente"
                 },
-                "description": "Inserisci le informazioni di accesso e la configurazione di Hive.",
+                "description": "Inserisci le tue informazioni di accesso Hive.",
                 "title": "Accesso Hive"
             }
         }
