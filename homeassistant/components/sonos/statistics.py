@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Any
 
 from soco.data_structures_entry import from_didl_string
 from soco.events_base import Event as SonosEvent, parse_event_xml
@@ -14,11 +15,11 @@ class SonosStatistics:
 
     def __init__(self, zone_name: str, kind: str) -> None:
         """Initialize SonosStatistics."""
-        self._stats = {}
+        self._stats: dict[str, Any] = {}
         self._stat_type = kind
         self.zone_name = zone_name
 
-    def report(self) -> dict:
+    def report(self) -> dict[str, Any]:
         """Generate a report for use in diagnostics."""
         return self._stats.copy()
 
@@ -68,7 +69,7 @@ class EventStatistics(SonosStatistics):
         """Mark a fully processed event by subscription type."""
         self._stats[event.service.service_type]["processed"] += 1
 
-    def report(self) -> dict:
+    def report(self) -> dict[str, Any]:
         """Generate a report for use in diagnostics."""
         payload = self._stats.copy()
         payload["soco:from_didl_string"] = from_didl_string.cache_info()

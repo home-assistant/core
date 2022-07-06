@@ -50,12 +50,12 @@ def get_thumbnail_url_full(
 ) -> str | None:
     """Get thumbnail URL."""
     if is_internal:
-        item = get_media(  # type: ignore[no-untyped-call]
+        item = get_media(
             media.library,
             media_content_id,
             media_content_type,
         )
-        return getattr(item, "album_art_uri", None)  # type: ignore[no-any-return]
+        return getattr(item, "album_art_uri", None)
 
     return get_browse_image_url(
         media_content_type,
@@ -100,7 +100,7 @@ async def async_browse_media(
     if media_content_type == "plex":
         return await plex.async_browse_media(hass, None, None, platform=DOMAIN)
 
-    if spotify.is_spotify_media_type(media_content_type):
+    if media_content_type and spotify.is_spotify_media_type(media_content_type):
         return await spotify.async_browse_media(
             hass, media_content_type, media_content_id, can_play_artist=False
         )
@@ -258,7 +258,7 @@ async def root_payload(
     get_browse_image_url: GetBrowseImageUrlType,
 ):
     """Return root payload for Sonos."""
-    children = []
+    children: list[BrowseMedia] = []
 
     if speaker.favorites:
         children.append(
@@ -303,7 +303,8 @@ async def root_payload(
 
     if "spotify" in hass.config.components:
         result = await spotify.async_browse_media(hass, None, None)
-        children.extend(result.children)
+        if result.children:
+            children.extend(result.children)
 
     try:
         item = await media_source.async_browse_media(
@@ -311,7 +312,8 @@ async def root_payload(
         )
         # If domain is None, it's overview of available sources
         if item.domain is None:
-            children.extend(item.children)
+            if item.children:
+                children.extend(item.children)
         else:
             children.append(item)
     except media_source.BrowseError:

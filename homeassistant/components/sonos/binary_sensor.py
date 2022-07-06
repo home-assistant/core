@@ -109,6 +109,6 @@ class SonosMicrophoneSensorEntity(SonosEntity, BinarySensorEntity):
         self.speaker.mic_enabled = self.soco.mic_enabled
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.speaker.mic_enabled

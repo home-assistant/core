@@ -56,6 +56,7 @@ class SonosEntity(Entity):
     async def async_fallback_poll(self, now: datetime.datetime) -> None:
         """Poll the entity if subscriptions fail."""
         if not self.speaker.subscriptions_failed:
+            listener_msg: str | None
             if soco_config.EVENT_ADVERTISE_IP:
                 listener_msg = f"{self.speaker.subscription_address} (advertising as {soco_config.EVENT_ADVERTISE_IP})"
             else:

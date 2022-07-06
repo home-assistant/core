@@ -165,7 +165,7 @@ class SonosSpeaker:
 
     async def async_setup_dispatchers(self, entry: ConfigEntry) -> None:
         """Connect dispatchers in async context during setup."""
-        dispatch_pairs = (
+        dispatch_pairs: tuple[tuple[str, Callable[..., Any]], ...] = (
             (SONOS_CHECK_ACTIVITY, self.async_check_activity),
             (SONOS_SPEAKER_ADDED, self.update_group_for_uid),
             (f"{SONOS_REBOOTED}-{self.soco.uid}", self.async_rebooted),
@@ -294,12 +294,13 @@ class SonosSpeaker:
     # Subscription handling and event dispatchers
     #
     def log_subscription_result(
-        self, result: Any, event: str, level: str = logging.DEBUG
+        self, result: Any, event: str, level: int = logging.DEBUG
     ) -> None:
         """Log a message if a subscription action (create/renew/stop) results in an exception."""
         if not isinstance(result, Exception):
             return
 
+        message: str | Exception
         if isinstance(result, asyncio.exceptions.TimeoutError):
             message = "Request timed out"
             exc_info = None
@@ -593,6 +594,7 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        assert self._subscription_lock is not None
         async with self._subscription_lock:
             await self._async_offline()
 
@@ -819,7 +821,7 @@ class SonosSpeaker:
 
             entity_registry = ent_reg.async_get(self.hass)
             sonos_group = []
-            sonos_group_entities = []
+            sonos_group_entities: list[str] = []
 
             for uid in group:
                 speaker = self.hass.data[DATA_SONOS].discovered.get(uid)
@@ -829,6 +831,7 @@ class SonosSpeaker:
                     entity_id = entity_registry.async_get_entity_id(
                         MP_DOMAIN, DOMAIN, uid
                     )
+                    assert entity_id is not None
                     sonos_group_entities.append(entity_id)
                 else:
                     self._group_members_missing.add(uid)
@@ -996,7 +999,7 @@ class SonosSpeaker:
                             exc_info=exc,
                         )
 
-            groups = []
+            groups: list[list[SonosSpeaker]] = []
             if not with_group:
                 return groups
 
@@ -1013,7 +1016,7 @@ class SonosSpeaker:
                     {
                         s
                         for s in speaker.sonos_group[1:]
-                        if s not in speaker.snapshot_group
+                        if speaker.snapshot_group and s not in speaker.snapshot_group
                     }
                 )
 

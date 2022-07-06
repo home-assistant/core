@@ -134,8 +134,8 @@ async def async_setup_entry(
                 "Service 'sonos.join' is deprecated and will be removed in 2022.8, please use 'media_player.join'"
             )
             master = platform.entities.get(service_call.data[ATTR_MASTER])
-            if master:
-                await SonosSpeaker.join_multi(hass, master.speaker, speakers)  # type: ignore[arg-type]
+            if master and isinstance(master, SonosMediaPlayerEntity):
+                await SonosSpeaker.join_multi(hass, master.speaker, speakers)
             else:
                 _LOGGER.error(
                     "Invalid master specified for join service: %s",
@@ -145,14 +145,14 @@ async def async_setup_entry(
             _LOGGER.warning(
                 "Service 'sonos.unjoin' is deprecated and will be removed in 2022.8, please use 'media_player.unjoin'"
             )
-            await SonosSpeaker.unjoin_multi(hass, speakers)  # type: ignore[arg-type]
+            await SonosSpeaker.unjoin_multi(hass, speakers)
         elif service_call.service == SERVICE_SNAPSHOT:
             await SonosSpeaker.snapshot_multi(
-                hass, speakers, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
+                hass, speakers, service_call.data[ATTR_WITH_GROUP]
             )
         elif service_call.service == SERVICE_RESTORE:
             await SonosSpeaker.restore_multi(
-                hass, speakers, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
+                hass, speakers, service_call.data[ATTR_WITH_GROUP]
             )
 
     config_entry.async_on_unload(
@@ -185,7 +185,7 @@ async def async_setup_entry(
         SONOS_DOMAIN, SERVICE_RESTORE, async_service_handle, join_unjoin_schema
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_SET_TIMER,
         {
             vol.Required(ATTR_SLEEP_TIME): vol.All(
@@ -195,9 +195,9 @@ async def async_setup_entry(
         "set_sleep_timer",
     )
 
-    platform.async_register_entity_service(SERVICE_CLEAR_TIMER, {}, "clear_sleep_timer")  # type: ignore
+    platform.async_register_entity_service(SERVICE_CLEAR_TIMER, {}, "clear_sleep_timer")
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_UPDATE_ALARM,
         {
             vol.Required(ATTR_ALARM_ID): cv.positive_int,
@@ -209,13 +209,13 @@ async def async_setup_entry(
         "set_alarm",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_PLAY_QUEUE,
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "play_queue",
     )
 
-    platform.async_register_entity_service(  # type: ignore
+    platform.async_register_entity_service(
         SERVICE_REMOVE_FROM_QUEUE,
         {vol.Optional(ATTR_QUEUE_POSITION): cv.positive_int},
         "remove_from_queue",
@@ -272,8 +272,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return if the media_player is available."""
         return (
             self.speaker.available
-            and self.speaker.sonos_group_entities
-            and self.media.playback_status
+            and bool(self.speaker.sonos_group_entities)
+            and bool(self.media.playback_status)
         )
 
     @property
@@ -290,7 +290,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return a hash of self."""
         return hash(self.unique_id)
 
-    @property  # type: ignore[misc]
+    @property
     def state(self) -> str:
         """Return the state of the entity."""
         if self.media.playback_status in (
@@ -333,13 +333,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return true if volume is muted."""
         return self.speaker.muted
 
-    @property  # type: ignore[misc]
-    def shuffle(self) -> str | None:
+    @property
+    def shuffle(self) -> bool | None:
         """Shuffling state."""
-        shuffle: str = PLAY_MODES[self.media.play_mode][0]
+        shuffle = PLAY_MODES[self.media.play_mode][0]
         return shuffle
 
-    @property  # type: ignore[misc]
+    @property
     def repeat(self) -> str | None:
         """Return current repeat mode."""
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
@@ -350,32 +350,32 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Return the SonosMedia object from the coordinator speaker."""
         return self.coordinator.media
 
-    @property  # type: ignore[misc]
+    @property
     def media_content_id(self) -> str | None:
         """Content id of current playing media."""
         return self.media.uri
 
-    @property  # type: ignore[misc]
-    def media_duration(self) -> float | None:
+    @property
+    def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
-        return self.media.duration
+        return None if (duration := self.media.duration) is None else int(duration)
 
-    @property  # type: ignore[misc]
-    def media_position(self) -> float | None:
+    @property
+    def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
-        return self.media.position
+        return None if (position := self.media.position) is None else int(position)
 
-    @property  # type: ignore[misc]
+    @property
     def media_position_updated_at(self) -> datetime.datetime | None:
         """When was the position of the current playing media valid."""
         return self.media.position_updated_at
 
-    @property  # type: ignore[misc]
+    @property
     def media_image_url(self) -> str | None:
         """Image url of current playing media."""
         return self.media.image_url or None
 
-    @property  # type: ignore[misc]
+    @property
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         return self.media.channel or None
@@ -385,22 +385,22 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Title of playlist currently playing."""
         return self.media.playlist_name
 
-    @property  # type: ignore[misc]
+    @property
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         return self.media.artist or None
 
-    @property  # type: ignore[misc]
+    @property
     def media_album_name(self) -> str | None:
         """Album name of current playing media, music track only."""
         return self.media.album_name or None
 
-    @property  # type: ignore[misc]
+    @property
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self.media.title or None
 
-    @property  # type: ignore[misc]
+    @property
     def source(self) -> str | None:
         """Name of the current input source."""
         return self.media.source_name or None
@@ -421,7 +421,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.soco.volume = str(int(volume * 100))
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
-    def set_shuffle(self, shuffle: str) -> None:
+    def set_shuffle(self, shuffle: bool) -> None:
         """Enable/Disable shuffle mode."""
         sonos_shuffle = shuffle
         sonos_repeat = PLAY_MODES[self.media.play_mode][1]
@@ -639,7 +639,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
-                item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
+                item = media_browser.get_media(self.media.library, media_id, media_type)
                 soco.play_uri(item.get_uri())
                 return
             try:
@@ -652,7 +652,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 soco.add_to_queue(playlist)
                 soco.play_from_queue(0)
         elif media_type in PLAYABLE_MEDIA_TYPES:
-            item = media_browser.get_media(self.media.library, media_id, media_type)  # type: ignore[no-untyped-call]
+            item = media_browser.get_media(self.media.library, media_id, media_type)
 
             if not item:
                 _LOGGER.error('Could not find "%s" in the library', media_id)
@@ -743,8 +743,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 MEDIA_TYPES_TO_SONOS[media_content_type],
             )
             if image_url := getattr(item, "album_art_uri", None):
-                result = await self._async_fetch_image(image_url)  # type: ignore[no-untyped-call]
-                return result  # type: ignore
+                result = await self._async_fetch_image(image_url)
+                return result
 
         return (None, None)
 

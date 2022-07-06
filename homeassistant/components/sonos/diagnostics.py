@@ -47,7 +47,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    payload = {"current_timestamp": time.monotonic()}
+    payload: dict[str, Any] = {"current_timestamp": time.monotonic()}
 
     for section in ("discovered", "discovery_known"):
         payload[section] = {}
