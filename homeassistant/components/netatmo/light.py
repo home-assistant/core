@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from pyatmo import modules as NaModules
 
-from homeassistant.components.light import LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -37,6 +37,7 @@ async def async_setup_entry(
     def _create_camera_light_entity(netatmo_device: NetatmoDevice) -> None:
         if not hasattr(netatmo_device.device, "floodlight"):
             return
+
         entity = NetatmoCameraLight(netatmo_device)
         async_add_entities([entity])
 
@@ -48,10 +49,9 @@ async def async_setup_entry(
 
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
-        try:
-            getattr(netatmo_device.device, "brightness")
-        except AttributeError:
+        if not hasattr(netatmo_device.device, "brightness"):
             return
+
         entity = NetatmoLight(netatmo_device)
         _LOGGER.debug("Adding light %s", entity)
         async_add_entities([entity])
@@ -170,6 +170,11 @@ class NetatmoLight(NetatmoBase, LightEntity):
         self._attr_brightness = 0
         self._attr_unique_id = f"{self._id}-light"
 
+        self._attr_supported_color_modes: set[str] = set()
+
+        if not self._attr_supported_color_modes and self._dimmer.brightness is not None:
+            self._attr_supported_color_modes.add(ColorMode.BRIGHTNESS)
+
         self._signal_name = f"{HOME}-{self._home_id}"
         self._publishers.extend(
             [
@@ -184,7 +189,7 @@ class NetatmoLight(NetatmoBase, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self._attr_brightness is not None and self._attr_brightness > 0
+        return self._dimmer.on is True
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
@@ -199,8 +204,8 @@ class NetatmoLight(NetatmoBase, LightEntity):
     @callback
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_brightness = self._dimmer.brightness
-
         if self._dimmer.brightness is not None:
             # Netatmo uses a range of [0, 100] to control brightness
             self._attr_brightness = round((self._dimmer.brightness / 100) * 255)
+        else:
+            self._attr_brightness = None
