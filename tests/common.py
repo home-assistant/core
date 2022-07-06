@@ -378,7 +378,10 @@ def async_fire_time_changed(
 ) -> None:
     """Fire a time changed event."""
     if datetime_ is None:
-        datetime_ = date_util.utcnow()
+        utc_datetime = date_util.utcnow()
+    else:
+        utc_datetime = date_util.as_utc(datetime_)
+    timestamp = date_util.utc_to_timestamp(utc_datetime)
 
     for task in list(hass.loop._scheduled):
         if not isinstance(task, asyncio.TimerHandle):
@@ -386,13 +389,16 @@ def async_fire_time_changed(
         if task.cancelled():
             continue
 
-        mock_seconds_into_future = datetime_.timestamp() - time.time()
+        mock_seconds_into_future = timestamp - time.time()
         future_seconds = task.when() - hass.loop.time()
 
         if fire_all or mock_seconds_into_future >= future_seconds:
             with patch(
                 "homeassistant.helpers.event.time_tracker_utcnow",
-                return_value=date_util.as_utc(datetime_),
+                return_value=utc_datetime,
+            ), patch(
+                "homeassistant.helpers.event.time_tracker_timestamp",
+                return_value=timestamp,
             ):
                 task._run()
                 task.cancel()
@@ -1000,6 +1006,11 @@ class MockEntity(entity.Entity):
     def entity_category(self):
         """Return the entity category."""
         return self._handle("entity_category")
+
+    @property
+    def has_entity_name(self):
+        """Return the has_entity_name name flag."""
+        return self._handle("has_entity_name")
 
     @property
     def entity_registry_enabled_default(self):

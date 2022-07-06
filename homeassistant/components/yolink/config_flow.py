@@ -1,6 +1,7 @@
 """Config flow for yolink."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -30,7 +31,7 @@ class OAuth2FlowHandler(
         scopes = ["create"]
         return {"scope": " ".join(scopes)}
 
-    async def async_step_reauth(self, user_input=None) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
         self._reauth_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]

@@ -1,13 +1,16 @@
 """Tests for wiz integration."""
 import datetime
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
-from homeassistant.const import ATTR_FRIENDLY_NAME, EVENT_HOMEASSISTANT_STOP
+from homeassistant.components.wiz.const import DOMAIN
+from homeassistant.const import ATTR_FRIENDLY_NAME, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
 from . import (
+    FAKE_IP,
     FAKE_MAC,
     FAKE_SOCKET,
     _mocked_wizlight,
@@ -16,7 +19,7 @@ from . import (
     async_setup_integration,
 )
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_retry(hass: HomeAssistant) -> None:
@@ -47,7 +50,17 @@ async def test_cleanup_on_failed_first_update(hass: HomeAssistant) -> None:
     """Test the socket is cleaned up on failed first update."""
     bulb = _mocked_wizlight(None, None, FAKE_SOCKET)
     bulb.updateState = AsyncMock(side_effect=OSError)
-    _, entry = await async_setup_integration(hass, wizlight=bulb)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=FAKE_MAC,
+        data={CONF_HOST: FAKE_IP},
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.wiz.discovery.find_wizlights", return_value=[]
+    ), _patch_wizlight(device=bulb):
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+        await hass.async_block_till_done()
     assert entry.state is config_entries.ConfigEntryState.SETUP_RETRY
     bulb.async_close.assert_called_once()
 

@@ -20,6 +20,8 @@ async def async_process_devices(hass, manager):
 
     if manager.fans:
         devices[VS_FANS].extend(manager.fans)
+        # Expose fan sensors separately
+        devices[VS_SENSORS].extend(manager.fans)
         _LOGGER.info("%d VeSync fans found", len(manager.fans))
 
     if manager.bulbs:
@@ -28,7 +30,7 @@ async def async_process_devices(hass, manager):
 
     if manager.outlets:
         devices[VS_SWITCHES].extend(manager.outlets)
-        # Expose outlets' power & energy usage as separate sensors
+        # Expose outlets' voltage, power & energy usage as separate sensors
         devices[VS_SENSORS].extend(manager.outlets)
         _LOGGER.info("%d VeSync outlets found", len(manager.outlets))
 
@@ -49,30 +51,24 @@ class VeSyncBaseEntity(Entity):
     def __init__(self, device):
         """Initialize the VeSync device."""
         self.device = device
+        self._attr_unique_id = self.base_unique_id
+        self._attr_name = self.base_name
 
     @property
     def base_unique_id(self):
         """Return the ID of this device."""
+        # The unique_id property may be overridden in subclasses, such as in
+        # sensors. Maintaining base_unique_id allows us to group related
+        # entities under a single device.
         if isinstance(self.device.sub_device_no, int):
             return f"{self.device.cid}{str(self.device.sub_device_no)}"
         return self.device.cid
 
     @property
-    def unique_id(self):
-        """Return the ID of this device."""
-        # The unique_id property may be overridden in subclasses, such as in sensors. Maintaining base_unique_id allows
-        # us to group related entities under a single device.
-        return self.base_unique_id
-
-    @property
     def base_name(self):
         """Return the name of the device."""
+        # Same story here as `base_unique_id` above
         return self.device.device_name
-
-    @property
-    def name(self):
-        """Return the name of the entity (may be overridden)."""
-        return self.base_name
 
     @property
     def available(self) -> bool:
@@ -97,6 +93,11 @@ class VeSyncBaseEntity(Entity):
 
 class VeSyncDevice(VeSyncBaseEntity, ToggleEntity):
     """Base class for VeSync Device Representations."""
+
+    @property
+    def details(self):
+        """Provide access to the device details dictionary."""
+        return self.device.details
 
     @property
     def is_on(self):

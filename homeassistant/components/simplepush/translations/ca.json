@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "El dispositiu ja est\u00e0 configurat"
+        },
+        "error": {
+            "cannot_connect": "Ha fallat la connexi\u00f3"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "device_key": "Clau del teu dispositiu",
+                    "event": "Esdeveniment per als esdeveniments.",
+                    "name": "Nom",
+                    "password": "Contrasenya del xifrat que utilitza el teu dispositiu",
+                    "salt": "La sal ('salt') que utilitza el teu dispositiu."
+                }
+            }
+        }
+    }
+}

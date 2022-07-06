@@ -29,11 +29,11 @@ from .const import (
     ATTR_ACTION,
     ATTR_BUTTON_NUMBER,
     ATTR_SERIAL,
-    BUTTON_DEVICES,
     CONF_SUBTYPE,
     DOMAIN,
     LUTRON_CASETA_BUTTON_EVENT,
 )
+from .models import LutronCasetaData
 
 SUPPORTED_INPUTS_EVENTS_TYPES = [ACTION_PRESS, ACTION_RELEASE]
 
@@ -386,10 +386,12 @@ async def async_attach_trigger(
     """Attach a trigger."""
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(config[CONF_DEVICE_ID])
+    assert device
+    assert device.model
     device_type = _device_model_to_type(device.model)
     _, serial = list(device.identifiers)[0]
-    schema = DEVICE_TYPE_SCHEMA_MAP.get(device_type)
-    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP.get(device_type)
+    schema = DEVICE_TYPE_SCHEMA_MAP[device_type]
+    valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LIP[device_type]
     config = schema(config)
     event_config = {
         event_trigger.CONF_PLATFORM: CONF_EVENT,
@@ -411,9 +413,9 @@ def get_button_device_by_dr_id(hass: HomeAssistant, device_id: str):
     if DOMAIN not in hass.data:
         return None
 
-    for config_entry in hass.data[DOMAIN]:
-        button_devices = hass.data[DOMAIN][config_entry][BUTTON_DEVICES]
-        if device := button_devices.get(device_id):
+    for entry_id in hass.data[DOMAIN]:
+        data: LutronCasetaData = hass.data[DOMAIN][entry_id]
+        if device := data.button_devices.get(device_id):
             return device
 
     return None

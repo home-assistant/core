@@ -1026,7 +1026,7 @@ async def test_device_class_switch(hass, device_class, google_type):
         ("garage_door", "action.devices.types.GARAGE"),
         ("lock", "action.devices.types.SENSOR"),
         ("opening", "action.devices.types.SENSOR"),
-        ("window", "action.devices.types.SENSOR"),
+        ("window", "action.devices.types.WINDOW"),
     ],
 )
 async def test_device_class_binary_sensor(hass, device_class, google_type):

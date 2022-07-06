@@ -28,5 +28,16 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "D\u00fc\u015f\u00fck pili otomatik atla"
+                },
+                "description": "D\u00fc\u015f\u00fck pil bildirdikleri anda b\u00f6lgeleri otomatik olarak atlay\u0131n.",
+                "title": "Toplam Ba\u011flant\u0131 Se\u00e7enekleri"
+            }
+        }
     }
 }

@@ -113,6 +113,7 @@ class HomeConnectDevice:
         """Initialize the device class."""
         self.hass = hass
         self.appliance = appliance
+        self.entities = []
 
     def initialize(self):
         """Fetch the info needed to initialize the device."""
