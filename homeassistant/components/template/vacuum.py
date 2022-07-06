@@ -126,6 +126,8 @@ async def async_setup_platform(
 class TemplateVacuum(TemplateEntity, StateVacuumEntity):
     """A template vacuum component."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         hass,
@@ -198,7 +200,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
         self._attr_fan_speed_list = config[CONF_FAN_SPEED_LIST]
 
     @property
-    def state(self):
+    def state(self) -> str | None:
         """Return the status of the vacuum cleaner."""
         return self._state
 
@@ -261,7 +263,7 @@ class TemplateVacuum(TemplateEntity, StateVacuumEntity):
                 self._attr_fan_speed_list,
             )
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         if self._template is not None:
             self.add_template_attribute(

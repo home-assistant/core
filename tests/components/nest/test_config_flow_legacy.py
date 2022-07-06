@@ -13,15 +13,6 @@ from tests.common import MockConfigEntry
 CONFIG = TEST_CONFIG_LEGACY.config
 
 
-async def test_abort_if_no_implementation_registered(hass):
-    """Test we abort if no implementation is registered."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "missing_configuration"
-
-
 async def test_abort_if_single_instance_allowed(hass):
     """Test we abort if Nest is already setup."""
     existing_entry = MockConfigEntry(domain=DOMAIN, data={})

@@ -1,4 +1,6 @@
 """OpenTherm Gateway config flow."""
+from __future__ import annotations
+
 import asyncio
 
 import pyotgw
@@ -34,7 +36,9 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OpenThermGwOptionsFlow:
         """Get the options flow for this handler."""
         return OpenThermGwOptionsFlow(config_entry)
 
@@ -111,7 +115,7 @@ class OpenThermGwConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class OpenThermGwOptionsFlow(config_entries.OptionsFlow):
     """Handle opentherm_gw options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize the options flow."""
         self.config_entry = config_entry
 

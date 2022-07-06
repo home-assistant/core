@@ -106,7 +106,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self.coordinator.musiccast.register_group_update_callback(
             self.update_all_mc_entities
         )
-        self.coordinator.async_add_listener(self.async_schedule_check_client_list)
+        self.async_on_remove(
+            self.coordinator.async_add_listener(self.async_schedule_check_client_list)
+        )
 
     async def async_will_remove_from_hass(self):
         """Entity being removed from hass."""
@@ -116,7 +118,6 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         self.coordinator.musiccast.remove_group_update_callback(
             self.update_all_mc_entities
         )
-        self.coordinator.async_remove_listener(self.async_schedule_check_client_list)
 
     @property
     def should_poll(self):

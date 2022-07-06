@@ -52,6 +52,14 @@ async def test_switch_attributes(hass, async_autosetup_sonos, soco):
     assert alarm_state.attributes.get(ATTR_PLAY_MODE) == "SHUFFLE_NOREPEAT"
     assert not alarm_state.attributes.get(ATTR_INCLUDE_LINKED_ZONES)
 
+    surround_music_full_volume = entity_registry.entities[
+        "switch.zone_a_surround_music_full_volume"
+    ]
+    surround_music_full_volume_state = hass.states.get(
+        surround_music_full_volume.entity_id
+    )
+    assert surround_music_full_volume_state.state == STATE_ON
+
     night_sound = entity_registry.entities["switch.zone_a_night_sound"]
     night_sound_state = hass.states.get(night_sound.entity_id)
     assert night_sound_state.state == STATE_ON

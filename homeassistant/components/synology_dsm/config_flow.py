@@ -1,6 +1,7 @@
 """Config flow to configure the Synology DSM integration."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
 from typing import Any
@@ -120,7 +121,7 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the synology_dsm config flow."""
         self.saved_user_input: dict[str, Any] = {}
         self.discovered_conf: dict[str, Any] = {}
-        self.reauth_conf: dict[str, Any] = {}
+        self.reauth_conf: Mapping[str, Any] = {}
         self.reauth_reason: str | None = None
 
     def _show_form(
@@ -299,9 +300,9 @@ class SynologyDSMFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = {**self.discovered_conf, **user_input}
         return await self.async_validate_input_create_entry(user_input, step_id=step)
 
-    async def async_step_reauth(self, data: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_conf = data.copy()
+        self.reauth_conf = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

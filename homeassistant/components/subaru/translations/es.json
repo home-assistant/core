@@ -6,9 +6,12 @@
         },
         "error": {
             "bad_pin_format": "El PIN debe tener 4 d\u00edgitos",
+            "bad_validation_code_format": "El c\u00f3digo de validaci\u00f3n debe tener 6 d\u00edgitos",
             "cannot_connect": "No se pudo conectar",
             "incorrect_pin": "PIN incorrecto",
-            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida"
+            "incorrect_validation_code": "C\u00f3digo de validaci\u00f3n incorrecto",
+            "invalid_auth": "Autenticaci\u00f3n no v\u00e1lida",
+            "two_factor_request_failed": "La solicitud del c\u00f3digo 2FA fall\u00f3, int\u00e9ntalo de nuevo"
         },
         "step": {
             "pin": {

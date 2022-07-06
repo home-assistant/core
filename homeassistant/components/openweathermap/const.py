@@ -22,16 +22,12 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_WINDY,
     ATTR_CONDITION_WINDY_VARIANT,
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_PRESSURE,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
 )
 from homeassistant.const import (
     DEGREE,
-    LENGTH_KILOMETERS,
+    LENGTH_METERS,
     LENGTH_MILLIMETERS,
     PERCENTAGE,
     PRESSURE_HPA,
@@ -71,6 +67,11 @@ ATTR_API_WEATHER_CODE = "weather_code"
 ATTR_API_FORECAST = "forecast"
 UPDATE_LISTENER = "update_listener"
 PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+
+ATTR_FORECAST_PRECIPITATION = "precipitation"
+ATTR_FORECAST_PRESSURE = "pressure"
+ATTR_FORECAST_TEMP = "temperature"
+ATTR_FORECAST_TEMP_LOW = "templow"
 
 FORECAST_MODE_HOURLY = "hourly"
 FORECAST_MODE_DAILY = "daily"
@@ -248,7 +249,7 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_VISIBILITY_DISTANCE,
         name="Visibility",
-        native_unit_of_measurement=LENGTH_KILOMETERS,
+        native_unit_of_measurement=LENGTH_METERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(

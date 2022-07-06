@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant import auth, data_entry_flow
 from homeassistant.auth import (
+    EVENT_USER_UPDATED,
     InvalidAuthError,
     auth_store,
     const as auth_const,
@@ -1097,3 +1098,20 @@ async def test_rename_does_not_change_refresh_token(mock_hass):
     token_after = list(user.refresh_tokens.values())[0]
 
     assert token_before == token_after
+
+
+async def test_event_user_updated_fires(hass):
+    """Test the user updated event fires."""
+    manager = await auth.auth_manager_from_config(hass, [], [])
+    user = MockUser().add_to_auth_manager(manager)
+    await manager.async_create_refresh_token(user, CLIENT_ID)
+
+    assert len(list(user.refresh_tokens.values())) == 1
+
+    events = async_capture_events(hass, EVENT_USER_UPDATED)
+
+    await manager.async_update_user(user, name="new name")
+    assert user.name == "new name"
+
+    await hass.async_block_till_done()
+    assert len(events) == 1

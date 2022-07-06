@@ -23,6 +23,7 @@ VALID_CONFIG_1 = {feedreader.DOMAIN: {CONF_URLS: [URL]}}
 VALID_CONFIG_2 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_SCAN_INTERVAL: 60}}
 VALID_CONFIG_3 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_MAX_ENTRIES: 100}}
 VALID_CONFIG_4 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_MAX_ENTRIES: 5}}
+VALID_CONFIG_5 = {feedreader.DOMAIN: {CONF_URLS: [URL], CONF_MAX_ENTRIES: 1}}
 
 
 def load_fixture_bytes(src):
@@ -54,6 +55,12 @@ def fixture_feed_21_events(hass):
 def fixture_feed_three_events(hass):
     """Load test feed data for three events."""
     return load_fixture_bytes("feedreader3.xml")
+
+
+@pytest.fixture(name="feed_atom_event")
+def fixture_feed_atom_event(hass):
+    """Load test feed data for atom event."""
+    return load_fixture_bytes("feedreader5.xml")
 
 
 @pytest.fixture(name="events")
@@ -98,7 +105,7 @@ async def test_setup_max_entries(hass):
 
 
 async def test_feed(hass, events, feed_one_event):
-    """Test simple feed with valid data."""
+    """Test simple rss feed with valid data."""
     with patch(
         "feedparser.http.get",
         return_value=feed_one_event,
@@ -118,6 +125,29 @@ async def test_feed(hass, events, feed_one_event):
     assert events[0].data.published_parsed.tm_mday == 30
     assert events[0].data.published_parsed.tm_hour == 5
     assert events[0].data.published_parsed.tm_min == 10
+
+
+async def test_atom_feed(hass, events, feed_atom_event):
+    """Test simple atom feed with valid data."""
+    with patch(
+        "feedparser.http.get",
+        return_value=feed_atom_event,
+    ):
+        assert await async_setup_component(hass, feedreader.DOMAIN, VALID_CONFIG_5)
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+        await hass.async_block_till_done()
+
+    assert len(events) == 1
+    assert events[0].data.title == "Atom-Powered Robots Run Amok"
+    assert events[0].data.description == "Some text."
+    assert events[0].data.link == "http://example.org/2003/12/13/atom03"
+    assert events[0].data.id == "urn:uuid:1225c695-cfb8-4ebb-aaaa-80da344efa6a"
+    assert events[0].data.updated_parsed.tm_year == 2003
+    assert events[0].data.updated_parsed.tm_mon == 12
+    assert events[0].data.updated_parsed.tm_mday == 13
+    assert events[0].data.updated_parsed.tm_hour == 18
+    assert events[0].data.updated_parsed.tm_min == 30
 
 
 async def test_feed_updates(hass, events, feed_one_event, feed_two_event):

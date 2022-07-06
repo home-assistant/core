@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2022.7.0.dev0"
+version     = "2022.8.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -29,7 +29,7 @@ dependencies    = [
     "async_timeout==4.0.2",
     "attrs==21.2.0",
     "atomicwrites==1.4.0",
-    "awesomeversion==22.5.2",
+    "awesomeversion==22.6.0",
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",
     "ciso8601==2.2.0",
@@ -41,10 +41,11 @@ dependencies    = [
     "PyJWT==2.4.0",
     # PyJWT has loose dependency. We want the latest one.
     "cryptography==36.0.2",
+    "orjson==3.7.5",
     "pip>=21.0,<22.2",
     "python-slugify==4.0.1",
     "pyyaml==6.0",
-    "requests==2.27.1",
+    "requests==2.28.1",
     "typing-extensions>=3.10.0.2,<5.0",
     "voluptuous==0.13.1",
     "voluptuous-serialize==2.5.0",
@@ -87,7 +88,7 @@ forced_separate = [
 ]
 combine_as_imports = true
 
-[tool.pylint.MASTER]
+[tool.pylint.MAIN]
 py-version = "3.9"
 ignore = [
     "tests",
@@ -108,7 +109,6 @@ init-hook = """\
 load-plugins = [
     "pylint.extensions.code_style",
     "pylint.extensions.typing",
-    "pylint_strict_informational",
     "hass_constructor",
     "hass_enforce_type_hints",
     "hass_imports",
@@ -119,7 +119,11 @@ extension-pkg-allow-list = [
     "av.audio.stream",
     "av.stream",
     "ciso8601",
+    "orjson",
     "cv2",
+]
+fail-on = [
+    "I",
 ]
 
 [tool.pylint.BASIC]
@@ -152,7 +156,6 @@ good-names = [
 # too-many-ancestors - it's too strict.
 # wrong-import-order - isort guards this
 # consider-using-f-string - str.format sometimes more readable
-# no-self-use - little added value with too many false-positives
 # ---
 # Enable once current issues are fixed:
 # consider-using-namedtuple-or-dataclass (Pylint CodeStyle extension)
@@ -179,7 +182,6 @@ disable = [
     "unused-argument",
     "wrong-import-order",
     "consider-using-f-string",
-    "no-self-use",
     "consider-using-namedtuple-or-dataclass",
     "consider-using-assignment-expr",
 ]
