@@ -21,6 +21,7 @@ from homeassistant.components.http.ban import (
     setup_bans,
 )
 from homeassistant.components.http.view import request_handler_factory
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from . import mock_real_ip
@@ -69,6 +70,99 @@ async def test_access_from_banned_ip(hass, aiohttp_client):
         set_real_ip(remote_addr)
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
+
+
+async def test_access_from_banned_ip_with_partially_broken_yaml_file(
+    hass, aiohttp_client, caplog
+):
+    """Test accessing to server from banned IP. Both trusted and not.
+
+    We inject some garbage into the yaml file to make sure it can
+    still load the bans.
+    """
+    app = web.Application()
+    app["hass"] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    data = {banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS}
+    data["5.3.3.3"] = {"banned_at": "garbage"}
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        return_value=data,
+    ):
+        client = await aiohttp_client(app)
+
+    for remote_addr in BANNED_IPS:
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.FORBIDDEN
+
+    # Ensure garbage data is ignored
+    set_real_ip("5.3.3.3")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    assert "Failed to load IP ban" in caplog.text
+
+
+async def test_no_ip_bans_file(hass, aiohttp_client):
+    """Test no ip bans file."""
+    app = web.Application()
+    app["hass"] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=FileNotFoundError,
+    ):
+        client = await aiohttp_client(app)
+
+    set_real_ip("4.3.2.1")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_failure_loading_ip_bans_file(hass, aiohttp_client):
+    """Test failure loading ip bans file."""
+    app = web.Application()
+    app["hass"] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=HomeAssistantError,
+    ):
+        client = await aiohttp_client(app)
+
+    set_real_ip("4.3.2.1")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_ip_ban_manager_never_started(hass, aiohttp_client, caplog):
+    """Test we handle the ip ban manager not being started."""
+    app = web.Application()
+    app["hass"] = hass
+    setup_bans(hass, app, 5)
+    set_real_ip = mock_real_ip(app)
+
+    with patch(
+        "homeassistant.components.http.ban.load_yaml_config_file",
+        side_effect=FileNotFoundError,
+    ):
+        client = await aiohttp_client(app)
+
+    # Mock the manager never being started
+    del app[KEY_BAN_MANAGER]
+
+    set_real_ip("4.3.2.1")
+    resp = await client.get("/")
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert "IP Ban middleware loaded but banned IPs not loaded" in caplog.text
 
 
 @pytest.mark.parametrize(

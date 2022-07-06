@@ -212,6 +212,7 @@ class IpBanManager:
             return
         except HomeAssistantError as err:
             _LOGGER.error("Unable to load %s: %s", self.path, str(err))
+            return
 
         ip_bans_lookup: dict[IPv4Address | IPv6Address, IpBan] = {}
         for ip_ban, ip_info in list_.items():
