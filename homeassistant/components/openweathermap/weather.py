@@ -1,7 +1,20 @@
 """Support for the OpenWeatherMap (OWM) service."""
 from __future__ import annotations
 
-from homeassistant.components.weather import Forecast, WeatherEntity
+from typing import cast
+
+from homeassistant.components.weather import (
+    ATTR_FORECAST_CONDITION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
+    ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_FORECAST_TIME,
+    ATTR_FORECAST_WIND_BEARING,
+    Forecast,
+    WeatherEntity,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     LENGTH_MILLIMETERS,
@@ -17,6 +30,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     ATTR_API_CONDITION,
     ATTR_API_FORECAST,
+    ATTR_API_FORECAST_CONDITION,
+    ATTR_API_FORECAST_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP,
+    ATTR_API_FORECAST_TEMP_LOW,
+    ATTR_API_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED,
     ATTR_API_HUMIDITY,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
@@ -30,6 +51,17 @@ from .const import (
     MANUFACTURER,
 )
 from .weather_update_coordinator import WeatherUpdateCoordinator
+
+FORECAST_MAP = {
+    ATTR_API_FORECAST_CONDITION: ATTR_FORECAST_CONDITION,
+    ATTR_API_FORECAST_PRECIPITATION: ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_API_FORECAST_PRECIPITATION_PROBABILITY: ATTR_FORECAST_PRECIPITATION_PROBABILITY,
+    ATTR_API_FORECAST_TEMP_LOW: ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_API_FORECAST_TEMP: ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_API_FORECAST_TIME: ATTR_FORECAST_TIME,
+    ATTR_API_FORECAST_WIND_BEARING: ATTR_FORECAST_WIND_BEARING,
+    ATTR_API_FORECAST_WIND_SPEED: ATTR_FORECAST_NATIVE_WIND_SPEED,
+}
 
 
 async def async_setup_entry(
@@ -109,7 +141,12 @@ class OpenWeatherMapWeather(WeatherEntity):
     @property
     def forecast(self) -> list[Forecast] | None:
         """Return the forecast array."""
-        return self._weather_coordinator.data[ATTR_API_FORECAST]
+        api_forecasts = self._weather_coordinator.data[ATTR_API_FORECAST]
+        forecasts = [
+            {ha_key: forecast[api_key] for api_key, ha_key in FORECAST_MAP.items()}
+            for forecast in api_forecasts
+        ]
+        return cast(list[Forecast], forecasts)
 
     @property
     def available(self) -> bool:
