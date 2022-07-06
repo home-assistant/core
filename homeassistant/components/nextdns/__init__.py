@@ -17,6 +17,7 @@ from nextdns import (
     ApiError,
     InvalidApiKeyError,
     NextDns,
+    Settings,
 )
 from nextdns.model import NextDnsData
 
@@ -34,10 +35,12 @@ from .const import (
     ATTR_ENCRYPTION,
     ATTR_IP_VERSIONS,
     ATTR_PROTOCOLS,
+    ATTR_SETTINGS,
     ATTR_STATUS,
     CONF_PROFILE_ID,
     DOMAIN,
     UPDATE_INTERVAL_ANALYTICS,
+    UPDATE_INTERVAL_SETTINGS,
 )
 
 TCoordinatorData = TypeVar("TCoordinatorData", bound=NextDnsData)
@@ -132,14 +135,27 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtoc
             raise UpdateFailed(err) from err
 
 
+class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator):
+    """Class to manage fetching NextDNS connection data from API."""
+
+    async def _async_update_data(self) -> Settings:
+        """Update data via library."""
+        try:
+            with timeout(10):
+                return await self.nextdns.get_settings(self.profile_id)
+        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
+            raise UpdateFailed(err) from err
+
+
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 COORDINATORS = [
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_IP_VERSIONS, NextDnsIpVersionsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_PROTOCOLS, NextDnsProtocolsUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
+    (ATTR_SETTINGS, NextDnsSettingsUpdateCoordinator, UPDATE_INTERVAL_SETTINGS),
     (ATTR_STATUS, NextDnsStatusUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
 ]
 
