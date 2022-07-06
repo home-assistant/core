@@ -44,10 +44,6 @@ def setup_security_filter(app: Application) -> None:
         request: Request, handler: Callable[[Request], Awaitable[StreamResponse]]
     ) -> StreamResponse:
         """Process request and tblock commonly known exploit attempts."""
-        _LOGGER.warning(
-            "Security_filter_middleware: %s - %s", request.path, request.query_string
-        )
-
         if FILTERS.search(request.path):
             _LOGGER.warning(
                 "Filtered a potential harmful request to: %s", request.raw_path
