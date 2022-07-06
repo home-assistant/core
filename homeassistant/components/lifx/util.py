@@ -155,7 +155,6 @@ async def async_execute_lifx(method: Callable) -> Message:
     async with async_timeout.timeout(OVERALL_TIMEOUT):
         result = await future
 
-    _LOGGER.debug("LIFX command result: %s", result)
 
     if result is None:
         raise asyncio.TimeoutError("No response from LIFX bulb")

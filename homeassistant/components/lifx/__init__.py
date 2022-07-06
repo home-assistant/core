@@ -20,7 +20,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     Platform,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
@@ -61,6 +61,7 @@ DATA_LIFX_MANAGER = "lifx_manager"
 
 PLATFORMS = [Platform.LIGHT]
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+MIGRATION_INTERVAL = timedelta(minutes=5)
 
 DISCOVERY_COOLDOWN = 5
 _LOGGER = logging.getLogger(__name__)
@@ -70,7 +71,7 @@ async def async_legacy_migration(
     hass: HomeAssistant,
     legacy_entry: ConfigEntry,
     discovered_devices: Iterable[Light],
-) -> None:
+) -> bool:
     """Migrate config entries."""
     existing_serials = {
         entry.unique_id
@@ -87,25 +88,71 @@ async def async_legacy_migration(
             "Migration in progress, waiting to discover %s device(s)",
             missing_discovery_count,
         )
-        return
+        return False
 
     _LOGGER.debug(
         "Migration successful, removing legacy entry %s", legacy_entry.entry_id
     )
     await hass.config_entries.async_remove(legacy_entry.entry_id)
+    return True
+
+
+class LIFXDiscoveryManager:
+    """Manage discovery and migration."""
+
+    def __init__(self, hass: HomeAssistant, migrating: bool) -> None:
+        """Init the manager."""
+        self.hass = hass
+        self.lock = asyncio.Lock()
+        self.migrating = migrating
+        self._cancel_discovery: CALLBACK_TYPE | None = None
+
+    @callback
+    def async_setup_discovery_interval(self) -> None:
+        """Set up discovery at an interval."""
+        if self._cancel_discovery:
+            self._cancel_discovery()
+            self._cancel_discovery = None
+        discovery_interval = (
+            MIGRATION_INTERVAL if self.migrating else DISCOVERY_INTERVAL
+        )
+        _LOGGER.debug(
+            "LIFX starting discovery with interval: %s and migrating: %s",
+            discovery_interval,
+            self.migrating,
+        )
+        self._cancel_discovery = async_track_time_interval(
+            self.hass, self.async_discovery, discovery_interval
+        )
+
+    async def async_discovery(self, *_: Any) -> None:
+        """Discovery and migrate LIFX devics."""
+        migrating_was_in_progress = self.migrating
+
+        async with self.lock:
+            discovered = await async_discover_devices(self.hass)
+
+            if legacy_entry := async_get_legacy_entry(self.hass):
+                migration_complete = await async_legacy_migration(
+                    self.hass, legacy_entry, discovered
+                )
+                if migration_complete and migrating_was_in_progress:
+                    self.migrating = False
+                    _LOGGER.debug(
+                        "LIFX migration complete, switching to normal discovery interval: %s",
+                        DISCOVERY_INTERVAL,
+                    )
+                    self.async_setup_discovery_interval()
+
+            if discovered:
+                async_trigger_discovery(self.hass, discovered)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LIFX component."""
     hass.data[DOMAIN] = {}
-    discovery_lock = asyncio.Lock()
-
-    async def _async_discovery(*_: Any) -> None:
-        async with discovery_lock:
-            if discovered := await async_discover_devices(hass):
-                if legacy_entry := async_get_legacy_entry(hass):
-                    await async_legacy_migration(hass, legacy_entry, discovered)
-                async_trigger_discovery(hass, discovered)
+    migrating = bool(async_get_legacy_entry(hass))
+    discovery_manager = LIFXDiscoveryManager(hass, migrating)
 
     @callback
     def _async_delayed_discovery(now: datetime) -> None:
@@ -113,14 +160,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         We do not want the discovery task to block startup.
         """
-        asyncio.create_task(_async_discovery())
+        asyncio.create_task(discovery_manager.async_discovery())
 
     # Let the system settle a bit before starting discovery
     # to reduce the risk we miss devices because the event
     # loop is blocked at startup.
+    discovery_manager.async_setup_discovery_interval()
     async_call_later(hass, DISCOVERY_COOLDOWN, _async_delayed_discovery)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_discovery)
-    async_track_time_interval(hass, _async_discovery, DISCOVERY_INTERVAL)
+    hass.bus.async_listen_once(
+        EVENT_HOMEASSISTANT_STARTED, discovery_manager.async_discovery
+    )
+
     return True
 
 
