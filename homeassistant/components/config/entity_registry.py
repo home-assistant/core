@@ -50,7 +50,9 @@ async def async_setup(hass: HomeAssistant) -> bool:
         )
 
     hass.bus.async_listen(
-        er.EVENT_ENTITY_REGISTRY_UPDATED, _async_clear_list_entities_cache
+        er.EVENT_ENTITY_REGISTRY_UPDATED,
+        _async_clear_list_entities_cache,
+        run_immediately=True,
     )
     websocket_api.async_register_command(hass, websocket_list_entities)
     websocket_api.async_register_command(hass, websocket_get_entity)
