@@ -45,6 +45,13 @@ async def async_setup_entry(
 class NetatmoCover(NetatmoBase, CoverEntity):
     """Representation of a Netatmo cover device."""
 
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+    )
+
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
         CoverEntity.__init__(self)
@@ -73,17 +80,6 @@ class NetatmoCover(NetatmoBase, CoverEntity):
             ]
         )
         self._attr_unique_id = f"{self._id}-{self._model}"
-
-    @property
-    def supported_features(self) -> int:
-        """Flag supported features."""
-        supported_features = 0
-        supported_features |= CoverEntityFeature.OPEN
-        supported_features |= CoverEntityFeature.CLOSE
-        supported_features |= CoverEntityFeature.STOP
-        supported_features |= CoverEntityFeature.SET_POSITION
-
-        return supported_features
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
@@ -132,10 +128,6 @@ class NetatmoCover(NetatmoBase, CoverEntity):
     def device_class(self) -> str:
         """Return the device class."""
         return CoverDeviceClass.SHUTTER
-
-    async def async_added_to_hass(self) -> None:
-        """Complete the initialization."""
-        await super().async_added_to_hass()
 
     @callback
     def async_update_callback(self) -> None:
