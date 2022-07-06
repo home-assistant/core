@@ -8,7 +8,7 @@ import voluptuous as vol
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
 from homeassistant import config_entries
-from homeassistant.components import usb, zeroconf
+from homeassistant.components import onboarding, usb, zeroconf
 from homeassistant.const import CONF_NAME
 from homeassistant.data_entry_flow import FlowResult
 
@@ -36,6 +36,7 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self):
         """Initialize flow instance."""
         self._device_path = None
+        self._device_settings = None
         self._radio_type = None
         self._title = None
 
@@ -167,11 +168,10 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         radio_type = discovery_info.properties.get("radio_type") or local_name
         node_name = local_name[: -len(".local")]
         host = discovery_info.host
+        port = discovery_info.port
         if local_name.startswith("tube") or "efr32" in local_name:
             # This is hard coded to work with legacy devices
             port = 6638
-        else:
-            port = discovery_info.port
         device_path = f"socket://{host}:{port}"
 
         if current_entry := await self.async_set_unique_id(node_name):
@@ -240,6 +240,54 @@ class ZhaFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="port_config",
             data_schema=vol.Schema(schema),
             errors=errors,
+        )
+
+    async def async_step_hardware(self, data=None):
+        """Handle hardware flow."""
+        if self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+        if not data:
+            return self.async_abort(reason="invalid_hardware_data")
+        if data.get("radio_type") != "efr32":
+            return self.async_abort(reason="invalid_hardware_data")
+        self._radio_type = RadioType.ezsp.name
+        app_cls = RadioType[self._radio_type].controller
+
+        schema = {
+            vol.Required(
+                CONF_DEVICE_PATH, default=self._device_path or vol.UNDEFINED
+            ): str
+        }
+        radio_schema = app_cls.SCHEMA_DEVICE.schema
+        assert not isinstance(radio_schema, vol.Schema)
+
+        for param, value in radio_schema.items():
+            if param in SUPPORTED_PORT_SETTINGS:
+                schema[param] = value
+        try:
+            self._device_settings = vol.Schema(schema)(data.get("port"))
+        except vol.Invalid:
+            return self.async_abort(reason="invalid_hardware_data")
+
+        self._title = data.get("name", data["port"]["path"])
+
+        self._set_confirm_only()
+        return await self.async_step_confirm_hardware()
+
+    async def async_step_confirm_hardware(self, user_input=None):
+        """Confirm a hardware discovery."""
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
+            return self.async_create_entry(
+                title=self._title,
+                data={
+                    CONF_DEVICE: self._device_settings,
+                    CONF_RADIO_TYPE: self._radio_type,
+                },
+            )
+
+        return self.async_show_form(
+            step_id="confirm_hardware",
+            description_placeholders={CONF_NAME: self._title},
         )
 
 

@@ -259,6 +259,7 @@ async def test_reauth(hass: HomeAssistant) -> None:
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": config_entry.entry_id,
         },
+        data=config_entry.data,
     )
     assert result["type"] == "form"
     assert not result["errors"]

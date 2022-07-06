@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "\u826f\u597d",
             "dirty": "\u4e0d\u4f73"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "\u95dc\u9589",
+            "open": "\u958b\u555f",
+            "tilt": "\u50be\u659c"
         }
     }
 }

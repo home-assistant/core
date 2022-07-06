@@ -809,3 +809,53 @@ async def test_discovery_adds_missing_ip_id_only(hass: HomeAssistant):
     assert result["type"] == RESULT_TYPE_ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[CONF_HOST] == IP_ADDRESS
+
+
+@pytest.mark.parametrize(
+    "source, data",
+    [
+        (
+            config_entries.SOURCE_DHCP,
+            dhcp.DhcpServiceInfo(
+                ip=IP_ADDRESS, macaddress="aa:bb:cc:dd:ee:ff", hostname="mock_hostname"
+            ),
+        ),
+        (
+            config_entries.SOURCE_HOMEKIT,
+            zeroconf.ZeroconfServiceInfo(
+                host=IP_ADDRESS,
+                addresses=[IP_ADDRESS],
+                hostname="mock_hostname",
+                name="mock_name",
+                port=None,
+                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                type="mock_type",
+            ),
+        ),
+    ],
+)
+async def test_discovered_during_onboarding(hass, source, data):
+    """Test we create a config entry when discovered during onboarding."""
+    mocked_bulb = _mocked_bulb()
+    with _patch_discovery(), _patch_discovery_interval(), patch(
+        f"{MODULE_CONFIG_FLOW}.AsyncBulb", return_value=mocked_bulb
+    ), patch(f"{MODULE}.async_setup", return_value=True) as mock_async_setup, patch(
+        f"{MODULE}.async_setup_entry", return_value=True
+    ) as mock_async_setup_entry, patch(
+        "homeassistant.components.onboarding.async_is_onboarded", return_value=False
+    ) as mock_is_onboarded:
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": source}, data=data
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == "create_entry"
+    assert result["data"] == {
+        CONF_HOST: IP_ADDRESS,
+        CONF_ID: "0x000000000015243f",
+        CONF_MODEL: MODEL,
+    }
+    assert mock_async_setup.called
+    assert mock_async_setup_entry.called
+    assert mock_is_onboarded.called

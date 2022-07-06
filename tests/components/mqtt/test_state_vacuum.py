@@ -31,6 +31,7 @@ from homeassistant.const import (
     CONF_PLATFORM,
     ENTITY_MATCH_ALL,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -85,6 +86,13 @@ DEFAULT_CONFIG = {
 DEFAULT_CONFIG_2 = {
     vacuum.DOMAIN: {"platform": "mqtt", "schema": "state", "name": "test"}
 }
+
+
+@pytest.fixture(autouse=True)
+def vacuum_platform_only():
+    """Only setup the vacuum platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.VACUUM]):
+        yield
 
 
 async def test_default_supported_features(hass, mqtt_mock_entry_with_yaml_config):
@@ -692,13 +700,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = vacuum.DOMAIN
     config = deepcopy(DEFAULT_CONFIG)
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

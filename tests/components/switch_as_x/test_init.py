@@ -365,8 +365,8 @@ async def test_setup_and_remove_config_entry(
 @pytest.mark.parametrize(
     "hidden_by_before,hidden_by_after",
     (
-        (er.RegistryEntryHider.USER.value, er.RegistryEntryHider.USER.value),
-        (er.RegistryEntryHider.INTEGRATION.value, None),
+        (er.RegistryEntryHider.USER, er.RegistryEntryHider.USER),
+        (er.RegistryEntryHider.INTEGRATION, None),
     ),
 )
 @pytest.mark.parametrize("target_domain", PLATFORMS_TO_TEST)

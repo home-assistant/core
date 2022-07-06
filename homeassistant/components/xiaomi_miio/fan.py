@@ -1,8 +1,11 @@
 """Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier."""
+from __future__ import annotations
+
 from abc import abstractmethod
 import asyncio
 import logging
 import math
+from typing import Any
 
 from miio.airfresh import OperationMode as AirfreshOperationMode
 from miio.airfresh_t2017 import OperationMode as AirfreshOperationModeT2017
@@ -291,30 +294,30 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         """Hold operation mode class."""
 
     @property
-    def preset_modes(self) -> list:
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return self._preset_modes
 
     @property
-    def percentage(self):
+    def percentage(self) -> None:
         """Return the percentage based speed of the fan."""
         return None
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         return self._state_attrs
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._state
 
     async def async_turn_on(
         self,
-        percentage: int = None,
-        preset_mode: str = None,
-        **kwargs,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
     ) -> None:
         """Turn the device on."""
         result = await self._try_command(
@@ -331,7 +334,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         result = await self._try_command(
             "Turning the miio device off failed.", self._device.off
@@ -352,12 +355,12 @@ class XiaomiGenericAirPurifier(XiaomiGenericDevice):
         self._speed_count = 100
 
     @property
-    def speed_count(self):
+    def speed_count(self) -> int:
         """Return the number of speeds of the fan supported."""
         return self._speed_count
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Get the active preset mode."""
         if self._state:
             preset_mode = self.operation_mode_class(self._mode).name
@@ -451,7 +454,7 @@ class XiaomiAirPurifier(XiaomiGenericAirPurifier):
         return AirpurifierOperationMode
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._state:
             mode = self.operation_mode_class(self._mode)
@@ -528,7 +531,7 @@ class XiaomiAirPurifierMiot(XiaomiAirPurifier):
         return AirpurifierMiotOperationMode
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._fan_level is None:
             return None
@@ -642,7 +645,7 @@ class XiaomiAirFresh(XiaomiGenericAirPurifier):
         return AirfreshOperationMode
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._state:
             mode = AirfreshOperationMode(self._mode)
@@ -733,7 +736,7 @@ class XiaomiAirFreshA1(XiaomiGenericAirPurifier):
         return AirfreshOperationModeT2017
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current percentage based speed."""
         if self._favorite_speed is None:
             return None
@@ -826,17 +829,17 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         self._percentage = None
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Get the active preset mode."""
         return self._preset_mode
 
     @property
-    def preset_modes(self) -> list:
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return [mode.name for mode in self.operation_mode_class]
 
     @property
-    def percentage(self):
+    def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         if self._state:
             return self._percentage
@@ -844,7 +847,7 @@ class XiaomiGenericFan(XiaomiGenericDevice):
         return None
 
     @property
-    def oscillating(self):
+    def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._oscillating
 
@@ -890,12 +893,12 @@ class XiaomiFan(XiaomiGenericFan):
         """Hold operation mode class."""
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str:
         """Get the active preset mode."""
         return ATTR_MODE_NATURE if self._nature_mode else ATTR_MODE_NORMAL
 
     @property
-    def preset_modes(self) -> list:
+    def preset_modes(self) -> list[str]:
         """Get the list of available preset modes."""
         return [ATTR_MODE_NATURE, ATTR_MODE_NORMAL]
 
@@ -1030,7 +1033,7 @@ class XiaomiFanMiot(XiaomiGenericFan):
         return FanOperationMode
 
     @property
-    def preset_mode(self):
+    def preset_mode(self) -> str | None:
         """Get the active preset mode."""
         return self._preset_mode
 

@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Hive Login",
-        "description": "Enter your Hive login information and configuration.",
+        "description": "Enter your Hive login information.",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]",
@@ -16,6 +16,13 @@
         "data": {
           "2fa": "Two-factor code"
         }
+      },
+      "configuration": {
+        "data": {
+          "device_name": "Device Name"
+        },
+        "description": "Enter your Hive configuration ",
+        "title": "Hive Configuration."
       },
       "reauth": {
         "title": "Hive Login",

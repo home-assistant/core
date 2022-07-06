@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bimmer_connected.account import MyBMWAccount
+from bimmer_connected.api.authentication import MyBMWAuthentication
 from bimmer_connected.api.regions import get_region_from_name
 from httpx import HTTPError
 import voluptuous as vol
@@ -14,7 +14,7 @@ from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from . import DOMAIN
-from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY
+from .const import CONF_ALLOWED_REGIONS, CONF_READ_ONLY, CONF_REFRESH_TOKEN
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -32,19 +32,22 @@ async def validate_input(
 
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
-    account = MyBMWAccount(
+    auth = MyBMWAuthentication(
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
         get_region_from_name(data[CONF_REGION]),
     )
 
     try:
-        await account.get_vehicles()
+        await auth.login()
     except HTTPError as ex:
         raise CannotConnect from ex
 
     # Return info that you want to store in the config entry.
-    return {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
+    retval = {"title": f"{data[CONF_USERNAME]}{data.get(CONF_SOURCE, '')}"}
+    if auth.refresh_token:
+        retval[CONF_REFRESH_TOKEN] = auth.refresh_token
+    return retval
 
 
 class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -70,7 +73,13 @@ class BMWConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             if info:
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title=info["title"],
+                    data={
+                        **user_input,
+                        CONF_REFRESH_TOKEN: info.get(CONF_REFRESH_TOKEN),
+                    },
+                )
 
         return self.async_show_form(
             step_id="user", data_schema=DATA_SCHEMA, errors=errors

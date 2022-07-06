@@ -17,6 +17,9 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_registry import EntityRegistry
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 from tests.components.august.mocks import (
@@ -318,3 +321,46 @@ async def test_load_unload(hass):
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def remove_device(ws_client, device_id, config_entry_id):
+    """Remove config entry from a device."""
+    await ws_client.send_json(
+        {
+            "id": 5,
+            "type": "config/device_registry/remove_config_entry",
+            "config_entry_id": config_entry_id,
+            "device_id": device_id,
+        }
+    )
+    response = await ws_client.receive_json()
+    return response["success"]
+
+
+async def test_device_remove_devices(hass, hass_ws_client):
+    """Test we can only remove a device that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+    august_operative_lock = await _mock_operative_august_lock_detail(hass)
+    config_entry = await _create_august_with_devices(hass, [august_operative_lock])
+    registry: EntityRegistry = er.async_get(hass)
+    entity = registry.entities["lock.a6697750d607098bae8d6baa11ef8063_name"]
+
+    device_registry = dr.async_get(hass)
+    device_entry = device_registry.async_get(entity.device_id)
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), device_entry.id, config_entry.entry_id
+        )
+        is False
+    )
+
+    dead_device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "remove-device-id")},
+    )
+    assert (
+        await remove_device(
+            await hass_ws_client(hass), dead_device_entry.id, config_entry.entry_id
+        )
+        is True
+    )

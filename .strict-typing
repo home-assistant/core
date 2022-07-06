@@ -83,9 +83,11 @@ homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
+homeassistant.components.emulated_hue.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.filesize.*
 homeassistant.components.fitbit.*
@@ -113,6 +115,7 @@ homeassistant.components.homekit.aidmanager
 homeassistant.components.homekit.config_flow
 homeassistant.components.homekit.diagnostics
 homeassistant.components.homekit.logbook
+homeassistant.components.homekit.type_locks
 homeassistant.components.homekit.type_triggers
 homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
@@ -127,7 +130,6 @@ homeassistant.components.homewizard.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
 homeassistant.components.hyperion.*
-homeassistant.components.ialarm_xr.*
 homeassistant.components.image_processing.*
 homeassistant.components.input_button.*
 homeassistant.components.input_select.*
@@ -196,6 +198,7 @@ homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
+homeassistant.components.sensibo.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
 homeassistant.components.senz.*
@@ -224,6 +227,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tolo.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*

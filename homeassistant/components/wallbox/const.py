@@ -41,6 +41,7 @@ class ChargerStatus(StrEnum):
     ERROR = "Error"
     READY = "Ready"
     LOCKED = "Locked"
+    LOCKED_CAR_CONNECTED = "Locked, car connected"
     UPDATING = "Updating"
     WAITING_IN_QUEUE_POWER_SHARING = "Waiting in queue by Power Sharing"
     WAITING_IN_QUEUE_POWER_BOOST = "Waiting in queue by Power Boost"

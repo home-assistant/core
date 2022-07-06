@@ -1,5 +1,4 @@
 """Tests for Transmission config flow."""
-from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
@@ -8,15 +7,7 @@ from transmissionrpc.error import TransmissionError
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components import transmission
 from homeassistant.components.transmission import config_flow
-from homeassistant.components.transmission.const import (
-    CONF_LIMIT,
-    CONF_ORDER,
-    DEFAULT_LIMIT,
-    DEFAULT_NAME,
-    DEFAULT_ORDER,
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-)
+from homeassistant.components.transmission.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.const import (
     CONF_HOST,
     CONF_NAME,
@@ -153,51 +144,6 @@ async def test_options(hass):
     assert result["data"][CONF_SCAN_INTERVAL] == 10
 
 
-async def test_import(hass, api):
-    """Test import step."""
-    flow = init_config_flow(hass)
-
-    # import with minimum fields only
-    result = await flow.async_step_import(
-        {
-            CONF_NAME: DEFAULT_NAME,
-            CONF_HOST: HOST,
-            CONF_PORT: DEFAULT_PORT,
-            CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            CONF_LIMIT: DEFAULT_LIMIT,
-            CONF_ORDER: DEFAULT_ORDER,
-        }
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == DEFAULT_NAME
-    assert result["data"][CONF_NAME] == DEFAULT_NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_PORT] == DEFAULT_PORT
-    assert result["data"][CONF_SCAN_INTERVAL] == DEFAULT_SCAN_INTERVAL
-
-    # import with all
-    result = await flow.async_step_import(
-        {
-            CONF_NAME: NAME,
-            CONF_HOST: HOST,
-            CONF_USERNAME: USERNAME,
-            CONF_PASSWORD: PASSWORD,
-            CONF_PORT: PORT,
-            CONF_SCAN_INTERVAL: timedelta(seconds=SCAN_INTERVAL),
-            CONF_LIMIT: DEFAULT_LIMIT,
-            CONF_ORDER: DEFAULT_ORDER,
-        }
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == NAME
-    assert result["data"][CONF_NAME] == NAME
-    assert result["data"][CONF_HOST] == HOST
-    assert result["data"][CONF_USERNAME] == USERNAME
-    assert result["data"][CONF_PASSWORD] == PASSWORD
-    assert result["data"][CONF_PORT] == PORT
-    assert result["data"][CONF_SCAN_INTERVAL] == SCAN_INTERVAL
-
-
 async def test_host_already_configured(hass, api):
     """Test host is already configured."""
     entry = MockConfigEntry(
@@ -311,3 +257,99 @@ async def test_error_on_unknown_error(hass, unknown_error):
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
     assert result["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reauth_success(hass, api):
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=transmission.DOMAIN,
+        data=MOCK_ENTRY,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_ENTRY,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+    assert result["description_placeholders"] == {CONF_USERNAME: USERNAME}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result2["type"] == "abort"
+    assert result2["reason"] == "reauth_successful"
+
+
+async def test_reauth_failed(hass, auth_error):
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=transmission.DOMAIN,
+        data=MOCK_ENTRY,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_ENTRY,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {
+        CONF_PASSWORD: "invalid_auth",
+    }
+
+
+async def test_reauth_failed_conn_error(hass, conn_error):
+    """Test we can reauth."""
+    entry = MockConfigEntry(
+        domain=transmission.DOMAIN,
+        data=MOCK_ENTRY,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        transmission.DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": entry.entry_id,
+        },
+        data=MOCK_ENTRY,
+    )
+
+    assert result["type"] == "form"
+    assert result["step_id"] == "reauth_confirm"
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-wrong-password",
+        },
+    )
+
+    assert result2["type"] == "form"
+    assert result2["errors"] == {"base": "cannot_connect"}

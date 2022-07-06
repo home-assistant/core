@@ -56,6 +56,7 @@ NO_IOT_CLASS = [
     "hardware",
     "history",
     "homeassistant",
+    "homeassistant_yellow",
     "image",
     "input_boolean",
     "input_button",

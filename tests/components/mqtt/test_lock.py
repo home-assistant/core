@@ -18,6 +18,7 @@ from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -56,6 +57,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     LOCK_DOMAIN: {"platform": "mqtt", "name": "test", "command_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def lock_platform_only():
+    """Only setup the lock platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.LOCK]):
+        yield
 
 
 async def test_controlling_state_via_topic(hass, mqtt_mock_entry_with_yaml_config):
@@ -738,7 +746,5 @@ async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

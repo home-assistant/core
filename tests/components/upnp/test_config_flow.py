@@ -1,7 +1,7 @@
 """Test UPnP/IGD config flow."""
 
 from copy import deepcopy
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -14,6 +14,7 @@ from homeassistant.components.upnp.const import (
     CONFIG_ENTRY_ST,
     CONFIG_ENTRY_UDN,
     DOMAIN,
+    ST_IGD_V1,
 )
 from homeassistant.core import HomeAssistant
 
@@ -75,12 +76,34 @@ async def test_flow_ssdp_incomplete_discovery(hass: HomeAssistant):
             ssdp_st=TEST_ST,
             ssdp_location=TEST_LOCATION,
             upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: ST_IGD_V1,
                 # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
             },
         ),
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "incomplete_discovery"
+
+
+@pytest.mark.usefixtures("mock_get_source_ip")
+async def test_flow_ssdp_non_igd_device(hass: HomeAssistant):
+    """Test config flow: incomplete discovery through ssdp."""
+    # Discovered via step ssdp.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=ssdp.SsdpServiceInfo(
+            ssdp_usn=TEST_USN,
+            ssdp_st=TEST_ST,
+            ssdp_location=TEST_LOCATION,
+            upnp={
+                ssdp.ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:WFADevice:1",  # Non-IGD
+                ssdp.ATTR_UPNP_UDN: TEST_UDN,
+            },
+        ),
+    )
+    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["reason"] == "non_igd_device"
 
 
 @pytest.mark.usefixtures(
@@ -338,100 +361,6 @@ async def test_flow_user_no_discovery(hass: HomeAssistant):
     """Test config flow: user, but no discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "no_devices_found"
-
-
-@pytest.mark.usefixtures(
-    "ssdp_instant_discovery",
-    "mock_setup_entry",
-    "mock_get_source_ip",
-    "mock_mac_address_from_host",
-)
-async def test_flow_import(hass: HomeAssistant):
-    """Test config flow: configured through configuration.yaml."""
-    # Discovered via step import.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["title"] == TEST_FRIENDLY_NAME
-    assert result["data"] == {
-        CONFIG_ENTRY_ST: TEST_ST,
-        CONFIG_ENTRY_UDN: TEST_UDN,
-        CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
-        CONFIG_ENTRY_LOCATION: TEST_LOCATION,
-        CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
-    }
-
-
-@pytest.mark.usefixtures(
-    "mock_get_source_ip",
-)
-async def test_flow_import_incomplete_discovery(hass: HomeAssistant):
-    """Test config flow: configured through configuration.yaml, but incomplete discovery."""
-    incomplete_discovery = ssdp.SsdpServiceInfo(
-        ssdp_usn=TEST_USN,
-        ssdp_st=TEST_ST,
-        ssdp_location=TEST_LOCATION,
-        upnp={
-            # ssdp.ATTR_UPNP_UDN: TEST_UDN,  # Not provided.
-        },
-    )
-
-    async def register_callback(hass, callback, match_dict):
-        """Immediately do callback."""
-        await callback(incomplete_discovery, ssdp.SsdpChange.ALIVE)
-        return MagicMock()
-
-    with patch(
-        "homeassistant.components.ssdp.async_register_callback",
-        side_effect=register_callback,
-    ), patch(
-        "homeassistant.components.upnp.ssdp.async_get_discovery_info_by_st",
-        return_value=[incomplete_discovery],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-        )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "incomplete_discovery"
-
-
-@pytest.mark.usefixtures("ssdp_instant_discovery", "mock_get_source_ip")
-async def test_flow_import_already_configured(hass: HomeAssistant):
-    """Test config flow: configured through configuration.yaml, but existing config entry."""
-    # Existing entry.
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_USN,
-        data={
-            CONFIG_ENTRY_ST: TEST_ST,
-            CONFIG_ENTRY_UDN: TEST_UDN,
-            CONFIG_ENTRY_ORIGINAL_UDN: TEST_UDN,
-            CONFIG_ENTRY_LOCATION: TEST_LOCATION,
-            CONFIG_ENTRY_MAC_ADDRESS: TEST_MAC_ADDRESS,
-        },
-        state=config_entries.ConfigEntryState.LOADED,
-    )
-    entry.add_to_hass(hass)
-
-    # Discovered via step import.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
-    )
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
-    assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("ssdp_no_discovery", "mock_get_source_ip")
-async def test_flow_import_no_devices_found(hass: HomeAssistant):
-    """Test config flow: no devices found, configured through configuration.yaml."""
-    # Discovered via step import.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_IMPORT}
     )
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "no_devices_found"

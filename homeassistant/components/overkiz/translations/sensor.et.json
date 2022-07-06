@@ -36,6 +36,11 @@
         "overkiz__sensor_room": {
             "clean": "Puhas",
             "dirty": "R\u00e4pane"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Suletud",
+            "open": "Avatud",
+            "tilt": "Kallutamine"
         }
     }
 }
