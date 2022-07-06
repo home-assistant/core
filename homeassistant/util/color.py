@@ -77,7 +77,7 @@ COLORS = {
     "gold": RGBColor(255, 215, 0),
     "goldenrod": RGBColor(218, 165, 32),
     "gray": RGBColor(128, 128, 128),
-    "green": RGBColor(0, 128, 0),
+    "green": RGBColor(0, 255, 0),
     "greenyellow": RGBColor(173, 255, 47),
     "grey": RGBColor(128, 128, 128),
     "honeydew": RGBColor(240, 255, 240),
