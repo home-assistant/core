@@ -15,7 +15,7 @@ from .entity import SonosEntity
 from .helpers import soco_error
 from .speaker import SonosSpeaker
 
-LEVEL_TYPES = {
+LEVEL_TYPES: dict[str, tuple[int, int]] = {
     "audio_delay": (0, 5),
     "bass": (-10, 10),
     "treble": (-10, 10),
@@ -34,8 +34,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Sonos number platform from a config entry."""
 
-    def available_soco_attributes(speaker: SonosSpeaker) -> list[str]:
-        features = []
+    def available_soco_attributes(
+        speaker: SonosSpeaker,
+    ) -> list[tuple[str, tuple[int, int]]]:
+        features: list[tuple[str, tuple[int, int]]] = []
         for level_type, valid_range in LEVEL_TYPES.items():
             if (state := getattr(speaker.soco, level_type, None)) is not None:
                 setattr(speaker, level_type, state)
@@ -67,7 +69,7 @@ class SonosLevelEntity(SonosEntity, NumberEntity):
     _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
-        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int]
+        self, speaker: SonosSpeaker, level_type: str, valid_range: tuple[int, int]
     ) -> None:
         """Initialize the level entity."""
         super().__init__(speaker)
