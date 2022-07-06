@@ -18,10 +18,6 @@ import homeassistant.util.dt as dt_util
 from .const import DOMAIN
 from .hub import Device, MikrotikDataUpdateCoordinator
 
-# These are normalized to ATTR_IP and ATTR_MAC to conform
-# to device_tracker
-FILTER_ATTRS = ("ip_address", "mac_address")
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -136,6 +132,4 @@ class MikrotikDataUpdateCoordinatorTracker(
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
-        if self.is_connected:
-            return {k: v for k, v in self.device.attrs.items() if k not in FILTER_ATTRS}
-        return None
+        return self.device.attrs if self.is_connected else None
