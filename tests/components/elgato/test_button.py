@@ -8,6 +8,7 @@ from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRE
 from homeassistant.components.elgato.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
 
@@ -68,17 +69,19 @@ async def test_button_identify_error(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_elgato: MagicMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test an error occurs with the Elgato identify button."""
     mock_elgato.identify.side_effect = ElgatoError
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.identify"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError, match="An error occurred while identifying the Elgato Light"
+    ):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.identify"},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
 
     assert len(mock_elgato.identify.mock_calls) == 1
-    assert "An error occurred while identifying the Elgato Light" in caplog.text

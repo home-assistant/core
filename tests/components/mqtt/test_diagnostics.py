@@ -1,11 +1,12 @@
 """Test MQTT diagnostics."""
 
 import json
-from unittest.mock import ANY
+from unittest.mock import ANY, patch
 
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.const import Platform
 
 from tests.common import async_fire_mqtt_message, mock_device_registry
 from tests.components.diagnostics import (
@@ -31,14 +32,27 @@ default_config = {
 }
 
 
+@pytest.fixture(autouse=True)
+def device_tracker_sensor_only():
+    """Only setup the device_tracker and sensor platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.mqtt.PLATFORMS",
+        [Platform.DEVICE_TRACKER, Platform.SENSOR],
+    ):
+        yield
+
+
 @pytest.fixture
 def device_reg(hass):
     """Return an empty, loaded, registry."""
     return mock_device_registry(hass)
 
 
-async def test_entry_diagnostics(hass, device_reg, hass_client, mqtt_mock):
+async def test_entry_diagnostics(
+    hass, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
+):
     """Test config entry diagnostics."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
     mqtt_mock.connected = True
 
@@ -154,8 +168,11 @@ async def test_entry_diagnostics(hass, device_reg, hass_client, mqtt_mock):
         }
     ],
 )
-async def test_redact_diagnostics(hass, device_reg, hass_client, mqtt_mock):
+async def test_redact_diagnostics(
+    hass, device_reg, hass_client, mqtt_mock_entry_no_yaml_config
+):
     """Test redacting diagnostics."""
+    mqtt_mock = await mqtt_mock_entry_no_yaml_config()
     expected_config = dict(default_config)
     expected_config["password"] = "**REDACTED**"
     expected_config["username"] = "**REDACTED**"

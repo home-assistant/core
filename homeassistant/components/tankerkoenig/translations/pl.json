@@ -1,13 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana"
+            "already_configured": "Lokalizacja jest ju\u017c skonfigurowana",
+            "reauth_successful": "Ponowne uwierzytelnienie powiod\u0142o si\u0119"
         },
         "error": {
             "invalid_auth": "Niepoprawne uwierzytelnienie",
             "no_stations": "Nie mo\u017cna znale\u017a\u0107 \u017cadnej stacji w zasi\u0119gu."
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "api_key": "Klucz API"
+                }
+            },
             "select_station": {
                 "data": {
                     "stations": "Stacje"

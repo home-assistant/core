@@ -6,8 +6,8 @@ from intellifire4py.exceptions import LoginException
 from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.intellifire.config_flow import MANUAL_ENTRY_STRING
-from homeassistant.components.intellifire.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.intellifire.const import CONF_USER_ID, DOMAIN
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import (
     RESULT_TYPE_ABORT,
@@ -20,9 +20,10 @@ from tests.components.intellifire.conftest import mock_api_connection_error
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
     login=AsyncMock(),
-    get_username=AsyncMock(return_value="intellifire"),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_no_discovery(
     hass: HomeAssistant,
@@ -64,14 +65,17 @@ async def test_no_discovery(
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test",
         CONF_PASSWORD: "AROONIE",
+        CONF_API_KEY: "key",
+        CONF_USER_ID: "intellifire",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
     login=AsyncMock(side_effect=mock_api_connection_error()),
-    get_username=AsyncMock(return_value="intellifire"),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_single_discovery(
     hass: HomeAssistant,
@@ -101,8 +105,10 @@ async def test_single_discovery(
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
-    login=AsyncMock(side_effect=LoginException()),
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
+    login=AsyncMock(side_effect=LoginException),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_single_discovery_loign_error(
     hass: HomeAssistant,
@@ -265,9 +271,10 @@ async def test_picker_already_discovered(
 
 
 @patch.multiple(
-    "homeassistant.components.intellifire.config_flow.IntellifireControlAsync",
+    "homeassistant.components.intellifire.config_flow.IntellifireAPICloud",
     login=AsyncMock(),
-    get_username=AsyncMock(return_value="intellifire"),
+    get_user_id=MagicMock(return_value="intellifire"),
+    get_fireplace_api_key=MagicMock(return_value="key"),
 )
 async def test_reauth_flow(
     hass: HomeAssistant,

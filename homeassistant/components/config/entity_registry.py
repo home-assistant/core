@@ -29,7 +29,22 @@ def websocket_list_entities(hass, connection, msg):
     registry = er.async_get(hass)
     connection.send_message(
         websocket_api.result_message(
-            msg["id"], [_entry_dict(entry) for entry in registry.entities.values()]
+            msg["id"],
+            [
+                {
+                    "area_id": entry.area_id,
+                    "config_entry_id": entry.config_entry_id,
+                    "device_id": entry.device_id,
+                    "disabled_by": entry.disabled_by,
+                    "entity_category": entry.entity_category,
+                    "entity_id": entry.entity_id,
+                    "hidden_by": entry.hidden_by,
+                    "icon": entry.icon,
+                    "name": entry.name,
+                    "platform": entry.platform,
+                }
+                for entry in registry.entities.values()
+            ],
         )
     )
 
@@ -196,7 +211,7 @@ def websocket_remove_entity(hass, connection, msg):
 
 
 @callback
-def _entry_dict(entry):
+def _entry_ext_dict(entry):
     """Convert entry to API format."""
     return {
         "area_id": entry.area_id,
@@ -209,18 +224,12 @@ def _entry_dict(entry):
         "icon": entry.icon,
         "name": entry.name,
         "platform": entry.platform,
+        "capabilities": entry.capabilities,
+        "device_class": entry.device_class,
+        "has_entity_name": entry.has_entity_name,
+        "options": entry.options,
+        "original_device_class": entry.original_device_class,
+        "original_icon": entry.original_icon,
+        "original_name": entry.original_name,
+        "unique_id": entry.unique_id,
     }
-
-
-@callback
-def _entry_ext_dict(entry):
-    """Convert entry to API format."""
-    data = _entry_dict(entry)
-    data["capabilities"] = entry.capabilities
-    data["device_class"] = entry.device_class
-    data["options"] = entry.options
-    data["original_device_class"] = entry.original_device_class
-    data["original_icon"] = entry.original_icon
-    data["original_name"] = entry.original_name
-    data["unique_id"] = entry.unique_id
-    return data

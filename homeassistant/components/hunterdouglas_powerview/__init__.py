@@ -19,28 +19,14 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import (
     API_PATH_FWVERSION,
-    COORDINATOR,
     DEFAULT_LEGACY_MAINPROCESSOR,
-    DEVICE_FIRMWARE,
-    DEVICE_INFO,
-    DEVICE_MAC_ADDRESS,
-    DEVICE_MODEL,
-    DEVICE_NAME,
-    DEVICE_REVISION,
-    DEVICE_SERIAL_NUMBER,
     DOMAIN,
     FIRMWARE,
     FIRMWARE_MAINPROCESSOR,
     FIRMWARE_NAME,
-    FIRMWARE_REVISION,
     HUB_EXCEPTIONS,
     HUB_NAME,
     MAC_ADDRESS_IN_USERDATA,
-    PV_API,
-    PV_ROOM_DATA,
-    PV_SCENE_DATA,
-    PV_SHADE_DATA,
-    PV_SHADES,
     ROOM_DATA,
     SCENE_DATA,
     SERIAL_NUMBER_IN_USERDATA,
@@ -48,6 +34,7 @@ from .const import (
     USER_DATA,
 )
 from .coordinator import PowerviewShadeUpdateCoordinator
+from .model import PowerviewDeviceInfo, PowerviewEntryData
 from .shade_data import PowerviewShadeData
 from .util import async_map_data_by_id
 
@@ -55,7 +42,7 @@ PARALLEL_UPDATES = 1
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
-PLATFORMS = [Platform.COVER, Platform.SCENE, Platform.SENSOR]
+PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SCENE, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -71,7 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         async with async_timeout.timeout(10):
-            device_info = await async_get_device_info(pv_request)
+            device_info = await async_get_device_info(pv_request, hub_address)
 
         async with async_timeout.timeout(10):
             rooms = Rooms(pv_request)
@@ -85,9 +72,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async with async_timeout.timeout(10):
             shades = Shades(pv_request)
-            shade_data = async_map_data_by_id(
-                (await shades.get_resources())[SHADE_DATA]
-            )
+            shade_entries = await shades.get_resources()
+            shade_data = async_map_data_by_id(shade_entries[SHADE_DATA])
+
     except HUB_EXCEPTIONS as err:
         raise ConfigEntryNotReady(
             f"Connection error to PowerView hub: {hub_address}: {err}"
@@ -97,22 +84,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = PowerviewShadeUpdateCoordinator(hass, shades, hub_address)
     coordinator.async_set_updated_data(PowerviewShadeData())
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        PV_API: pv_request,
-        PV_ROOM_DATA: room_data,
-        PV_SCENE_DATA: scene_data,
-        PV_SHADES: shades,
-        PV_SHADE_DATA: shade_data,
-        COORDINATOR: coordinator,
-        DEVICE_INFO: device_info,
-    }
+    # populate raw shade data into the coordinator for diagnostics
+    coordinator.data.store_group_data(shade_entries[SHADE_DATA])
+
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = PowerviewEntryData(
+        api=pv_request,
+        room_data=room_data,
+        scene_data=scene_data,
+        shade_data=shade_data,
+        coordinator=coordinator,
+        device_info=device_info,
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
 
-async def async_get_device_info(pv_request):
+async def async_get_device_info(
+    pv_request: AioRequest, hub_address: str
+) -> PowerviewDeviceInfo:
     """Determine device info."""
     userdata = UserData(pv_request)
     resources = await userdata.get_resources()
@@ -130,14 +121,14 @@ async def async_get_device_info(pv_request):
         else:
             main_processor_info = DEFAULT_LEGACY_MAINPROCESSOR
 
-    return {
-        DEVICE_NAME: base64_to_unicode(userdata_data[HUB_NAME]),
-        DEVICE_MAC_ADDRESS: userdata_data[MAC_ADDRESS_IN_USERDATA],
-        DEVICE_SERIAL_NUMBER: userdata_data[SERIAL_NUMBER_IN_USERDATA],
-        DEVICE_REVISION: main_processor_info[FIRMWARE_REVISION],
-        DEVICE_FIRMWARE: main_processor_info,
-        DEVICE_MODEL: main_processor_info[FIRMWARE_NAME],
-    }
+    return PowerviewDeviceInfo(
+        name=base64_to_unicode(userdata_data[HUB_NAME]),
+        mac_address=userdata_data[MAC_ADDRESS_IN_USERDATA],
+        serial_number=userdata_data[SERIAL_NUMBER_IN_USERDATA],
+        firmware=main_processor_info,
+        model=main_processor_info[FIRMWARE_NAME],
+        hub_address=hub_address,
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

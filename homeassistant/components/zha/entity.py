@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import functools
 import logging
 from typing import TYPE_CHECKING, Any
@@ -29,7 +30,6 @@ from .core.const import (
     SIGNAL_REMOVE,
 )
 from .core.helpers import LogMixin
-from .core.typing import CALLABLE_T, ChannelType, ZhaDeviceType
 
 if TYPE_CHECKING:
     from .core.channels.base import ZigbeeChannel
@@ -57,7 +57,7 @@ class BaseZhaEntity(LogMixin, entity.Entity):
         self._state: Any = None
         self._extra_state_attributes: dict[str, Any] = {}
         self._zha_device = zha_device
-        self._unsubs: list[CALLABLE_T] = []
+        self._unsubs: list[Callable[[], None]] = []
         self.remove_future: asyncio.Future[Any] = asyncio.Future()
 
     @property
@@ -127,13 +127,18 @@ class BaseZhaEntity(LogMixin, entity.Entity):
 
     @callback
     def async_accept_signal(
-        self, channel: ChannelType, signal: str, func: CALLABLE_T, signal_override=False
+        self,
+        channel: ZigbeeChannel | None,
+        signal: str,
+        func: Callable[..., Any],
+        signal_override=False,
     ):
         """Accept a signal from a channel."""
         unsub = None
         if signal_override:
             unsub = async_dispatcher_connect(self.hass, signal, func)
         else:
+            assert channel
             unsub = async_dispatcher_connect(
                 self.hass, f"{channel.unique_id}_{signal}", func
             )
@@ -181,8 +186,8 @@ class ZhaEntity(BaseZhaEntity, RestoreEntity):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -301,7 +306,7 @@ class ZhaGroupEntity(BaseZhaEntity):
         if self._change_listener_debouncer is None:
             self._change_listener_debouncer = Debouncer(
                 self.hass,
-                self,
+                _LOGGER,
                 cooldown=UPDATE_GROUP_FROM_CHILD_DELAY,
                 immediate=False,
                 function=functools.partial(self.async_update_ha_state, True),
@@ -321,6 +326,7 @@ class ZhaGroupEntity(BaseZhaEntity):
     def async_state_changed_listener(self, event: Event):
         """Handle child updates."""
         # Delay to ensure that we get updates from all members before updating the group
+        assert self._change_listener_debouncer
         self.hass.create_task(self._change_listener_debouncer.async_call())
 
     async def async_will_remove_from_hass(self) -> None:

@@ -20,6 +20,13 @@
                 "description": "Adja meg a Hive hiteles\u00edt\u00e9si k\u00f3dj\u00e1t. \n \n\u00cdrd be a 0000 k\u00f3dot m\u00e1sik k\u00f3d k\u00e9r\u00e9s\u00e9hez.",
                 "title": "Hive k\u00e9tfaktoros hiteles\u00edt\u00e9s."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Eszk\u00f6zn\u00e9v"
+                },
+                "description": "Adja meg Hive konfigur\u00e1ci\u00f3j\u00e1t",
+                "title": "Hive konfigur\u00e1ci\u00f3."
+            },
             "reauth": {
                 "data": {
                     "password": "Jelsz\u00f3",

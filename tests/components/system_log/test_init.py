@@ -53,7 +53,7 @@ async def get_error_log(hass_ws_client):
 def _generate_and_log_exception(exception, log):
     try:
         raise Exception(exception)
-    except:  # noqa: E722 pylint: disable=bare-except
+    except Exception:  # pylint: disable=broad-except
         _LOGGER.exception(log)
 
 
