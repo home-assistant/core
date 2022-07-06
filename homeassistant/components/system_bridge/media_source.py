@@ -1,11 +1,8 @@
 """System Bridge Media Source Implementation."""
 from __future__ import annotations
 
-import asyncio
-
-import async_timeout
 from systembridgeconnector.models.media_directories import MediaDirectories
-from systembridgeconnector.models.media_files import File as MediaFile
+from systembridgeconnector.models.media_files import File as MediaFile, MediaFiles
 
 from homeassistant.components.media_player.const import MEDIA_CLASS_DIRECTORY
 from homeassistant.components.media_source.const import (
@@ -73,13 +70,8 @@ class SystemBridgeSource(MediaSource):
             coordinator: SystemBridgeDataUpdateCoordinator = self.hass.data[DOMAIN].get(
                 entry.entry_id
             )
-            await coordinator.async_get_media_directories()
-
-            async with async_timeout.timeout(20):
-                while coordinator.data.media_directories is None:
-                    await asyncio.sleep(1)
-
-            return _build_root_paths(entry, coordinator.data.media_directories)
+            directories = await coordinator.async_get_media_directories()
+            return _build_root_paths(entry, directories)
 
         entry_id, path = item.identifier.split("~~", 1)
         entry = self.hass.config_entries.async_get_entry(entry_id)
@@ -90,15 +82,11 @@ class SystemBridgeSource(MediaSource):
 
         path_split = path.split("/", 1)
 
-        await coordinator.async_get_media_files(
+        files = await coordinator.async_get_media_files(
             path_split[0], path_split[1] if len(path_split) > 1 else None
         )
 
-        async with async_timeout.timeout(20):
-            while coordinator.data.media_files is None:
-                await asyncio.sleep(1)
-
-        return _build_media_items(entry, coordinator, path, item.identifier)
+        return _build_media_items(entry, files, path, item.identifier)
 
     def _build_bridges(self) -> BrowseMediaSource:
         """Build bridges for System Bridge media."""
@@ -172,7 +160,7 @@ def _build_root_paths(
 
 def _build_media_items(
     entry: ConfigEntry,
-    coordinator: SystemBridgeDataUpdateCoordinator,
+    media_files: MediaFiles,
     path: str,
     identifier: str,
 ) -> BrowseMediaSource:
@@ -187,7 +175,7 @@ def _build_media_items(
         can_expand=True,
         children=[
             _build_media_item(identifier, file)
-            for file in coordinator.data.media_files.files
+            for file in media_files.files
             if file.is_directory
             or (
                 file.is_file
@@ -200,18 +188,22 @@ def _build_media_items(
 
 def _build_media_item(
     path: str,
-    file: MediaFile,
+    media_file: MediaFile,
 ) -> BrowseMediaSource:
     """Build individual media item."""
-    ext = f"~~{file.mime_type}" if file.is_file and file.mime_type is not None else ""
+    ext = (
+        f"~~{media_file.mime_type}"
+        if media_file.is_file and media_file.mime_type is not None
+        else ""
+    )
     return BrowseMediaSource(
         domain=DOMAIN,
-        identifier=f"{path}/{file.name}{ext}",
+        identifier=f"{path}/{media_file.name}{ext}",
         media_class=MEDIA_CLASS_DIRECTORY
-        if file.is_directory or file.mime_type is None
-        else MEDIA_CLASS_MAP[file.mime_type.split("/", 1)[0]],
-        media_content_type=file.mime_type,
-        title=file.name,
-        can_play=file.is_file,
-        can_expand=file.is_directory,
+        if media_file.is_directory or media_file.mime_type is None
+        else MEDIA_CLASS_MAP[media_file.mime_type.split("/", 1)[0]],
+        media_content_type=media_file.mime_type,
+        title=media_file.name,
+        can_play=media_file.is_file,
+        can_expand=media_file.is_directory,
     )
