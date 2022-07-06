@@ -2128,7 +2128,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[async,encrypted]==2.5.0
 
 # homeassistant.components.satel_integra
-satel_integra==0.3.4
+satel_integra==0.3.7
 
 # homeassistant.components.dhcp
 scapy==2.4.5
