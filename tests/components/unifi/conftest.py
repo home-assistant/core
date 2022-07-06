@@ -18,6 +18,9 @@ def mock_unifi_websocket():
 
         def make_websocket_call(data: dict | None = None, state: str = ""):
             """Generate a websocket call."""
+            import pprint
+
+            pprint.pprint(["make_websocket_call", data, state])
             if data:
                 mock.return_value.data = data
                 mock.call_args[1]["callback"](SIGNAL_DATA)
