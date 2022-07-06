@@ -253,7 +253,7 @@ aioshelly==2.0.0
 aioskybell==22.6.1
 
 # homeassistant.components.slimproto
-aioslimproto==2.0.1
+aioslimproto==2.1.1
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
