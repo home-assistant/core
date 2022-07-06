@@ -816,6 +816,8 @@ build.json @home-assistant/supervisor
 /tests/components/pure_energie/ @klaasnicolaas
 /homeassistant/components/push/ @dgomes
 /tests/components/push/ @dgomes
+/homeassistant/components/pushover/ @engrbm87
+/tests/components/pushover/ @engrbm87
 /homeassistant/components/pvoutput/ @frenck
 /tests/components/pvoutput/ @frenck
 /homeassistant/components/pvpc_hourly_pricing/ @azogue
