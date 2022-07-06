@@ -1,9 +1,7 @@
 """The MPRIS media playback remote control integration."""
 from __future__ import annotations
 
-import asyncio
 import datetime
-import logging
 from typing import List
 
 from cryptography.hazmat.primitives.serialization import load_pem_private_key
@@ -22,9 +20,9 @@ from .const import (
     DOMAIN,
     ENTRY_CLIENT,
     ENTRY_MANAGER,
+    LOGGER as _LOGGER,
 )
 
-_LOGGER = logging.getLogger(__name__)
 MIN_TIME_BETWEEN_UPDATES = datetime.timedelta(seconds=5)
 PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 

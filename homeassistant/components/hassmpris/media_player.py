@@ -3,9 +3,8 @@ from __future__ import annotations
 
 import asyncio
 import json
-import logging
 import re
-from typing import Any, Dict, Optional, cast
+from typing import Any, Optional, cast
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -30,9 +29,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, ENTRY_CLIENT, ENTRY_PLAYERS, ENTRY_MANAGER
-
-_LOGGER = logging.getLogger(__name__)
+from .const import DOMAIN, ENTRY_CLIENT, ENTRY_MANAGER, ENTRY_PLAYERS, LOGGER as _LOGGER
 
 PLATFORM = "media_player"
 
@@ -153,6 +150,35 @@ class HASSMPRISEntity(MediaPlayerEntity):
         if self.hass:
             await self.async_update_ha_state(True)
 
+    async def update_mpris_properties(
+        self,
+        p: mpris_pb2.MPRISPlayerProperties,
+    ):
+        feats = self._attr_supported_features
+        if p.HasField("CanControl"):
+            if not p.CanControl:
+                feats = feats - SUPPORTED_MINIMAL
+            else:
+                feats = SUPPORTED_MINIMAL
+
+        for name, bitwisefield in {
+            "CanPlay": MediaPlayerEntityFeature.PLAY,
+            "CanPause": MediaPlayerEntityFeature.PAUSE,
+            "CanSeek": MediaPlayerEntityFeature.SEEK,
+        }.items():
+            if p.HasField(name):
+                val = getattr(p, name)
+                _LOGGER.debug("%s: setting bitfield for %s to %s", self.name, name, val)
+                if val:
+                    feats = feats | bitwisefield
+                else:
+                    feats = feats ^ bitwisefield
+
+        if feats != self._attr_supported_features:
+            self._attr_supported_features = feats
+            if self.hass:
+                await self.async_update_ha_state(True)
+
 
 class EntityManager:
     def __init__(
@@ -221,7 +247,7 @@ class EntityManager:
     async def stop(
         self,
         *unused_args: Any,
-        exception: Optional[Exception] = None,
+        exception: Exception | None = None,
     ):
         """Stops the loop."""
         try:
@@ -300,7 +326,6 @@ class EntityManager:
         _LOGGER.debug("Handling update: %s", discovery_data)
         state = STATE_IDLE
         fire_status_update_observed = False
-        fire_metadata_update_observed = False
         table = {
             mpris_pb2.PlayerStatus.GONE: STATE_OFF,
             mpris_pb2.PlayerStatus.APPEARED: STATE_IDLE,
@@ -317,9 +342,16 @@ class EntityManager:
                     "Invalid state %s",
                     discovery_data.status,
                 )
+
+        fire_metadata_update_observed = False
         if discovery_data.json_metadata:
             fire_metadata_update_observed = True
             metadata = json.loads(discovery_data.json_metadata)
+
+        fire_properties_update_observed = False
+        if discovery_data.HasField("properties"):
+            fire_properties_update_observed = True
+            mpris_properties = discovery_data.properties
 
         player_id = discovery_data.player_id
 
@@ -334,6 +366,8 @@ class EntityManager:
             await entity.update_state(state)
         if fire_metadata_update_observed:
             await entity.update_metadata(metadata)
+        if fire_properties_update_observed:
+            await entity.update_mpris_properties(mpris_properties)
 
 
 async def async_setup_entry(

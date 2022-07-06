@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import logging
 from typing import Any
 
 from cryptography.hazmat.primitives import serialization
@@ -11,15 +10,18 @@ import pskca
 from shortauthstrings import emoji
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
-
 from homeassistant import config_entries
+from homeassistant.components import zeroconf
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
-from .const import CONF_CLIENT_CERT, CONF_CLIENT_KEY, CONF_TRUST_CHAIN, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
+from .const import (
+    CONF_CLIENT_CERT,
+    CONF_CLIENT_KEY,
+    CONF_TRUST_CHAIN,
+    DOMAIN,
+    LOGGER as _LOGGER,
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {

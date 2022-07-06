@@ -1,5 +1,9 @@
 """Constants for the MPRIS media playback remote control integration."""
 
+import logging
+
+LOGGER = logging.getLogger(__package__)
+
 DOMAIN = "hassmpris"
 ENTRY_CLIENT = "client"
 ENTRY_MANAGER = "manager"
