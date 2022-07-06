@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from pyatmo import modules as NaModules
 
-from homeassistant.components.light import ColorMode, LightEntity
+from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -194,7 +194,11 @@ class NetatmoLight(NetatmoBase, LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn light on."""
         _LOGGER.debug("Turn light '%s' on", self.name)
-        await self._dimmer.async_on()
+        if ATTR_BRIGHTNESS in kwargs:
+            await self._dimmer.async_set_brightness(kwargs[ATTR_BRIGHTNESS])
+
+        else:
+            await self._dimmer.async_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
