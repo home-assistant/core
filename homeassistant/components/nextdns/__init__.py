@@ -20,7 +20,7 @@ from nextdns import (
 from nextdns.model import NextDnsData
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -131,7 +131,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = ["sensor"]
+PLATFORMS = [Platform.BUTTON, Platform.SENSOR]
 COORDINATORS = [
     (ATTR_DNSSEC, NextDnsDnssecUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
     (ATTR_ENCRYPTION, NextDnsEncryptionUpdateCoordinator, UPDATE_INTERVAL_ANALYTICS),
@@ -153,8 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except (ApiError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN].setdefault(entry.entry_id, {})
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {}
 
     tasks = []
 
@@ -165,7 +164,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass, nextdns, profile_id, update_interval
         )
         tasks.append(
-            hass.data[DOMAIN][entry.entry_id][coordinator_name].async_refresh()
+            hass.data[DOMAIN][entry.entry_id][
+                coordinator_name
+            ].async_config_entry_first_refresh()
         )
 
     await asyncio.gather(*tasks)
