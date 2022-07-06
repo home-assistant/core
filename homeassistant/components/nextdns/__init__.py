@@ -141,7 +141,7 @@ class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator):
     async def _async_update_data(self) -> Settings:
         """Update data via library."""
         try:
-            with timeout(10):
+            async with timeout(10):
                 return await self.nextdns.get_settings(self.profile_id)
         except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
             raise UpdateFailed(err) from err
