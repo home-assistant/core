@@ -132,7 +132,7 @@ async def test_light_setup_and_services(hass, config_entry, netatmo_auth):
 
     light_entity = "light.bathroom_light"
 
-    assert hass.states.get(light_entity).state == "on"
+    assert hass.states.get(light_entity).state == "off"
 
     # Test turning light off
     with patch("pyatmo.home.Home.async_set_state") as mock_set_state:
