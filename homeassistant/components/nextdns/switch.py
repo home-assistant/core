@@ -1,6 +1,8 @@
 """Support for the NextDNS service."""
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from typing import Any, cast
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -15,132 +17,170 @@ from .const import ATTR_SETTINGS, DOMAIN
 
 PARALLEL_UPDATES = 1
 
+
+@dataclass
+class NextDnsSwitchRequiredKeysMixin:
+    """Class for NextDNS entity required keys."""
+
+    state: Callable[[Any], bool]
+
+
+@dataclass
+class NextDnsSwitchEntityDescription(
+    SwitchEntityDescription, NextDnsSwitchRequiredKeysMixin
+):
+    """NextDNS switch entity description."""
+
+
 SWITCHES = (
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_page",
         name="{profile_name} Block Page",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:web-cancel",
+        state=lambda data: data.block_page,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="cache_boost",
         name="{profile_name} Cache Boost",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:memory",
+        state=lambda data: data.cache_boost,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="cname_flattening",
         name="{profile_name} CNAME Flattening",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:tournament",
+        state=lambda data: data.cname_flattening,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="anonymized_ecs",
         name="{profile_name} Anonymized EDNS Client Subnet",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:incognito",
+        state=lambda data: data.anonymized_ecs,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="logs",
         name="{profile_name} Logs",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:file-document-outline",
+        state=lambda data: data.logs,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="web3",
         name="{profile_name} Web3",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:web",
+        state=lambda data: data.web3,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="allow_affiliate",
         name="{profile_name} Allow Affiliate & Tracking Links",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.allow_affiliate,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_disguised_trackers",
         name="{profile_name} Block Disguised Third-Party Trackers",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_disguised_trackers,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="ai_threat_detection",
         name="{profile_name} AI-Driven Threat Detection",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.ai_threat_detection,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_csam",
         name="{profile_name} Block Child Sexual Abuse Material",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_csam,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_ddns",
         name="{profile_name} Block Dynamic DNS Hostnames",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_ddns,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_nrd",
         name="{profile_name} Block Newly Registered Domains",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_nrd,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_parked_domains",
         name="{profile_name} Block Parked Domains",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_parked_domains,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="cryptojacking_protection",
         name="{profile_name} Cryptojacking Protection",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.cryptojacking_protection,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="dga_protection",
         name="{profile_name} Domain Generation Algorithms Protection",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.dga_protection,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="dns_rebinding_protection",
         name="{profile_name} DNS Rebinding Protection",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:dns",
+        state=lambda data: data.dns_rebinding_protection,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="google_safe_browsing",
         name="{profile_name} Google Safe Browsing",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:google",
+        state=lambda data: data.google_safe_browsing,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="idn_homograph_attacks_protection",
         name="{profile_name} IDN Homograph Attacks Protection",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.idn_homograph_attacks_protection,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="threat_intelligence_feeds",
         name="{profile_name} Threat Intelligence Feeds",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.threat_intelligence_feeds,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="typosquatting_protection",
         name="{profile_name} Typosquatting Protection",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:keyboard-outline",
+        state=lambda data: data.typosquatting_protection,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="block_bypass_methods",
         name="{profile_name} Block Bypass Methods",
         entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.block_bypass_methods,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="safesearch",
         name="{profile_name} Force SafeSearch",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:search-web",
+        state=lambda data: data.safesearch,
     ),
-    SwitchEntityDescription(
+    NextDnsSwitchEntityDescription(
         key="youtube_restricted_mode",
         name="{profile_name} Force YouTube Restricted Mode",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:youtube",
+        state=lambda data: data.youtube_restricted_mode,
     ),
 )
 
@@ -166,7 +206,7 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
     def __init__(
         self,
         coordinator: NextDnsSettingsUpdateCoordinator,
-        description: SwitchEntityDescription,
+        description: NextDnsSwitchEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -175,13 +215,13 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
         self._attr_name = cast(str, description.name).format(
             profile_name=coordinator.profile_name
         )
-        self._attr_is_on = getattr(coordinator.data, description.key)
-        self.entity_description = description
+        self._attr_is_on = description.state(coordinator.data)
+        self.entity_description: NextDnsSwitchEntityDescription = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = getattr(self.coordinator.data, self.entity_description.key)
+        self._attr_is_on = self.entity_description.state(self.coordinator.data)
         self.async_write_ha_state()
 
     async def async_turn_on(self, **kwargs: Any) -> None:
