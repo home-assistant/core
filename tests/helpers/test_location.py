@@ -124,3 +124,30 @@ def test_coordinates_function_returns_input_if_no_coords(hass):
     """Test test_coordinates function."""
     assert location.find_coordinates(hass, "test.abc") == "test.abc"
     assert location.find_coordinates(hass, "abc") == "abc"
+
+
+async def test_coordinates_function_template(hass):
+    """Test templated coordinates function."""
+    hass.states.async_set(
+        "zone.home",
+        "zoning",
+        {"latitude": 32.87336, "longitude": -117.22943},
+    )
+    hass.states.async_set(
+        "zone.work",
+        "zoning",
+        {"latitude": 50.20423, "longitude": -134.30498},
+    )
+    hass.states.async_set("person.test", "home")
+    assert (
+        location.find_coordinates(
+            hass, "{{ iif(is_state('person.test', 'home'), 'zone.work', 'zone.home') }}"
+        )
+        == "50.20423,-134.30498"
+    )
+    assert (
+        location.find_coordinates(
+            hass, "{{ iif(is_state('person.test', 'work'), 'zone.home', 'zone.work') }}"
+        )
+        == "50.20423,-134.30498"
+    )
