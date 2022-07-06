@@ -2,6 +2,7 @@
     "system_health": {
         "info": {
             "arch": "Processzor architekt\u00fara",
+            "config_dir": "Konfigur\u00e1ci\u00f3s k\u00f6nyvt\u00e1r",
             "dev": "Fejleszt\u00e9s",
             "docker": "Docker",
             "hassio": "Supervisor",
