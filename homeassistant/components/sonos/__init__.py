@@ -8,12 +8,14 @@ import datetime
 from functools import partial
 import logging
 import socket
+from typing import TypeVar
 from urllib.parse import urlparse
 
 from soco import events_asyncio
 import soco.config as soco_config
 from soco.core import SoCo
 from soco.exceptions import SoCoException
+from soco.groups import ZoneGroup
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -21,7 +23,7 @@ from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOSTS, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send, dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval, call_later
@@ -74,6 +76,8 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
+_T = TypeVar("_T", SonosAlarms, SonosFavorites)
+
 
 @dataclass
 class UnjoinData:
@@ -93,7 +97,7 @@ class SonosData:
         self.favorites: dict[str, SonosFavorites] = {}
         self.alarms: dict[str, SonosAlarms] = {}
         self.topology_condition = asyncio.Condition()
-        self.hosts_heartbeat = None
+        self.hosts_heartbeat: CALLBACK_TYPE | None = None
         self.discovery_known: set[str] = set()
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
@@ -168,7 +172,7 @@ class SonosDiscoveryManager:
         self.data = data
         self.hosts = set(hosts)
         self.discovery_lock = asyncio.Lock()
-        self._known_invisible = set()
+        self._known_invisible: set[ZoneGroup] = set()
         self._manual_config_required = bool(hosts)
 
     async def async_shutdown(self):
@@ -228,17 +232,20 @@ class SonosDiscoveryManager:
             _LOGGER.debug("Adding new speaker: %s", speaker_info)
             speaker = SonosSpeaker(self.hass, soco, speaker_info)
             self.data.discovered[soco.uid] = speaker
-            for coordinator, coord_dict in (
-                (SonosAlarms, self.data.alarms),
-                (SonosFavorites, self.data.favorites),
-            ):
-                if soco.household_id not in coord_dict:
-                    new_coordinator = coordinator(self.hass, soco.household_id)
-                    new_coordinator.setup(soco)
-                    coord_dict[soco.household_id] = new_coordinator
+            self._add_speaker_to_coord_dict(soco, SonosAlarms, self.data.alarms)
+            self._add_speaker_to_coord_dict(soco, SonosFavorites, self.data.favorites)
             speaker.setup(self.entry)
         except (OSError, SoCoException):
             _LOGGER.warning("Failed to add SonosSpeaker using %s", soco, exc_info=True)
+
+    def _add_speaker_to_coord_dict(
+        self, soco: SoCo, coordinator: type[_T], coord_dict: dict[str, _T]
+    ) -> None:
+        """Create and set up a new SonosSpeaker instance."""
+        if soco.household_id not in coord_dict:
+            new_coordinator = coordinator(self.hass, soco.household_id)
+            new_coordinator.setup(soco)
+            coord_dict[soco.household_id] = new_coordinator
 
     def _poll_manual_hosts(self, now: datetime.datetime | None = None) -> None:
         """Add and maintain Sonos devices from a manual configuration."""
