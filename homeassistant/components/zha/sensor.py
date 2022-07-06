@@ -523,6 +523,25 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         return round(cooked, 3)
 
 
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+)
+class PolledSmartEnergySummation(SmartEnergySummation):
+    """Polled Smart Energy Metering summation sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
+
+
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
