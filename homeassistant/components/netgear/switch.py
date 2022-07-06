@@ -235,7 +235,6 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
             await self.hass.async_add_executor_job(
                 self.entity_description.action(self._router), True
             )
-        self.async_schedule_update_ha_state(force_refresh=True)
 
     async def async_turn_off(self, **kwargs):
         """Turn the switch off."""
@@ -243,4 +242,3 @@ class NetgearRouterSwitchEntity(NetgearRouterEntity, SwitchEntity):
             await self.hass.async_add_executor_job(
                 self.entity_description.action(self._router), False
             )
-        self.async_schedule_update_ha_state(force_refresh=True)
