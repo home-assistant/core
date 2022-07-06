@@ -6,7 +6,10 @@ import logging
 
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import TemplateError
 from homeassistant.util import location as loc_util
+
+from . import template as template_helper
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +56,10 @@ def find_coordinates(
     Will recursively resolve an entity if pointed to by the state of the supplied entity.
     Returns coordinates in the form of '90.000,180.000', an address or the state of the last resolved entity.
     """
+    # Check if is a template value and render as required
+    if (template_result := resolve_template(hass, name)) is not None:
+        name = template_result
+
     # Check if a friendly name of a zone was supplied
     if (zone_coords := resolve_zone(hass, name)) is not None:
         return zone_coords
@@ -96,6 +103,23 @@ def find_coordinates(
 
     # Might be an address, coordinates or anything else. This has to be checked by the caller.
     return entity_state.state
+
+
+def resolve_template(hass: HomeAssistant, value: str) -> str | None:
+    """Resolve the template. If the template is valid, provide the result of the template."""
+    value_template: template_helper.Template | None = None
+    if value is not None:
+        try:
+            value_template = template_helper.Template(value)  # type: ignore[no-untyped-call]
+            value_template.ensure_valid()
+        except TemplateError:
+            value_template = None
+        if value_template is not None:
+            value_template.hass = hass
+            value = value_template.async_render()
+            return value
+
+    return None
 
 
 def resolve_zone(hass: HomeAssistant, zone_name: str) -> str | None:
