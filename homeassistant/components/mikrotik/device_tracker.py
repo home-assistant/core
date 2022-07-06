@@ -86,6 +86,8 @@ class MikrotikDataUpdateCoordinatorTracker(
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self.device = device
+        self._attr_name = str(device.name)
+        self._attr_unique_id = device.mac
 
     @property
     def is_connected(self) -> bool:
@@ -104,12 +106,6 @@ class MikrotikDataUpdateCoordinatorTracker(
         return SOURCE_TYPE_ROUTER
 
     @property
-    def name(self) -> str:
-        """Return the name of the client."""
-        # Stringify to ensure we return a string
-        return str(self.device.name)
-
-    @property
     def hostname(self) -> str:
         """Return the hostname of the client."""
         return self.device.name
@@ -123,11 +119,6 @@ class MikrotikDataUpdateCoordinatorTracker(
     def ip_address(self) -> str:
         """Return the mac address of the client."""
         return self.device.ip_address
-
-    @property
-    def unique_id(self) -> str:
-        """Return a unique identifier for this device."""
-        return self.device.mac
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
