@@ -83,7 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = hass_entry_data[API] = HomePlusControlAsyncApi(hass, entry, implementation)
 
     # Set of entity unique identifiers of this integration
-    uids = hass_entry_data[ENTITY_UIDS] = set()
+    uids: set[str] = set()
+    hass_entry_data[ENTITY_UIDS] = uids
 
     # Integration dispatchers
     hass_entry_data[DISPATCHER_REMOVERS] = []
