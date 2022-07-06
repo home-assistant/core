@@ -50,13 +50,11 @@ class UptimeKumaFlowHandler(ConfigFlow, domain=DOMAIN):
 
         errors = {}
 
-        username = user_input.get(CONF_USERNAME)
-        password = user_input.get(CONF_PASSWORD)
         utkm = await self.hass.async_add_executor_job(
             UptimeKumaMonitor,
             f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
-            username,
-            password,
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
             user_input[CONF_VERIFY_SSL],
         )
 
