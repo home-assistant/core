@@ -9,7 +9,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .resolution_center import async_dismiss_issue
+from .issue_handler import async_dismiss_issue
 
 
 @callback

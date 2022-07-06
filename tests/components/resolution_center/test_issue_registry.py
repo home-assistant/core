@@ -4,9 +4,7 @@ from homeassistant.components.resolution_center import (
     issue_registry,
 )
 from homeassistant.components.resolution_center.const import DOMAIN
-from homeassistant.components.resolution_center.resolution_center import (
-    async_dismiss_issue,
-)
+from homeassistant.components.resolution_center.issue_handler import async_dismiss_issue
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
