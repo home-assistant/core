@@ -14,7 +14,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import (
+    CONF_ENTRY_TIMEOUT_HOURS,
     CONF_FFMPEG_ARGUMENTS,
+    DEFAULT_ENTRY_TIMEOUT_HOURS,
     DEFAULT_FFMPEG_ARGUMENTS,
     DEFAULT_TIMEOUT,
     DOMAIN,
@@ -123,6 +125,12 @@ class CanaryOptionsFlowHandler(OptionsFlow):
                 CONF_TIMEOUT,
                 default=self.config_entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
             ): int,
+            vol.Optional(
+                CONF_ENTRY_TIMEOUT_HOURS,
+                default=self.config_entry.options.get(
+                    CONF_ENTRY_TIMEOUT_HOURS, DEFAULT_ENTRY_TIMEOUT_HOURS
+                ),
+            ): vol.All(vol.Coerce(int), vol.Range(min=1, max=23)),
         }
 
         return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

@@ -22,6 +22,7 @@
         "step": {
             "init": {
                 "data": {
+                    "entry_timeout_hours": "Expire Entry Image after X hours",
                     "ffmpeg_arguments": "Arguments passed to ffmpeg for cameras",
                     "timeout": "Request Timeout (seconds)"
                 }

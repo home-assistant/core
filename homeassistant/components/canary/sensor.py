@@ -28,7 +28,7 @@ SENSOR_VALUE_PRECISION: Final = 2
 ATTR_AIR_QUALITY: Final = "air_quality"
 
 # Define variables to store the device names, as referred to by the Canary API.
-# Note: If Canary change the name of any of their devices (which they have done),
+# Note: If Canary changes the name of their devices (which they have done),
 # then these variables will need updating, otherwise the sensors will stop working
 # and disappear in Home Assistant.
 CANARY_PRO: Final = "Canary Pro"
@@ -138,7 +138,7 @@ class CanarySensor(CoordinatorEntity[CanaryDataUpdateCoordinator], SensorEntity)
         self._attr_native_unit_of_measurement = sensor_type[1]
         self._state: str | int | float | datetime | None = None
         self._attr_icon = sensor_type[2]
-        _LOGGER.info("CanarySensor: %s created", self.name)
+        _LOGGER.debug("%s initialized", self.name)
 
     @property
     def device_class(self) -> str | None:
