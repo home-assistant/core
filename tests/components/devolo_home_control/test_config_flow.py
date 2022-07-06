@@ -17,7 +17,7 @@ from .const import (
 from tests.common import MockConfigEntry
 
 
-async def test_form(hass: HomeAssistant):
+async def test_form(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     result = await hass.config_entries.flow.async_init(
@@ -31,7 +31,7 @@ async def test_form(hass: HomeAssistant):
 
 
 @pytest.mark.credentials_invalid
-async def test_form_invalid_credentials_user(hass: HomeAssistant):
+async def test_form_invalid_credentials_user(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
@@ -49,7 +49,7 @@ async def test_form_invalid_credentials_user(hass: HomeAssistant):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_already_configured(hass: HomeAssistant):
+async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test if we get the error message on already configured."""
     with patch(
         "homeassistant.components.devolo_home_control.Mydevolo.uuid",
@@ -65,7 +65,7 @@ async def test_form_already_configured(hass: HomeAssistant):
         assert result["reason"] == "already_configured"
 
 
-async def test_form_advanced_options(hass: HomeAssistant):
+async def test_form_advanced_options(hass: HomeAssistant) -> None:
     """Test if we get the advanced options if user has enabled it."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -102,7 +102,7 @@ async def test_form_advanced_options(hass: HomeAssistant):
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_form_zeroconf(hass: HomeAssistant):
+async def test_form_zeroconf(hass: HomeAssistant) -> None:
     """Test that the zeroconf confirmation form is served."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -117,7 +117,7 @@ async def test_form_zeroconf(hass: HomeAssistant):
 
 
 @pytest.mark.credentials_invalid
-async def test_form_invalid_credentials_zeroconf(hass: HomeAssistant):
+async def test_form_invalid_credentials_zeroconf(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
 
     result = await hass.config_entries.flow.async_init(
@@ -137,7 +137,7 @@ async def test_form_invalid_credentials_zeroconf(hass: HomeAssistant):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_zeroconf_wrong_device(hass: HomeAssistant):
+async def test_zeroconf_wrong_device(hass: HomeAssistant) -> None:
     """Test that the zeroconf ignores wrong devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -158,7 +158,7 @@ async def test_zeroconf_wrong_device(hass: HomeAssistant):
     assert result["type"] == FlowResultType.ABORT
 
 
-async def test_form_reauth(hass: HomeAssistant):
+async def test_form_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth confirmation form is served."""
     mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})
     mock_config.add_to_hass(hass)
@@ -196,7 +196,7 @@ async def test_form_reauth(hass: HomeAssistant):
 
 
 @pytest.mark.credentials_invalid
-async def test_form_invalid_credentials_reauth(hass: HomeAssistant):
+async def test_form_invalid_credentials_reauth(hass: HomeAssistant) -> None:
     """Test if we get the error message on invalid credentials."""
     mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})
     mock_config.add_to_hass(hass)
@@ -221,7 +221,7 @@ async def test_form_invalid_credentials_reauth(hass: HomeAssistant):
     assert result["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_uuid_change_reauth(hass: HomeAssistant):
+async def test_form_uuid_change_reauth(hass: HomeAssistant) -> None:
     """Test that the reauth confirmation form is served."""
     mock_config = MockConfigEntry(domain=DOMAIN, unique_id="123456", data={})
     mock_config.add_to_hass(hass)
@@ -258,7 +258,7 @@ async def test_form_uuid_change_reauth(hass: HomeAssistant):
     assert result2["errors"] == {"base": "reauth_failed"}
 
 
-async def _setup(hass: HomeAssistant, result: FlowResult):
+async def _setup(hass: HomeAssistant, result: FlowResult) -> None:
     """Finish configuration steps."""
     with patch(
         "homeassistant.components.devolo_home_control.async_setup_entry",
