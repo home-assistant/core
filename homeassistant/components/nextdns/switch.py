@@ -5,6 +5,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
+from nextdns import Settings
+
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +24,7 @@ PARALLEL_UPDATES = 1
 class NextDnsSwitchRequiredKeysMixin:
     """Class for NextDNS entity required keys."""
 
-    state: Callable[[Any], bool]
+    state: Callable[[Settings], bool]
 
 
 @dataclass
