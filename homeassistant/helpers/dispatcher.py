@@ -89,4 +89,4 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
-        hass.async_add_hass_job(job, *args)
+        hass.async_run_hass_job(job, *args)
