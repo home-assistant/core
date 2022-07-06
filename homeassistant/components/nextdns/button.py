@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(buttons)
 
 
-class NextDnsButton(CoordinatorEntity, ButtonEntity):
+class NextDnsButton(CoordinatorEntity[NextDnsStatusUpdateCoordinator], ButtonEntity):
     """Define an NextDNS button."""
 
     def __init__(
