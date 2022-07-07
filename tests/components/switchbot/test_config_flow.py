@@ -9,11 +9,7 @@ from homeassistant.components.switchbot.const import (
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_MAC, CONF_NAME, CONF_PASSWORD, CONF_SENSOR_TYPE
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import USER_INPUT, USER_INPUT_CURTAIN, init_integration, patch_async_setup_entry
 
@@ -26,7 +22,7 @@ async def test_user_form_valid_mac(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -37,7 +33,7 @@ async def test_user_form_valid_mac(hass):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-name"
     assert result["data"] == {
         CONF_MAC: "e7:89:43:99:99:99",
@@ -53,7 +49,7 @@ async def test_user_form_valid_mac(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -64,7 +60,7 @@ async def test_user_form_valid_mac(hass):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-name"
     assert result["data"] == {
         CONF_MAC: "e7:89:43:90:90:90",
@@ -80,7 +76,7 @@ async def test_user_form_valid_mac(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "no_unconfigured_devices"
 
 
@@ -93,7 +89,7 @@ async def test_user_form_exception(hass, switchbot_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
     switchbot_config_flow.side_effect = Exception
@@ -102,7 +98,7 @@ async def test_user_form_exception(hass, switchbot_config_flow):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
 
 
@@ -112,7 +108,7 @@ async def test_options_flow(hass):
         entry = await init_integration(hass)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
 
@@ -127,7 +123,7 @@ async def test_options_flow(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TIME_BETWEEN_UPDATE_COMMAND] == 60
     assert result["data"][CONF_RETRY_COUNT] == 3
     assert result["data"][CONF_RETRY_TIMEOUT] == 5
@@ -141,7 +137,7 @@ async def test_options_flow(hass):
         entry = await init_integration(hass)
 
         result = await hass.config_entries.options.async_init(entry.entry_id)
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "init"
         assert result["errors"] is None
 
@@ -156,7 +152,7 @@ async def test_options_flow(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_TIME_BETWEEN_UPDATE_COMMAND] == 66
     assert result["data"][CONF_RETRY_COUNT] == 6
     assert result["data"][CONF_RETRY_TIMEOUT] == 6
