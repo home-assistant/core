@@ -701,7 +701,7 @@ class ProtectMediaSource(MediaSource):
                 )
 
             if entity_id:
-                # verify entity is avaiable
+                # verify entity is available
                 entry = entity_registry.async_get(entity_id)
                 if not entry.disabled:
                     break
