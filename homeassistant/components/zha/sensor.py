@@ -813,7 +813,7 @@ class TimeLeft(Sensor, id_suffix="time_left"):
     _unit = TIME_MINUTES
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(channel_names="ikea_airpurifier")
 class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     """Sensor that displays device run time (in minutes)."""
 
@@ -823,7 +823,7 @@ class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
     _unit = TIME_MINUTES
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(channel_names="ikea_airpurifier")
 class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
     """Sensor that displays run time of the current filter (in minutes)."""
 
