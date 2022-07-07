@@ -67,7 +67,7 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     initial_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert initial_result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert initial_result.get("type") == data_entry_flow.FlowResultType.FORM
     assert initial_result.get("step_id") == "user"
 
     # Test filling in API key
@@ -76,7 +76,7 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: API_KEY},
     )
-    assert enter_api_key_result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert enter_api_key_result.get("type") == data_entry_flow.FlowResultType.FORM
     assert enter_api_key_result.get("step_id") == "site"
 
     select_site_result = await hass.config_entries.flow.async_configure(
@@ -85,7 +85,7 @@ async def test_single_site(hass: HomeAssistant, single_site_api: Mock) -> None:
     )
 
     # Show available sites
-    assert select_site_result.get("type") == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert select_site_result.get("type") == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert select_site_result.get("title") == "Home"
     data = select_site_result.get("data")
     assert data
@@ -102,7 +102,7 @@ async def test_no_site(hass: HomeAssistant, no_site_api: Mock) -> None:
         data={CONF_API_TOKEN: "psk_123456789"},
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "no_site"}
@@ -113,7 +113,7 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     # Test filling in API key
@@ -122,7 +122,7 @@ async def test_invalid_key(hass: HomeAssistant, invalid_key_api: Mock) -> None:
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: "psk_123456789"},
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "invalid_api_token"}
@@ -133,7 +133,7 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     assert result.get("step_id") == "user"
 
     # Test filling in API key
@@ -142,7 +142,7 @@ async def test_unknown_error(hass: HomeAssistant, api_error: Mock) -> None:
         context={"source": SOURCE_USER},
         data={CONF_API_TOKEN: "psk_123456789"},
     )
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_FORM
+    assert result.get("type") == data_entry_flow.FlowResultType.FORM
     # Goes back to the user step
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"api_token": "unknown_error"}

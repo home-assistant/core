@@ -202,7 +202,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     assert result["data_schema"]({}) == {
@@ -231,7 +231,7 @@ async def test_options_flow(hass: HomeAssistant, mock_get_source_ip) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
         CONF_HOSTS: "192.168.1.0/24,192.168.2.0/24",
         CONF_HOME_INTERVAL: 5,
