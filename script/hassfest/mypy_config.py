@@ -90,7 +90,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xbox.browse_media",
     "homeassistant.components.xbox.media_source",
     "homeassistant.components.xbox.sensor",
-    "homeassistant.components.xiaomi_miio.fan",
     "homeassistant.components.xiaomi_miio.humidifier",
     "homeassistant.components.xiaomi_miio.light",
     "homeassistant.components.xiaomi_miio.switch",
