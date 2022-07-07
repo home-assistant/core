@@ -65,7 +65,6 @@ class BluetoothServiceInfo(BaseServiceInfo):
     manufacturer_data: dict[int, str]
     service_data: dict[str, bytes]
     service_uuids: list[str]
-    platform_data: Any
 
     @property
     def hci_packet(self) -> bytes:
@@ -116,7 +115,6 @@ class BluetoothServiceInfo(BaseServiceInfo):
             manufacturer_data=advertisement_data.manufacturer_data,
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,
-            platform_data=advertisement_data.platform_data,
         )
 
 
