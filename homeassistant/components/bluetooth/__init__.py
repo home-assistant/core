@@ -40,6 +40,19 @@ from .usage import install_multiple_bleak_catcher
 _LOGGER = logging.getLogger(__name__)
 
 
+class BluetoothScanningMode(Enum):
+    """The mode of scanning for bluetooth devices."""
+
+    PASSIVE = "passive"
+    ACTIVE = "active"
+
+
+SCANNING_MODE_TO_BLEAK = {
+    BluetoothScanningMode.ACTIVE: "active",
+    BluetoothScanningMode.PASSIVE: "passive",
+}
+
+
 @dataclasses.dataclass
 class BluetoothServiceInfo(BaseServiceInfo):
     """Prepared info from bluetooth entries."""
@@ -100,7 +113,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the bluetooth integration."""
     # bt = await async_get_bluetooth(hass)
     bluetooth: list[dict[str, str]] = []
-    bluetooth_discovery = BluetoothManager(hass, bluetooth)
+    bluetooth_discovery = BluetoothManager(
+        hass, bluetooth, BluetoothScanningMode.PASSIVE
+    )
     await bluetooth_discovery.async_setup()
     hass.data[DOMAIN] = bluetooth
 
@@ -118,9 +133,11 @@ class BluetoothManager:
         self,
         hass: HomeAssistant,
         bluetooth: list[dict[str, str]],
+        scanning_mode: BluetoothScanningMode,
     ) -> None:
-        """Init USB Discovery."""
+        """Init bluetooth discovery."""
         self.hass = hass
+        self.scanning_mode = scanning_mode
         self.bluetooth = bluetooth
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
@@ -130,7 +147,9 @@ class BluetoothManager:
     async def async_setup(self) -> None:
         """Set up BT Discovery."""
         try:
-            self.scanner = HaBleakScanner()
+            self.scanner = HaBleakScanner(
+                scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
+            )
         except BleakError as ex:
             _LOGGER.warning(
                 "Could not create bluetooth scanner (is bluetooth present and enabled?): %s",
