@@ -701,7 +701,11 @@ class ProtectMediaSource(MediaSource):
                 )
 
             if entity_id:
-                break
+                # verify entity is avaiable
+                entry = entity_registry.async_get(entity_id)
+                if not entry.disabled:
+                    break
+                entity_id = None
 
         if entity_id is not None:
             url = URL(CameraImageView.url.format(entity_id=entity_id))
