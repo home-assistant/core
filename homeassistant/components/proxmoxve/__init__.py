@@ -229,7 +229,7 @@ def create_coordinator_container_vm(
     )
 
 
-def parse_api_container_vm(status):
+def parse_api_container_vm(status) -> ProxmoxAPIData:
     """Get the container or vm api data and return it formatted in a dictionary.
 
     It is implemented in this way to allow for more data to be added for sensors
