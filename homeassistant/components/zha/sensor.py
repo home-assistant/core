@@ -472,25 +472,8 @@ class SmartEnergyMetering(Sensor):
 
 @MULTI_MATCH(
     channel_names=CHANNEL_SMARTENERGY_METERING,
-    models={"TS011F"},
     stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
 )
-class PolledSmartEnergyMetering(SmartEnergyMetering):
-    """Polled metering sensor."""
-
-    @property
-    def should_poll(self) -> bool:
-        """Poll the entity for current state."""
-        return True
-
-    async def async_update(self) -> None:
-        """Retrieve latest state."""
-        if not self.available:
-            return
-        await self._channel.async_force_update()
-
-
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
 class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
     """Smart Energy Metering summation sensor."""
 
@@ -521,6 +504,26 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 
         cooked = float(self._channel.multiplier * value) / self._channel.divisor
         return round(cooked, 3)
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergySummation(SmartEnergySummation):
+    """Polled Smart Energy Metering summation sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
