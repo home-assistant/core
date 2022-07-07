@@ -159,7 +159,8 @@ def async_log_errors(
             available = False
             if self._available is True:
                 _LOGGER.warning(
-                    "Timeout connecting to Denon AVR receiver at host %s. Device is unavailable",
+                    "Timeout connecting to Denon AVR receiver at host %s. "
+                    "Device is unavailable",
                     self._receiver.host,
                 )
                 self._available = False
@@ -167,7 +168,8 @@ def async_log_errors(
             available = False
             if self._available is True:
                 _LOGGER.warning(
-                    "Network error connecting to Denon AVR receiver at host %s. Device is unavailable",
+                    "Network error connecting to Denon AVR receiver at host %s. "
+                    "Device is unavailable",
                     self._receiver.host,
                 )
                 self._available = False
@@ -175,7 +177,9 @@ def async_log_errors(
             available = False
             if self._available is True:
                 _LOGGER.warning(
-                    "Denon AVR receiver at host %s responded with HTTP 403 error. Device is unavailable. Please consider power cycling your receiver",
+                    "Denon AVR receiver at host %s responded with HTTP 403 error. "
+                    "Device is unavailable. Please consider power cycling your "
+                    "receiver",
                     self._receiver.host,
                 )
                 self._available = False
