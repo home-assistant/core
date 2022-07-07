@@ -249,7 +249,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -301,7 +301,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -342,7 +342,7 @@ jobs:
     runs-on: ubuntu-20.04
     needs:
       - info
-      - prepare-base
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
