@@ -66,7 +66,7 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         self._filters: dict[str, set[str]] = {}
         if "filters" in kwargs:
             self._filters = {
-                k: {str(matcher) for matcher in v} for k, v in kwargs["filters"].items()
+                k: set(getattr(v, "value", v)) for k, v in kwargs["filters"].items()
             }
         if "service_uuids" in kwargs:
             self._filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
