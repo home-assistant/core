@@ -135,7 +135,7 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtoc
             raise UpdateFailed(err) from err
 
 
-class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
     """Class to manage fetching NextDNS connection data from API."""
 
     async def _async_update_data(self) -> Settings:
