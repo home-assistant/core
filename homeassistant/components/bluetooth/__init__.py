@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from bleak import BleakError
-from bleak.backends.device import BLEDevice
+from bleak.backends.device import MANUFACTURERS, BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 # from homeassistant.components import websocket_api
@@ -70,13 +70,28 @@ class BluetoothServiceInfo(BaseServiceInfo):
     ) -> BluetoothServiceInfo:
         """Create a BluetoothServiceInfo from an advertisement."""
         return cls(
-            name=advertisement_data.local_name or device.name,
+            name=advertisement_data.local_name or device.name or device.address,
             address=device.address,
             rssi=device.rssi,
             manufacturer_data=advertisement_data.manufacturer_data,
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,
         )
+
+    @property
+    def manufacturer(self) -> str | None:
+        """Convert manufacturer data to a string."""
+        for manufacturer in self.manufacturer_data:
+            if name := MANUFACTURERS.get(manufacturer):
+                return name
+        return None
+
+    @property
+    def manufacturer_id(self) -> int | None:
+        """Get the first manufacturer id."""
+        for manufacturer in self.manufacturer_data:
+            return manufacturer
+        return None
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
@@ -173,7 +188,11 @@ class BluetoothManager:
         service_info = BluetoothServiceInfo.from_advertisement(
             device, advertisement_data
         )
-        _LOGGER.debug("Device detected: %s", service_info)
+        _LOGGER.debug(
+            "Device detected: %s with manufacturer: %s",
+            service_info,
+            service_info.manufacturer,
+        )
 
     async def async_register_callback(
         self, callback: BluetoothCallback, match_dict: None | dict[str, str] = None
