@@ -121,7 +121,7 @@ async def test_user(hass, client_single):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # test with all provided with search returning only 1 place
@@ -130,7 +130,7 @@ async def test_user(hass, client_single):
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_1_POSTAL},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == f"{CITY_1_LAT}, {CITY_1_LON}"
     assert result["title"] == f"{CITY_1}"
     assert result["data"][CONF_LATITUDE] == str(CITY_1_LAT)
@@ -146,14 +146,14 @@ async def test_user_list(hass, client_multiple):
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_2_NAME},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "cities"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_CITY: f"{CITY_3};{CITY_3_LAT};{CITY_3_LON}"},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == f"{CITY_3_LAT}, {CITY_3_LON}"
     assert result["title"] == f"{CITY_3}"
     assert result["data"][CONF_LATITUDE] == str(CITY_3_LAT)
@@ -168,7 +168,7 @@ async def test_import(hass, client_multiple):
         context={"source": SOURCE_IMPORT},
         data={CONF_CITY: CITY_2_NAME},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == f"{CITY_2_LAT}, {CITY_2_LON}"
     assert result["title"] == f"{CITY_2}"
     assert result["data"][CONF_LATITUDE] == str(CITY_2_LAT)
@@ -183,7 +183,7 @@ async def test_search_failed(hass, client_empty):
         data={CONF_CITY: CITY_1_POSTAL},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {CONF_CITY: "empty"}
 
 
@@ -201,7 +201,7 @@ async def test_abort_if_already_setup(hass, client_single):
         context={"source": SOURCE_IMPORT},
         data={CONF_CITY: CITY_1_POSTAL},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     # Should fail, same CITY same postal code (flow)
@@ -210,7 +210,7 @@ async def test_abort_if_already_setup(hass, client_single):
         context={"source": SOURCE_USER},
         data={CONF_CITY: CITY_1_POSTAL},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -226,7 +226,7 @@ async def test_options_flow(hass: HomeAssistant):
     assert config_entry.options == {}
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     # Default
@@ -234,7 +234,7 @@ async def test_options_flow(hass: HomeAssistant):
         result["flow_id"],
         user_input={},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_MODE] == FORECAST_MODE_DAILY
 
     # Manual
@@ -243,5 +243,5 @@ async def test_options_flow(hass: HomeAssistant):
         result["flow_id"],
         user_input={CONF_MODE: FORECAST_MODE_HOURLY},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_MODE] == FORECAST_MODE_HOURLY

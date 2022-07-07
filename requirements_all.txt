@@ -518,7 +518,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.6.0
+debugpy==1.6.1
 
 # homeassistant.components.decora
 # decora==0.6
@@ -586,7 +586,7 @@ elgato==3.0.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.0.0
+elkm1-lib==2.0.2
 
 # homeassistant.components.elmax
 elmax_api==0.0.2

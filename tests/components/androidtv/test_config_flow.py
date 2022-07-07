@@ -97,7 +97,7 @@ async def test_user(hass, config, eth_mac, wifi_mac):
     flow_result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER, "show_advanced_options": True}
     )
-    assert flow_result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow_result["type"] == data_entry_flow.FlowResultType.FORM
     assert flow_result["step_id"] == "user"
 
     # test with all provided
@@ -110,7 +110,7 @@ async def test_user(hass, config, eth_mac, wifi_mac):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == config
 
@@ -134,7 +134,7 @@ async def test_user_adbkey(hass):
         )
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == HOST
         assert result["data"] == config_data
 
@@ -152,7 +152,7 @@ async def test_error_both_key_server(hass):
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "key_and_server"}
 
     with patch(
@@ -164,7 +164,7 @@ async def test_error_both_key_server(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == HOST
         assert result2["data"] == CONFIG_ADB_SERVER
 
@@ -179,7 +179,7 @@ async def test_error_invalid_key(hass):
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"base": "adbkey_not_file"}
 
     with patch(
@@ -191,7 +191,7 @@ async def test_error_invalid_key(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == HOST
         assert result2["data"] == CONFIG_ADB_SERVER
 
@@ -219,7 +219,7 @@ async def test_invalid_mac(hass, config, eth_mac, wifi_mac):
             data=config,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "invalid_unique_id"
 
 
@@ -237,7 +237,7 @@ async def test_abort_if_host_exist(hass):
         data=config_data,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -260,7 +260,7 @@ async def test_abort_if_unique_exist(hass):
             data=CONFIG_ADB_SERVER,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -275,7 +275,7 @@ async def test_on_connect_failed(hass):
         result = await hass.config_entries.flow.async_configure(
             flow_result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
@@ -285,7 +285,7 @@ async def test_on_connect_failed(hass):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=CONFIG_ADB_SERVER
         )
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result2["type"] == data_entry_flow.FlowResultType.FORM
         assert result2["errors"] == {"base": "unknown"}
 
     with patch(
@@ -297,7 +297,7 @@ async def test_on_connect_failed(hass):
         )
         await hass.async_block_till_done()
 
-        assert result3["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result3["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result3["title"] == HOST
         assert result3["data"] == CONFIG_ADB_SERVER
 
@@ -320,7 +320,7 @@ async def test_options_flow(hass):
         await hass.async_block_till_done()
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         # test app form with existing app
@@ -330,7 +330,7 @@ async def test_options_flow(hass):
                 CONF_APPS: "app1",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "apps"
 
         # test change value in apps form
@@ -340,7 +340,7 @@ async def test_options_flow(hass):
                 CONF_APP_NAME: "Appl1",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         # test app form with new app
@@ -350,7 +350,7 @@ async def test_options_flow(hass):
                 CONF_APPS: APPS_NEW_ID,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "apps"
 
         # test save value for new app
@@ -361,7 +361,7 @@ async def test_options_flow(hass):
                 CONF_APP_NAME: "Appl2",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         # test app form for delete
@@ -371,7 +371,7 @@ async def test_options_flow(hass):
                 CONF_APPS: "app1",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "apps"
 
         # test delete app1
@@ -382,7 +382,7 @@ async def test_options_flow(hass):
                 CONF_APP_DELETE: True,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         # test rules form with existing rule
@@ -392,7 +392,7 @@ async def test_options_flow(hass):
                 CONF_STATE_DETECTION_RULES: "com.plexapp.android",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "rules"
 
         # test change value in rule form with invalid json rule
@@ -402,7 +402,7 @@ async def test_options_flow(hass):
                 CONF_RULE_VALUES: "a",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "rules"
         assert result["errors"] == {"base": "invalid_det_rules"}
 
@@ -413,7 +413,7 @@ async def test_options_flow(hass):
                 CONF_RULE_VALUES: json.dumps({"a": "b"}),
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "rules"
         assert result["errors"] == {"base": "invalid_det_rules"}
 
@@ -424,7 +424,7 @@ async def test_options_flow(hass):
                 CONF_RULE_VALUES: json.dumps(["standby"]),
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         # test rule form with new rule
@@ -434,7 +434,7 @@ async def test_options_flow(hass):
                 CONF_STATE_DETECTION_RULES: RULES_NEW_ID,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "rules"
 
         # test save value for new rule
@@ -445,7 +445,7 @@ async def test_options_flow(hass):
                 CONF_RULE_VALUES: json.dumps(VALID_DETECT_RULE),
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         # test rules form with delete existing rule
@@ -455,7 +455,7 @@ async def test_options_flow(hass):
                 CONF_STATE_DETECTION_RULES: "com.plexapp.android",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "rules"
 
         # test delete rule
@@ -465,7 +465,7 @@ async def test_options_flow(hass):
                 CONF_RULE_DELETE: True,
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
@@ -479,7 +479,7 @@ async def test_options_flow(hass):
             },
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         apps_options = config_entry.options[CONF_APPS]
         assert apps_options.get("app1") is None

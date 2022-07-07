@@ -20,8 +20,8 @@ on:
         type: boolean
 
 env:
-  CACHE_VERSION: 10
-  PIP_CACHE_VERSION: 4
+  CACHE_VERSION: 0
+  PIP_CACHE_VERSION: 0
   HA_SHORT_VERSION: 2022.8
   DEFAULT_PYTHON: 3.9
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
@@ -35,24 +35,38 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Determine what has changed
+  info:
+    name: Collect information & changes data
     outputs:
       # In case of issues with the partial run, use the following line instead:
       # test_full_suite: 'true'
-      test_full_suite: ${{ steps.info.outputs.test_full_suite }}
       core: ${{ steps.core.outputs.changes }}
-      integrations: ${{ steps.integrations.outputs.changes }}
       integrations_glob: ${{ steps.info.outputs.integrations_glob }}
-      tests: ${{ steps.info.outputs.tests }}
-      tests_glob: ${{ steps.info.outputs.tests_glob }}
-      test_groups: ${{ steps.info.outputs.test_groups }}
-      test_group_count: ${{ steps.info.outputs.test_group_count }}
+      integrations: ${{ steps.integrations.outputs.changes }}
+      pre-commit_cache_key: ${{ steps.generate_pre-commit_cache_key.outputs.key }}
+      python_cache_key: ${{ steps.generate_python_cache_key.outputs.key }}
       requirements: ${{ steps.core.outputs.requirements }}
-    runs-on: ubuntu-latest
+      test_full_suite: ${{ steps.info.outputs.test_full_suite }}
+      test_group_count: ${{ steps.info.outputs.test_group_count }}
+      test_groups: ${{ steps.info.outputs.test_groups }}
+      tests_glob: ${{ steps.info.outputs.tests_glob }}
+      tests: ${{ steps.info.outputs.tests }}
+    runs-on: ubuntu-20.04
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
+      - name: Generate partial Python venv restore key
+        id: generate_python_cache_key
+        run: >-
+          echo "::set-output name=key::venv-${{ env.CACHE_VERSION }}-${{
+            hashFiles('requirements_test.txt') }}-${{
+            hashFiles('requirements_all.txt') }}-${{
+            hashFiles('homeassistant/package_constraints.txt') }}"
+      - name: Generate partial pre-commit restore key
+        id: generate_pre-commit_cache_key
+        run: >-
+          echo "::set-output name=key::${{ env.CACHE_VERSION }}-${{ env.DEFAULT_PYTHON }}-${{
+            hashFiles('.pre-commit-config.yaml') }}"
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
         id: core
@@ -79,8 +93,8 @@ jobs:
           # Defaults
           integrations_glob=""
           test_full_suite="true"
-          test_groups="[1, 2, 3, 4, 5, 6]"
-          test_group_count=6
+          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+          test_group_count=10
           tests="[]"
           tests_glob=""
 
@@ -123,8 +137,8 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
-            test_groups="[1, 2, 3, 4, 5, 6]"
-            test_group_count=6
+            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+            test_group_count=10
             test_full_suite="true"
           fi
 
@@ -142,15 +156,11 @@ jobs:
           echo "tests_glob: ${tests_glob}"
           echo "::set-output name=tests_glob::${tests_glob}"
 
-  # Separate job to pre-populate the base dependency cache
-  # This prevent upcoming jobs to do the same individually
-  prepare-base:
-    name: Prepare base dependencies
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    outputs:
-      python-key: ${{ steps.generate-python-key.outputs.key }}
-      pre-commit-key: ${{ steps.generate-pre-commit-key.outputs.key }}
+  pre-commit:
+    name: Prepare pre-commit base
+    runs-on: ubuntu-20.04
+    needs:
+      - info
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -159,67 +169,26 @@ jobs:
         uses: actions/setup-python@v4.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
-      - name: Generate partial Python venv restore key
-        id: generate-python-key
-        run: >-
-          echo "::set-output name=key::base-venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements.txt') }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}"
-      - name: Generate partial pip restore key
-        id: generate-pip-key
-        run: >-
-          echo "::set-output name=key::base-pip-${{ env.PIP_CACHE_VERSION }}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
+          cache: "pip"
       - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-python-key.outputs.key }}
-          # Temporary disabling the restore of environments when bumping
-          # a dependency. It seems that we are experiencing issues with
-          # restoring environments in GitHub Actions, although unclear why.
-          # First attempt: https://github.com/home-assistant/core/pull/62383
-          #
-          # restore-keys: |
-          #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-${{ hashFiles('requirements_test.txt') }}-
-          #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements.txt') }}-
-          #   ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-venv-${{ env.CACHE_VERSION }}-
-      - name: Restore pip wheel cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.0.4
-        with:
-          path: ${{ env.PIP_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            steps.generate-pip-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-base-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
           . venv/bin/activate
           python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.2" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements.txt -r requirements_test.txt --use-deprecated=legacy-resolver
-      - name: Generate partial pre-commit restore key
-        id: generate-pre-commit-key
-        run: >-
-          echo "::set-output name=key::pre-commit-${{ env.CACHE_VERSION }}-${{
-            hashFiles('.pre-commit-config.yaml') }}"
+          pip install "$(cat requirements_test.txt | grep pre-commit)"
       - name: Restore pre-commit environment from cache
         id: cache-precommit
         uses: actions/cache@v3.0.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ steps.generate-pre-commit-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-pre-commit-${{ env.CACHE_VERSION }}-
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Install pre-commit dependencies
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -228,10 +197,10 @@ jobs:
 
   lint-black:
     name: Check black
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
-      - changes
-      - prepare-base
+      - info
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -245,8 +214,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.prepare-base.outputs.python-key }}
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -257,31 +225,31 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
           echo "Failed to restore pre-commit environment from cache"
           exit 1
       - name: Run black (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual black --all-files --show-diff-on-failure
       - name: Run black (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/* --show-diff-on-failure
+          pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
   lint-flake8:
     name: Check flake8
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
-      - changes
-      - prepare-base
+      - info
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -295,8 +263,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.prepare-base.outputs.python-key }}
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -307,7 +274,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -317,22 +284,24 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/flake8.json"
       - name: Run flake8 (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual flake8 --all-files
       - name: Run flake8 (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/*
+          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
 
   lint-isort:
     name: Check isort
-    runs-on: ubuntu-latest
-    needs: prepare-base
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -346,8 +315,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.prepare-base.outputs.python-key }}
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -358,7 +326,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -371,10 +339,10 @@ jobs:
 
   lint-other:
     name: Check other linters
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
-      - changes
-      - prepare-base
+      - info
+      - pre-commit
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
@@ -388,8 +356,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.prepare-base.outputs.python-key }}
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -400,7 +367,7 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: ${{ env.PRE_COMMIT_CACHE }}
-          key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
       - name: Fail job if pre-commit cache restore failed
         if: steps.cache-precommit.outputs.cache-hit != 'true'
         run: |
@@ -408,17 +375,17 @@ jobs:
           exit 1
 
       - name: Run pyupgrade (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
       - name: Run pyupgrade (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/* --show-diff-on-failure
+          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
       - name: Register yamllint problem matcher
         run: |
@@ -437,17 +404,17 @@ jobs:
           pre-commit run --hook-stage manual check-json --all-files
 
       - name: Run prettier (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual prettier --all-files
 
       - name: Run prettier (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
-          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/*
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
 
       - name: Register check executables problem matcher
         run: |
@@ -478,36 +445,105 @@ jobs:
           args: hadolint Dockerfile.dev
 
       - name: Run bandit (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
       - name: Run bandit (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           shopt -s globstar
-          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.changes.outputs.integrations_glob }}/**/* --show-diff-on-failure
+          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
-  hassfest:
-    name: Check hassfest
-    runs-on: ubuntu-latest
-    needs: prepare-tests
+  base:
+    name: Prepare dependencies
+    runs-on: ubuntu-20.04
+    needs: info
+    timeout-minutes: 60
     strategy:
       matrix:
-        python-version: [3.9]
-    container: homeassistant/ci-azure:${{ matrix.python-version }}
+        python-version: ["3.9", "3.10"]
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Generate partial pip restore key
+        id: generate-pip-key
+        run: >-
+          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-${{
+            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
+      - name: Restore base Python virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
+      - name: Restore pip wheel cache
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        uses: actions/cache@v3.0.4
+        with:
+          path: ${{ env.PIP_CACHE }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            steps.generate-pip-key.outputs.key }}
+          restore-keys: |
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
+      - name: Install additional OS dependencies
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg \
+            libavcodec-dev \
+            libavdevice-dev \
+            libavfilter-dev \
+            libavformat-dev \
+            libavutil-dev \
+            libswresample-dev \
+            libswscale-dev \
+            libudev-dev
+      - name: Create Python virtual environment
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          python -m venv venv
+          . venv/bin/activate
+          python --version
+          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.2" setuptools wheel
+          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
+          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
+          pip install -e .
+
+  hassfest:
+    name: Check hassfest
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -520,14 +556,16 @@ jobs:
 
   gen-requirements-all:
     name: Check all requirements
-    runs-on: ubuntu-latest
-    needs: prepare-base
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.0.0
         id: python
+        uses: actions/setup-python@v4.0.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -535,8 +573,9 @@ jobs:
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-            needs.prepare-base.outputs.python-key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -547,94 +586,29 @@ jobs:
           . venv/bin/activate
           python -m script.gen_requirements_all validate
 
-  prepare-tests:
-    name: Prepare tests for Python ${{ matrix.python-version }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 60
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10"]
-    outputs:
-      python-key: ${{ steps.generate-python-key.outputs.key }}
-    container: homeassistant/ci-azure:${{ matrix.python-version }}
-    steps:
-      - name: Check out code from GitHub
-        uses: actions/checkout@v3.0.2
-      - name: Generate partial Python venv restore key
-        id: generate-python-key
-        run: >-
-          echo "::set-output name=key::venv-${{ env.CACHE_VERSION }}-${{
-            hashFiles('requirements_test.txt') }}-${{
-            hashFiles('requirements_all.txt') }}-${{
-            hashFiles('homeassistant/package_constraints.txt') }}"
-      - name: Generate partial pip restore key
-        id: generate-pip-key
-        run: >-
-          echo "::set-output name=key::pip-${{ env.PIP_CACHE_VERSION }}-${{
-            env.HA_SHORT_VERSION }}-$(date -u '+%Y-%m-%dT%H:%M:%s')"
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
-        id: cache-venv
-        uses: actions/cache@v3.0.4
-        with:
-          path: venv
-          key: >-
-            ${{ runner.os }}-${{ matrix.python-version }}-${{
-            steps.generate-python-key.outputs.key }}
-          # Temporary disabling the restore of environments when bumping
-          # a dependency. It seems that we are experiencing issues with
-          # restoring environments in GitHub Actions, although unclear why.
-          # First attempt: https://github.com/home-assistant/core/pull/62383
-          #
-          # restore-keys: |
-          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-${{ hashFiles('requirements_all.txt') }}-
-          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-${{ hashFiles('requirements_test.txt') }}-
-          #   ${{ runner.os }}-${{ matrix.python-version }}-venv-${{ env.CACHE_VERSION }}-
-      - name: Restore pip wheel cache
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: actions/cache@v3.0.4
-        with:
-          path: ${{ env.PIP_CACHE }}
-          key: >-
-            ${{ runner.os }}-${{ matrix.python-version }}-${{
-            steps.generate-pip-key.outputs.key }}
-          restore-keys: |
-            ${{ runner.os }}-${{ matrix.python-version }}-pip-${{ env.PIP_CACHE_VERSION }}-${{ env.HA_SHORT_VERSION }}-
-      - name: Create full Python ${{ matrix.python-version }} virtual environment
-        if: steps.cache-venv.outputs.cache-hit != 'true'
-        run: |
-          # Temporary addition of cmake, needed to build some Python 3.9 packages
-          apt-get update
-          apt-get -y install cmake
-
-          python -m venv venv
-          . venv/bin/activate
-          python --version
-          pip install --cache-dir=$PIP_CACHE -U "pip>=21.0,<22.2" setuptools wheel
-          pip install --cache-dir=$PIP_CACHE -r requirements_all.txt --use-deprecated=legacy-resolver
-          pip install --cache-dir=$PIP_CACHE -r requirements_test.txt --use-deprecated=legacy-resolver
-          pip install -e .
-
   pylint:
     name: Check pylint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     timeout-minutes: 20
     needs:
-      - changes
-      - prepare-tests
-    strategy:
-      matrix:
-        python-version: [3.9]
-    container: homeassistant/ci-azure:${{ matrix.python-version }}
+      - info
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -644,39 +618,41 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pylint.json"
       - name: Run pylint (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           python --version
           pylint --ignore-missing-annotations=y homeassistant
       - name: Run pylint (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+          pylint --ignore-missing-annotations=y homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   mypy:
     name: Check mypy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
-      - changes
-      - prepare-tests
-    strategy:
-      matrix:
-        python-version: [3.9]
-    container: homeassistant/ci-azure:${{ matrix.python-version }}
+      - info
+      - base
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
-      - name: Restore full Python ${{ matrix.python-version }} virtual environment
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -686,41 +662,46 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/mypy.json"
       - name: Run mypy (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         run: |
           . venv/bin/activate
           python --version
           mypy homeassistant pylint
       - name: Run mypy (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         shell: bash
         run: |
           . venv/bin/activate
           python --version
-          mypy homeassistant/components/${{ needs.changes.outputs.integrations_glob }}
+          mypy homeassistant/components/${{ needs.info.outputs.integrations_glob }}
 
   pip-check:
-    runs-on: ubuntu-latest
-    if: needs.changes.outputs.requirements == 'true' || github.event.inputs.full == 'true'
+    runs-on: ubuntu-20.04
+    if: needs.info.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
-      - changes
-      - prepare-tests
+      - info
+      - base
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.9]
+        python-version: ["3.9", "3.10"]
     name: Run pip check ${{ matrix.python-version }}
-    container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}
+          key: >-
+            ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -732,38 +713,48 @@ jobs:
           ./script/pip_check $PIP_CACHE
 
   pytest:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: |
       (github.event_name != 'push' || github.event.repository.full_name == 'home-assistant/core')
       && github.event.inputs.lint-only != 'true'
-      && (needs.changes.outputs.test_full_suite == 'true' || needs.changes.outputs.tests_glob)
+      && (needs.info.outputs.test_full_suite == 'true' || needs.info.outputs.tests_glob)
     needs:
-      - changes
+      - info
+      - base
       - gen-requirements-all
       - hassfest
       - lint-black
       - lint-other
       - lint-isort
       - mypy
-      - prepare-tests
     strategy:
       fail-fast: false
       matrix:
-        group: ${{ fromJson(needs.changes.outputs.test_groups) }}
+        group: ${{ fromJson(needs.info.outputs.test_groups) }}
         python-version: ["3.9", "3.10"]
     name: >-
       Run tests Python ${{ matrix.python-version }} (${{ matrix.group }})
-    container: homeassistant/ci-azure:${{ matrix.python-version }}
     steps:
+      - name: Install additional OS dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get -y install \
+            bluez \
+            ffmpeg
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ matrix.python-version }}
+        id: python
+        uses: actions/setup-python@v4.0.0
+        with:
+          python-version: ${{ matrix.python-version }}
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
         id: cache-venv
         uses: actions/cache@v3.0.4
         with:
           path: venv
-          key: ${{ runner.os }}-${{ matrix.python-version }}-${{
-            needs.prepare-tests.outputs.python-key }}
+          key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
+            needs.info.outputs.python_cache_key }}
       - name: Fail job if Python cache restore failed
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
@@ -783,7 +774,7 @@ jobs:
         run: |
           echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Run pytest (fully)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         timeout-minutes: 60
         run: |
           . venv/bin/activate
@@ -794,7 +785,7 @@ jobs:
             --durations=10 \
             -n auto \
             --dist=loadfile \
-            --test-group-count ${{ needs.changes.outputs.test_group_count }} \
+            --test-group-count ${{ needs.info.outputs.test_group_count }} \
             --test-group=${{ matrix.group }} \
             --cov="homeassistant" \
             --cov-report=xml \
@@ -802,8 +793,8 @@ jobs:
             -p no:sugar \
             tests
       - name: Run pytest (partially)
-        if: needs.changes.outputs.test_full_suite == 'false'
-        timeout-minutes: 20
+        if: needs.info.outputs.test_full_suite == 'false'
+        timeout-minutes: 10
         shell: bash
         run: |
           . venv/bin/activate
@@ -838,9 +829,9 @@ jobs:
 
   coverage:
     name: Upload test coverage to Codecov
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     needs:
-      - changes
+      - info
       - pytest
     steps:
       - name: Check out code from GitHub
@@ -848,10 +839,10 @@ jobs:
       - name: Download all coverage artifacts
         uses: actions/download-artifact@v3
       - name: Upload coverage to Codecov (full coverage)
-        if: needs.changes.outputs.test_full_suite == 'true'
+        if: needs.info.outputs.test_full_suite == 'true'
         uses: codecov/codecov-action@v3.1.0
         with:
           flags: full-suite
       - name: Upload coverage to Codecov (partial coverage)
-        if: needs.changes.outputs.test_full_suite == 'false'
+        if: needs.info.outputs.test_full_suite == 'false'
         uses: codecov/codecov-action@v3.1.0

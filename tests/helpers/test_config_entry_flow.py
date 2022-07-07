@@ -51,7 +51,7 @@ async def test_single_entry_allowed(hass, discovery_flow_conf):
     MockConfigEntry(domain="test").add_to_hass(hass)
     result = await flow.async_step_user()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -62,7 +62,7 @@ async def test_user_no_devices_found(hass, discovery_flow_conf):
     flow.context = {"source": config_entries.SOURCE_USER}
     result = await flow.async_step_confirm(user_input={})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
 
 
@@ -75,7 +75,7 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
         "test", context={"source": config_entries.SOURCE_USER}, data={}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     progress = hass.config_entries.flow.async_progress()
@@ -88,7 +88,7 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
     }
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -110,7 +110,7 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
     MockConfigEntry(domain="test").add_to_hass(hass)
     result = await getattr(flow, f"async_step_{source}")({})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -132,11 +132,11 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
 
     result = await getattr(flow, f"async_step_{source}")({})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     result = await flow.async_step_confirm({})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -160,7 +160,7 @@ async def test_discovery_during_onboarding(hass, discovery_flow_conf, source):
     ):
         result = await getattr(flow, f"async_step_{source}")({})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_multiple_discoveries(hass, discovery_flow_conf):
@@ -170,13 +170,13 @@ async def test_multiple_discoveries(hass, discovery_flow_conf):
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # Second discovery
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_only_one_in_progress(hass, discovery_flow_conf):
@@ -187,21 +187,21 @@ async def test_only_one_in_progress(hass, discovery_flow_conf):
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # User starts flow
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_USER}, data={}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # Discovery flow has not been aborted
     assert len(hass.config_entries.flow.async_progress()) == 2
 
     # Discovery should be aborted once user confirms
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
@@ -213,14 +213,14 @@ async def test_import_abort_discovery(hass, discovery_flow_conf):
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # Start import flow
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_IMPORT}, data={}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     # Discovery flow has been aborted
     assert len(hass.config_entries.flow.async_progress()) == 0
@@ -234,7 +234,7 @@ async def test_import_no_confirmation(hass, discovery_flow_conf):
     discovery_flow_conf["discovered"] = True
 
     result = await flow.async_step_import(None)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_import_single_instance(hass, discovery_flow_conf):
@@ -246,7 +246,7 @@ async def test_import_single_instance(hass, discovery_flow_conf):
     MockConfigEntry(domain="test").add_to_hass(hass)
 
     result = await flow.async_step_import(None)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_ignored_discoveries(hass, discovery_flow_conf):
@@ -256,7 +256,7 @@ async def test_ignored_discoveries(hass, discovery_flow_conf):
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     flow = next(
         (
@@ -278,7 +278,7 @@ async def test_ignored_discoveries(hass, discovery_flow_conf):
     result = await hass.config_entries.flow.async_init(
         "test", context={"source": config_entries.SOURCE_DISCOVERY}, data={}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_webhook_single_entry_allowed(hass, webhook_flow_conf):
@@ -289,7 +289,7 @@ async def test_webhook_single_entry_allowed(hass, webhook_flow_conf):
     MockConfigEntry(domain="test_single").add_to_hass(hass)
     result = await flow.async_step_user()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -302,7 +302,7 @@ async def test_webhook_multiple_entries_allowed(hass, webhook_flow_conf):
     hass.config.api = Mock(base_url="http://example.com")
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
 
 async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
@@ -316,7 +316,7 @@ async def test_webhook_config_flow_registers_webhook(hass, webhook_flow_conf):
     )
     result = await flow.async_step_user(user_input={})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["webhook_id"] is not None
 
 
@@ -341,7 +341,7 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     result = await hass.config_entries.flow.async_init(
         "test_single", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
@@ -358,7 +358,7 @@ async def test_webhook_create_cloudhook(hass, webhook_flow_conf):
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["description_placeholders"]["webhook_url"] == "https://example.com"
     assert len(mock_create.mock_calls) == 1
     assert len(async_setup_entry.mock_calls) == 1
@@ -395,7 +395,7 @@ async def test_webhook_create_cloudhook_aborts_not_connected(hass, webhook_flow_
     result = await hass.config_entries.flow.async_init(
         "test_single", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch(
         "hass_nabucasa.cloudhooks.Cloudhooks.async_create",
@@ -413,7 +413,7 @@ async def test_webhook_create_cloudhook_aborts_not_connected(hass, webhook_flow_
 
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cloud_not_connected"
 
 

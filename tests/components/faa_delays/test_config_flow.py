@@ -56,7 +56,7 @@ async def test_duplicate_error(hass):
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=conf
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

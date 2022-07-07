@@ -101,7 +101,7 @@ async def test_bridge_cannot_connect(hass):
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
 
 
@@ -124,7 +124,7 @@ async def test_bridge_cannot_connect_unknown_error(hass):
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
 
 
@@ -144,7 +144,7 @@ async def test_bridge_invalid_ssl_error(hass):
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == CasetaConfigFlow.ABORT_REASON_CANNOT_CONNECT
 
 
@@ -171,7 +171,7 @@ async def test_duplicate_bridge_import(hass):
             data=entry_mock_data,
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(mock_setup_entry.mock_calls) == 0
 
