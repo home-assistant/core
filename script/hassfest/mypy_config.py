@@ -49,8 +49,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.lovelace.dashboard",
     "homeassistant.components.lovelace.resources",
     "homeassistant.components.lovelace.websocket",
-    "homeassistant.components.meteo_france.sensor",
-    "homeassistant.components.meteo_france.weather",
     "homeassistant.components.minecraft_server",
     "homeassistant.components.minecraft_server.helpers",
     "homeassistant.components.minecraft_server.sensor",
