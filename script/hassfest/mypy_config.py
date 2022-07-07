@@ -24,7 +24,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.conversation",
     "homeassistant.components.conversation.default_agent",
     "homeassistant.components.denonavr.config_flow",
-    "homeassistant.components.denonavr.media_player",
     "homeassistant.components.denonavr.receiver",
     "homeassistant.components.evohome",
     "homeassistant.components.evohome.climate",
