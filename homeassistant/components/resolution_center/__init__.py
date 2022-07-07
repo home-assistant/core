@@ -14,8 +14,6 @@ __all__ = ["DOMAIN", "async_create_issue", "async_delete_issue"]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Resolution Center."""
-    hass.data[DOMAIN] = {}
-
     websocket_api.async_setup(hass)
     await async_load_issue_registry(hass)
 
