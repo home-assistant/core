@@ -1,6 +1,7 @@
 """Support for Proxmox VE."""
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -87,6 +88,15 @@ CONFIG_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
+
+
+@dataclass
+class ProxmoxAPIData:
+    """All data parsed from the Proxmox API per container/vm."""
+
+    name: str
+    status: str
+    mem: int
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -225,12 +235,9 @@ def parse_api_container_vm(status):
     It is implemented in this way to allow for more data to be added for sensors
     in the future.
     """
-
-    return {
-        "status": status["status"],
-        "name": status["name"],
-        "mem": status["mem"],
-    }
+    return ProxmoxAPIData(
+        status=status["status"], name=status["name"], mem=status["mem"]
+    )
 
 
 def call_api_container_vm(proxmox, node_name, vm_id, machine_type):

@@ -44,7 +44,7 @@ async def async_setup_platform(
                 if (coordinator_data := coordinator.data) is None:
                     continue
 
-                name = coordinator_data["name"]
+                name = coordinator_data.name
 
                 sensors += [
                     ProxmoxSensor(
@@ -56,13 +56,13 @@ async def async_setup_platform(
                         node_name=node_name,
                         vm_id=dev_id,
                         native_lambda=lambda data: round(
-                            int(data["mem"]) / BYTE_TO_GIBIBYTE, 2
+                            int(data.mem) / BYTE_TO_GIBIBYTE, 2
                         ),
                         unit_of_measurement=DATA_GIBIBYTES,
                     )
                 ]
 
-        add_entities(sensors)
+    add_entities(sensors)
 
 
 class ProxmoxSensor(ProxmoxEntity, SensorEntity):
