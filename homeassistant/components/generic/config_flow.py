@@ -6,7 +6,7 @@ import contextlib
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from typing import Any
+from typing import Any, cast
 
 import PIL
 from aiohttp import web
@@ -15,7 +15,8 @@ from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
 
-from homeassistant.components.camera import SCAN_INTERVAL, CameraImageView
+from homeassistant.components.camera import CAMERA_IMAGE_TIMEOUT, _async_get_image
+from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
@@ -24,7 +25,12 @@ from homeassistant.components.stream import (
     SOURCE_TIMEOUT,
     create_stream,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntriesFlowManager,
+    ConfigEntry,
+    ConfigFlow,
+    OptionsFlow,
+)
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -38,7 +44,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
 
@@ -66,6 +71,7 @@ DEFAULT_DATA = {
 }
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
+PREVIEW = "preview"
 
 
 def build_schema(
@@ -264,6 +270,19 @@ async def async_test_stream(
     return {}
 
 
+def register_preview(hass: HomeAssistant):
+    """Set up previews for camera feeds during config flow."""
+    if not hass.data.get(DOMAIN):
+        hass.data[DOMAIN] = {}
+
+    if not hass.data[DOMAIN].get(PREVIEW):
+        _LOGGER.debug("Registering camera image preview handler")
+        preview = CameraImagePreview(hass)
+
+        hass.http.register_view(preview)
+        hass.data[DOMAIN][PREVIEW] = True
+
+
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for generic IP camera."""
 
@@ -273,8 +292,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize Generic ConfigFlow."""
         self.cached_user_input: dict[str, Any] = {}
         self.cached_title = ""
-        self.preview_iterator = 0
-        self.temp_view: CameraImagePreView | None = None
+        self.preview: GenericCamera | None = None
 
     @staticmethod
     def async_get_options_flow(
@@ -297,6 +315,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         errors = {}
         hass = self.hass
+        register_preview(hass)
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
@@ -323,11 +342,9 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.cached_title = name
 
                     # Register a temporary view so that we can show a preview
-                    self.preview_iterator += 1
-                    preview_id = f"{self.flow_id}_{self.preview_iterator}"
-                    cam = GenericCamera(self.hass, user_input, preview_id, "preview")
-                    self.temp_view = CameraImagePreView(self.hass, cam, preview_id)
-                    preview_url = f"/api/generic/preview_flow/{preview_id}"
+                    flow_id = self.flow_id
+                    self.preview = GenericCamera(hass, user_input, flow_id, "preview")
+                    preview_url = f"/api/generic/preview_flow_image/{flow_id}"
                     return self.async_show_form(
                         step_id="user_confirm_still",
                         data_schema=vol.Schema(
@@ -351,8 +368,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> FlowResult:
         """Handle user clicking confirm after still preview."""
-        if self.temp_view:
-            self.temp_view.mark_invalid()
         if not user_input.get(CONF_CONFIRMED_OK):
             return self.async_show_form(
                 step_id="user",
@@ -448,37 +463,39 @@ class GenericOptionsFlowHandler(OptionsFlow):
         )
 
 
-class CameraImagePreView(CameraImageView):
+class CameraImagePreview(HomeAssistantView):
     """Camera view to temporarily serve an image."""
 
+    url = "/api/generic/preview_flow_image/{flow_id}"
     name = "api:generic:preview_flow_image"
-    previews: dict[str, GenericCamera] = {}
-    initialized = False
+    requires_auth = False
 
-    def __init__(
-        self, hass: HomeAssistant, camera: GenericCamera, preview_id: str
-    ) -> None:
-        """Initialize a basic camera view."""
-        self.preview_id = preview_id
-        if not self.initialized:
-            super().__init__(EntityComponent(_LOGGER, DOMAIN, hass, SCAN_INTERVAL))
-            self.url = "/api/generic/preview_flow_image/{entity_id}"
-            hass.http.register_view(self)
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialise."""
+        self.hass = hass
 
-        _LOGGER.debug("Adding temporary camera preview '%s'", preview_id)
-        self.previews[preview_id] = camera
-
-    async def get(self, request: web.Request, entity_id) -> web.Response:
+    async def get(self, request: web.Request, flow_id) -> web.Response:
         """Start a GET request."""
-        camera = self.previews.get(entity_id)
+        _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
+        manager: ConfigEntriesFlowManager = self.hass.config_entries.flow
+
+        # @todo - Need to find a more legal way of doing this:
+        # pylint: disable=protected-access
+        flow = cast(GenericIPCamConfigFlow, manager._progress[flow_id])
+        camera = flow.preview
+
         if camera is None:
             _LOGGER.warning("Not valid")
             raise web.HTTPNotFound()
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
             raise web.HTTPServiceUnavailable()
-        return await self.handle(request, camera)
-
-    def mark_invalid(self):
-        """Remove the view when we've finished with it."""
-        self.previews.pop(self.preview_id)
+        try:
+            image = await _async_get_image(
+                camera,
+                CAMERA_IMAGE_TIMEOUT,
+            )
+        except (ValueError) as ex:
+            raise web.HTTPInternalServerError() from ex
+        else:
+            return web.Response(body=image.content, content_type=image.content_type)

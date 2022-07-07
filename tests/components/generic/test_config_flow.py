@@ -74,7 +74,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
         assert result1["type"] == data_entry_flow.FlowResultType.FORM
         assert result1["step_id"] == "user_confirm_still"
         client = await hass_client()
-        preview_id = result1["flow_id"] + "_1"
+        preview_id = result1["flow_id"]
         # Check the preview image works.
         resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
         assert resp.status == HTTPStatus.OK
@@ -101,7 +101,7 @@ async def test_form(hass, fakeimgbytes_png, hass_client, user_flow, mock_create_
     await hass.async_block_till_done()
     # Check that the preview image is disabled after.
     resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
-    assert resp.status == HTTPStatus.NOT_FOUND
+    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -178,7 +178,7 @@ async def test_form_still_preview_cam_off(
         )
         assert result1["type"] == data_entry_flow.RESULT_TYPE_FORM
         assert result1["step_id"] == "user_confirm_still"
-        preview_id = result1["flow_id"] + "_1"
+        preview_id = result1["flow_id"]
         # Try to view the image, should be unavailable.
         client = await hass_client()
         resp = await client.get(f"/api/generic/preview_flow_image/{preview_id}")
