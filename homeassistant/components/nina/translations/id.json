@@ -23,5 +23,22 @@
                 "title": "Pilih kota/kabupaten"
             }
         }
+    },
+    "options": {
+        "error": {
+            "no_selection": "Pilih setidaknya satu kota/kabupaten"
+        },
+        "step": {
+            "init": {
+                "data": {
+                    "_a_to_d": "Kota/kabupaten (A-D)",
+                    "_e_to_h": "Kota/kabupaten (E-H)",
+                    "_i_to_l": "Kota/kabupaten (I-L)",
+                    "_m_to_q": "Kota/kabupaten (M-Q)",
+                    "_r_to_u": "Kota/kabupaten (R-U)"
+                },
+                "title": "Opsi"
+            }
+        }
     }
 }

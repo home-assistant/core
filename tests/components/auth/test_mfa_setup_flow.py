@@ -64,7 +64,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     assert result["success"]
 
     flow = result["result"]
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert flow["type"] == data_entry_flow.FlowResultType.FORM
     assert flow["handler"] == "example_module"
     assert flow["step_id"] == "init"
     assert flow["data_schema"][0] == {"type": "string", "name": "pin", "required": True}
@@ -83,7 +83,7 @@ async def test_ws_setup_depose_mfa(hass, hass_ws_client):
     assert result["success"]
 
     flow = result["result"]
-    assert flow["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert flow["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert flow["handler"] == "example_module"
     assert flow["data"]["result"] is None
 

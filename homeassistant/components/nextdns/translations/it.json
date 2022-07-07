@@ -1,0 +1,14 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Questo profilo NextDNS \u00e8 gi\u00e0 configurato."
+        },
+        "step": {
+            "profiles": {
+                "data": {
+                    "profile": "Profilo"
+                }
+            }
+        }
+    }
+}

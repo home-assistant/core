@@ -35,7 +35,7 @@ async def test_abort_if_no_implementation_registered(hass):
     flow.hass = hass
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_configuration"
 
 
@@ -48,12 +48,12 @@ async def test_abort_if_already_setup(hass):
         config_flow.DOMAIN,
         context={"source": config_entries.SOURCE_USER},
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     with pytest.raises(data_entry_flow.AbortFlow):
         result = await flow.async_step_code()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -63,7 +63,7 @@ async def test_full_flow_implementation(hass):
     flow = await init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert (
         result["description_placeholders"]["cb_url"]
@@ -78,7 +78,7 @@ async def test_full_flow_implementation(hass):
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value="test"):
         result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Ambiclimate"
     assert result["data"]["callback_url"] == "https://example.com/api/ambiclimate"
     assert result["data"][CONF_CLIENT_SECRET] == "secret"
@@ -86,14 +86,14 @@ async def test_full_flow_implementation(hass):
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value=None):
         result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
     with patch(
         "ambiclimate.AmbiclimateOAuth.get_access_token",
         side_effect=ambiclimate.AmbiclimateOauthError(),
     ):
         result = await flow.async_step_code("123ABC")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
 
 
 async def test_abort_invalid_code(hass):
@@ -103,7 +103,7 @@ async def test_abort_invalid_code(hass):
 
     with patch("ambiclimate.AmbiclimateOAuth.get_access_token", return_value=None):
         result = await flow.async_step_code("invalid")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "access_token"
 
 
@@ -115,7 +115,7 @@ async def test_already_setup(hass):
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 

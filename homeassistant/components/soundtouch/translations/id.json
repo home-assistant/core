@@ -1,0 +1,16 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "zeroconf_confirm": {
+                "description": "Anda akan menambahkan perangkat SoundTouch bernama  `{name}` ke Home Assistant.",
+                "title": "Konfirmasi penambahan perangkat Bose SoundTouch"
+            }
+        }
+    }
+}

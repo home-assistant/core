@@ -7,6 +7,7 @@
         "error": {
             "already_exists": "Kamera dengan setelan URL ini sudah ada.",
             "invalid_still_image": "URL tidak mengembalikan gambar diam yang valid",
+            "malformed_url": "URL salah format",
             "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
             "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
             "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",
@@ -50,6 +51,7 @@
         "error": {
             "already_exists": "Kamera dengan setelan URL ini sudah ada.",
             "invalid_still_image": "URL tidak mengembalikan gambar diam yang valid",
+            "malformed_url": "URL salah format",
             "no_still_image_or_stream_url": "Anda harus menentukan setidaknya gambar diam atau URL streaming",
             "stream_file_not_found": "File tidak ditemukan saat mencoba menyambung ke streaming (sudahkah ffmpeg diinstal?)",
             "stream_http_not_found": "HTTP 404 Tidak ditemukan saat mencoba menyambung ke streaming",

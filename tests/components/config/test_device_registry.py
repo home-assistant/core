@@ -29,14 +29,14 @@ def registry(hass):
 
 async def test_list_devices(hass, client, registry):
     """Test list entries."""
-    registry.async_get_or_create(
+    device1 = registry.async_get_or_create(
         config_entry_id="1234",
         connections={("ethernet", "12:34:56:78:90:AB:CD:EF")},
         identifiers={("bridgeid", "0123")},
         manufacturer="manufacturer",
         model="model",
     )
-    registry.async_get_or_create(
+    device2 = registry.async_get_or_create(
         config_entry_id="1234",
         identifiers={("bridgeid", "1234")},
         manufacturer="manufacturer",
@@ -83,6 +83,32 @@ async def test_list_devices(hass, client, registry):
             "disabled_by": None,
             "configuration_url": None,
         },
+    ]
+
+    registry.async_remove_device(device2.id)
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 6, "type": "config/device_registry/list"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == [
+        {
+            "area_id": None,
+            "config_entries": ["1234"],
+            "configuration_url": None,
+            "connections": [["ethernet", "12:34:56:78:90:AB:CD:EF"]],
+            "disabled_by": None,
+            "entry_type": None,
+            "hw_version": None,
+            "id": device1.id,
+            "identifiers": [["bridgeid", "0123"]],
+            "manufacturer": "manufacturer",
+            "model": "model",
+            "name": None,
+            "name_by_user": None,
+            "sw_version": None,
+            "via_device_id": None,
+        }
     ]
 
 
