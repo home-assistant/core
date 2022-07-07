@@ -26,7 +26,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
 
     @hass_callback
     def async_register_callback(
-        self, callback: AdvertisementDataCallback, filters: dict[str, Any]
+        self, callback: AdvertisementDataCallback, filters: dict[str, set[str]]
     ) -> CALLBACK_TYPE:
         """Register a callback."""
         self._callbacks.append((callback, filters))
