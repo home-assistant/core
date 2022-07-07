@@ -42,25 +42,19 @@ async def async_setup_entry(
 
         entities.append(ElkBinarySensor(element, elk, elk_data))
 
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
 class ElkBinarySensor(ElkAttachedEntity, BinarySensorEntity):
     """Representation of ElkM1 binary sensor."""
 
     _element: Zone
+    _attr_entity_registry_enabled_default = False
 
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk sensors."""
         super().__init__(element, elk, elk_data)
-        self._state: bool = False
-        self._attr_entity_registry_enabled_default = False
-
-    @property
-    def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        return self._state
 
     def _element_changed(self, _: Element, changeset: Any) -> None:
         # Zone in NORMAL state is OFF; any other state is ON
-        self._state = self._element.logical_status != ZoneLogicalStatus.NORMAL
+        self._attr_is_on = bool(self._element.logical_status != ZoneLogicalStatus.NORMAL)
