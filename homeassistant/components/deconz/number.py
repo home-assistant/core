@@ -113,8 +113,10 @@ class DeconzNumber(DeconzDevice, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set sensor config."""
-        data = {self.entity_description.key: int(value)}
-        await self._device.set_config(**data)
+        await self.gateway.api.sensors.presence.set_config(
+            id=self._device.resource_id,
+            delay=int(value),
+        )
 
     @property
     def unique_id(self) -> str:
