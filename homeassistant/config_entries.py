@@ -1160,6 +1160,7 @@ class ConfigEntries:
             "this will fail in version 2022.12",
             # Raise this to warning once all core integrations have been migrated
             level=logging.DEBUG,
+            error_if_core=False,
         )
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
