@@ -1,8 +1,8 @@
 """Generate bluetooth file."""
 from __future__ import annotations
 
-from collections import OrderedDict, defaultdict
-import json
+import pprint
+import re
 
 from .model import Config, Integration
 
@@ -13,24 +13,15 @@ To update, run python3 -m script.hassfest
 \"\"\"
 from __future__ import annotations
 
-from typing import Any
-
 # fmt: off
 
-
-BLUETOOTH: dict[str, Any] = {}
+BLUETOOTH: list[dict[str, str | int]] = {}
 """.strip()
 
 
-def sort_dict(value):
-    """Sort a dictionary."""
-    return OrderedDict((key, value[key]) for key in sorted(value))
-
-
-def generate_and_validate(integrations: dict[str, Integration]):
+def generate_and_validate(integrations: list[dict[str, str]]):
     """Validate and generate bluetooth data."""
-
-    data = defaultdict(list)
+    match_list = []
 
     for domain in sorted(integrations):
         integration = integrations[domain]
@@ -38,27 +29,35 @@ def generate_and_validate(integrations: dict[str, Integration]):
         if not integration.manifest or not integration.config_flow:
             continue
 
-        bluetooth = integration.manifest.get("bluetooth")
+        match_types = integration.manifest.get("bluetooth", [])
 
-        if not bluetooth:
+        if not match_types:
             continue
 
-        for matcher in bluetooth:
-            data[domain].append(sort_dict(matcher))
+        for entry in match_types:
+            match_list.append({"domain": domain, **entry})
 
-    return BASE.format(json.dumps(data, indent=4))
+    # JSON will format `True` as `true`
+    # re.sub for flake8 E128
+    formatted = pprint.pformat(match_list)
+    formatted_aligned_continuation = re.sub(r"^\[\{", "[\n {", formatted)
+    formatted_align_indent = re.sub(
+        r"(?m)^ ", "    ", formatted_aligned_continuation, flags=re.MULTILINE, count=0
+    )
+    return BASE.format(formatted_align_indent)
 
 
 def validate(integrations: dict[str, Integration], config: Config):
-    """Validate ssdp file."""
-    ssdp_path = config.root / "homeassistant/generated/bluetooth.py"
+    """Validate bluetooth file."""
+    bluetooth_path = config.root / "homeassistant/generated/bluetooth.py"
     config.cache["bluetooth"] = content = generate_and_validate(integrations)
 
     if config.specific_integrations:
         return
 
-    with open(str(ssdp_path)) as fp:
-        if fp.read().strip() != content:
+    with open(str(bluetooth_path)) as fp:
+        current = fp.read().strip()
+        if current != content:
             config.add_error(
                 "bluetooth",
                 "File bluetooth.py is not up to date. Run python3 -m script.hassfest",
@@ -68,7 +67,7 @@ def validate(integrations: dict[str, Integration], config: Config):
 
 
 def generate(integrations: dict[str, Integration], config: Config):
-    """Generate ssdp file."""
+    """Generate bluetooth file."""
     bluetooth_path = config.root / "homeassistant/generated/bluetooth.py"
     with open(str(bluetooth_path), "w") as fp:
         fp.write(f"{config.cache['bluetooth']}\n")
