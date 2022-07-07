@@ -66,8 +66,6 @@ class ElgatoLight(
 ):
     """Defines an Elgato Light."""
 
-    _attr_name = "Light"
-
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[State],
