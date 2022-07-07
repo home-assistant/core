@@ -37,7 +37,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
 
         return _remove_callback
 
-    def async_callback_disptacher(
+    def async_callback_dispatcher(
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
         """Dispatch the callback.
