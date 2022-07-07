@@ -5,7 +5,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import os
-from typing import TYPE_CHECKING, Any, NamedTuple
+from typing import Any, NamedTuple
 
 import voluptuous as vol
 
@@ -537,8 +537,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     if (data := await store.async_load()) is None:
         data = {}
 
-    if TYPE_CHECKING:
-        assert isinstance(data, dict)
+    assert isinstance(data, dict)
 
     refresh_token = None
     if "hassio_user" in data:
