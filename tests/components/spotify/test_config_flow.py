@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 from spotipy import SpotifyException
 
-from homeassistant import data_entry_flow, setup
+from homeassistant import data_entry_flow
 from homeassistant.components import zeroconf
 from homeassistant.components.application_credentials import (
     ClientCredential,
@@ -33,12 +33,6 @@ BLANK_ZEROCONF_INFO = zeroconf.ZeroconfServiceInfo(
 @pytest.fixture
 async def component_setup(hass: HomeAssistant) -> None:
     """Fixture for setting up the integration."""
-    assert await setup.async_setup_component(
-        hass,
-        DOMAIN,
-        {"http": {"base_url": "https://example.com"}},
-    )
-
     result = await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
