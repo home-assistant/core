@@ -140,6 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     undo_listener = entry.add_update_listener(_update_listener)
 
+    _LOGGER.warning("DOORBIRD DONE LOADING")
     hass.data[DOMAIN][config_entry_id] = {
         DOOR_STATION: doorstation,
         DOOR_STATION_INFO: info,

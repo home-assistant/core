@@ -1,5 +1,7 @@
 """Describe logbook events."""
 
+import logging
+
 from homeassistant.components.logbook.const import (
     LOGBOOK_ENTRY_ENTITY_ID,
     LOGBOOK_ENTRY_MESSAGE,
@@ -10,10 +12,13 @@ from homeassistant.core import callback
 
 from .const import DOMAIN, DOOR_STATION, DOOR_STATION_EVENT_ENTITY_IDS
 
+_LOGGER = logging.getLogger(__name__)
+
 
 @callback
 def async_describe_events(hass, async_describe_event):
     """Describe logbook events."""
+    _LOGGER.warning("DOORBIRD LOGBOOK LOADING")
 
     @callback
     def async_describe_logbook_event(event):
