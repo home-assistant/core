@@ -57,7 +57,9 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         def _remove_callback() -> None:
             self._callbacks.remove((callback, filters))
 
-        # Replay the history
+        # Replay the history since otherwise we miss devices
+        # that were already discovered before the callback was registered
+        # or we are in passive mode
         for device, advertisement_data in self._history.values():
             _dispatch_callback(callback, filters, device, advertisement_data)
 
