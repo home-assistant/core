@@ -17,6 +17,9 @@
                 },
                 "description": "Masukkan kembali token akses pengembang Awair Anda."
             },
+            "reauth_confirm": {
+                "description": "Masukkan kembali token akses pengembang Awair Anda."
+            },
             "user": {
                 "data": {
                     "access_token": "Token Akses",

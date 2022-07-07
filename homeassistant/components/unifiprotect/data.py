@@ -26,6 +26,8 @@ from homeassistant.helpers.event import async_track_time_interval
 
 from .const import (
     CONF_DISABLE_RTSP,
+    CONF_MAX_MEDIA,
+    DEFAULT_MAX_MEDIA,
     DEVICES_THAT_ADOPT,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
@@ -80,6 +82,11 @@ class ProtectData:
     def disable_stream(self) -> bool:
         """Check if RTSP is disabled."""
         return self._entry.options.get(CONF_DISABLE_RTSP, False)
+
+    @property
+    def max_events(self) -> int:
+        """Max number of events to load at once."""
+        return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)
 
     def get_by_types(
         self, device_types: Iterable[ModelType]
