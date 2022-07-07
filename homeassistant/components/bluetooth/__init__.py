@@ -1,7 +1,6 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Awaitable, Callable
 import dataclasses
 from enum import Enum
@@ -24,15 +23,12 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import BluetoothMatcher, async_get_bluetooth, bind_hass
+from homeassistant.loader import BluetoothMatcher, async_get_bluetooth
 
 from . import models
 from .const import DOMAIN
 from .models import HaBleakScanner
 from .usage import install_multiple_bleak_catcher
-
-# import voluptuous as vol
-
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +96,6 @@ BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
 
 
-@bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
@@ -141,7 +136,6 @@ class BluetoothManager:
         self._integration_matchers = integration_matchers
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
-        self._scan_task: asyncio.Task | None = None
         self._callbacks: list[tuple[BluetoothCallback, dict[str, str]]] = []
 
     async def async_setup(self) -> None:
@@ -159,15 +153,7 @@ class BluetoothManager:
         install_multiple_bleak_catcher(self.scanner)
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
 
-    async def _async_start_scanner(self) -> None:
-        """Start scanner and wait until canceled."""
-        future: asyncio.Future[bool] = asyncio.Future()
-        assert self.scanner is not None
-        await self.scanner.start()
-        await future
-
-    @hass_callback
-    def async_start(self, event: Event) -> None:
+    async def async_start(self, event: Event) -> None:
         """Start BT Discovery and run a manual scan."""
         _LOGGER.debug("Starting bluetooth scanner")
         assert self.scanner is not None
@@ -176,7 +162,7 @@ class BluetoothManager:
             self._device_detected, {}
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
-        self._scan_task = self.hass.async_create_task(self._async_start_scanner())
+        await self.scanner.start()
 
     @hass_callback
     def _device_detected(
@@ -257,9 +243,6 @@ class BluetoothManager:
         if self._cancel_device_detected:
             self._cancel_device_detected()
             self._cancel_device_detected = None
-        if self._scan_task:
-            self._scan_task.cancel()
-            self._scan_task = None
         if self.scanner:
             await self.scanner.stop()
         models.HA_BLEAK_SCANNER = None
