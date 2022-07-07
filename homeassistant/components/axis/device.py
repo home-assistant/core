@@ -229,21 +229,18 @@ class AxisNetworkDevice:
         self.fw_version = self.api.vapix.firmware_version
         self.product_type = self.api.vapix.product_type
 
-        async def start_platforms():
-            await self.hass.config_entries.async_forward_entry_setups(
-                self.config_entry, PLATFORMS
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
+        if self.option_events:
+            self.api.stream.connection_status_callback.append(
+                self.async_connection_status_callback
             )
-            if self.option_events:
-                self.api.stream.connection_status_callback.append(
-                    self.async_connection_status_callback
-                )
-                self.api.enable_events(event_callback=self.async_event_callback)
-                self.api.stream.start()
+            self.api.enable_events(event_callback=self.async_event_callback)
+            self.api.stream.start()
 
-                if self.api.vapix.mqtt:
-                    async_when_setup(self.hass, MQTT_DOMAIN, self.use_mqtt)
-
-        self.hass.async_create_task(start_platforms())
+            if self.api.vapix.mqtt:
+                async_when_setup(self.hass, MQTT_DOMAIN, self.use_mqtt)
 
         self.config_entry.add_update_listener(self.async_new_address_callback)
 
