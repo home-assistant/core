@@ -6,13 +6,15 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import websocket_api
 from .const import DOMAIN
-from .issue_handler import async_create_issue, async_delete_issue  # noqa: F401
+from .issue_handler import async_create_issue, async_delete_issue
 from .issue_registry import async_load as async_load_issue_registry
+
+__all__ = ["DOMAIN", "async_create_issue", "async_delete_issue"]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Resolution Center."""
-    hass.data[DOMAIN] = {"issues": {}}
+    hass.data[DOMAIN] = {}
 
     websocket_api.async_setup(hass)
     await async_load_issue_registry(hass)

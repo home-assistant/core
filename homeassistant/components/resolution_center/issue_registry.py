@@ -8,24 +8,28 @@ from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
+from .models import IssueSeverity
+
 DATA_REGISTRY = "issue_registry"
 STORAGE_KEY = "resolution_center.issue_registry"
 STORAGE_VERSION = 1
 SAVE_DELAY = 10
+SAVED_FIELDS = ("dismissed_version", "domain", "issue_id")
 
 
 @dataclasses.dataclass(frozen=True)
 class IssueEntry:
     """Issue Registry Entry."""
 
+    active: bool
+    breaks_in_ha_version: str | None
     dismissed_version: str | None
     domain: str
     issue_id: str
-
-    @property
-    def is_dismissed(self) -> bool:
-        """Return True if an issue is dismissed."""
-        return self.dismissed_version is not None
+    learn_more_url: str | None
+    severity: IssueSeverity | None
+    translation_key: str | None
+    translation_placeholders: dict[str, str] | None
 
 
 class IssueRegistry:
@@ -43,17 +47,43 @@ class IssueRegistry:
         return self.issues.get((domain, issue_id))
 
     @callback
-    def async_get_or_create(self, domain: str, issue_id: str) -> IssueEntry:
+    def async_get_or_create(
+        self,
+        domain: str,
+        issue_id: str,
+        *,
+        breaks_in_ha_version: str | None = None,
+        learn_more_url: str | None = None,
+        severity: IssueSeverity,
+        translation_key: str,
+        translation_placeholders: dict[str, str] | None = None,
+    ) -> IssueEntry:
         """Get issue. Create if it doesn't exist."""
 
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
+                active=True,
+                breaks_in_ha_version=breaks_in_ha_version,
                 dismissed_version=None,
                 domain=domain,
                 issue_id=issue_id,
+                learn_more_url=learn_more_url,
+                severity=severity,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
             )
             self.issues[(domain, issue_id)] = issue
             self.async_schedule_save()
+        else:
+            issue = self.issues[(domain, issue_id)] = dataclasses.replace(
+                issue,
+                active=True,
+                breaks_in_ha_version=breaks_in_ha_version,
+                learn_more_url=learn_more_url,
+                severity=severity,
+                translation_key=translation_key,
+                translation_placeholders=translation_placeholders,
+            )
 
         return issue
 
@@ -82,7 +112,7 @@ class IssueRegistry:
         return issue
 
     async def async_load(self) -> None:
-        """Load the area registry."""
+        """Load the issue registry."""
         data = await self._store.async_load()
 
         issues: dict[tuple[str, str], IssueEntry] = {}
@@ -90,36 +120,45 @@ class IssueRegistry:
         if isinstance(data, dict):
             for issue in data["issues"]:
                 issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
+                    active=False,
+                    breaks_in_ha_version=None,
                     dismissed_version=issue["dismissed_version"],
                     domain=issue["domain"],
                     issue_id=issue["issue_id"],
+                    learn_more_url=None,
+                    severity=None,
+                    translation_key=None,
+                    translation_placeholders=None,
                 )
 
         self.issues = issues
 
     @callback
     def async_schedule_save(self) -> None:
-        """Schedule saving the area registry."""
+        """Schedule saving the issue registry."""
         self._store.async_delay_save(self._data_to_save, SAVE_DELAY)
 
     @callback
     def _data_to_save(self) -> dict[str, list[dict[str, str | None]]]:
-        """Return data of area registry to store in a file."""
+        """Return data of issue registry to store in a file."""
         data = {}
 
-        data["issues"] = [dataclasses.asdict(entry) for entry in self.issues.values()]
+        data["issues"] = [
+            {field: getattr(entry, field) for field in SAVED_FIELDS}
+            for entry in self.issues.values()
+        ]
 
         return data
 
 
 @callback
 def async_get(hass: HomeAssistant) -> IssueRegistry:
-    """Get area registry."""
+    """Get issue registry."""
     return cast(IssueRegistry, hass.data[DATA_REGISTRY])
 
 
 async def async_load(hass: HomeAssistant) -> None:
-    """Load area registry."""
+    """Load issue registry."""
     assert DATA_REGISTRY not in hass.data
     hass.data[DATA_REGISTRY] = IssueRegistry(hass)
     await hass.data[DATA_REGISTRY].async_load()
