@@ -57,6 +57,17 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
                 _LOGGER.exception("Error in callback: %s", callback)
 
 
+def _get_bleak_filter_value_set(obj: Any) -> Any:
+    """Get the value of a bleak filter object.
+
+    On linux there will be dbus_next Variant objects
+    but we cannot import that since the library won't
+    work on MacOS.
+
+    """
+    return set(getattr(obj, "value", obj))
+
+
 class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
     """A wrapper that uses the single instance."""
 
@@ -66,14 +77,12 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         self._filters: dict[str, set[str]] = {}
         if "filters" in kwargs:
             self._filters = {
-                # On linux there will be dbus_next Variant objects
-                # but we cannot import that since the library won't
-                # work on MacOS
-                k: set(getattr(v, "value", v))
-                for k, v in kwargs["filters"].items()
+                k: _get_bleak_filter_value_set(v) for k, v in kwargs["filters"].items()
             }
         if "service_uuids" in kwargs:
-            self._filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
+            self._filters[FILTER_UUIDS] = _get_bleak_filter_value_set(
+                kwargs["service_uuids"]
+            )
         super().__init__(*args, **kwargs)
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
