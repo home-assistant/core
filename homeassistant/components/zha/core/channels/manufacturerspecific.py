@@ -15,7 +15,8 @@ from ..const import (
     ATTR_ATTRIBUTE_NAME,
     ATTR_VALUE,
     REPORT_CONFIG_ASAP,
-    REPORT_CONFIG_MIN_INT_IMMEDIATE,
+    REPORT_CONFIG_DEFAULT,
+    REPORT_CONFIG_IMMEDIATE,
     REPORT_CONFIG_MAX_INT,
     REPORT_CONFIG_MIN_INT,
     SIGNAL_ATTR_UPDATED,
@@ -130,48 +131,57 @@ class SmartThingsAcceleration(ZigbeeChannel):
 class InovelliCluster(ClientChannel):
     """Inovelli Button Press Event channel."""
 
-    REPORT_CONFIG = []
+    REPORT_CONFIG = ()
 
 
+@registries.CHANNEL_ONLY_CLUSTERS.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
 @registries.ZIGBEE_CHANNEL_REGISTRY.register(registries.IKEA_AIR_PURIFIER_CLUSTER)
-class IkeaAirPurifierCluster(ZigbeeChannel):
+class IkeaAirPurifierChannel(ZigbeeChannel):
     """IKEA Air Purifier channel."""
 
-    REPORT_CONFIG = [
-        {
-            "attr": "filter_run_time",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "replace_filter",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "filter_life_time",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "disable_led",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "air_quality_25pm",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "child_lock",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "fan_mode",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "fan_speed",
-            "config": (REPORT_CONFIG_MIN_INT_IMMEDIATE, REPORT_CONFIG_MAX_INT, 1),
-        },
-        {
-            "attr": "device_run_time",
-            "config": (REPORT_CONFIG_MIN_INT, REPORT_CONFIG_MAX_INT, 1),
-        },
-    ]
+    REPORT_CONFIG = (
+        AttrReportConfig(attr="filter_run_time", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="replace_filter", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="filter_life_time", config=REPORT_CONFIG_DEFAULT),
+        AttrReportConfig(attr="disable_led", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="air_quality_25pm", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="child_lock", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="fan_mode", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="fan_speed", config=REPORT_CONFIG_IMMEDIATE),
+        AttrReportConfig(attr="device_run_time", config=REPORT_CONFIG_DEFAULT),
+    )
+
+    @property
+    def fan_mode(self) -> int | None:
+        """Return current fan mode."""
+        return self.cluster.get("fan_mode")
+
+    @property
+    def fan_mode_sequence(self) -> int | None:
+        """Return possible fan mode speeds."""
+        return self.cluster.get("fan_mode_sequence")
+
+    async def async_set_speed(self, value) -> None:
+        """Set the speed of the fan."""
+
+        try:
+            await self.cluster.write_attributes({"fan_mode": value})
+        except ZigbeeException as ex:
+            self.error("Could not set speed: %s", ex)
+            return
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        await self.get_attribute_value("fan_mode", from_cache=False)
+
+    @callback
+    def attribute_updated(self, attrid: int, value: Any) -> None:
+        """Handle attribute update from fan cluster."""
+        attr_name = self._get_attribute_name(attrid)
+        self.debug(
+            "Attribute report '%s'[%s] = %s", self.cluster.name, attr_name, value
+        )
+        if attr_name == "fan_mode":
+            self.async_send_signal(
+                f"{self.unique_id}_{SIGNAL_ATTR_UPDATED}", attrid, attr_name, value
+            )
