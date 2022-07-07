@@ -9,7 +9,7 @@
             "connection_error": "Nem lehet csatlakozni az ESP-hez. K\u00e9rem, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy a YAML konfigur\u00e1ci\u00f3 tartalmaz egy \"api:\" sort.",
             "invalid_auth": "\u00c9rv\u00e9nytelen hiteles\u00edt\u00e9s",
             "invalid_psk": "Az adat\u00e1tviteli titkos\u00edt\u00e1si kulcs \u00e9rv\u00e9nytelen. K\u00e9rj\u00fck, gy\u0151z\u0151dj\u00f6n meg r\u00f3la, hogy megegyezik a konfigur\u00e1ci\u00f3ban l\u00e9v\u0151vel.",
-            "resolve_error": "Az ESP c\u00edme nem oldhat\u00f3 fel. Ha a hiba tov\u00e1bbra is fenn\u00e1ll, k\u00e9rem, \u00e1ll\u00edtson be egy statikus IP-c\u00edmet: https://esphomelib.com/esphomeyaml/components/wifi.html#manual-ips"
+            "resolve_error": "Az ESP c\u00edme nem oldhat\u00f3 fel. Ha a hiba tov\u00e1bbra is fenn\u00e1ll, k\u00e9rem, \u00e1ll\u00edtson be egy statikus IP-c\u00edmet."
         },
         "flow_title": "{name}",
         "step": {
@@ -40,7 +40,7 @@
                     "host": "C\u00edm",
                     "port": "Port"
                 },
-                "description": "K\u00e9rem, adja meg az [ESPHome](https://esphomelib.com/) csom\u00f3pontj\u00e1nak kapcsol\u00f3d\u00e1si be\u00e1ll\u00edt\u00e1sait."
+                "description": "K\u00e9rem, adja meg az [ESPHome]({esphome_url}) csom\u00f3pontj\u00e1nak kapcsol\u00f3d\u00e1si be\u00e1ll\u00edt\u00e1sait."
             }
         }
     }

@@ -12,8 +12,8 @@ from bleak.backends.scanner import AdvertisementData
 from fjaraskupan import Device, State, device_filter
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -130,6 +130,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     scanner.register_detection_callback(detection_callback)
     await scanner.start()
+
+    async def on_hass_stop(event: Event) -> None:
+        await scanner.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, on_hass_stop)
+    )
 
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
     return True

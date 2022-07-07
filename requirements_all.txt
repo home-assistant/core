@@ -168,7 +168,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.18
+aiohomekit==0.7.20
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -247,10 +247,10 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.6.1
+aioskybell==22.7.0
 
 # homeassistant.components.slimproto
-aioslimproto==2.0.1
+aioslimproto==2.1.1
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -828,13 +828,13 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220630.0
+home-assistant-frontend==20220706.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.2
+homematicip==1.0.3
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -973,9 +973,6 @@ logi_circle==0.2.3
 
 # homeassistant.components.london_underground
 london-tube-status==0.5
-
-# homeassistant.components.recorder
-lru-dict==1.1.7
 
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
@@ -1447,7 +1444,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==95
+pydeconz==96
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1480,7 +1477,7 @@ pyeight==0.3.0
 pyemby==1.8
 
 # homeassistant.components.envisalink
-pyenvisalink==4.5
+pyenvisalink==4.6
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -1795,7 +1792,7 @@ pysaj==0.0.16
 pysdcp==1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.17
+pysensibo==1.0.18
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -2128,7 +2125,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[async,encrypted]==2.5.0
 
 # homeassistant.components.satel_integra
-satel_integra==0.3.4
+satel_integra==0.3.7
 
 # homeassistant.components.dhcp
 scapy==2.4.5
