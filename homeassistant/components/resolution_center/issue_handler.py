@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import dataclasses
 
+from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
@@ -24,6 +26,12 @@ def async_create_issue(
     translation_placeholders: dict[str, str] | None,
 ) -> None:
     """Create an issue, or replace an existing one."""
+    # Verify the breaks_in_ha_version is a valid version string
+    if breaks_in_ha_version:
+        AwesomeVersion(
+            breaks_in_ha_version, ensure_strategy=AwesomeVersionStrategy.CALVER
+        )
+
     issue_registry = async_get_issue_registry(hass)
 
     issue_entry = issue_registry.async_get_or_create(domain, issue_id)
@@ -33,9 +41,7 @@ def async_create_issue(
         domain=domain,
         issue_id=issue_id,
         dismissed=issue_entry.is_dismissed,
-        dismissed_version_major=issue_entry.dismissed_version_major,
-        dismissed_version_minor=issue_entry.dismissed_version_minor,
-        dismissed_version_patch=issue_entry.dismissed_version_patch,
+        dismissed_version=issue_entry.dismissed_version,
         is_fixable=is_fixable,
         learn_more_url=learn_more_url,
         severity=severity,
@@ -73,8 +79,6 @@ def async_dismiss_issue(hass: HomeAssistant, domain: str, issue_id: str) -> None
     issue = dataclasses.replace(
         issue,
         dismissed=issue_entry.is_dismissed,
-        dismissed_version_major=issue_entry.dismissed_version_major,
-        dismissed_version_minor=issue_entry.dismissed_version_minor,
-        dismissed_version_patch=issue_entry.dismissed_version_patch,
+        dismissed_version=issue_entry.dismissed_version,
     )
     hass.data[DOMAIN]["issues"][(domain, issue_id)] = issue

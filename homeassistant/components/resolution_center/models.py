@@ -22,9 +22,7 @@ class Issue:
     domain: str
     issue_id: str
     dismissed: bool
-    dismissed_version_major: int | None
-    dismissed_version_minor: int | None
-    dismissed_version_patch: int | None
+    dismissed_version: str | None
     is_fixable: bool
     learn_more_url: str | None
     severity: IssueSeverity

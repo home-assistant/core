@@ -4,7 +4,7 @@ from __future__ import annotations
 import dataclasses
 from typing import cast
 
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION
+from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.storage import Store
 
@@ -18,19 +18,14 @@ SAVE_DELAY = 10
 class IssueEntry:
     """Issue Registry Entry."""
 
-    dismissed_version_major: int | None
-    dismissed_version_minor: int | None
-    dismissed_version_patch: int | None
+    dismissed_version: str | None
     domain: str
     issue_id: str
 
     @property
     def is_dismissed(self) -> bool:
         """Return True if an issue is dismissed."""
-        return (
-            self.dismissed_version_major == MAJOR_VERSION
-            and self.dismissed_version_minor == MINOR_VERSION
-        )
+        return self.dismissed_version is not None
 
 
 class IssueRegistry:
@@ -53,9 +48,7 @@ class IssueRegistry:
 
         if (issue := self.async_get_issue(domain, issue_id)) is None:
             issue = IssueEntry(
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
                 domain=domain,
                 issue_id=issue_id,
             )
@@ -76,18 +69,12 @@ class IssueRegistry:
     def async_dismiss(self, domain: str, issue_id: str) -> IssueEntry:
         """Dismiss issue."""
         old = self.issues[(domain, issue_id)]
-        if (
-            old.dismissed_version_major == MAJOR_VERSION
-            and old.dismissed_version_major == MAJOR_VERSION
-            and old.dismissed_version_major == MAJOR_VERSION
-        ):
+        if old.dismissed_version == ha_version:
             return old
 
         issue = self.issues[(domain, issue_id)] = dataclasses.replace(
             old,
-            dismissed_version_major=MAJOR_VERSION,
-            dismissed_version_minor=MINOR_VERSION,
-            dismissed_version_patch=PATCH_VERSION,
+            dismissed_version=ha_version,
         )
 
         self.async_schedule_save()
@@ -103,9 +90,7 @@ class IssueRegistry:
         if isinstance(data, dict):
             for issue in data["issues"]:
                 issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
-                    dismissed_version_major=issue["dismissed_version_major"],
-                    dismissed_version_minor=issue["dismissed_version_minor"],
-                    dismissed_version_patch=issue["dismissed_version_patch"],
+                    dismissed_version=issue["dismissed_version"],
                     domain=issue["domain"],
                     issue_id=issue["issue_id"],
                 )

@@ -7,7 +7,7 @@ from homeassistant.components.resolution_center import (
 )
 from homeassistant.components.resolution_center.const import DOMAIN
 from homeassistant.components.resolution_center.issue_handler import async_dismiss_issue
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION
+from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -26,7 +26,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
     issues = [
         {
-            "breaks_in_ha_version": "2022.9",
+            "breaks_in_ha_version": "2022.9.0dev0",
             "domain": "test",
             "issue_id": "issue_1",
             "is_fixable": True,
@@ -69,9 +69,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]
@@ -97,11 +95,49 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["result"]["issues"][0] == dict(
         issues[0],
         dismissed=False,
-        dismissed_version_major=None,
-        dismissed_version_minor=None,
-        dismissed_version_patch=None,
+        dismissed_version=None,
         learn_more_url="blablabla",
     )
+
+
+@pytest.mark.parametrize("ha_version", ("2022.9.cat", "In the future!"))
+async def test_create_issue_invalid_version(
+    hass: HomeAssistant, hass_ws_client, ha_version
+) -> None:
+    """Test creating an issue with invalid breaks in version."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_ws_client(hass)
+
+    issue = {
+        "breaks_in_ha_version": ha_version,
+        "domain": "test",
+        "issue_id": "issue_1",
+        "is_fixable": True,
+        "learn_more_url": "https://theuselessweb.com",
+        "severity": "error",
+        "translation_key": "abc_123",
+        "translation_placeholders": {"abc": "123"},
+    }
+
+    with pytest.raises(Exception):
+        async_create_issue(
+            hass,
+            issue["domain"],
+            issue["issue_id"],
+            breaks_in_ha_version=issue["breaks_in_ha_version"],
+            is_fixable=issue["is_fixable"],
+            learn_more_url=issue["learn_more_url"],
+            severity=issue["severity"],
+            translation_key=issue["translation_key"],
+            translation_placeholders=issue["translation_placeholders"],
+        )
+
+    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {"issues": []}
 
 
 async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
@@ -151,9 +187,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]
@@ -172,9 +206,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]
@@ -192,9 +224,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=True,
-                dismissed_version_major=MAJOR_VERSION,
-                dismissed_version_minor=MINOR_VERSION,
-                dismissed_version_patch=PATCH_VERSION,
+                dismissed_version=ha_version,
             )
             for issue in issues
         ]
@@ -212,9 +242,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=True,
-                dismissed_version_major=MAJOR_VERSION,
-                dismissed_version_minor=MINOR_VERSION,
-                dismissed_version_patch=PATCH_VERSION,
+                dismissed_version=ha_version,
             )
             for issue in issues
         ]
@@ -240,9 +268,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
     assert msg["result"]["issues"][0] == dict(
         issues[0],
         dismissed=True,
-        dismissed_version_major=MAJOR_VERSION,
-        dismissed_version_minor=MINOR_VERSION,
-        dismissed_version_patch=PATCH_VERSION,
+        dismissed_version=ha_version,
         learn_more_url="blablabla",
     )
 
@@ -288,9 +314,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]
@@ -308,9 +332,7 @@ async def test_delete_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]

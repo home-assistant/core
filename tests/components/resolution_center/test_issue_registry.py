@@ -76,16 +76,12 @@ async def test_loading_issues_from_storage(hass: HomeAssistant, hass_storage) ->
         "data": {
             "issues": [
                 {
-                    "dismissed_version_major": 2022,
-                    "dismissed_version_minor": 7,
-                    "dismissed_version_patch": "0.dev0",
+                    "dismissed_version": "2022.7.0.dev0",
                     "domain": "test",
                     "issue_id": "issue_1",
                 },
                 {
-                    "dismissed_version_major": None,
-                    "dismissed_version_minor": None,
-                    "dismissed_version_patch": None,
+                    "dismissed_version": None,
                     "domain": "test",
                     "issue_id": "issue_2",
                 },

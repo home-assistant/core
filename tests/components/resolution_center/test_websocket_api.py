@@ -1,7 +1,7 @@
 """Test the resolution center websocket API."""
 from homeassistant.components.resolution_center import async_create_issue
 from homeassistant.components.resolution_center.const import DOMAIN
-from homeassistant.const import MAJOR_VERSION, MINOR_VERSION, PATCH_VERSION
+from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -47,9 +47,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]
@@ -87,9 +85,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=True,
-                dismissed_version_major=MAJOR_VERSION,
-                dismissed_version_minor=MINOR_VERSION,
-                dismissed_version_patch=PATCH_VERSION,
+                dismissed_version=ha_version,
             )
             for issue in issues
         ]
@@ -153,9 +149,7 @@ async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
             dict(
                 issue,
                 dismissed=False,
-                dismissed_version_major=None,
-                dismissed_version_minor=None,
-                dismissed_version_patch=None,
+                dismissed_version=None,
             )
             for issue in issues
         ]
