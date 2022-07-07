@@ -66,7 +66,11 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         self._filters: dict[str, set[str]] = {}
         if "filters" in kwargs:
             self._filters = {
-                k: set(getattr(v, "value", v)) for k, v in kwargs["filters"].items()
+                # On linux there will be dbus_next Variant objects
+                # but we cannot import that since the library won't
+                # work on MacOS
+                k: set(getattr(v, "value", v))
+                for k, v in kwargs["filters"].items()
             }
         if "service_uuids" in kwargs:
             self._filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
