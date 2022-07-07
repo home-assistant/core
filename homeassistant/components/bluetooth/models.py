@@ -13,6 +13,10 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 
 _LOGGER = logging.getLogger(__name__)
 
+FILTER_UUIDS = "UUIDs"
+
+HA_BLEAK_SCANNER: HaBleakScanner | None = None
+
 
 class HaBleakScanner(BleakScanner):
     """BleakScanner that cannot be stopped."""
@@ -21,14 +25,14 @@ class HaBleakScanner(BleakScanner):
 
     @hass_callback
     def async_register_callback(
-        self, callback: AdvertisementDataCallback
+        self, callback: AdvertisementDataCallback, filters: dict[str, Any]
     ) -> CALLBACK_TYPE:
         """Register a callback."""
-        self._callbacks.append(callback)
+        self._callbacks.append((callback, filters))
 
         @hass_callback
         def _remove_callback():
-            self._callbacks.remove(callback)
+            self._callbacks.remove((callback, filters))
 
         return _remove_callback
 
@@ -40,7 +44,12 @@ class HaBleakScanner(BleakScanner):
         Here we get the actual callback from bleak and dispatch
         it to all the wrapped HaBleakScannerWrapper classes
         """
-        for callback in self._callbacks:
+        for callback, filters in self._callbacks:
+            if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
+                advertisement_data.service_uuids
+            ):
+                return
+
             try:
                 callback(device, advertisement_data)
             except Exception:  # pylint: disable=broad-except
@@ -50,8 +59,14 @@ class HaBleakScanner(BleakScanner):
 class HaBleakScannerWrapper(BleakScanner):
     """A wrapper that uses the single instance."""
 
-    _ha_bleak_scanner: HaBleakScanner
-    _detection_cancel: CALLBACK_TYPE | None
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the BleakScanner."""
+        self._detection_cancel: CALLBACK_TYPE | None = None
+        if "filters" in kwargs:
+            self._filters = {k: set(v) for k, v in kwargs["filters"].items()}
+        if "service_uuids" in kwargs:
+            self._filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
+        super().__init__(*args, **kwargs)
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
@@ -67,6 +82,12 @@ class HaBleakScannerWrapper(BleakScanner):
             self._detection_cancel()
             self._detection_cancel = None
 
+    @property
+    def discovered_devices(self) -> list[BLEDevice]:
+        """Return a list of discovered devices."""
+        assert HA_BLEAK_SCANNER is not None
+        return HA_BLEAK_SCANNER.discovered_devices
+
     def register_detection_callback(self, callback: AdvertisementDataCallback) -> None:
         """Register a callback that is called when a device is discovered or has a property changed.
 
@@ -75,8 +96,9 @@ class HaBleakScannerWrapper(BleakScanner):
         """
         self._cancel_callback()
         super().register_detection_callback(callback)
-        self._detection_cancel = self._ha_bleak_scanner.async_register_callback(
-            self._callback
+        assert HA_BLEAK_SCANNER is not None
+        self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
+            self._callback, self._filters
         )
 
     def __del__(self):
