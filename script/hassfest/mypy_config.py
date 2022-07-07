@@ -90,15 +90,9 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xbox.browse_media",
     "homeassistant.components.xbox.media_source",
     "homeassistant.components.xbox.sensor",
-    "homeassistant.components.xiaomi_miio",
-    "homeassistant.components.xiaomi_miio.air_quality",
-    "homeassistant.components.xiaomi_miio.binary_sensor",
-    "homeassistant.components.xiaomi_miio.device",
-    "homeassistant.components.xiaomi_miio.device_tracker",
     "homeassistant.components.xiaomi_miio.fan",
     "homeassistant.components.xiaomi_miio.humidifier",
     "homeassistant.components.xiaomi_miio.light",
-    "homeassistant.components.xiaomi_miio.sensor",
     "homeassistant.components.xiaomi_miio.switch",
 ]
 
