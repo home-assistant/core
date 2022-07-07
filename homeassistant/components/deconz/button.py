@@ -90,8 +90,11 @@ class DeconzButton(DeconzSceneMixin, ButtonEntity):
 
     async def async_press(self) -> None:
         """Store light states into scene."""
-        async_button_fn = getattr(self._device, self.entity_description.button_fn)
-        await async_button_fn()
+        async_button_fn = getattr(
+            self.gateway.api.scenes,
+            self.entity_description.button_fn,
+        )
+        await async_button_fn(self._device.group_id, self._device.id)
 
     def get_device_identifier(self) -> str:
         """Return a unique identifier for this scene."""
