@@ -178,7 +178,7 @@ class AreaRegistry:
 
         areas: MutableMapping[str, AreaEntry] = OrderedDict()
 
-        if isinstance(data, dict):
+        if data is not None:
             for area in data["areas"]:
                 assert area["name"] is not None and area["id"] is not None
                 normalized_name = normalize_area_name(area["name"])
