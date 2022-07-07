@@ -124,7 +124,7 @@ async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
 
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
@@ -137,5 +137,5 @@ async def test_options_flow(hass: HomeAssistant, client: MagicMock) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert dict(config_entry.options) == {CONF_SYNC_TIME: True}

@@ -304,7 +304,7 @@ async def test_options(hass):
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.options.async_configure(
@@ -314,7 +314,7 @@ async def test_options(hass):
 
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_SCAN_INTERVAL] == 10
 
         assert len(mock_setup_entry.mock_calls) == 1
@@ -339,7 +339,7 @@ async def test_options_webhook(hass, webhook_id):
 
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "webhook"
         assert result["description_placeholders"] == {"webhook_url": ""}
 
@@ -350,7 +350,7 @@ async def test_options_webhook(hass, webhook_id):
 
         await hass.async_block_till_done()
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_WEBHOOK_ID] == CONF_WEBHOOK_ID
 
         assert len(mock_setup_entry.mock_calls) == 1
