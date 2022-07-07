@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, Final
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
@@ -13,7 +13,7 @@ from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 
 _LOGGER = logging.getLogger(__name__)
 
-FILTER_UUIDS = "UUIDs"
+FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
 
