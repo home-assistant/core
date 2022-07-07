@@ -65,7 +65,7 @@ jobs:
       - name: Generate partial pre-commit restore key
         id: generate_pre-commit_cache_key
         run: >-
-          echo "::set-output name=key::${{ env.CACHE_VERSION }}-${{
+          echo "::set-output name=key::${{ env.CACHE_VERSION }}-${{ env.DEFAULT_PYTHON }}-${{
             hashFiles('.pre-commit-config.yaml') }}"
       - name: Filter for core changes
         uses: dorny/paths-filter@v2.10.2
@@ -199,6 +199,7 @@ jobs:
     name: Check black
     runs-on: ubuntu-20.04
     needs:
+      - info
       - pre-commit
     steps:
       - name: Check out code from GitHub
