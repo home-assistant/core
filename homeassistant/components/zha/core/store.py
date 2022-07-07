@@ -40,7 +40,7 @@ class ZhaStorage:
         """Initialize the zha device storage."""
         self.hass: HomeAssistant = hass
         self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_create_device(self, device: ZHADevice) -> ZhaDeviceEntry:
@@ -94,7 +94,7 @@ class ZhaStorage:
 
     async def async_load(self) -> None:
         """Load the registry of zha device entries."""
-        data = cast(dict[str, Any], await self._store.async_load())
+        data = await self._store.async_load()
 
         devices: OrderedDict[str, ZhaDeviceEntry] = OrderedDict()
 
