@@ -80,8 +80,7 @@ class PhilipsTVMediaPlayer(
     ) -> None:
         """Initialize the Philips TV."""
         self._tv = coordinator.api
-        self._sources = {}
-        self._channels = {}
+        self._sources: dict[str, str] = {}
         self._supports = SUPPORT_PHILIPS_JS
         self._system = coordinator.system
         self._attr_name = coordinator.system["name"]
