@@ -24,7 +24,7 @@ from homeassistant.core import (
 from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import BluetoothMatcher, async_get_bluetooth, bind_hass
+from homeassistant.loader import BluetoothMatcher, async_get_bluetooth
 
 from . import models
 from .const import DOMAIN
@@ -100,7 +100,6 @@ BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
 
 
-@bind_hass
 async def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
