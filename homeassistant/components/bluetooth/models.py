@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
 import logging
 from typing import Any, Final, cast
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
+from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
 
@@ -17,12 +19,33 @@ FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
 
+MAX_HISTORY_SIZE: Final = 256
+
+
+def _dispatch_callback(
+    callback: Callable,
+    device: BLEDevice,
+    advertisement_data: AdvertisementData,
+    filters: dict[str, set[str]],
+) -> None:
+    """Dispatch the callback."""
+    if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
+        advertisement_data.service_uuids
+    ):
+        return
+
+    try:
+        callback(device, advertisement_data)
+    except Exception:  # pylint: disable=broad-except
+        _LOGGER.exception("Error in callback: %s", callback)
+
 
 class HaBleakScanner(BleakScanner):  # type: ignore[misc]
     """BleakScanner that cannot be stopped."""
 
     # HaBleakScanner is a singleton
     _callbacks: list[AdvertisementDataCallback] = []
+    _history: LRU = LRU(MAX_HISTORY_SIZE)
 
     @hass_callback
     def async_register_callback(
@@ -35,6 +58,10 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         def _remove_callback() -> None:
             self._callbacks.remove((callback, filters))
 
+        # Replay the history
+        for device, advertisement_data in self._history.values():
+            _dispatch_callback(callback, device, advertisement_data, filters)
+
         return _remove_callback
 
     def async_callback_dispatcher(
@@ -45,16 +72,9 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         Here we get the actual callback from bleak and dispatch
         it to all the wrapped HaBleakScannerWrapper classes
         """
+        self._history[device.address] = (device, advertisement_data)
         for callback, filters in self._callbacks:
-            if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
-                advertisement_data.service_uuids
-            ):
-                return
-
-            try:
-                callback(device, advertisement_data)
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Error in callback: %s", callback)
+            _dispatch_callback(callback, device, advertisement_data, filters)
 
 
 class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
