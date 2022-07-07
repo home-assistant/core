@@ -70,7 +70,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
     ) -> BluetoothServiceInfo:
         """Create a BluetoothServiceInfo from an advertisement."""
         return cls(
-            name=advertisement_data.local_name or device.name,
+            name=advertisement_data.local_name or device.name or device.address,
             address=device.address,
             rssi=device.rssi,
             manufacturer_data=advertisement_data.manufacturer_data,
