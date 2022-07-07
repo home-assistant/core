@@ -15,7 +15,12 @@ from bleak.backends.scanner import AdvertisementData
 # from homeassistant.components import websocket_api
 # from homeassistant.components.websocket_api.connection import ActiveConnection
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import Event, HomeAssistant, callback as hass_callback
+from homeassistant.core import (
+    CALLBACK_TYPE,
+    Event,
+    HomeAssistant,
+    callback as hass_callback,
+)
 from homeassistant.data_entry_flow import BaseServiceInfo
 
 # from homeassistant.helpers import discovery_flow, system_info
@@ -118,6 +123,7 @@ class BluetoothManager:
         self.hass = hass
         self.bluetooth = bluetooth
         self.scanner: HaBleakScanner | None = None
+        self._cancel_device_detected: CALLBACK_TYPE | None = None
         self._scan_task: asyncio.Task | None = None
         self._callbacks: list[tuple[BluetoothCallback, dict[str, str]]] = []
 
@@ -147,6 +153,9 @@ class BluetoothManager:
         _LOGGER.debug("Starting bluetooth scanner")
         assert self.scanner is not None
         self.scanner.register_detection_callback(self.scanner.async_callback_disptacher)
+        self._cancel_device_detected = self.scanner.async_register_callback(
+            self._device_detected
+        )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._scan_task = self.hass.async_create_task(self._async_start_scanner())
 
@@ -178,6 +187,9 @@ class BluetoothManager:
 
     async def async_stop(self, event: Event) -> None:
         """Stop bluetooth discovery."""
+        if self._cancel_device_detected:
+            self._cancel_device_detected()
+            self._cancel_device_detected = None
         if self._scan_task:
             self._scan_task.cancel()
             self._scan_task = None
