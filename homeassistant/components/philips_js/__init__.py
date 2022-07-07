@@ -131,13 +131,13 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Return the system descriptor."""
         if self.api.system:
             return self.api.system
+        assert self.config_entry
         return self.config_entry.data[CONF_SYSTEM]
 
     @property
     def unique_id(self) -> str:
         """Return the system descriptor."""
-        entry: ConfigEntry = self.config_entry
-        assert entry
+        assert (entry := self.config_entry) is not None
         if entry.unique_id:
             return entry.unique_id
         assert entry.entry_id
