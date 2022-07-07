@@ -86,8 +86,8 @@ async def websocket_supervisor_event(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict
 ):
     """Publish events from the Supervisor."""
-    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
     connection.send_result(msg[WS_ID])
+    async_dispatcher_send(hass, EVENT_SUPERVISOR_EVENT, msg[ATTR_DATA])
 
 
 @websocket_api.websocket_command(
