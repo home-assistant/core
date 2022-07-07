@@ -435,7 +435,7 @@ eagle100==0.1.1
 elgato==3.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==2.0.0
+elkm1-lib==2.0.1
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
