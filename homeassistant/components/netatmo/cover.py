@@ -54,7 +54,6 @@ class NetatmoCover(NetatmoBase, CoverEntity):
 
     def __init__(self, netatmo_device: NetatmoDevice) -> None:
         """Initialize the Netatmo device."""
-        CoverEntity.__init__(self)
         super().__init__(netatmo_device.data_handler)
         self.optimistic = True
 
@@ -66,8 +65,7 @@ class NetatmoCover(NetatmoBase, CoverEntity):
         self._config_url = CONF_URL_CONTROL
 
         self._home_id = self._cover.home.entity_id
-        self._closed: bool | None = None
-        self._attr_is_closed = None
+        self._attr_is_closed = self._cover.current_position == 0
 
         self._signal_name = f"{HOME}-{self._home_id}"
         self._publishers.extend(
