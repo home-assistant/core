@@ -66,41 +66,6 @@ class BluetoothServiceInfo(BaseServiceInfo):
     service_data: dict[str, bytes]
     service_uuids: list[str]
 
-    @property
-    def hci_packet(self) -> bytes:
-        """Return the HCI packet for this service.
-
-        04 # HCI Packet Type: HCI Event (0x04)
-        3E # Event Code: LE Meta (0x3e)
-        26 # Parameter Total Length: 38
-        02 # Sub Event: LE Advertising Report (0x02)
-        01 # Num Reports: 1
-        03 # Event Type: Non-Connectable Undirected Advertising (0x03)
-        01 # Peer Address Type: Random Device Address (0x01)
-        """
-        packet = bytearray()
-        packet.append(0x04)
-        packet.append(0x3E)
-        packet.append(0x26)  # TOTAL length
-        packet.append(0x02)
-        packet.append(0x01)
-        packet.append(0x03)
-        packet.append(0x01)
-        #        packet.append(int(self.address[:2], 16))
-        #        packet.append(int(self.address[2:4], 16))
-        #        packet.append(int(self.address[4:6], 16))
-        #        packet.append(int(self.address[6:8], 16))
-        #        packet.append(int(self.address[8:10], 16))
-        #        packet.append(int(self.address[10:12], 16))
-        return packet
-
-    #      header = b"043E"
-    #      total_length = 11 + payload_size + 1
-    #      payload_size,
-    #      payload_size * 2,
-    #      "",
-    #      self.rssi # unit 8 # payload fillter
-
     @classmethod
     def from_advertisement(
         cls, device: BLEDevice, advertisement_data: AdvertisementData
@@ -212,7 +177,7 @@ class BluetoothManager:
         service_info = BluetoothServiceInfo.from_advertisement(
             device, advertisement_data
         )
-        _LOGGER.debug("Device detected: %s - %s", service_info, service_info.hci_packet)
+        _LOGGER.debug("Device detected: %s", service_info)
 
     async def async_register_callback(
         self, callback: BluetoothCallback, match_dict: None | dict[str, str] = None
