@@ -131,7 +131,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     scanner.register_detection_callback(detection_callback)
     await scanner.start()
 
-    async def on_hass_stop(event: Event):
+    async def on_hass_stop(event: Event) -> None:
         await scanner.stop()
 
     entry.async_on_unload(
