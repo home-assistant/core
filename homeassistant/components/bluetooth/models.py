@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 from typing import Any, Final, cast
 
@@ -23,7 +22,7 @@ MAX_HISTORY_SIZE: Final = 256
 
 
 def _dispatch_callback(
-    callback: Callable,
+    callback: AdvertisementDataCallback,
     filters: dict[str, set[str]],
     device: BLEDevice,
     advertisement_data: AdvertisementData,
