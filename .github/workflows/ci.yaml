@@ -244,219 +244,218 @@ jobs:
           shopt -s globstar
           pre-commit run --hook-stage manual black --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
-  # lint-flake8:
-  #   name: Check flake8
-  #   runs-on: ubuntu-20.04
-  #   needs:
-  #     - changes
-  #     - prepare-base
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v4.0.0
-  #       id: python
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: Restore base Python virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-  #           needs.prepare-base.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Restore pre-commit environment from cache
-  #       id: cache-precommit
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: ${{ env.PRE_COMMIT_CACHE }}
-  #         key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
-  #     - name: Fail job if pre-commit cache restore failed
-  #       if: steps.cache-precommit.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore pre-commit environment from cache"
-  #         exit 1
-  #     - name: Register flake8 problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/flake8.json"
-  #     - name: Run flake8 (fully)
-  #       if: needs.info.outputs.test_full_suite == 'true'
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual flake8 --all-files
-  #     - name: Run flake8 (partially)
-  #       if: needs.info.outputs.test_full_suite == 'false'
-  #       shell: bash
-  #       run: |
-  #         . venv/bin/activate
-  #         shopt -s globstar
-  #         pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
+  lint-flake8:
+    name: Check flake8
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - prepare-base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.0.0
+        id: python
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Restore pre-commit environment from cache
+        id: cache-precommit
+        uses: actions/cache@v3.0.4
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore pre-commit environment from cache"
+          exit 1
+      - name: Register flake8 problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/flake8.json"
+      - name: Run flake8 (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual flake8 --all-files
+      - name: Run flake8 (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          shopt -s globstar
+          pre-commit run --hook-stage manual flake8 --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
 
-  # lint-isort:
-  #   name: Check isort
-  #   runs-on: ubuntu-20.04
-  #   needs: prepare-base
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v4.0.0
-  #       id: python
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: Restore base Python virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-  #           needs.prepare-base.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Restore pre-commit environment from cache
-  #       id: cache-precommit
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: ${{ env.PRE_COMMIT_CACHE }}
-  #         key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
-  #     - name: Fail job if pre-commit cache restore failed
-  #       if: steps.cache-precommit.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore pre-commit environment from cache"
-  #         exit 1
-  #     - name: Run isort
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
+  lint-isort:
+    name: Check isort
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - prepare-base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.0.0
+        id: python
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Restore pre-commit environment from cache
+        id: cache-precommit
+        uses: actions/cache@v3.0.4
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore pre-commit environment from cache"
+          exit 1
+      - name: Run isort
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual isort --all-files --show-diff-on-failure
 
-  # lint-other:
-  #   name: Check other linters
-  #   runs-on: ubuntu-20.04
-  #   needs:
-  #     - changes
-  #     - prepare-base
-  #   steps:
-  #     - name: Check out code from GitHub
-  #       uses: actions/checkout@v3.0.2
-  #     - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-  #       uses: actions/setup-python@v4.0.0
-  #       id: python
-  #       with:
-  #         python-version: ${{ env.DEFAULT_PYTHON }}
-  #     - name: Restore base Python virtual environment
-  #       id: cache-venv
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: venv
-  #         key: ${{ runner.os }}-${{ steps.python.outputs.python-version }}-${{
-  #           needs.prepare-base.outputs.python-key }}
-  #     - name: Fail job if Python cache restore failed
-  #       if: steps.cache-venv.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore Python virtual environment from cache"
-  #         exit 1
-  #     - name: Restore pre-commit environment from cache
-  #       id: cache-precommit
-  #       uses: actions/cache@v3.0.4
-  #       with:
-  #         path: ${{ env.PRE_COMMIT_CACHE }}
-  #         key: ${{ runner.os }}-${{ needs.prepare-base.outputs.pre-commit-key }}
-  #     - name: Fail job if pre-commit cache restore failed
-  #       if: steps.cache-precommit.outputs.cache-hit != 'true'
-  #       run: |
-  #         echo "Failed to restore pre-commit environment from cache"
-  #         exit 1
+  lint-other:
+    name: Check other linters
+    runs-on: ubuntu-20.04
+    needs:
+      - info
+      - prepare-base
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@v3.0.2
+      - name: Set up Python ${{ env.DEFAULT_PYTHON }}
+        uses: actions/setup-python@v4.0.0
+        id: python
+        with:
+          python-version: ${{ env.DEFAULT_PYTHON }}
+      - name: Restore base Python virtual environment
+        id: cache-venv
+        uses: actions/cache@v3.0.4
+        with:
+          path: venv
+          key: ${{ runner.os }}-venv-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if Python cache restore failed
+        if: steps.cache-venv.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore Python virtual environment from cache"
+          exit 1
+      - name: Restore pre-commit environment from cache
+        id: cache-precommit
+        uses: actions/cache@v3.0.4
+        with:
+          path: ${{ env.PRE_COMMIT_CACHE }}
+          key: ${{ runner.os }}-pre-commit-${{ needs.info.outputs.pre-commit_cache_key }}
+      - name: Fail job if pre-commit cache restore failed
+        if: steps.cache-precommit.outputs.cache-hit != 'true'
+        run: |
+          echo "Failed to restore pre-commit environment from cache"
+          exit 1
 
-  #     - name: Run pyupgrade (fully)
-  #       if: needs.info.outputs.test_full_suite == 'true'
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
-  #     - name: Run pyupgrade (partially)
-  #       if: needs.info.outputs.test_full_suite == 'false'
-  #       shell: bash
-  #       run: |
-  #         . venv/bin/activate
-  #         shopt -s globstar
-  #         pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
+      - name: Run pyupgrade (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual pyupgrade --all-files --show-diff-on-failure
+      - name: Run pyupgrade (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          shopt -s globstar
+          pre-commit run --hook-stage manual pyupgrade --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
-  #     - name: Register yamllint problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/yamllint.json"
-  #     - name: Run yamllint
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
+      - name: Register yamllint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/yamllint.json"
+      - name: Run yamllint
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual yamllint --all-files --show-diff-on-failure
 
-  #     - name: Register check-json problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/check-json.json"
-  #     - name: Run check-json
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual check-json --all-files
+      - name: Register check-json problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/check-json.json"
+      - name: Run check-json
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual check-json --all-files
 
-  #     - name: Run prettier (fully)
-  #       if: needs.info.outputs.test_full_suite == 'true'
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual prettier --all-files
+      - name: Run prettier (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --all-files
 
-  #     - name: Run prettier (partially)
-  #       if: needs.info.outputs.test_full_suite == 'false'
-  #       shell: bash
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
+      - name: Run prettier (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual prettier --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/*
 
-  #     - name: Register check executables problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
-  #     - name: Run executables check
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
+      - name: Register check executables problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/check-executables-have-shebangs.json"
+      - name: Run executables check
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual check-executables-have-shebangs --all-files
 
-  #     - name: Register codespell problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/codespell.json"
-  #     - name: Run codespell
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
+      - name: Register codespell problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/codespell.json"
+      - name: Run codespell
+        run: |
+          . venv/bin/activate
+          pre-commit run --show-diff-on-failure --hook-stage manual codespell --all-files
 
-  #     - name: Register hadolint problem matcher
-  #       run: |
-  #         echo "::add-matcher::.github/workflows/matchers/hadolint.json"
-  #     - name: Check Dockerfile
-  #       uses: docker://hadolint/hadolint:v1.18.2
-  #       with:
-  #         args: hadolint Dockerfile
-  #     - name: Check Dockerfile.dev
-  #       uses: docker://hadolint/hadolint:v1.18.2
-  #       with:
-  #         args: hadolint Dockerfile.dev
+      - name: Register hadolint problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/hadolint.json"
+      - name: Check Dockerfile
+        uses: docker://hadolint/hadolint:v1.18.2
+        with:
+          args: hadolint Dockerfile
+      - name: Check Dockerfile.dev
+        uses: docker://hadolint/hadolint:v1.18.2
+        with:
+          args: hadolint Dockerfile.dev
 
-  #     - name: Run bandit (fully)
-  #       if: needs.info.outputs.test_full_suite == 'true'
-  #       run: |
-  #         . venv/bin/activate
-  #         pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
-  #     - name: Run bandit (partially)
-  #       if: needs.info.outputs.test_full_suite == 'false'
-  #       shell: bash
-  #       run: |
-  #         . venv/bin/activate
-  #         shopt -s globstar
-  #         pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
+      - name: Run bandit (fully)
+        if: needs.info.outputs.test_full_suite == 'true'
+        run: |
+          . venv/bin/activate
+          pre-commit run --hook-stage manual bandit --all-files --show-diff-on-failure
+      - name: Run bandit (partially)
+        if: needs.info.outputs.test_full_suite == 'false'
+        shell: bash
+        run: |
+          . venv/bin/activate
+          shopt -s globstar
+          pre-commit run --hook-stage manual bandit --files {homeassistant,tests}/components/${{ needs.info.outputs.integrations_glob }}/**/* --show-diff-on-failure
 
   # hassfest:
   #   name: Check hassfest
