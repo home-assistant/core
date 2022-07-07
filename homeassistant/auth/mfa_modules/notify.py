@@ -119,9 +119,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
             if self._user_settings is not None:
                 return
 
-            if (data := await self._user_store.async_load()) is None or not isinstance(
-                data, dict
-            ):
+            if (data := await self._user_store.async_load()) is None:
                 data = cast(dict[str, dict[str, Any]], {STORAGE_USERS: {}})
 
             self._user_settings = {

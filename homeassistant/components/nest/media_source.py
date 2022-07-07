@@ -140,15 +140,9 @@ class NestEventMediaStore(EventMediaStore):
             if (data := await self._store.async_load()) is None:
                 _LOGGER.debug("Loaded empty event store")
                 self._data = {}
-            elif isinstance(data, dict):
+            else:
                 _LOGGER.debug("Loaded event store with %d records", len(data))
                 self._data = data
-            else:
-                raise ValueError(
-                    "Unexpected data in storage version={}, key={}".format(
-                        STORAGE_VERSION, STORAGE_KEY
-                    )
-                )
         return self._data
 
     async def async_save(self, data: dict) -> None:

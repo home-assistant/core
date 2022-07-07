@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.singleton import singleton
@@ -69,7 +69,7 @@ class Network:
     async def async_load(self) -> None:
         """Load config."""
         if stored := await self._store.async_load():
-            self._data = cast(dict, stored)
+            self._data = stored
 
     async def _async_save(self) -> None:
         """Save preferences."""

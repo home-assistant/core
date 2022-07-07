@@ -43,9 +43,7 @@ class CameraPreferences:
 
     async def async_initialize(self) -> None:
         """Finish initializing the preferences."""
-        if (prefs := await self._store.async_load()) is None or not isinstance(
-            prefs, dict
-        ):
+        if (prefs := await self._store.async_load()) is None:
             prefs = {}
 
         self._prefs = prefs

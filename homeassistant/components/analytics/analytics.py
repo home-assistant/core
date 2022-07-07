@@ -1,6 +1,6 @@
 """Analytics helper class for the analytics integration."""
 import asyncio
-from typing import Any, cast
+from typing import Any
 import uuid
 
 import aiohttp
@@ -109,7 +109,7 @@ class Analytics:
 
     async def load(self) -> None:
         """Load preferences."""
-        stored = cast(dict, await self._store.async_load())
+        stored = await self._store.async_load()
         if stored:
             self._data = stored
 

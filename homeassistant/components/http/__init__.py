@@ -7,7 +7,7 @@ import logging
 import os
 import ssl
 from tempfile import NamedTemporaryFile
-from typing import Any, Final, Optional, TypedDict, Union, cast
+from typing import Any, Final, TypedDict, Union, cast
 
 from aiohttp import web
 from aiohttp.typedefs import StrOrURL
@@ -125,12 +125,12 @@ class ConfData(TypedDict, total=False):
 
 
 @bind_hass
-async def async_get_last_config(hass: HomeAssistant) -> dict | None:
+async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
     store: storage.Store[dict[str, Any]] = storage.Store(
         hass, STORAGE_VERSION, STORAGE_KEY
     )
-    return cast(Optional[dict], await store.async_load())
+    return await store.async_load()
 
 
 class ApiConfig:

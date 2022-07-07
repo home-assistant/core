@@ -80,9 +80,7 @@ class Data:
 
     async def async_load(self) -> None:
         """Load stored data."""
-        if (data := await self._store.async_load()) is None or not isinstance(
-            data, dict
-        ):
+        if (data := await self._store.async_load()) is None:
             data = cast(dict[str, list[dict[str, str]]], {"users": []})
 
         seen: set[str] = set()

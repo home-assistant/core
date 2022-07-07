@@ -213,7 +213,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
 
     # Get/create config to store a unique id for this hass instance.
     store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
-    if not (config := await store.async_load()) or not isinstance(config, dict):
+    if not (config := await store.async_load()):
         # Create config
         config = {
             CONF_INSTANCE_ID: str(uuid4()),

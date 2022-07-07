@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from io import BytesIO
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -93,11 +93,8 @@ class TotpAuthModule(MultiFactorAuthModule):
             if self._users is not None:
                 return
 
-            data: dict[str, dict[str, str]] | None
-            if (data := await self._user_store.async_load()) is None or not isinstance(
-                data, dict
-            ):
-                data = {STORAGE_USERS: {}}
+            if (data := await self._user_store.async_load()) is None:
+                data = cast(dict[str, dict[str, str]], {STORAGE_USERS: {}})
 
             self._users = data.get(STORAGE_USERS, {})
 
