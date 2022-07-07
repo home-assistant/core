@@ -36,7 +36,9 @@ class CameraPreferences:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize camera prefs."""
         self._hass = hass
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store: Store[dict[str, dict[str, bool]]] = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY
+        )
         self._prefs: dict[str, dict[str, bool]] | None = None
 
     async def async_initialize(self) -> None:
