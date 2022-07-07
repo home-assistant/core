@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import DATA_GIBIBYTES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -14,6 +14,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
 
 BYTE_TO_GIBIBYTE = 1.074e9
+
+sensorDescriptions = [
+    (
+        SensorEntityDescription(
+            key="mem_gib",
+            name="mem_gib",
+            native_unit_of_measurement=DATA_GIBIBYTES,
+            icon="",
+        ),
+        lambda data: round(int(data.mem) / BYTE_TO_GIBIBYTE, 2),
+    )
+]
 
 
 async def async_setup_platform(
@@ -48,21 +60,18 @@ async def async_setup_platform(
 
                 name = coordinator_data.name
 
-                sensors += [
-                    ProxmoxSensor(
-                        coordinator=coordinator,
-                        unique_id=f"proxmox_{node_name}_{dev_id}_mem_gib",
-                        name=f"{node_name}_{name}_memory",
-                        icon="",
-                        host_name=host_name,
-                        node_name=node_name,
-                        vm_id=dev_id,
-                        native_lambda=lambda data: round(
-                            int(data.mem) / BYTE_TO_GIBIBYTE, 2
-                        ),
-                        unit_of_measurement=DATA_GIBIBYTES,
+                for (description, native_lambda) in sensorDescriptions:
+                    sensors.append(
+                        ProxmoxSensor(
+                            coordinator=coordinator,
+                            vm_name=name,
+                            host_name=host_name,
+                            node_name=node_name,
+                            vm_id=dev_id,
+                            native_lambda=native_lambda,
+                            description=description,
+                        )
                     )
-                ]
 
     add_entities(sensors)
 
@@ -73,21 +82,25 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id: str,
-        name: str,
-        icon: str,
+        vm_name: str,
         host_name: str,
         node_name: str,
         vm_id: int,
         native_lambda: Callable,
-        unit_of_measurement: str,
+        description: SensorEntityDescription,
     ) -> None:
         """Create the sensor for vms or containers."""
 
         self.native_lambda = native_lambda
-        self._attr_native_unit_of_measurement = unit_of_measurement
+        self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         super().__init__(
-            coordinator, unique_id, name, icon, host_name, node_name, vm_id
+            coordinator,
+            unique_id=f"proxmox_{node_name}_{vm_id}_{description.name}",
+            name=f"{node_name}_{vm_name}_{description.name}",
+            icon=description.icon,
+            host_name=host_name,
+            node_name=node_name,
+            vm_id=vm_id,
         )
 
     @property
