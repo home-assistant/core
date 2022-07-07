@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
 import logging
 from typing import Any, Final, cast
 
@@ -23,7 +22,7 @@ MAX_HISTORY_SIZE: Final = 256
 
 
 def _dispatch_callback(
-    callback: Callable,
+    callback: AdvertisementDataCallback,
     filters: dict[str, set[str]],
     device: BLEDevice,
     advertisement_data: AdvertisementData,
@@ -58,7 +57,9 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         def _remove_callback() -> None:
             self._callbacks.remove((callback, filters))
 
-        # Replay the history
+        # Replay the history since otherwise we miss devices
+        # that were already discovered before the callback was registered
+        # or we are in passive mode
         for device, advertisement_data in self._history.values():
             _dispatch_callback(callback, filters, device, advertisement_data)
 
