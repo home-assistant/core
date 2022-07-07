@@ -515,7 +515,9 @@ jobs:
             libavutil-dev \
             libswresample-dev \
             libswscale-dev \
-            libudev-dev
+            libudev-dev \
+            libxml2-dev \
+            libxslt-dev
       - name: Create Python virtual environment
         if: steps.cache-venv.outputs.cache-hit != 'true'
         run: |
