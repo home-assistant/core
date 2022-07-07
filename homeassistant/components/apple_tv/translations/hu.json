@@ -41,7 +41,7 @@
                 "title": "Jelsz\u00f3 sz\u00fcks\u00e9ges"
             },
             "protocol_disabled": {
-                "description": "P\u00e1ros\u00edt\u00e1s sz\u00fcks\u00e9ges a `{protokoll}` miatt, de az eszk\u00f6z\u00f6n le van tiltva. K\u00e9rj\u00fck, vizsg\u00e1lja meg az eszk\u00f6z\u00f6n az esetleges hozz\u00e1f\u00e9r\u00e9si korl\u00e1toz\u00e1sokat (pl. enged\u00e9lyezze a helyi h\u00e1l\u00f3zaton l\u00e9v\u0151 \u00f6sszes eszk\u00f6z csatlakoztat\u00e1s\u00e1t).\n\nFolytathatja a protokoll p\u00e1ros\u00edt\u00e1sa n\u00e9lk\u00fcl is, de bizonyos funkci\u00f3k korl\u00e1tozottak lesznek.",
+                "description": "P\u00e1ros\u00edt\u00e1s sz\u00fcks\u00e9ges a `{protocol}` miatt, de az eszk\u00f6z\u00f6n le van tiltva. K\u00e9rj\u00fck, vizsg\u00e1lja meg az eszk\u00f6z\u00f6n az esetleges hozz\u00e1f\u00e9r\u00e9si korl\u00e1toz\u00e1sokat (pl. enged\u00e9lyezze a helyi h\u00e1l\u00f3zaton l\u00e9v\u0151 \u00f6sszes eszk\u00f6z csatlakoztat\u00e1s\u00e1t).\n\nFolytathatja a protokoll p\u00e1ros\u00edt\u00e1sa n\u00e9lk\u00fcl is, de bizonyos funkci\u00f3k korl\u00e1tozottak lesznek.",
                 "title": "A p\u00e1ros\u00edt\u00e1s nem lehets\u00e9ges"
             },
             "reconfigure": {

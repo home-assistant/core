@@ -1155,6 +1155,10 @@ class ConfigEntries:
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
+        report(
+            "called async_setup_platforms instead of awaiting async_forward_entry_setups; "
+            "this will fail in version 2022.12",
+        )
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
 

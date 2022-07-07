@@ -181,7 +181,7 @@ aiohue==4.4.2
 aioimaplib==1.0.0
 
 # homeassistant.components.apache_kafka
-aiokafka==0.6.0
+aiokafka==0.7.2
 
 # homeassistant.components.kef
 aiokef==0.2.16
@@ -250,7 +250,7 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.6.1
+aioskybell==22.7.0
 
 # homeassistant.components.slimproto
 aioslimproto==2.1.1
@@ -828,7 +828,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220706.0
+home-assistant-frontend==20220707.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -1474,7 +1474,7 @@ pyeight==0.3.0
 pyemby==1.8
 
 # homeassistant.components.envisalink
-pyenvisalink==4.5
+pyenvisalink==4.6
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2122,7 +2122,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[async,encrypted]==2.5.0
 
 # homeassistant.components.satel_integra
-satel_integra==0.3.4
+satel_integra==0.3.7
 
 # homeassistant.components.dhcp
 scapy==2.4.5

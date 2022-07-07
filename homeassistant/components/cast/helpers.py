@@ -37,7 +37,7 @@ class ChromecastInfo:
 
     @property
     def friendly_name(self) -> str:
-        """Return the UUID."""
+        """Return the Friendly Name."""
         return self.cast_info.friendly_name
 
     @property

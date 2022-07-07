@@ -143,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = SonosDiscoveryManager(
         hass, entry, data, hosts
     )
-    hass.async_create_task(manager.setup_platforms_and_discovery())
+    await manager.setup_platforms_and_discovery()
     return True
 
 

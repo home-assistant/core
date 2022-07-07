@@ -51,7 +51,7 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+) -> tuple[device_registry.DeviceEntry | None, area_registry.AreaEntry | None]:
     """Get registry entries."""
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
