@@ -30,7 +30,6 @@ class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
 
     _attr_has_entity_name = True
     _attr_icon = "mdi:delete-empty"
-    _attr_name = "Calendar"
 
     def __init__(
         self,
