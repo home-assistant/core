@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
-_T = TypeVar("_T", list[Any], dict[str, Any])
+_T = TypeVar("_T")
 
 
 @bind_hass

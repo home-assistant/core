@@ -49,7 +49,9 @@ class AreaRegistry:
         """Initialize the area registry."""
         self.hass = hass
         self.areas: MutableMapping[str, AreaEntry] = {}
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
+        self._store: Store[dict[str, list[dict[str, str | None]]]] = Store(
+            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
         self._normalized_name_area_idx: dict[str, str] = {}
 
     @callback
@@ -178,6 +180,7 @@ class AreaRegistry:
 
         if isinstance(data, dict):
             for area in data["areas"]:
+                assert area["name"] is not None and area["id"] is not None
                 normalized_name = normalize_area_name(area["name"])
                 areas[area["id"]] = AreaEntry(
                     name=area["name"],
