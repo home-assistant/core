@@ -80,7 +80,8 @@ class BluetoothServiceInfo(BaseServiceInfo):
     def manufacturer(self) -> str | None:
         """Convert manufacturer data to a string."""
         for manufacturer in self.manufacturer_data:
-            if name := MANUFACTURERS.get(manufacturer):
+            if manufacturer in MANUFACTURERS:
+                name: str = MANUFACTURERS[manufacturer]
                 return name
         return None
 
