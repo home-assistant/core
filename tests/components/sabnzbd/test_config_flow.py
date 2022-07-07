@@ -55,7 +55,7 @@ async def test_create_entry(hass):
         )
         await hass.async_block_till_done()
 
-        assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result2["title"] == "edc3eee7330e"
         assert result2["data"] == {
             CONF_API_KEY: "edc3eee7330e4fdda04489e3fbc283d0",
@@ -93,7 +93,7 @@ async def test_import_flow(hass) -> None:
             data=VALID_CONFIG_OLD,
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == "edc3eee7330e"
         assert result["data"][CONF_NAME] == "Sabnzbd"
         assert result["data"][CONF_API_KEY] == "edc3eee7330e4fdda04489e3fbc283d0"

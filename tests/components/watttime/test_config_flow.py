@@ -106,13 +106,13 @@ async def test_options_flow(hass: HomeAssistant, config_entry):
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_SHOW_ON_MAP: False}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_SHOW_ON_MAP: False}
 
 
