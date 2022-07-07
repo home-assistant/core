@@ -28,6 +28,7 @@ from homeassistant.data_entry_flow import BaseServiceInfo
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 
+from . import models
 from .const import DOMAIN
 from .models import HaBleakScanner
 from .usage import install_multiple_bleak_catcher
@@ -175,7 +176,7 @@ class BluetoothManager:
         assert self.scanner is not None
         self.scanner.register_detection_callback(self.scanner.async_callback_disptacher)
         self._cancel_device_detected = self.scanner.async_register_callback(
-            self._device_detected
+            self._device_detected, {}
         )
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._scan_task = self.hass.async_create_task(self._async_start_scanner())
@@ -220,3 +221,4 @@ class BluetoothManager:
             self._scan_task = None
         if self.scanner:
             await self.scanner.stop()
+        models.HA_BLEAK_SCANNER = None
