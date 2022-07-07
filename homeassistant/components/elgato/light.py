@@ -66,6 +66,8 @@ class ElgatoLight(
 ):
     """Defines an Elgato Light."""
 
+    _attr_name = "Light"
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator[State],
@@ -80,7 +82,6 @@ class ElgatoLight(
 
         self._attr_min_mireds = 143
         self._attr_max_mireds = 344
-        self._attr_name = info.display_name or info.product_name
         self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
         self._attr_unique_id = info.serial_number
 

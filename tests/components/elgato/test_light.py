@@ -40,7 +40,7 @@ async def test_light_state_temperature(
     entity_registry = er.async_get(hass)
 
     # First segment of the strip
-    state = hass.states.get("light.frenck")
+    state = hass.states.get("light.frenck_light")
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 54
     assert state.attributes.get(ATTR_COLOR_TEMP) == 297
@@ -51,7 +51,7 @@ async def test_light_state_temperature(
     assert state.attributes.get(ATTR_SUPPORTED_COLOR_MODES) == [ColorMode.COLOR_TEMP]
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.frenck")
+    entry = entity_registry.async_get("light.frenck_light")
     assert entry
     assert entry.unique_id == "CN11A1A00001"
 
@@ -83,7 +83,7 @@ async def test_light_state_color(
     entity_registry = er.async_get(hass)
 
     # First segment of the strip
-    state = hass.states.get("light.frenck")
+    state = hass.states.get("light.frenck_light")
     assert state
     assert state.attributes.get(ATTR_BRIGHTNESS) == 128
     assert state.attributes.get(ATTR_COLOR_TEMP) is None
@@ -97,7 +97,7 @@ async def test_light_state_color(
     ]
     assert state.state == STATE_ON
 
-    entry = entity_registry.async_get("light.frenck")
+    entry = entity_registry.async_get("light.frenck_light")
     assert entry
     assert entry.unique_id == "CN11A1A00001"
 
@@ -111,7 +111,7 @@ async def test_light_change_state_temperature(
     mock_elgato: MagicMock,
 ) -> None:
     """Test the change of state of a Elgato Key Light device."""
-    state = hass.states.get("light.frenck")
+    state = hass.states.get("light.frenck_light")
     assert state
     assert state.state == STATE_ON
 
@@ -119,7 +119,7 @@ async def test_light_change_state_temperature(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.frenck",
+            ATTR_ENTITY_ID: "light.frenck_light",
             ATTR_BRIGHTNESS: 255,
             ATTR_COLOR_TEMP: 100,
         },
@@ -135,7 +135,7 @@ async def test_light_change_state_temperature(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.frenck",
+            ATTR_ENTITY_ID: "light.frenck_light",
             ATTR_BRIGHTNESS: 255,
         },
         blocking=True,
@@ -149,7 +149,7 @@ async def test_light_change_state_temperature(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "light.frenck"},
+        {ATTR_ENTITY_ID: "light.frenck_light"},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -160,7 +160,7 @@ async def test_light_change_state_temperature(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {
-            ATTR_ENTITY_ID: "light.frenck",
+            ATTR_ENTITY_ID: "light.frenck_light",
             ATTR_BRIGHTNESS: 255,
             ATTR_HS_COLOR: (10.1, 20.2),
         },
@@ -188,12 +188,12 @@ async def test_light_unavailable(
         await hass.services.async_call(
             LIGHT_DOMAIN,
             service,
-            {ATTR_ENTITY_ID: "light.frenck"},
+            {ATTR_ENTITY_ID: "light.frenck_light"},
             blocking=True,
         )
         await hass.async_block_till_done()
 
-    state = hass.states.get("light.frenck")
+    state = hass.states.get("light.frenck_light")
     assert state
     assert state.state == STATE_UNAVAILABLE
 
@@ -208,7 +208,7 @@ async def test_light_identify(
         DOMAIN,
         SERVICE_IDENTIFY,
         {
-            ATTR_ENTITY_ID: "light.frenck",
+            ATTR_ENTITY_ID: "light.frenck_light",
         },
         blocking=True,
     )
@@ -231,7 +231,7 @@ async def test_light_identify_error(
             DOMAIN,
             SERVICE_IDENTIFY,
             {
-                ATTR_ENTITY_ID: "light.frenck",
+                ATTR_ENTITY_ID: "light.frenck_light",
             },
             blocking=True,
         )
