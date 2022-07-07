@@ -809,7 +809,7 @@ jobs:
             -qq \
             --timeout=9 \
             --durations=10 \
-            -n 0 \
+            -n auto \
             --cov="homeassistant.components.${{ matrix.group }}" \
             --cov-report=xml \
             --cov-report=term-missing \
