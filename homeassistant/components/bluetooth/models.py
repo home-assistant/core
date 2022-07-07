@@ -26,7 +26,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
 
     @hass_callback
     def async_register_callback(
-        self, callback: AdvertisementDataCallback, filters: dict[str, Any]
+        self, callback: AdvertisementDataCallback, filters: dict[str, set[str]]
     ) -> CALLBACK_TYPE:
         """Register a callback."""
         self._callbacks.append((callback, filters))
@@ -66,7 +66,11 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         self._filters: dict[str, set[str]] = {}
         if "filters" in kwargs:
             self._filters = {
-                k: {str(matcher) for matcher in v} for k, v in kwargs["filters"].items()
+                # On linux there will be dbus_next Variant objects
+                # but we cannot import that since the library won't
+                # work on MacOS
+                k: set(getattr(v, "value", v))
+                for k, v in kwargs["filters"].items()
             }
         if "service_uuids" in kwargs:
             self._filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
