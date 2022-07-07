@@ -82,8 +82,6 @@ SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 
-SERVICE_JOIN = "join"
-SERVICE_UNJOIN = "unjoin"
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
 SERVICE_SET_TIMER = "set_sleep_timer"
@@ -130,24 +128,7 @@ async def async_setup_entry(
             assert isinstance(entity, SonosMediaPlayerEntity)
             speakers.append(entity.speaker)
 
-        if service_call.service == SERVICE_JOIN:
-            _LOGGER.warning(
-                "Service 'sonos.join' is deprecated and will be removed in 2022.8, please use 'media_player.join'"
-            )
-            master = platform.entities.get(service_call.data[ATTR_MASTER])
-            if master:
-                await SonosSpeaker.join_multi(hass, master.speaker, speakers)  # type: ignore[arg-type]
-            else:
-                _LOGGER.error(
-                    "Invalid master specified for join service: %s",
-                    service_call.data[ATTR_MASTER],
-                )
-        elif service_call.service == SERVICE_UNJOIN:
-            _LOGGER.warning(
-                "Service 'sonos.unjoin' is deprecated and will be removed in 2022.8, please use 'media_player.unjoin'"
-            )
-            await SonosSpeaker.unjoin_multi(hass, speakers)  # type: ignore[arg-type]
-        elif service_call.service == SERVICE_SNAPSHOT:
+        if service_call.service == SERVICE_SNAPSHOT:
             await SonosSpeaker.snapshot_multi(
                 hass, speakers, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
             )
@@ -158,20 +139,6 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SONOS_CREATE_MEDIA_PLAYER, async_create_entities)
-    )
-
-    hass.services.async_register(
-        SONOS_DOMAIN,
-        SERVICE_JOIN,
-        async_service_handle,
-        cv.make_entity_service_schema({vol.Required(ATTR_MASTER): cv.entity_id}),
-    )
-
-    hass.services.async_register(
-        SONOS_DOMAIN,
-        SERVICE_UNJOIN,
-        async_service_handle,
-        cv.make_entity_service_schema({}),
     )
 
     join_unjoin_schema = cv.make_entity_service_schema(
