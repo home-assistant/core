@@ -10,9 +10,8 @@ from homeassistant.core import HomeAssistant, callback
 
 
 @callback
-def async_register(  # pylint:disable=unused-argument
-    hass: HomeAssistant,
-    register: system_health.SystemHealthRegistration,
+def async_register(
+    hass: HomeAssistant, register: system_health.SystemHealthRegistration
 ) -> None:
     """Register system health callbacks."""
     register.async_register_info(system_health_info)

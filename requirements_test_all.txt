@@ -228,7 +228,7 @@ aioshelly==2.0.0
 aioskybell==22.6.1
 
 # homeassistant.components.slimproto
-aioslimproto==2.0.1
+aioslimproto==2.1.1
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -604,13 +604,13 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220705.0
+home-assistant-frontend==20220706.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.2
+homematicip==1.0.3
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5

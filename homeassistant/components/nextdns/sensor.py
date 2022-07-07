@@ -294,10 +294,8 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class NextDnsSensor(CoordinatorEntity, SensorEntity):
+class NextDnsSensor(CoordinatorEntity[NextDnsUpdateCoordinator], SensorEntity):
     """Define an NextDNS sensor."""
-
-    coordinator: NextDnsUpdateCoordinator
 
     def __init__(
         self,

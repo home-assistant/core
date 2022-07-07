@@ -579,7 +579,7 @@ UNITS = (
     ),
     UnitOfMeasurement(
         unit=TEMP_CELSIUS,
-        aliases={"°c", "c", "celsius"},
+        aliases={"°c", "c", "celsius", "℃"},
         device_classes={SensorDeviceClass.TEMPERATURE},
     ),
     UnitOfMeasurement(

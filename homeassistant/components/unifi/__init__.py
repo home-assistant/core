@@ -1,4 +1,7 @@
 """Integration to UniFi Network and its various features."""
+from collections.abc import Mapping
+from typing import Any
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -92,7 +95,10 @@ async def async_flatten_entry_data(
     Keep controller key layer in case user rollbacks.
     """
 
-    data: dict = {**config_entry.data, **config_entry.data[CONF_CONTROLLER]}
+    data: Mapping[str, Any] = {
+        **config_entry.data,
+        **config_entry.data[CONF_CONTROLLER],
+    }
     if config_entry.data != data:
         hass.config_entries.async_update_entry(config_entry, data=data)
 
