@@ -138,6 +138,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle multiple receivers found."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             self.host = user_input["select_host"]
             return await self.async_step_connect()
@@ -150,7 +151,9 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(step_id="select", data_schema=select_scheme)
+        return self.async_show_form(
+            step_id="select", data_schema=select_scheme, errors=errors
+        )
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
