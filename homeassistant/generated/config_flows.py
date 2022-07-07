@@ -55,7 +55,6 @@ FLOWS = {
         "brother",
         "brunt",
         "bsblan",
-        "bt",
         "buienradar",
         "caldav",
         "canary",

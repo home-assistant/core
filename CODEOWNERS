@@ -138,6 +138,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluetooth/ @bdraco
+/tests/components/bluetooth/ @bdraco
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
@@ -154,8 +156,6 @@ build.json @home-assistant/supervisor
 /tests/components/brunt/ @eavanvalkenburg
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
-/homeassistant/components/bt/ @bdraco
-/tests/components/bt/ @bdraco
 /homeassistant/components/bt_smarthub/ @jxwolstenholme
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221

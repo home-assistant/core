@@ -322,7 +322,7 @@ bellows==0.31.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
 
-# homeassistant.components.bt
+# homeassistant.components.bluetooth
 bleak==0.14.3
 
 # homeassistant.components.blebox

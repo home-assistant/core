@@ -28,6 +28,7 @@ from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from .components.bluetooth import BluetoothServiceInfo
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
     from .components.mqtt import MqttServiceInfo
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SOURCE_BLUETOOTH = "bluetooth"
 SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
 SOURCE_HASSIO = "hassio"
@@ -1471,6 +1473,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return super().async_abort(
             reason=reason, description_placeholders=description_placeholders
         )
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by Bluetooth discovery."""
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo

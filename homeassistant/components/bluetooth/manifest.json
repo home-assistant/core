@@ -1,7 +1,6 @@
 {
   "domain": "bluetooth",
   "name": "Bluetooth",
-  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/bluetooth",
   "dependencies": ["websocket_api"],
   "quality_scale": "internal",
