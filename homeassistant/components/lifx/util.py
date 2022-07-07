@@ -147,7 +147,7 @@ async def async_execute_lifx(method: Callable) -> Message:
     def _callback(bulb: Light, message: Message) -> None:
         if not future.done():
             # The future will get canceled out from under
-            # use by async_timeout when we hit the OVERALL_TIMEOUT
+            # us by async_timeout when we hit the OVERALL_TIMEOUT
             future.set_result(message)
 
     _LOGGER.debug("Sending LIFX command: %s", method)
