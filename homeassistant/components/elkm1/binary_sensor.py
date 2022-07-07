@@ -5,7 +5,6 @@ from typing import Any
 
 from elkm1_lib.const import ZoneLogicalStatus, ZoneType
 from elkm1_lib.elements import Element
-from elkm1_lib.elk import Elk
 from elkm1_lib.zones import Zone
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -50,10 +49,6 @@ class ElkBinarySensor(ElkAttachedEntity, BinarySensorEntity):
 
     _element: Zone
     _attr_entity_registry_enabled_default = False
-
-    def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
-        """Initialize the base of all Elk sensors."""
-        super().__init__(element, elk, elk_data)
 
     def _element_changed(self, _: Element, changeset: Any) -> None:
         # Zone in NORMAL state is OFF; any other state is ON
