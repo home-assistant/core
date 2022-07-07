@@ -9,7 +9,7 @@ import logging
 from typing import Any
 
 from bleak import BleakError
-from bleak.backends.device import BLEDevice
+from bleak.backends.device import MANUFACTURERS, BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 # from homeassistant.components import websocket_api
@@ -77,6 +77,14 @@ class BluetoothServiceInfo(BaseServiceInfo):
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,
         )
+
+    @property
+    def manufacturer(self) -> str | None:
+        """Convert manufacturer data to a string."""
+        for manufacturer in self.manufacturer_data:
+            if name := MANUFACTURERS.get(manufacturer):
+                return name
+        return None
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
@@ -173,7 +181,11 @@ class BluetoothManager:
         service_info = BluetoothServiceInfo.from_advertisement(
             device, advertisement_data
         )
-        _LOGGER.debug("Device detected: %s", service_info)
+        _LOGGER.debug(
+            "Device detected: %s with manufacturer: %s",
+            service_info,
+            service_info.manufacturer,
+        )
 
     async def async_register_callback(
         self, callback: BluetoothCallback, match_dict: None | dict[str, str] = None
