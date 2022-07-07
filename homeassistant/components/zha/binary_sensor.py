@@ -188,7 +188,7 @@ class FrostLock(BinarySensor, id_suffix="frost_lock"):
     _attr_device_class: BinarySensorDeviceClass = BinarySensorDeviceClass.LOCK
 
 
-@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+@MULTI_MATCH(channel_names="ikea_airpurifier")
 class ReplaceFilter(BinarySensor, id_suffix="replace_filter"):
     """ZHA BinarySensor."""
 
