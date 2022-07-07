@@ -63,6 +63,10 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
+        self._filters: dict[str, set[str]] = {}
+
+        _LOGGER.debug("[init wrapper]: %s %s", args, kwargs)
+
         if "filters" in kwargs:
             self._filters = {k: set(v) for k, v in kwargs["filters"].items()}
         if "service_uuids" in kwargs:
