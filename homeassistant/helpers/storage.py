@@ -2,14 +2,14 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Mapping, Sequence
 from contextlib import suppress
 from copy import deepcopy
 import inspect
 from json import JSONEncoder
 import logging
 import os
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, Union
 
 from homeassistant.const import EVENT_HOMEASSISTANT_FINAL_WRITE
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=Union[Mapping[str, Any], Sequence[Any]])
 
 
 @bind_hass
