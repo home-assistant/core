@@ -23,9 +23,7 @@ from .const import DOMAIN
 # import voluptuous as vol
 
 
-
 # from homeassistant.loader import async_get_bluetooth
-
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,12 +48,12 @@ class BluetoothServiceInfo(BaseServiceInfo):
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the bt integration."""
+    """Set up the bluetooth integration."""
     # bt = await async_get_bluetooth(hass)
-    bt = {}
-    bt_discovery = BTManager(hass, bt)
-    await bt_discovery.async_setup()
-    hass.data[DOMAIN] = bt_discovery
+    bluetooth = {}
+    bluetooth_discovery = BluetoothManager(hass, bluetooth)
+    await bluetooth_discovery.async_setup()
+    hass.data[DOMAIN] = bluetooth
 
     # TODO:
     # websocket_api.async_register_command(hass, list_devices)
@@ -64,8 +62,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-class BTManager:
-    """Manage BT."""
+class BluetoothManager:
+    """Manage Bluetooth."""
 
     def __init__(
         self,

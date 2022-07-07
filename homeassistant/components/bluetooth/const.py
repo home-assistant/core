@@ -1,3 +1,3 @@
 """Constants for the Bluetooth integration."""
 
-DOMAIN = "bt"
+DOMAIN = "bluetooth"
