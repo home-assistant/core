@@ -20,8 +20,8 @@ async def test_waste_pickup_calendar(
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
 
-    state = hass.states.get("calendar.twente_milieu")
-    entry = entity_registry.async_get("calendar.twente_milieu")
+    state = hass.states.get("calendar.twente_milieu_calendar")
+    entry = entity_registry.async_get("calendar.twente_milieu_calendar")
     assert entry
     assert state
     assert entry.unique_id == "12345"
@@ -56,8 +56,8 @@ async def test_api_calendar(
     data = await response.json()
     assert data == [
         {
-            "entity_id": "calendar.twente_milieu",
-            "name": "Twente Milieu",
+            "entity_id": "calendar.twente_milieu_calendar",
+            "name": "Twente Milieu Calendar",
         }
     ]
 
@@ -70,7 +70,7 @@ async def test_api_events(
     """Test the Twente Milieu calendar view."""
     client = await hass_client()
     response = await client.get(
-        "/api/calendars/calendar.twente_milieu?start=2022-01-05&end=2022-01-06"
+        "/api/calendars/calendar.twente_milieu_calendar?start=2022-01-05&end=2022-01-06"
     )
     assert response.status == HTTPStatus.OK
     events = await response.json()

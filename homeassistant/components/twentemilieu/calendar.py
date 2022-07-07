@@ -28,8 +28,9 @@ async def async_setup_entry(
 class TwenteMilieuCalendar(TwenteMilieuEntity, CalendarEntity):
     """Defines a Twente Milieu calendar."""
 
-    _attr_name = "Twente Milieu"
+    _attr_has_entity_name = True
     _attr_icon = "mdi:delete-empty"
+    _attr_name = "Calendar"
 
     def __init__(
         self,
