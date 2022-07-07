@@ -143,7 +143,11 @@ class OpenWeatherMapWeather(WeatherEntity):
         """Return the forecast array."""
         api_forecasts = self._weather_coordinator.data[ATTR_API_FORECAST]
         forecasts = [
-            {ha_key: forecast[api_key] for api_key, ha_key in FORECAST_MAP.items()}
+            {
+                ha_key: forecast[api_key]
+                for api_key, ha_key in FORECAST_MAP.items()
+                if api_key in forecast
+            }
             for forecast in api_forecasts
         ]
         return cast(list[Forecast], forecasts)
