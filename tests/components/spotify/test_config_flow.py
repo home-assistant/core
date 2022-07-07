@@ -30,14 +30,14 @@ async def test_abort_if_no_configuration(hass):
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "missing_credentials"
 
 
@@ -49,7 +49,7 @@ async def test_zeroconf_abort_if_existing_entry(hass):
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=BLANK_ZEROCONF_INFO
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -79,7 +79,7 @@ async def test_full_flow(
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == (
         "https://accounts.spotify.com/authorize"
         "?response_type=code&client_id=client"
@@ -169,7 +169,7 @@ async def test_abort_if_spotify_error(
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "connection_error"
 
 
@@ -305,7 +305,7 @@ async def test_reauth_account_mismatch(
         spotify_mock.return_value.current_user.return_value = {"id": "fake_id"}
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
 
 
@@ -315,5 +315,5 @@ async def test_abort_if_no_reauth_entry(hass):
         DOMAIN, context={"source": "reauth_confirm"}
     )
 
-    assert result.get("type") == data_entry_flow.RESULT_TYPE_ABORT
+    assert result.get("type") == data_entry_flow.FlowResultType.ABORT
     assert result.get("reason") == "reauth_account_mismatch"
