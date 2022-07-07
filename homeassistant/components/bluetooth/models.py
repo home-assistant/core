@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 from typing import Any
 
 from bleak import BleakScanner
@@ -9,6 +10,8 @@ from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class HaBleakScanner(BleakScanner):
@@ -38,7 +41,10 @@ class HaBleakScanner(BleakScanner):
         it to all the wrapped HaBleakScannerWrapper classes
         """
         for callback in self._callbacks:
-            callback(device, advertisement_data)
+            try:
+                callback(device, advertisement_data)
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error in callback: %s", callback)
 
 
 class HaBleakScannerWrapper(BleakScanner):
