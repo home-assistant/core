@@ -86,6 +86,13 @@ class BluetoothServiceInfo(BaseServiceInfo):
                 return name
         return None
 
+    @property
+    def manufacturer_id(self) -> int | None:
+        """Get the first manufacturer id."""
+        for manufacturer in self.manufacturer_data:
+            return manufacturer
+        return None
+
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
