@@ -154,6 +154,8 @@ build.json @home-assistant/supervisor
 /tests/components/brunt/ @eavanvalkenburg
 /homeassistant/components/bsblan/ @liudger
 /tests/components/bsblan/ @liudger
+/homeassistant/components/bt/ @bdraco
+/tests/components/bt/ @bdraco
 /homeassistant/components/bt_smarthub/ @jxwolstenholme
 /homeassistant/components/buienradar/ @mjj4791 @ties @Robbie1221
 /tests/components/buienradar/ @mjj4791 @ties @Robbie1221

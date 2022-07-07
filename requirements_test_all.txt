@@ -316,6 +316,9 @@ bellows==0.31.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
 
+# homeassistant.components.bt
+bleak==0.14.3
+
 # homeassistant.components.blebox
 blebox_uniapi==2.0.1
 
