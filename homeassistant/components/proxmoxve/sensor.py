@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import DATA_GIBIBYTES
 from homeassistant.core import HomeAssistant
@@ -71,15 +73,15 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
-        unique_id,
-        name,
-        icon,
-        host_name,
-        node_name,
-        vm_id,
-        native_lambda,
-        unit_of_measurement,
-    ):
+        unique_id: str,
+        name: str,
+        icon: str,
+        host_name: str,
+        node_name: str,
+        vm_id: int,
+        native_lambda: Callable,
+        unit_of_measurement: str,
+    ) -> None:
         """Create the sensor for vms or containers."""
 
         self.native_lambda = native_lambda
