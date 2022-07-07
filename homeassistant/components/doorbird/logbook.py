@@ -18,7 +18,7 @@ _LOGGER = logging.getLogger(__name__)
 @callback
 def async_describe_events(hass, async_describe_event):
     """Describe logbook events."""
-    _LOGGER.warning("DOORBIRD LOGBOOK LOADING")
+    _LOGGER.warning("DOORBIRD LOGBOOK LOADING: %s", hass.data[DOMAIN])
 
     @callback
     def async_describe_logbook_event(event):
