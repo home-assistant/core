@@ -504,7 +504,7 @@ def is_hassio(hass: HomeAssistant) -> bool:
 
 
 @callback
-def get_supervisor_ip() -> str:
+def get_supervisor_ip() -> str | None:
     """Return the supervisor ip address."""
     if "SUPERVISOR" not in os.environ:
         return None
@@ -536,6 +536,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
+
+    assert isinstance(data, dict)
 
     refresh_token = None
     if "hassio_user" in data:
@@ -710,6 +712,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     async_setup_discovery_view(hass, hassio)
 
     # Init auth Hass.io feature
+    assert user is not None
     async_setup_auth_view(hass, user)
 
     # Init ingress Hass.io feature
@@ -877,7 +880,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         except HassioAPIError as err:
             raise UpdateFailed(f"Error on Supervisor API: {err}") from err
 
-        new_data = {}
+        new_data: dict[str, Any] = {}
         supervisor_info = get_supervisor_info(self.hass)
         addons_info = get_addons_info(self.hass)
         addons_stats = get_addons_stats(self.hass)
