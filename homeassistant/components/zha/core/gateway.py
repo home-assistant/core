@@ -184,7 +184,7 @@ class ZHAGateway:
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
         self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
-            self.application_controller.ieee
+            self.application_controller.state.node_info.ieee
         )
         self.async_load_devices()
         self.async_load_groups()
@@ -194,7 +194,7 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
-            if zha_device.ieee == self.application_controller.ieee:
+            if zha_device.ieee == self.application_controller.state.node_info.ieee:
                 self.coordinator_zha_device = zha_device
             zha_dev_entry = self.zha_storage.devices.get(str(zigpy_device.ieee))
             delta_msg = "not known"

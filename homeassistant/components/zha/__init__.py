@@ -110,9 +110,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         connections={
-            (dr.CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))
+            (
+                dr.CONNECTION_ZIGBEE,
+                str(zha_gateway.application_controller.state.node_info.ieee),
+            )
         },
-        identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},
+        identifiers={
+            (DOMAIN, str(zha_gateway.application_controller.state.node_info.ieee))
+        },
         name="Zigbee Coordinator",
         manufacturer="ZHA",
         model=zha_gateway.radio_description,
