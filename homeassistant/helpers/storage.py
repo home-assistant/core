@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, MutableMapping
 from contextlib import suppress
 from copy import deepcopy
 import inspect
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STORAGE_SEMAPHORE = "storage_semaphore"
 
-_T = TypeVar("_T")
+_T = TypeVar("_T", bound=MutableMapping[str, Any])
 
 
 @bind_hass
