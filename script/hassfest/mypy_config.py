@@ -23,7 +23,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cloud.http_api",
     "homeassistant.components.conversation",
     "homeassistant.components.conversation.default_agent",
-    "homeassistant.components.denonavr.config_flow",
     "homeassistant.components.evohome",
     "homeassistant.components.evohome.climate",
     "homeassistant.components.evohome.water_heater",

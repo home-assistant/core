@@ -90,14 +90,14 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def __init__(self) -> None:
         """Initialize the Denon AVR flow."""
-        self.host = None
-        self.serial_number = None
-        self.model_name = None
+        self.host: str | None = None
+        self.serial_number: str | None = None
+        self.model_name: str | None = None
         self.timeout = DEFAULT_TIMEOUT
         self.show_all_sources = DEFAULT_SHOW_SOURCES
         self.zone2 = DEFAULT_ZONE2
         self.zone3 = DEFAULT_ZONE3
-        self.d_receivers = []
+        self.d_receivers: list[dict[str, Any]] = []
 
     @staticmethod
     @callback
@@ -138,7 +138,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle multiple receivers found."""
-        errors = {}
         if user_input is not None:
             self.host = user_input["select_host"]
             return await self.async_step_connect()
@@ -151,9 +150,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             }
         )
 
-        return self.async_show_form(
-            step_id="select", data_schema=select_scheme, errors=errors
-        )
+        return self.async_show_form(step_id="select", data_schema=select_scheme)
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -169,6 +166,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Connect to the receiver."""
+        assert self.host
         connect_denonavr = ConnectDenonAVR(
             self.host,
             self.timeout,
@@ -185,6 +183,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         if not success:
             return self.async_abort(reason="cannot_connect")
         receiver = connect_denonavr.receiver
+        assert receiver
 
         if not self.serial_number:
             self.serial_number = receiver.serial_number
@@ -238,6 +237,7 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             "*", ""
         )
         self.serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
+        assert discovery_info.ssdp_location is not None
         self.host = urlparse(discovery_info.ssdp_location).hostname
 
         if self.model_name in IGNORED_MODELS:
@@ -260,6 +260,6 @@ class DenonAvrFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         return await self.async_step_confirm()
 
     @staticmethod
-    def construct_unique_id(model_name: str, serial_number: str) -> str:
+    def construct_unique_id(model_name: str | None, serial_number: str | None) -> str:
         """Construct the unique id from the ssdp discovery or user_step."""
         return f"{model_name}-{serial_number}"
