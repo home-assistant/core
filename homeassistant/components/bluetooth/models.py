@@ -65,7 +65,10 @@ def _get_bleak_filter_value_set(obj: Any) -> Any:
     work on MacOS.
 
     """
-    return set(getattr(obj, "value", obj))
+    _LOGGER.warning("_get_bleak_filter_value_set: %s", obj)
+    ret = set(getattr(obj, "value", obj))
+    _LOGGER.warning("_get_bleak_filter_value_set: %s", ret)
+    return ret
 
 
 class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
@@ -74,13 +77,13 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
-        self._filters: dict[str, set[str]] = {}
+        self._mapped_filters: dict[str, set[str]] = {}
         if "filters" in kwargs:
-            self._filters = {
+            self._mapped_filters = {
                 k: _get_bleak_filter_value_set(v) for k, v in kwargs["filters"].items()
             }
         if "service_uuids" in kwargs:
-            self._filters[FILTER_UUIDS] = _get_bleak_filter_value_set(
+            self._mapped_filters[FILTER_UUIDS] = _get_bleak_filter_value_set(
                 kwargs["service_uuids"]
             )
         super().__init__(*args, **kwargs)
@@ -115,7 +118,7 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         super().register_detection_callback(callback)
         assert HA_BLEAK_SCANNER is not None
         self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
-            self._callback, self._filters
+            self._callback, self._mapped_filters
         )
 
     def __del__(self) -> None:
