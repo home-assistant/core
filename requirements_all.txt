@@ -401,7 +401,7 @@ bimmer_connected==0.9.6
 # homeassistant.components.bizkaibus
 bizkaibus==0.1.1
 
-# homeassistant.components.bt
+# homeassistant.components.bluetooth
 bleak==0.14.3
 
 # homeassistant.components.blebox

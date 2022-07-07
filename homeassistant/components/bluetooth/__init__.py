@@ -53,6 +53,11 @@ SCANNING_MODE_TO_BLEAK = {
     BluetoothScanningMode.PASSIVE: "passive",
 }
 
+LOCAL_NAME = "local_name"
+SERVICE_UUID = "service_uuid"
+MANUFACTURER_ID = "manufacturer_id"
+MANUFACTURER_DATA_FIRST_BYTE = "manufacturer_data_first_byte"
+
 
 @dataclasses.dataclass
 class BluetoothServiceInfo(BaseServiceInfo):
