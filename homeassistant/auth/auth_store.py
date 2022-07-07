@@ -483,11 +483,10 @@ class AuthStore:
                 jwt_key=rt_dict["jwt_key"],
                 last_used_at=last_used_at,
                 last_used_ip=rt_dict.get("last_used_ip"),
-                credential=credentials.get(rt_dict["credential_id"])
-                if "credential_id" in rt_dict
-                else None,
                 version=rt_dict.get("version"),
             )
+            if "credential_id" in rt_dict:
+                token.credential = credentials.get(rt_dict["credential_id"])
             users[rt_dict["user_id"]].refresh_tokens[token.id] = token
 
         self._groups = groups
