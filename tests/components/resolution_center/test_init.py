@@ -100,7 +100,7 @@ async def test_create_update_issue(hass: HomeAssistant, hass_ws_client) -> None:
     )
 
 
-@pytest.mark.parametrize("ha_version", ("2022.9.cat", "In the future!"))
+@pytest.mark.parametrize("ha_version", ("2022.9.cat", "In the future: 2023.1.1"))
 async def test_create_issue_invalid_version(
     hass: HomeAssistant, hass_ws_client, ha_version
 ) -> None:

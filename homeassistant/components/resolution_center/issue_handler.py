@@ -29,7 +29,9 @@ def async_create_issue(
     # Verify the breaks_in_ha_version is a valid version string
     if breaks_in_ha_version:
         AwesomeVersion(
-            breaks_in_ha_version, ensure_strategy=AwesomeVersionStrategy.CALVER
+            breaks_in_ha_version,
+            ensure_strategy=AwesomeVersionStrategy.CALVER,
+            find_first_match=True,
         )
 
     issue_registry = async_get_issue_registry(hass)
