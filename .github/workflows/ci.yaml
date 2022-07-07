@@ -26,7 +26,7 @@ env:
   # Pin latest Python patch versions to avoid issues
   # with runners using different versions.
   DEFAULT_PYTHON: 3.9.14
-  ALL_PYTHON_VERSIONS: "['3.9.14', '3.10.7']"
+  ALL_PYTHON_VERSIONS: "['3.9.14', '3.10.7', '3.11.0-rc.2']"
   PRE_COMMIT_CACHE: ~/.cache/pre-commit
   PIP_CACHE: /tmp/pip-cache
   SQLALCHEMY_WARN_20: 1
