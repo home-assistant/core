@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 from typing import Any
 
-from bleak import BleakScanner
+from bleak import BleakError, BleakScanner
 from bleak.backends.device import BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
@@ -123,28 +123,39 @@ class BluetoothManager:
     async def async_setup(self) -> None:
         """Set up BT Discovery."""
         self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
 
     async def _async_start_scanner(self) -> None:
         """Start scanner and wait until canceled."""
         future: asyncio.Future[bool] = asyncio.Future()
         assert self.scanner is not None
-        async with self.scanner():
+        async with self.scanner:
             await future
 
     @hass_callback
     def async_start(self, event: Event) -> None:
         """Start BT Discovery and run a manual scan."""
-        self.scanner = BleakScanner()
+        _LOGGER.debug("Starting bluetooth scanner")
+        try:
+            self.scanner = BleakScanner()
+        except BleakError as ex:
+            _LOGGER.warning(
+                "Could not create bluetooth scanner (is bluetooth present and enabled?): %s",
+                ex,
+            )
+            return
         self.scanner.register_detection_callback(self._device_detected)
+        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.async_stop)
         self._scan_task = self.hass.async_create_task(self._async_start_scanner())
 
     @hass_callback
-    def _device_detected(self, device, advertisement_data):
+    def _device_detected(
+        self, device: BLEDevice, advertisement_data: AdvertisementData
+    ) -> None:
+        """Handle a detected device."""
         service_info = BluetoothServiceInfo.from_advertisement(
             device, advertisement_data
         )
-        _LOGGER.warning("Device detected: %s", service_info)
+        _LOGGER.debug("Device detected: %s", service_info)
 
     async def async_register_callback(
         self, callback: BluetoothCallback, match_dict: None | dict[str, str] = None
