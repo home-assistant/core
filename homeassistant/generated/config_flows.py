@@ -190,6 +190,7 @@ FLOWS = {
         "ibeacon",
         "icloud",
         "ifttt",
+        "imap",
         "inkbird",
         "insteon",
         "intellifire",
