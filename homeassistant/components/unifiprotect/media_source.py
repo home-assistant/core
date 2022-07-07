@@ -10,7 +10,9 @@ from typing import Any, cast
 from pyunifiprotect.data import Camera, Event, EventType, SmartDetectObjectType
 from pyunifiprotect.exceptions import NvrError
 from pyunifiprotect.utils import from_js_time
+from yarl import URL
 
+from homeassistant.components.camera import CameraImageView
 from homeassistant.components.media_player.const import (
     MEDIA_CLASS_DIRECTORY,
     MEDIA_CLASS_IMAGE,
@@ -23,7 +25,9 @@ from homeassistant.components.media_source.models import (
     MediaSourceItem,
     PlayMedia,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
@@ -31,6 +35,8 @@ from .data import ProtectData
 from .views import async_generate_event_video_url, async_generate_thumbnail_url
 
 VIDEO_FORMAT = "video/mp4"
+THUMBNAIL_WIDTH = 185
+THUMBNAIL_HEIGHT = 185
 
 
 class SimpleEventType(str, Enum):
@@ -124,6 +130,7 @@ class ProtectMediaSource(MediaSource):
     """Represents all UniFi Protect NVRs."""
 
     name: str = "UniFi Protect"
+    _registry: er.EntityRegistry | None
 
     def __init__(
         self, hass: HomeAssistant, data_sources: dict[str, ProtectData]
@@ -133,6 +140,7 @@ class ProtectMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
         self.data_sources = data_sources
+        self._registry = None
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Return a streamable URL and associated mime type for a UniFi Protect event.
@@ -308,6 +316,13 @@ class ProtectMediaSource(MediaSource):
 
         return await self._build_event(data, event, thumbnail_only)
 
+    async def get_registry(self) -> er.EntityRegistry:
+        """Get or return Entity Registry."""
+
+        if self._registry is None:
+            self._registry = await er.async_get_registry(self.hass)
+        return self._registry
+
     def _breadcrumb(
         self,
         data: ProtectData,
@@ -378,7 +393,9 @@ class ProtectMediaSource(MediaSource):
                 title=title,
                 can_play=True,
                 can_expand=False,
-                thumbnail=async_generate_thumbnail_url(event_id, nvr.id, 185, 185),
+                thumbnail=async_generate_thumbnail_url(
+                    event_id, nvr.id, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT
+                ),
             )
 
         return BrowseMediaSource(
@@ -389,7 +406,9 @@ class ProtectMediaSource(MediaSource):
             title=title,
             can_play=True,
             can_expand=False,
-            thumbnail=async_generate_thumbnail_url(event_id, nvr.id, 185, 185),
+            thumbnail=async_generate_thumbnail_url(
+                event_id, nvr.id, THUMBNAIL_WIDTH, THUMBNAIL_HEIGHT
+            ),
         )
 
     async def _build_events(
@@ -663,6 +682,34 @@ class ProtectMediaSource(MediaSource):
 
         return source
 
+    async def _get_camera_thumbnail_url(self, camera: Camera) -> str:
+        """Get camera thumbnail URL using the first avaiable camera entity."""
+
+        if not camera.is_connected or camera.is_privacy_on:
+            return None
+
+        entity_id: str | None = None
+        entity_registry = await self.get_registry()
+        for channel in camera.channels:
+            base_id = f"{camera.mac}_{channel.id}"
+            entity_id = entity_registry.async_get_entity_id(
+                Platform.CAMERA, DOMAIN, base_id
+            )
+            if entity_id is None:
+                entity_id = entity_registry.async_get_entity_id(
+                    Platform.CAMERA, DOMAIN, f"{base_id}_insecure"
+                )
+
+            if entity_id:
+                break
+
+        if entity_id is not None:
+            url = URL(CameraImageView.url.format(entity_id=entity_id))
+            return str(
+                url.update_query({"width": THUMBNAIL_WIDTH, "height": THUMBNAIL_HEIGHT})
+            )
+        return None
+
     async def _build_camera(
         self, data: ProtectData, camera_id: str, build_children: bool = False
     ) -> BrowseMediaSource:
@@ -680,6 +727,9 @@ class ProtectMediaSource(MediaSource):
             is_doorbell = camera.feature_flags.has_chime
             has_smart = camera.feature_flags.has_smart_detect
 
+        thumbnail_url: str | None = None
+        if camera is not None:
+            thumbnail_url = await self._get_camera_thumbnail_url(camera)
         source = BrowseMediaSource(
             domain=DOMAIN,
             identifier=f"{data.api.bootstrap.nvr.id}:{camera_id}",
@@ -688,6 +738,7 @@ class ProtectMediaSource(MediaSource):
             title=name,
             can_play=False,
             can_expand=True,
+            thumbnail=thumbnail_url,
             children_media_class=MEDIA_CLASS_VIDEO,
         )
 
