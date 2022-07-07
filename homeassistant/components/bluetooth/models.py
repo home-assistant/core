@@ -24,9 +24,9 @@ MAX_HISTORY_SIZE: Final = 256
 
 def _dispatch_callback(
     callback: Callable,
+    filters: dict[str, set[str]],
     device: BLEDevice,
     advertisement_data: AdvertisementData,
-    filters: dict[str, set[str]],
 ) -> None:
     """Dispatch the callback."""
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
@@ -44,7 +44,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
     """BleakScanner that cannot be stopped."""
 
     # HaBleakScanner is a singleton
-    _callbacks: list[AdvertisementDataCallback] = []
+    _callbacks: list[tuple[AdvertisementDataCallback, dict[str, set[str]]]] = []
     _history: LRU = LRU(MAX_HISTORY_SIZE)
 
     @hass_callback
@@ -60,7 +60,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
 
         # Replay the history
         for device, advertisement_data in self._history.values():
-            _dispatch_callback(callback, device, advertisement_data, filters)
+            _dispatch_callback(callback, filters, device, advertisement_data)
 
         return _remove_callback
 
@@ -74,7 +74,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         """
         self._history[device.address] = (device, advertisement_data)
         for callback, filters in self._callbacks:
-            _dispatch_callback(callback, device, advertisement_data, filters)
+            _dispatch_callback(callback, filters, device, advertisement_data)
 
 
 class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
