@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import json
 import re
-from typing import Any, Optional, cast
+from typing import Any, cast
 
 from hassmpris.proto import mpris_pb2
 import hassmpris_client
@@ -46,15 +46,23 @@ SUPPORTED_MINIMAL = (
 )
 SUPPORTED_TURN_OFF = MediaPlayerEntityFeature.TURN_OFF
 SUPPORTED_TURN_ON = MediaPlayerEntityFeature.TURN_ON
-SUPPORTED_SEEK = MediaPlayerEntityFeature.SEEK
+
+
+def _feat2bitfield(bitfield: int, obj: object) -> str:
+    fields = []
+    for f in dir(obj):
+        v = getattr(obj, f)
+        if not isinstance(v, int):
+            continue
+        if bitfield & v:
+            fields.append(f)
+    return ",".join(fields)
 
 
 class HASSMPRISEntity(MediaPlayerEntity):
+    """This class represents an MPRIS media player entity."""
 
-    # FIXME players already playing when HASSMPRIS starts
-    # appear as idle and "cannot be made to play".
     _attr_device_class = MediaPlayerDeviceClass.TV
-
     _attr_supported_features = SUPPORTED_MINIMAL
 
     def __init__(
@@ -63,6 +71,14 @@ class HASSMPRISEntity(MediaPlayerEntity):
         integration_id: str,
         player_id: str,
     ):
+        """
+        Initialize the entity.
+
+        Parameters:
+          client: the client to the remote agent
+          integration_id: unique identifier of the integration
+          player_id: the name / unique identifier of the player
+        """
         super().__init__()
         if client is None:
             raise ValueError("Instantiation of this class requires a client")
@@ -75,18 +91,26 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self._metadata: dict[str, Any] = {}
 
     async def set_unavailable(self):
+        """Mark player as unavailable."""
         _LOGGER.debug("Marking %s as unavailable" % self)
         self.client = None
         self._attr_available = False
         await self.update_state(STATE_UNKNOWN)
 
     async def async_removed_from_registry(self) -> None:
+        """Clean up when removed from the registry."""
         self.client = None
 
     async def set_available(
         self,
         client: hassmpris_client.AsyncMPRISClient,
     ):
+        """
+        Mark a player as available again.
+
+        Parameters:
+          client: the new client to use to talk to the agent
+        """
         _LOGGER.debug("Marking %s as available" % self)
         self.client = client
         self._client_host = self.client.host
@@ -95,14 +119,17 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     @property
     def unique_id(self) -> str:
+        """Return the unique ID of this entity."""
         return self._integration_id + "-" + self.player_id
 
     @property
     def name(self):
+        """Return the name of the entity."""
         return self.player_id
 
     @property
     def device_info(self) -> DeviceInfo:
+        """Return the device information associated with the entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._integration_id)},
             name="MPRIS agent at %s" % self._client_host,
@@ -111,14 +138,17 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     @property
     def should_poll(self) -> bool:
+        """Do not poll."""
         return False
 
     @property
     def state(self):
+        """Return the current playback state of the entity."""
         return self._state
 
     @property
     def metadata(self) -> dict[str, Any]:
+        """Return the metadata of the media playing right now."""
         # FIXME this is probably incorrect data type, we want
         # other information such as player playback length
         # and current position.
@@ -126,26 +156,47 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
     @staticmethod
     def config_schema():
+        """Return the discovery schema."""
         return DISCOVERY_SCHEMA
 
     async def async_media_play(self):
+        """Begin playback."""
         if self.client:
             await self.client.play(self.player_id)
 
     async def async_media_pause(self):
+        """Pause playback."""
         if self.client:
             await self.client.pause(self.player_id)
 
     async def async_media_stop(self):
+        """Stop playback."""
         if self.client:
             await self.client.stop(self.player_id)
 
+    async def async_media_next_track(self):
+        """Skip to next track."""
+        if self.client:
+            await self.client.next(self.player_id)
+
+    async def async_media_previous_track(self):
+        """Skip to previous track."""
+        if self.client:
+            await self.client.previous(self.player_id)
+
+    async def async_media_seek(self, position: float):
+        """Send seek command."""
+        if self.client:
+            await self.client.seek(self.player_id, position)
+
     async def update_state(self, new_state):
+        """Update player state based on reports from the server."""
         self._state = new_state
         if self.hass:
             await self.async_update_ha_state(True)
 
-    async def update_metadata(self, new_metadata):
+    async def update_metadata(self, new_metadata: dict[str, Any]):
+        """Update player metadata based on incoming metadata (a dict)."""
         self._metadata = new_metadata
         if self.hass:
             await self.async_update_ha_state(True)
@@ -154,10 +205,11 @@ class HASSMPRISEntity(MediaPlayerEntity):
         self,
         p: mpris_pb2.MPRISPlayerProperties,
     ):
+        """Update player properties based on incoming MPRISPlayerProperties."""
         feats = self._attr_supported_features
         if p.HasField("CanControl"):
             if not p.CanControl:
-                feats = feats - SUPPORTED_MINIMAL
+                feats = 0
             else:
                 feats = SUPPORTED_MINIMAL
 
@@ -165,15 +217,22 @@ class HASSMPRISEntity(MediaPlayerEntity):
             "CanPlay": MediaPlayerEntityFeature.PLAY,
             "CanPause": MediaPlayerEntityFeature.PAUSE,
             "CanSeek": MediaPlayerEntityFeature.SEEK,
+            "CanGoNext": MediaPlayerEntityFeature.NEXT_TRACK,
+            "CanGoPrevious": MediaPlayerEntityFeature.PREVIOUS_TRACK,
         }.items():
             if p.HasField(name):
                 val = getattr(p, name)
-                _LOGGER.debug("%s: setting bitfield for %s to %s", self.name, name, val)
                 if val:
                     feats = feats | bitwisefield
                 else:
-                    feats = feats ^ bitwisefield
+                    feats = feats & ~bitwisefield
 
+        _LOGGER.debug(
+            "%s: current feature bitfield: (%s) %s",
+            self.name,
+            feats,
+            _feat2bitfield(feats, MediaPlayerEntityFeature),
+        )
         if feats != self._attr_supported_features:
             self._attr_supported_features = feats
             if self.hass:
@@ -181,12 +240,29 @@ class HASSMPRISEntity(MediaPlayerEntity):
 
 
 class EntityManager:
+    """
+    The entity manager manages MPRIS media player entities.
+
+    This class is responsible for maintaining the known player entities
+    in sync with the state as reported by the server, as well as keeping
+    tabs of newly-appeared players and players that have gone.
+    """
+
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         async_add_entities: AddEntitiesCallback,
     ):
+        """
+        Initialize the entity manager.
+
+        Parameters:
+          hass: the HomeAssistant singleton
+          config_entry: the configuration entry associated with
+                        this component (or integration?)
+          async_add_entities: callback to add entities async
+        """
         self.hass = hass
         self.config_entry = config_entry
         self.config_entry_id = config_entry.entry_id
@@ -199,18 +275,22 @@ class EntityManager:
 
     @property
     def players(self) -> dict[str, HASSMPRISEntity]:
+        """Return the players known to this entity manager."""
         if ENTRY_PLAYERS not in self.component_data:
-            self.component_data[ENTRY_PLAYERS] = dict()
+            self.component_data[ENTRY_PLAYERS] = {}
         return cast(dict[str, HASSMPRISEntity], self.component_data[ENTRY_PLAYERS])
 
     @property
     def client(self) -> hassmpris_client.AsyncMPRISClient:
+        """Return the MPRIS client associated with this entity manager."""
         return self.component_data[ENTRY_CLIENT]
 
     async def start(self):
+        """Start the entity manager as a separate task."""
         self.hass.loop.create_task(self.run())
 
     async def run(self):
+        """Run the entity manager."""
         if self._started:
             _LOGGER.debug("Thread already started")
             return
@@ -249,7 +329,7 @@ class EntityManager:
         *unused_args: Any,
         exception: Exception | None = None,
     ):
-        """Stops the loop."""
+        """Stop the loop."""
         try:
             if exception:
                 self._shutdown.set_exception(exception)
@@ -375,7 +455,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> bool:
-    """Sets up all the media players for the MPRIS integration."""
+    """Set up all the media players for the MPRIS integration."""
     manager = EntityManager(hass, config_entry, async_add_entities)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, manager.stop)
     await manager.start()

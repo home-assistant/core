@@ -876,6 +876,9 @@ hass_splunk==0.1.1
 # homeassistant.components.conversation
 hassil==1.0.5
 
+# homeassistant.components.hassmpris
+hassmpris_client==0.0.15
+
 # homeassistant.components.tasmota
 hatasmota==0.6.4
 
