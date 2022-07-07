@@ -59,9 +59,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
 
     name: str
     address: str
-    details: Any
     rssi: int
-    metadata: Any
     manufacturer_data: dict[int, str]
     service_data: dict[str, bytes]
     service_uuids: list[str]
@@ -74,9 +72,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
         return cls(
             name=advertisement_data.local_name or device.name,
             address=device.address,
-            details=device.details,
             rssi=device.rssi,
-            metadata=device.metadata,
             manufacturer_data=advertisement_data.manufacturer_data,
             service_data=advertisement_data.service_data,
             service_uuids=advertisement_data.service_uuids,
