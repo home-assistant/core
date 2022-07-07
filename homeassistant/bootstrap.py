@@ -88,6 +88,12 @@ STAGE_1_INTEGRATIONS = {
     # as possible so problem integrations can
     # be removed
     "frontend",
+    # Ensure the integration platform helper is loaded
+    # before any logbook platforms since some legacy
+    # integration events (at least doorbird) use a different
+    # event type per device. Once we get rid of all
+    # the events per device, we can remove this.
+    "logbook",
 }
 
 
