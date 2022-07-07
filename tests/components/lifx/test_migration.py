@@ -1,21 +1,26 @@
 """Tests the lifx migration."""
+from __future__ import annotations
 
 from datetime import timedelta
+from unittest.mock import patch
 
 from homeassistant import setup
-from homeassistant.components.lifx import DOMAIN
+from homeassistant.components import lifx
+from homeassistant.components.lifx import DOMAIN, discovery
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
-import homeassistant.util.dt as dt_util
+from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import (
     IP_ADDRESS,
     LABEL,
     MAC_ADDRESS,
     SERIAL,
+    _mocked_bulb,
     _patch_config_flow_try_connect,
     _patch_device,
     _patch_discovery,
@@ -75,6 +80,79 @@ async def test_migration_device_online_end_to_end(
                 break
 
         assert legacy_entry is None
+
+
+async def test_discovery_is_more_frequent_during_migration(
+    hass: HomeAssistant, device_reg: DeviceRegistry, entity_reg: EntityRegistry
+):
+    """Test that discovery is more frequent during migration."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, title="LEGACY", data={}, unique_id=DOMAIN
+    )
+    config_entry.add_to_hass(hass)
+    device = device_reg.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, SERIAL)},
+        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
+        name=LABEL,
+    )
+    entity_reg.async_get_or_create(
+        config_entry=config_entry,
+        platform=DOMAIN,
+        domain="light",
+        unique_id=dr.format_mac(SERIAL),
+        original_name=LABEL,
+        device_id=device.id,
+    )
+
+    bulb = _mocked_bulb()
+    start_calls = 0
+
+    class MockLifxDiscovery:
+        """Mock lifx discovery."""
+
+        def __init__(self, *args, **kwargs):
+            """Init discovery."""
+            self.bulb = bulb
+            self.lights = {}
+
+        def start(self):
+            """Mock start."""
+            nonlocal start_calls
+            start_calls += 1
+            # Discover the bulb so we can complete migration
+            # and verify we switch back to normal discovery
+            # interval
+            if start_calls == 4:
+                self.lights = {self.bulb.mac_addr: self.bulb}
+
+        def cleanup(self):
+            """Mock cleanup."""
+
+    with _patch_device(device=bulb), _patch_config_flow_try_connect(
+        device=bulb
+    ), patch.object(discovery, "DEFAULT_TIMEOUT", 0), patch(
+        "homeassistant.components.lifx.discovery.LifxDiscovery", MockLifxDiscovery
+    ):
+        await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
+        await hass.async_block_till_done()
+        assert start_calls == 0
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+        assert start_calls == 2
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        assert start_calls == 6
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+        await hass.async_block_till_done()
+        assert start_calls == 6
+
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
+        await hass.async_block_till_done()
+        assert start_calls == 8
 
 
 async def test_migration_device_online_end_to_end_after_downgrade(

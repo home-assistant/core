@@ -59,6 +59,10 @@ async def test_configuring_lifx_causes_discovery(hass):
         await hass.async_block_till_done()
         assert start_calls == 2
 
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
+        await hass.async_block_till_done()
+        assert start_calls == 4
+
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
         await hass.async_block_till_done()
         assert start_calls == 6
