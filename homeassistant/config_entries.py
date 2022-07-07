@@ -1158,6 +1158,8 @@ class ConfigEntries:
         report(
             "called async_setup_platforms instead of awaiting async_forward_entry_setups; "
             "this will fail in version 2022.12",
+            # Raise this to warning once all core integrations have been migrated
+            level=logging.DEBUG,
         )
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
