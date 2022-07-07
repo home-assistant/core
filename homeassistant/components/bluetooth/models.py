@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
@@ -18,9 +18,10 @@ FILTER_UUIDS: Final = "UUIDs"
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
 
 
-class HaBleakScanner(BleakScanner):
+class HaBleakScanner(BleakScanner):  # type: ignore[misc]
     """BleakScanner that cannot be stopped."""
 
+    # HaBleakScanner is a singleton
     _callbacks: list[AdvertisementDataCallback] = []
 
     @hass_callback
@@ -31,7 +32,7 @@ class HaBleakScanner(BleakScanner):
         self._callbacks.append((callback, filters))
 
         @hass_callback
-        def _remove_callback():
+        def _remove_callback() -> None:
             self._callbacks.remove((callback, filters))
 
         return _remove_callback
@@ -56,7 +57,7 @@ class HaBleakScanner(BleakScanner):
                 _LOGGER.exception("Error in callback: %s", callback)
 
 
-class HaBleakScannerWrapper(BleakScanner):
+class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
     """A wrapper that uses the single instance."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
@@ -76,7 +77,7 @@ class HaBleakScannerWrapper(BleakScanner):
         """Start scanning for devices."""
         return
 
-    def _cancel_callback(self):
+    def _cancel_callback(self) -> None:
         """Cancel callback."""
         if self._detection_cancel:
             self._detection_cancel()
@@ -86,7 +87,7 @@ class HaBleakScannerWrapper(BleakScanner):
     def discovered_devices(self) -> list[BLEDevice]:
         """Return a list of discovered devices."""
         assert HA_BLEAK_SCANNER is not None
-        return HA_BLEAK_SCANNER.discovered_devices
+        return cast(list[BLEDevice], HA_BLEAK_SCANNER.discovered_devices)
 
     def register_detection_callback(self, callback: AdvertisementDataCallback) -> None:
         """Register a callback that is called when a device is discovered or has a property changed.
@@ -101,7 +102,7 @@ class HaBleakScannerWrapper(BleakScanner):
             self._callback, self._filters
         )
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Delete the BleakScanner."""
         if self._detection_cancel:
             asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
