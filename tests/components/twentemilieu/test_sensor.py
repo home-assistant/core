@@ -30,7 +30,7 @@ async def test_waste_pickup_sensors(
     assert state.state == "2022-01-06"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Twente Milieu Christmas Tree Pickup"
+        == "Twente Milieu Christmas tree pickup"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:pine-tree"
@@ -46,7 +46,7 @@ async def test_waste_pickup_sensors(
     assert state.state == "2021-11-01"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Twente Milieu Non-recyclable Waste Pickup"
+        == "Twente Milieu Non-recyclable waste pickup"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
@@ -59,7 +59,7 @@ async def test_waste_pickup_sensors(
     assert entry.unique_id == "twentemilieu_12345_Organic"
     assert state.state == "2021-11-02"
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Twente Milieu Organic Waste Pickup"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Twente Milieu Organic waste pickup"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
@@ -73,7 +73,7 @@ async def test_waste_pickup_sensors(
     assert state.state == "2021-11-03"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Twente Milieu Packages Waste Pickup"
+        == "Twente Milieu Packages waste pickup"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
@@ -86,7 +86,7 @@ async def test_waste_pickup_sensors(
     assert entry.unique_id == "twentemilieu_12345_Paper"
     assert state.state == STATE_UNKNOWN
     assert (
-        state.attributes.get(ATTR_FRIENDLY_NAME) == "Twente Milieu Paper Waste Pickup"
+        state.attributes.get(ATTR_FRIENDLY_NAME) == "Twente Milieu Paper waste pickup"
     )
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.DATE
     assert state.attributes.get(ATTR_ICON) == "mdi:delete-empty"
