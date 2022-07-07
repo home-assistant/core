@@ -65,7 +65,7 @@ async def async_setup_entry(
     """Sensor set up for Hass.io config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
 
-    entities = []
+    entities: list[HassioOSSensor | HassioAddonSensor] = []
 
     for addon in coordinator.data[DATA_KEY_ADDONS].values():
         for entity_description in ADDON_ENTITY_DESCRIPTIONS:
