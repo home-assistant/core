@@ -682,8 +682,8 @@ class ProtectMediaSource(MediaSource):
 
         return source
 
-    async def _get_camera_thumbnail_url(self, camera: Camera) -> str:
-        """Get camera thumbnail URL using the first avaiable camera entity."""
+    async def _get_camera_thumbnail_url(self, camera: Camera) -> str | None:
+        """Get camera thumbnail URL using the first available camera entity."""
 
         if not camera.is_connected or camera.is_privacy_on:
             return None
