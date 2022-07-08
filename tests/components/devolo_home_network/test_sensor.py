@@ -9,7 +9,7 @@ from homeassistant.components.devolo_home_network.const import (
     SHORT_UPDATE_INTERVAL,
 )
 from homeassistant.components.sensor import DOMAIN, SensorStateClass
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
@@ -47,6 +47,9 @@ async def test_update_connected_wifi_clients(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == "1"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected Wifi clients"
+    )
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
 
     # Emulate device failure
@@ -85,6 +88,10 @@ async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == "1"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME]
+        == f"{entry.title} Neighboring Wifi networks"
+    )
     assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
 
     # Emulate device failure
@@ -123,6 +130,9 @@ async def test_update_connected_plc_devices(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == "1"
+    assert (
+        state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected PLC devices"
+    )
     assert er.async_get(state_key).entity_category is EntityCategory.DIAGNOSTIC
 
     # Emulate device failure

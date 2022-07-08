@@ -9,7 +9,12 @@ from homeassistant.components.devolo_home_network.const import (
     CONNECTED_TO_ROUTER,
     LONG_UPDATE_INTERVAL,
 )
-from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_FRIENDLY_NAME,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
@@ -49,6 +54,7 @@ async def test_update_attached_to_router(hass: HomeAssistant):
     state = hass.states.get(state_key)
     assert state is not None
     assert state.state == STATE_OFF
+    assert state.attributes[ATTR_FRIENDLY_NAME] == f"{entry.title} Connected to router"
 
     assert er.async_get(state_key).entity_category == EntityCategory.DIAGNOSTIC
 
