@@ -252,7 +252,7 @@ async def test_calling_service_basic(hass, caplog):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].context.parent_id is context.id
+    assert calls[0].context == context
     assert calls[0].data.get("hello") == "world"
     assert f"Executing step {alias}" in caplog.text
 
@@ -294,7 +294,7 @@ async def test_calling_service_with_result(hass, caplog):
     await hass.async_block_till_done()
 
     assert len(calls) == 2
-    assert calls[0].context.parent_id is context.id
+    assert calls[0].context == context
     assert calls[0].data.get("hello") == "world"
     assert f"Executing step {alias}" in caplog.text
     assert calls[1].data.get("goodbye") == "world"
@@ -334,6 +334,48 @@ async def test_calling_service_with_result(hass, caplog):
     )
 
 
+async def test_calling_nested_services_with_result(hass, caplog):
+    """Test the calling of a service."""
+    context = Context()
+    calls1 = async_mock_service(hass, "test", "script1", result={"hello": 1})
+    calls2 = async_mock_service(hass, "test", "script2", result={"hello": 2})
+
+    alias = "service step"
+    sequence1 = cv.SCRIPT_SCHEMA(
+        [
+            {"alias": alias, "service": "test.script1", "data": {"hello": "world"}},
+            {"service": "script.inner"},
+            {"service": "test.script1", "data": {"goodbye": "{{service.hello}}"}},
+        ]
+    )
+    script_obj1 = script.Script(hass, sequence1, "Test Name 1", "test_domain")
+    sequence2 = cv.SCRIPT_SCHEMA(
+        [
+            {"alias": alias, "service": "test.script2", "data": {"hello": "world"}},
+            {"service": "test.script2", "data": {"goodbye": "{{service.hello}}"}},
+        ]
+    )
+    script_obj2 = script.Script(hass, sequence2, "Test Name 2", "test_domain")
+
+    async def run_script2(call: ServiceCall):
+        await script_obj2.async_run(context=call.context)
+
+    hass.services.async_register("script", "inner", run_script2)
+
+    await script_obj1.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert len(calls1) == 2
+    assert calls1[0].context == context
+    assert calls1[0].data.get("hello") == "world"
+    assert calls1[1].data.get("goodbye") == 1
+
+    assert len(calls2) == 2
+    assert calls2[0].context == context
+    assert calls2[0].data.get("hello") == "world"
+    assert calls2[1].data.get("goodbye") == 2
+
+
 async def test_calling_service_template(hass):
     """Test the calling of a service."""
     context = Context()
@@ -364,7 +406,7 @@ async def test_calling_service_template(hass):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].context.parent_id is context.id
+    assert calls[0].context == context
     assert calls[0].data.get("hello") == "world"
 
     assert_action_trace(
@@ -403,7 +445,7 @@ async def test_data_template_with_templated_key(hass):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].context.parent_id is context.id
+    assert calls[0].context == context
     assert calls[0].data.get("hello") == "world"
 
     assert_action_trace(

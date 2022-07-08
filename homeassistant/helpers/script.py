@@ -670,8 +670,12 @@ class _ScriptRun:
 
         trace_set_result(params=params, running_script=running_script, limit=limit)
 
-        # Create a child context in order to allow service results to be associated to this call
-        subcontext = Context(user_id=self._context.user_id, parent_id=self._context.id)
+        # Create a marker context instance to identify individual callw' return values
+        subcontext = Context(
+            user_id=self._context.user_id,
+            parent_id=self._context.parent_id,
+            id=self._context.id,
+        )
 
         def handle_result(event: Event) -> None:
             self._variables["service"] = event.data
