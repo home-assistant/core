@@ -22,7 +22,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
@@ -362,12 +362,15 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     if start is None or end is None:
         raise ValueError("Missing required fields to set start or end date/datetime")
 
-    await entity.calendar_service.async_create_event(
-        entity.calendar_id,
-        Event(
-            summary=call.data[EVENT_SUMMARY],
-            description=call.data[EVENT_DESCRIPTION],
-            start=start,
-            end=end,
-        ),
-    )
+    try:
+        await entity.calendar_service.async_create_event(
+            entity.calendar_id,
+            Event(
+                summary=call.data[EVENT_SUMMARY],
+                description=call.data[EVENT_DESCRIPTION],
+                start=start,
+                end=end,
+            ),
+        )
+    except ApiException as err:
+        raise HomeAssistantError(str(err)) from err

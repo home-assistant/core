@@ -8,6 +8,7 @@ import time
 from typing import Any
 from unittest.mock import Mock, patch
 
+from aiohttp.client_exceptions import ClientError
 import pytest
 import voluptuous as vol
 
@@ -21,6 +22,7 @@ from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF
 from homeassistant.core import HomeAssistant, State
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
@@ -674,6 +676,33 @@ async def test_add_event_date_time(
             "timeZone": "America/Regina",
         },
     }
+
+
+async def test_add_event_failure(
+    hass: HomeAssistant,
+    component_setup: ComponentSetup,
+    mock_calendars_list: ApiResult,
+    test_api_calendar: dict[str, Any],
+    mock_events_list: ApiResult,
+    mock_insert_event: Callable[[..., dict[str, Any]], None],
+    setup_config_entry: MockConfigEntry,
+    add_event_call_service: Callable[dict[str, Any], Awaitable[None]],
+) -> None:
+    """Test service calls with incorrect fields."""
+
+    mock_calendars_list({"items": [test_api_calendar]})
+    mock_events_list({})
+    assert await component_setup()
+
+    mock_insert_event(
+        calendar_id=CALENDAR_ID,
+        exc=ClientError(),
+    )
+
+    with pytest.raises(HomeAssistantError):
+        await add_event_call_service(
+            {"start_date": "2022-05-01", "end_date": "2022-05-01"}
+        )
 
 
 @pytest.mark.parametrize(
