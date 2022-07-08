@@ -18,7 +18,7 @@ FILTER_UUIDS: Final = "UUIDs"
 
 HA_BLEAK_SCANNER: HaBleakScanner | None = None
 
-MAX_HISTORY_SIZE: Final = 256
+MAX_HISTORY_SIZE: Final = 512
 
 
 def _dispatch_callback(
