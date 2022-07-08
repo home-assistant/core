@@ -292,6 +292,8 @@ class AirVisualGeographySensor(AirVisualEntity, SensorEntity):
 class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
     """Define an AirVisual sensor related to a Node/Pro unit."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -301,9 +303,6 @@ class AirVisualNodeProSensor(AirVisualEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry, description)
 
-        self._attr_name = (
-            f"{coordinator.data['settings']['node_name']} Node/Pro: {description.name}"
-        )
         self._attr_unique_id = f"{coordinator.data['serial_number']}_{description.key}"
 
     @property
