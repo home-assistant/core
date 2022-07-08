@@ -73,9 +73,9 @@ class WallboxNumber(WallboxEntity, NumberEntity):
         self._coordinator = coordinator
         self._attr_name = f"{entry.title} {description.name}"
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
-        self._is_bidirectional = any(
-            coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:3] in model
-            for model in BIDIRECTIONAL_MODEL_PREFIXES
+        self._is_bidirectional = (
+            coordinator.data[CHARGER_DATA_KEY][CHARGER_PART_NUMBER_KEY][0:3]
+            in BIDIRECTIONAL_MODEL_PREFIXES
         )
 
     @property
