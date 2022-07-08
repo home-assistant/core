@@ -456,7 +456,9 @@ class RfxtrxEntity(RestoreEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
+    _attr_assumed_state = True
     _attr_has_entity_name = True
+    _attr_should_poll = False
     _device: rfxtrxmod.RFXtrxDevice
     _event: rfxtrxmod.RFXtrxEvent | None
 
@@ -467,9 +469,6 @@ class RfxtrxEntity(RestoreEntity):
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
-        self._attr_name = None
-        self._attr_assumed_state = True
-        self._attr_should_poll = False
         self._device = device
         self._event = event
         self._device_id = device_id
