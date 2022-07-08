@@ -183,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_PASSWORD],
             port=entry.data[CONF_PORT],
-            ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
+            use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         raise ConfigEntryNotReady from err
