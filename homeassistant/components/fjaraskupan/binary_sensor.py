@@ -83,7 +83,6 @@ class BinarySensor(CoordinatorEntity[Coordinator], BinarySensorEntity):
 
         self._attr_unique_id = f"{device.address}-{entity_description.key}"
         self._attr_device_info = device_info
-        self._attr_name = entity_description.name
 
     @property
     def is_on(self) -> bool | None:
