@@ -140,19 +140,19 @@ async def test_discovery_is_more_frequent_during_migration(
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
-        assert start_calls == 2
+        assert start_calls == 1
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=5))
         await hass.async_block_till_done()
-        assert start_calls == 6
+        assert start_calls == 3
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
         await hass.async_block_till_done()
-        assert start_calls == 6
+        assert start_calls == 4
 
         async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=15))
         await hass.async_block_till_done()
-        assert start_calls == 8
+        assert start_calls == 5
 
 
 async def test_migration_device_online_end_to_end_after_downgrade(
