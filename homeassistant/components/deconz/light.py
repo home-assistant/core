@@ -113,11 +113,7 @@ async def async_setup_entry(
 
         first = True
         for light_id in group.lights:
-            if (
-                (light := gateway.api.lights.lights.get(light_id))
-                and light.ZHATYPE == Light.ZHATYPE
-                and light.reachable
-            ):
+            if (light := gateway.api.lights.lights.get(light_id)) and light.reachable:
                 group.update_color_state(light, update_all_attributes=first)
                 first = False
 
