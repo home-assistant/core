@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     DEVICE_CLASSES_SCHEMA,
+    NumberDeviceClass,
     RestoreNumber,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -41,8 +42,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -135,9 +136,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT number through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, number.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, number.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -294,11 +293,11 @@ class MqttNumber(MqttEntity, RestoreNumber):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def device_class(self) -> str | None:
+    def device_class(self) -> NumberDeviceClass | None:
         """Return the device class of the sensor."""
         return self._config.get(CONF_DEVICE_CLASS)

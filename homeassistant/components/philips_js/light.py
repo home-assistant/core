@@ -146,7 +146,7 @@ class PhilipsTVLightEntity(
         self._hs = None
         self._brightness = None
         self._cache_keys = None
-        self._last_selected_effect: AmbilightEffect = None
+        self._last_selected_effect: AmbilightEffect | None = None
         super().__init__(coordinator)
 
         self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}

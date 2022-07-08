@@ -51,8 +51,8 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
-    async_setup_platform_discovery,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
@@ -143,9 +143,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT siren through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    config_entry.async_on_unload(
-        await async_setup_platform_discovery(hass, siren.DOMAIN)
-    )
+    await async_discover_yaml_entities(hass, siren.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -311,12 +309,12 @@ class MqttSiren(MqttEntity, SirenEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         mqtt_attributes = super().extra_state_attributes
         attributes = (
@@ -355,7 +353,7 @@ class MqttSiren(MqttEntity, SirenEntity):
                 self._config[CONF_ENCODING],
             )
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the siren on.
 
         This method is a coroutine.
@@ -373,7 +371,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             self._update(kwargs)
             self.async_write_ha_state()
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the siren off.
 
         This method is a coroutine.
