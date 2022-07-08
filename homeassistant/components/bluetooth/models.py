@@ -79,19 +79,8 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         it to all the wrapped HaBleakScannerWrapper classes
         """
         self._history[device.address] = (device, advertisement_data)
-
-        removes = []
-
         for callback_filters in self._callbacks:
-            if callback_filters[0] is None:
-                removes.append(callback_filters)
-                continue
             _dispatch_callback(*callback_filters, device, advertisement_data)
-
-        # If the callback is None, it means it was destroyed
-        # so we need to remove it from the list
-        for callback_filters in removes:
-            self._callbacks.remove(callback_filters)
 
 
 class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
@@ -100,7 +89,7 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
-        self._filters: dict[str, set[str]] = {}
+        self._mapped_filters: dict[str, set[str]] = {}
         if "filters" in kwargs:
             self._mapped_filters = {k: set(v) for k, v in kwargs["filters"].items()}
         if "service_uuids" in kwargs:
@@ -137,7 +126,7 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
         super().register_detection_callback(callback)
         assert HA_BLEAK_SCANNER is not None
         self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
-            self._callback, self._filters
+            self._callback, self._mapped_filters
         )
 
     def __del__(self) -> None:
