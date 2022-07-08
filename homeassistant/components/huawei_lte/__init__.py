@@ -74,6 +74,7 @@ from .const import (
     KEY_SMS_SMS_COUNT,
     KEY_WLAN_HOST_LIST,
     KEY_WLAN_WIFI_FEATURE_SWITCH,
+    KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
     NOTIFY_SUPPRESS_TIMEOUT,
     SERVICE_CLEAR_TRAFFIC_STATISTICS,
     SERVICE_REBOOT,
@@ -274,6 +275,18 @@ class Router:
         self._get_data(KEY_WLAN_HOST_LIST, self.client.wlan.host_list)
         self._get_data(
             KEY_WLAN_WIFI_FEATURE_SWITCH, self.client.wlan.wifi_feature_switch
+        )
+        self._get_data(
+            KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH,
+            lambda: next(
+                filter(
+                    lambda ssid: ssid.get("wifiisguestnetwork") == "1",
+                    self.client.wlan.multi_basic_settings()
+                    .get("Ssids", {})
+                    .get("Ssid", []),
+                ),
+                {},
+            ),
         )
 
         dispatcher_send(self.hass, UPDATE_SIGNAL, self.config_entry.unique_id)
