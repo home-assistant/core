@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import DATA_GIBIBYTES
@@ -15,16 +16,31 @@ from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
 
 BYTE_TO_GIBIBYTE = 1.074e9
 
+
+@dataclass
+class ProxmoxVERequiredKeyMixin:
+    """Mixin for required lambda functions."""
+
+    native_lambda: Callable
+
+
+@dataclass
+class ProxmoxVESensorEntityDescription(
+    SensorEntityDescription, ProxmoxVERequiredKeyMixin
+):
+    """Class to describe a proxmoxve sensor."""
+
+
 SENSOR_DESCRIPTIONS = [
     (
-        SensorEntityDescription(
+        ProxmoxVESensorEntityDescription(
             key="mem_gib",
             name="mem_gib",
             native_unit_of_measurement=DATA_GIBIBYTES,
-            icon="",
-        ),
-        lambda data: round(int(data.mem) / BYTE_TO_GIBIBYTE, 2),
-    )
+            icon=None,
+            native_lambda=lambda data: round(int(data.mem) / BYTE_TO_GIBIBYTE, 2),
+        )
+    ),
 ]
 
 
@@ -60,7 +76,7 @@ async def async_setup_platform(
 
                 name = coordinator_data.name
 
-                for (description, native_lambda) in SENSOR_DESCRIPTIONS:
+                for description in SENSOR_DESCRIPTIONS:
                     sensors.append(
                         ProxmoxSensor(
                             coordinator=coordinator,
@@ -68,7 +84,6 @@ async def async_setup_platform(
                             host_name=host_name,
                             node_name=node_name,
                             vm_id=dev_id,
-                            native_lambda=native_lambda,
                             description=description,
                         )
                     )
@@ -86,12 +101,11 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
         host_name: str,
         node_name: str,
         vm_id: int,
-        native_lambda: Callable,
-        description: SensorEntityDescription,
+        description: ProxmoxVESensorEntityDescription,
     ) -> None:
         """Create the sensor for vms or containers."""
 
-        self.native_lambda = native_lambda
+        self.native_lambda = description.native_lambda
         self._attr_native_unit_of_measurement = description.native_unit_of_measurement
         super().__init__(
             coordinator,
