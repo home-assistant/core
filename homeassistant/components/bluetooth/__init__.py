@@ -181,7 +181,7 @@ class BluetoothManager:
             self.scanner = HaBleakScanner(
                 scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
             )
-        except BleakError as ex:
+        except (FileNotFoundError, BleakError) as ex:
             _LOGGER.warning(
                 "Could not create bluetooth scanner (is bluetooth present and enabled?): %s",
                 ex,
