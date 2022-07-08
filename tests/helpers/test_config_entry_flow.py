@@ -94,6 +94,7 @@ async def test_user_has_confirmation(hass, discovery_flow_conf):
 @pytest.mark.parametrize(
     "source",
     [
+        config_entries.SOURCE_BLUETOOTH,
         config_entries.SOURCE_DISCOVERY,
         config_entries.SOURCE_MQTT,
         config_entries.SOURCE_SSDP,
@@ -117,6 +118,7 @@ async def test_discovery_single_instance(hass, discovery_flow_conf, source):
 @pytest.mark.parametrize(
     "source",
     [
+        config_entries.SOURCE_BLUETOOTH,
         config_entries.SOURCE_DISCOVERY,
         config_entries.SOURCE_MQTT,
         config_entries.SOURCE_SSDP,
@@ -142,6 +144,7 @@ async def test_discovery_confirmation(hass, discovery_flow_conf, source):
 @pytest.mark.parametrize(
     "source",
     [
+        config_entries.SOURCE_BLUETOOTH,
         config_entries.SOURCE_DISCOVERY,
         config_entries.SOURCE_MQTT,
         config_entries.SOURCE_SSDP,
