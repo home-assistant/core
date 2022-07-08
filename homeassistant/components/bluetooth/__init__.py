@@ -7,6 +7,7 @@ from enum import Enum
 import fnmatch
 from functools import cached_property
 import logging
+import platform
 from typing import Final
 
 from bleak import BleakError
@@ -188,6 +189,15 @@ class BluetoothManager:
                 ex,
             )
             return
+        # We want RSSI updates
+        if platform.system() == "Linux":
+            from bleak.backends.bluezdbus import (  # pylint: disable=import-outside-toplevel
+                scanner,
+            )
+
+            scanner._ADVERTISING_DATA_PROPERTIES.add(  # pylint: disable=protected-access
+                "RSSI"
+            )
         install_multiple_bleak_catcher(self.scanner)
         # We have to start it right away as some integrations might
         # need it straight away.
