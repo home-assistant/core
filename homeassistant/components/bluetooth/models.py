@@ -75,8 +75,19 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         it to all the wrapped HaBleakScannerWrapper classes
         """
         self._history[device.address] = (device, advertisement_data)
-        for callback, filters in self._callbacks:
-            _dispatch_callback(callback, filters, device, advertisement_data)
+
+        removes = []
+
+        for callback_filters in self._callbacks:
+            if callback_filters[0] is None:
+                removes.append(callback_filters)
+                continue
+            _dispatch_callback(*callback_filters, device, advertisement_data)
+
+        # If the callback is None, it means it was destroyed
+        # so we need to remove it from the list
+        for callback_filters in removes:
+            self._callbacks.remove(callback_filters)
 
 
 class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
