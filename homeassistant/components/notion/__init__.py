@@ -132,6 +132,8 @@ def _async_register_new_bridge(
 class NotionEntity(CoordinatorEntity):
     """Define a base Notion entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
@@ -156,7 +158,6 @@ class NotionEntity(CoordinatorEntity):
         )
 
         self._attr_extra_state_attributes = {}
-        self._attr_name = f'{sensor["name"]}: {description.name}'
         self._attr_unique_id = (
             f'{sensor_id}_{coordinator.data["tasks"][task_id]["task_type"]}'
         )
