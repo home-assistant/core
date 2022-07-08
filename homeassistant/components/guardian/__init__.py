@@ -379,7 +379,10 @@ class GuardianEntity(CoordinatorEntity):
         self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_info = DeviceInfo(manufacturer="Elexa")
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.data[CONF_UID])},
+            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
+        )
         self._attr_extra_state_attributes = {}
         self._entry = entry
         self.entity_description = description
@@ -406,11 +409,9 @@ class PairedSensorEntity(GuardianEntity):
         super().__init__(entry, description)
 
         paired_sensor_uid = coordinator.data["uid"]
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, paired_sensor_uid)},
-            name=f"Guardian Paired Sensor {paired_sensor_uid}",
-            via_device=(DOMAIN, entry.data[CONF_UID]),
-        )
+        self._attr_device_info["identifiers"].add((DOMAIN, paired_sensor_uid))
+        self._attr_device_info["name"] = f"Guardian Paired Sensor {paired_sensor_uid}"
+        self._attr_device_info["via_device"] = (DOMAIN, entry.data[CONF_UID])
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
         self.coordinator = coordinator
 
@@ -431,11 +432,9 @@ class ValveControllerEntity(GuardianEntity):
         """Initialize."""
         super().__init__(entry, description)
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.data[CONF_UID])},
-            model=coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
-        )
+        self._attr_device_info["model"] = coordinators[API_SYSTEM_DIAGNOSTICS].data[
+            "firmware"
+        ]
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators
 
