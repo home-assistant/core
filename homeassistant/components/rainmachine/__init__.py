@@ -401,6 +401,8 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class RainMachineEntity(CoordinatorEntity):
     """Define a generic RainMachine entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -424,7 +426,6 @@ class RainMachineEntity(CoordinatorEntity):
             sw_version=controller.software_version,
         )
         self._attr_extra_state_attributes = {}
-        self._attr_name = f"{controller.name} {description.name}"
         self._attr_unique_id = f"{controller.mac}_{description.key}"
         self._controller = controller
         self.entity_description = description
