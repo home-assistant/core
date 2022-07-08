@@ -51,7 +51,7 @@ MANUFACTURER_ID: Final = "manufacturer_id"
 MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class BluetoothServiceInfo(BaseServiceInfo):
     """Prepared info from bluetooth entries."""
 
