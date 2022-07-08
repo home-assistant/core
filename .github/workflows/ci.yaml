@@ -677,7 +677,6 @@ jobs:
 
   pip-check:
     runs-on: ubuntu-20.04
-    if: needs.info.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
       - info
       - base
