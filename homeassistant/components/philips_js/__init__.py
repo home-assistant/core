@@ -108,6 +108,8 @@ class PluggableAction:
 class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Coordinator to update data."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass, api: PhilipsTV, options: Mapping) -> None:
         """Set up the coordinator."""
         self.api = api
@@ -136,8 +138,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     @property
     def unique_id(self) -> str:
         """Return the system descriptor."""
-        entry: ConfigEntry = self.config_entry
-        assert entry
+        entry = self.config_entry
         if entry.unique_id:
             return entry.unique_id
         assert entry.entry_id
