@@ -74,7 +74,8 @@ class SatelIntegraAlarmPanel(alarm.AlarmControlPanelEntity):
         self._attr_name = name
         self._arm_home_mode = arm_home_mode
         self._partition_id = partition_id
-        self._satel = controller
+        self._satel = controller        
+        self._attr_unique_id = f"{partition_id}"
 
     async def async_added_to_hass(self) -> None:
         """Update alarm status and register callbacks for future updates."""
