@@ -272,14 +272,11 @@ async def async_test_stream(
 
 def register_preview(hass: HomeAssistant):
     """Set up previews for camera feeds during config flow."""
-    if not hass.data.get(DOMAIN):
-        hass.data[DOMAIN] = {}
+    hass.data.setdefault(DOMAIN, {})
 
     if not hass.data[DOMAIN].get(PREVIEW):
         _LOGGER.debug("Registering camera image preview handler")
-        preview = CameraImagePreview(hass)
-
-        hass.http.register_view(preview)
+        hass.http.register_view(CameraImagePreview(hass))
         hass.data[DOMAIN][PREVIEW] = True
 
 
