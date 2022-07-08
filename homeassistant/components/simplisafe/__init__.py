@@ -660,6 +660,8 @@ class SimpliSafe:
 class SimpliSafeEntity(CoordinatorEntity):
     """Define a base SimpliSafe entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         simplisafe: SimpliSafe,
@@ -710,11 +712,10 @@ class SimpliSafeEntity(CoordinatorEntity):
             identifiers={(DOMAIN, serial)},
             manufacturer="SimpliSafe",
             model=model,
-            name=device_name,
+            name=f"{device_name} {' '.join([w.title() for w in model.split('_')])}",
             via_device=(DOMAIN, system.system_id),
         )
 
-        self._attr_name = f"{system.address} {device_name} {' '.join([w.title() for w in model.split('_')])}"
         self._attr_unique_id = serial
         self._device = device
         self._online = True
