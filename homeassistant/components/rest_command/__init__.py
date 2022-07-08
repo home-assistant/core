@@ -25,10 +25,6 @@ from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rest_command"
 
-RESULT_EVENT = f"{DOMAIN}_result"
-
-SERVICE_NAME = "invoke"
-
 _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 10
@@ -58,10 +54,6 @@ COMMAND_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
-
-SERVICE_CONF_REQUEST_ID = "request_id"
-
-SERVICE_SCHEMA = vol.Schema({vol.Optional(SERVICE_CONF_REQUEST_ID): cv.string})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -146,8 +138,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             "url": str(response.url),
                         },
                     }
-                    if "request_id" in service.data:
-                        event_data["request_id"] = service.data["request_id"]
 
                     hass.bus.async_fire(
                         EVENT_SERVICE_RESULT, event_data, context=service.context
@@ -179,9 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
 
         # register services
-        hass.services.async_register(
-            DOMAIN, name, async_service_handler, SERVICE_SCHEMA
-        )
+        hass.services.async_register(DOMAIN, name, async_service_handler)
 
     for command, command_config in config[DOMAIN].items():
         async_register_rest_command(command, command_config)
