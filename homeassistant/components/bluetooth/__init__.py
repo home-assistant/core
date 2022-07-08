@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 import dataclasses
 from enum import Enum
 import fnmatch
+from functools import cached_property
 import logging
 from typing import Final
 
@@ -85,7 +86,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
                 return name
         return None
 
-    @property
+    @cached_property
     def manufacturer_id(self) -> int | None:
         """Get the first manufacturer id."""
         for manufacturer in self.manufacturer_data:
