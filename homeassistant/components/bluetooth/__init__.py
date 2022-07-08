@@ -76,7 +76,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
             service_uuids=advertisement_data.service_uuids,
         )
 
-    @property
+    @cached_property
     def manufacturer(self) -> str | None:
         """Convert manufacturer data to a string."""
         for manufacturer in self.manufacturer_data:
