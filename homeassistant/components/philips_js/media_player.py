@@ -84,7 +84,6 @@ class PhilipsTVMediaPlayer(
         self._sources: dict[str, str] = {}
         self._supports = SUPPORT_PHILIPS_JS
         self._system = coordinator.system
-        self._attr_name = None
         self._attr_unique_id = coordinator.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={
