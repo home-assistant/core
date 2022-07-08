@@ -27,6 +27,9 @@ def mock_bleak_scanner_start():
     ) as mock_bleak_scanner_start:
         yield mock_bleak_scanner_start
 
+    # We need to drop the stop method from the object since we patched
+    # out start and this fixture will expire before the stop method is called
+    # when EVENT_HOMEASSISTANT_STOP is fired.
     if models.HA_BLEAK_SCANNER:
         models.HA_BLEAK_SCANNER.stop = AsyncMock()
     bleak.BleakScanner = scanner
