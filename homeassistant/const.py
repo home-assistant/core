@@ -268,6 +268,7 @@ CONF_ZONE: Final = "zone"
 
 # #### EVENTS ####
 EVENT_CALL_SERVICE: Final = "call_service"
+EVENT_SERVICE_RESULT: Final = "service_result"
 EVENT_COMPONENT_LOADED: Final = "component_loaded"
 EVENT_CORE_CONFIG_UPDATE: Final = "core_config_updated"
 EVENT_HOMEASSISTANT_CLOSE: Final = "homeassistant_close"

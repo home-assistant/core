@@ -4,7 +4,7 @@ from http import HTTPStatus
 import logging
 
 import aiohttp
-from aiohttp import hdrs
+from aiohttp import ClientResponse, hdrs
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    EVENT_SERVICE_RESULT,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -23,6 +24,10 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 DOMAIN = "rest_command"
+
+RESULT_EVENT = f"{DOMAIN}_result"
+
+SERVICE_NAME = "invoke"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +58,10 @@ COMMAND_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
+
+SERVICE_CONF_REQUEST_ID = "request_id"
+
+SERVICE_SCHEMA = vol.Schema({vol.Optional(SERVICE_CONF_REQUEST_ID): cv.string})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -118,6 +127,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 headers[hdrs.CONTENT_TYPE] = content_type
 
             try:
+                response: ClientResponse
                 async with getattr(websession, method)(
                     request_url,
                     data=payload,
@@ -125,6 +135,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     headers=headers,
                     timeout=timeout,
                 ) as response:
+
+                    event_data = {
+                        "response": {
+                            "status": response.status,
+                            "headers": list(response.headers.items()),
+                            "content": (await response.content.read()).decode(
+                                response.get_encoding()
+                            ),
+                            "url": str(response.url),
+                        },
+                    }
+                    if "request_id" in service.data:
+                        event_data["request_id"] = service.data["request_id"]
+
+                    hass.bus.async_fire(
+                        EVENT_SERVICE_RESULT, event_data, context=service.context
+                    )
 
                     if response.status < HTTPStatus.BAD_REQUEST:
                         _LOGGER.debug(
@@ -152,7 +179,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 )
 
         # register services
-        hass.services.async_register(DOMAIN, name, async_service_handler)
+        hass.services.async_register(
+            DOMAIN, name, async_service_handler, SERVICE_SCHEMA
+        )
 
     for command, command_config in config[DOMAIN].items():
         async_register_rest_command(command, command_config)

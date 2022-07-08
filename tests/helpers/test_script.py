@@ -252,7 +252,7 @@ async def test_calling_service_basic(hass, caplog):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].context is context
+    assert calls[0].context.parent_id is context.id
     assert calls[0].data.get("hello") == "world"
     assert f"Executing step {alias}" in caplog.text
 
@@ -270,6 +270,64 @@ async def test_calling_service_basic(hass, caplog):
                         },
                         "running_script": False,
                     }
+                }
+            ],
+        }
+    )
+
+
+async def test_calling_service_with_result(hass, caplog):
+    """Test the calling of a service."""
+    context = Context()
+    calls = async_mock_service(hass, "test", "script", result={"hello": "world"})
+
+    alias = "service step"
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {"alias": alias, "service": "test.script", "data": {"hello": "world"}},
+            {"service": "test.script", "data": {"goodbye": "{{service.hello}}"}},
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=context)
+    await hass.async_block_till_done()
+
+    assert len(calls) == 2
+    assert calls[0].context.parent_id is context.id
+    assert calls[0].data.get("hello") == "world"
+    assert f"Executing step {alias}" in caplog.text
+    assert calls[1].data.get("goodbye") == "world"
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "limit": SERVICE_CALL_LIMIT,
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"hello": "world"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ],
+            "1": [
+                {
+                    "result": {
+                        "limit": SERVICE_CALL_LIMIT,
+                        "params": {
+                            "domain": "test",
+                            "service": "script",
+                            "service_data": {"goodbye": "world"},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    },
+                    "variables": {"service": {"hello": "world"}},
                 }
             ],
         }
@@ -306,7 +364,7 @@ async def test_calling_service_template(hass):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].context is context
+    assert calls[0].context.parent_id is context.id
     assert calls[0].data.get("hello") == "world"
 
     assert_action_trace(
@@ -345,7 +403,7 @@ async def test_data_template_with_templated_key(hass):
     await hass.async_block_till_done()
 
     assert len(calls) == 1
-    assert calls[0].context is context
+    assert calls[0].context.parent_id is context.id
     assert calls[0].data.get("hello") == "world"
 
     assert_action_trace(

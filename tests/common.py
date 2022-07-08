@@ -38,6 +38,7 @@ from homeassistant.config import async_process_component_config
 from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_SERVICE_RESULT,
     EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
@@ -325,7 +326,9 @@ async def async_test_home_assistant(loop, load_registries=True):
     return hass
 
 
-def async_mock_service(hass, domain, service, schema=None):
+def async_mock_service(
+    hass, domain, service, schema=None, result: dict[str, Any] | None = None
+):
     """Set up a fake service & return a calls log list to this service."""
     calls = []
 
@@ -333,6 +336,9 @@ def async_mock_service(hass, domain, service, schema=None):
     def mock_service_log(call):  # pylint: disable=unnecessary-lambda
         """Mock service call."""
         calls.append(call)
+        """Pass along results"""
+        if result is not None:
+            hass.bus.async_fire(EVENT_SERVICE_RESULT, result, context=call.context)
 
     hass.services.async_register(domain, service, mock_service_log, schema=schema)
 

@@ -59,11 +59,13 @@ from homeassistant.const import (
     CONF_WAIT_TEMPLATE,
     CONF_WHILE,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_SERVICE_RESULT,
     SERVICE_TURN_ON,
 )
 from homeassistant.core import (
     SERVICE_CALL_LIMIT,
     Context,
+    Event,
     HassJob,
     HomeAssistant,
     callback,
@@ -667,20 +669,37 @@ class _ScriptRun:
             limit = SERVICE_CALL_LIMIT
 
         trace_set_result(params=params, running_script=running_script, limit=limit)
-        service_task = self._hass.async_create_task(
-            self._hass.services.async_call(
-                **params,
-                blocking=True,
-                context=self._context,
-                limit=limit,
-            )
-        )
-        if limit is not None:
-            # There is a call limit, so just wait for it to finish.
-            await service_task
-            return
 
-        await self._async_run_long_action(service_task)
+        # Create a child context in order to allow service results to be associated to this call
+        subcontext = Context(user_id=self._context.user_id, parent_id=self._context.id)
+
+        def handle_result(event: Event) -> None:
+            self._variables["service"] = event.data
+
+        def service_result_filter(event: Event) -> bool:
+            return event.context is subcontext
+
+        result_listener_cancel = self._hass.bus.async_listen(
+            EVENT_SERVICE_RESULT, handle_result, service_result_filter, True
+        )
+
+        try:
+            service_task = self._hass.async_create_task(
+                self._hass.services.async_call(
+                    **params,
+                    blocking=True,
+                    context=subcontext,
+                    limit=limit,
+                )
+            )
+            if limit is not None:
+                # There is a call limit, so just wait for it to finish.
+                await service_task
+                return
+
+            await self._async_run_long_action(service_task)
+        finally:
+            result_listener_cancel()
 
     async def _async_device_step(self):
         """Perform the device automation specified in the action."""
