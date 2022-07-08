@@ -1278,7 +1278,7 @@ python-ecobee-api==0.2.14
 python-forecastio==1.4.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.0.3
+python-homewizard-energy==1.1.0
 
 # homeassistant.components.izone
 python-izone==1.2.3
