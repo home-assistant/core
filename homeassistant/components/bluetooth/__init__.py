@@ -203,18 +203,18 @@ class BluetoothManager:
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
         """Handle a detected device."""
-        _LOGGER.debug(
-            "Device detected: %s with advertisement_data: %s",
-            device,
-            advertisement_data,
-        )
         matched_domains = {
             matcher["domain"]
             for matcher in self._integration_matchers
             if _ble_device_matches(matcher, device, advertisement_data)
         }
-
-        if not matched_domains or not self._callbacks:
+        _LOGGER.debug(
+            "Device detected: %s with advertisement_data: %s matched domains: %s",
+            device,
+            advertisement_data,
+            matched_domains,
+        )
+        if not matched_domains and not self._callbacks:
             return
 
         service_info: BluetoothServiceInfo | None = None
