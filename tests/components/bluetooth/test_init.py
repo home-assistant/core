@@ -121,9 +121,13 @@ async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
 async def test_discovery_match_by_manufacturer_id_and_first_byte(
     hass, mock_bleak_scanner_start
 ):
-    """Test bluetooth discovery match by manufacturer_id and first_byte."""
+    """Test bluetooth discovery match by manufacturer_id and manufacturer_data_first_byte."""
     mock_bt = [
-        {"domain": "homekit_controller", "manufacturer_id": 76, "first_byte": 0x06}
+        {
+            "domain": "homekit_controller",
+            "manufacturer_id": 76,
+            "manufacturer_data_first_byte": 0x06,
+        }
     ]
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -146,9 +150,16 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
 
         assert len(mock_config_flow.mock_calls) == 1
         assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
+        mock_config_flow.reset_mock()
+
+        # 2nd discovery should not generate another flow
+        models.HA_BLEAK_SCANNER._callback(hkc_device, hkc_adv)
+        await hass.async_block_till_done()
+
+        assert len(mock_config_flow.mock_calls) == 0
 
         mock_config_flow.reset_mock()
-        not_hkc_device = BLEDevice("44:44:33:11:23:45", "lock")
+        not_hkc_device = BLEDevice("44:44:33:11:23:21", "lock")
         not_hkc_adv = AdvertisementData(
             local_name="lock", service_uuids=[], manufacturer_data={76: b"\x02"}
         )
@@ -157,7 +168,7 @@ async def test_discovery_match_by_manufacturer_id_and_first_byte(
         await hass.async_block_till_done()
 
         assert len(mock_config_flow.mock_calls) == 0
-        not_apple_device = BLEDevice("44:44:33:11:23:45", "lock")
+        not_apple_device = BLEDevice("44:44:33:11:23:23", "lock")
         not_apple_adv = AdvertisementData(
             local_name="lock", service_uuids=[], manufacturer_data={21: b"\x02"}
         )
@@ -188,7 +199,7 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        bluetooth.async_register_callback(
+        cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
             {"service_uuids": {"cba20d00-224d-11e6-9fb8-0002a5d5c51b"}},
@@ -206,6 +217,13 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
 
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
 
+        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_adv = AdvertisementData(local_name="empty")
+
+        models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
+        await hass.async_block_till_done()
+
+        cancel()
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 

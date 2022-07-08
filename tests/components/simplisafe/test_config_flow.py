@@ -25,18 +25,18 @@ async def test_duplicate_error(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=credentials_config
     )
     assert result["step_id"] == "sms_2fa"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=sms_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -47,13 +47,13 @@ async def test_options_flow(hass, config_entry):
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "init"
 
         result = await hass.config_entries.options.async_configure(
             result["flow_id"], user_input={CONF_CODE: "4321"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert config_entry.options == {CONF_CODE: "4321"}
 
 
@@ -72,18 +72,18 @@ async def test_step_reauth(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config
     )
     assert result["step_id"] == "reauth_confirm"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=reauth_config
     )
     assert result["step_id"] == "sms_2fa"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=sms_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 2
@@ -112,12 +112,12 @@ async def test_step_reauth_errors(hass, config, error_string, exc, reauth_config
             DOMAIN, context={"source": SOURCE_REAUTH}, data=config
         )
         assert result["step_id"] == "reauth_confirm"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=reauth_config
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "reauth_confirm"
         assert result["errors"] == {"base": error_string}
 
@@ -149,18 +149,18 @@ async def test_step_reauth_from_scratch(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=config
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=credentials_config
     )
     assert result["step_id"] == "sms_2fa"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=sms_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     assert len(hass.config_entries.async_entries()) == 1
@@ -186,12 +186,12 @@ async def test_step_user_errors(hass, credentials_config, error_string, exc):
             DOMAIN, context={"source": SOURCE_USER}
         )
         assert result["step_id"] == "user"
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
 
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input=credentials_config
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": error_string}
 
@@ -205,7 +205,7 @@ async def test_step_user_email_2fa(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # Patch API.async_verify_2fa_email to first return pending, then return all done:
     api.async_verify_2fa_email.side_effect = [Verify2FAPending, None]
@@ -213,10 +213,10 @@ async def test_step_user_email_2fa(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=credentials_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -236,7 +236,7 @@ async def test_step_user_email_2fa_timeout(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # Patch API.async_verify_2fa_email to return pending:
     api.async_verify_2fa_email.side_effect = Verify2FAPending
@@ -244,14 +244,14 @@ async def test_step_user_email_2fa_timeout(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=credentials_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_SHOW_PROGRESS_DONE
+    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS_DONE
     assert result["step_id"] == "email_2fa_error"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "email_2fa_timed_out"
 
 
@@ -263,18 +263,18 @@ async def test_step_user_sms_2fa(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=credentials_config
     )
     assert result["step_id"] == "sms_2fa"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=sms_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     assert len(hass.config_entries.async_entries()) == 1
     [config_entry] = hass.config_entries.async_entries(DOMAIN)
@@ -300,13 +300,13 @@ async def test_step_user_sms_2fa_errors(
         DOMAIN, context={"source": SOURCE_USER}
     )
     assert result["step_id"] == "user"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=credentials_config
     )
     assert result["step_id"] == "sms_2fa"
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     # Simulate entering the incorrect SMS code:
     api.async_verify_2fa_sms.side_effect = InvalidCredentialsError
@@ -314,5 +314,5 @@ async def test_step_user_sms_2fa_errors(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input=sms_config
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {"code": error_string}

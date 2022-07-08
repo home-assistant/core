@@ -8,7 +8,7 @@ from homeassistant import config_entries
 from homeassistant.components import dhcp
 from homeassistant.components.elkm1.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     ELK_DISCOVERY,
@@ -47,7 +47,7 @@ async def test_discovery_ignored_entry(hass):
             data=ELK_DISCOVERY_INFO,
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -242,7 +242,7 @@ async def test_form_user_with_insecure_elk_times_out(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -280,7 +280,7 @@ async def test_form_user_with_secure_elk_no_discovery_ip_already_configured(hass
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "address_already_configured"
 
 
@@ -961,7 +961,7 @@ async def test_form_import_existing(hass):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "address_already_configured"
 
 
@@ -989,7 +989,7 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == "cc:cc:cc:cc:cc:cc"
@@ -1018,7 +1018,7 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MOCK_MAC
@@ -1034,7 +1034,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data=ELK_DISCOVERY_INFO,
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with _patch_discovery(), _patch_elk():
@@ -1044,7 +1044,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data=DHCP_DISCOVERY,
         )
         await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_elk():
@@ -1058,7 +1058,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
 
@@ -1073,7 +1073,7 @@ async def test_discovered_by_discovery(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
     assert result["errors"] == {}
 
@@ -1118,7 +1118,7 @@ async def test_discovered_by_discovery_non_standard_port(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
     assert result["errors"] == {}
 
@@ -1169,7 +1169,7 @@ async def test_discovered_by_discovery_url_already_configured(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -1182,7 +1182,7 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
     assert result["errors"] == {}
 
@@ -1225,7 +1225,7 @@ async def test_discovered_by_dhcp_udp_responds_with_nonsecure_port(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
     assert result["errors"] == {}
 
@@ -1275,7 +1275,7 @@ async def test_discovered_by_dhcp_udp_responds_existing_config_entry(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "discovered_connection"
     assert result["errors"] == {}
 
@@ -1315,5 +1315,5 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
