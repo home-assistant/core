@@ -13,7 +13,7 @@ from bleak.backends.device import MANUFACTURERS, BLEDevice
 from bleak.backends.scanner import AdvertisementData
 
 from homeassistant import config_entries
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -188,10 +188,8 @@ class BluetoothManager:
             )
             return
         install_multiple_bleak_catcher(self.scanner)
-        self.hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, self.async_start)
-
-    async def async_start(self, event: Event) -> None:
-        """Start BT Discovery and run a manual scan."""
+        # We have to start it right away as some integrations might
+        # need it straight away.
         _LOGGER.debug("Starting bluetooth scanner")
         assert self.scanner is not None
         self.scanner.register_detection_callback(self.scanner.async_callback_dispatcher)
