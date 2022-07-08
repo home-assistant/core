@@ -1,7 +1,7 @@
 """The bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 import dataclasses
 from enum import Enum
 import fnmatch
@@ -52,7 +52,7 @@ MANUFACTURER_ID: Final = "manufacturer_id"
 MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
-@dataclasses.dataclass(frozen=True)
+@dataclasses.dataclass
 class BluetoothServiceInfo(BaseServiceInfo):
     """Prepared info from bluetooth entries."""
 
@@ -95,7 +95,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
 
 
 BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
-BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
+BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
 
 
 @hass_callback
@@ -120,6 +120,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await bluetooth_discovery.async_setup()
     hass.data[DOMAIN] = bluetooth_discovery
+
+    def _fake_subscriber(
+        service_info: BluetoothServiceInfo, change: BluetoothChange
+    ) -> None:
+        """Fake subscriber for the BleakScanner."""
+        _LOGGER.warning("Got a change from service_info: %s", service_info)
+
+    async_register_callback(hass, _fake_subscriber, None)
+
     return True
 
 
