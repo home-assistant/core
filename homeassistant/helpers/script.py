@@ -680,7 +680,10 @@ class _ScriptRun:
             return event.context is subcontext
 
         result_listener_cancel = self._hass.bus.async_listen(
-            EVENT_SERVICE_RESULT, handle_result, service_result_filter, True
+            EVENT_SERVICE_RESULT,
+            callback(handle_result),
+            callback(service_result_filter),
+            True,
         )
 
         try:
