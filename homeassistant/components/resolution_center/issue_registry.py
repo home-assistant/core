@@ -25,6 +25,7 @@ class IssueEntry:
     breaks_in_ha_version: str | None
     dismissed_version: str | None
     domain: str
+    is_fixable: bool | None
     issue_id: str
     learn_more_url: str | None
     severity: IssueSeverity | None
@@ -53,6 +54,7 @@ class IssueRegistry:
         issue_id: str,
         *,
         breaks_in_ha_version: str | None = None,
+        is_fixable: bool,
         learn_more_url: str | None = None,
         severity: IssueSeverity,
         translation_key: str,
@@ -66,6 +68,7 @@ class IssueRegistry:
                 breaks_in_ha_version=breaks_in_ha_version,
                 dismissed_version=None,
                 domain=domain,
+                is_fixable=is_fixable,
                 issue_id=issue_id,
                 learn_more_url=learn_more_url,
                 severity=severity,
@@ -79,6 +82,7 @@ class IssueRegistry:
                 issue,
                 active=True,
                 breaks_in_ha_version=breaks_in_ha_version,
+                is_fixable=is_fixable,
                 learn_more_url=learn_more_url,
                 severity=severity,
                 translation_key=translation_key,
@@ -124,6 +128,7 @@ class IssueRegistry:
                     breaks_in_ha_version=None,
                     dismissed_version=issue["dismissed_version"],
                     domain=issue["domain"],
+                    is_fixable=None,
                     issue_id=issue["issue_id"],
                     learn_more_url=None,
                     severity=None,
