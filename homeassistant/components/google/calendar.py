@@ -233,7 +233,7 @@ class GoogleCalendarEntity(CalendarEntity):
         self._search: str | None = data.get(CONF_SEARCH)
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: CalendarEvent | None = None
-        self._attr_name = data[CONF_NAME].lower().capitalize()
+        self._attr_name = data[CONF_NAME].capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_value: timedelta | None = None
         self.entity_id = entity_id
