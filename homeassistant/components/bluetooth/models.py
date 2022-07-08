@@ -51,11 +51,12 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         self, callback: AdvertisementDataCallback, filters: dict[str, set[str]]
     ) -> CALLBACK_TYPE:
         """Register a callback."""
-        self._callbacks.append((callback, filters))
+        callback_entry = (callback, filters)
+        self._callbacks.append(callback_entry)
 
         @hass_callback
         def _remove_callback() -> None:
-            self._callbacks.remove((callback, filters))
+            self._callbacks.remove(callback_entry)
 
         # Replay the history since otherwise we miss devices
         # that were already discovered before the callback was registered
