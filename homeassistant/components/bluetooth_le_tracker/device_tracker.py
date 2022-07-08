@@ -24,7 +24,6 @@ from homeassistant.components.device_tracker.legacy import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
@@ -112,7 +111,7 @@ async def async_setup_scanner(
     for device in await async_load_config(yaml_path, hass, timedelta(0)):
         # check if device is a valid bluetooth device
         if device.mac and device.mac[:4].upper() == BLE_PREFIX:
-            address = dr.format_mac(device.mac[4:])
+            address = device.mac[4:]
             if device.track:
                 _LOGGER.debug("Adding %s to BLE tracker", device.mac)
                 devs_to_track.append(address)
@@ -162,7 +161,7 @@ async def async_setup_scanner(
         service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
     ):
         """Update from a ble callback."""
-        mac = dr.format_mac(service_info.address)
+        mac = service_info.address
         if mac in devs_to_track:
             now = dt_util.utcnow()
             hass.async_create_task(async_see_device(mac, service_info.name))
