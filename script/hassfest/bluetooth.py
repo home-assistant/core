@@ -1,8 +1,7 @@
 """Generate bluetooth file."""
 from __future__ import annotations
 
-import pprint
-import re
+import json
 
 from .model import Config, Integration
 
@@ -37,14 +36,7 @@ def generate_and_validate(integrations: list[dict[str, str]]):
         for entry in match_types:
             match_list.append({"domain": domain, **entry})
 
-    # JSON will format `True` as `true`
-    # re.sub for flake8 E128
-    formatted = pprint.pformat(match_list)
-    formatted_aligned_continuation = re.sub(r"^\[\{", "[\n {", formatted)
-    formatted_align_indent = re.sub(
-        r"(?m)^ ", "    ", formatted_aligned_continuation, flags=re.MULTILINE, count=0
-    )
-    return BASE.format(formatted_align_indent)
+    return BASE.format(json.dumps(match_list, indent=4))
 
 
 def validate(integrations: dict[str, Integration], config: Config):
