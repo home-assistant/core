@@ -216,6 +216,8 @@ async def async_setup_entry(
 class GoogleCalendarEntity(CalendarEntity):
     """A calendar event device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         calendar_service: GoogleCalendarService,
@@ -231,7 +233,7 @@ class GoogleCalendarEntity(CalendarEntity):
         self._search: str | None = data.get(CONF_SEARCH)
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: CalendarEvent | None = None
-        self._name: str = data[CONF_NAME]
+        self._attr_name = data[CONF_NAME].lower().capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_value: timedelta | None = None
         self.entity_id = entity_id
@@ -256,11 +258,6 @@ class GoogleCalendarEntity(CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
