@@ -5,6 +5,7 @@ import asyncio
 from contextlib import suppress
 import datetime as dt
 import os
+import time
 
 from httpx import RequestError
 import onvif
@@ -148,6 +149,32 @@ class ONVIFDevice:
             await self.events.async_stop()
         await self.device.close()
 
+    async def async_manually_set_date_and_time(self) -> None:
+        """Set Date and Time Manually using SetSystemDateAndTime command."""
+        device_mgmt = self.device.create_devicemgmt_service()
+
+        # Retrieve DateTime object from camera to use as template for Set operation
+        device_time = await device_mgmt.GetSystemDateAndTime()
+
+        system_date = dt_util.utcnow()
+        LOGGER.debug("System date (UTC): %s", system_date)
+
+        dt_param = device_mgmt.create_type("SetSystemDateAndTime")
+        dt_param.DateTimeType = "Manual"
+        # Retrieve DST setting from system
+        dt_param.DaylightSavings = bool(time.localtime().tm_isdst)
+        dt_param.UTCDateTime = device_time.UTCDateTime
+        # Retrieve timezone from system
+        dt_param.TimeZone = str(system_date.astimezone().tzinfo)
+        dt_param.UTCDateTime.Date.Year = system_date.year
+        dt_param.UTCDateTime.Date.Month = system_date.month
+        dt_param.UTCDateTime.Date.Day = system_date.day
+        dt_param.UTCDateTime.Time.Hour = system_date.hour
+        dt_param.UTCDateTime.Time.Minute = system_date.minute
+        dt_param.UTCDateTime.Time.Second = system_date.second
+        LOGGER.debug("SetSystemDateAndTime: %s", dt_param)
+        await device_mgmt.SetSystemDateAndTime(dt_param)
+
     async def async_check_date_and_time(self) -> None:
         """Warns if device and system date not synced."""
         LOGGER.debug("Setting up the ONVIF device management service")
@@ -164,6 +191,8 @@ class ONVIFDevice:
                     self.name,
                 )
                 return
+
+            LOGGER.debug("Device time: %s", device_time)
 
             tzone = dt_util.DEFAULT_TIME_ZONE
             cdate = device_time.LocalDateTime
@@ -207,6 +236,9 @@ class ONVIFDevice:
                         cam_date_utc,
                         system_date,
                     )
+                    if device_time.DateTimeType == "Manual":
+                        # Set Date and Time ourselves if Date and Time is set manually in the camera.
+                        await self.async_manually_set_date_and_time()
         except RequestError as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err

@@ -85,8 +85,18 @@ def async_dispatcher_send(hass: HomeAssistant, signal: str, *args: Any) -> None:
     This method must be run in the event loop.
     """
     target_list = hass.data.get(DATA_DISPATCHER, {}).get(signal, {})
+
+    run: list[HassJob] = []
     for target, job in target_list.items():
         if job is None:
             job = _generate_job(signal, target)
             target_list[target] = job
-        hass.async_add_hass_job(job, *args)
+
+        # Run the jobs all at the end
+        # to ensure no jobs add more disptachers
+        # which can result in the target_list
+        # changing size during iteration
+        run.append(job)
+
+    for job in run:
+        hass.async_run_hass_job(job, *args)

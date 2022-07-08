@@ -22,7 +22,7 @@ async def test_form_create_entry(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
     assert result["errors"] == {}
 
@@ -36,7 +36,7 @@ async def test_form_create_entry(hass):
             {CONF_API_KEY: "fake_api_key"},
         )
 
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "profiles"
 
         result = await hass.config_entries.flow.async_configure(
@@ -44,7 +44,7 @@ async def test_form_create_entry(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Fake Profile"
     assert result["data"][CONF_API_KEY] == "fake_api_key"
     assert result["data"][CONF_PROFILE_ID] == "xyz12"
@@ -96,5 +96,5 @@ async def test_form_already_configured(hass):
         result["flow_id"], {CONF_PROFILE_NAME: "Fake Profile"}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"

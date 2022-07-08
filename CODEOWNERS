@@ -859,6 +859,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/repetier/ @MTrab @ShadowBr0ther
+/homeassistant/components/resolution_center/ @home-assistant/core
+/tests/components/resolution_center/ @home-assistant/core
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
