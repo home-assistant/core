@@ -44,7 +44,6 @@ class Light(CoordinatorEntity[Coordinator], LightEntity):
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
-        self._attr_name = None
 
     async def async_turn_on(self, **kwargs):
         """Turn the light on."""

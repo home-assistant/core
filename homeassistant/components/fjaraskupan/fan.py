@@ -79,7 +79,6 @@ class Fan(CoordinatorEntity[Coordinator], FanEntity):
         super().__init__(coordinator)
         self._device = device
         self._default_on_speed = 25
-        self._attr_name = None
         self._attr_unique_id = device.address
         self._attr_device_info = device_info
         self._percentage = 0
