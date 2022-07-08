@@ -120,15 +120,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     await bluetooth_discovery.async_setup()
     hass.data[DOMAIN] = bluetooth_discovery
-
-    def _fake_subscriber(
-        service_info: BluetoothServiceInfo, change: BluetoothChange
-    ) -> None:
-        """Fake subscriber for the BleakScanner."""
-        _LOGGER.warning("Got a change from service_info: %s", service_info)
-
-    async_register_callback(hass, _fake_subscriber, None)
-
     return True
 
 
