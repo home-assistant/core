@@ -1,5 +1,5 @@
 """Tests for the Bluetooth integration."""
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import bleak
 from bleak import BleakError
@@ -27,6 +27,8 @@ def mock_bleak_scanner_start():
     ) as mock_bleak_scanner_start:
         yield mock_bleak_scanner_start
 
+    if models.HA_BLEAK_SCANNER:
+        models.HA_BLEAK_SCANNER.stop = AsyncMock()
     bleak.BleakScanner = scanner
 
 
