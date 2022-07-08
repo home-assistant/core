@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2022.7.1"
+version     = "2022.7.2"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,7 +28,7 @@ dependencies    = [
     "astral==2.2",
     "async_timeout==4.0.2",
     "attrs==21.2.0",
-    "atomicwrites==1.4.0",
+    "atomicwrites-homeassistant==1.4.1",
     "awesomeversion==22.6.0",
     "bcrypt==3.1.7",
     "certifi>=2021.5.30",

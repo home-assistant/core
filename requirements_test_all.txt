@@ -574,7 +574,7 @@ habitipy==0.2.0
 hangups==0.4.18
 
 # homeassistant.components.cloud
-hass-nabucasa==0.54.0
+hass-nabucasa==0.54.1
 
 # homeassistant.components.tasmota
 hatasmota==0.5.1
@@ -974,7 +974,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==96
+pydeconz==97
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -1376,7 +1376,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.06.1
+regenmaschine==2022.07.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
