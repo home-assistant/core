@@ -711,7 +711,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
             effects_count = Counter(itertools.chain(all_effects))
             self._effect = effects_count.most_common(1)[0][0]
 
-        self._attr_color_mode = None
+        self._color_mode = None
         all_color_modes = list(
             helpers.find_state_attributes(on_states, ATTR_COLOR_MODE)
         )
@@ -722,7 +722,7 @@ class LightGroup(BaseLight, ZhaGroupEntity):
                 color_mode_count[ColorMode.ONOFF] = -1
             if ColorMode.BRIGHTNESS in color_mode_count:
                 color_mode_count[ColorMode.BRIGHTNESS] = 0
-            self._attr_color_mode = color_mode_count.most_common(1)[0][0]
+            self._color_mode = color_mode_count.most_common(1)[0][0]
 
         self._attr_supported_color_modes = None
         all_supported_color_modes = list(
