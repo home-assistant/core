@@ -124,6 +124,8 @@ async def async_setup_entry(
 class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     """A representation of a RFXtrx binary sensor."""
 
+    _attr_force_update = True
+
     def __init__(
         self,
         device: rfxtrxmod.RFXtrxDevice,
@@ -156,11 +158,6 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
 
         if self._state and self._off_delay is not None:
             self._state = False
-
-    @property
-    def force_update(self) -> bool:
-        """We should force updates. Repeated states have meaning."""
-        return True
 
     @property
     def is_on(self):
