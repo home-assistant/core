@@ -346,7 +346,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
                 hass, "recorder", {"recorder": {"db_url": "sqlite://"}}
             )
         )
-        await hass.data[recorder.DOMAIN]["db_connected"]
+        await hass.data[recorder.DOMAIN].db_connected
         hass.states.async_set("my.entity", "on", {})
         await hass.async_block_till_done()
 

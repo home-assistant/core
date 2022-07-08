@@ -127,9 +127,11 @@ async def test_canceled_before_startup_finishes(
 ):
     """Test recorder shuts down when its startup future is canceled out from under it."""
     hass.state = CoreState.not_running
-    await async_setup_recorder_instance(hass)
+    recorder_helper.async_initialize_recorder(hass)
+    hass.create_task(async_setup_recorder_instance(hass))
+    await hass.data[DOMAIN].db_connected
+
     instance = get_instance(hass)
-    await instance.async_db_ready
     instance._hass_started.cancel()
     with patch.object(instance, "engine"):
         await hass.async_block_till_done()
