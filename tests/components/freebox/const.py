@@ -22,6 +22,7 @@ DATA_SYSTEM_GET_CONFIG = {
     "fans": [{"id": "fan0_speed", "name": "Ventilateur 1", "value": 2130}],
     "sensors": [
         {"id": "temp_hdd", "name": "Disque dur", "value": 40},
+        {"id": "temp_hdd2", "name": "Disque dur 2"},
         {"id": "temp_sw", "name": "Température Switch", "value": 50},
         {"id": "temp_cpum", "name": "Température CPU M", "value": 60},
         {"id": "temp_cpub", "name": "Température CPU B", "value": 56},
