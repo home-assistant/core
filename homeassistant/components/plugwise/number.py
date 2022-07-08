@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
 
 from plugwise import Smile
 
@@ -14,6 +13,7 @@ from homeassistant.components.number import (
     NumberMode,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -27,7 +27,7 @@ from .entity import PlugwiseEntity
 class PlugwiseEntityDescriptionMixin:
     """Mixin values for Plugwse entities."""
 
-    command: Callable[[Smile, float], Awaitable[Any]]
+    command: Callable[[Smile, float], Awaitable[None]]
 
 
 @dataclass
@@ -43,11 +43,11 @@ NUMBER_TYPES = (
         command=lambda api, value: api.set_max_boiler_temperature(value),
         device_class=NumberDeviceClass.TEMPERATURE,
         name="Maximum Boiler Temperature Setpoint",
-        icon="mdi:thermometer",
         entity_category=EntityCategory.CONFIG,
         native_min_value=25,
         native_max_value=95,
         native_step=5,
+        native_unit_of_measurement=TEMP_CELSIUS,
     ),
 )
 
