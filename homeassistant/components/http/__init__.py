@@ -127,9 +127,7 @@ class ConfData(TypedDict, total=False):
 @bind_hass
 async def async_get_last_config(hass: HomeAssistant) -> dict[str, Any] | None:
     """Return the last known working config."""
-    store: storage.Store[dict[str, Any]] = storage.Store(
-        hass, STORAGE_VERSION, STORAGE_KEY
-    )
+    store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     return await store.async_load()
 
 

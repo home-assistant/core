@@ -263,7 +263,7 @@ class EnergyManager:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize energy manager."""
         self._hass = hass
-        self._store: storage.Store[EnergyPreferences] = storage.Store(
+        self._store = storage.Store[EnergyPreferences](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         self.data: EnergyPreferences | None = None

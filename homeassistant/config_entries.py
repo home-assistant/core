@@ -842,7 +842,7 @@ class ConfigEntries:
         self._hass_config = hass_config
         self._entries: dict[str, ConfigEntry] = {}
         self._domain_index: dict[str, list[str]] = {}
-        self._store: storage.Store[dict[str, list[dict[str, Any]]]] = storage.Store(
+        self._store = storage.Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         EntityRegistryDisabledHandler(hass).async_setup()

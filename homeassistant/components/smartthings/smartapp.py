@@ -212,7 +212,7 @@ async def setup_smartapp_endpoint(hass: HomeAssistant):
         return
 
     # Get/create config to store a unique id for this hass instance.
-    store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if not (config := await store.async_load()):
         # Create config
         config = {
@@ -284,7 +284,7 @@ async def unload_smartapp_endpoint(hass: HomeAssistant):
     if cloudhook_url and cloud.async_is_logged_in(hass):
         await cloud.async_delete_cloudhook(hass, hass.data[DOMAIN][CONF_WEBHOOK_ID])
         # Remove cloudhook from storage
-        store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
         await store.async_save(
             {
                 CONF_INSTANCE_ID: hass.data[DOMAIN][CONF_INSTANCE_ID],

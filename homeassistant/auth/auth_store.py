@@ -46,7 +46,7 @@ class AuthStore:
         self._users: dict[str, models.User] | None = None
         self._groups: dict[str, models.Group] | None = None
         self._perm_lookup: PermissionLookup | None = None
-        self._store: Store[dict[str, list[dict[str, Any]]]] = Store(
+        self._store = Store[dict[str, list[dict[str, Any]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._lock = asyncio.Lock()

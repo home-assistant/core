@@ -39,7 +39,7 @@ PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the mobile app component."""
-    store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (app_config := await store.async_load()) is None or not isinstance(
         app_config, dict
     ):

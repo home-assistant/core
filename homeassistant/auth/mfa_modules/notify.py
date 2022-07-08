@@ -100,7 +100,7 @@ class NotifyAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._user_settings: _UsersDict | None = None
-        self._user_store: Store[dict[str, dict[str, Any]]] = Store(
+        self._user_store = Store[dict[str, dict[str, Any]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._include = config.get(CONF_INCLUDE, [])

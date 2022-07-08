@@ -167,9 +167,7 @@ async def _configure_almond_for_ha(
         return
 
     _LOGGER.debug("Configuring Almond to connect to Home Assistant at %s", hass_url)
-    store: storage.Store[dict[str, Any]] = storage.Store(
-        hass, STORAGE_VERSION, STORAGE_KEY
-    )
+    store = storage.Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     data = await store.async_load()
 
     if data is None:

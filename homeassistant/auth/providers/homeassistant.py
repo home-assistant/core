@@ -61,7 +61,7 @@ class Data:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the user data store."""
         self.hass = hass
-        self._store: Store[dict[str, list[dict[str, str]]]] = Store(
+        self._store = Store[dict[str, list[dict[str, str]]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._data: dict[str, list[dict[str, str]]] | None = None

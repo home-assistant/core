@@ -533,7 +533,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     if not await hassio.is_connected():
         _LOGGER.warning("Not connected with the supervisor / system too busy!")
 
-    store: Store[dict[str, str]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, str]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
 

@@ -118,7 +118,7 @@ def async_user_not_allowed_do_auth(
 
 async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
     """Create auth middleware for the app."""
-    store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
     if (data := await store.async_load()) is None:
         data = {}
 

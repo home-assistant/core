@@ -90,9 +90,7 @@ async def async_get_media_event_store(
         os.makedirs(media_path, exist_ok=True)
 
     await hass.async_add_executor_job(mkdir)
-    store: Store[dict[str, Any]] = Store(
-        hass, STORAGE_VERSION, STORAGE_KEY, private=True
-    )
+    store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY, private=True)
     return NestEventMediaStore(hass, subscriber, store, media_path)
 
 

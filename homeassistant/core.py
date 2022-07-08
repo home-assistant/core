@@ -1942,7 +1942,7 @@ class Config:
         # pylint: disable=import-outside-toplevel
         from .helpers.storage import Store
 
-        store: Store[dict[str, Any]] = Store(
+        store = Store[dict[str, Any]](
             self.hass,
             CORE_STORAGE_VERSION,
             CORE_STORAGE_KEY,

@@ -71,7 +71,7 @@ class Analytics:
             ATTR_ONBOARDED: False,
             ATTR_UUID: None,
         }
-        self._store: Store[dict[str, Any]] = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
 
     @property
     def preferences(self) -> dict:

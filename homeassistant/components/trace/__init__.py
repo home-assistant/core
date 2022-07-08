@@ -52,7 +52,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Initialize the trace integration."""
     hass.data[DATA_TRACE] = {}
     websocket_api.async_setup(hass)
-    store: Store[dict[str, list]] = Store(
+    store = Store[dict[str, list]](
         hass, STORAGE_VERSION, STORAGE_KEY, encoder=ExtendedJSONEncoder
     )
     hass.data[DATA_TRACE_STORE] = store

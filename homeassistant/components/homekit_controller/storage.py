@@ -46,7 +46,7 @@ class EntityMapStorage:
     def __init__(self, hass: HomeAssistant) -> None:
         """Create a new entity map store."""
         self.hass = hass
-        self.store: Store[StorageLayout] = Store(
+        self.store = Store[StorageLayout](
             hass, ENTITY_MAP_STORAGE_VERSION, ENTITY_MAP_STORAGE_KEY
         )
         self.storage_data: dict[str, Pairing] = {}
