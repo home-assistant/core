@@ -14,7 +14,6 @@ from homeassistant.components.resolution_center import (
 from homeassistant.components.resolution_center.const import DOMAIN
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -47,8 +46,6 @@ async def mock_resolution_center_integration(hass):
     hass.config.components.add("integration_without_diagnostics")
 
     def async_create_fix_flow(hass, issue_id):
-        if issue_id != "issue_1":
-            raise HomeAssistantError
         return MockFixFlow()
 
     mock_platform(
@@ -199,7 +196,7 @@ async def test_fix_non_existing_issue(hass: HomeAssistant, hass_ws_client) -> No
     await client.send_json(
         {
             "id": 2,
-            "type": "resolution_center/fix_issue",
+            "type": "resolution_center/fix_issue_init",
             "domain": "fake_integration",
             "issue_id": "no_such_issue",
         }
@@ -273,7 +270,7 @@ async def test_fix_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 2,
-            "type": "resolution_center/fix_issue",
+            "type": "resolution_center/fix_issue_init",
             "domain": "fake_integration",
             "issue_id": "issue_1",
         }
@@ -286,7 +283,7 @@ async def test_fix_issue(hass: HomeAssistant, hass_ws_client) -> None:
     await client.send_json(
         {
             "id": 3,
-            "type": "resolution_center/fix_issue_confirm",
+            "type": "resolution_center/fix_issue_step",
             "flow_id": msg["result"]["flow_id"],
             "user_input": {},
         }

@@ -20,8 +20,8 @@ from .issue_registry import async_get as async_get_issue_registry
 def async_setup(hass: HomeAssistant) -> None:
     """Set up the resolution center websocket API."""
     websocket_api.async_register_command(hass, ws_dismiss_issue)
-    websocket_api.async_register_command(hass, ws_fix_issue)
-    websocket_api.async_register_command(hass, ws_fix_issue_confirm)
+    websocket_api.async_register_command(hass, ws_fix_issue_init)
+    websocket_api.async_register_command(hass, ws_fix_issue_step)
     websocket_api.async_register_command(hass, ws_list_issues)
 
 
@@ -44,13 +44,13 @@ def ws_dismiss_issue(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "resolution_center/fix_issue",
+        vol.Required("type"): "resolution_center/fix_issue_init",
         vol.Required("domain"): str,
         vol.Required("issue_id"): str,
     }
 )
 @websocket_api.async_response
-async def ws_fix_issue(
+async def ws_fix_issue_init(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Start a flow to an issue."""
@@ -65,13 +65,13 @@ async def ws_fix_issue(
 
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "resolution_center/fix_issue_confirm",
+        vol.Required("type"): "resolution_center/fix_issue_step",
         vol.Required("flow_id"): str,
         vol.Optional("user_input"): dict,
     }
 )
 @websocket_api.async_response
-async def ws_fix_issue_confirm(
+async def ws_fix_issue_step(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """Provide user input for an issue fix flow."""

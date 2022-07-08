@@ -37,14 +37,19 @@ class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
         platform = platforms[handler_key]
 
         assert data and "issue_id" in data
-        return await platform.async_create_fix_flow(self.hass, data["issue_id"])
+        issue_id = data["issue_id"]
+
+        issue_registry = async_get_issue_registry(self.hass)
+        issue = issue_registry.async_get_issue(handler_key, issue_id)
+        if issue is None or not issue.is_fixable:
+            raise HomeAssistantError("Issue does not exist or is not fixable")
+
+        return await platform.async_create_fix_flow(self.hass, issue_id)
 
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
         """Complete a fix flow."""
-        issue_registry = async_get_issue_registry(self.hass)
-        issue_registry.async_delete(flow.handler, flow.init_data["issue_id"])
         async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         return result
 
