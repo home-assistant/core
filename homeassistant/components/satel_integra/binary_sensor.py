@@ -39,8 +39,9 @@ async def async_setup_platform(
     for zone_num, device_config_data in configured_zones.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
+        unique_id = f"{CONF_ZONES}_{zone_num}"
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED
+            controller, zone_num, zone_name, zone_type, SIGNAL_ZONES_UPDATED, unique_id
         )
         devices.append(device)
 
@@ -49,8 +50,9 @@ async def async_setup_platform(
     for zone_num, device_config_data in configured_outputs.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_ZONE_NAME]
+        unique_id = f"{CONF_OUTPUTS}_{zone_num}"
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED
+            controller, zone_num, zone_name, zone_type, SIGNAL_OUTPUTS_UPDATED, unique_id
         )
         devices.append(device)
 
@@ -61,7 +63,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
     """Representation of an Satel Integra binary sensor."""
 
     def __init__(
-        self, controller, device_number, device_name, zone_type, react_to_signal
+        self, controller, device_number, device_name, zone_type, react_to_signal, unique_id
     ):
         """Initialize the binary_sensor."""
         self._device_number = device_number
@@ -70,6 +72,7 @@ class SatelIntegraBinarySensor(BinarySensorEntity):
         self._state = 0
         self._react_to_signal = react_to_signal
         self._satel = controller
+        self._unique_id = unique_id
 
     async def async_added_to_hass(self):
         """Register callbacks."""
