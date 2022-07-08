@@ -62,25 +62,19 @@ async def test_sensors(hass, config_entry, aioclient_mock_fixture):
     print(hass.states)
     assert hass.states.get("sensor.kitchen_sink_temperature").state == "16"
     assert (
-        hass.states.get("sensor.kitchen_sink_temperature").attributes[
-            ATTR_STATE_CLASS
-        ]
+        hass.states.get("sensor.kitchen_sink_temperature").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT
     )
 
     assert hass.states.get("sensor.kitchen_sink_humidity").state == "43"
     assert (
-        hass.states.get("sensor.kitchen_sink_humidity").attributes[
-            ATTR_STATE_CLASS
-        ]
+        hass.states.get("sensor.kitchen_sink_humidity").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT
     )
 
     assert hass.states.get("sensor.kitchen_sink_battery").state == "100"
     assert (
-        hass.states.get("sensor.kitchen_sink_battery").attributes[
-            ATTR_STATE_CLASS
-        ]
+        hass.states.get("sensor.kitchen_sink_battery").attributes[ATTR_STATE_CLASS]
         == SensorStateClass.MEASUREMENT
     )
 
