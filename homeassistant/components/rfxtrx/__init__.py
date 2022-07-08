@@ -456,6 +456,7 @@ class RfxtrxEntity(RestoreEntity):
     Contains the common logic for Rfxtrx lights and switches.
     """
 
+    _attr_has_entity_name = True
     _device: rfxtrxmod.RFXtrxDevice
     _event: rfxtrxmod.RFXtrxEvent | None
 
@@ -466,7 +467,9 @@ class RfxtrxEntity(RestoreEntity):
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
-        self._name = f"{device.type_string} {device.id_string}"
+        self._attr_name = None
+        self._attr_assumed_state = True
+        self._attr_should_poll = False
         self._device = device
         self._event = event
         self._device_id = device_id
@@ -485,26 +488,11 @@ class RfxtrxEntity(RestoreEntity):
         )
 
     @property
-    def should_poll(self):
-        """No polling needed for a RFXtrx switch."""
-        return False
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
     def extra_state_attributes(self):
         """Return the device state attributes."""
         if not self._event:
             return None
         return {ATTR_EVENT: "".join(f"{x:02x}" for x in self._event.data)}
-
-    @property
-    def assumed_state(self):
-        """Return true if unable to access real state of entity."""
-        return True
 
     @property
     def unique_id(self):
