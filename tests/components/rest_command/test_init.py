@@ -5,7 +5,12 @@ from http import HTTPStatus
 import aiohttp
 
 import homeassistant.components.rest_command as rc
-from homeassistant.const import CONTENT_TYPE_JSON, CONTENT_TYPE_TEXT_PLAIN
+from homeassistant.const import (
+    CONTENT_TYPE_JSON,
+    CONTENT_TYPE_TEXT_PLAIN,
+    EVENT_SERVICE_RESULT,
+)
+from homeassistant.core import Event, callback
 from homeassistant.setup import setup_component
 
 from tests.common import assert_setup_component, get_test_home_assistant
@@ -154,6 +159,31 @@ class TestRestCommandComponent:
         self.hass.block_till_done()
 
         assert len(aioclient_mock.mock_calls) == 1
+
+    def test_rest_command_get_with_response(self, aioclient_mock):
+        """Call a rest command with get."""
+        with assert_setup_component(5):
+            setup_component(self.hass, rc.DOMAIN, self.config)
+
+        result = {}
+
+        def handle_result(event: Event):
+            result["data"] = event.data
+
+        cancel = self.hass.bus.async_listen(
+            EVENT_SERVICE_RESULT, callback(handle_result), run_immediately=True
+        )
+
+        aioclient_mock.get(self.url, content=b"success")
+
+        self.hass.services.call(rc.DOMAIN, "get_test", {})
+
+        self.hass.block_till_done()
+        cancel()
+
+        assert len(aioclient_mock.mock_calls) == 1
+        assert result["data"]["response"]["content"] == "success"
+        assert result["data"]["response"]["status"] == 200
 
     def test_rest_command_delete(self, aioclient_mock):
         """Call a rest command with delete."""

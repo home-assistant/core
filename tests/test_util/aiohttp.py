@@ -244,6 +244,10 @@ class AiohttpClientMockResponse:
         """Return content."""
         return mock_stream(self.response)
 
+    def get_encoding(self):
+        """Get encoding."""
+        return "utf-8"
+
     async def read(self):
         """Return mock response."""
         return self.response
