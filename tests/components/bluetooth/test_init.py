@@ -2,6 +2,7 @@
 from unittest.mock import MagicMock, patch
 
 import bleak
+from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
 import pytest
 
@@ -32,7 +33,7 @@ def mock_bleak_scanner_start():
 
 
 async def test_setup_and_stop(hass, mock_bleak_scanner_start):
-    """Test configured options for a device are loaded via config entry."""
+    """Test we and setup and stop the scanner."""
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
     ]
@@ -48,6 +49,30 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+
+async def test_setup_and_stop_no_bluetooth(hass, caplog):
+    """Test we fail gracefully when bluetooth is not available."""
+    mock_bt = [
+        {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner", side_effect=BleakError
+    ) as mock_ha_bleak_scanner, patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_ha_bleak_scanner.mock_calls) == 1
+    assert "Could not create bluetooth scanner" in caplog.text
 
 
 async def test_discovery_match_by_service_uuid(hass, mock_bleak_scanner_start):
@@ -189,6 +214,8 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
     ) -> None:
         """Fake subscriber for the BleakScanner."""
         callbacks.append((service_info, change))
+        if len(callbacks) >= 3:
+            raise ValueError
 
     with patch(
         "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
@@ -223,14 +250,20 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
         models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
         await hass.async_block_till_done()
 
-        cancel()
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
+        # 3rd callback raises ValueError but is still tracked
         models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
         await hass.async_block_till_done()
 
-    assert len(callbacks) == 2
+        cancel()
+
+        # 4th callback should not be tracked since we canceled
+        models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
+        await hass.async_block_till_done()
+
+    assert len(callbacks) == 3
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
     assert service_info.name == "wohand"
@@ -238,6 +271,11 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
     assert service_info.manufacturer_id == 89
 
     service_info: BluetoothServiceInfo = callbacks[1][0]
+    assert service_info.name == "empty"
+    assert service_info.manufacturer is None
+    assert service_info.manufacturer_id is None
+
+    service_info: BluetoothServiceInfo = callbacks[2][0]
     assert service_info.name == "empty"
     assert service_info.manufacturer is None
     assert service_info.manufacturer_id is None
