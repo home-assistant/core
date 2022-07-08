@@ -15,7 +15,7 @@ from . import COORDINATORS, DOMAIN, PROXMOX_CLIENTS, ProxmoxEntity
 
 BYTE_TO_GIBIBYTE = 1.074e9
 
-sensorDescriptions = [
+SENSOR_DESCRIPTIONS = [
     (
         SensorEntityDescription(
             key="mem_gib",
@@ -60,7 +60,7 @@ async def async_setup_platform(
 
                 name = coordinator_data.name
 
-                for (description, native_lambda) in sensorDescriptions:
+                for (description, native_lambda) in SENSOR_DESCRIPTIONS:
                     sensors.append(
                         ProxmoxSensor(
                             coordinator=coordinator,
@@ -104,7 +104,7 @@ class ProxmoxSensor(ProxmoxEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Get the native value."""
 
         if (data := self.coordinator.data) is None:
