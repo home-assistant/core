@@ -5,6 +5,7 @@ from collections.abc import Awaitable, Callable
 import dataclasses
 from enum import Enum
 import fnmatch
+from functools import cached_property
 import logging
 from typing import Final
 
@@ -51,7 +52,7 @@ MANUFACTURER_ID: Final = "manufacturer_id"
 MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class BluetoothServiceInfo(BaseServiceInfo):
     """Prepared info from bluetooth entries."""
 
@@ -76,7 +77,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
             service_uuids=advertisement_data.service_uuids,
         )
 
-    @property
+    @cached_property
     def manufacturer(self) -> str | None:
         """Convert manufacturer data to a string."""
         for manufacturer in self.manufacturer_data:
@@ -85,7 +86,7 @@ class BluetoothServiceInfo(BaseServiceInfo):
                 return name
         return None
 
-    @property
+    @cached_property
     def manufacturer_id(self) -> int | None:
         """Get the first manufacturer id."""
         for manufacturer in self.manufacturer_data:
@@ -97,7 +98,8 @@ BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
 
 
-async def async_register_callback(
+@hass_callback
+def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
     match_dict: BluetoothMatcher | None,
@@ -107,7 +109,7 @@ async def async_register_callback(
     Returns a callback that can be used to cancel the registration.
     """
     manager: BluetoothManager = hass.data[DOMAIN]
-    return await manager.async_register_callback(callback, match_dict)
+    return manager.async_register_callback(callback, match_dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -244,7 +246,8 @@ class BluetoothManager:
                 service_info,
             )
 
-    async def async_register_callback(
+    @hass_callback
+    def async_register_callback(
         self, callback: BluetoothCallback, match_dict: BluetoothMatcher | None = None
     ) -> Callable[[], None]:
         """Register a callback."""
