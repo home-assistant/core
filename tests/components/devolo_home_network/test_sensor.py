@@ -24,12 +24,13 @@ from tests.common import async_fire_time_changed
 async def test_sensor_setup(hass: HomeAssistant):
     """Test default setup of the sensor component."""
     entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{DOMAIN}.connected_wifi_clients") is not None
-    assert hass.states.get(f"{DOMAIN}.connected_plc_devices") is None
-    assert hass.states.get(f"{DOMAIN}.neighboring_wifi_networks") is None
+    assert hass.states.get(f"{DOMAIN}.{device_name}_connected_wifi_clients") is not None
+    assert hass.states.get(f"{DOMAIN}.{device_name}_connected_plc_devices") is None
+    assert hass.states.get(f"{DOMAIN}.{device_name}_neighboring_wifi_networks") is None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -37,9 +38,9 @@ async def test_sensor_setup(hass: HomeAssistant):
 @pytest.mark.usefixtures("mock_device")
 async def test_update_connected_wifi_clients(hass: HomeAssistant):
     """Test state change of a connected_wifi_clients sensor device."""
-    state_key = f"{DOMAIN}.connected_wifi_clients"
-
     entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
+    state_key = f"{DOMAIN}.{device_name}_connected_wifi_clients"
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
@@ -74,8 +75,9 @@ async def test_update_connected_wifi_clients(hass: HomeAssistant):
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_device")
 async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
     """Test state change of a neighboring_wifi_networks sensor device."""
-    state_key = f"{DOMAIN}.neighboring_wifi_networks"
     entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
+    state_key = f"{DOMAIN}.{device_name}_neighboring_wifi_networks"
     er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -111,8 +113,9 @@ async def test_update_neighboring_wifi_networks(hass: HomeAssistant):
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_device")
 async def test_update_connected_plc_devices(hass: HomeAssistant):
     """Test state change of a connected_plc_devices sensor device."""
-    state_key = f"{DOMAIN}.connected_plc_devices"
     entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
+    state_key = f"{DOMAIN}.{device_name}_connected_plc_devices"
     er = entity_registry.async_get(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

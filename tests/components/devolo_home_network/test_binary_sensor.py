@@ -25,10 +25,11 @@ from tests.common import async_fire_time_changed
 async def test_binary_sensor_setup(hass: HomeAssistant):
     """Test default setup of the binary sensor component."""
     entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert hass.states.get(f"{DOMAIN}.{CONNECTED_TO_ROUTER}") is None
+    assert hass.states.get(f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}") is None
 
     await hass.config_entries.async_unload(entry.entry_id)
 
@@ -36,8 +37,9 @@ async def test_binary_sensor_setup(hass: HomeAssistant):
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_device")
 async def test_update_attached_to_router(hass: HomeAssistant):
     """Test state change of a attached_to_router binary sensor device."""
-    state_key = f"{DOMAIN}.{CONNECTED_TO_ROUTER}"
     entry = configure_integration(hass)
+    device_name = entry.title.replace(" ", "_").lower()
+    state_key = f"{DOMAIN}.{device_name}_{CONNECTED_TO_ROUTER}"
 
     er = entity_registry.async_get(hass)
 
