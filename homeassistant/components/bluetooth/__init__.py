@@ -195,9 +195,7 @@ class BluetoothManager:
         """Set up BT Discovery."""
         try:
             self.scanner = HaBleakScanner(
-                # Reduce CPU usage
-                filters={"UUIDs": [], "Transport": "le", "RSSI": -100},
-                scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode],
+                scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode]
             )
         except (FileNotFoundError, BleakError) as ex:
             _LOGGER.warning(
