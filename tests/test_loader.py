@@ -573,10 +573,11 @@ async def test_get_bluetooth(hass):
     test_1_integration = _get_test_integration_with_bluetooth_matcher(
         hass, "test_1", True
     )
-
+    test_2_integration = _get_test_integration_with_dhcp_matcher(hass, "test_2", True)
     with patch("homeassistant.loader.async_get_custom_components") as mock_get:
         mock_get.return_value = {
             "test_1": test_1_integration,
+            "test_2": test_2_integration,
         }
         bluetooth = await loader.async_get_bluetooth(hass)
         bluetooth_for_domain = [
