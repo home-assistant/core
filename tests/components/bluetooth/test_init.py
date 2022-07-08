@@ -199,7 +199,7 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
 
-        bluetooth.async_register_callback(
+        cancel = bluetooth.async_register_callback(
             hass,
             _fake_subscriber,
             {"service_uuids": {"cba20d00-224d-11e6-9fb8-0002a5d5c51b"}},
@@ -217,6 +217,13 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
 
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
 
+        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_adv = AdvertisementData(local_name="empty")
+
+        models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
+        await hass.async_block_till_done()
+
+        cancel()
         empty_device = BLEDevice("11:22:33:44:55:66", "empty")
         empty_adv = AdvertisementData(local_name="empty")
 
