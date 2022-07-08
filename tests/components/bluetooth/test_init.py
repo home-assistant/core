@@ -11,7 +11,6 @@ from homeassistant.components.bluetooth import (
     models,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
-from homeassistant.generated import bluetooth as bt_gen
 from homeassistant.setup import async_setup_component
 
 
@@ -29,9 +28,9 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start):
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
     ]
-    with patch.object(bt_gen, "BLUETOOTH", mock_bt), patch.object(
-        hass.config_entries.flow, "async_init"
-    ):
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init"):
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
@@ -43,14 +42,14 @@ async def test_setup_and_stop(hass, mock_bleak_scanner_start):
     assert len(mock_bleak_scanner_start.mock_calls) == 1
 
 
-async def test_discovery(hass, mock_bleak_scanner_start):
-    """Test configured options for a device are loaded via config entry."""
+async def test_discovery_match_by_service_uuid(hass, mock_bleak_scanner_start):
+    """Test bluetooth discovery match by service_uuid."""
     mock_bt = [
         {"domain": "switchbot", "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"}
     ]
-    with patch.object(bt_gen, "BLUETOOTH", mock_bt), patch.object(
-        hass.config_entries.flow, "async_init"
-    ) as mock_config_flow:
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
@@ -71,6 +70,60 @@ async def test_discovery(hass, mock_bleak_scanner_start):
     assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
 
 
+async def test_discovery_match_by_local_name(hass, mock_bleak_scanner_start):
+    """Test bluetooth discovery match by local_name."""
+    mock_bt = [{"domain": "switchbot", "local_name": "wohand"}]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+        switchbot_adv = AdvertisementData(local_name="wohand", service_uuids=[])
+
+        models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "switchbot"
+
+
+async def test_discovery_match_by_manufacturer_id_and_first_byte(
+    hass, mock_bleak_scanner_start
+):
+    """Test bluetooth discovery match by manufacturer_id and first_byte."""
+    mock_bt = [
+        {"domain": "homekit_controller", "manufacturer_id": 76, "first_byte": 0x06}
+    ]
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init") as mock_config_flow:
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+        assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        switchbot_device = BLEDevice("44:44:33:11:23:45", "lock")
+        switchbot_adv = AdvertisementData(
+            local_name="lock", service_uuids=[], manufacturer_data={76: b"\x06"}
+        )
+
+        models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+    assert len(mock_config_flow.mock_calls) == 1
+    assert mock_config_flow.mock_calls[0][1][0] == "homekit_controller"
+
+
 async def test_register_callbacks(hass, mock_bleak_scanner_start):
     """Test configured options for a device are loaded via config entry."""
     mock_bt = []
@@ -82,9 +135,9 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
         """Fake subscriber for the BleakScanner."""
         callbacks.append((service_info, change))
 
-    with patch.object(bt_gen, "BLUETOOTH", mock_bt), patch.object(
-        hass.config_entries.flow, "async_init"
-    ):
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(hass.config_entries.flow, "async_init"):
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
@@ -108,12 +161,21 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
         )
 
         models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+
+        empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+        empty_adv = AdvertisementData(local_name="empty")
+
+        models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
         await hass.async_block_till_done()
 
-    assert len(callbacks) == 1
+    assert len(callbacks) == 2
 
     service_info: BluetoothServiceInfo = callbacks[0][0]
-
     assert service_info.name == "wohand"
     assert service_info.manufacturer == "Nordic Semiconductor ASA"
     assert service_info.manufacturer_id == 89
+
+    service_info: BluetoothServiceInfo = callbacks[1][0]
+    assert service_info.name == "empty"
+    assert service_info.manufacturer is None
+    assert service_info.manufacturer_id is None
