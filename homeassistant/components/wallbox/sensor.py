@@ -36,7 +36,6 @@ from .const import (
     CHARGER_DEPOT_PRICE_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
-    CHARGER_PART_NUMBER_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATE_OF_CHARGE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
@@ -54,6 +53,7 @@ class WallboxSensorEntityDescription(SensorEntityDescription):
     """Describes Wallbox sensor entity."""
 
     precision: int | None = None
+
 
 SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
     CHARGER_CHARGING_POWER_KEY: WallboxSensorEntityDescription(
@@ -155,6 +155,7 @@ async def async_setup_entry(
             if (description := SENSOR_TYPES.get(ent))
         ]
     )
+
 
 class WallboxSensor(WallboxEntity, SensorEntity):
     """Representation of the Wallbox portal."""
