@@ -6,6 +6,7 @@ import dataclasses
 from enum import Enum
 import fnmatch
 import logging
+from typing import Final
 
 from bleak import BleakError
 from bleak.backends.device import MANUFACTURERS, BLEDevice
@@ -44,10 +45,10 @@ SCANNING_MODE_TO_BLEAK = {
     BluetoothScanningMode.PASSIVE: "passive",
 }
 
-LOCAL_NAME = "local_name"
-SERVICE_UUID = "service_uuid"
-MANUFACTURER_ID = "manufacturer_id"
-MANUFACTURER_DATA_FIRST_BYTE = "manufacturer_data_first_byte"
+LOCAL_NAME: Final = "local_name"
+SERVICE_UUID: Final = "service_uuid"
+MANUFACTURER_ID: Final = "manufacturer_id"
+MANUFACTURER_DATA_FIRST_BYTE: Final = "manufacturer_data_first_byte"
 
 
 @dataclasses.dataclass
