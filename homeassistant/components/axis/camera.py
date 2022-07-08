@@ -40,7 +40,7 @@ class AxisCamera(AxisEntityBase, MjpegCamera):
 
         MjpegCamera.__init__(
             self,
-            name=device.name,
+            name="",
             username=device.username,
             password=device.password,
             mjpeg_url=self.mjpeg_source,
