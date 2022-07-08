@@ -24,7 +24,6 @@ PARALLEL_UPDATES = 1
 class NextDnsSwitchRequiredKeysMixin(Generic[TCoordinatorData]):
     """Class for NextDNS entity required keys."""
 
-    coordinator_class: type[TCoordinatorData]
     state: Callable[[TCoordinatorData], bool]
 
 
@@ -36,173 +35,150 @@ class NextDnsSwitchEntityDescription(
 
 
 SWITCHES = (
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_page",
-        coordinator_class=Settings,
         name="{profile_name} Block Page",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:web-cancel",
         state=lambda data: data.block_page,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="cache_boost",
-        coordinator_class=Settings,
         name="{profile_name} Cache Boost",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:memory",
         state=lambda data: data.cache_boost,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="cname_flattening",
-        coordinator_class=Settings,
         name="{profile_name} CNAME Flattening",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:tournament",
         state=lambda data: data.cname_flattening,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="anonymized_ecs",
-        coordinator_class=Settings,
         name="{profile_name} Anonymized EDNS Client Subnet",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:incognito",
         state=lambda data: data.anonymized_ecs,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="logs",
-        coordinator_class=Settings,
         name="{profile_name} Logs",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:file-document-outline",
         state=lambda data: data.logs,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="web3",
-        coordinator_class=Settings,
         name="{profile_name} Web3",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:web",
         state=lambda data: data.web3,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="allow_affiliate",
-        coordinator_class=Settings,
         name="{profile_name} Allow Affiliate & Tracking Links",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.allow_affiliate,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_disguised_trackers",
-        coordinator_class=Settings,
         name="{profile_name} Block Disguised Third-Party Trackers",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_disguised_trackers,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="ai_threat_detection",
-        coordinator_class=Settings,
         name="{profile_name} AI-Driven Threat Detection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.ai_threat_detection,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_csam",
-        coordinator_class=Settings,
         name="{profile_name} Block Child Sexual Abuse Material",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_csam,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_ddns",
-        coordinator_class=Settings,
         name="{profile_name} Block Dynamic DNS Hostnames",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_ddns,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_nrd",
-        coordinator_class=Settings,
         name="{profile_name} Block Newly Registered Domains",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_nrd,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_parked_domains",
-        coordinator_class=Settings,
         name="{profile_name} Block Parked Domains",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_parked_domains,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="cryptojacking_protection",
-        coordinator_class=Settings,
         name="{profile_name} Cryptojacking Protection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.cryptojacking_protection,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="dga_protection",
-        coordinator_class=Settings,
         name="{profile_name} Domain Generation Algorithms Protection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.dga_protection,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="dns_rebinding_protection",
-        coordinator_class=Settings,
         name="{profile_name} DNS Rebinding Protection",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:dns",
         state=lambda data: data.dns_rebinding_protection,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="google_safe_browsing",
-        coordinator_class=Settings,
         name="{profile_name} Google Safe Browsing",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:google",
         state=lambda data: data.google_safe_browsing,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="idn_homograph_attacks_protection",
-        coordinator_class=Settings,
         name="{profile_name} IDN Homograph Attacks Protection",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.idn_homograph_attacks_protection,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="threat_intelligence_feeds",
-        coordinator_class=Settings,
         name="{profile_name} Threat Intelligence Feeds",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.threat_intelligence_feeds,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="typosquatting_protection",
-        coordinator_class=Settings,
         name="{profile_name} Typosquatting Protection",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:keyboard-outline",
         state=lambda data: data.typosquatting_protection,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="block_bypass_methods",
-        coordinator_class=Settings,
         name="{profile_name} Block Bypass Methods",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.block_bypass_methods,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="safesearch",
-        coordinator_class=Settings,
         name="{profile_name} Force SafeSearch",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:search-web",
         state=lambda data: data.safesearch,
     ),
-    NextDnsSwitchEntityDescription(
+    NextDnsSwitchEntityDescription[Settings](
         key="youtube_restricted_mode",
-        coordinator_class=Settings,
         name="{profile_name} Force YouTube Restricted Mode",
         entity_category=EntityCategory.CONFIG,
         icon="mdi:youtube",
