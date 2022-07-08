@@ -13,6 +13,7 @@ from typing import Final
 from bleak import BleakError
 from bleak.backends.device import MANUFACTURERS, BLEDevice
 from bleak.backends.scanner import AdvertisementData
+from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
@@ -33,6 +34,8 @@ from .models import HaBleakScanner
 from .usage import install_multiple_bleak_catcher
 
 _LOGGER = logging.getLogger(__name__)
+
+MAX_REMEMBER_ADDRESSES: Final = 2048
 
 
 class BluetoothScanningMode(Enum):
@@ -190,6 +193,9 @@ class BluetoothManager:
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
         self._callbacks: list[tuple[BluetoothCallback, BluetoothMatcher | None]] = []
+        # Some devices use a random address so we need to use
+        # an LRU to avoid memory issues.
+        self._matched: LRU = LRU(MAX_REMEMBER_ADDRESSES)
 
     async def async_setup(self) -> None:
         """Set up BT Discovery."""
@@ -220,17 +226,22 @@ class BluetoothManager:
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
         """Handle a detected device."""
-        matched_domains = {
-            matcher["domain"]
-            for matcher in self._integration_matchers
-            if _ble_device_matches(matcher, device, advertisement_data)
-        }
-        _LOGGER.debug(
-            "Device detected: %s with advertisement_data: %s matched domains: %s",
-            device,
-            advertisement_data,
-            matched_domains,
-        )
+        matched_domains: set[str] | None = None
+        if device.address not in self._matched:
+            matched_domains = {
+                matcher["domain"]
+                for matcher in self._integration_matchers
+                if _ble_device_matches(matcher, device, advertisement_data)
+            }
+            if matched_domains:
+                self._matched[device.address] = True
+            _LOGGER.debug(
+                "Device detected: %s with advertisement_data: %s matched domains: %s",
+                device,
+                advertisement_data,
+                matched_domains,
+            )
+
         if not matched_domains and not self._callbacks:
             return
 
