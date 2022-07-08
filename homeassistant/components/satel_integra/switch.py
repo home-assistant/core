@@ -58,6 +58,7 @@ class SatelIntegraSwitch(SwitchEntity):
         self._state = False
         self._code = code
         self._satel = controller
+        self._attr_unique_id = f"{device_number}"
 
     async def async_added_to_hass(self):
         """Register callbacks."""
