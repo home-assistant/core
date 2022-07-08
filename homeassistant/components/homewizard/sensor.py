@@ -123,7 +123,7 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         key="active_liter_lpm",
         name="Active Water Usage",
         native_unit_of_measurement="l/m",
-        icon="mdi:wifi",
+        icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
