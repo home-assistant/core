@@ -196,7 +196,7 @@ class BluetoothManager:
         try:
             self.scanner = HaBleakScanner(
                 scanning_mode=SCANNING_MODE_TO_BLEAK[self.scanning_mode],
-                filters={"RSSI": 20},  # We only want significant changes
+                filters={"RSSI": -20},  # We only want significant changes  "UUIDs": []
             )
         except (FileNotFoundError, BleakError) as ex:
             _LOGGER.warning(
