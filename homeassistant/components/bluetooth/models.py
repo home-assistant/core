@@ -28,6 +28,10 @@ def _dispatch_callback(
     advertisement_data: AdvertisementData,
 ) -> None:
     """Dispatch the callback."""
+    if not callback:
+        # Callback destroyed right before being called, ignore
+        return
+
     if (uuids := filters.get(FILTER_UUIDS)) and not uuids.intersection(
         advertisement_data.service_uuids
     ):
