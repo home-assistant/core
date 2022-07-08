@@ -20,7 +20,7 @@ from homeassistant.components.google import DOMAIN, SERVICE_ADD_EVENT
 from homeassistant.components.google.calendar import SERVICE_CREATE_EVENT
 from homeassistant.components.google.const import CONF_CALENDAR_ACCESS
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_OFF
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -307,8 +307,8 @@ async def test_multiple_config_entries(
 
     state = hass.states.get("calendar.example_calendar_1")
     assert state
-    assert state.name == "Example Calendar 1"
     assert state.state == STATE_OFF
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Example calendar 1"
 
     config_entry2 = MockConfigEntry(
         domain=DOMAIN, data=config_entry.data, unique_id="other-address@example.com"
@@ -327,7 +327,7 @@ async def test_multiple_config_entries(
 
     state = hass.states.get("calendar.example_calendar_2")
     assert state
-    assert state.name == "Example Calendar 2"
+    assert state.attributes.get(ATTR_FRIENDLY_NAME) == "Example calendar 2"
 
 
 @pytest.mark.parametrize(
