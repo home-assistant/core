@@ -316,6 +316,9 @@ azure-eventhub==5.7.0
 # homeassistant.components.homekit
 base36==0.1.1
 
+# homeassistant.components.scrape
+beautifulsoup4==4.11.1
+
 # homeassistant.components.zha
 bellows==0.31.0
 
@@ -693,6 +696,9 @@ logi_circle==0.2.3
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
 
+# homeassistant.components.scrape
+lxml==4.8.0
+
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
 
@@ -1035,10 +1041,6 @@ pyfronius==0.7.1
 
 # homeassistant.components.ifttt
 pyfttt==0.3
-
-# homeassistant.components.bluetooth_le_tracker
-# homeassistant.components.skybeacon
-pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.hvv_departures
 pygti==0.9.2
