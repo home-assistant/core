@@ -20,6 +20,7 @@ from .const import (
     ATTR_COORDINATORS,
     ATTR_DEVICE_MANIPULATOR,
     ATTR_DEVICE_OUTLET,
+    ATTR_DEVICE_SWITCH,
     DOMAIN,
 )
 from .coordinator import YoLinkCoordinator
@@ -41,18 +42,25 @@ DEVICE_TYPES: tuple[YoLinkSwitchEntityDescription, ...] = (
         device_class=SwitchDeviceClass.OUTLET,
         name="State",
         value=lambda value: value == "open" if value is not None else None,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_OUTLET],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_OUTLET,
     ),
     YoLinkSwitchEntityDescription(
         key="manipulator_state",
-        device_class=SwitchDeviceClass.SWITCH,
         name="State",
+        icon="mdi:pipe",
         value=lambda value: value == "open" if value is not None else None,
-        exists_fn=lambda device: device.device_type in [ATTR_DEVICE_MANIPULATOR],
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_MANIPULATOR,
+    ),
+    YoLinkSwitchEntityDescription(
+        key="switch_state",
+        name="State",
+        device_class=SwitchDeviceClass.SWITCH,
+        value=lambda value: value == "open" if value is not None else None,
+        exists_fn=lambda device: device.device_type == ATTR_DEVICE_SWITCH,
     ),
 )
 
-DEVICE_TYPE = [ATTR_DEVICE_MANIPULATOR, ATTR_DEVICE_OUTLET]
+DEVICE_TYPE = [ATTR_DEVICE_MANIPULATOR, ATTR_DEVICE_OUTLET, ATTR_DEVICE_SWITCH]
 
 
 async def async_setup_entry(

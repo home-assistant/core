@@ -1,4 +1,4 @@
-"""Tests for the AVM Fritz!Box integration."""
+"""Tests for Fritz!Tools diagnostics platform."""
 from __future__ import annotations
 
 from aiohttp import ClientSession

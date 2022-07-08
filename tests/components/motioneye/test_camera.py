@@ -265,12 +265,12 @@ async def test_get_stream_from_camera(aiohttp_server: Any, hass: HomeAssistant) 
 
     client = create_mock_motioneye_client()
     client.get_camera_stream_url = Mock(
-        return_value=f"http://localhost:{stream_server.port}/"
+        return_value=f"http://127.0.0.1:{stream_server.port}/"
     )
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
-            CONF_URL: f"http://localhost:{stream_server.port}",
+            CONF_URL: f"http://127.0.0.1:{stream_server.port}",
             # The port won't be used as the client is a mock.
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
@@ -351,13 +351,13 @@ async def test_camera_option_stream_url_template(
     config_entry = create_mock_motioneye_config_entry(
         hass,
         data={
-            CONF_URL: f"http://localhost:{stream_server.port}",
+            CONF_URL: f"http://127.0.0.1:{stream_server.port}",
             # The port won't be used as the client is a mock.
             CONF_SURVEILLANCE_USERNAME: TEST_SURVEILLANCE_USERNAME,
         },
         options={
             CONF_STREAM_URL_TEMPLATE: (
-                f"http://localhost:{stream_server.port}/" "{{ name }}/{{ id }}"
+                f"http://127.0.0.1:{stream_server.port}/" "{{ name }}/{{ id }}"
             )
         },
     )

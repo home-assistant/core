@@ -27,8 +27,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+import homeassistant.helpers.entity_registry as er
 
-from .const import ATTR_DARK, ATTR_ON
+from .const import ATTR_DARK, ATTR_ON, DOMAIN as DECONZ_DOMAIN
 from .deconz_device import DeconzDevice
 from .gateway import DeconzGateway, get_gateway_from_config_entry
 
@@ -179,6 +180,27 @@ BINARY_SENSOR_DESCRIPTIONS = [
 ]
 
 
+@callback
+def async_update_unique_id(
+    hass: HomeAssistant, unique_id: str, description: DeconzBinarySensorDescription
+) -> None:
+    """Update unique ID to always have a suffix.
+
+    Introduced with release 2022.7.
+    """
+    ent_reg = er.async_get(hass)
+
+    new_unique_id = f"{unique_id}-{description.key}"
+    if ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, new_unique_id):
+        return
+
+    if description.suffix:
+        unique_id = f'{unique_id.split("-", 1)[0]}-{description.suffix.lower()}'
+
+    if entity_id := ent_reg.async_get_entity_id(DOMAIN, DECONZ_DOMAIN, unique_id):
+        ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -204,6 +226,8 @@ async def async_setup_entry(
                 or description.value_fn(sensor) is None
             ):
                 continue
+
+            async_update_unique_id(hass, sensor.unique_id, description)
 
             async_add_entities([DeconzBinarySensor(sensor, gateway, description)])
 
@@ -255,9 +279,7 @@ class DeconzBinarySensor(DeconzDevice, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
-        if self.entity_description.suffix:
-            return f"{self.serial}-{self.entity_description.suffix.lower()}"
-        return super().unique_id
+        return f"{super().unique_id}-{self.entity_description.key}"
 
     @callback
     def async_update_callback(self) -> None:

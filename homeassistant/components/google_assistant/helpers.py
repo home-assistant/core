@@ -51,7 +51,7 @@ LOCAL_SDK_MIN_VERSION = AwesomeVersion("2.1.5")
 @callback
 def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
-) -> tuple[device_registry.DeviceEntry, area_registry.AreaEntry]:
+) -> tuple[device_registry.DeviceEntry | None, area_registry.AreaEntry | None]:
     """Get registry entries."""
     ent_reg = entity_registry.async_get(hass)
     dev_reg = device_registry.async_get(hass)
@@ -90,6 +90,7 @@ class AbstractConfig(ABC):
         self._local_sdk_active = False
         self._local_last_active: datetime | None = None
         self._local_sdk_version_warn = False
+        self.is_supported_cache: dict[str, tuple[int | None, bool]] = {}
 
     async def async_initialize(self):
         """Perform async initialization of config."""
@@ -159,7 +160,9 @@ class AbstractConfig(ABC):
 
     def get_local_webhook_id(self, agent_user_id):
         """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
-        return self._store.agent_user_ids[agent_user_id][STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        if data := self._store.agent_user_ids.get(agent_user_id):
+            return data[STORE_GOOGLE_LOCAL_WEBHOOK_ID]
+        return None
 
     @abstractmethod
     def get_agent_user_id(self, context):
@@ -356,9 +359,6 @@ class AbstractConfig(ABC):
                 pprint.pformat(payload),
             )
 
-        if not self.enabled:
-            return json_response(smart_home.turned_off_response(payload))
-
         if (agent_user_id := self.get_local_agent_user_id(webhook_id)) is None:
             # No agent user linked to this webhook, means that the user has somehow unregistered
             # removing webhook and stopping processing of this request.
@@ -369,6 +369,11 @@ class AbstractConfig(ABC):
             )
             webhook.async_unregister(self.hass, webhook_id)
             return None
+
+        if not self.enabled:
+            return json_response(
+                smart_home.api_disabled_response(payload, agent_user_id)
+            )
 
         result = await smart_home.async_handle_message(
             self.hass,
@@ -539,7 +544,17 @@ class GoogleEntity:
     @callback
     def is_supported(self) -> bool:
         """Return if the entity is supported by Google."""
-        return bool(self.traits())
+        features: int | None = self.state.attributes.get(ATTR_SUPPORTED_FEATURES)
+
+        result = self.config.is_supported_cache.get(self.entity_id)
+
+        if result is None or result[0] != features:
+            result = self.config.is_supported_cache[self.entity_id] = (
+                features,
+                bool(self.traits()),
+            )
+
+        return result[1]
 
     @callback
     def might_2fa(self) -> bool:

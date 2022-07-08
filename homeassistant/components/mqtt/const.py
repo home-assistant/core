@@ -35,6 +35,7 @@ DATA_CONFIG_ENTRY_LOCK = "mqtt_config_entry_lock"
 DATA_MQTT = "mqtt"
 DATA_MQTT_CONFIG = "mqtt_config"
 DATA_MQTT_RELOAD_NEEDED = "mqtt_reload_needed"
+DATA_MQTT_UPDATED_CONFIG = "mqtt_updated_config"
 
 DEFAULT_PREFIX = "homeassistant"
 DEFAULT_BIRTH_WILL_TOPIC = DEFAULT_PREFIX + "/status"
@@ -85,6 +86,26 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SCENE,
+    Platform.SENSOR,
+    Platform.SIREN,
+    Platform.SWITCH,
+    Platform.VACUUM,
+]
+
+RELOADABLE_PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.LIGHT,
+    Platform.LOCK,
+    Platform.NUMBER,
+    Platform.SCENE,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SIREN,
     Platform.SWITCH,

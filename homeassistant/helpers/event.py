@@ -1286,6 +1286,7 @@ def async_track_point_in_utc_time(
     """Add a listener that fires once after a specific point in UTC time."""
     # Ensure point_in_time is UTC
     utc_point_in_time = dt_util.as_utc(point_in_time)
+    expected_fire_timestamp = dt_util.utc_to_timestamp(utc_point_in_time)
 
     # Since this is called once, we accept a HassJob so we can avoid
     # having to figure out how to call the action every time its called.
@@ -1295,15 +1296,12 @@ def async_track_point_in_utc_time(
     def run_action(job: HassJob[[datetime], Awaitable[None] | None]) -> None:
         """Call the action."""
         nonlocal cancel_callback
-
-        now = time_tracker_utcnow()
-
         # Depending on the available clock support (including timer hardware
         # and the OS kernel) it can happen that we fire a little bit too early
         # as measured by utcnow(). That is bad when callbacks have assumptions
         # about the current time. Thus, we rearm the timer for the remaining
         # time.
-        if (delta := (utc_point_in_time - now).total_seconds()) > 0:
+        if (delta := (expected_fire_timestamp - time_tracker_timestamp())) > 0:
             _LOGGER.debug("Called %f seconds too early, rearming", delta)
 
             cancel_callback = hass.loop.call_later(delta, run_action, job)
@@ -1474,6 +1472,7 @@ track_sunset = threaded_listener_factory(async_track_sunset)
 
 # For targeted patching in tests
 time_tracker_utcnow = dt_util.utcnow
+time_tracker_timestamp = time.time
 
 
 @callback

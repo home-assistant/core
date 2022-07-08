@@ -36,9 +36,19 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
 
     async def _async_update_data(self) -> PowerviewShadeData:
         """Fetch data from shade endpoint."""
+
         async with async_timeout.timeout(10):
             shade_entries = await self.shades.get_resources()
+
+        if isinstance(shade_entries, bool):
+            # hub returns boolean on a 204/423 empty response (maintenance)
+            # continual polling results in inevitable error
+            raise UpdateFailed("Powerview Hub is undergoing maintenance")
+
         if not shade_entries:
             raise UpdateFailed("Failed to fetch new shade data")
+
+        # only update if shade_entries is valid
         self.data.store_group_data(shade_entries[SHADE_DATA])
+
         return self.data

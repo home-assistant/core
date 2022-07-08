@@ -3,7 +3,7 @@
   "name": "System Bridge",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/system_bridge",
-  "requirements": ["systembridgeconnector==3.1.3"],
+  "requirements": ["systembridgeconnector==3.1.5"],
   "codeowners": ["@timmo001"],
   "zeroconf": ["_system-bridge._tcp.local."],
   "after_dependencies": ["zeroconf"],

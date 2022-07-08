@@ -506,10 +506,12 @@ async def test_remove_incomplete_segment_on_exit(
     assert len(segments) == 3
     assert not segments[-1].complete
     stream_worker_sync.resume()
-    stream._thread_quit.set()
-    stream._thread.join()
-    stream._thread = None
-    await hass.async_block_till_done()
-    assert segments[-1].complete
-    assert len(segments) == 2
+    with patch("homeassistant.components.stream.Stream.remove_provider"):
+        # Patch remove_provider so the deque is not cleared
+        stream._thread_quit.set()
+        stream._thread.join()
+        stream._thread = None
+        await hass.async_block_till_done()
+        assert segments[-1].complete
+        assert len(segments) == 2
     await stream.stop()

@@ -1,6 +1,7 @@
 """Test config utils."""
 # pylint: disable=protected-access
 from collections import OrderedDict
+import contextlib
 import copy
 import os
 from unittest import mock
@@ -147,7 +148,7 @@ def test_load_yaml_config_raises_error_if_not_dict():
 def test_load_yaml_config_raises_error_if_malformed_yaml():
     """Test error raised if invalid YAML."""
     with open(YAML_PATH, "w") as fp:
-        fp.write(":")
+        fp.write(":-")
 
     with pytest.raises(HomeAssistantError):
         config_util.load_yaml_config_file(YAML_PATH)
@@ -156,10 +157,21 @@ def test_load_yaml_config_raises_error_if_malformed_yaml():
 def test_load_yaml_config_raises_error_if_unsafe_yaml():
     """Test error raised if unsafe YAML."""
     with open(YAML_PATH, "w") as fp:
-        fp.write("hello: !!python/object/apply:os.system")
+        fp.write("- !!python/object/apply:os.system []")
 
-    with pytest.raises(HomeAssistantError):
+    with patch.object(os, "system") as system_mock, contextlib.suppress(
+        HomeAssistantError
+    ):
         config_util.load_yaml_config_file(YAML_PATH)
+
+    assert len(system_mock.mock_calls) == 0
+
+    # Here we validate that the test above is a good test
+    # since previously the syntax was not valid
+    with open(YAML_PATH) as fp, patch.object(os, "system") as system_mock:
+        list(yaml.unsafe_load_all(fp))
+
+    assert len(system_mock.mock_calls) == 1
 
 
 def test_load_yaml_config_preserves_key_order():

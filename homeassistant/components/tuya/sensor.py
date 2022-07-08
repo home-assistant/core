@@ -18,6 +18,7 @@ from homeassistant.const import (
     ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     POWER_KILO_WATT,
+    TIME_MINUTES,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -379,6 +380,27 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Door Window Sensor
     # https://developer.tuya.com/en/docs/iot/s?id=K9gf48hm02l8m
     "mcs": BATTERY_SENSORS,
+    # Sous Vide Cooker
+    # https://developer.tuya.com/en/docs/iot/categorymzj?id=Kaiuz2vy130ux
+    "mzj": (
+        TuyaSensorEntityDescription(
+            key=DPCode.TEMP_CURRENT,
+            name="Current Temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.STATUS,
+            name="Status",
+            device_class=TuyaDeviceClass.STATUS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.REMAIN_TIME,
+            name="Remaining Time",
+            native_unit_of_measurement=TIME_MINUTES,
+            icon="mdi:timer",
+        ),
+    ),
     # PIR Detector
     # https://developer.tuya.com/en/docs/iot/categorypir?id=Kaiuz3ss11b80
     "pir": BATTERY_SENSORS,

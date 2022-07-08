@@ -1,4 +1,4 @@
-"""Tests for Shelly button platform."""
+"""Tests for Fritz!Tools sensor platform."""
 from __future__ import annotations
 
 from datetime import timedelta

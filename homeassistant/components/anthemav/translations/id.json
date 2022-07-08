@@ -1,0 +1,14 @@
+{
+    "config": {
+        "error": {
+            "cannot_connect": "Gagal terhubung"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "port": "Port"
+                }
+            }
+        }
+    }
+}

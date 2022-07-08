@@ -4,6 +4,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from datetime import datetime as dt
 
+import sqlalchemy
 from sqlalchemy import lambda_stmt, select
 from sqlalchemy.orm import Query
 from sqlalchemy.sql.elements import ClauseList
@@ -93,4 +94,6 @@ def apply_event_device_id_matchers(
     json_quotable_device_ids: Iterable[str],
 ) -> ClauseList:
     """Create matchers for the device_ids in the event_data."""
-    return DEVICE_ID_IN_EVENT.in_(json_quotable_device_ids)
+    return DEVICE_ID_IN_EVENT.is_not(None) & sqlalchemy.cast(
+        DEVICE_ID_IN_EVENT, sqlalchemy.Text()
+    ).in_(json_quotable_device_ids)

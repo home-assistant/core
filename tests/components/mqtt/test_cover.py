@@ -43,6 +43,7 @@ from homeassistant.const import (
     STATE_OPEN,
     STATE_OPENING,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.setup import async_setup_component
 
@@ -81,6 +82,13 @@ from tests.common import async_fire_mqtt_message
 DEFAULT_CONFIG = {
     cover.DOMAIN: {"platform": "mqtt", "name": "test", "state_topic": "test-topic"}
 }
+
+
+@pytest.fixture(autouse=True)
+def cover_platform_only():
+    """Only setup the cover platform to speed up tests."""
+    with patch("homeassistant.components.mqtt.PLATFORMS", [Platform.COVER]):
+        yield
 
 
 async def test_state_via_state_topic(hass, mqtt_mock_entry_with_yaml_config):
@@ -1256,12 +1264,8 @@ async def test_tilt_defaults(hass, mqtt_mock_entry_with_yaml_config):
     await mqtt_mock_entry_with_yaml_config()
 
     state_attributes_dict = hass.states.get("cover.test").attributes
-    assert ATTR_CURRENT_TILT_POSITION in state_attributes_dict
-
-    current_cover_position = hass.states.get("cover.test").attributes[
-        ATTR_CURRENT_TILT_POSITION
-    ]
-    assert current_cover_position == STATE_UNKNOWN
+    # Tilt position is not yet known
+    assert ATTR_CURRENT_TILT_POSITION not in state_attributes_dict
 
 
 async def test_tilt_via_invocation_defaults(hass, mqtt_mock_entry_with_yaml_config):
@@ -3352,13 +3356,11 @@ async def test_encoding_subscribable_topics(
     )
 
 
-async def test_setup_manual_entity_from_yaml(hass, caplog, tmp_path):
+async def test_setup_manual_entity_from_yaml(hass):
     """Test setup manual configured MQTT entity."""
     platform = cover.DOMAIN
     config = copy.deepcopy(DEFAULT_CONFIG[platform])
     config["name"] = "test"
     del config["platform"]
-    await help_test_setup_manual_entity_from_yaml(
-        hass, caplog, tmp_path, platform, config
-    )
+    await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None

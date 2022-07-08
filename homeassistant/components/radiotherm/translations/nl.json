@@ -18,5 +18,14 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "hold_temp": "Stel een permanente hold in bij het aanpassen van de temperatuur."
+                }
+            }
+        }
     }
 }

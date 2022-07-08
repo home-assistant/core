@@ -132,7 +132,7 @@ async def test_implementation(hass, flow_handler, current_request_with_host):
             TEST_DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+    assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
     assert result["url"] == "http://example.com/auth"
 
     flow_finished.set_result(

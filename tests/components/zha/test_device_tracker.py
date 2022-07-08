@@ -1,6 +1,7 @@
 """Test ZHA Device Tracker."""
 from datetime import timedelta
 import time
+from unittest.mock import patch
 
 import pytest
 import zigpy.profiles.zha
@@ -22,6 +23,23 @@ from .common import (
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed
+
+
+@pytest.fixture(autouse=True)
+def device_tracker_platforms_only():
+    """Only setup the device_tracker platforms and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.BUTTON,
+            Platform.SELECT,
+            Platform.NUMBER,
+            Platform.BINARY_SENSOR,
+            Platform.SENSOR,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
