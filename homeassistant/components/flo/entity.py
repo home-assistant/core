@@ -14,6 +14,7 @@ class FloEntity(Entity):
     """A base class for Flo entities."""
 
     _attr_force_update = False
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     def __init__(
