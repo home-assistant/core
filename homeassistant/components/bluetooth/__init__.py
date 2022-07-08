@@ -6,7 +6,6 @@ import dataclasses
 from enum import Enum
 import fnmatch
 import logging
-from typing import Any
 
 from bleak import BleakError
 from bleak.backends.device import MANUFACTURERS, BLEDevice
@@ -100,7 +99,7 @@ BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
 async def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
-    match_dict: None | dict[str, str] = None,
+    match_dict: BluetoothMatcher | None,
 ) -> Callable[[], None]:
     """Register to receive a callback on bluetooth change.
 
@@ -122,6 +121,42 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+def _ble_device_matches(
+    matcher: BluetoothMatcher, device: BLEDevice, advertisement_data: AdvertisementData
+) -> bool:
+    """Check if a ble device and advertisement_data matches the matcher."""
+    if (
+        matcher_local_name := matcher.get(LOCAL_NAME)
+    ) is not None and not fnmatch.fnmatch(
+        advertisement_data.local_name or device.name or device.address,
+        matcher_local_name,
+    ):
+        return False
+
+    if (
+        matcher_service_uuid := matcher.get(SERVICE_UUID)
+    ) is not None and matcher_service_uuid not in advertisement_data.service_uuids:
+        return False
+
+    if (
+        (matcher_manfacturer_id := matcher.get(MANUFACTURER_ID)) is not None
+        and matcher_manfacturer_id not in advertisement_data.manufacturer_data
+    ):
+        return False
+
+    if (
+        matcher_manufacturer_data_first_byte := matcher.get(
+            MANUFACTURER_DATA_FIRST_BYTE
+        )
+    ) is not None and not any(
+        matcher_manufacturer_data_first_byte == manufacturer_data[0]
+        for manufacturer_data in advertisement_data.manufacturer_data.values()
+    ):
+        return False
+
+    return True
+
+
 class BluetoothManager:
     """Manage Bluetooth."""
 
@@ -137,7 +172,7 @@ class BluetoothManager:
         self._integration_matchers = integration_matchers
         self.scanner: HaBleakScanner | None = None
         self._cancel_device_detected: CALLBACK_TYPE | None = None
-        self._callbacks: list[tuple[BluetoothCallback, dict[str, str]]] = []
+        self._callbacks: list[tuple[BluetoothCallback, BluetoothMatcher | None]] = []
 
     async def async_setup(self) -> None:
         """Set up BT Discovery."""
@@ -170,51 +205,40 @@ class BluetoothManager:
         self, device: BLEDevice, advertisement_data: AdvertisementData
     ) -> None:
         """Handle a detected device."""
-        name = advertisement_data.local_name or device.name or device.address
         _LOGGER.debug(
             "Device detected: %s with advertisement_data: %s",
             device,
             advertisement_data,
         )
-        matched_domains = set()
-        for matcher in self._integration_matchers:
-            domain = matcher["domain"]
-            if (
-                matcher_local_name := matcher.get(LOCAL_NAME)
-            ) is not None and not fnmatch.fnmatch(name, matcher_local_name):
-                continue
+        matched_domains = {
+            matcher["domain"]
+            for matcher in self._integration_matchers
+            if _ble_device_matches(matcher, device, advertisement_data)
+        }
 
-            if (
-                (matcher_service_uuid := matcher.get(SERVICE_UUID)) is not None
-                and matcher_service_uuid not in advertisement_data.service_uuids
+        if not matched_domains or not self._callbacks:
+            return
+
+        service_info: BluetoothServiceInfo | None = None
+        for callback, matcher in self._callbacks:
+            if matcher is None or _ble_device_matches(
+                matcher, device, advertisement_data
             ):
-                continue
-
-            if (
-                (matcher_manfacturer_id := matcher.get(MANUFACTURER_ID)) is not None
-                and matcher_manfacturer_id not in advertisement_data.manufacturer_data
-            ):
-                continue
-
-            if (
-                matcher_manufacturer_data_first_byte := matcher.get(
-                    MANUFACTURER_DATA_FIRST_BYTE
-                )
-            ) is not None and not any(
-                matcher_manufacturer_data_first_byte == manufacturer_data[0]
-                for manufacturer_data in advertisement_data.manufacturer_data.values()
-            ):
-                continue
-
-            _LOGGER.debug("Matched %s against %s", advertisement_data, matcher)
-            matched_domains.add(domain)
+                if service_info is None:
+                    service_info = BluetoothServiceInfo.from_advertisement(
+                        device, advertisement_data
+                    )
+                try:
+                    callback(service_info, BluetoothChange.ADVERTISEMENT)
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Error in bluetooth callback")
 
         if not matched_domains:
             return
-
-        service_info = BluetoothServiceInfo.from_advertisement(
-            device, advertisement_data
-        )
+        if service_info is None:
+            service_info = BluetoothServiceInfo.from_advertisement(
+                device, advertisement_data
+            )
         for domain in matched_domains:
             discovery_flow.async_create_flow(
                 self.hass,
@@ -224,13 +248,10 @@ class BluetoothManager:
             )
 
     async def async_register_callback(
-        self, callback: BluetoothCallback, match_dict: None | dict[str, str] = None
+        self, callback: BluetoothCallback, match_dict: BluetoothMatcher | None = None
     ) -> Callable[[], None]:
         """Register a callback."""
-        # if match_dict is None:
-        lower_match_dict: dict[str, Any] = {}
-
-        callback_entry = (callback, lower_match_dict)
+        callback_entry = (callback, match_dict)
         self._callbacks.append(callback_entry)
 
         @hass_callback
