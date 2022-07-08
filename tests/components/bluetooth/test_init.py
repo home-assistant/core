@@ -1,5 +1,5 @@
 """Tests for the Bluetooth integration."""
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import bleak
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -241,3 +241,159 @@ async def test_register_callbacks(hass, mock_bleak_scanner_start):
     assert service_info.name == "empty"
     assert service_info.manufacturer is None
     assert service_info.manufacturer_id is None
+
+
+async def test_wrapped_instance_with_filter(hass, mock_bleak_scanner_start):
+    """Test consumers can use the wrapped instance with a filter as if it was normal BleakScanner."""
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
+    ), patch.object(hass.config_entries.flow, "async_init"):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    detected = []
+
+    def _device_detected(
+        device: BLEDevice, advertisement_data: AdvertisementData
+    ) -> None:
+        """Handle a detected device."""
+        detected.append((device, advertisement_data))
+
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
+    empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+    empty_adv = AdvertisementData(local_name="empty")
+
+    assert models.HA_BLEAK_SCANNER is not None
+    scanner = models.HaBleakScannerWrapper(
+        filters={"UUIDs": ["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]}
+    )
+    scanner.register_detection_callback(_device_detected)
+
+    mock_discovered = [MagicMock()]
+    type(models.HA_BLEAK_SCANNER).discovered_devices = mock_discovered
+    models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+
+    discovered = await scanner.discover(timeout=0)
+    assert len(discovered) == 1
+    assert discovered == mock_discovered
+    assert len(detected) == 1
+
+    scanner.register_detection_callback(_device_detected)
+    # We should get a reply from the history when we register again
+    assert len(detected) == 2
+    scanner.register_detection_callback(_device_detected)
+    # We should get a reply from the history when we register again
+    assert len(detected) == 3
+
+    type(models.HA_BLEAK_SCANNER).discovered_devices = []
+    discovered = await scanner.discover(timeout=0)
+    assert len(discovered) == 0
+    assert discovered == []
+
+    models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+    assert len(detected) == 4
+
+    # The filter we created in the wrapped scanner with should be respected
+    # and we should not get another callback
+    models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
+    assert len(detected) == 4
+
+
+async def test_wrapped_instance_with_service_uuids(hass, mock_bleak_scanner_start):
+    """Test consumers can use the wrapped instance with a service_uuids list as if it was normal BleakScanner."""
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
+    ), patch.object(hass.config_entries.flow, "async_init"):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    detected = []
+
+    def _device_detected(
+        device: BLEDevice, advertisement_data: AdvertisementData
+    ) -> None:
+        """Handle a detected device."""
+        detected.append((device, advertisement_data))
+
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
+    empty_device = BLEDevice("11:22:33:44:55:66", "empty")
+    empty_adv = AdvertisementData(local_name="empty")
+
+    assert models.HA_BLEAK_SCANNER is not None
+    scanner = models.HaBleakScannerWrapper(
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    scanner.register_detection_callback(_device_detected)
+
+    type(models.HA_BLEAK_SCANNER).discovered_devices = [MagicMock()]
+    for _ in range(2):
+        models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+        await hass.async_block_till_done()
+
+    assert len(detected) == 2
+
+    # The UUIDs list we created in the wrapped scanner with should be respected
+    # and we should not get another callback
+    models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
+    assert len(detected) == 2
+
+
+async def test_wrapped_instance_with_broken_callbacks(hass, mock_bleak_scanner_start):
+    """Test broken callbacks do not cause the scanner to fail."""
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=[]
+    ), patch.object(hass.config_entries.flow, "async_init"):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    detected = []
+
+    def _device_detected(
+        device: BLEDevice, advertisement_data: AdvertisementData
+    ) -> None:
+        """Handle a detected device."""
+        if detected:
+            raise ValueError
+        detected.append((device, advertisement_data))
+
+    switchbot_device = BLEDevice("44:44:33:11:23:45", "wohand")
+    switchbot_adv = AdvertisementData(
+        local_name="wohand",
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+        manufacturer_data={89: b"\xd8.\xad\xcd\r\x85"},
+        service_data={"00000d00-0000-1000-8000-00805f9b34fb": b"H\x10c"},
+    )
+
+    assert models.HA_BLEAK_SCANNER is not None
+    scanner = models.HaBleakScannerWrapper(
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"]
+    )
+    scanner.register_detection_callback(_device_detected)
+
+    models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+    models.HA_BLEAK_SCANNER._callback(switchbot_device, switchbot_adv)
+    await hass.async_block_till_done()
+    assert len(detected) == 1

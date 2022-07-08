@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import asyncio
+import contextlib
 import logging
 from typing import Any, Final, cast
 
@@ -132,4 +133,6 @@ class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
     def __del__(self) -> None:
         """Delete the BleakScanner."""
         if self._detection_cancel:
-            asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
+            # Nothing to do if event loop is already closed
+            with contextlib.suppress(RuntimeError):
+                asyncio.get_running_loop().call_soon_threadsafe(self._detection_cancel)
