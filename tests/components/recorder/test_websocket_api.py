@@ -321,7 +321,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
 
     migration_done = threading.Event()
 
-    real_migration = recorder.migration.migrate_schema
+    real_migration = recorder.migration._apply_update
 
     def stalled_migration(*args):
         """Make migration stall."""
@@ -337,7 +337,7 @@ async def test_recorder_info_migration_queue_exhausted(hass, hass_ws_client):
     ), patch.object(
         recorder.core, "MAX_QUEUE_BACKLOG", 1
     ), patch(
-        "homeassistant.components.recorder.migration.migrate_schema",
+        "homeassistant.components.recorder.migration._apply_update",
         wraps=stalled_migration,
     ):
         recorder_helper.async_initialize_recorder(hass)
