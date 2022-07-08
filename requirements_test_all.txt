@@ -388,7 +388,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.6.1
+debugpy==1.6.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -685,7 +685,7 @@ logi_circle==0.2.3
 luftdaten==0.7.2
 
 # homeassistant.components.scrape
-lxml==4.8.0
+lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
@@ -760,7 +760,7 @@ nexia==2.0.1
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.0.0
+nextdns==1.0.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -977,7 +977,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==96
+pydeconz==97
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3

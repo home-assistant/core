@@ -43,7 +43,6 @@ PARALLEL_UPDATES = 1
 class NextDnsSensorRequiredKeysMixin(Generic[TCoordinatorData]):
     """Class for NextDNS entity required keys."""
 
-    coordinator_class: type[TCoordinatorData]
     coordinator_type: str
     value: Callable[[TCoordinatorData], StateType]
 
@@ -57,9 +56,8 @@ class NextDnsSensorEntityDescription(
 
 
 SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="all_queries",
-        coordinator_class=AnalyticsStatus,
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
@@ -68,9 +66,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.all_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="blocked_queries",
-        coordinator_class=AnalyticsStatus,
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
@@ -79,9 +76,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.blocked_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="relayed_queries",
-        coordinator_class=AnalyticsStatus,
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
@@ -90,9 +86,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.relayed_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsStatus](
         key="blocked_queries_ratio",
-        coordinator_class=AnalyticsStatus,
         coordinator_type=ATTR_STATUS,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:dns",
@@ -101,9 +96,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.blocked_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doh_queries",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -113,9 +107,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doh_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="dot_queries",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -125,9 +118,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.dot_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doq_queries",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -137,9 +129,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doq_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="udp_queries",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -149,9 +140,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.udp_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doh_queries_ratio",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
@@ -161,9 +151,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doh_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="dot_queries_ratio",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -173,9 +162,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.dot_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="doq_queries_ratio",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_registry_enabled_default=False,
         icon="mdi:dns",
@@ -185,9 +173,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.doq_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsProtocols](
         key="udp_queries_ratio",
-        coordinator_class=AnalyticsProtocols,
         coordinator_type=ATTR_PROTOCOLS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -197,9 +184,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.udp_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsEncryption](
         key="encrypted_queries",
-        coordinator_class=AnalyticsEncryption,
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -209,9 +195,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.encrypted_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsEncryption](
         key="unencrypted_queries",
-        coordinator_class=AnalyticsEncryption,
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -221,9 +206,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.unencrypted_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsEncryption](
         key="encrypted_queries_ratio",
-        coordinator_class=AnalyticsEncryption,
         coordinator_type=ATTR_ENCRYPTION,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -233,9 +217,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.encrypted_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsIpVersions](
         key="ipv4_queries",
-        coordinator_class=AnalyticsIpVersions,
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -245,9 +228,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.ipv4_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsIpVersions](
         key="ipv6_queries",
-        coordinator_class=AnalyticsIpVersions,
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -257,9 +239,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.ipv6_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsIpVersions](
         key="ipv6_queries_ratio",
-        coordinator_class=AnalyticsIpVersions,
         coordinator_type=ATTR_IP_VERSIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -269,9 +250,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.ipv6_queries_ratio,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsDnssec](
         key="validated_queries",
-        coordinator_class=AnalyticsDnssec,
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -281,9 +261,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.validated_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsDnssec](
         key="not_validated_queries",
-        coordinator_class=AnalyticsDnssec,
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -293,9 +272,8 @@ SENSORS: tuple[NextDnsSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value=lambda data: data.not_validated_queries,
     ),
-    NextDnsSensorEntityDescription(
+    NextDnsSensorEntityDescription[AnalyticsDnssec](
         key="validated_queries_ratio",
-        coordinator_class=AnalyticsDnssec,
         coordinator_type=ATTR_DNSSEC,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

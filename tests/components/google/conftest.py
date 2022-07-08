@@ -34,10 +34,10 @@ EMAIL_ADDRESS = "user@gmail.com"
 # the yaml config that overrides the entity name and other settings. A test
 # can use a fixture to exercise either case.
 TEST_API_ENTITY = "calendar.we_are_we_are_a_test_calendar"
-TEST_API_ENTITY_NAME = "We are, we are, a... Test Calendar"
+TEST_API_ENTITY_NAME = "We are, we are, a... test calendar"
 # Name of the entity when using yaml configuration overrides
 TEST_YAML_ENTITY = "calendar.backyard_light"
-TEST_YAML_ENTITY_NAME = "Backyard Light"
+TEST_YAML_ENTITY_NAME = "Backyard light"
 
 # A calendar object returned from the API
 TEST_API_CALENDAR = {
@@ -306,9 +306,12 @@ def mock_insert_event(
 ) -> Callable[[...], None]:
     """Fixture for capturing event creation."""
 
-    def _expect_result(calendar_id: str = CALENDAR_ID) -> None:
+    def _expect_result(
+        calendar_id: str = CALENDAR_ID, exc: ClientError | None = None
+    ) -> None:
         aioclient_mock.post(
             f"{API_BASE_URL}/calendars/{calendar_id}/events",
+            exc=exc,
         )
         return
 

@@ -518,7 +518,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.6.1
+debugpy==1.6.2
 
 # homeassistant.components.decora
 # decora==0.6
@@ -912,7 +912,7 @@ jellyfin-apiclient-python==1.8.1
 jsonpath==0.82
 
 # homeassistant.components.kaiterra
-kaiterra-async-client==0.0.2
+kaiterra-async-client==1.0.0
 
 # homeassistant.components.keba
 keba-kecontact==1.1.0
@@ -984,7 +984,7 @@ lupupy==0.0.24
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==4.8.0
+lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
@@ -1092,7 +1092,7 @@ nextcloudmonitor==1.1.0
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.0.0
+nextdns==1.0.1
 
 # homeassistant.components.niko_home_control
 niko-home-control==0.2.1
@@ -1444,7 +1444,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==96
+pydeconz==97
 
 # homeassistant.components.delijn
 pydelijn==1.0.0

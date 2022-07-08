@@ -32,7 +32,7 @@
                     "event_hub_instance_name": "\u30a4\u30d9\u30f3\u30c8\u30cf\u30d6\u306e\u30a4\u30f3\u30b9\u30bf\u30f3\u30b9\u540d",
                     "use_connection_string": "\u63a5\u7d9a\u6587\u5b57\u5217\u3092\u4f7f\u7528\u3059\u308b"
                 },
-                "title": "Azure Event Hub\u30a4\u30f3\u30c6\u30b0\u30ec\u30fc\u30b7\u30e7\u30f3\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
+                "title": "Azure Event Hub\u7d71\u5408\u306e\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7"
             }
         }
     },

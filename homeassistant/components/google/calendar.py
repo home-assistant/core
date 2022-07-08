@@ -22,7 +22,7 @@ from homeassistant.components.calendar import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID, CONF_ENTITIES, CONF_NAME, CONF_OFFSET
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     entity_platform,
@@ -216,6 +216,8 @@ async def async_setup_entry(
 class GoogleCalendarEntity(CalendarEntity):
     """A calendar event device."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         calendar_service: GoogleCalendarService,
@@ -231,7 +233,7 @@ class GoogleCalendarEntity(CalendarEntity):
         self._search: str | None = data.get(CONF_SEARCH)
         self._ignore_availability: bool = data.get(CONF_IGNORE_AVAILABILITY, False)
         self._event: CalendarEvent | None = None
-        self._name: str = data[CONF_NAME]
+        self._attr_name = data[CONF_NAME].capitalize()
         self._offset = data.get(CONF_OFFSET, DEFAULT_CONF_OFFSET)
         self._offset_value: timedelta | None = None
         self.entity_id = entity_id
@@ -256,11 +258,6 @@ class GoogleCalendarEntity(CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         return self._event
-
-    @property
-    def name(self) -> str:
-        """Return the name of the entity."""
-        return self._name
 
     def _event_filter(self, event: Event) -> bool:
         """Return True if the event is visible."""
@@ -362,12 +359,15 @@ async def async_create_event(entity: GoogleCalendarEntity, call: ServiceCall) ->
     if start is None or end is None:
         raise ValueError("Missing required fields to set start or end date/datetime")
 
-    await entity.calendar_service.async_create_event(
-        entity.calendar_id,
-        Event(
-            summary=call.data[EVENT_SUMMARY],
-            description=call.data[EVENT_DESCRIPTION],
-            start=start,
-            end=end,
-        ),
-    )
+    try:
+        await entity.calendar_service.async_create_event(
+            entity.calendar_id,
+            Event(
+                summary=call.data[EVENT_SUMMARY],
+                description=call.data[EVENT_DESCRIPTION],
+                start=start,
+                end=end,
+            ),
+        )
+    except ApiException as err:
+        raise HomeAssistantError(str(err)) from err
