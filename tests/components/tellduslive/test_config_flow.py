@@ -62,12 +62,12 @@ async def test_abort_if_already_setup(hass):
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
     with patch.object(hass.config_entries, "async_entries", return_value=[{}]):
         result = await flow.async_step_import(None)
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_setup"
 
 
@@ -76,16 +76,16 @@ async def test_full_flow_implementation(hass, mock_tellduslive):
     flow = init_config_flow(hass)
     flow.context = {"source": SOURCE_DISCOVERY}
     result = await flow.async_step_discovery(["localhost", "tellstick"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
     assert len(flow._hosts) == 2
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await flow.async_step_user({"host": "localhost"})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["description_placeholders"] == {
         "auth_url": "https://example.com",
@@ -93,7 +93,7 @@ async def test_full_flow_implementation(hass, mock_tellduslive):
     }
 
     result = await flow.async_step_auth("")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"]["host"] == "localhost"
     assert result["data"]["scan_interval"] == 60
@@ -105,7 +105,7 @@ async def test_step_import(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_import({CONF_HOST: DOMAIN, KEY_SCAN_INTERVAL: 0})
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -116,7 +116,7 @@ async def test_step_import_add_host(hass, mock_tellduslive):
     result = await flow.async_step_import(
         {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: 0}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -127,7 +127,7 @@ async def test_step_import_no_config_file(hass, mock_tellduslive):
     result = await flow.async_step_import(
         {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: 0}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -142,7 +142,7 @@ async def test_step_import_load_json_matching_host(hass, mock_tellduslive):
         result = await flow.async_step_import(
             {CONF_HOST: "Cloud API", KEY_SCAN_INTERVAL: 0}
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -157,7 +157,7 @@ async def test_step_import_load_json(hass, mock_tellduslive):
         result = await flow.async_step_import(
             {CONF_HOST: "localhost", KEY_SCAN_INTERVAL: SCAN_INTERVAL}
         )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"]["host"] == "localhost"
     assert result["data"]["scan_interval"] == 60
@@ -171,7 +171,7 @@ async def test_step_disco_no_local_api(hass, mock_tellduslive):
     flow.context = {"source": SOURCE_DISCOVERY}
 
     result = await flow.async_step_discovery(["localhost", "tellstick"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert len(flow._hosts) == 1
 
@@ -182,7 +182,7 @@ async def test_step_auth(hass, mock_tellduslive):
 
     await flow.async_step_auth()
     result = await flow.async_step_auth(["localhost", "tellstick"])
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "Cloud API"
     assert result["data"]["host"] == "Cloud API"
     assert result["data"]["scan_interval"] == 60
@@ -199,7 +199,7 @@ async def test_wrong_auth_flow_implementation(hass, mock_tellduslive):
 
     await flow.async_step_auth()
     result = await flow.async_step_auth("")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"]["base"] == "invalid_auth"
 
@@ -209,7 +209,7 @@ async def test_not_pick_host_if_only_one(hass, mock_tellduslive):
     flow = init_config_flow(hass)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "auth"
 
 
@@ -218,7 +218,7 @@ async def test_abort_if_timeout_generating_auth_url(hass, mock_tellduslive):
     flow = init_config_flow(hass, side_effect=asyncio.TimeoutError)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "authorize_url_timeout"
 
 
@@ -228,7 +228,7 @@ async def test_abort_no_auth_url(hass, mock_tellduslive):
     flow._get_auth_url = Mock(return_value=False)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
 
@@ -237,7 +237,7 @@ async def test_abort_if_exception_generating_auth_url(hass, mock_tellduslive):
     flow = init_config_flow(hass, side_effect=ValueError)
 
     result = await flow.async_step_user()
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "unknown_authorize_url_generation"
 
 

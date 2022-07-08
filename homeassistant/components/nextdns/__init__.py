@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TypeVar
 
 from aiohttp.client_exceptions import ClientConnectorError
 from async_timeout import timeout
@@ -39,8 +40,10 @@ from .const import (
     UPDATE_INTERVAL_ANALYTICS,
 )
 
+TCoordinatorData = TypeVar("TCoordinatorData", bound=NextDnsData)
 
-class NextDnsUpdateCoordinator(DataUpdateCoordinator):
+
+class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
     """Class to manage fetching NextDNS data API."""
 
     def __init__(
@@ -64,12 +67,12 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator):
 
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
-    async def _async_update_data(self) -> NextDnsData:
+    async def _async_update_data(self) -> TCoordinatorData:
         """Update data via library."""
         raise NotImplementedError("Update method not implemented")
 
 
-class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
     """Class to manage fetching NextDNS analytics status data from API."""
 
     async def _async_update_data(self) -> AnalyticsStatus:
@@ -81,7 +84,7 @@ class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator):
             raise UpdateFailed(err) from err
 
 
-class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
     """Class to manage fetching NextDNS analytics Dnssec data from API."""
 
     async def _async_update_data(self) -> AnalyticsDnssec:
@@ -93,7 +96,7 @@ class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator):
             raise UpdateFailed(err) from err
 
 
-class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncryption]):
     """Class to manage fetching NextDNS analytics encryption data from API."""
 
     async def _async_update_data(self) -> AnalyticsEncryption:
@@ -105,7 +108,7 @@ class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator):
             raise UpdateFailed(err) from err
 
 
-class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVersions]):
     """Class to manage fetching NextDNS analytics IP versions data from API."""
 
     async def _async_update_data(self) -> AnalyticsIpVersions:
@@ -117,7 +120,7 @@ class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator):
             raise UpdateFailed(err) from err
 
 
-class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator):
+class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtocols]):
     """Class to manage fetching NextDNS analytics protocols data from API."""
 
     async def _async_update_data(self) -> AnalyticsProtocols:

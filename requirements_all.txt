@@ -181,7 +181,7 @@ aiohue==4.4.2
 aioimaplib==1.0.0
 
 # homeassistant.components.apache_kafka
-aiokafka==0.6.0
+aiokafka==0.7.2
 
 # homeassistant.components.kef
 aiokef==0.2.16
@@ -247,7 +247,7 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.6.1
+aioskybell==22.7.0
 
 # homeassistant.components.slimproto
 aioslimproto==2.1.1
@@ -518,7 +518,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.6.0
+debugpy==1.6.1
 
 # homeassistant.components.decora
 # decora==0.6
@@ -586,7 +586,7 @@ elgato==3.0.0
 eliqonline==1.2.2
 
 # homeassistant.components.elkm1
-elkm1-lib==2.0.0
+elkm1-lib==2.0.2
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -828,7 +828,7 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220706.0
+home-assistant-frontend==20220707.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
@@ -912,7 +912,7 @@ jellyfin-apiclient-python==1.8.1
 jsonpath==0.82
 
 # homeassistant.components.kaiterra
-kaiterra-async-client==0.0.2
+kaiterra-async-client==1.0.0
 
 # homeassistant.components.keba
 keba-kecontact==1.1.0
@@ -974,9 +974,6 @@ logi_circle==0.2.3
 # homeassistant.components.london_underground
 london-tube-status==0.5
 
-# homeassistant.components.recorder
-lru-dict==1.1.7
-
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
 
@@ -987,7 +984,7 @@ lupupy==0.0.24
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==4.8.0
+lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
@@ -1480,7 +1477,7 @@ pyeight==0.3.0
 pyemby==1.8
 
 # homeassistant.components.envisalink
-pyenvisalink==4.5
+pyenvisalink==4.6
 
 # homeassistant.components.ephember
 pyephember==0.3.1
@@ -2128,7 +2125,7 @@ samsungctl[websocket]==0.7.1
 samsungtvws[async,encrypted]==2.5.0
 
 # homeassistant.components.satel_integra
-satel_integra==0.3.4
+satel_integra==0.3.7
 
 # homeassistant.components.dhcp
 scapy==2.4.5

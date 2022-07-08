@@ -5,11 +5,7 @@ from homeassistant.components.filesize.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_FILE_PATH
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import TEST_DIR, TEST_FILE, TEST_FILE_NAME, async_create_file
 
@@ -24,7 +20,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result.get("type") == RESULT_TYPE_FORM
+    assert result.get("type") == FlowResultType.FORM
     assert result.get("step_id") == SOURCE_USER
     assert "flow_id" in result
 
@@ -33,7 +29,7 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
         user_input={CONF_FILE_PATH: TEST_FILE},
     )
 
-    assert result2.get("type") == RESULT_TYPE_CREATE_ENTRY
+    assert result2.get("type") == FlowResultType.CREATE_ENTRY
     assert result2.get("title") == TEST_FILE_NAME
     assert result2.get("data") == {CONF_FILE_PATH: TEST_FILE}
 
@@ -51,7 +47,7 @@ async def test_unique_path(
         DOMAIN, context={"source": SOURCE_USER}, data={CONF_FILE_PATH: TEST_FILE}
     )
 
-    assert result.get("type") == RESULT_TYPE_ABORT
+    assert result.get("type") == FlowResultType.ABORT
     assert result.get("reason") == "already_configured"
 
 
@@ -64,7 +60,7 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == SOURCE_USER
 
     result2 = await hass.config_entries.flow.async_configure(
@@ -103,7 +99,7 @@ async def test_flow_fails_on_validation(hass: HomeAssistant) -> None:
             },
         )
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_FILE_NAME
     assert result2["data"] == {
         CONF_FILE_PATH: TEST_FILE,

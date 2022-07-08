@@ -15,7 +15,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -943,10 +943,10 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info_paired,
     )
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_paired"
     mdns_update_to_paired.set()
     result = await task
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == {}
