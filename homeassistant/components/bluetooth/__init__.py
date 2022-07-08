@@ -97,7 +97,8 @@ BluetoothChange = Enum("BluetoothChange", "ADVERTISEMENT")
 BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], Awaitable]
 
 
-async def async_register_callback(
+@hass_callback
+def async_register_callback(
     hass: HomeAssistant,
     callback: BluetoothCallback,
     match_dict: BluetoothMatcher | None,
@@ -107,7 +108,7 @@ async def async_register_callback(
     Returns a callback that can be used to cancel the registration.
     """
     manager: BluetoothManager = hass.data[DOMAIN]
-    return await manager.async_register_callback(callback, match_dict)
+    return manager.async_register_callback(callback, match_dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -244,7 +245,8 @@ class BluetoothManager:
                 service_info,
             )
 
-    async def async_register_callback(
+    @hass_callback
+    def async_register_callback(
         self, callback: BluetoothCallback, match_dict: BluetoothMatcher | None = None
     ) -> Callable[[], None]:
         """Register a callback."""
