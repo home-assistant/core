@@ -509,11 +509,22 @@ async def _async_set_up_integrations(
 
     _LOGGER.info("Domains to be set up: %s", domains_to_setup)
 
-    # Load the registries
+    def _cache_uname_processor() -> None:
+        """Cache the result of platform.uname().processor in the executor.
+
+        Multiple modules call this function at startup which
+        executes a blocking subprocess call. This is a problem for the
+        asyncio event loop. By primeing the cache of uname we can
+        avoid the blocking call in the event loop.
+        """
+        platform.uname().processor  # pylint: disable=expression-not-assigned
+
+    # Load the registries and cache the result of platform.uname().processor
     await asyncio.gather(
         device_registry.async_load(hass),
         entity_registry.async_load(hass),
         area_registry.async_load(hass),
+        hass.async_add_executor_job(_cache_uname_processor),
     )
 
     # Initialize recorder
@@ -569,24 +580,6 @@ async def _async_set_up_integrations(
         - recorder_domains
         - debuggers
         - stage_1_domains
-    )
-
-    def _cache_uname_processor() -> None:
-        """Cache the result of platform.uname().processor in the executor.
-
-        Multiple modules call this function at startup which
-        executes a blocking subprocess call. This is a problem for the
-        asyncio event loop. By primeing the cache of uname we can
-        avoid the blocking call in the event loop.
-        """
-        platform.uname().processor  # pylint: disable=expression-not-assigned
-
-    # Load the registries and cache the result of platform.uname().processor
-    await asyncio.gather(
-        device_registry.async_load(hass),
-        entity_registry.async_load(hass),
-        area_registry.async_load(hass),
-        hass.async_add_executor_job(_cache_uname_processor),
     )
 
     # Start setup
