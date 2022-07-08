@@ -47,9 +47,13 @@ def _dispatch_callback(
 class HaBleakScanner(BleakScanner):  # type: ignore[misc]
     """BleakScanner that cannot be stopped."""
 
-    # HaBleakScanner is a singleton
-    _callbacks: list[tuple[AdvertisementDataCallback, dict[str, set[str]]]] = []
-    _history: LRU = LRU(MAX_HISTORY_SIZE)
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        """Initialize the BleakScanner."""
+        self._callbacks: list[
+            tuple[AdvertisementDataCallback, dict[str, set[str]]]
+        ] = []
+        self._history: LRU = LRU(MAX_HISTORY_SIZE)
+        super().__init__(*args, **kwargs)
 
     @hass_callback
     def async_register_callback(
