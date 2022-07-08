@@ -21,7 +21,6 @@ def mock_bleak_scanner_start():
     """Fixture to mock starting the bleak scanner."""
     scanner = bleak.BleakScanner
     models.HA_BLEAK_SCANNER = None
-    models.HaBleakScanner._history.clear()
 
     with patch(
         "homeassistant.components.bluetooth.HaBleakScanner.start",
@@ -29,7 +28,6 @@ def mock_bleak_scanner_start():
         yield mock_bleak_scanner_start
 
     bleak.BleakScanner = scanner
-    models.HaBleakScanner._history.clear()
 
 
 async def test_setup_and_stop(hass, mock_bleak_scanner_start):
