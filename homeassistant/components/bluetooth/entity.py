@@ -13,7 +13,7 @@ if TYPE_CHECKING:
     from .update_coordinator import BluetoothDataUpdateCoordinator
 
 
-@dataclasses.dataclass
+@dataclasses.dataclass(frozen=True)
 class BluetoothDeviceKey:
     """Key for a bluetooth device.
 
