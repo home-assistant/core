@@ -168,6 +168,7 @@ FLOWS = {
         "iaqualink",
         "icloud",
         "ifttt",
+        "inkbird",
         "insteon",
         "intellifire",
         "ios",
