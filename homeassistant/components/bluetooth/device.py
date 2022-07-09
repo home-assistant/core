@@ -67,14 +67,12 @@ class BluetoothDeviceData:
     ]:
         """Update a bluetooth device."""
         self.update_rssi(service_info.rssi)
-        self.update(service_info, change)
+        self.update(service_info)
         self._entity_descriptions.update(self._entity_descriptions_updates)
         return self._entity_descriptions_updates
 
     @abstractmethod
-    def update(
-        self, service_info: BluetoothServiceInfo, change: BluetoothChange
-    ) -> None:
+    def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BluetoothServiceInfo."""
         raise NotImplementedError()
 
