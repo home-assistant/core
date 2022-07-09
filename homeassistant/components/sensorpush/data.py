@@ -44,8 +44,7 @@ def decode_values(mfg_data: bytes, device_type_id: int) -> dict:
 
     mod = 1
     div = 1
-    for i in range(0, len(pack_params)):
-        block = pack_params[i]
+    for i, block in enumerate(pack_params):
         min_value = block[0]
         max_value = block[1]
         step = block[2]
@@ -110,8 +109,8 @@ class SensorPushBluetoothDeviceData(BluetoothDeviceData):
         page_id = data[0] & 0x03
         if page_id == 0:
             device_type_id = 64 + (data[0] >> 2)
-            if device_type_id in SENSORPUSH_DEVICE_TYPES:
-                device_type = SENSORPUSH_DEVICE_TYPES[device_type_id]
+            if known_device_type := SENSORPUSH_DEVICE_TYPES.get(device_type_id):
+                device_type = known_device_type
             result.update(decode_values(data, device_type_id))
 
         if device_type:
