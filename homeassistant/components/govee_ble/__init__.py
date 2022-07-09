@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 
-from .bluetooth_update_coordinator import BluetoothDataUpdateCoordinator, UpdateFailed
+from .bluetooth_update_coordinator import BluetoothDataUpdateCoordinator
 from .const import DOMAIN
 from .govee_parser import parse_govee_from_discovery_data
 
@@ -23,23 +23,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert address is not None
 
     @callback
-    def _async_update_govee_device(
+    def _async_parse_govee_device(
         service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
-    ) -> dict[str, Any]:
+    ) -> dict[str, Any] | None:
         """Subscribe to bluetooth changes."""
         if data := parse_govee_from_discovery_data(
             service_info.manufacturer_data,
         ):
             data["rssi"] = service_info.rssi
+            _LOGGER.warning("Parser returned data: %s", data)
             return data
-        raise UpdateFailed(f"Cannot parse Govee device: {service_info}")
+        return None
 
     coordinator = BluetoothDataUpdateCoordinator(
         hass,
         _LOGGER,
         name=entry.title,
-        matcher=bluetooth.BluetoothCallbackMatcher(address=address),
-        update_method=_async_update_govee_device,
+        address=address,
+        parser_method=_async_parse_govee_device,
     )
     entry.async_on_unload(coordinator.async_setup())
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
