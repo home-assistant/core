@@ -51,14 +51,15 @@ class BluetoothCoordinatorEntity(entity.Entity):
         self.device_key = device_key
         self.coordinator = coordinator
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.address}-{description.key}"
-        self._attr_name = f"{coordinator.name} {description.name}"
+        self._attr_unique_id = f"{coordinator.address}-{self.device_key.key}"
+        self._attr_name = description.name
         identifiers: set[tuple[str, str]] = set()
         connections: set[tuple[str, str]] = set()
         if device_key.device_id:
             identifiers.add(
                 (bluetooth.DOMAIN, f"{coordinator.address}-{self.device_key.device_id}")
             )
+            self._attr_unique_id = f"{coordinator.address}-{self.device_key.device_id}-{self.device_key.key}"
         elif ":" in coordinator.address:
             # Linux
             connections.add((dr.CONNECTION_NETWORK_MAC, coordinator.address))
