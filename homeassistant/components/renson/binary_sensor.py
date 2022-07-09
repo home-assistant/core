@@ -20,6 +20,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -46,12 +47,14 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
         name="Frost protection active",
         key="FROST_PROTECTION_FIELD",
         field=FROST_PROTECTION_FIELD,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="BREEZE_ENABLE_FIELD",
         name="Breeze",
         field=BREEZE_ENABLE_FIELD,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="BREEZE_MET_FIELD",
@@ -63,23 +66,27 @@ BINARY_SENSORS: tuple[RensonBinarySensorEntityDescription, ...] = (
         name="Humidity control",
         field=HUMIDITY_CONTROL_FIELD,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="AIR_QUALITY_CONTROL_FIELD",
         name="Air quality control",
         field=AIR_QUALITY_CONTROL_FIELD,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="CO2_CONTROL_FIELD",
         name="CO2 control",
         field=CO2_CONTROL_FIELD,
         entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     RensonBinarySensorEntityDescription(
         key="PREHEATER_FIELD",
         name="Preheater",
         field=PREHEATER_FIELD,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
