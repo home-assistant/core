@@ -21,14 +21,17 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load Roku remote based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     unique_id = coordinator.data.info.serial_number
-    async_add_entities([
-        RokuRemote(
-            device_id=unique_id,
-            coordinator=coordinator,
-        )
-    ], True)
+    async_add_entities(
+        [
+            RokuRemote(
+                device_id=unique_id,
+                coordinator=coordinator,
+            )
+        ],
+        True,
+    )
 
 
 class RokuRemote(RokuEntity, RemoteEntity):
