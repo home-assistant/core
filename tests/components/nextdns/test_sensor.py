@@ -124,6 +124,20 @@ async def test_sensor(hass):
     registry.async_get_or_create(
         SENSOR_DOMAIN,
         DOMAIN,
+        "xyz12_tcp_queries",
+        suggested_object_id="fake_profile_tcp_queries",
+        disabled_by=None,
+    )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        "xyz12_tcp_queries_ratio",
+        suggested_object_id="fake_profile_tcp_queries_ratio",
+        disabled_by=None,
+    )
+    registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
         "xyz12_udp_queries",
         suggested_object_id="fake_profile_udp_queries",
         disabled_by=None,
@@ -334,6 +348,26 @@ async def test_sensor(hass):
     entry = registry.async_get("sensor.fake_profile_ipv6_queries_ratio")
     assert entry
     assert entry.unique_id == "xyz12_ipv6_queries_ratio"
+
+    state = hass.states.get("sensor.fake_profile_tcp_queries")
+    assert state
+    assert state.state == "0"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "queries"
+
+    entry = registry.async_get("sensor.fake_profile_tcp_queries")
+    assert entry
+    assert entry.unique_id == "xyz12_tcp_queries"
+
+    state = hass.states.get("sensor.fake_profile_tcp_queries_ratio")
+    assert state
+    assert state.state == "0.0"
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+
+    entry = registry.async_get("sensor.fake_profile_tcp_queries_ratio")
+    assert entry
+    assert entry.unique_id == "xyz12_tcp_queries_ratio"
 
     state = hass.states.get("sensor.fake_profile_udp_queries")
     assert state
