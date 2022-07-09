@@ -82,12 +82,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.withings.binary_sensor",
     "homeassistant.components.withings.common",
     "homeassistant.components.withings.config_flow",
-    "homeassistant.components.xbox",
-    "homeassistant.components.xbox.base_sensor",
-    "homeassistant.components.xbox.binary_sensor",
-    "homeassistant.components.xbox.browse_media",
-    "homeassistant.components.xbox.media_source",
-    "homeassistant.components.xbox.sensor",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
