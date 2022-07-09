@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from homeassistant.components import bluetooth
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -28,11 +28,6 @@ class BluetoothDataUpdateCoordinator:
         data: BluetoothDeviceData,
         *,
         name: str,
-        parser_method: Callable[
-            [bluetooth.BluetoothServiceInfo, bluetooth.BluetoothChange],
-            dict[str, Any] | None,
-        ]
-        | None = None,
     ) -> None:
         """Initialize the dispatcher."""
         self.data = data
@@ -40,7 +35,6 @@ class BluetoothDataUpdateCoordinator:
         self.hass = hass
         self.logger = logger
         self.name = name
-        self.parser_method = parser_method
         self.address = address
         self._listeners: dict[
             BluetoothDeviceKey | None, list[BluetoothListenerCallbackType]
@@ -52,8 +46,6 @@ class BluetoothDataUpdateCoordinator:
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Start the callback."""
-        if self.parser_method is None:
-            raise NotImplementedError("Parser method not implemented")
         return bluetooth.async_register_callback(
             self.hass,
             self._async_handle_bluetooth_event,
@@ -125,7 +117,6 @@ class BluetoothDataUpdateCoordinator:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        assert self.parser_method is not None
         try:
             data_update = self.data.generate_update(service_info, change)
         except Exception as err:  # pylint: disable=broad-except
