@@ -50,7 +50,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
     await venstar_data_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[config.entry_id] = venstar_data_coordinator
-    hass.config_entries.async_setup_platforms(config, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config, PLATFORMS)
 
     return True
 

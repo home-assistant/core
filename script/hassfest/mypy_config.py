@@ -44,7 +44,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.minecraft_server",
     "homeassistant.components.minecraft_server.helpers",
     "homeassistant.components.minecraft_server.sensor",
-    "homeassistant.components.nilu.air_quality",
     "homeassistant.components.nzbget",
     "homeassistant.components.nzbget.config_flow",
     "homeassistant.components.nzbget.coordinator",
@@ -74,7 +73,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.sensor",
     "homeassistant.components.sonos.speaker",
     "homeassistant.components.sonos.statistics",
-    "homeassistant.components.telegram_bot.polling",
     "homeassistant.components.template.number",
     "homeassistant.components.template.sensor",
     "homeassistant.components.toon",
@@ -90,16 +88,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.xbox.browse_media",
     "homeassistant.components.xbox.media_source",
     "homeassistant.components.xbox.sensor",
-    "homeassistant.components.xiaomi_miio",
-    "homeassistant.components.xiaomi_miio.air_quality",
-    "homeassistant.components.xiaomi_miio.binary_sensor",
-    "homeassistant.components.xiaomi_miio.device",
-    "homeassistant.components.xiaomi_miio.device_tracker",
-    "homeassistant.components.xiaomi_miio.fan",
-    "homeassistant.components.xiaomi_miio.humidifier",
-    "homeassistant.components.xiaomi_miio.light",
-    "homeassistant.components.xiaomi_miio.sensor",
-    "homeassistant.components.xiaomi_miio.switch",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

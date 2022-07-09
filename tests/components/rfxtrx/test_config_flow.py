@@ -475,11 +475,11 @@ async def test_options_replace_sensor_device(hass):
     await start_options_flow(hass, entry)
 
     state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_signal_strength"
     )
     assert state
     state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery"
     )
     assert state
     state = hass.states.get(
@@ -495,11 +495,11 @@ async def test_options_replace_sensor_device(hass):
     )
     assert state
     state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_rssi_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_signal_strength"
     )
     assert state
     state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery"
     )
     assert state
     state = hass.states.get(
@@ -565,7 +565,7 @@ async def test_options_replace_sensor_device(hass):
     entity_registry = er.async_get(hass)
 
     entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_rssi_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_signal_strength"
     )
     assert entry
     assert entry.device_id == new_device
@@ -580,7 +580,7 @@ async def test_options_replace_sensor_device(hass):
     assert entry
     assert entry.device_id == new_device
     entry = entity_registry.async_get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_f0_04_battery"
     )
     assert entry
     assert entry.device_id == new_device
@@ -591,11 +591,11 @@ async def test_options_replace_sensor_device(hass):
     assert entry.device_id == new_device
 
     state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_rssi_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_signal_strength"
     )
     assert not state
     state = hass.states.get(
-        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery_numeric"
+        "sensor.thgn122_123_thgn132_thgr122_228_238_268_23_04_battery"
     )
     assert not state
     state = hass.states.get(
@@ -637,13 +637,13 @@ async def test_options_replace_control_device(hass):
 
     state = hass.states.get("binary_sensor.ac_118cdea_2")
     assert state
-    state = hass.states.get("sensor.ac_118cdea_2_rssi_numeric")
+    state = hass.states.get("sensor.ac_118cdea_2_signal_strength")
     assert state
     state = hass.states.get("switch.ac_118cdea_2")
     assert state
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert state
-    state = hass.states.get("sensor.ac_1118cdea_2_rssi_numeric")
+    state = hass.states.get("sensor.ac_1118cdea_2_signal_strength")
     assert state
     state = hass.states.get("switch.ac_1118cdea_2")
     assert state
@@ -700,7 +700,7 @@ async def test_options_replace_control_device(hass):
     entry = entity_registry.async_get("binary_sensor.ac_118cdea_2")
     assert entry
     assert entry.device_id == new_device
-    entry = entity_registry.async_get("sensor.ac_118cdea_2_rssi_numeric")
+    entry = entity_registry.async_get("sensor.ac_118cdea_2_signal_strength")
     assert entry
     assert entry.device_id == new_device
     entry = entity_registry.async_get("switch.ac_118cdea_2")
@@ -709,7 +709,7 @@ async def test_options_replace_control_device(hass):
 
     state = hass.states.get("binary_sensor.ac_1118cdea_2")
     assert not state
-    state = hass.states.get("sensor.ac_1118cdea_2_rssi_numeric")
+    state = hass.states.get("sensor.ac_1118cdea_2_signal_strength")
     assert not state
     state = hass.states.get("switch.ac_1118cdea_2")
     assert not state

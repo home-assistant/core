@@ -289,12 +289,16 @@ class DeconzLight(DeconzBaseLight[Light]):
 class DeconzGroup(DeconzBaseLight[Group]):
     """Representation of a deCONZ group."""
 
+    _attr_has_entity_name = True
+
     _device: Group
 
     def __init__(self, device: Group, gateway: DeconzGateway) -> None:
         """Set up group and create an unique id."""
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
+
+        self._attr_name = None
 
     @property
     def unique_id(self) -> str:
