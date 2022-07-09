@@ -138,6 +138,7 @@ FLOWS = {
         "goodwe",
         "google",
         "google_travel_time",
+        "govee_ble",
         "gpslogger",
         "gree",
         "growatt_server",
