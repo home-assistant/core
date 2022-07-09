@@ -4,7 +4,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -55,21 +55,21 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_time"]),
-        info_fn=lambda data: data["departure_information"],
+        info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_from",
         name="Departure From",
         icon="mdi:ferry",
-        value_fn=lambda data: data["departure_from"],
-        info_fn=lambda data: data["departure_information"],
+        value_fn=lambda data: cast(str, data["departure_from"]),
+        info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_to",
         name="Departure To",
         icon="mdi:ferry",
-        value_fn=lambda data: data["departure_to"],
-        info_fn=lambda data: data["departure_information"],
+        value_fn=lambda data: cast(str, data["departure_to"]),
+        info_fn=lambda data: cast(list[str], data["departure_information"]),
     ),
     TrafikverketSensorEntityDescription(
         key="departure_modified",
@@ -77,7 +77,7 @@ SENSOR_TYPES: tuple[TrafikverketSensorEntityDescription, ...] = (
         icon="mdi:clock",
         device_class=SensorDeviceClass.TIMESTAMP,
         value_fn=lambda data: as_utc(data["departure_modified"]),
-        info_fn=lambda data: data["departure_information"],
+        info_fn=lambda data: cast(list[str], data["departure_information"]),
         entity_registry_enabled_default=False,
     ),
     TrafikverketSensorEntityDescription(

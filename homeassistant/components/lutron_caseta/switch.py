@@ -6,7 +6,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import LutronCasetaDeviceUpdatableEntity
-from .const import BRIDGE_DEVICE, BRIDGE_LEAP, DOMAIN as CASETA_DOMAIN
+from .const import DOMAIN as CASETA_DOMAIN
+from .models import LutronCasetaData
 
 
 async def async_setup_entry(
@@ -19,9 +20,9 @@ async def async_setup_entry(
     Adds switches from the Caseta bridge associated with the config_entry as
     switch entities.
     """
-    data = hass.data[CASETA_DOMAIN][config_entry.entry_id]
-    bridge = data[BRIDGE_LEAP]
-    bridge_device = data[BRIDGE_DEVICE]
+    data: LutronCasetaData = hass.data[CASETA_DOMAIN][config_entry.entry_id]
+    bridge = data.bridge
+    bridge_device = data.bridge_device
     switch_devices = bridge.get_devices_by_domain(DOMAIN)
     async_add_entities(
         LutronCasetaLight(switch_device, bridge, bridge_device)

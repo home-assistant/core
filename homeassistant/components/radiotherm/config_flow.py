@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 from socket import timeout
 from typing import Any
+from urllib.error import URLError
 
 from radiotherm.validate import RadiothermTstatError
 import voluptuous as vol
@@ -29,7 +30,7 @@ async def validate_connection(hass: HomeAssistant, host: str) -> RadioThermInitD
     """Validate the connection."""
     try:
         return await async_get_init_data(hass, host)
-    except (timeout, RadiothermTstatError) as ex:
+    except (timeout, RadiothermTstatError, URLError, OSError) as ex:
         raise CannotConnect(f"Failed to connect to {host}: {ex}") from ex
 
 

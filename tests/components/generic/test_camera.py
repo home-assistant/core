@@ -8,12 +8,24 @@ import httpx
 import pytest
 import respx
 
-from homeassistant.components.camera import async_get_mjpeg_stream
+from homeassistant.components.camera import (
+    async_get_mjpeg_stream,
+    async_get_stream_source,
+)
+from homeassistant.components.generic.const import (
+    CONF_CONTENT_TYPE,
+    CONF_FRAMERATE,
+    CONF_LIMIT_REFETCH_TO_URL_CHANGE,
+    CONF_STILL_IMAGE_URL,
+    CONF_STREAM_SOURCE,
+    DOMAIN,
+)
 from homeassistant.components.websocket_api.const import TYPE_RESULT
 from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.setup import async_setup_component
 
-from tests.common import AsyncMock, Mock
+from tests.common import AsyncMock, Mock, MockConfigEntry
 
 
 @respx.mock
@@ -184,23 +196,29 @@ async def test_stream_source(hass, hass_client, hass_ws_client, fakeimgbytes_png
     respx.get("http://example.com/0a").respond(stream=fakeimgbytes_png)
 
     hass.states.async_set("sensor.temp", "0")
-    assert await async_setup_component(
-        hass,
-        "camera",
-        {
-            "camera": {
-                "name": "config_test",
-                "platform": "generic",
-                "still_image_url": "http://example.com",
-                "stream_source": 'http://example.com/{{ states.sensor.temp.state + "a" }}',
-                "limit_refetch_to_url_change": True,
-            },
+    mock_entry = MockConfigEntry(
+        title="config_test",
+        domain=DOMAIN,
+        data={},
+        options={
+            CONF_STILL_IMAGE_URL: "http://example.com",
+            CONF_STREAM_SOURCE: 'http://example.com/{{ states.sensor.temp.state + "a" }}',
+            CONF_LIMIT_REFETCH_TO_URL_CHANGE: True,
+            CONF_FRAMERATE: 2,
+            CONF_CONTENT_TYPE: "image/png",
+            CONF_VERIFY_SSL: False,
+            CONF_USERNAME: "barney",
+            CONF_PASSWORD: "betty",
         },
     )
+    mock_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_entry.entry_id)
     assert await async_setup_component(hass, "stream", {})
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.temp", "5")
+    stream_source = await async_get_stream_source(hass, "camera.config_test")
+    assert stream_source == "http://barney:betty@example.com/5a"
 
     with patch(
         "homeassistant.components.camera.Stream.endpoint_url",

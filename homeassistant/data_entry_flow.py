@@ -109,12 +109,12 @@ def _async_flow_handler_to_flow_result(
 ) -> list[FlowResult]:
     """Convert a list of FlowHandler to a partial FlowResult that can be serialized."""
     return [
-        {
-            "flow_id": flow.flow_id,
-            "handler": flow.handler,
-            "context": flow.context,
-            "step_id": flow.cur_step["step_id"] if flow.cur_step else None,
-        }
+        FlowResult(
+            flow_id=flow.flow_id,
+            handler=flow.handler,
+            context=flow.context,
+            step_id=flow.cur_step["step_id"] if flow.cur_step else None,
+        )
         for flow in flows
         if include_uninitialized or flow.cur_step is not None
     ]
@@ -446,16 +446,16 @@ class FlowHandler:
         last_step: bool | None = None,
     ) -> FlowResult:
         """Return the definition of a form to gather user input."""
-        return {
-            "type": FlowResultType.FORM,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "data_schema": data_schema,
-            "errors": errors,
-            "description_placeholders": description_placeholders,
-            "last_step": last_step,  # Display next or submit button in frontend
-        }
+        return FlowResult(
+            type=FlowResultType.FORM,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            data_schema=data_schema,
+            errors=errors,
+            description_placeholders=description_placeholders,
+            last_step=last_step,  # Display next or submit button in frontend
+        )
 
     @callback
     def async_create_entry(
@@ -467,16 +467,16 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Finish config flow and create a config entry."""
-        return {
-            "version": self.VERSION,
-            "type": FlowResultType.CREATE_ENTRY,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "title": title,
-            "data": data,
-            "description": description,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            version=self.VERSION,
+            type=FlowResultType.CREATE_ENTRY,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            title=title,
+            data=data,
+            description=description,
+            description_placeholders=description_placeholders,
+        )
 
     @callback
     def async_abort(
@@ -499,24 +499,24 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Return the definition of an external step for the user to take."""
-        return {
-            "type": FlowResultType.EXTERNAL_STEP,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "url": url,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            type=FlowResultType.EXTERNAL_STEP,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            url=url,
+            description_placeholders=description_placeholders,
+        )
 
     @callback
     def async_external_step_done(self, *, next_step_id: str) -> FlowResult:
         """Return the definition of an external step for the user to take."""
-        return {
-            "type": FlowResultType.EXTERNAL_STEP_DONE,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": next_step_id,
-        }
+        return FlowResult(
+            type=FlowResultType.EXTERNAL_STEP_DONE,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=next_step_id,
+        )
 
     @callback
     def async_show_progress(
@@ -527,24 +527,24 @@ class FlowHandler:
         description_placeholders: Mapping[str, str] | None = None,
     ) -> FlowResult:
         """Show a progress message to the user, without user input allowed."""
-        return {
-            "type": FlowResultType.SHOW_PROGRESS,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "progress_action": progress_action,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            type=FlowResultType.SHOW_PROGRESS,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            progress_action=progress_action,
+            description_placeholders=description_placeholders,
+        )
 
     @callback
     def async_show_progress_done(self, *, next_step_id: str) -> FlowResult:
         """Mark the progress done."""
-        return {
-            "type": FlowResultType.SHOW_PROGRESS_DONE,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": next_step_id,
-        }
+        return FlowResult(
+            type=FlowResultType.SHOW_PROGRESS_DONE,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=next_step_id,
+        )
 
     @callback
     def async_show_menu(
@@ -558,15 +558,15 @@ class FlowHandler:
 
         Options dict maps step_id => i18n label
         """
-        return {
-            "type": FlowResultType.MENU,
-            "flow_id": self.flow_id,
-            "handler": self.handler,
-            "step_id": step_id,
-            "data_schema": vol.Schema({"next_step_id": vol.In(menu_options)}),
-            "menu_options": menu_options,
-            "description_placeholders": description_placeholders,
-        }
+        return FlowResult(
+            type=FlowResultType.MENU,
+            flow_id=self.flow_id,
+            handler=self.handler,
+            step_id=step_id,
+            data_schema=vol.Schema({"next_step_id": vol.In(menu_options)}),
+            menu_options=menu_options,
+            description_placeholders=description_placeholders,
+        )
 
 
 @callback
@@ -577,10 +577,10 @@ def _create_abort_data(
     description_placeholders: Mapping[str, str] | None = None,
 ) -> FlowResult:
     """Return the definition of an external step for the user to take."""
-    return {
-        "type": FlowResultType.ABORT,
-        "flow_id": flow_id,
-        "handler": handler,
-        "reason": reason,
-        "description_placeholders": description_placeholders,
-    }
+    return FlowResult(
+        type=FlowResultType.ABORT,
+        flow_id=flow_id,
+        handler=handler,
+        reason=reason,
+        description_placeholders=description_placeholders,
+    )

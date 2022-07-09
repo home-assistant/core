@@ -1,8 +1,11 @@
 """Diagnostics support for Synology DSM."""
 from __future__ import annotations
 
+from typing import Any
+
 from synology_dsm.api.surveillance_station.camera import SynoCamera
 
+from homeassistant.components.camera import diagnostics as camera_diagnostics
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -16,13 +19,13 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_DEVICE_TOKEN}
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: ConfigEntry
-) -> dict:
+) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
     syno_api = data.api
     dsm_info = syno_api.dsm.information
 
-    diag_data = {
+    diag_data: dict[str, Any] = {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT),
         "device_info": {
             "model": dsm_info.model,
@@ -33,7 +36,7 @@ async def async_get_config_entry_diagnostics(
         },
         "network": {"interfaces": {}},
         "storage": {"disks": {}, "volumes": {}},
-        "surveillance_station": {"cameras": {}},
+        "surveillance_station": {"cameras": {}, "camera_diagnostics": {}},
         "upgrade": {},
         "utilisation": {},
         "is_system_loaded": True,
@@ -45,7 +48,7 @@ async def async_get_config_entry_diagnostics(
     if syno_api.network is not None:
         intf: dict
         for intf in syno_api.network.interfaces:
-            diag_data["network"]["interfaces"][intf["id"]] = {  # type: ignore[index]
+            diag_data["network"]["interfaces"][intf["id"]] = {
                 "type": intf["type"],
                 "ip": intf["ip"],
             }
@@ -53,7 +56,7 @@ async def async_get_config_entry_diagnostics(
     if syno_api.storage is not None:
         disk: dict
         for disk in syno_api.storage.disks:
-            diag_data["storage"]["disks"][disk["id"]] = {  # type: ignore[index]
+            diag_data["storage"]["disks"][disk["id"]] = {
                 "name": disk["name"],
                 "vendor": disk["vendor"],
                 "model": disk["model"],
@@ -64,7 +67,7 @@ async def async_get_config_entry_diagnostics(
 
         volume: dict
         for volume in syno_api.storage.volumes:
-            diag_data["storage"]["volumes"][volume["id"]] = {  # type: ignore[index]
+            diag_data["storage"]["volumes"][volume["id"]] = {
                 "name": volume["fs_type"],
                 "size": volume["size"],
             }
@@ -72,13 +75,17 @@ async def async_get_config_entry_diagnostics(
     if syno_api.surveillance_station is not None:
         camera: SynoCamera
         for camera in syno_api.surveillance_station.get_all_cameras():
-            diag_data["surveillance_station"]["cameras"][camera.id] = {  # type: ignore[index]
+            diag_data["surveillance_station"]["cameras"][camera.id] = {
                 "name": camera.name,
                 "is_enabled": camera.is_enabled,
                 "is_motion_detection_enabled": camera.is_motion_detection_enabled,
                 "model": camera.model,
                 "resolution": camera.resolution,
             }
+        if camera_data := await camera_diagnostics.async_get_config_entry_diagnostics(
+            hass, entry
+        ):
+            diag_data["surveillance_station"]["camera_diagnostics"] = camera_data
 
     if syno_api.upgrade is not None:
         diag_data["upgrade"] = {
