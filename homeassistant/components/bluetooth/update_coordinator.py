@@ -118,7 +118,7 @@ class BluetoothDataUpdateCoordinator:
     ) -> None:
         """Handle a Bluetooth event."""
         try:
-            data_update = self.data.generate_update(service_info, change)
+            data_update = self.data.generate_update(service_info)
         except Exception as err:  # pylint: disable=broad-except
             self.last_exception = err
             self.last_update_success = False
