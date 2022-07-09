@@ -8,7 +8,7 @@
         "flow_title": "{name}",
         "step": {
             "bluetooth_confirm": {
-                "description": "Do you want to setup {name})?"
+                "description": "Do you want to setup {name}?"
             }
         }
     }
