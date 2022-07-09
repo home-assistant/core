@@ -168,7 +168,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.20
+aiohomekit==0.7.21
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1450,7 +1450,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==97
+pydeconz==98
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1901,7 +1901,7 @@ python-family-hub-local==0.0.2
 python-forecastio==1.4.0
 
 # homeassistant.components.sms
-# python-gammu==3.2.3
+# python-gammu==3.2.4
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0
