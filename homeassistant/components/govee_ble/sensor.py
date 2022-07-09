@@ -1,6 +1,7 @@
 """Support for govee ble sensors."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant import config_entries
@@ -55,6 +56,7 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
 }
 ALL_SENSORS = set(SENSOR_TYPES)
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -69,6 +71,11 @@ async def async_setup_entry(
     @callback
     def _async_add_or_update_entities() -> None:
         """Listen for new entities."""
+        _LOGGER.warning(
+            "_async_add_or_update_entities: %s, %s", created, coordinator.data
+        )
+        if coordinator.data is None:
+            return
         new = ALL_SENSORS.intersection(coordinator.data).difference(created)
         async_add_entities(GoveeSensor(coordinator, SENSOR_TYPES[key]) for key in new)
 

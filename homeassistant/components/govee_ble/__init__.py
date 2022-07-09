@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             data["rssi"] = service_info.rssi
             return data
-        raise UpdateFailed("Cannot parse Govee device")
+        raise UpdateFailed(f"Cannot parse Govee device: {service_info}")
 
     coordinator = BluetoothDataUpdateCoordinator(
         hass,

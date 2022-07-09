@@ -34,7 +34,7 @@ def decode_temps_probes(packet_value: int) -> float:
     return float(packet_value / 100)
 
 
-NOT_GOVEE_MANUFACTURER = {76}
+NOT_GOVEE_MANUFACTURER = {76, 60552}
 
 
 def parse_govee_from_discovery_data(
@@ -44,18 +44,18 @@ def parse_govee_from_discovery_data(
     for device_id, mfr_data in manufacturer_data.items():
         if device_id in NOT_GOVEE_MANUFACTURER:
             continue
-        if result := parse_govee(mfr_data, device_id):
+        if result := parse_govee(device_id, mfr_data):
             return result
 
     return None
 
 
-def parse_govee(mfr_data: bytes, device_id: int) -> dict[str, str | int | float] | None:
+def parse_govee(device_id: int, mfr_data: bytes) -> dict[str, str | int | float] | None:
     """Parser for Govee sensors."""
     # TODO: Add support for multiple sensors
     # TODO: standardize data types
     # TODO: standardize firmware version
-
+    _LOGGER.warning("Parsing Govee sensor: %s %s", device_id, mfr_data)
     # Original messages had the device id
     # appended to the start of the mfr_data
     # This is not the case for the new messages
@@ -170,10 +170,7 @@ def parse_govee(mfr_data: bytes, device_id: int) -> dict[str, str | int | float]
     else:
         return None
 
-    result.update(
-        {
-            "type": device_type,
-            "firmware": firmware,
-        }
-    )
-    return result
+    return result | {
+        "type": device_type,
+        "firmware": firmware,
+    }
