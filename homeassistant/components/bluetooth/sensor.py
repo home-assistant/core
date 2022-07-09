@@ -13,8 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.helpers.typing import StateType
 
-from .entity import BluetoothDescriptionRequiredKeysMixin
-from .update_coordinator import BluetoothCoordinatorEntity
+from .entity import BluetoothCoordinatorEntity, BluetoothDescriptionRequiredKeysMixin
 
 
 class BluetoothSensorType(Enum):
