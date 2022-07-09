@@ -286,6 +286,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         self.cached_user_input: dict[str, Any] = {}
         self.cached_title = ""
         self.preview: GenericCamera | None = None
+        self.preview_increment = 0
 
     @staticmethod
     def async_get_options_flow(
@@ -337,7 +338,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     flow_id = self.flow_id
                     preview = GenericCamera(hass, user_input, flow_id, "preview")
                     register_preview(hass, flow_id, preview)
-                    preview_url = f"/api/generic/preview_flow_image/{flow_id}"
+                    self.preview_increment += 1
+                    preview_url = f"/api/generic/preview_flow_image/{flow_id}_{self.preview_increment}"
                     return self.async_show_form(
                         step_id="user_confirm_still",
                         data_schema=vol.Schema(
@@ -459,7 +461,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 class CameraImagePreview(HomeAssistantView):
     """Camera view to temporarily serve an image."""
 
-    url = "/api/generic/preview_flow_image/{flow_id}"
+    url = "/api/generic/preview_flow_image/{flow_id_inc}"
     name = "api:generic:preview_flow_image"
     requires_auth = False
 
@@ -467,9 +469,11 @@ class CameraImagePreview(HomeAssistantView):
         """Initialise."""
         self.hass = hass
 
-    async def get(self, request: web.Request, flow_id) -> web.Response:
+    async def get(self, request: web.Request, flow_id_inc: str) -> web.Response:
         """Start a GET request."""
-        _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
+        _LOGGER.debug("processing GET request for flow_id=%s", flow_id_inc)
+        # ignore the incrementing suffix which is just to prevent browser caching.
+        flow_id = flow_id_inc.split("_")[0]
         camera = self.hass.data[DOMAIN][PREVIEWS][flow_id]
 
         if not camera.is_on:
