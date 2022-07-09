@@ -534,6 +534,88 @@ async def test_sensor_entity_total_gas(hass, mock_config_entry_data, mock_config
     assert ATTR_ICON not in state.attributes
 
 
+async def test_sensor_entity_active_liters(
+    hass, mock_config_entry_data, mock_config_entry
+):
+    """Test entity loads active liters (watermeter)."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(return_value=Data.from_dict({"active_liter_lpm": 12.345}))
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.product_name_aabbccddeeff_active_water_usage")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_active_water_usage"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "aabbccddeeff_active_liter_lpm"
+    assert not entry.disabled
+    assert state.state == "12.345"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Active Water Usage"
+    )
+
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "l/min"
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_ICON) == "mdi:water"
+
+
+async def test_sensor_entity_total_liters(
+    hass, mock_config_entry_data, mock_config_entry
+):
+    """Test entity loads total liters (watermeter)."""
+
+    api = get_mock_device()
+    api.data = AsyncMock(return_value=Data.from_dict({"total_liter_m3": 1234.567}))
+
+    with patch(
+        "homeassistant.components.homewizard.coordinator.HomeWizardEnergy",
+        return_value=api,
+    ):
+        entry = mock_config_entry
+        entry.data = mock_config_entry_data
+        entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_registry = er.async_get(hass)
+
+    state = hass.states.get("sensor.product_name_aabbccddeeff_total_water_usage")
+    entry = entity_registry.async_get(
+        "sensor.product_name_aabbccddeeff_total_water_usage"
+    )
+    assert entry
+    assert state
+    assert entry.unique_id == "aabbccddeeff_total_liter_m3"
+    assert not entry.disabled
+    assert state.state == "1234.567"
+    assert (
+        state.attributes.get(ATTR_FRIENDLY_NAME)
+        == "Product Name (aabbccddeeff) Total Water Usage"
+    )
+
+    assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_TOTAL_INCREASING
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+    assert ATTR_DEVICE_CLASS not in state.attributes
+    assert state.attributes.get(ATTR_ICON) == "mdi:gauge"
+
+
 async def test_sensor_entity_disabled_when_null(
     hass, mock_config_entry_data, mock_config_entry
 ):

@@ -100,7 +100,7 @@ aio_geojson_usgs_earthquakes==0.1
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.5
+aioairzone==0.4.6
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -195,10 +195,10 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.6.0
+aiopyarr==22.7.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.1.0
+aioqsw==0.1.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -1001,7 +1001,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.8
+pyezviz==0.2.0.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1281,7 +1281,7 @@ python-ecobee-api==0.2.14
 python-forecastio==1.4.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.0.3
+python-homewizard-energy==1.1.0
 
 # homeassistant.components.izone
 python-izone==1.2.3
@@ -1382,7 +1382,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.07.0
+regenmaschine==2022.07.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1519,7 +1519,7 @@ sunwatcher==0.2.1
 surepy==0.7.2
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.1.5
+systembridgeconnector==3.3.2
 
 # homeassistant.components.tailscale
 tailscale==0.2.0

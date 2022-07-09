@@ -183,7 +183,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Fan from a config entry."""
-    entities = []
+    entities: list[FanEntity] = []
+    entity: FanEntity
 
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
@@ -299,7 +300,7 @@ class XiaomiGenericDevice(XiaomiCoordinatedMiioEntity, FanEntity):
         return self._preset_modes
 
     @property
-    def percentage(self) -> None:
+    def percentage(self) -> int | None:
         """Return the percentage based speed of the fan."""
         return None
 
