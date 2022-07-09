@@ -10,3 +10,5 @@ CONF_USER_ID = "user_id"
 LOGGER = logging.getLogger(__package__)
 
 CONF_SERIAL = "serial"
+
+DEFAULT_THERMOSTAT_TEMP = 21

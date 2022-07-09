@@ -47,7 +47,7 @@ async def test_form(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Name"
     assert result2["data"] == {
         "host": "1.2.3.4",
@@ -72,7 +72,7 @@ async def test_form_unknown_error(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
@@ -93,7 +93,7 @@ async def test_form_cannot_connect(hass):
             },
         )
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {CONF_HOST: "cannot_connect"}
 
 
@@ -113,7 +113,7 @@ async def test_import(hass):
             data={CONF_HOST: "1.2.3.4"},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["title"] == "My Name"
     assert result["data"] == {CONF_HOST: "1.2.3.4"}
     assert len(mock_setup_entry.mock_calls) == 1
@@ -131,7 +131,7 @@ async def test_import_cannot_connect(hass):
             data={CONF_HOST: "1.2.3.4"},
         )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -153,7 +153,7 @@ async def test_dhcp_can_confirm(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["description_placeholders"] == {
         "host": "1.2.3.4",
@@ -171,7 +171,7 @@ async def test_dhcp_can_confirm(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "My Name"
     assert result2["data"] == {
         "host": "1.2.3.4",
@@ -197,7 +197,7 @@ async def test_dhcp_fails_to_connect(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -226,7 +226,7 @@ async def test_dhcp_already_exists(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -243,7 +243,7 @@ async def test_user_unique_id_already_exists(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -261,5 +261,5 @@ async def test_user_unique_id_already_exists(hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"

@@ -45,7 +45,7 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntellifirePollData
                 except (ConnectionError, ClientConnectionError) as exception:
                     raise UpdateFailed from exception
 
-        LOGGER.info("Failure Count %d", self._api.failed_poll_attempts)
+        LOGGER.debug("Failure Count %d", self._api.failed_poll_attempts)
         if self._api.failed_poll_attempts > 10:
             LOGGER.debug("Too many polling errors - raising exception")
             raise UpdateFailed

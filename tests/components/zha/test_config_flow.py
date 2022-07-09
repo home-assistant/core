@@ -25,11 +25,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
 )
 from homeassistant.const import CONF_SOURCE
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
@@ -72,7 +68,7 @@ async def test_discovery(detect_mock, hass):
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://192.168.1.200:6638"
     assert result["data"] == {
         CONF_DEVICE: {
@@ -104,7 +100,7 @@ async def test_zigate_via_zeroconf(probe_mock, hass):
         flow["flow_id"], user_input={}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://192.168.1.200:1234"
     assert result["data"] == {
         CONF_DEVICE: {
@@ -134,7 +130,7 @@ async def test_efr32_via_zeroconf(probe_mock, hass):
         flow["flow_id"], user_input={"baudrate": 115200}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "socket://192.168.1.200:6638"
     assert result["data"] == {
         CONF_DEVICE: {
@@ -176,7 +172,7 @@ async def test_discovery_via_zeroconf_ip_change(detect_mock, hass):
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
@@ -209,7 +205,7 @@ async def test_discovery_via_zeroconf_ip_change_ignored(detect_mock, hass):
         "zha", context={"source": SOURCE_ZEROCONF}, data=service_info
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "socket://192.168.1.22:6638",
@@ -231,7 +227,7 @@ async def test_discovery_via_usb(detect_mock, hass):
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
@@ -240,7 +236,7 @@ async def test_discovery_via_usb(detect_mock, hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert "zigbee radio" in result2["title"]
     assert result2["data"] == {
         "device": {
@@ -267,7 +263,7 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
@@ -276,7 +272,7 @@ async def test_zigate_discovery_via_usb(detect_mock, hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert (
         "zigate radio - /dev/ttyZIGBEE, s/n: 1234 - test - 6015:0403"
         in result2["title"]
@@ -304,7 +300,7 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
         "zha", context={"source": SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
     with patch("homeassistant.components.zha.async_setup_entry"):
@@ -313,7 +309,7 @@ async def test_discovery_via_usb_no_radio(detect_mock, hass):
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "usb_probe_failed"
 
 
@@ -338,7 +334,7 @@ async def test_discovery_via_usb_already_setup(detect_mock, hass):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -372,7 +368,7 @@ async def test_discovery_via_usb_path_changes(hass):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
@@ -457,7 +453,7 @@ async def test_discovery_via_usb_deconz_ignored(detect_mock, hass):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
 
 
@@ -485,7 +481,7 @@ async def test_discovery_via_usb_zha_ignored_updates(detect_mock, hass):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_DEVICE] == {
         CONF_DEVICE_PATH: "/dev/ttyZIGBEE",
@@ -535,7 +531,7 @@ async def test_user_flow(detect_mock, hass):
         context={CONF_SOURCE: SOURCE_USER},
         data={zigpy.config.CONF_DEVICE_PATH: port_select},
     )
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"].startswith(port.description)
     assert result["data"] == {CONF_RADIO_TYPE: "test_radio"}
     assert detect_mock.await_count == 1
@@ -559,7 +555,7 @@ async def test_user_flow_not_detected(detect_mock, hass):
         data={zigpy.config.CONF_DEVICE_PATH: port_select},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pick_radio"
     assert detect_mock.await_count == 1
     assert detect_mock.await_args[0][0] == port.device
@@ -573,7 +569,7 @@ async def test_user_flow_show_form(hass):
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -585,7 +581,7 @@ async def test_user_flow_show_manual(hass):
         context={CONF_SOURCE: SOURCE_USER},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pick_radio"
 
 
@@ -597,7 +593,7 @@ async def test_user_flow_manual(hass):
         context={CONF_SOURCE: SOURCE_USER},
         data={zigpy.config.CONF_DEVICE_PATH: config_flow.CONF_MANUAL_PATH},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pick_radio"
 
 
@@ -608,7 +604,7 @@ async def test_pick_radio_flow(hass, radio_type):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={CONF_SOURCE: "pick_radio"}, data={CONF_RADIO_TYPE: radio_type}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "port_config"
 
 
@@ -708,7 +704,7 @@ async def test_user_port_config_fail(probe_mock, hass):
         result["flow_id"],
         user_input={zigpy.config.CONF_DEVICE_PATH: "/dev/ttyUSB33"},
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "port_config"
     assert result["errors"]["base"] == "cannot_connect"
     assert probe_mock.await_count == 1
@@ -793,7 +789,7 @@ async def test_hardware_not_onboarded(hass):
             "zha", context={"source": "hardware"}, data=data
         )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyAMA1"
     assert result["data"] == {
         CONF_DEVICE: {
@@ -823,14 +819,14 @@ async def test_hardware_onboarded(hass):
             "zha", context={"source": "hardware"}, data=data
         )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm_hardware"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "/dev/ttyAMA1"
     assert result["data"] == {
         CONF_DEVICE: {
@@ -861,7 +857,7 @@ async def test_hardware_already_setup(hass):
         "zha", context={"source": "hardware"}, data=data
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
 
 
@@ -875,5 +871,5 @@ async def test_hardware_invalid_data(hass, data):
         "zha", context={"source": "hardware"}, data=data
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "invalid_hardware_data"

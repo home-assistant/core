@@ -218,7 +218,7 @@ async def async_setup_auth(hass: HomeAssistant, app: Application) -> None:
         # for every request.
         elif (
             request.method == "GET"
-            and SIGN_QUERY_PARAM in request.query
+            and SIGN_QUERY_PARAM in request.query_string
             and await async_validate_signed_request(request)
         ):
             authenticated = True
