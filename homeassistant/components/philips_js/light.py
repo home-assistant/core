@@ -137,6 +137,8 @@ class PhilipsTVLightEntity(
 ):
     """Representation of a Philips TV exposing the JointSpace API."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: PhilipsTVDataUpdateCoordinator,
@@ -151,7 +153,7 @@ class PhilipsTVLightEntity(
 
         self._attr_supported_color_modes = {ColorMode.HS, ColorMode.ONOFF}
         self._attr_supported_features = LightEntityFeature.EFFECT
-        self._attr_name = f"{coordinator.system['name']} Ambilight"
+        self._attr_name = "Ambilight"
         self._attr_unique_id = coordinator.unique_id
         self._attr_icon = "mdi:television-ambient-light"
         self._attr_device_info = DeviceInfo(
