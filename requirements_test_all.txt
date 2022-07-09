@@ -316,6 +316,9 @@ bellows==0.31.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
 
+# homeassistant.components.bluetooth
+bleak==0.14.3
+
 # homeassistant.components.blebox
 blebox_uniapi==2.0.1
 
@@ -577,7 +580,7 @@ habitipy==0.2.0
 hangups==0.4.18
 
 # homeassistant.components.cloud
-hass-nabucasa==0.54.0
+hass-nabucasa==0.54.1
 
 # homeassistant.components.tasmota
 hatasmota==0.5.1
@@ -1379,7 +1382,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.06.1
+regenmaschine==2022.07.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
