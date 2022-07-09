@@ -116,7 +116,11 @@ class SensorPushBluetoothDeviceData(BluetoothDeviceData):
 
         if device_type:
             self.set_device_type(device_type)
-            self.set_device_name(service_info.name)
+            if service_info.name.startswith("SensorPush "):
+                self.set_device_name(service_info.name[11:])
+            else:
+                self.set_device_name(service_info.name)
+
         for key, value in result.items():
             if key == "temperature":
                 self.update_predefined_sensor(
