@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    PRESSURE_MBAR,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
 )
@@ -28,6 +29,13 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
+    "pressure": SensorEntityDescription(
+        key="pressure",
+        name="Pressure",
+        native_unit_of_measurement=PRESSURE_MBAR,
+        device_class=SensorDeviceClass.PRESSURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "temperature": SensorEntityDescription(
         key="temperature",
         name="Temperature",
