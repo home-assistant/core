@@ -123,6 +123,10 @@ class AppleTVEntity(Entity):
             self.atv = None
             self.async_write_ha_state()
 
+        if self.manager.atv:
+            # ATV is already connected
+            _async_connected(self.manager.atv)
+
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass, f"{SIGNAL_CONNECTED}_{self.unique_id}", _async_connected

@@ -57,6 +57,7 @@ homeassistant.components.automation.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
@@ -153,6 +154,7 @@ homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.metoffice.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
@@ -190,6 +192,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.resolution_center.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*

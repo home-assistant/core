@@ -51,6 +51,7 @@ DEFAULT_ON_PERCENTAGE = 50
 
 STRICT_MATCH = functools.partial(ZHA_ENTITIES.strict_match, Platform.FAN)
 GROUP_MATCH = functools.partial(ZHA_ENTITIES.group_match, Platform.FAN)
+MULTI_MATCH = functools.partial(ZHA_ENTITIES.multipass_match, Platform.FAN)
 
 
 async def async_setup_entry(
@@ -228,3 +229,101 @@ class FanGroup(BaseFan, ZhaGroupEntity):
         """Run when about to be added to hass."""
         await self.async_update()
         await super().async_added_to_hass()
+
+
+IKEA_SPEED_RANGE = (1, 10)  # off is not included
+IKEA_PRESET_MODES_TO_NAME = {
+    1: PRESET_MODE_AUTO,
+    2: "Speed 1",
+    3: "Speed 1.5",
+    4: "Speed 2",
+    5: "Speed 2.5",
+    6: "Speed 3",
+    7: "Speed 3.5",
+    8: "Speed 4",
+    9: "Speed 4.5",
+    10: "Speed 5",
+}
+IKEA_NAME_TO_PRESET_MODE = {v: k for k, v in IKEA_PRESET_MODES_TO_NAME.items()}
+IKEA_PRESET_MODES = list(IKEA_NAME_TO_PRESET_MODE)
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier", models={"STARKVIND Air purifier"})
+class IkeaFan(BaseFan, ZhaEntity):
+    """Representation of a ZHA fan."""
+
+    def __init__(self, unique_id, zha_device, channels, **kwargs):
+        """Init this sensor."""
+        super().__init__(unique_id, zha_device, channels, **kwargs)
+        self._fan_channel = self.cluster_channels.get("ikea_airpurifier")
+
+    async def async_added_to_hass(self):
+        """Run when about to be added to hass."""
+        await super().async_added_to_hass()
+        self.async_accept_signal(
+            self._fan_channel, SIGNAL_ATTR_UPDATED, self.async_set_state
+        )
+
+    @property
+    def preset_modes(self) -> list[str]:
+        """Return the available preset modes."""
+        return IKEA_PRESET_MODES
+
+    @property
+    def speed_count(self) -> int:
+        """Return the number of speeds the fan supports."""
+        return int_states_in_range(IKEA_SPEED_RANGE)
+
+    async def async_set_percentage(self, percentage: int | None) -> None:
+        """Set the speed percenage of the fan."""
+        if percentage is None:
+            percentage = 0
+        fan_mode = math.ceil(percentage_to_ranged_value(IKEA_SPEED_RANGE, percentage))
+        await self._async_set_fan_mode(fan_mode)
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode for the fan."""
+        if preset_mode not in self.preset_modes:
+            raise NotValidPresetModeError(
+                f"The preset_mode {preset_mode} is not a valid preset_mode: {self.preset_modes}"
+            )
+        await self._async_set_fan_mode(IKEA_NAME_TO_PRESET_MODE[preset_mode])
+
+    @property
+    def percentage(self) -> int | None:
+        """Return the current speed percentage."""
+        if (
+            self._fan_channel.fan_mode is None
+            or self._fan_channel.fan_mode > IKEA_SPEED_RANGE[1]
+        ):
+            return None
+        if self._fan_channel.fan_mode == 0:
+            return 0
+        return ranged_value_to_percentage(IKEA_SPEED_RANGE, self._fan_channel.fan_mode)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        return IKEA_PRESET_MODES_TO_NAME.get(self._fan_channel.fan_mode)
+
+    async def async_turn_on(self, percentage=None, preset_mode=None, **kwargs) -> None:
+        """Turn the entity on."""
+        if percentage is None:
+            percentage = (100 / self.speed_count) * IKEA_NAME_TO_PRESET_MODE[
+                PRESET_MODE_AUTO
+            ]
+        await self.async_set_percentage(percentage)
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Turn the entity off."""
+        await self.async_set_percentage(0)
+
+    @callback
+    def async_set_state(self, attr_id, attr_name, value):
+        """Handle state update from channel."""
+        self.async_write_ha_state()
+
+    async def _async_set_fan_mode(self, fan_mode: int) -> None:
+        """Set the fan mode for the fan."""
+        await self._fan_channel.async_set_speed(fan_mode)
+        self.async_set_state(0, "fan_mode", fan_mode)
