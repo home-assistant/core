@@ -7,11 +7,6 @@
           "client_id": "Client ID",
           "scan_interval": "Interval (in minutes)"
         }
-      },
-      "user": {
-        "data": {
-          "scan_interval": "Interval (in minutes)"
-        }
       }
     },
     "error": {

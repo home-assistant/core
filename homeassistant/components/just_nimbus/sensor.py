@@ -6,11 +6,7 @@ from datetime import timedelta
 
 import justnimbus
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
@@ -145,7 +141,6 @@ async def async_setup_entry(
 
 class JustNimbusSensor(
     JustNimbusEntity,
-    SensorEntity,
 ):
     """Implementation of the JustNimbus sensor."""
 
