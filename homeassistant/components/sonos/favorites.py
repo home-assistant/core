@@ -1,11 +1,10 @@
 """Class representing Sonos favorites."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 import logging
 import re
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from soco import SoCo
 from soco.data_structures import DidlFavorite
@@ -78,30 +77,30 @@ class SonosFavorites(SonosHouseholdCoordinator):
         container_id = int(match.groups()[0])
         event_id = int(event_id.split(",")[-1])
 
-        lock = cast(asyncio.Lock, self.cache_update_lock)
-        async with lock:  # pylint:disable=not-async-context-manager
-            last_poll_id = self.last_polled_ids.get(speaker.uid)
-            if (
-                self.last_processed_event_id
-                and event_id <= self.last_processed_event_id
-            ):
-                # Skip updates if this event_id has already been seen
-                if not last_poll_id:
-                    self.last_polled_ids[speaker.uid] = container_id
-                return
+        if self.cache_update_lock:
+            async with self.cache_update_lock:
+                last_poll_id = self.last_polled_ids.get(speaker.uid)
+                if (
+                    self.last_processed_event_id
+                    and event_id <= self.last_processed_event_id
+                ):
+                    # Skip updates if this event_id has already been seen
+                    if not last_poll_id:
+                        self.last_polled_ids[speaker.uid] = container_id
+                    return
 
-            if last_poll_id and container_id <= last_poll_id:
-                return
+                if last_poll_id and container_id <= last_poll_id:
+                    return
 
-            speaker.event_stats.process(event)
-            _LOGGER.debug(
-                "New favorites event %s from %s (was %s)",
-                event_id,
-                speaker.soco,
-                self.last_processed_event_id,
-            )
-            self.last_processed_event_id = event_id
-            await self.async_update_entities(speaker.soco, container_id)
+                speaker.event_stats.process(event)
+                _LOGGER.debug(
+                    "New favorites event %s from %s (was %s)",
+                    event_id,
+                    speaker.soco,
+                    self.last_processed_event_id,
+                )
+                self.last_processed_event_id = event_id
+                await self.async_update_entities(speaker.soco, container_id)
 
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:

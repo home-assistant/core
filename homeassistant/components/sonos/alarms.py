@@ -1,10 +1,9 @@
 """Class representing Sonos alarms."""
 from __future__ import annotations
 
-import asyncio
 from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from soco import SoCo
 from soco.alarms import Alarm, Alarms
@@ -65,13 +64,13 @@ class SonosAlarms(SonosHouseholdCoordinator):
         """Process the event payload in an async lock and update entities."""
         event_id = event.variables["alarm_list_version"].split(":")[-1]
         event_id = int(event_id)
-        lock = cast(asyncio.Lock, self.cache_update_lock)
-        async with lock:  # pylint:disable=not-async-context-manager
-            if event_id <= self.last_processed_event_id:
-                # Skip updates if this event_id has already been seen
-                return
-            speaker.event_stats.process(event)
-            await self.async_update_entities(speaker.soco, event_id)
+        if self.cache_update_lock:
+            async with self.cache_update_lock:
+                if event_id <= self.last_processed_event_id:
+                    # Skip updates if this event_id has already been seen
+                    return
+                speaker.event_stats.process(event)
+                await self.async_update_entities(speaker.soco, event_id)
 
     @soco_error()
     def update_cache(self, soco: SoCo, update_id: int | None = None) -> bool:
