@@ -120,7 +120,7 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
         self._mapped_filters = mapped_filters
         return True
 
-    def set_scanning_filters(self, *args: Any, **kwargs: Any) -> None:
+    def set_scanning_filter(self, *args: Any, **kwargs: Any) -> None:
         """Set the filters to use."""
         if self._map_filters(*args, **kwargs):
             self._setup_detection_callback()
