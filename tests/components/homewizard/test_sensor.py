@@ -570,7 +570,7 @@ async def test_sensor_entity_active_liters(
     )
 
     assert state.attributes.get(ATTR_STATE_CLASS) == STATE_CLASS_MEASUREMENT
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "l/m"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "l/min"
     assert ATTR_DEVICE_CLASS not in state.attributes
     assert state.attributes.get(ATTR_ICON) == "mdi:water"
 
