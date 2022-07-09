@@ -141,7 +141,7 @@ def get_device_discovery_info(
     result = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
         hostname=device.description.name,
-        name=device.description.name,
+        name=device.description.name + "._hap._tcp.local.",
         addresses=["127.0.0.1"],
         port=8080,
         properties={
