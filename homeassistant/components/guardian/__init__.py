@@ -51,8 +51,6 @@ DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 SERVICE_NAME_DISABLE_AP = "disable_ap"
 SERVICE_NAME_ENABLE_AP = "enable_ap"
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
-SERVICE_NAME_REBOOT = "reboot"
-SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
@@ -60,8 +58,6 @@ SERVICES = (
     SERVICE_NAME_DISABLE_AP,
     SERVICE_NAME_ENABLE_AP,
     SERVICE_NAME_PAIR_SENSOR,
-    SERVICE_NAME_REBOOT,
-    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
     SERVICE_NAME_UNPAIR_SENSOR,
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
@@ -89,7 +85,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 )
 
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
 
 @callback
@@ -203,16 +199,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await paired_sensor_manager.async_pair_sensor(uid)
 
     @extract_client
-    async def async_reboot(call: ServiceCall, client: Client) -> None:
-        """Reboot the valve controller."""
-        await client.system.reboot()
-
-    @extract_client
-    async def async_reset_valve_diagnostics(call: ServiceCall, client: Client) -> None:
-        """Fully reset system motor diagnostics."""
-        await client.valve.reset()
-
-    @extract_client
     async def async_unpair_sensor(call: ServiceCall, client: Client) -> None:
         """Remove a paired sensor."""
         entry_id = async_get_entry_id_for_service_call(hass, call)
@@ -238,12 +224,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
-        ),
-        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
-        (
-            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
-            SERVICE_BASE_SCHEMA,
-            async_reset_valve_diagnostics,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
@@ -389,7 +369,6 @@ class GuardianEntity(CoordinatorEntity):
 
         This should be extended by Guardian platforms.
         """
-        raise NotImplementedError
 
 
 class PairedSensorEntity(GuardianEntity):
@@ -454,7 +433,6 @@ class ValveControllerEntity(GuardianEntity):
 
         This should be extended by Guardian platforms.
         """
-        raise NotImplementedError
 
     @callback
     def async_add_coordinator_update_listener(self, api: str) -> None:
