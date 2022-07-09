@@ -1,6 +1,7 @@
 """Config flow for Lidarr."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientConnectorError
@@ -8,19 +9,13 @@ from aiopyarr import SystemStatus, exceptions
 from aiopyarr.lidarr_client import LidarrClient
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import (
-    CONF_MAX_RECORDS,
-    DEFAULT_MAX_RECORDS,
-    DEFAULT_NAME,
-    DEFAULT_URL,
-    DOMAIN,
-)
+from .const import DEFAULT_NAME, DOMAIN
 
 
 class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -32,13 +27,7 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the flow."""
         self.entry: ConfigEntry | None = None
 
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return LidarrOptionsFlowHandler(config_entry)
-
-    async def async_step_reauth(self, user_input: dict[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, user_input: Mapping[str, Any]) -> FlowResult:
         """Handle configuration by re-auth."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
@@ -85,22 +74,14 @@ class LidarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     return self.async_abort(reason="reauth_successful")
 
-                return self.async_create_entry(
-                    title=DEFAULT_NAME,
-                    data=user_input,
-                    options={
-                        CONF_MAX_RECORDS: DEFAULT_MAX_RECORDS,
-                    },
-                )
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(
-                        CONF_URL, default=user_input.get(CONF_URL, DEFAULT_URL)
-                    ): str,
+                    vol.Required(CONF_URL, default=user_input.get(CONF_URL, "")): str,
                     vol.Optional(CONF_API_KEY): str,
                     vol.Optional(
                         CONF_VERIFY_SSL,
@@ -128,29 +109,3 @@ async def validate_input(
     if CONF_API_KEY not in data:
         return await lidarr.async_try_zeroconf()
     return await lidarr.async_get_system_status()
-
-
-class LidarrOptionsFlowHandler(OptionsFlow):
-    """Handle Lidarr client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, int] | None = None
-    ) -> FlowResult:
-        """Manage Lidarr options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_MAX_RECORDS,
-                default=self.config_entry.options.get(
-                    CONF_MAX_RECORDS, DEFAULT_MAX_RECORDS
-                ),
-            ): int,
-        }
-
-        return self.async_show_form(step_id="init", data_schema=vol.Schema(options))

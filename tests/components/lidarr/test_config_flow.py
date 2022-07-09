@@ -4,7 +4,7 @@ from unittest.mock import patch
 from aiopyarr import ArrAuthenticationException, ArrConnectionException, ArrException
 
 from homeassistant import data_entry_flow
-from homeassistant.components.lidarr.const import CONF_MAX_RECORDS, DEFAULT_NAME, DOMAIN
+from homeassistant.components.lidarr.const import DEFAULT_NAME, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
 from homeassistant.const import CONF_API_KEY, CONF_SOURCE
 from homeassistant.core import HomeAssistant
@@ -40,7 +40,6 @@ async def test_flow_user_form(
     assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
     assert result["data"] == CONF_DATA
-    assert result["options"] == {CONF_MAX_RECORDS: 50}
 
 
 async def test_flow_user_invalid_auth(hass: HomeAssistant) -> None:
@@ -141,23 +140,3 @@ async def test_flow_reauth(
     assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
     assert result["reason"] == "reauth_successful"
     assert entry.data[CONF_API_KEY] == "abc123"
-
-
-async def test_options_flow(
-    hass: HomeAssistant,
-):
-    """Test updating options."""
-    entry = create_entry(hass)
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_MAX_RECORDS: 100},
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
-    assert result["data"][CONF_MAX_RECORDS] == 100

@@ -6,8 +6,8 @@ from datetime import timedelta
 
 from aiopyarr import (
     LidarrQueue,
+    LidarrRootFolder,
     LidarrWantedCutoff,
-    RootFolder,
     SystemStatus,
     exceptions,
 )
@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_MAX_RECORDS, DOMAIN, LOGGER
+from .const import DEFAULT_MAX_RECORDS, DOMAIN, LOGGER
 
 
 class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
@@ -41,7 +41,7 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.api_client = api_client
-        self.disk_space: list[RootFolder] = []
+        self.disk_space: list[LidarrRootFolder] = []
         self.host_configuration = host_configuration
         self.queue: LidarrQueue = LidarrQueue({"records": []})
         self.system_status: SystemStatus = SystemStatus({"": ""})
@@ -49,7 +49,6 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
 
     async def _async_update_data(self) -> None:
         """Get the latest data from Lidarr."""
-        records = self.config_entry.options[CONF_MAX_RECORDS]
         try:
             [
                 self.disk_space,
@@ -59,9 +58,9 @@ class LidarrDataUpdateCoordinator(DataUpdateCoordinator):
             ] = await asyncio.gather(
                 *[
                     self.api_client.async_get_root_folders(),
-                    self.api_client.async_get_queue(page_size=records),
+                    self.api_client.async_get_queue(page_size=DEFAULT_MAX_RECORDS),
                     self.api_client.async_get_system_status(),
-                    self.api_client.async_get_wanted(page_size=records),
+                    self.api_client.async_get_wanted(page_size=DEFAULT_MAX_RECORDS),
                 ]
             )
 

@@ -26,16 +26,12 @@ BYTE_SIZES = [
     DATA_YOTTABYTES,
 ]
 
-# Config Keys
-CONF_MAX_RECORDS = "max_records"
-
 # Defaults
 DEFAULT_DAYS = "1"
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Lidarr"
 DEFAULT_UNIT = DATA_GIGABYTES
-DEFAULT_MAX_RECORDS = 50
-DEFAULT_URL = "http://172.17.0.1:8686"
+DEFAULT_MAX_RECORDS = 20
 
 DOMAIN: Final = "lidarr"
 

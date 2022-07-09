@@ -1,12 +1,7 @@
 """Tests for the Lidarr component."""
 from aiopyarr.lidarr_client import LidarrClient
 
-from homeassistant.components.lidarr.const import (
-    CONF_MAX_RECORDS,
-    DEFAULT_MAX_RECORDS,
-    DEFAULT_URL,
-    DOMAIN,
-)
+from homeassistant.components.lidarr.const import DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_URL,
@@ -21,23 +16,18 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 BASE_PATH = ""
 API_KEY = "1234567890abcdef1234567890abcdef"
-client = LidarrClient(
-    session=async_get_clientsession, api_token=API_KEY, url=DEFAULT_URL
-)
-API_URL = f"{DEFAULT_URL}/api/{client._host.api_ver}"
+URL = "http://127.0.0.1:8686"
+client = LidarrClient(session=async_get_clientsession, api_token=API_KEY, url=URL)
+API_URL = f"{URL}/api/{client._host.api_ver}"
 
 MOCK_REAUTH_INPUT = {CONF_API_KEY: "new_key"}
 
 MOCK_USER_INPUT = {
-    CONF_URL: DEFAULT_URL,
+    CONF_URL: URL,
     CONF_VERIFY_SSL: False,
 }
 
-CONF_DATA = {
-    CONF_URL: DEFAULT_URL,
-    CONF_API_KEY: API_KEY,
-    CONF_VERIFY_SSL: False,
-}
+CONF_DATA = MOCK_USER_INPUT | {CONF_API_KEY: API_KEY}
 
 
 def mock_connection(
@@ -57,7 +47,6 @@ def create_entry(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=CONF_DATA,
-        options={CONF_MAX_RECORDS: DEFAULT_MAX_RECORDS},
     )
 
     entry.add_to_hass(hass)

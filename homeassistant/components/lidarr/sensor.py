@@ -25,6 +25,16 @@ from .const import BYTE_SIZES, DOMAIN
 from .coordinator import LidarrDataUpdateCoordinator
 
 
+def get_space(coordinator: LidarrDataUpdateCoordinator, name: str) -> str:
+    """Get space."""
+    space = []
+    for mount in coordinator.disk_space:
+        if name in mount.path:
+            mount.freeSpace = mount.freeSpace if mount.accessible else 0
+            space.append(mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES))
+    return f"{space[0]:.2f}"
+
+
 @dataclass
 class LidarrSensorEntityDescription(SensorEntityDescription):
     """Class to describe a Lidarr sensor."""
@@ -38,16 +48,14 @@ SENSOR_TYPES: tuple[LidarrSensorEntityDescription, ...] = (
         name="Disk Space",
         native_unit_of_measurement=DATA_GIGABYTES,
         icon="mdi:harddisk",
-        value=lambda coordinator, name: get_space(  # pylint:disable=unnecessary-lambda
-            coordinator, name
-        ),
+        value=get_space,
         state_class=SensorStateClass.TOTAL,
     ),
     LidarrSensorEntityDescription(
         key="queue",
         name="Queue",
         native_unit_of_measurement="Albums",
-        icon="mdi:music",
+        icon="mdi:download",
         value=lambda coordinator, _: coordinator.queue.totalRecords,
         state_class=SensorStateClass.TOTAL,
     ),
@@ -115,16 +123,6 @@ class LidarrSensor(LidarrEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value(self.coordinator, self.ext_name)
-
-
-def get_space(coordinator: LidarrDataUpdateCoordinator, name: str) -> str:
-    """Get space."""
-    space = [
-        mount.freeSpace / 1024 ** BYTE_SIZES.index(DATA_GIGABYTES)
-        for mount in coordinator.disk_space
-        if name in mount.path
-    ]
-    return f"{space[0]:.2f}"
 
 
 def queue_str(item: LidarrQueueItem) -> str:
