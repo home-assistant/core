@@ -8,7 +8,11 @@ from typing import Any, Final, cast
 
 from bleak import BleakScanner
 from bleak.backends.device import BLEDevice
-from bleak.backends.scanner import AdvertisementData, AdvertisementDataCallback
+from bleak.backends.scanner import (
+    AdvertisementData,
+    AdvertisementDataCallback,
+    BaseBleakScanner,
+)
 from lru import LRU  # pylint: disable=no-name-in-module
 
 from homeassistant.core import CALLBACK_TYPE, callback as hass_callback
@@ -88,7 +92,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
             _dispatch_callback(*callback_filters, device, advertisement_data)
 
 
-class HaBleakScannerWrapper(BleakScanner):  # type: ignore[misc]
+class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
     """A wrapper that uses the single instance."""
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
