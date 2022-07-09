@@ -909,6 +909,9 @@ py-synologydsm-api==1.0.8
 # homeassistant.components.seventeentrack
 py17track==2021.12.2
 
+# homeassistant.components.hdmi_cec
+pyCEC==0.5.1
+
 # homeassistant.components.control4
 pyControl4==0.0.6
 
