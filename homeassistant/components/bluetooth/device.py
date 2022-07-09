@@ -10,7 +10,7 @@ from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
 from homeassistant.helpers.typing import StateType
 
-from . import BluetoothChange, BluetoothServiceInfo
+from . import BluetoothServiceInfo
 from .binary_sensor import (
     BINARY_SENSOR_TYPE_TO_DEVICE_CLASS,
     BluetoothBinarySensorEntityDescription,
@@ -41,9 +41,9 @@ class BluetoothDeviceData:
             BluetoothSensorEntityDescription | BluetoothBinarySensorEntityDescription,
         ] = {}
 
-    @property
-    def supported(self) -> bool:
+    def supported(self, service_info: BluetoothServiceInfo) -> bool:
         """Return True if the device is supported."""
+        self.generate_update(service_info)
         return bool(self._device_id_to_name or self._device_id_to_type)
 
     @property
@@ -60,7 +60,7 @@ class BluetoothDeviceData:
         self._device_id_to_type[device_id] = device_type
 
     def generate_update(
-        self, service_info: BluetoothServiceInfo, change: BluetoothChange
+        self, service_info: BluetoothServiceInfo
     ) -> dict[
         BluetoothDeviceKey,
         BluetoothSensorEntityDescription | BluetoothBinarySensorEntityDescription,
