@@ -124,7 +124,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Handle shutdown tasks."""
         zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
         await zha_gateway.shutdown()
-        await zha_gateway.async_update_device_storage()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
         ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
@@ -137,7 +136,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload ZHA config entry."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     await zha_gateway.shutdown()
-    await zha_gateway.async_update_device_storage()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
