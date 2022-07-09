@@ -77,11 +77,10 @@ class Device:
     @property
     def attrs(self) -> dict[str, Any]:
         """Return device attributes."""
-        attr_data = self._wireless_params if self._wireless_params else self._params
+        attr_data = self._wireless_params | self._params
         for attr in ATTR_DEVICE_TRACKER:
             if attr in attr_data:
                 self._attrs[slugify(attr)] = attr_data[attr]
-        self._attrs["ip_address"] = self._params.get("active-address")
         return self._attrs
 
     def update(
@@ -250,7 +249,7 @@ class MikrotikData:
     ) -> list[dict[str, Any]]:
         """Retrieve data from Mikrotik API."""
         try:
-            _LOGGER.info("Running command %s", cmd)
+            _LOGGER.debug("Running command %s", cmd)
             if params:
                 return list(self.api(cmd=cmd, **params))
             return list(self.api(cmd=cmd))
