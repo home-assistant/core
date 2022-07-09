@@ -31,7 +31,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             service_info.manufacturer_data,
         ):
             data["rssi"] = service_info.rssi
-            _LOGGER.warning("Parser returned data: %s", data)
             return data
         return None
 
