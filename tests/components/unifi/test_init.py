@@ -51,7 +51,7 @@ async def test_controller_mac(hass):
         mock_controller.return_value.api.url = "https://123:443"
         assert await unifi.async_setup_entry(hass, entry) is True
 
-    assert len(mock_controller.mock_calls) == 2
+    assert len(mock_controller.mock_calls) == 26
 
     device_registry = dr.async_get(hass)
     device = device_registry.async_get_or_create(

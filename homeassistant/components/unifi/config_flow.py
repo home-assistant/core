@@ -46,7 +46,7 @@ from .const import (
     DEFAULT_POE_CLIENTS,
     DOMAIN as UNIFI_DOMAIN,
 )
-from .controller import UniFiController, get_controller
+from .controller import UniFiController, get_unifi_controller
 from .errors import AuthenticationRequired, CannotConnect
 
 DEFAULT_PORT = 443
@@ -99,16 +99,7 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             }
 
             try:
-                controller = await get_controller(
-                    self.hass,
-                    host=self.config[CONF_HOST],
-                    username=self.config[CONF_USERNAME],
-                    password=self.config[CONF_PASSWORD],
-                    port=self.config[CONF_PORT],
-                    site=self.config[CONF_SITE_ID],
-                    verify_ssl=self.config[CONF_VERIFY_SSL],
-                )
-
+                controller = await get_unifi_controller(self.hass, self.config)
                 sites = await controller.sites()
 
             except AuthenticationRequired:
