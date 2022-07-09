@@ -38,22 +38,23 @@ NOT_GOVEE_MANUFACTURER = {76}
 
 
 def parse_govee_from_discovery_data(
-    rssi: int, manufacturer_data: dict[int, bytes]
+    manufacturer_data: dict[int, bytes]
 ) -> dict[str, Any] | None:
     """Parse Govee BLE advertisement data."""
     for device_id, mfr_data in manufacturer_data.items():
         if device_id in NOT_GOVEE_MANUFACTURER:
             continue
-        if result := parse_govee(mfr_data, device_id, rssi):
+        if result := parse_govee(mfr_data, device_id):
             return result
 
     return None
 
 
-def parse_govee(
-    mfr_data: bytes, device_id: int, rssi: int
-) -> dict[str, str | int | float] | None:
+def parse_govee(mfr_data: bytes, device_id: int) -> dict[str, str | int | float] | None:
     """Parser for Govee sensors."""
+    # TODO: Add support for multiple sensors
+    # TODO: standardize data types
+    # TODO: standardize firmware version
 
     # Original messages had the device id
     # appended to the start of the mfr_data
@@ -171,11 +172,8 @@ def parse_govee(
 
     result.update(
         {
-            "rssi": rssi,
             "type": device_type,
-            "packet": "no packet id",
             "firmware": firmware,
-            "data": True,
         }
     )
     return result

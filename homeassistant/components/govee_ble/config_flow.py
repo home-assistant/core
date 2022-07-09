@@ -28,12 +28,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         if not (
-            device := parse_govee_from_discovery_data(
-                discovery_info.name,
-                discovery_info.address,
-                discovery_info.rssi,
-                discovery_info.manufacturer_data,
-            )
+            device := parse_govee_from_discovery_data(discovery_info.manufacturer_data)
         ):
             return self.async_abort(reason="not_govee")
         self._discovery_info = discovery_info
