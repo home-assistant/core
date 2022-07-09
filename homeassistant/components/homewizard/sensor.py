@@ -119,6 +119,20 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
+    SensorEntityDescription(
+        key="active_liter_lpm",
+        name="Active Water Usage",
+        native_unit_of_measurement="l/min",
+        icon="mdi:water",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="total_liter_m3",
+        name="Total Water Usage",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        icon="mdi:gauge",
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
 )
 
 
