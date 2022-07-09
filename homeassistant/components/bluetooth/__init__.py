@@ -311,15 +311,32 @@ class BluetoothManager:
     def async_register_callback(
         self,
         callback: BluetoothCallback,
-        match_dict: BluetoothCallbackMatcher | None = None,
+        matcher: BluetoothCallbackMatcher | None = None,
     ) -> Callable[[], None]:
         """Register a callback."""
-        callback_entry = (callback, match_dict)
+        callback_entry = (callback, matcher)
         self._callbacks.append(callback_entry)
 
         @hass_callback
         def _async_remove_callback() -> None:
             self._callbacks.remove(callback_entry)
+
+        # If we have history for the subscriber, we can trigger the callback
+        # immediately with the last packet so the subscriber can see the
+        # device.
+        if (
+            matcher
+            and (address := matcher.get(ADDRESS))
+            and models.HA_BLEAK_SCANNER
+            and (device_adv_data := models.HA_BLEAK_SCANNER.history.get(address))
+        ):
+            try:
+                callback(
+                    BluetoothServiceInfo.from_advertisement(*device_adv_data),
+                    BluetoothChange.ADVERTISEMENT,
+                )
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Error in bluetooth callback")
 
         return _async_remove_callback
 
