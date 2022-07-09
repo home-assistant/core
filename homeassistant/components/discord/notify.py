@@ -9,7 +9,6 @@ from typing import Any, cast
 
 import nextcord
 from nextcord.abc import Messageable
-import requests
 
 from homeassistant.components.notify import (
     ATTR_DATA,
@@ -18,6 +17,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +68,7 @@ class DiscordNotificationService(BaseNotificationService):
             return False
         return True
 
-    def get_file_from_url(
+    async def async_get_file_from_url(
         self, url: str, verify_ssl: bool, max_file_size: int
     ) -> bytearray | None:
         """Retrieve file bytes from URL."""
@@ -76,36 +76,41 @@ class DiscordNotificationService(BaseNotificationService):
             _LOGGER.error("URL not allowed: %s", url)
             return None
 
-        resp = requests.get(url, verify=verify_ssl, timeout=30, stream=True)
-        resp.raise_for_status()
+        session = async_get_clientsession(self.hass)
 
-        if (
-            resp.headers.get("Content-Length") is not None
-            and int(str(resp.headers.get("Content-Length"))) > max_file_size
-        ):
-            _LOGGER.error(
-                "Attachment too large (Content-Length reports %s). Max size: %s bytes",
-                int(str(resp.headers.get("Content-Length"))),
-                max_file_size,
-            )
-            return None
-
-        file_size = 0
-        byte_chunks = bytearray()
-
-        for byte_chunk in resp.iter_content(1024):
-            file_size += len(byte_chunk)
-            if file_size > max_file_size:
+        async with session.get(
+            url,
+            ssl=verify_ssl,
+            timeout=30,
+            raise_for_status=True,
+        ) as resp:
+            if (
+                resp.headers.get("Content-Length") is not None
+                and int(str(resp.headers.get("Content-Length"))) > max_file_size
+            ):
                 _LOGGER.error(
-                    "Attachment too large (Stream reports %s). Max size: %s bytes",
-                    file_size,
+                    "Attachment too large (Content-Length reports %s). Max size: %s bytes",
+                    int(str(resp.headers.get("Content-Length"))),
                     max_file_size,
                 )
                 return None
 
-            byte_chunks.extend(byte_chunk)
+            file_size = 0
+            byte_chunks = bytearray()
 
-        return byte_chunks
+            async for byte_chunk in resp.content.iter_chunked(1024):
+                file_size += len(byte_chunk)
+                if file_size > max_file_size:
+                    _LOGGER.error(
+                        "Attachment too large (Stream reports %s). Max size: %s bytes",
+                        file_size,
+                        max_file_size,
+                    )
+                    return None
+
+                byte_chunks.extend(byte_chunk)
+
+            return byte_chunks
 
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Login to Discord, send message to channel(s) and log out."""
@@ -167,8 +172,7 @@ class DiscordNotificationService(BaseNotificationService):
                 verify_ssl = True
 
             for url in data.get(ATTR_URLS, []):
-                file = await self.hass.async_add_executor_job(
-                    self.get_file_from_url,
+                file = await self.async_get_file_from_url(
                     url,
                     verify_ssl,
                     MAX_ALLOWED_DOWNLOAD_SIZE_BYTES,

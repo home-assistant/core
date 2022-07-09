@@ -2,10 +2,11 @@
 from http import HTTPStatus
 
 import pytest
-from requests_mock.mocker import Mocker
 
 from homeassistant.components.discord.notify import DiscordNotificationService
 from homeassistant.core import HomeAssistant
+
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 MESSAGE = "Testing Discord Messenger platform"
 CONTENT = b"TestContent"
@@ -22,25 +23,27 @@ def discord_notification_service(hass: HomeAssistant) -> DiscordNotificationServ
 
 
 @pytest.fixture
-def discord_requests_mock_factory(requests_mock: Mocker) -> Mocker:
+def discord_aiohttp_mock_factory(
+    aioclient_mock: AiohttpClientMocker,
+) -> AiohttpClientMocker:
     """Create Discord service mock from factory."""
 
-    def _discord_requests_mock_factory(content_length_header: str = None) -> Mocker:
+    def _discord_aiohttp_mock_factory(
+        content_length_header: str = None,
+    ) -> AiohttpClientMocker:
         if content_length_header is not None:
-            requests_mock.register_uri(
-                "GET",
+            aioclient_mock.get(
                 URL_ATTACHMENT,
-                status_code=HTTPStatus.OK,
+                status=HTTPStatus.OK,
                 content=CONTENT,
                 headers={"Content-Length": content_length_header},
             )
         else:
-            requests_mock.register_uri(
-                "GET",
+            aioclient_mock.get(
                 URL_ATTACHMENT,
-                status_code=HTTPStatus.OK,
+                status=HTTPStatus.OK,
                 content=CONTENT,
             )
-        return requests_mock
+        return aioclient_mock
 
-    return _discord_requests_mock_factory
+    return _discord_aiohttp_mock_factory
