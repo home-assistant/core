@@ -1323,7 +1323,7 @@ py-zabbix==1.1.7
 py17track==2021.12.2
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.5.1
+pyCEC==0.5.2
 
 # homeassistant.components.control4
 pyControl4==0.0.6
