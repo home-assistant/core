@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aiounifi.api import SOURCE_DATA
+from aiounifi.api import SOURCE_DATA, SOURCE_EVENT
 from aiounifi.events import (
     ACCESS_POINT_UPGRADED,
     GATEWAY_UPGRADED,
@@ -27,7 +27,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN as UNIFI_DOMAIN
-from .unifi_client import UniFiClient
+from .controller import UniFiController
+from .unifi_client import UniFiClientBase
 from .unifi_entity_base import UniFiBase
 
 LOGGER = logging.getLogger(__name__)
@@ -79,7 +80,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
-    controller = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
+    controller: UniFiController = hass.data[UNIFI_DOMAIN][config_entry.entry_id]
     controller.entities[DOMAIN] = {CLIENT_TRACKER: set(), DEVICE_TRACKER: set()}
 
     @callback
@@ -144,7 +145,7 @@ def add_device_entities(controller, async_add_entities, devices):
         async_add_entities(trackers)
 
 
-class UniFiClientTracker(UniFiClient, ScannerEntity):
+class UniFiClientTracker(UniFiClientBase, ScannerEntity):
     """Representation of a network client."""
 
     DOMAIN = DOMAIN
@@ -155,6 +156,8 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         super().__init__(client, controller)
 
         self._controller_connection_state_changed = False
+
+        self._only_listen_to_data_source = False
 
         last_seen = client.last_seen or 0
         self.schedule_update = self._is_connected = (
@@ -224,6 +227,23 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         ):
             self._is_connected = True
             self.schedule_update = True
+            self._only_listen_to_data_source = True
+
+        elif (
+            self.client.last_updated == SOURCE_EVENT
+            and not self._only_listen_to_data_source
+        ):
+
+            if (self.is_wired and self.client.event.event in WIRED_CONNECTION) or (
+                not self.is_wired and self.client.event.event in WIRELESS_CONNECTION
+            ):
+                self._is_connected = True
+                self.schedule_update = False
+                self.controller.async_heartbeat(self.unique_id)
+                super().async_update_callback()
+
+            else:
+                self.schedule_update = True
 
         self._async_log_debug_data("update_callback")
 
@@ -241,11 +261,6 @@ class UniFiClientTracker(UniFiClient, ScannerEntity):
         self._is_connected = False
         self.async_write_ha_state()
         self._async_log_debug_data("make_disconnected")
-
-    @property
-    def device_info(self) -> None:
-        """Return no device info."""
-        return None
 
     @property
     def is_connected(self):

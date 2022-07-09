@@ -50,10 +50,7 @@ from .const import (
     LOGGER,
 )
 
-DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
-DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -186,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_PASSWORD],
             port=entry.data[CONF_PORT],
-            ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
+            use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         raise ConfigEntryNotReady from err

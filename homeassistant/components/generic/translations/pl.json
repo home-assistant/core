@@ -7,7 +7,9 @@
         "error": {
             "already_exists": "Kamera z tymi ustawieniami adresu URL ju\u017c istnieje.",
             "invalid_still_image": "Adres URL nie zwr\u00f3ci\u0142 prawid\u0142owego obrazu nieruchomego (still image)",
+            "malformed_url": "Nieprawid\u0142owy adres URL",
             "no_still_image_or_stream_url": "Musisz poda\u0107 przynajmniej nieruchomy obraz (still image) lub adres URL strumienia",
+            "relative_url": "Wzgl\u0119dne adresy URL s\u0105 niedozwolone",
             "stream_file_not_found": "Nie znaleziono pliku podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem (czy ffmpeg jest zainstalowany?)",
             "stream_http_not_found": "\"HTTP 404 Nie znaleziono\" podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
             "stream_io_error": "B\u0142\u0105d wej\u015bcia/wyj\u015bcia podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
@@ -15,6 +17,7 @@
             "stream_no_video": "Strumie\u0144 nie zawiera wideo",
             "stream_not_permitted": "Operacja nie jest dozwolona podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
             "stream_unauthorised": "Autoryzacja nie powiod\u0142a si\u0119 podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
+            "template_error": "B\u0142\u0105d renderowania szablonu. Przejrzyj log, aby uzyska\u0107 wi\u0119cej informacji.",
             "timeout": "Przekroczono limit czasu podczas \u0142adowania adresu URL",
             "unable_still_load": "Nie mo\u017cna za\u0142adowa\u0107 prawid\u0142owego obrazu z adresu URL nieruchomego obrazu (np. nieprawid\u0142owy host, adres URL lub b\u0142\u0105d uwierzytelniania). Przejrzyj logi, aby uzyska\u0107 wi\u0119cej informacji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"
@@ -49,7 +52,9 @@
         "error": {
             "already_exists": "Kamera z tymi ustawieniami adresu URL ju\u017c istnieje.",
             "invalid_still_image": "Adres URL nie zwr\u00f3ci\u0142 prawid\u0142owego obrazu nieruchomego (still image)",
+            "malformed_url": "Nieprawid\u0142owy adres URL",
             "no_still_image_or_stream_url": "Musisz poda\u0107 przynajmniej nieruchomy obraz (still image) lub adres URL strumienia",
+            "relative_url": "Wzgl\u0119dne adresy URL s\u0105 niedozwolone",
             "stream_file_not_found": "Nie znaleziono pliku podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem (czy ffmpeg jest zainstalowany?)",
             "stream_http_not_found": "\"HTTP 404 Nie znaleziono\" podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
             "stream_io_error": "B\u0142\u0105d wej\u015bcia/wyj\u015bcia podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
@@ -57,6 +62,7 @@
             "stream_no_video": "Strumie\u0144 nie zawiera wideo",
             "stream_not_permitted": "Operacja nie jest dozwolona podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem. Z\u0142y protok\u00f3\u0142 transportowy RTSP?",
             "stream_unauthorised": "Autoryzacja nie powiod\u0142a si\u0119 podczas pr\u00f3by po\u0142\u0105czenia ze strumieniem",
+            "template_error": "B\u0142\u0105d renderowania szablonu. Przejrzyj log, aby uzyska\u0107 wi\u0119cej informacji.",
             "timeout": "Przekroczono limit czasu podczas \u0142adowania adresu URL",
             "unable_still_load": "Nie mo\u017cna za\u0142adowa\u0107 prawid\u0142owego obrazu z adresu URL nieruchomego obrazu (np. nieprawid\u0142owy host, adres URL lub b\u0142\u0105d uwierzytelniania). Przejrzyj logi, aby uzyska\u0107 wi\u0119cej informacji.",
             "unknown": "Nieoczekiwany b\u0142\u0105d"

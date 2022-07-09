@@ -866,7 +866,7 @@ async def test_event_listener_filtered_allowlist(
         FilterTest("fake.excluded", False),
         FilterTest("another_fake.denied", False),
         FilterTest("fake.excluded_entity", False),
-        FilterTest("another_fake.included_entity", False),
+        FilterTest("another_fake.included_entity", True),
     ]
     execute_filter_test(hass, tests, handler_method, write_api, get_mock_call)
 

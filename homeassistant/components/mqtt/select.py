@@ -1,7 +1,6 @@
 """Configure select in a device through MQTT topic."""
 from __future__ import annotations
 
-import asyncio
 import functools
 import logging
 
@@ -17,8 +16,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttCommandTemplate, MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
@@ -31,11 +30,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttCommandTemplate, MqttValueTemplate
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ MQTT_SELECT_ATTRIBUTES_BLOCKED = frozenset(
 )
 
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_RW_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
@@ -79,7 +79,11 @@ async def async_setup_platform(
     """Set up MQTT select configured under the select platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, select.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        select.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -90,14 +94,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT select through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, select.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_yaml_entities(hass, select.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -214,6 +211,6 @@ class MqttSelect(MqttEntity, SelectEntity, RestoreEntity):
         )
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic

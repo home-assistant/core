@@ -52,8 +52,11 @@ NO_IOT_CLASS = [
     "downloader",
     "ffmpeg",
     "frontend",
+    "hardkernel",
+    "hardware",
     "history",
     "homeassistant",
+    "homeassistant_yellow",
     "image",
     "input_boolean",
     "input_button",
@@ -76,6 +79,8 @@ NO_IOT_CLASS = [
     "profiler",
     "proxy",
     "python_script",
+    "raspberry_pi",
+    "resolution_center",
     "safe_mode",
     "script",
     "search",
@@ -153,7 +158,7 @@ MANIFEST_SCHEMA = vol.Schema(
     {
         vol.Required("domain"): str,
         vol.Required("name"): str,
-        vol.Optional("integration_type"): "helper",
+        vol.Optional("integration_type"): vol.In(["hardware", "helper"]),
         vol.Optional("config_flow"): bool,
         vol.Optional("mqtt"): [str],
         vol.Optional("zeroconf"): [
@@ -185,6 +190,16 @@ MANIFEST_SCHEMA = vol.Schema(
         vol.Optional("ssdp"): vol.Schema(
             vol.All([vol.All(vol.Schema({}, extra=vol.ALLOW_EXTRA), vol.Length(min=1))])
         ),
+        vol.Optional("bluetooth"): [
+            vol.Schema(
+                {
+                    vol.Optional("service_uuid"): vol.All(str, verify_lowercase),
+                    vol.Optional("local_name"): vol.All(str),
+                    vol.Optional("manufacturer_id"): int,
+                    vol.Optional("manufacturer_data_first_byte"): int,
+                }
+            )
+        ],
         vol.Optional("homekit"): vol.Schema({vol.Optional("models"): [str]}),
         vol.Optional("dhcp"): [
             vol.Schema(

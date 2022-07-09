@@ -1,11 +1,11 @@
 repos:
   - repo: https://github.com/asottile/pyupgrade
-    rev: v2.32.1
+    rev: v2.34.0
     hooks:
       - id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
         args:
@@ -93,10 +93,10 @@ repos:
         language: script
         types: [python]
         require_serial: true
-        files: ^homeassistant/.+\.py$
+        files: ^(homeassistant|pylint)/.+\.py$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint -j 0
+        entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
         language: script
         types: [python]
         files: ^homeassistant/.+\.py$
@@ -106,7 +106,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(homeassistant/.+/manifest\.json|setup\.cfg|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
+        files: ^(homeassistant/.+/manifest\.json|pyproject\.toml|\.pre-commit-config\.yaml|script/gen_requirements_all\.py)$
       - id: hassfest
         name: hassfest
         entry: script/run-in-env.sh python3 -m script.hassfest
@@ -120,7 +120,7 @@ repos:
         pass_filenames: false
         language: script
         types: [text]
-        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|setup\.cfg)$
+        files: ^(script/hassfest/metadata\.py|homeassistant/const\.py$|pyproject\.toml)$
       - id: hassfest-mypy-config
         name: hassfest-mypy-config
         entry: script/run-in-env.sh python3 -m script.hassfest -p mypy_config

@@ -1,47 +1,34 @@
 """The Synology DSM component."""
 from __future__ import annotations
 
-from datetime import timedelta
+from itertools import chain
 import logging
-from typing import Any
 
-import async_timeout
 from synology_dsm.api.surveillance_station import SynoSurveillanceStation
 from synology_dsm.api.surveillance_station.camera import SynoCamera
-from synology_dsm.exceptions import (
-    SynologyDSMAPIErrorException,
-    SynologyDSMLogin2SARequiredException,
-    SynologyDSMLoginDisabledAccountException,
-    SynologyDSMLoginFailedException,
-    SynologyDSMLoginInvalidException,
-    SynologyDSMLoginPermissionDeniedException,
-    SynologyDSMRequestException,
-)
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import SynoApi
 from .const import (
-    COORDINATOR_CAMERAS,
-    COORDINATOR_CENTRAL,
-    COORDINATOR_SWITCHES,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
     PLATFORMS,
-    SIGNAL_CAMERA_SOURCE_CHANGED,
-    SYNO_API,
-    SYSTEM_LOADED,
-    UNDO_UPDATE_LISTENER,
+    SYNOLOGY_AUTH_FAILED_EXCEPTIONS,
+    SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
+from .coordinator import (
+    SynologyDSMCameraUpdateCoordinator,
+    SynologyDSMCentralUpdateCoordinator,
+    SynologyDSMSwitchUpdateCoordinator,
+)
+from .models import SynologyDSMData
 from .service import async_setup_services
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
@@ -79,30 +66,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = SynoApi(hass, entry)
     try:
         await api.async_setup()
-    except (
-        SynologyDSMLogin2SARequiredException,
-        SynologyDSMLoginDisabledAccountException,
-        SynologyDSMLoginInvalidException,
-        SynologyDSMLoginPermissionDeniedException,
-    ) as err:
+    except SYNOLOGY_AUTH_FAILED_EXCEPTIONS as err:
         if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryAuthFailed(f"reason: {details}") from err
-    except (SynologyDSMLoginFailedException, SynologyDSMRequestException) as err:
+    except SYNOLOGY_CONNECTION_EXCEPTIONS as err:
         if err.args[0] and isinstance(err.args[0], dict):
             details = err.args[0].get(EXCEPTION_DETAILS, EXCEPTION_UNKNOWN)
         else:
             details = EXCEPTION_UNKNOWN
         raise ConfigEntryNotReady(details) from err
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.unique_id] = {
-        UNDO_UPDATE_LISTENER: entry.add_update_listener(_async_update_listener),
-        SYNO_API: api,
-        SYSTEM_LOADED: True,
-    }
 
     # Services
     await async_setup_services(hass)
@@ -114,114 +89,78 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry, data={**entry.data, CONF_MAC: network.macs}
         )
 
-    async def async_coordinator_update_data_cameras() -> dict[
-        str, dict[str, SynoCamera]
-    ] | None:
-        """Fetch all camera data from api."""
-        if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
-            raise UpdateFailed("System not fully loaded")
+    # These all create executor jobs so we do not gather here
+    coordinator_central = SynologyDSMCentralUpdateCoordinator(hass, entry, api)
+    await coordinator_central.async_config_entry_first_refresh()
 
-        if SynoSurveillanceStation.CAMERA_API_KEY not in api.dsm.apis:
-            return None
+    available_apis = api.dsm.apis
 
-        surveillance_station = api.surveillance_station
-        current_data: dict[str, SynoCamera] = {
-            camera.id: camera for camera in surveillance_station.get_all_cameras()
-        }
+    # The central coordinator needs to be refreshed first since
+    # the next two rely on data from it
+    coordinator_cameras: SynologyDSMCameraUpdateCoordinator | None = None
+    if SynoSurveillanceStation.CAMERA_API_KEY in available_apis:
+        coordinator_cameras = SynologyDSMCameraUpdateCoordinator(hass, entry, api)
+        await coordinator_cameras.async_config_entry_first_refresh()
 
+    coordinator_switches: SynologyDSMSwitchUpdateCoordinator | None = None
+    if (
+        SynoSurveillanceStation.INFO_API_KEY in available_apis
+        and SynoSurveillanceStation.HOME_MODE_API_KEY in available_apis
+    ):
+        coordinator_switches = SynologyDSMSwitchUpdateCoordinator(hass, entry, api)
+        await coordinator_switches.async_config_entry_first_refresh()
         try:
-            async with async_timeout.timeout(30):
-                await hass.async_add_executor_job(surveillance_station.update)
-        except SynologyDSMAPIErrorException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            await coordinator_switches.async_setup()
+        except SYNOLOGY_CONNECTION_EXCEPTIONS as ex:
+            raise ConfigEntryNotReady from ex
 
-        new_data: dict[str, SynoCamera] = {
-            camera.id: camera for camera in surveillance_station.get_all_cameras()
-        }
-
-        for cam_id, cam_data_new in new_data.items():
-            if (
-                (cam_data_current := current_data.get(cam_id)) is not None
-                and cam_data_current.live_view.rtsp != cam_data_new.live_view.rtsp
-            ):
-                async_dispatcher_send(
-                    hass,
-                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{entry.entry_id}_{cam_id}",
-                    cam_data_new.live_view.rtsp,
-                )
-
-        return {"cameras": new_data}
-
-    async def async_coordinator_update_data_central() -> None:
-        """Fetch all device and sensor data from api."""
-        try:
-            await api.async_update()
-        except Exception as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-        return None
-
-    async def async_coordinator_update_data_switches() -> dict[
-        str, dict[str, Any]
-    ] | None:
-        """Fetch all switch data from api."""
-        if not hass.data[DOMAIN][entry.unique_id][SYSTEM_LOADED]:
-            raise UpdateFailed("System not fully loaded")
-        if SynoSurveillanceStation.HOME_MODE_API_KEY not in api.dsm.apis:
-            return None
-
-        surveillance_station = api.surveillance_station
-
-        return {
-            "switches": {
-                "home_mode": await hass.async_add_executor_job(
-                    surveillance_station.get_home_mode_status
-                )
-            }
-        }
-
-    hass.data[DOMAIN][entry.unique_id][COORDINATOR_CAMERAS] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{entry.unique_id}_cameras",
-        update_method=async_coordinator_update_data_cameras,
-        update_interval=timedelta(seconds=30),
+    synology_data = SynologyDSMData(
+        api=api,
+        coordinator_central=coordinator_central,
+        coordinator_cameras=coordinator_cameras,
+        coordinator_switches=coordinator_switches,
     )
-
-    hass.data[DOMAIN][entry.unique_id][COORDINATOR_CENTRAL] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{entry.unique_id}_central",
-        update_method=async_coordinator_update_data_central,
-        update_interval=timedelta(
-            minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        ),
-    )
-
-    hass.data[DOMAIN][entry.unique_id][COORDINATOR_SWITCHES] = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        name=f"{entry.unique_id}_switches",
-        update_method=async_coordinator_update_data_switches,
-        update_interval=timedelta(seconds=30),
-    )
-
+    hass.data.setdefault(DOMAIN, {})[entry.unique_id] = synology_data
     hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Synology DSM sensors."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        entry_data = hass.data[DOMAIN][entry.unique_id]
-        entry_data[UNDO_UPDATE_LISTENER]()
-        await entry_data[SYNO_API].async_unload()
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        entry_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+        await entry_data.api.async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
-
     return unload_ok
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove synology_dsm config entry from a device."""
+    data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
+    api = data.api
+    serial = api.information.serial
+    storage = api.storage
+    # get_all_cameras does not do I/O
+    all_cameras: list[SynoCamera] = api.surveillance_station.get_all_cameras()
+    device_ids = chain(
+        (camera.id for camera in all_cameras),
+        storage.volumes_ids,
+        storage.disks_ids,
+        storage.volumes_ids,
+        (SynoSurveillanceStation.INFO_API_KEY,),  # Camera home/away
+    )
+    return not device_entry.identifiers.intersection(
+        (
+            (DOMAIN, serial),  # Base device
+            *((DOMAIN, f"{serial}_{id}") for id in device_ids),  # Storage and cameras
+        )
+    )

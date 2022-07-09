@@ -1,7 +1,6 @@
 """Coordinator for WS66i."""
 from __future__ import annotations
 
-from datetime import timedelta
 import logging
 
 from pyws66i import WS66i, ZoneStatus
@@ -9,12 +8,12 @@ from pyws66i import WS66i, ZoneStatus
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import POLL_INTERVAL
+
 _LOGGER = logging.getLogger(__name__)
 
-POLL_INTERVAL = timedelta(seconds=30)
 
-
-class Ws66iDataUpdateCoordinator(DataUpdateCoordinator):
+class Ws66iDataUpdateCoordinator(DataUpdateCoordinator[list[ZoneStatus]]):
     """DataUpdateCoordinator to gather data for WS66i Zones."""
 
     def __init__(
@@ -43,11 +42,9 @@ class Ws66iDataUpdateCoordinator(DataUpdateCoordinator):
 
             data.append(data_zone)
 
-        # HA will call my entity's _handle_coordinator_update()
         return data
 
     async def _async_update_data(self) -> list[ZoneStatus]:
         """Fetch data for each of the zones."""
-        # HA will call my entity's _handle_coordinator_update()
-        # The data I pass back here can be accessed through coordinator.data.
+        # The data that is returned here can be accessed through coordinator.data.
         return await self.hass.async_add_executor_job(self._update_all_zones)

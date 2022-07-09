@@ -1,4 +1,4 @@
-"""The Energy websocket API."""
+"""The Recorder websocket API."""
 from __future__ import annotations
 
 import logging
@@ -103,7 +103,7 @@ def ws_update_statistics_metadata(
 ) -> None:
     """Update statistics metadata for a statistic_id."""
     hass.data[DATA_INSTANCE].async_update_statistics_metadata(
-        msg["statistic_id"], msg["unit_of_measurement"]
+        msg["statistic_id"], new_unit_of_measurement=msg["unit_of_measurement"]
     )
     connection.send_result(msg["id"])
 

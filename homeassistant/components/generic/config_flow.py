@@ -1,17 +1,15 @@
 """Config flow for generic (IP Camera)."""
 from __future__ import annotations
 
+from collections.abc import Mapping
 import contextlib
 from errno import EHOSTUNREACH, EIO
-from functools import partial
 import io
 import logging
-from types import MappingProxyType
 from typing import Any
 
 import PIL
 from async_timeout import timeout
-import av
 from httpx import HTTPStatusError, RequestError, TimeoutException
 import voluptuous as vol
 import yarl
@@ -19,9 +17,10 @@ import yarl
 from homeassistant.components.stream import (
     CONF_RTSP_TRANSPORT,
     CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+    HLS_PROVIDER,
     RTSP_TRANSPORTS,
     SOURCE_TIMEOUT,
-    convert_stream_options,
+    create_stream,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
@@ -33,6 +32,7 @@ from homeassistant.const import (
     HTTP_BASIC_AUTHENTICATION,
     HTTP_DIGEST_AUTHENTICATION,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template as template_helper
@@ -65,7 +65,7 @@ SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
 
 
 def build_schema(
-    user_input: dict[str, Any] | MappingProxyType[str, Any],
+    user_input: Mapping[str, Any],
     is_options_flow: bool = False,
     show_advanced_options=False,
 ):
@@ -120,7 +120,7 @@ def build_schema(
     return vol.Schema(spec)
 
 
-def get_image_type(image):
+def get_image_type(image: bytes) -> str | None:
     """Get the format of downloaded bytes that could be an image."""
     fmt = None
     imagefile = io.BytesIO(image)
@@ -136,7 +136,9 @@ def get_image_type(image):
     return fmt
 
 
-async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
+async def async_test_still(
+    hass: HomeAssistant, info: Mapping[str, Any]
+) -> tuple[dict[str, str], str | None]:
     """Verify that the still image is valid before we create an entity."""
     fmt = None
     if not (url := info.get(CONF_STILL_IMAGE_URL)):
@@ -148,7 +150,13 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     except TemplateError as err:
         _LOGGER.warning("Problem rendering template %s: %s", url, err)
         return {CONF_STILL_IMAGE_URL: "template_error"}, None
-    verify_ssl = info.get(CONF_VERIFY_SSL)
+    try:
+        yarl_url = yarl.URL(url)
+    except ValueError:
+        return {CONF_STILL_IMAGE_URL: "malformed_url"}, None
+    if not yarl_url.is_absolute():
+        return {CONF_STILL_IMAGE_URL: "relative_url"}, None
+    verify_ssl = info[CONF_VERIFY_SSL]
     auth = generate_auth(info)
     try:
         async_client = get_async_client(hass, verify_ssl=verify_ssl)
@@ -178,7 +186,9 @@ async def async_test_still(hass, info) -> tuple[dict[str, str], str | None]:
     return {}, f"image/{fmt}"
 
 
-def slug(hass, template) -> str | None:
+def slug(
+    hass: HomeAssistant, template: str | template_helper.Template | None
+) -> str | None:
     """Convert a camera url into a string suitable for a camera name."""
     if not template:
         return None
@@ -194,46 +204,52 @@ def slug(hass, template) -> str | None:
     return None
 
 
-async def async_test_stream(hass, info) -> dict[str, str]:
+async def async_test_stream(
+    hass: HomeAssistant, info: Mapping[str, Any]
+) -> dict[str, str]:
     """Verify that the stream is valid before we create an entity."""
     if not (stream_source := info.get(CONF_STREAM_SOURCE)):
         return {}
+    # Import from stream.worker as stream cannot reexport from worker
+    # without forcing the av dependency on default_config
+    # pylint: disable=import-outside-toplevel
+    from homeassistant.components.stream.worker import StreamWorkerError
+
+    if not isinstance(stream_source, template_helper.Template):
+        stream_source = template_helper.Template(stream_source, hass)
     try:
-        # For RTSP streams, prefer TCP. This code is duplicated from
-        # homeassistant.components.stream.__init__.py:create_stream()
-        # It may be possible & better to call create_stream() directly.
-        stream_options: dict[str, bool | str] = {}
-        if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
-            stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
-        if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
-            stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
-        pyav_options = convert_stream_options(stream_options)
-        if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
-            pyav_options = {
-                "rtsp_flags": "prefer_tcp",
-                "stimeout": "5000000",
-                **pyav_options,
-            }
-        _LOGGER.debug("Attempting to open stream %s", stream_source)
-        container = await hass.async_add_executor_job(
-            partial(
-                av.open,
-                stream_source,
-                options=pyav_options,
-                timeout=SOURCE_TIMEOUT,
-            )
-        )
-        _ = container.streams.video[0]
-    except (av.error.FileNotFoundError):  # pylint: disable=c-extension-no-member
-        return {CONF_STREAM_SOURCE: "stream_file_not_found"}
-    except (av.error.HTTPNotFoundError):  # pylint: disable=c-extension-no-member
-        return {CONF_STREAM_SOURCE: "stream_http_not_found"}
-    except (av.error.TimeoutError):  # pylint: disable=c-extension-no-member
-        return {CONF_STREAM_SOURCE: "timeout"}
-    except av.error.HTTPUnauthorizedError:  # pylint: disable=c-extension-no-member
-        return {CONF_STREAM_SOURCE: "stream_unauthorised"}
-    except (KeyError, IndexError):
-        return {CONF_STREAM_SOURCE: "stream_no_video"}
+        stream_source = stream_source.async_render(parse_result=False)
+    except TemplateError as err:
+        _LOGGER.warning("Problem rendering template %s: %s", stream_source, err)
+        return {CONF_STREAM_SOURCE: "template_error"}
+    stream_options: dict[str, str | bool | float] = {}
+    if rtsp_transport := info.get(CONF_RTSP_TRANSPORT):
+        stream_options[CONF_RTSP_TRANSPORT] = rtsp_transport
+    if info.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
+        stream_options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = True
+
+    try:
+        url = yarl.URL(stream_source)
+    except ValueError:
+        return {CONF_STREAM_SOURCE: "malformed_url"}
+    if not url.is_absolute():
+        return {CONF_STREAM_SOURCE: "relative_url"}
+    if not url.user and not url.password:
+        username = info.get(CONF_USERNAME)
+        password = info.get(CONF_PASSWORD)
+        if username and password:
+            url = url.with_user(username).with_password(password)
+            stream_source = str(url)
+    try:
+        stream = create_stream(hass, stream_source, stream_options, "test_stream")
+        hls_provider = stream.add_provider(HLS_PROVIDER)
+        await stream.start()
+        if not await hls_provider.part_recv(timeout=SOURCE_TIMEOUT):
+            hass.async_create_task(stream.stop())
+            return {CONF_STREAM_SOURCE: "timeout"}
+        await stream.stop()
+    except StreamWorkerError as err:
+        return {CONF_STREAM_SOURCE: str(err)}
     except PermissionError:
         return {CONF_STREAM_SOURCE: "stream_not_permitted"}
     except OSError as err:
@@ -250,7 +266,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize Generic ConfigFlow."""
         self.cached_user_input: dict[str, Any] = {}
         self.cached_title = ""
@@ -262,7 +278,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return GenericOptionsFlowHandler(config_entry)
 
-    def check_for_existing(self, options):
+    def check_for_existing(self, options: dict[str, Any]) -> bool:
         """Check whether an existing entry is using the same URLs."""
         return any(
             entry.options.get(CONF_STILL_IMAGE_URL) == options.get(CONF_STILL_IMAGE_URL)
@@ -283,14 +299,16 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 errors["base"] = "no_still_image_or_stream_url"
             else:
-                errors, still_format = await async_test_still(self.hass, user_input)
-                errors = errors | await async_test_stream(self.hass, user_input)
-                still_url = user_input.get(CONF_STILL_IMAGE_URL)
-                stream_url = user_input.get(CONF_STREAM_SOURCE)
-                name = slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
+                errors, still_format = await async_test_still(hass, user_input)
+                errors = errors | await async_test_stream(hass, user_input)
                 if not errors:
                     user_input[CONF_CONTENT_TYPE] = still_format
                     user_input[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
+                    still_url = user_input.get(CONF_STILL_IMAGE_URL)
+                    stream_url = user_input.get(CONF_STREAM_SOURCE)
+                    name = (
+                        slug(hass, still_url) or slug(hass, stream_url) or DEFAULT_NAME
+                    )
                     if still_url is None:
                         # If user didn't specify a still image URL,
                         # The automatically generated still image that stream generates
@@ -309,7 +327,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_config) -> FlowResult:
+    async def async_step_import(self, import_config: dict[str, Any]) -> FlowResult:
         """Handle config import from yaml."""
         # abort if we've already got this one.
         if self.check_for_existing(import_config):
@@ -321,6 +339,7 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME,
             slug(self.hass, still_url) or slug(self.hass, stream_url) or DEFAULT_NAME,
         )
+
         if CONF_LIMIT_REFETCH_TO_URL_CHANGE not in import_config:
             import_config[CONF_LIMIT_REFETCH_TO_URL_CHANGE] = False
         still_format = import_config.get(CONF_CONTENT_TYPE, "image/jpeg")
@@ -346,9 +365,9 @@ class GenericOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             errors, still_format = await async_test_still(
-                self.hass, self.config_entry.options | user_input
+                hass, self.config_entry.options | user_input
             )
-            errors = errors | await async_test_stream(self.hass, user_input)
+            errors = errors | await async_test_stream(hass, user_input)
             still_url = user_input.get(CONF_STILL_IMAGE_URL)
             stream_url = user_input.get(CONF_STREAM_SOURCE)
             if not errors:

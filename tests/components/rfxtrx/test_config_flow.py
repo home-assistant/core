@@ -314,7 +314,7 @@ async def test_options_global(hass):
         user_input={"automatic_add": True, "protocols": SOME_PROTOCOLS},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -349,7 +349,7 @@ async def test_no_protocols(hass):
         user_input={"automatic_add": False, "protocols": []},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -404,7 +404,7 @@ async def test_options_add_device(hass):
         result["flow_id"], user_input={}
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -558,7 +558,7 @@ async def test_options_replace_sensor_device(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -691,7 +691,7 @@ async def test_options_replace_control_device(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -772,7 +772,7 @@ async def test_options_add_and_configure_device(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -816,7 +816,7 @@ async def test_options_add_and_configure_device(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
@@ -847,7 +847,7 @@ async def test_options_configure_rfy_cover_device(hass):
         result["flow_id"],
         user_input={
             "automatic_add": True,
-            "event_code": "071a000001020301",
+            "event_code": "0C1a0000010203010000000000",
         },
     )
 
@@ -863,7 +863,10 @@ async def test_options_configure_rfy_cover_device(hass):
 
     await hass.async_block_till_done()
 
-    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+    assert (
+        entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
+        == "EU"
+    )
 
     device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
@@ -893,11 +896,14 @@ async def test_options_configure_rfy_cover_device(hass):
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
     await hass.async_block_till_done()
 
-    assert entry.data["devices"]["071a000001020301"]["venetian_blind_mode"] == "EU"
+    assert (
+        entry.data["devices"]["0C1a0000010203010000000000"]["venetian_blind_mode"]
+        == "EU"
+    )
 
 
 def test_get_serial_by_id_no_dir():

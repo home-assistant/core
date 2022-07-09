@@ -20,6 +20,7 @@ from google_nest_sdm.exceptions import ApiException
 
 from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.components.camera.const import StreamType
+from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,7 +45,9 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the cameras."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
+        DATA_DEVICE_MANAGER
+    ]
     entities = []
     for device in device_manager.devices.values():
         if (
@@ -67,6 +70,7 @@ class NestCamera(Camera):
         self._create_stream_url_lock = asyncio.Lock()
         self._stream_refresh_unsub: Callable[[], None] | None = None
         self._attr_is_streaming = CameraLiveStreamTrait.NAME in self._device.traits
+        self.stream_options[CONF_EXTRA_PART_WAIT_TIME] = 3
 
     @property
     def should_poll(self) -> bool:
@@ -175,7 +179,7 @@ class NestCamera(Camera):
             # Next attempt to catch a url will get a new one
             self._stream = None
             if self.stream:
-                self.stream.stop()
+                await self.stream.stop()
                 self.stream = None
             return
         # Update the stream worker with the latest valid url

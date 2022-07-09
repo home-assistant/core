@@ -15,9 +15,10 @@ from aiohomekit.model.characteristics import (
 from aiohomekit.model.services import Service, ServicesTypes
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import ATTR_IDENTIFIERS, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, Entity
 from homeassistant.helpers.typing import ConfigType
@@ -26,7 +27,7 @@ from .config_flow import normalize_hkid
 from .connection import HKDevice, valid_serial_number
 from .const import ENTITY_MAP, KNOWN_DEVICES, TRIGGERS
 from .storage import EntityMapStorage
-from .utils import async_get_controller
+from .utils import async_get_controller, folded_name
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class HomeKitEntity(Entity):
         self._accessory = accessory
         self._aid = devinfo["aid"]
         self._iid = devinfo["iid"]
+        self._char_name: str | None = None
         self._features = 0
         self.setup()
 
@@ -126,6 +128,9 @@ class HomeKitEntity(Entity):
         if CharacteristicPermissions.events in char.perms:
             self.watchable_characteristics.append((self._aid, char.iid))
 
+        if self._char_name is None:
+            self._char_name = char.service.value(CharacteristicsTypes.NAME)
+
     @property
     def unique_id(self) -> str:
         """Return the ID of this device."""
@@ -137,9 +142,30 @@ class HomeKitEntity(Entity):
         return f"homekit-{self._accessory.unique_id}-{self._aid}-{self._iid}"
 
     @property
+    def default_name(self) -> str | None:
+        """Return the default name of the device."""
+        return None
+
+    @property
     def name(self) -> str | None:
         """Return the name of the device if any."""
-        return self.accessory.name
+        accessory_name = self.accessory.name
+        # If the service has a name char, use that, if not
+        # fallback to the default name provided by the subclass
+        device_name = self._char_name or self.default_name
+        folded_device_name = folded_name(device_name or "")
+        folded_accessory_name = folded_name(accessory_name)
+        if device_name:
+            # Sometimes the device name includes the accessory
+            # name already like My ecobee Occupancy / My ecobee
+            if folded_device_name.startswith(folded_accessory_name):
+                return device_name
+            if (
+                folded_accessory_name not in folded_device_name
+                and folded_device_name not in folded_accessory_name
+            ):
+                return f"{accessory_name} {device_name}"
+        return accessory_name
 
     @property
     def available(self) -> bool:
@@ -261,3 +287,18 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
             "HomeKit again",
             entry.title,
         )
+
+
+async def async_remove_config_entry_device(
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+) -> bool:
+    """Remove homekit_controller config entry from a device."""
+    hkid = config_entry.data["AccessoryPairingID"]
+    connection: HKDevice = hass.data[KNOWN_DEVICES][hkid]
+    return not device_entry.identifiers.intersection(
+        identifier
+        for accessory in connection.entity_map.accessories
+        for identifier in connection.device_info_for_accessory(accessory)[
+            ATTR_IDENTIFIERS
+        ]
+    )

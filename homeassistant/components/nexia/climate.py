@@ -391,7 +391,9 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the system mode (Auto, Heat_Cool, Cool, Heat, etc)."""
-        if hvac_mode == HVACMode.AUTO:
+        if hvac_mode == HVACMode.OFF:
+            await self._zone.call_permanent_off()
+        elif hvac_mode == HVACMode.AUTO:
             await self._zone.call_return_to_schedule()
             await self._zone.set_mode(mode=OPERATION_MODE_AUTO)
         else:

@@ -74,3 +74,5 @@ EFFECT_SPEED_SUPPORT_MODES: Final = {ColorMode.RGB, ColorMode.RGBW, ColorMode.RG
 CONF_CUSTOM_EFFECT_COLORS: Final = "custom_effect_colors"
 CONF_CUSTOM_EFFECT_SPEED_PCT: Final = "custom_effect_speed_pct"
 CONF_CUSTOM_EFFECT_TRANSITION: Final = "custom_effect_transition"
+
+FLUX_LED_DISCOVERY_SIGNAL = "flux_led_discovery_{entry_id}"

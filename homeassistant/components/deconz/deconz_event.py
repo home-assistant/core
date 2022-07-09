@@ -6,11 +6,8 @@ from typing import Any
 
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.ancillary_control import (
-    ANCILLARY_CONTROL_EMERGENCY,
-    ANCILLARY_CONTROL_FIRE,
-    ANCILLARY_CONTROL_INVALID_CODE,
-    ANCILLARY_CONTROL_PANIC,
     AncillaryControl,
+    AncillaryControlAction,
 )
 from pydeconz.models.sensor.switch import Switch
 
@@ -33,10 +30,10 @@ CONF_DECONZ_EVENT = "deconz_event"
 CONF_DECONZ_ALARM_EVENT = "deconz_alarm_event"
 
 SUPPORTED_DECONZ_ALARM_EVENTS = {
-    ANCILLARY_CONTROL_EMERGENCY,
-    ANCILLARY_CONTROL_FIRE,
-    ANCILLARY_CONTROL_INVALID_CODE,
-    ANCILLARY_CONTROL_PANIC,
+    AncillaryControlAction.EMERGENCY,
+    AncillaryControlAction.FIRE,
+    AncillaryControlAction.INVALID_CODE,
+    AncillaryControlAction.PANIC,
 }
 
 
@@ -58,28 +55,17 @@ async def async_setup_events(gateway: DeconzGateway) -> None:
         elif isinstance(sensor, AncillaryControl):
             new_event = DeconzAlarmEvent(sensor, gateway)
 
-        else:
-            return None
-
         gateway.hass.async_create_task(new_event.async_update_device_registry())
         gateway.events.append(new_event)
 
-    gateway.config_entry.async_on_unload(
-        gateway.api.sensors.ancillary_control.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.switch,
     )
-
-    gateway.config_entry.async_on_unload(
-        gateway.api.sensors.switch.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors.ancillary_control,
     )
-
-    for sensor_id in gateway.api.sensors:
-        async_add_sensor(EventType.ADDED, sensor_id)
 
 
 @callback
@@ -194,7 +180,7 @@ class DeconzAlarmEvent(DeconzEventBase):
             CONF_ID: self.event_id,
             CONF_UNIQUE_ID: self.serial,
             CONF_DEVICE_ID: self.device_id,
-            CONF_EVENT: self._device.action,
+            CONF_EVENT: self._device.action.value,
         }
 
         self.gateway.hass.bus.async_fire(CONF_DECONZ_ALARM_EVENT, data)

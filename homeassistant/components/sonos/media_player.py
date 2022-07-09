@@ -18,6 +18,7 @@ import voluptuous as vol
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
+    MediaPlayerEnqueue,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     async_process_play_media_url,
@@ -43,8 +44,9 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
-from . import media_browser
+from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
@@ -66,6 +68,8 @@ from .speaker import SonosMedia, SonosSpeaker
 
 _LOGGER = logging.getLogger(__name__)
 
+LONG_SERVICE_TIMEOUT = 30.0
+UNJOIN_SERVICE_TIMEOUT = 0.1
 VOLUME_INCREMENT = 2
 
 REPEAT_TO_SONOS = {
@@ -78,8 +82,6 @@ SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 
-SERVICE_JOIN = "join"
-SERVICE_UNJOIN = "unjoin"
 SERVICE_SNAPSHOT = "snapshot"
 SERVICE_RESTORE = "restore"
 SERVICE_SET_TIMER = "set_sleep_timer"
@@ -126,24 +128,7 @@ async def async_setup_entry(
             assert isinstance(entity, SonosMediaPlayerEntity)
             speakers.append(entity.speaker)
 
-        if service_call.service == SERVICE_JOIN:
-            _LOGGER.warning(
-                "Service 'sonos.join' is deprecated and will be removed in 2022.8, please use 'media_player.join'"
-            )
-            master = platform.entities.get(service_call.data[ATTR_MASTER])
-            if master:
-                await SonosSpeaker.join_multi(hass, master.speaker, speakers)  # type: ignore[arg-type]
-            else:
-                _LOGGER.error(
-                    "Invalid master specified for join service: %s",
-                    service_call.data[ATTR_MASTER],
-                )
-        elif service_call.service == SERVICE_UNJOIN:
-            _LOGGER.warning(
-                "Service 'sonos.unjoin' is deprecated and will be removed in 2022.8, please use 'media_player.unjoin'"
-            )
-            await SonosSpeaker.unjoin_multi(hass, speakers)  # type: ignore[arg-type]
-        elif service_call.service == SERVICE_SNAPSHOT:
+        if service_call.service == SERVICE_SNAPSHOT:
             await SonosSpeaker.snapshot_multi(
                 hass, speakers, service_call.data[ATTR_WITH_GROUP]  # type: ignore[arg-type]
             )
@@ -154,20 +139,6 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, SONOS_CREATE_MEDIA_PLAYER, async_create_entities)
-    )
-
-    hass.services.async_register(
-        SONOS_DOMAIN,
-        SERVICE_JOIN,
-        async_service_handle,
-        cv.make_entity_service_schema({vol.Required(ATTR_MASTER): cv.entity_id}),
-    )
-
-    hass.services.async_register(
-        SONOS_DOMAIN,
-        SERVICE_UNJOIN,
-        async_service_handle,
-        cv.make_entity_service_schema({}),
     )
 
     join_unjoin_schema = cv.make_entity_service_schema(
@@ -526,7 +497,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         self.coordinator.soco.clear_queue()
 
     @soco_error()
-    def play_media(self, media_type: str, media_id: str, **kwargs: Any) -> None:
+    def play_media(  # noqa: C901
+        self, media_type: str, media_id: str, **kwargs: Any
+    ) -> None:
         """
         Send the play_media command to the media player.
 
@@ -537,9 +510,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         If media_type is "playlist", media_id should be a Sonos
         Playlist name.  Otherwise, media_id should be a URI.
-
-        If ATTR_MEDIA_ENQUEUE is True, add `media_id` to the queue.
         """
+        # Use 'replace' as the default enqueue option
+        enqueue = kwargs.get(ATTR_MEDIA_ENQUEUE, MediaPlayerEnqueue.REPLACE)
+
         if spotify.is_spotify_media_type(media_type):
             media_type = spotify.resolve_spotify_media_type(media_type)
             media_id = spotify.spotify_uri_from_media_browser_url(media_id)
@@ -551,7 +525,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_type = MEDIA_TYPE_MUSIC
             media_id = (
                 run_coroutine_threadsafe(
-                    media_source.async_resolve_media(self.hass, media_id),
+                    media_source.async_resolve_media(
+                        self.hass, media_id, self.entity_id
+                    ),
                     self.hass.loop,
                 )
                 .result()
@@ -573,29 +549,61 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
             if result.shuffle:
                 self.set_shuffle(True)
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                plex_plugin.add_to_queue(result.media)
-            else:
+            if enqueue == MediaPlayerEnqueue.ADD:
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = plex_plugin.add_to_queue(
+                    result.media, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
-                plex_plugin.add_to_queue(result.media)
+                plex_plugin.add_to_queue(result.media, timeout=LONG_SERVICE_TIMEOUT)
                 soco.play_from_queue(0)
             return
 
         share_link = self.coordinator.share_link
         if share_link.is_share_link(media_id):
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
-                share_link.add_share_link_to_queue(media_id)
-            else:
+            if enqueue == MediaPlayerEnqueue.ADD:
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = share_link.add_share_link_to_queue(
+                    media_id, position=pos, timeout=LONG_SERVICE_TIMEOUT
+                )
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.clear_queue()
-                share_link.add_share_link_to_queue(media_id)
+                share_link.add_share_link_to_queue(
+                    media_id, timeout=LONG_SERVICE_TIMEOUT
+                )
                 soco.play_from_queue(0)
         elif media_type in (MEDIA_TYPE_MUSIC, MEDIA_TYPE_TRACK):
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
 
-            if kwargs.get(ATTR_MEDIA_ENQUEUE):
+            if enqueue == MediaPlayerEnqueue.ADD:
                 soco.add_uri_to_queue(media_id)
-            else:
+            elif enqueue in (
+                MediaPlayerEnqueue.NEXT,
+                MediaPlayerEnqueue.PLAY,
+            ):
+                pos = (self.media.queue_position or 0) + 1
+                new_pos = soco.add_uri_to_queue(media_id, position=pos)
+                if enqueue == MediaPlayerEnqueue.PLAY:
+                    soco.play_from_queue(new_pos - 1)
+            elif enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_uri(media_id, force_radio=is_radio)
         elif media_type == MEDIA_TYPE_PLAYLIST:
             if media_id.startswith("S:"):
@@ -721,7 +729,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             media_content_type,
         )
 
-    def join_players(self, group_members):
+    async def async_join_players(self, group_members):
         """Join `group_members` as a player group with the current player."""
         speakers = []
         for entity_id in group_members:
@@ -730,8 +738,34 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             else:
                 raise HomeAssistantError(f"Not a known Sonos entity_id: {entity_id}")
 
-        self.speaker.join(speakers)
+        await SonosSpeaker.join_multi(self.hass, self.speaker, speakers)
 
-    def unjoin_player(self):
-        """Remove this player from any group."""
-        self.speaker.unjoin()
+    async def async_unjoin_player(self):
+        """Remove this player from any group.
+
+        Coalesces all calls within UNJOIN_SERVICE_TIMEOUT to allow use of SonosSpeaker.unjoin_multi()
+        which optimizes the order in which speakers are removed from their groups.
+        Removing coordinators last better preserves playqueues on the speakers.
+        """
+        sonos_data = self.hass.data[DATA_SONOS]
+        household_id = self.speaker.household_id
+
+        async def async_process_unjoin(now: datetime.datetime) -> None:
+            """Process the unjoin with all remove requests within the coalescing period."""
+            unjoin_data = sonos_data.unjoin_data.pop(household_id)
+            _LOGGER.debug(
+                "Processing unjoins for %s", [x.zone_name for x in unjoin_data.speakers]
+            )
+            await SonosSpeaker.unjoin_multi(self.hass, unjoin_data.speakers)
+            unjoin_data.event.set()
+
+        if unjoin_data := sonos_data.unjoin_data.get(household_id):
+            unjoin_data.speakers.append(self.speaker)
+        else:
+            unjoin_data = sonos_data.unjoin_data[household_id] = UnjoinData(
+                speakers=[self.speaker]
+            )
+            async_call_later(self.hass, UNJOIN_SERVICE_TIMEOUT, async_process_unjoin)
+
+        _LOGGER.debug("Requesting unjoin for %s", self.speaker.zone_name)
+        await unjoin_data.event.wait()

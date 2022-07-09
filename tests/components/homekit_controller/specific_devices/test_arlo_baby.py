@@ -37,9 +37,9 @@ async def test_arlo_baby_setup(hass):
                     state="idle",
                 ),
                 EntityTestInfo(
-                    entity_id="binary_sensor.arlobabya0",
+                    entity_id="binary_sensor.arlobabya0_motion",
                     unique_id="homekit-00A0000000000-500",
-                    friendly_name="ArloBabyA0",
+                    friendly_name="ArloBabyA0 Motion",
                     state="off",
                 ),
                 EntityTestInfo(
@@ -71,9 +71,9 @@ async def test_arlo_baby_setup(hass):
                     state="1",
                 ),
                 EntityTestInfo(
-                    entity_id="light.arlobabya0",
+                    entity_id="light.arlobabya0_nightlight",
                     unique_id="homekit-00A0000000000-1100",
-                    friendly_name="ArloBabyA0",
+                    friendly_name="ArloBabyA0 Nightlight",
                     supported_features=0,
                     capabilities={"supported_color_modes": ["hs"]},
                     state="off",

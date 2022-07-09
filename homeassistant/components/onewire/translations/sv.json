@@ -3,6 +3,7 @@
         "step": {
             "device_selection": {
                 "data": {
+                    "clear_device_options": "Rensa alla enhetskonfigurationer",
                     "device_selection": "V\u00e4lj enheter att konfigurera"
                 }
             }
