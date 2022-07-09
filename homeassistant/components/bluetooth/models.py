@@ -99,19 +99,31 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
         """Initialize the BleakScanner."""
         self._detection_cancel: CALLBACK_TYPE | None = None
         self._mapped_filters: dict[str, set[str]] = {}
-        if "filters" in kwargs:
-            self._mapped_filters = {k: set(v) for k, v in kwargs["filters"].items()}
-        if "service_uuids" in kwargs:
-            self._mapped_filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
+        self._adv_data_callback: AdvertisementDataCallback | None = None
+        self._map_filters(*args, **kwargs)
         super().__init__(*args, **kwargs)
 
     async def stop(self, *args: Any, **kwargs: Any) -> None:
         """Stop scanning for devices."""
-        return
 
     async def start(self, *args: Any, **kwargs: Any) -> None:
         """Start scanning for devices."""
-        return
+
+    def _map_filters(self, *args: Any, **kwargs: Any) -> bool:
+        """Map the filters."""
+        if "filters" in kwargs:
+            mapped_filters = {k: set(v) for k, v in kwargs["filters"].items()}
+        if "service_uuids" in kwargs:
+            mapped_filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
+        if mapped_filters == self._mapped_filters:
+            return False
+        self._mapped_filters = mapped_filters
+        return True
+
+    def set_scanning_filters(self, *args: Any, **kwargs: Any) -> None:
+        """Set the filters to use."""
+        if self._map_filters(*args, **kwargs):
+            self._setup_detection_callback()
 
     def _cancel_callback(self) -> None:
         """Cancel callback."""
@@ -131,8 +143,15 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
         This method takes the callback and registers it with the long running
         scanner.
         """
+        self._adv_data_callback = callback
+        self._setup_detection_callback()
+
+    def _setup_detection_callback(self) -> None:
+        """Set up the detection callback."""
+        if self._adv_data_callback is None:
+            return
         self._cancel_callback()
-        super().register_detection_callback(callback)
+        super().register_detection_callback(self._adv_data_callback)
         assert HA_BLEAK_SCANNER is not None
         self._detection_cancel = HA_BLEAK_SCANNER.async_register_callback(
             self._callback, self._mapped_filters
