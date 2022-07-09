@@ -19,7 +19,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Govee Bluetooth from a config entry."""
-    address = str(entry.unique_id)
+    address = entry.unique_id
+    assert address is not None
+    # TODO: coordinator is not a good design here since
+    # there can be multiple sensors on the device and we
+    # need to handle each one separately, we need some type of dispatcher
+    # to dynamically add sensors and feed updates to the right sensor
     coordinator: DataUpdateCoordinator[dict[str, Any]] = DataUpdateCoordinator(
         hass, _LOGGER, name=entry.title, update_interval=None
     )
@@ -30,11 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ) -> None:
         """Subscribe to bluetooth changes."""
         if data := parse_govee_from_discovery_data(
-            service_info.name,
-            service_info.address,
-            service_info.rssi,
             service_info.manufacturer_data,
         ):
+            data["rssi"] = service_info.rssi
             coordinator.async_set_updated_data(data)
 
     entry.async_on_unload(
