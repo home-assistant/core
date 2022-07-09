@@ -298,7 +298,7 @@ class DeconzGroup(DeconzBaseLight[Group]):
         self._unique_id = f"{gateway.bridgeid}-{device.deconz_id}"
         super().__init__(device, gateway)
 
-        self._attr_name = ""
+        self._attr_name = None
 
     @property
     def unique_id(self) -> str:
