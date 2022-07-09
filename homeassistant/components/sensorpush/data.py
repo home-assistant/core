@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.bluetooth import BluetoothChange, BluetoothServiceInfo
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
 from homeassistant.components.bluetooth.sensor import BluetoothSensorType
 from homeassistant.const import PERCENTAGE, PRESSURE_MBAR, TEMP_CELSIUS
@@ -64,9 +64,7 @@ def decode_values(mfg_data: bytes, device_type_id: int) -> dict:
 class SensorPushBluetoothDeviceData(BluetoothDeviceData):
     """Date update for SensorPush Bluetooth devices."""
 
-    def update(
-        self, service_info: BluetoothServiceInfo, change: BluetoothChange
-    ) -> None:
+    def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
         manufacturer_data = service_info.manufacturer_data
         local_name = service_info.name

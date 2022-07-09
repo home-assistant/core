@@ -10,7 +10,7 @@ from __future__ import annotations
 import logging
 import struct
 
-from homeassistant.components.bluetooth import BluetoothChange, BluetoothServiceInfo
+from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
 from homeassistant.components.bluetooth.sensor import BluetoothSensorType
 from homeassistant.components.sensor import SensorStateClass
@@ -45,9 +45,7 @@ def decode_temps_probes(packet_value: int) -> float:
 class GoveeBluetoothDeviceData(BluetoothDeviceData):
     """Data for Govee BLE sensors."""
 
-    def update(
-        self, service_info: BluetoothServiceInfo, change: BluetoothChange
-    ) -> None:
+    def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
         _LOGGER.debug("Parsing Govee BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
