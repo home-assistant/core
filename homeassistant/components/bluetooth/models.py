@@ -111,10 +111,12 @@ class HaBleakScannerWrapper(BaseBleakScanner):  # type: ignore[misc]
 
     def _map_filters(self, *args: Any, **kwargs: Any) -> bool:
         """Map the filters."""
-        if "filters" in kwargs:
-            mapped_filters = {k: set(v) for k, v in kwargs["filters"].items()}
-        if "service_uuids" in kwargs:
-            mapped_filters[FILTER_UUIDS] = set(kwargs["service_uuids"])
+        if filters := kwargs.get("filters"):
+            if len(filters) > 1 and FILTER_UUIDS not in filters:
+                _LOGGER.warning("Only %s filters are supported", FILTER_UUIDS)
+            mapped_filters = {k: set(v) for k, v in filters.items()}
+        if service_uuids := kwargs.get("service_uuids"):
+            mapped_filters[FILTER_UUIDS] = set(service_uuids)
         if mapped_filters == self._mapped_filters:
             return False
         self._mapped_filters = mapped_filters
