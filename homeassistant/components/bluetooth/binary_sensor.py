@@ -10,8 +10,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 
-from .entity import BluetoothDescriptionRequiredKeysMixin
-from .update_coordinator import BluetoothCoordinatorEntity
+from .entity import BluetoothCoordinatorEntity, BluetoothDescriptionRequiredKeysMixin
 
 
 class BluetoothBinarySensorType(Enum):
