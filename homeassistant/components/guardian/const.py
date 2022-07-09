@@ -15,3 +15,4 @@ API_WIFI_STATUS = "wifi_status"
 CONF_UID = "uid"
 
 SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED = "guardian_paired_sensor_coordinator_added_{0}"
+SIGNAL_REBOOT = "guardian_reboot"
