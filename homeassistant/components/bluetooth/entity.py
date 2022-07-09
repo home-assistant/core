@@ -52,7 +52,6 @@ class BluetoothCoordinatorEntity(entity.Entity):
         self.coordinator = coordinator
         self.entity_description = description
         self._attr_unique_id = f"{coordinator.address}-{self.device_key.key}"
-        self._attr_name = description.name
         identifiers: set[tuple[str, str]] = set()
         connections: set[tuple[str, str]] = set()
         if device_key.device_id:
