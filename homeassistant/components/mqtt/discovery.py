@@ -4,19 +4,19 @@ from __future__ import annotations
 import asyncio
 from collections import deque
 import functools
-import json
 import logging
 import re
 import time
 
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT
+from homeassistant.data_entry_flow import FlowResultType
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.json import json_loads
 from homeassistant.loader import async_get_mqtt
 
 from .. import mqtt
@@ -27,8 +27,6 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_TOPIC,
-    CONFIG_ENTRY_IS_SETUP,
-    DATA_CONFIG_ENTRY_LOCK,
     DOMAIN,
 )
 
@@ -119,7 +117,7 @@ async def async_start(  # noqa: C901
 
         if payload:
             try:
-                payload = json.loads(payload)
+                payload = json_loads(payload)
             except ValueError:
                 _LOGGER.warning("Unable to parse JSON %s: '%s'", object_id, payload)
                 return
@@ -227,28 +225,6 @@ async def async_start(  # noqa: C901
             # Add component
             _LOGGER.info("Found new component: %s %s", component, discovery_id)
             hass.data[ALREADY_DISCOVERED][discovery_hash] = None
-
-            config_entries_key = f"{component}.mqtt"
-            async with hass.data[DATA_CONFIG_ENTRY_LOCK]:
-                if config_entries_key not in hass.data[CONFIG_ENTRY_IS_SETUP]:
-                    if component == "device_automation":
-                        # Local import to avoid circular dependencies
-                        # pylint: disable-next=import-outside-toplevel
-                        from . import device_automation
-
-                        await device_automation.async_setup_entry(hass, config_entry)
-                    elif component == "tag":
-                        # Local import to avoid circular dependencies
-                        # pylint: disable-next=import-outside-toplevel
-                        from . import tag
-
-                        await tag.async_setup_entry(hass, config_entry)
-                    else:
-                        await hass.config_entries.async_forward_entry_setup(
-                            config_entry, component
-                        )
-                    hass.data[CONFIG_ENTRY_IS_SETUP].add(config_entries_key)
-
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_NEW.format(component, "mqtt"), payload
             )
@@ -305,7 +281,7 @@ async def async_start(  # noqa: C901
                 )
                 if (
                     result
-                    and result["type"] == RESULT_TYPE_ABORT
+                    and result["type"] == FlowResultType.ABORT
                     and result["reason"]
                     in ("already_configured", "single_instance_allowed")
                 ):

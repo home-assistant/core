@@ -199,7 +199,7 @@ class ComponentFactory:
                 "redirect_uri": "http://127.0.0.1:8080/auth/external/callback",
             },
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_EXTERNAL_STEP
+        assert result["type"] == data_entry_flow.FlowResultType.EXTERNAL_STEP
         assert result["url"] == (
             "https://account.withings.com/oauth2_user/authorize2?"
             f"response_type=code&client_id={self._client_id}&"

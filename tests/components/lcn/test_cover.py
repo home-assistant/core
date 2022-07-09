@@ -22,12 +22,15 @@ from homeassistant.helpers import entity_registry as er
 
 from .conftest import MockModuleConnection
 
+COVER_OUTPUTS = "cover.cover_outputs"
+COVER_RELAYS = "cover.cover_relays"
+
 
 async def test_setup_lcn_cover(hass, entry, lcn_connection):
     """Test the setup of cover."""
     for entity_id in (
-        "cover.cover_outputs",
-        "cover.cover_relays",
+        COVER_OUTPUTS,
+        COVER_RELAYS,
     ):
         state = hass.states.get(entity_id)
         assert state is not None
@@ -38,13 +41,13 @@ async def test_entity_attributes(hass, entry, lcn_connection):
     """Test the attributes of an entity."""
     entity_registry = er.async_get(hass)
 
-    entity_outputs = entity_registry.async_get("cover.cover_outputs")
+    entity_outputs = entity_registry.async_get(COVER_OUTPUTS)
 
     assert entity_outputs
     assert entity_outputs.unique_id == f"{entry.entry_id}-m000007-outputs"
     assert entity_outputs.original_name == "Cover_Outputs"
 
-    entity_relays = entity_registry.async_get("cover.cover_relays")
+    entity_relays = entity_registry.async_get(COVER_RELAYS)
 
     assert entity_relays
     assert entity_relays.unique_id == f"{entry.entry_id}-m000007-motor1"
@@ -54,7 +57,7 @@ async def test_entity_attributes(hass, entry, lcn_connection):
 @patch.object(MockModuleConnection, "control_motors_outputs")
 async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
     """Test the outputs cover opens."""
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_CLOSED
 
     # command failed
@@ -63,7 +66,7 @@ async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_outputs"},
+        {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -71,7 +74,7 @@ async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
         MotorStateModifier.UP, MotorReverseTime.RT1200
     )
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state != STATE_OPENING
 
@@ -82,7 +85,7 @@ async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_outputs"},
+        {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -90,7 +93,7 @@ async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
         MotorStateModifier.UP, MotorReverseTime.RT1200
     )
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state == STATE_OPENING
 
@@ -98,7 +101,7 @@ async def test_outputs_open(control_motors_outputs, hass, lcn_connection):
 @patch.object(MockModuleConnection, "control_motors_outputs")
 async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
     """Test the outputs cover closes."""
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_OPEN
 
     # command failed
@@ -107,7 +110,7 @@ async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_outputs"},
+        {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -115,7 +118,7 @@ async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
         MotorStateModifier.DOWN, MotorReverseTime.RT1200
     )
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state != STATE_CLOSING
 
@@ -126,7 +129,7 @@ async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_outputs"},
+        {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -134,7 +137,7 @@ async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
         MotorStateModifier.DOWN, MotorReverseTime.RT1200
     )
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -142,7 +145,7 @@ async def test_outputs_close(control_motors_outputs, hass, lcn_connection):
 @patch.object(MockModuleConnection, "control_motors_outputs")
 async def test_outputs_stop(control_motors_outputs, hass, lcn_connection):
     """Test the outputs cover stops."""
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_CLOSING
 
     # command failed
@@ -151,13 +154,13 @@ async def test_outputs_stop(control_motors_outputs, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_outputs"},
+        {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(MotorStateModifier.STOP)
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -168,13 +171,13 @@ async def test_outputs_stop(control_motors_outputs, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_outputs"},
+        {ATTR_ENTITY_ID: COVER_OUTPUTS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_outputs.assert_awaited_with(MotorStateModifier.STOP)
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state not in (STATE_CLOSING, STATE_OPENING)
 
@@ -185,7 +188,7 @@ async def test_relays_open(control_motors_relays, hass, lcn_connection):
     states = [MotorStateModifier.NOCHANGE] * 4
     states[0] = MotorStateModifier.UP
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     state.state = STATE_CLOSED
 
     # command failed
@@ -194,13 +197,13 @@ async def test_relays_open(control_motors_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_relays"},
+        {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state != STATE_OPENING
 
@@ -211,13 +214,13 @@ async def test_relays_open(control_motors_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_OPEN_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_relays"},
+        {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state == STATE_OPENING
 
@@ -228,7 +231,7 @@ async def test_relays_close(control_motors_relays, hass, lcn_connection):
     states = [MotorStateModifier.NOCHANGE] * 4
     states[0] = MotorStateModifier.DOWN
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     state.state = STATE_OPEN
 
     # command failed
@@ -237,13 +240,13 @@ async def test_relays_close(control_motors_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_relays"},
+        {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state != STATE_CLOSING
 
@@ -254,13 +257,13 @@ async def test_relays_close(control_motors_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_CLOSE_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_relays"},
+        {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -271,7 +274,7 @@ async def test_relays_stop(control_motors_relays, hass, lcn_connection):
     states = [MotorStateModifier.NOCHANGE] * 4
     states[0] = MotorStateModifier.STOP
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     state.state = STATE_CLOSING
 
     # command failed
@@ -280,13 +283,13 @@ async def test_relays_stop(control_motors_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_relays"},
+        {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -297,13 +300,13 @@ async def test_relays_stop(control_motors_relays, hass, lcn_connection):
     await hass.services.async_call(
         DOMAIN_COVER,
         SERVICE_STOP_COVER,
-        {ATTR_ENTITY_ID: "cover.cover_relays"},
+        {ATTR_ENTITY_ID: COVER_RELAYS},
         blocking=True,
     )
     await hass.async_block_till_done()
     control_motors_relays.assert_awaited_with(states)
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state not in (STATE_CLOSING, STATE_OPENING)
 
@@ -313,33 +316,33 @@ async def test_pushed_outputs_status_change(hass, entry, lcn_connection):
     device_connection = get_device_connection(hass, (0, 7, False), entry)
     address = LcnAddr(0, 7, False)
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     state.state = STATE_CLOSED
 
     # push status "open"
-    input = ModStatusOutput(address, 0, 100)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 0, 100)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state == STATE_OPENING
 
     # push status "stop"
-    input = ModStatusOutput(address, 0, 0)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 0, 0)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state not in (STATE_OPENING, STATE_CLOSING)
 
     # push status "close"
-    input = ModStatusOutput(address, 1, 100)
-    await device_connection.async_process_input(input)
+    inp = ModStatusOutput(address, 1, 100)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover_outputs")
+    state = hass.states.get(COVER_OUTPUTS)
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -350,36 +353,36 @@ async def test_pushed_relays_status_change(hass, entry, lcn_connection):
     address = LcnAddr(0, 7, False)
     states = [False] * 8
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     state.state = STATE_CLOSED
 
     # push status "open"
     states[0:2] = [True, False]
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state == STATE_OPENING
 
     # push status "stop"
     states[0] = False
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state not in (STATE_OPENING, STATE_CLOSING)
 
     # push status "close"
     states[0:2] = [True, True]
-    input = ModStatusRelays(address, states)
-    await device_connection.async_process_input(input)
+    inp = ModStatusRelays(address, states)
+    await device_connection.async_process_input(inp)
     await hass.async_block_till_done()
 
-    state = hass.states.get("cover.cover_relays")
+    state = hass.states.get(COVER_RELAYS)
     assert state is not None
     assert state.state == STATE_CLOSING
 
@@ -387,5 +390,5 @@ async def test_pushed_relays_status_change(hass, entry, lcn_connection):
 async def test_unload_config_entry(hass, entry, lcn_connection):
     """Test the cover is removed when the config entry is unloaded."""
     await hass.config_entries.async_unload(entry.entry_id)
-    assert hass.states.get("cover.cover_outputs").state == STATE_UNAVAILABLE
-    assert hass.states.get("cover.cover_relays").state == STATE_UNAVAILABLE
+    assert hass.states.get(COVER_OUTPUTS).state == STATE_UNAVAILABLE
+    assert hass.states.get(COVER_RELAYS).state == STATE_UNAVAILABLE

@@ -57,6 +57,7 @@ homeassistant.components.automation.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.binary_sensor.*
+homeassistant.components.bluetooth.*
 homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
@@ -83,9 +84,11 @@ homeassistant.components.dunehd.*
 homeassistant.components.efergy.*
 homeassistant.components.elgato.*
 homeassistant.components.elkm1.*
+homeassistant.components.emulated_hue.*
 homeassistant.components.esphome.*
 homeassistant.components.energy.*
 homeassistant.components.evil_genius_labs.*
+homeassistant.components.fan.*
 homeassistant.components.fastdotcom.*
 homeassistant.components.filesize.*
 homeassistant.components.fitbit.*
@@ -101,6 +104,7 @@ homeassistant.components.geo_location.*
 homeassistant.components.geocaching.*
 homeassistant.components.gios.*
 homeassistant.components.goalzero.*
+homeassistant.components.google.*
 homeassistant.components.greeneye_monitor.*
 homeassistant.components.group.*
 homeassistant.components.guardian.*
@@ -112,6 +116,7 @@ homeassistant.components.homekit.aidmanager
 homeassistant.components.homekit.config_flow
 homeassistant.components.homekit.diagnostics
 homeassistant.components.homekit.logbook
+homeassistant.components.homekit.type_locks
 homeassistant.components.homekit.type_triggers
 homeassistant.components.homekit.util
 homeassistant.components.homekit_controller
@@ -149,6 +154,7 @@ homeassistant.components.luftdaten.*
 homeassistant.components.mailbox.*
 homeassistant.components.media_player.*
 homeassistant.components.media_source.*
+homeassistant.components.metoffice.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
 homeassistant.components.modem_callerid.*
@@ -186,6 +192,7 @@ homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
+homeassistant.components.resolution_center.*
 homeassistant.components.ridwell.*
 homeassistant.components.rituals_perfume_genie.*
 homeassistant.components.roku.*
@@ -194,6 +201,7 @@ homeassistant.components.rtsp_to_webrtc.*
 homeassistant.components.samsungtv.*
 homeassistant.components.scene.*
 homeassistant.components.select.*
+homeassistant.components.sensibo.*
 homeassistant.components.sensor.*
 homeassistant.components.senseme.*
 homeassistant.components.senz.*
@@ -222,6 +230,7 @@ homeassistant.components.tplink.*
 homeassistant.components.tolo.*
 homeassistant.components.tractive.*
 homeassistant.components.tradfri.*
+homeassistant.components.trafikverket_ferry.*
 homeassistant.components.trafikverket_train.*
 homeassistant.components.trafikverket_weatherstation.*
 homeassistant.components.tts.*

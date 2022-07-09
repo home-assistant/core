@@ -18,6 +18,7 @@ from homeassistant.const import (
     MASS_GRAMS,
     PRESSURE_PA,
     SPEED_KILOMETERS_PER_HOUR,
+    STATE_ON,
     TEMP_CELSIUS,
     VOLUME_LITERS,
 )
@@ -25,6 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr, entity, template
 from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
 import homeassistant.util.dt as dt_util
 from homeassistant.util.unit_system import UnitSystem
@@ -294,6 +296,34 @@ def test_int_function(hass):
     assert render(hass, "{{ int('bad', default=1) }}") == 1
 
 
+def test_bool_function(hass):
+    """Test bool function."""
+    assert render(hass, "{{ bool(true) }}") is True
+    assert render(hass, "{{ bool(false) }}") is False
+    assert render(hass, "{{ bool('on') }}") is True
+    assert render(hass, "{{ bool('off') }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool('unknown') }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool(none) }}")
+    assert render(hass, "{{ bool('unavailable', none) }}") is None
+    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
+
+
+def test_bool_filter(hass):
+    """Test bool filter."""
+    assert render(hass, "{{ true | bool }}") is True
+    assert render(hass, "{{ false | bool }}") is False
+    assert render(hass, "{{ 'on' | bool }}") is True
+    assert render(hass, "{{ 'off' | bool }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'unknown' | bool }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ none | bool }}")
+    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
+    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [
@@ -447,6 +477,8 @@ def test_logarithm(hass):
     assert render(hass, "{{ 'no_number' | log(10, default=1) }}") == 1
     assert render(hass, "{{ log('no_number', 10, 1) }}") == 1
     assert render(hass, "{{ log('no_number', 10, default=1) }}") == 1
+    assert render(hass, "{{ log(0, 10, 1) }}") == 1
+    assert render(hass, "{{ log(0, 10, default=1) }}") == 1
 
 
 def test_sine(hass):
@@ -3388,6 +3420,18 @@ def test_urlencode(hass):
     assert tpl.async_render() == "the%20quick%20brown%20fox%20%3D%20true"
 
 
+def test_as_timedelta(hass: HomeAssistant) -> None:
+    """Test the as_timedelta function/filter."""
+    tpl = template.Template("{{ as_timedelta('PT10M') }}", hass)
+    assert tpl.async_render() == "0:10:00"
+
+    tpl = template.Template("{{ 'PT10M' | as_timedelta }}", hass)
+    assert tpl.async_render() == "0:10:00"
+
+    tpl = template.Template("{{ 'T10M' | as_timedelta }}", hass)
+    assert tpl.async_render() is None
+
+
 def test_iif(hass: HomeAssistant) -> None:
     """Test the immediate if function/filter."""
     tpl = template.Template("{{ (1 == 1) | iif }}", hass)
@@ -3817,3 +3861,21 @@ async def test_undefined_variable(hass, caplog):
         "Template variable warning: 'no_such_variable' is undefined when rendering '{{ no_such_variable }}'"
         in caplog.text
     )
+
+
+async def test_template_states_blocks_setitem(hass):
+    """Test we cannot setitem on TemplateStates."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    with pytest.raises(RuntimeError):
+        template_state["any"] = "any"
+
+
+async def test_template_states_can_serialize(hass):
+    """Test TemplateState is serializable."""
+    hass.states.async_set("light.new", STATE_ON)
+    state = hass.states.get("light.new")
+    template_state = template.TemplateState(hass, state, True)
+    assert template_state.as_dict() is template_state.as_dict()
+    assert json_dumps(template_state) == json_dumps(template_state)

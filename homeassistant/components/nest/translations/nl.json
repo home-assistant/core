@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "already_configured": "Account is al geconfigureerd",
             "authorize_url_timeout": "Time-out bij het genereren van autorisatie-URL.",
             "invalid_access_token": "Ongeldig toegangstoken",
             "missing_configuration": "Integratie niet geconfigureerd. Raadpleeg de documentatie.",
@@ -55,7 +56,7 @@
             },
             "reauth_confirm": {
                 "description": "De Nest-integratie moet uw account opnieuw verifi\u00ebren",
-                "title": "Integratie herauthentiseren"
+                "title": "Integratie herauthenticeren"
             }
         }
     },

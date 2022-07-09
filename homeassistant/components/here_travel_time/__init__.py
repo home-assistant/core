@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_UNIT_SYSTEM,
     CONF_UNIT_SYSTEM_IMPERIAL,
+    LENGTH_METERS,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -22,6 +23,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt
+from homeassistant.util.unit_system import IMPERIAL_SYSTEM
 
 from .const import (
     ATTR_DESTINATION,
@@ -41,11 +43,9 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
-    CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     NO_ROUTE_ERROR_MESSAGE,
-    ROUTE_MODE_FASTEST,
     TRAFFIC_MODE_ENABLED,
     TRAVEL_MODES_VEHICLE,
 )
@@ -60,7 +60,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     """Set up HERE Travel Time from a config entry."""
     api_key = config_entry.data[CONF_API_KEY]
     here_client = RoutingApi(api_key)
-    setup_options(hass, config_entry)
 
     arrival = (
         dt.parse_time(config_entry.options[CONF_ARRIVAL_TIME])
@@ -96,21 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
 
     return True
-
-
-def setup_options(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
-    """Set up options for a config entry if not set."""
-    if not config_entry.options:
-        hass.config_entries.async_update_entry(
-            config_entry,
-            options={
-                CONF_TRAFFIC_MODE: TRAFFIC_MODE_ENABLED,
-                CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
-                CONF_ARRIVAL_TIME: None,
-                CONF_DEPARTURE_TIME: None,
-                CONF_UNIT_SYSTEM: hass.config.units.name,
-            },
-        )
 
 
 async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -196,15 +180,15 @@ class HereTravelTimeDataUpdateCoordinator(DataUpdateCoordinator):
                 traffic_time = summary["trafficTime"]
             if self.config.units == CONF_UNIT_SYSTEM_IMPERIAL:
                 # Convert to miles.
-                distance = distance / 1609.344
+                distance = IMPERIAL_SYSTEM.length(distance, LENGTH_METERS)
             else:
                 # Convert to kilometers
                 distance = distance / 1000
             return HERERoutingData(
                 {
                     ATTR_ATTRIBUTION: attribution,
-                    ATTR_DURATION: summary["baseTime"] / 60,  # type: ignore[misc]
-                    ATTR_DURATION_IN_TRAFFIC: traffic_time / 60,
+                    ATTR_DURATION: round(summary["baseTime"] / 60),  # type: ignore[misc]
+                    ATTR_DURATION_IN_TRAFFIC: round(traffic_time / 60),
                     ATTR_DISTANCE: distance,
                     ATTR_ROUTE: response.route_short,
                     ATTR_ORIGIN: ",".join(origin),

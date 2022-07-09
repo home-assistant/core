@@ -20,6 +20,13 @@
                 "description": "Introdueix codi d'autenticaci\u00f3 Hive. \n\n Introdueix el codi 0000 per demanar un altre codi.",
                 "title": "Verificaci\u00f3 en dos passos de Hive."
             },
+            "configuration": {
+                "data": {
+                    "device_name": "Nom del dispositiu"
+                },
+                "description": "Introdueix la teva configuraci\u00f3 de Hive ",
+                "title": "Configuraci\u00f3 de Hive."
+            },
             "reauth": {
                 "data": {
                     "password": "Contrasenya",
@@ -34,7 +41,7 @@
                     "scan_interval": "Interval d'escaneig (segons)",
                     "username": "Nom d'usuari"
                 },
-                "description": "Actualitza la informaci\u00f3 i configuraci\u00f3 d'inici de sessi\u00f3.",
+                "description": "Introdueix la informaci\u00f3 d'inici de sessi\u00f3 de Hive.",
                 "title": "Inici de sessi\u00f3 Hive"
             }
         }

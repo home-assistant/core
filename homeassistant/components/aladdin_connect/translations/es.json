@@ -13,6 +13,7 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
+                "description": "La integraci\u00f3n de Aladdin Connect necesita volver a autenticar su cuenta",
                 "title": "Reautenticaci\u00f3n de la integraci\u00f3n"
             },
             "user": {

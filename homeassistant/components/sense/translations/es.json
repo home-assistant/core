@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "El dispositivo ya est\u00e1 configurado"
+            "already_configured": "El dispositivo ya est\u00e1 configurado",
+            "reauth_successful": "La reautenticaci\u00f3n fue exitosa"
         },
         "error": {
             "cannot_connect": "No se pudo conectar",
@@ -13,7 +14,8 @@
                 "data": {
                     "password": "Contrase\u00f1a"
                 },
-                "description": "La integraci\u00f3n Sense debe volver a autenticar la cuenta {email}."
+                "description": "La integraci\u00f3n Sense debe volver a autenticar la cuenta {email}.",
+                "title": "Reautenticar la integraci\u00f3n"
             },
             "user": {
                 "data": {
@@ -26,7 +28,8 @@
             "validation": {
                 "data": {
                     "code": "C\u00f3digo de verificaci\u00f3n"
-                }
+                },
+                "title": "Detecci\u00f3n de autenticaci\u00f3n multifactor"
             }
         }
     }

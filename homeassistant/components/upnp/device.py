@@ -9,7 +9,6 @@ from typing import Any
 from urllib.parse import urlparse
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
-from async_upnp_client.client import UpnpDevice
 from async_upnp_client.client_factory import UpnpFactory
 from async_upnp_client.exceptions import UpnpError
 from async_upnp_client.profiles.igd import IgdDevice, StatusInfo
@@ -47,15 +46,19 @@ async def async_get_mac_address_from_host(hass: HomeAssistant, host: str) -> str
     return mac_address
 
 
-async def async_create_upnp_device(
-    hass: HomeAssistant, ssdp_location: str
-) -> UpnpDevice:
-    """Create UPnP device."""
-    session = async_get_clientsession(hass)
+async def async_create_device(hass: HomeAssistant, ssdp_location: str) -> Device:
+    """Create UPnP/IGD device."""
+    session = async_get_clientsession(hass, verify_ssl=False)
     requester = AiohttpSessionRequester(session, with_sleep=True, timeout=20)
 
     factory = UpnpFactory(requester, disable_state_variable_validation=True)
-    return await factory.async_create_device(ssdp_location)
+    upnp_device = await factory.async_create_device(ssdp_location)
+
+    # Create profile wrapper.
+    igd_device = IgdDevice(upnp_device, None)
+    device = Device(hass, igd_device)
+
+    return device
 
 
 class Device:
@@ -66,40 +69,8 @@ class Device:
         self.hass = hass
         self._igd_device = igd_device
         self.coordinator: DataUpdateCoordinator | None = None
-        self._mac_address: str | None = None
-
-    @classmethod
-    async def async_create_device(
-        cls, hass: HomeAssistant, ssdp_location: str
-    ) -> Device:
-        """Create UPnP/IGD device."""
-        upnp_device = await async_create_upnp_device(hass, ssdp_location)
-
-        # Create profile wrapper.
-        igd_device = IgdDevice(upnp_device, None)
-        device = cls(hass, igd_device)
-
-        return device
-
-    @property
-    def mac_address(self) -> str | None:
-        """Get the mac address."""
-        return self._mac_address
-
-    @mac_address.setter
-    def mac_address(self, mac_address: str) -> None:
-        """Set the mac address."""
-        self._mac_address = mac_address
-
-    @property
-    def original_udn(self) -> str | None:
-        """Get the mac address."""
-        return self._original_udn
-
-    @original_udn.setter
-    def original_udn(self, original_udn: str) -> None:
-        """Set the original UDN."""
-        self._original_udn = original_udn
+        self.mac_address: str | None = None
+        self.original_udn: str | None = None
 
     @property
     def udn(self) -> str:

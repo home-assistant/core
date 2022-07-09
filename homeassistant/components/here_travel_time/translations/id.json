@@ -1,0 +1,89 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Perangkat sudah dikonfigurasi"
+        },
+        "error": {
+            "invalid_auth": "Autentikasi tidak valid",
+            "unknown": "Kesalahan yang tidak diharapkan"
+        },
+        "step": {
+            "destination_coordinates": {
+                "data": {
+                    "destination": "Tujuan dalam koordinat GPS"
+                },
+                "title": "Pilih Tujuan"
+            },
+            "destination_entity_id": {
+                "data": {
+                    "destination_entity_id": "Tujuan menggunakan entitas"
+                },
+                "title": "Pilih Tujuan"
+            },
+            "destination_menu": {
+                "menu_options": {
+                    "destination_coordinates": "Menggunakan lokasi pada peta",
+                    "destination_entity": "Menggunakan entitas"
+                },
+                "title": "Pilih Tujuan"
+            },
+            "origin_coordinates": {
+                "data": {
+                    "origin": "Asal dalam koordinat GPS"
+                },
+                "title": "Pilih Asal"
+            },
+            "origin_entity_id": {
+                "data": {
+                    "origin_entity_id": "Asal menggunakan entitas"
+                },
+                "title": "Pilih Asal"
+            },
+            "origin_menu": {
+                "menu_options": {
+                    "origin_coordinates": "Menggunakan lokasi pada peta",
+                    "origin_entity": "Menggunakan entitas"
+                },
+                "title": "Pilih Asal"
+            },
+            "user": {
+                "data": {
+                    "api_key": "Kunci API",
+                    "mode": "Mode Perjalanan",
+                    "name": "Nama"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "arrival_time": {
+                "data": {
+                    "arrival_time": "Waktu Kedatangan"
+                },
+                "title": "Pilih Waktu Kedatangan"
+            },
+            "departure_time": {
+                "data": {
+                    "departure_time": "Waktu Keberangkatan"
+                },
+                "title": "Pilih Waktu Keberangkatan"
+            },
+            "init": {
+                "data": {
+                    "route_mode": "Mode Rute",
+                    "traffic_mode": "Modus Lalu Lintas",
+                    "unit_system": "Sistem unit"
+                }
+            },
+            "time_menu": {
+                "menu_options": {
+                    "arrival_time": "Konfigurasikan waktu kedatangan",
+                    "departure_time": "Konfigurasikan waktu keberangkatan",
+                    "no_time": "Jangan mengonfigurasi waktu"
+                },
+                "title": "Pilih Jenis Waktu"
+            }
+        }
+    }
+}

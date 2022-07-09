@@ -14,6 +14,7 @@ from pyunifiprotect.data import (
     Light,
     ModelType,
     ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
     Sensor,
     StateType,
     Viewer,
@@ -25,7 +26,7 @@ from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 
 from .const import ATTR_EVENT_SCORE, DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData
-from .models import ProtectRequiredKeysMixin
+from .models import PermRequired, ProtectRequiredKeysMixin
 from .utils import get_nested_attr
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,14 +38,28 @@ def _async_device_entities(
     klass: type[ProtectDeviceEntity],
     model_type: ModelType,
     descs: Sequence[ProtectRequiredKeysMixin],
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     if len(descs) == 0:
         return []
 
     entities: list[ProtectDeviceEntity] = []
-    for device in data.get_by_types({model_type}):
+    devices = (
+        [ufp_device] if ufp_device is not None else data.get_by_types({model_type})
+    )
+    for device in devices:
+        if not device.is_adopted_by_us:
+            continue
+
         assert isinstance(device, (Camera, Light, Sensor, Viewer, Doorlock, Chime))
         for description in descs:
+            if description.ufp_perm is not None:
+                can_write = device.can_write(data.api.bootstrap.auth_user)
+                if description.ufp_perm == PermRequired.WRITE and not can_write:
+                    continue
+                if description.ufp_perm == PermRequired.NO_WRITE and can_write:
+                    continue
+
             if description.ufp_required_field:
                 required_field = get_nested_attr(device, description.ufp_required_field)
                 if not required_field:
@@ -61,7 +76,7 @@ def _async_device_entities(
                 "Adding %s entity %s for %s",
                 klass.__name__,
                 description.name,
-                device.name,
+                device.display_name,
             )
 
     return entities
@@ -78,6 +93,7 @@ def async_all_device_entities(
     lock_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     chime_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
     all_descs: Sequence[ProtectRequiredKeysMixin] | None = None,
+    ufp_device: ProtectAdoptableDeviceModel | None = None,
 ) -> list[ProtectDeviceEntity]:
     """Generate a list of all the device entities."""
     all_descs = list(all_descs or [])
@@ -88,14 +104,33 @@ def async_all_device_entities(
     lock_descs = list(lock_descs or []) + all_descs
     chime_descs = list(chime_descs or []) + all_descs
 
-    return (
-        _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
-        + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
-        + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
-        + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
-        + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
-        + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
-    )
+    if ufp_device is None:
+        return (
+            _async_device_entities(data, klass, ModelType.CAMERA, camera_descs)
+            + _async_device_entities(data, klass, ModelType.LIGHT, light_descs)
+            + _async_device_entities(data, klass, ModelType.SENSOR, sense_descs)
+            + _async_device_entities(data, klass, ModelType.VIEWPORT, viewer_descs)
+            + _async_device_entities(data, klass, ModelType.DOORLOCK, lock_descs)
+            + _async_device_entities(data, klass, ModelType.CHIME, chime_descs)
+        )
+
+    descs = []
+    if ufp_device.model == ModelType.CAMERA:
+        descs = camera_descs
+    elif ufp_device.model == ModelType.LIGHT:
+        descs = light_descs
+    elif ufp_device.model == ModelType.SENSOR:
+        descs = sense_descs
+    elif ufp_device.model == ModelType.VIEWPORT:
+        descs = viewer_descs
+    elif ufp_device.model == ModelType.DOORLOCK:
+        descs = lock_descs
+    elif ufp_device.model == ModelType.CHIME:
+        descs = chime_descs
+
+    if len(descs) == 0 or ufp_device.model is None:
+        return []
+    return _async_device_entities(data, klass, ufp_device.model, descs, ufp_device)
 
 
 class ProtectDeviceEntity(Entity):
@@ -117,17 +152,17 @@ class ProtectDeviceEntity(Entity):
         self.device = device
 
         if description is None:
-            self._attr_unique_id = f"{self.device.id}"
-            self._attr_name = f"{self.device.name}"
+            self._attr_unique_id = f"{self.device.mac}"
+            self._attr_name = f"{self.device.display_name}"
         else:
             self.entity_description = description
-            self._attr_unique_id = f"{self.device.id}_{description.key}"
+            self._attr_unique_id = f"{self.device.mac}_{description.key}"
             name = description.name or ""
-            self._attr_name = f"{self.device.name} {name.title()}"
+            self._attr_name = f"{self.device.display_name} {name.title()}"
 
         self._attr_attribution = DEFAULT_ATTRIBUTION
         self._async_set_device_info()
-        self._async_update_device_from_protect()
+        self._async_update_device_from_protect(device)
 
     async def async_update(self) -> None:
         """Update the entity.
@@ -139,7 +174,7 @@ class ProtectDeviceEntity(Entity):
     @callback
     def _async_set_device_info(self) -> None:
         self._attr_device_info = DeviceInfo(
-            name=self.device.name,
+            name=self.device.display_name,
             manufacturer=DEFAULT_BRAND,
             model=self.device.type,
             via_device=(DOMAIN, self.data.api.bootstrap.nvr.mac),
@@ -149,12 +184,11 @@ class ProtectDeviceEntity(Entity):
         )
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         """Update Entity object from Protect device."""
         if self.data.last_update_success:
-            assert self.device.model
-            devices = getattr(self.data.api.bootstrap, f"{self.device.model.value}s")
-            self.device = devices[self.device.id]
+            assert isinstance(device, ProtectAdoptableDeviceModel)
+            self.device = device
 
         is_connected = (
             self.data.last_update_success and self.device.state == StateType.CONNECTED
@@ -171,9 +205,9 @@ class ProtectDeviceEntity(Entity):
         self._attr_available = is_connected
 
     @callback
-    def _async_updated_event(self) -> None:
+    def _async_updated_event(self, device: ProtectModelWithId) -> None:
         """Call back for incoming data."""
-        self._async_update_device_from_protect()
+        self._async_update_device_from_protect(device)
         self.async_write_ha_state()
 
     async def async_added_to_hass(self) -> None:
@@ -181,7 +215,7 @@ class ProtectDeviceEntity(Entity):
         await super().async_added_to_hass()
         self.async_on_remove(
             self.data.async_subscribe_device_id(
-                self.device.id, self._async_updated_event
+                self.device.mac, self._async_updated_event
             )
         )
 
@@ -207,14 +241,14 @@ class ProtectNVREntity(ProtectDeviceEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, self.device.mac)},
             identifiers={(DOMAIN, self.device.mac)},
             manufacturer=DEFAULT_BRAND,
-            name=self.device.name,
+            name=self.device.display_name,
             model=self.device.type,
             sw_version=str(self.device.version),
             configuration_url=self.device.api.base_url,
         )
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
         if self.data.last_update_success:
             self.device = self.data.api.bootstrap.nvr
 
@@ -251,8 +285,8 @@ class EventThumbnailMixin(ProtectDeviceEntity):
         return attrs
 
     @callback
-    def _async_update_device_from_protect(self) -> None:
-        super()._async_update_device_from_protect()
+    def _async_update_device_from_protect(self, device: ProtectModelWithId) -> None:
+        super()._async_update_device_from_protect(device)
         self._event = self._async_get_event()
 
         attrs = self.extra_state_attributes or {}

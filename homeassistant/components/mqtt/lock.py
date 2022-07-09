@@ -1,8 +1,8 @@
 """Support for MQTT locks."""
 from __future__ import annotations
 
-import asyncio
 import functools
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,8 +15,8 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import MqttValueTemplate, subscription
-from .. import mqtt
+from . import subscription
+from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_ENCODING,
@@ -28,11 +28,12 @@ from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .models import MqttValueTemplate
 
 CONF_PAYLOAD_LOCK = "payload_lock"
 CONF_PAYLOAD_UNLOCK = "payload_unlock"
@@ -56,7 +57,7 @@ MQTT_LOCK_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_RW_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_OPTIMISTIC, default=DEFAULT_OPTIMISTIC): cv.boolean,
@@ -87,7 +88,11 @@ async def async_setup_platform(
     """Set up MQTT locks configured under the lock platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, lock.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        lock.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -98,14 +103,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT lock through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, lock.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_yaml_entities(hass, lock.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
@@ -184,21 +182,21 @@ class MqttLock(MqttEntity, LockEntity):
         await subscription.async_subscribe_topics(self.hass, self._sub_state)
 
     @property
-    def is_locked(self):
+    def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._optimistic
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         return LockEntityFeature.OPEN if CONF_PAYLOAD_OPEN in self._config else 0
 
-    async def async_lock(self, **kwargs):
+    async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device.
 
         This method is a coroutine.
@@ -215,7 +213,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._state = True
             self.async_write_ha_state()
 
-    async def async_unlock(self, **kwargs):
+    async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device.
 
         This method is a coroutine.
@@ -232,7 +230,7 @@ class MqttLock(MqttEntity, LockEntity):
             self._state = False
             self.async_write_ha_state()
 
-    async def async_open(self, **kwargs):
+    async def async_open(self, **kwargs: Any) -> None:
         """Open the door latch.
 
         This method is a coroutine.

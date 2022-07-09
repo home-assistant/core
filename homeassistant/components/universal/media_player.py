@@ -72,6 +72,8 @@ from homeassistant.const import (
     STATE_IDLE,
     STATE_OFF,
     STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -94,8 +96,15 @@ CONF_ATTRS = "attributes"
 CONF_CHILDREN = "children"
 CONF_COMMANDS = "commands"
 
-OFF_STATES = [STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN]
-
+STATES_ORDER = [
+    STATE_UNKNOWN,
+    STATE_UNAVAILABLE,
+    STATE_OFF,
+    STATE_IDLE,
+    STATE_ON,
+    STATE_PAUSED,
+    STATE_PLAYING,
+]
 ATTRS_SCHEMA = cv.schema_with_slug_keys(cv.string)
 CMD_SCHEMA = cv.schema_with_slug_keys(cv.SERVICE_SCHEMA)
 
@@ -614,9 +623,15 @@ class UniversalMediaPlayer(MediaPlayerEntity):
 
     async def async_update(self):
         """Update state in HA."""
-        for child_name in self._children:
-            child_state = self.hass.states.get(child_name)
-            if child_state and child_state.state not in OFF_STATES:
-                self._child_state = child_state
-                return
         self._child_state = None
+        for child_name in self._children:
+            if (child_state := self.hass.states.get(child_name)) and STATES_ORDER.index(
+                child_state.state
+            ) >= STATES_ORDER.index(STATE_IDLE):
+                if self._child_state:
+                    if STATES_ORDER.index(child_state.state) > STATES_ORDER.index(
+                        self._child_state.state
+                    ):
+                        self._child_state = child_state
+                else:
+                    self._child_state = child_state

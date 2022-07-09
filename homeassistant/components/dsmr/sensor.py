@@ -4,10 +4,11 @@ from __future__ import annotations
 import asyncio
 from asyncio import CancelledError
 from contextlib import suppress
+from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 
-from dsmr_parser import obis_references as obis_ref
+from dsmr_parser import obis_references
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
     create_rfxtrx_dsmr_reader,
@@ -16,7 +17,12 @@ from dsmr_parser.clients.rfxtrx_protocol import (
 from dsmr_parser.objects import DSMRObject
 import serial
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
@@ -25,7 +31,7 @@ from homeassistant.const import (
     VOLUME_CUBIC_METERS,
 )
 from homeassistant.core import CoreState, HomeAssistant, callback
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import EventType, StateType
 from homeassistant.util import Throttle
@@ -47,11 +53,285 @@ from .const import (
     DOMAIN,
     DSMR_PROTOCOL,
     LOGGER,
-    SENSORS,
 )
-from .models import DSMRSensorEntityDescription
 
 UNIT_CONVERSION = {"m3": VOLUME_CUBIC_METERS}
+
+
+@dataclass
+class DSMRSensorEntityDescription(SensorEntityDescription):
+    """Represents an DSMR Sensor."""
+
+    dsmr_versions: set[str] | None = None
+    is_gas: bool = False
+
+
+SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
+    DSMRSensorEntityDescription(
+        key=obis_references.CURRENT_ELECTRICITY_USAGE,
+        name="Power Consumption",
+        device_class=SensorDeviceClass.POWER,
+        force_update=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.CURRENT_ELECTRICITY_DELIVERY,
+        name="Power Production",
+        device_class=SensorDeviceClass.POWER,
+        force_update=True,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_ACTIVE_TARIFF,
+        name="Power Tariff",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        icon="mdi:flash",
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_USED_TARIFF_1,
+        name="Energy Consumption (tarif 1)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        device_class=SensorDeviceClass.ENERGY,
+        force_update=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_USED_TARIFF_2,
+        name="Energy Consumption (tarif 2)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_DELIVERED_TARIFF_1,
+        name="Energy Production (tarif 1)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_DELIVERED_TARIFF_2,
+        name="Energy Production (tarif 2)",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE,
+        name="Power Consumption Phase L1",
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE,
+        name="Power Consumption Phase L2",
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE,
+        name="Power Consumption Phase L3",
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE,
+        name="Power Production Phase L1",
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE,
+        name="Power Production Phase L2",
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE,
+        name="Power Production Phase L3",
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.SHORT_POWER_FAILURE_COUNT,
+        name="Short Power Failure Count",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        icon="mdi:flash-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.LONG_POWER_FAILURE_COUNT,
+        name="Long Power Failure Count",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        icon="mdi:flash-off",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.VOLTAGE_SAG_L1_COUNT,
+        name="Voltage Sags Phase L1",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.VOLTAGE_SAG_L2_COUNT,
+        name="Voltage Sags Phase L2",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.VOLTAGE_SAG_L3_COUNT,
+        name="Voltage Sags Phase L3",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.VOLTAGE_SWELL_L1_COUNT,
+        name="Voltage Swells Phase L1",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        icon="mdi:pulse",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.VOLTAGE_SWELL_L2_COUNT,
+        name="Voltage Swells Phase L2",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        icon="mdi:pulse",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.VOLTAGE_SWELL_L3_COUNT,
+        name="Voltage Swells Phase L3",
+        dsmr_versions={"2.2", "4", "5", "5B", "5L"},
+        entity_registry_enabled_default=False,
+        icon="mdi:pulse",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_VOLTAGE_L1,
+        name="Voltage Phase L1",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_VOLTAGE_L2,
+        name="Voltage Phase L2",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_VOLTAGE_L3,
+        name="Voltage Phase L3",
+        device_class=SensorDeviceClass.VOLTAGE,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_CURRENT_L1,
+        name="Current Phase L1",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_CURRENT_L2,
+        name="Current Phase L2",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.INSTANTANEOUS_CURRENT_L3,
+        name="Current Phase L3",
+        device_class=SensorDeviceClass.CURRENT,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.BELGIUM_MAX_POWER_PER_PHASE,
+        name="Max power per phase",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
+        name="Max current per phase",
+        dsmr_versions={"5B"},
+        device_class=SensorDeviceClass.POWER,
+        entity_registry_enabled_default=False,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_IMPORTED_TOTAL,
+        name="Energy Consumption (total)",
+        dsmr_versions={"5L", "5S", "Q3D"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.ELECTRICITY_EXPORTED_TOTAL,
+        name="Energy Production (total)",
+        dsmr_versions={"5L", "5S", "Q3D"},
+        force_update=True,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.HOURLY_GAS_METER_READING,
+        name="Gas Consumption",
+        dsmr_versions={"4", "5", "5L"},
+        is_gas=True,
+        force_update=True,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.BELGIUM_5MIN_GAS_METER_READING,
+        name="Gas Consumption",
+        dsmr_versions={"5B"},
+        is_gas=True,
+        force_update=True,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    DSMRSensorEntityDescription(
+        key=obis_references.GAS_METER_READING,
+        name="Gas Consumption",
+        dsmr_versions={"2.2"},
+        is_gas=True,
+        force_update=True,
+        device_class=SensorDeviceClass.GAS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+)
 
 
 async def async_setup_entry(
@@ -240,7 +520,7 @@ class DSMREntity(SensorEntity):
         if (value := self.get_dsmr_object_attr("value")) is None:
             return None
 
-        if self.entity_description.key == obis_ref.ELECTRICITY_ACTIVE_TARIFF:
+        if self.entity_description.key == obis_references.ELECTRICITY_ACTIVE_TARIFF:
             return self.translate_tariff(value, self._entry.data[CONF_DSMR_VERSION])
 
         with suppress(TypeError):

@@ -19,6 +19,7 @@ from telegram import (
     ReplyKeyboardMarkup,
     ReplyKeyboardRemove,
     Update,
+    User,
 )
 from telegram.error import TelegramError
 from telegram.ext import CallbackContext, Filters
@@ -80,6 +81,12 @@ ATTR_VERIFY_SSL = "verify_ssl"
 ATTR_TIMEOUT = "timeout"
 ATTR_MESSAGE_TAG = "message_tag"
 ATTR_CHANNEL_POST = "channel_post"
+ATTR_QUESTION = "question"
+ATTR_OPTIONS = "options"
+ATTR_ANSWERS = "answers"
+ATTR_OPEN_PERIOD = "open_period"
+ATTR_IS_ANONYMOUS = "is_anonymous"
+ATTR_ALLOWS_MULTIPLE_ANSWERS = "allows_multiple_answers"
 
 CONF_ALLOWED_CHAT_IDS = "allowed_chat_ids"
 CONF_PROXY_URL = "proxy_url"
@@ -96,6 +103,7 @@ SERVICE_SEND_VIDEO = "send_video"
 SERVICE_SEND_VOICE = "send_voice"
 SERVICE_SEND_DOCUMENT = "send_document"
 SERVICE_SEND_LOCATION = "send_location"
+SERVICE_SEND_POLL = "send_poll"
 SERVICE_EDIT_MESSAGE = "edit_message"
 SERVICE_EDIT_CAPTION = "edit_caption"
 SERVICE_EDIT_REPLYMARKUP = "edit_replymarkup"
@@ -184,6 +192,19 @@ SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend(
     }
 )
 
+SERVICE_SCHEMA_SEND_POLL = vol.Schema(
+    {
+        vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
+        vol.Required(ATTR_QUESTION): cv.string,
+        vol.Required(ATTR_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_OPEN_PERIOD): cv.positive_int,
+        vol.Optional(ATTR_IS_ANONYMOUS, default=True): cv.boolean,
+        vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
+        vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
+        vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+    }
+)
+
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend(
     {
         vol.Required(ATTR_MESSAGEID): vol.Any(
@@ -246,6 +267,7 @@ SERVICE_MAP = {
     SERVICE_SEND_VOICE: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
     SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
+    SERVICE_SEND_POLL: SERVICE_SCHEMA_SEND_POLL,
     SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
     SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
     SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
@@ -398,6 +420,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         elif msgtype == SERVICE_SEND_LOCATION:
             await hass.async_add_executor_job(
                 partial(notify_service.send_location, **kwargs)
+            )
+        elif msgtype == SERVICE_SEND_POLL:
+            await hass.async_add_executor_job(
+                partial(notify_service.send_poll, **kwargs)
             )
         elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
             await hass.async_add_executor_job(
@@ -847,6 +873,34 @@ class TelegramNotificationService:
                 timeout=params[ATTR_TIMEOUT],
             )
 
+    def send_poll(
+        self,
+        question,
+        options,
+        is_anonymous,
+        allows_multiple_answers,
+        target=None,
+        **kwargs,
+    ):
+        """Send a poll."""
+        params = self._get_msg_kwargs(kwargs)
+        openperiod = kwargs.get(ATTR_OPEN_PERIOD)
+        for chat_id in self._get_target_chat_ids(target):
+            _LOGGER.debug("Send poll '%s' to chat ID %s", question, chat_id)
+            self._send_msg(
+                self.bot.send_poll,
+                "Error sending poll",
+                params[ATTR_MESSAGE_TAG],
+                chat_id=chat_id,
+                question=question,
+                options=options,
+                is_anonymous=is_anonymous,
+                allows_multiple_answers=allows_multiple_answers,
+                open_period=openperiod,
+                disable_notification=params[ATTR_DISABLE_NOTIF],
+                timeout=params[ATTR_TIMEOUT],
+            )
+
     def leave_chat(self, chat_id=None):
         """Remove bot from chat."""
         chat_id = self._get_target_chat_ids(chat_id)[0]
@@ -913,15 +967,16 @@ class BaseTelegramBotEntity:
             event_data[ATTR_TEXT] = message.text
 
         if message.from_user:
-            event_data.update(
-                {
-                    ATTR_USER_ID: message.from_user.id,
-                    ATTR_FROM_FIRST: message.from_user.first_name,
-                    ATTR_FROM_LAST: message.from_user.last_name,
-                }
-            )
+            event_data.update(self._get_user_event_data(message.from_user))
 
         return event_type, event_data
+
+    def _get_user_event_data(self, user: User) -> dict[str, Any]:
+        return {
+            ATTR_USER_ID: user.id,
+            ATTR_FROM_FIRST: user.first_name,
+            ATTR_FROM_LAST: user.last_name,
+        }
 
     def _get_callback_query_event_data(
         self, callback_query: CallbackQuery
@@ -937,6 +992,9 @@ class BaseTelegramBotEntity:
         if callback_query.message:
             event_data[ATTR_MSG] = callback_query.message.to_dict()
             event_data[ATTR_CHAT_ID] = callback_query.message.chat.id
+
+        if callback_query.from_user:
+            event_data.update(self._get_user_event_data(callback_query.from_user))
 
         # Split data into command and args if possible
         event_data.update(self._get_command_event_data(callback_query.data))

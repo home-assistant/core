@@ -5,11 +5,15 @@ from unittest.mock import patch
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    DATA_KILOBYTES,
+    DATA_RATE_BYTES_PER_SECOND,
     ENERGY_KILO_WATT_HOUR,
     ENERGY_WATT_HOUR,
     POWER_KILO_WATT,
     POWER_WATT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    TIME_HOURS,
     TIME_SECONDS,
 )
 from homeassistant.core import HomeAssistant, State
@@ -299,7 +303,9 @@ async def test_suffix(hass):
     assert await async_setup_component(hass, "sensor", config)
 
     entity_id = config["sensor"]["source"]
-    hass.states.async_set(entity_id, 1000, {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT})
+    hass.states.async_set(
+        entity_id, 1000, {ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_BYTES_PER_SECOND}
+    )
     await hass.async_block_till_done()
 
     now = dt_util.utcnow() + timedelta(seconds=10)
@@ -307,7 +313,7 @@ async def test_suffix(hass):
         hass.states.async_set(
             entity_id,
             1000,
-            {ATTR_UNIT_OF_MEASUREMENT: POWER_KILO_WATT},
+            {ATTR_UNIT_OF_MEASUREMENT: DATA_RATE_BYTES_PER_SECOND},
             force_update=True,
         )
         await hass.async_block_till_done()
@@ -317,6 +323,43 @@ async def test_suffix(hass):
 
     # Testing a network speed sensor at 1000 bytes/s over 10s  = 10kbytes
     assert round(float(state.state)) == 10
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == DATA_KILOBYTES
+
+
+async def test_suffix_2(hass):
+    """Test integration sensor state."""
+    config = {
+        "sensor": {
+            "platform": "integration",
+            "name": "integration",
+            "source": "sensor.cubic_meters_per_hour",
+            "round": 2,
+            "unit_time": TIME_HOURS,
+        }
+    }
+
+    assert await async_setup_component(hass, "sensor", config)
+
+    entity_id = config["sensor"]["source"]
+    hass.states.async_set(entity_id, 1000, {ATTR_UNIT_OF_MEASUREMENT: "m³/h"})
+    await hass.async_block_till_done()
+
+    now = dt_util.utcnow() + timedelta(hours=1)
+    with patch("homeassistant.util.dt.utcnow", return_value=now):
+        hass.states.async_set(
+            entity_id,
+            1000,
+            {ATTR_UNIT_OF_MEASUREMENT: "m³/h"},
+            force_update=True,
+        )
+        await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.integration")
+    assert state is not None
+
+    # Testing a flow sensor at 1000 m³/h over 1h = 1000 m³
+    assert round(float(state.state)) == 1000
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "m³"
 
 
 async def test_units(hass):
@@ -348,6 +391,15 @@ async def test_units(hass):
 
     # Testing the sensor ignored the source sensor's units until
     # they became valid
+    assert state.attributes.get("unit_of_measurement") == ENERGY_WATT_HOUR
+
+    # When source state goes to None / Unknown, expect an early exit without
+    # changes to the state or unit_of_measurement
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, None)
+    await hass.async_block_till_done()
+
+    new_state = hass.states.get("sensor.integration")
+    assert state == new_state
     assert state.attributes.get("unit_of_measurement") == ENERGY_WATT_HOUR
 
 

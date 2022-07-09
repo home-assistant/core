@@ -13,17 +13,24 @@ from aiohttp.client_exceptions import ClientError
 from gcal_sync.auth import API_BASE_URL
 import pytest
 
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.components.google.const import DOMAIN
+from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.template import DATE_STR_FORMAT
 import homeassistant.util.dt as dt_util
 
-from .conftest import CALENDAR_ID, TEST_YAML_ENTITY, TEST_YAML_ENTITY_NAME
+from .conftest import (
+    CALENDAR_ID,
+    TEST_API_ENTITY,
+    TEST_API_ENTITY_NAME,
+    TEST_YAML_ENTITY,
+)
 
 from tests.common import async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMockResponse
 
-TEST_ENTITY = TEST_YAML_ENTITY
-TEST_ENTITY_NAME = TEST_YAML_ENTITY_NAME
+TEST_ENTITY = TEST_API_ENTITY
+TEST_ENTITY_NAME = TEST_API_ENTITY_NAME
 
 TEST_EVENT = {
     "summary": "Test All Day Event",
@@ -58,7 +65,6 @@ TEST_EVENT = {
 @pytest.fixture(autouse=True)
 def mock_test_setup(
     hass,
-    mock_calendars_yaml,
     test_api_calendar,
     mock_calendars_list,
     config_entry,
@@ -87,17 +93,15 @@ def upcoming_date() -> dict[str, Any]:
     }
 
 
-def upcoming_event_url() -> str:
+def upcoming_event_url(entity: str = TEST_ENTITY) -> str:
     """Return a calendar API to return events created by upcoming()."""
     now = dt_util.now()
     start = (now - datetime.timedelta(minutes=60)).isoformat()
     end = (now + datetime.timedelta(minutes=60)).isoformat()
-    return f"/api/calendars/{TEST_ENTITY}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
+    return f"/api/calendars/{entity}?start={urllib.parse.quote(start)}&end={urllib.parse.quote(end)}"
 
 
-async def test_all_day_event(
-    hass, mock_events_list_items, mock_token_read, component_setup
-):
+async def test_all_day_event(hass, mock_events_list_items, component_setup):
     """Test that we can create an event trigger on device."""
     week_from_today = dt_util.now().date() + datetime.timedelta(days=7)
     end_event = week_from_today + datetime.timedelta(days=1)
@@ -551,6 +555,7 @@ async def test_http_api_event_paging(
 async def test_opaque_event(
     hass,
     hass_client,
+    mock_calendars_yaml,
     mock_events_list_items,
     component_setup,
     transparency,
@@ -566,20 +571,22 @@ async def test_opaque_event(
     assert await component_setup()
 
     client = await hass_client()
-    response = await client.get(upcoming_event_url())
+    response = await client.get(upcoming_event_url(TEST_YAML_ENTITY))
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert (len(events) > 0) == expect_visible_event
 
 
+@pytest.mark.parametrize("mock_test_setup", [None])
 async def test_scan_calendar_error(
     hass,
     component_setup,
     test_api_calendar,
     mock_calendars_list,
+    config_entry,
 ):
     """Test that the calendar update handles a server error."""
-
+    config_entry.add_to_hass(hass)
     mock_calendars_list({}, exc=ClientError())
     assert await component_setup()
 
@@ -658,3 +665,120 @@ async def test_future_event_offset_update_behavior(
     state = hass.states.get(TEST_ENTITY)
     assert state.state == STATE_OFF
     assert state.attributes["offset_reached"]
+
+
+async def test_unique_id(
+    hass,
+    mock_events_list_items,
+    component_setup,
+    config_entry,
+):
+    """Test entity is created with a unique id based on the config entry."""
+    mock_events_list_items([])
+    assert await component_setup()
+
+    entity_registry = er.async_get(hass)
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{config_entry.unique_id}-{CALENDAR_ID}"
+    }
+
+
+@pytest.mark.parametrize(
+    "old_unique_id", [CALENDAR_ID, f"{CALENDAR_ID}-we_are_we_are_a_test_calendar"]
+)
+async def test_unique_id_migration(
+    hass,
+    mock_events_list_items,
+    component_setup,
+    config_entry,
+    old_unique_id,
+):
+    """Test that old unique id format is migrated to the new format that supports multiple accounts."""
+    entity_registry = er.async_get(hass)
+
+    # Create an entity using the old unique id format
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=old_unique_id,
+        config_entry=config_entry,
+    )
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {old_unique_id}
+
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{config_entry.unique_id}-{CALENDAR_ID}"
+    }
+
+
+@pytest.mark.parametrize(
+    "calendars_config",
+    [
+        [
+            {
+                "cal_id": CALENDAR_ID,
+                "entities": [
+                    {
+                        "device_id": "backyard_light",
+                        "name": "Backyard Light",
+                        "search": "#Backyard",
+                    },
+                    {
+                        "device_id": "front_light",
+                        "name": "Front Light",
+                        "search": "#Front",
+                    },
+                ],
+            }
+        ],
+    ],
+)
+async def test_invalid_unique_id_cleanup(
+    hass,
+    mock_events_list_items,
+    component_setup,
+    config_entry,
+    mock_calendars_yaml,
+):
+    """Test that old unique id format that is not actually unique is removed."""
+    entity_registry = er.async_get(hass)
+
+    # Create an entity using the old unique id format
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=f"{CALENDAR_ID}-backyard_light",
+        config_entry=config_entry,
+    )
+    entity_registry.async_get_or_create(
+        DOMAIN,
+        Platform.CALENDAR,
+        unique_id=f"{CALENDAR_ID}-front_light",
+        config_entry=config_entry,
+    )
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert {entry.unique_id for entry in registry_entries} == {
+        f"{CALENDAR_ID}-backyard_light",
+        f"{CALENDAR_ID}-front_light",
+    }
+
+    mock_events_list_items([])
+    assert await component_setup()
+
+    registry_entries = er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    )
+    assert not registry_entries

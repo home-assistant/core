@@ -3,5 +3,10 @@
         "trigger_type": {
             "turned_off": "{entity_name} st\u00e4ngdes av"
         }
+    },
+    "state": {
+        "_": {
+            "on": "P\u00e5"
+        }
     }
 }

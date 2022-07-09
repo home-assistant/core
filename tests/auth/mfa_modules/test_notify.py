@@ -133,25 +133,25 @@ async def test_login_flow_validates_mfa(hass):
     provider = hass.auth.auth_providers[0]
 
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await hass.auth.login_flow.async_configure(
         result["flow_id"], {"username": "test-user", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"username": "test-user", "password": "test-pass"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["data_schema"].schema.get("code") == str
 
@@ -170,7 +170,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["errors"]["base"] == "invalid_code"
 
@@ -187,7 +187,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["errors"]["base"] == "invalid_code"
 
@@ -195,7 +195,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": "invalid-code"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "too_many_retry"
 
     # wait service call finished
@@ -203,13 +203,13 @@ async def test_login_flow_validates_mfa(hass):
 
     # restart login
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"username": "test-user", "password": "test-pass"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert result["type"] == data_entry_flow.FlowResultType.FORM
         assert result["step_id"] == "mfa"
         assert result["data_schema"].schema.get("code") == str
 
@@ -228,7 +228,7 @@ async def test_login_flow_validates_mfa(hass):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"code": MOCK_CODE}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["data"].id == "mock-id"
 
 
@@ -243,14 +243,14 @@ async def test_setup_user_notify_service(hass):
 
     flow = await notify_auth_module.async_setup_flow("test-user")
     step = await flow.async_step_init()
-    assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert step["type"] == data_entry_flow.FlowResultType.FORM
     assert step["step_id"] == "init"
     schema = step["data_schema"]
     schema({"notify_service": "test2"})
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         step = await flow.async_step_init({"notify_service": "test1"})
-        assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert step["type"] == data_entry_flow.FlowResultType.FORM
         assert step["step_id"] == "setup"
 
     # wait service call finished
@@ -266,7 +266,7 @@ async def test_setup_user_notify_service(hass):
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE_2):
         step = await flow.async_step_setup({"code": "invalid"})
-        assert step["type"] == data_entry_flow.RESULT_TYPE_FORM
+        assert step["type"] == data_entry_flow.FlowResultType.FORM
         assert step["step_id"] == "setup"
         assert step["errors"]["base"] == "invalid_code"
 
@@ -283,7 +283,7 @@ async def test_setup_user_notify_service(hass):
 
     with patch("pyotp.HOTP.verify", return_value=True):
         step = await flow.async_step_setup({"code": MOCK_CODE_2})
-        assert step["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+        assert step["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
 
 async def test_include_exclude_config(hass):
@@ -332,7 +332,7 @@ async def test_setup_user_no_notify_service(hass):
 
     flow = await notify_auth_module.async_setup_flow("test-user")
     step = await flow.async_step_init()
-    assert step["type"] == data_entry_flow.RESULT_TYPE_ABORT
+    assert step["type"] == data_entry_flow.FlowResultType.ABORT
     assert step["reason"] == "no_available_service"
 
 
@@ -369,13 +369,13 @@ async def test_not_raise_exception_when_service_not_exist(hass):
     provider = hass.auth.auth_providers[0]
 
     result = await hass.auth.login_flow.async_init((provider.type, provider.id))
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
 
     with patch("pyotp.HOTP.at", return_value=MOCK_CODE):
         result = await hass.auth.login_flow.async_configure(
             result["flow_id"], {"username": "test-user", "password": "test-pass"}
         )
-        assert result["type"] == data_entry_flow.RESULT_TYPE_ABORT
+        assert result["type"] == data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "unknown_error"
 
     # wait service call finished

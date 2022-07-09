@@ -28,6 +28,49 @@ DATETIME_RE = re.compile(
     r"(?P<tzinfo>Z|[+-]\d{2}(?::?\d{2})?)?$"
 )
 
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+STANDARD_DURATION_RE = re.compile(
+    r"^"
+    r"(?:(?P<days>-?\d+) (days?, )?)?"
+    r"(?P<sign>-?)"
+    r"((?:(?P<hours>\d+):)(?=\d+:\d+))?"
+    r"(?:(?P<minutes>\d+):)?"
+    r"(?P<seconds>\d+)"
+    r"(?:[\.,](?P<microseconds>\d{1,6})\d{0,6})?"
+    r"$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+ISO8601_DURATION_RE = re.compile(
+    r"^(?P<sign>[-+]?)"
+    r"P"
+    r"(?:(?P<days>\d+([\.,]\d+)?)D)?"
+    r"(?:T"
+    r"(?:(?P<hours>\d+([\.,]\d+)?)H)?"
+    r"(?:(?P<minutes>\d+([\.,]\d+)?)M)?"
+    r"(?:(?P<seconds>\d+([\.,]\d+)?)S)?"
+    r")?"
+    r"$"
+)
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+POSTGRES_INTERVAL_RE = re.compile(
+    r"^"
+    r"(?:(?P<days>-?\d+) (days? ?))?"
+    r"(?:(?P<sign>[-+])?"
+    r"(?P<hours>\d+):"
+    r"(?P<minutes>\d\d):"
+    r"(?P<seconds>\d\d)"
+    r"(?:\.(?P<microseconds>\d{1,6}))?"
+    r")?$"
+)
+
 
 def set_default_time_zone(time_zone: dt.tzinfo) -> None:
     """Set a default time zone to be used when none is specified.
@@ -169,6 +212,35 @@ def parse_date(dt_str: str) -> dt.date | None:
         return dt.datetime.strptime(dt_str, DATE_STR_FORMAT).date()
     except ValueError:  # If dt_str did not match our format
         return None
+
+
+# Copyright (c) Django Software Foundation and individual contributors.
+# All rights reserved.
+# https://github.com/django/django/blob/master/LICENSE
+def parse_duration(value: str) -> dt.timedelta | None:
+    """Parse a duration string and return a datetime.timedelta.
+
+    Also supports ISO 8601 representation and PostgreSQL's day-time interval
+    format.
+    """
+    match = (
+        STANDARD_DURATION_RE.match(value)
+        or ISO8601_DURATION_RE.match(value)
+        or POSTGRES_INTERVAL_RE.match(value)
+    )
+    if match:
+        kws = match.groupdict()
+        sign = -1 if kws.pop("sign", "+") == "-" else 1
+        if kws.get("microseconds"):
+            kws["microseconds"] = kws["microseconds"].ljust(6, "0")
+        time_delta_args: dict[str, float] = {
+            k: float(v.replace(",", ".")) for k, v in kws.items() if v is not None
+        }
+        days = dt.timedelta(float(time_delta_args.pop("days", 0.0) or 0.0))
+        if match.re == ISO8601_DURATION_RE:
+            days *= sign
+        return days + sign * dt.timedelta(**time_delta_args)
+    return None
 
 
 def parse_time(time_str: str) -> dt.time | None:
