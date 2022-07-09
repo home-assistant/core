@@ -7,6 +7,11 @@
             "cannot_connect": "Gagal terhubung"
         },
         "step": {
+            "user": {
+                "data": {
+                    "host": "Host"
+                }
+            },
             "zeroconf_confirm": {
                 "description": "Anda akan menambahkan perangkat SoundTouch bernama  `{name}` ke Home Assistant.",
                 "title": "Konfirmasi penambahan perangkat Bose SoundTouch"
