@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import socket
+from types import MappingProxyType
 from typing import Any
 from urllib.parse import urlparse
 
@@ -99,7 +100,9 @@ class UnifiFlowHandler(config_entries.ConfigFlow, domain=UNIFI_DOMAIN):
             }
 
             try:
-                controller = await get_unifi_controller(self.hass, self.config)
+                controller = await get_unifi_controller(
+                    self.hass, MappingProxyType(self.config)
+                )
                 sites = await controller.sites()
 
             except AuthenticationRequired:
