@@ -25,6 +25,8 @@ from .bluetooth_update_coordinator import (
 )
 from .const import DOMAIN
 
+_LOGGER = logging.getLogger(__name__)
+
 SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     "temperature": SensorEntityDescription(
         key="temperature",
@@ -56,7 +58,6 @@ SENSOR_TYPES: dict[str, SensorEntityDescription] = {
     ),
 }
 ALL_SENSORS = set(SENSOR_TYPES)
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -71,11 +72,8 @@ async def async_setup_entry(
     @callback
     def _async_add_or_update_entities(data: dict[str, Any]) -> None:
         """Listen for new entities."""
-        _LOGGER.warning("_async_add_or_update_entities: %s, %s", created, data)
         possible_sensors = ALL_SENSORS.intersection(data)
-        _LOGGER.warning("possible_sensors: %s", possible_sensors)
         new = possible_sensors.difference(created)
-        _LOGGER.warning("new: %s", new)
         if new:
             created.update(new)
             async_add_entities(

@@ -69,8 +69,6 @@ class BluetoothDataUpdateCoordinator:
     @callback
     def async_update_listeners(self, data: dict[str, Any]) -> None:
         """Update all registered listeners."""
-        self.logger.warning("Updating listeners %s with data %s", self._listeners, data)
-
         # Dispatch to listeners without a filter key
         if listeners := self._listeners.get(None):
             for update_callback in listeners:
@@ -89,9 +87,6 @@ class BluetoothDataUpdateCoordinator:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        self.logger.warning(
-            "_async_handle_bluetooth_event: %s %s", service_info, change
-        )
         assert self.parser_method is not None
         try:
             parsed = self.parser_method(service_info, change)
