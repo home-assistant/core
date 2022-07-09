@@ -9,12 +9,14 @@ from homeassistant.components.fibaro import DOMAIN
 from homeassistant.components.fibaro.const import CONF_IMPORT_PLUGINS
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
-TEST_SERIALNUMBER = "HC2-111111"
-TEST_NAME = "my_fibaro_home_center"
-TEST_URL = "http://192.168.1.1/api/"
-TEST_USERNAME = "user"
-TEST_PASSWORD = "password"
-TEST_VERSION = "4.360"
+from .const import (
+    TEST_NAME,
+    TEST_PASSWORD,
+    TEST_SERIALNUMBER,
+    TEST_URL,
+    TEST_USERNAME,
+    TEST_VERSION,
+)
 
 
 @pytest.fixture(name="fibaro_client", autouse=True)

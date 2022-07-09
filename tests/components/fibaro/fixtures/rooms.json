@@ -1,0 +1,92 @@
+[
+  {
+    "id": 4,
+    "name": "Wohnen",
+    "sectionID": 4,
+    "icon": "room_sofa",
+    "defaultSensors": { "temperature": 0, "humidity": 0, "light": 0 },
+    "defaultThermostat": 0,
+    "sortOrder": 1,
+    "category": "other"
+  },
+  {
+    "id": 5,
+    "name": "Küche",
+    "sectionID": 4,
+    "icon": "room_dining",
+    "defaultSensors": { "temperature": 141, "humidity": 0, "light": 142 },
+    "defaultThermostat": 0,
+    "sortOrder": 3,
+    "category": "other"
+  },
+  {
+    "id": 6,
+    "name": "Schlafzimmer",
+    "sectionID": 4,
+    "icon": "room_bedroom",
+    "defaultSensors": { "temperature": 0, "humidity": 0, "light": 0 },
+    "defaultThermostat": 0,
+    "sortOrder": 5,
+    "category": "other"
+  },
+  {
+    "id": 7,
+    "name": "Keller",
+    "sectionID": 4,
+    "icon": "room_laundry",
+    "defaultSensors": { "temperature": 195, "humidity": 196, "light": 0 },
+    "defaultThermostat": 0,
+    "sortOrder": 8,
+    "category": "other"
+  },
+  {
+    "id": 8,
+    "name": "Bad",
+    "sectionID": 4,
+    "icon": "room_wanna",
+    "defaultSensors": { "temperature": 0, "humidity": 0, "light": 0 },
+    "defaultThermostat": 0,
+    "sortOrder": 6,
+    "category": "other"
+  },
+  {
+    "id": 9,
+    "name": "Essen",
+    "sectionID": 4,
+    "icon": "room_jadalnia",
+    "defaultSensors": { "temperature": 0, "humidity": 0, "light": 0 },
+    "defaultThermostat": 0,
+    "sortOrder": 2,
+    "category": "other"
+  },
+  {
+    "id": 106,
+    "name": "Sitzplatz",
+    "sectionID": 4,
+    "icon": "room_drzwiwejsciowe",
+    "defaultSensors": { "temperature": 323, "humidity": 0, "light": 327 },
+    "defaultThermostat": 0,
+    "sortOrder": 9,
+    "category": "other"
+  },
+  {
+    "id": 108,
+    "name": "Flur / WC",
+    "sectionID": 4,
+    "icon": "room_schody",
+    "defaultSensors": { "temperature": 18, "humidity": 0, "light": 19 },
+    "defaultThermostat": 0,
+    "sortOrder": 4,
+    "category": "other"
+  },
+  {
+    "id": 145,
+    "name": "Büro's",
+    "sectionID": 4,
+    "icon": "room_office",
+    "defaultSensors": { "temperature": 0, "humidity": 0, "light": 0 },
+    "defaultThermostat": 0,
+    "sortOrder": 7,
+    "category": "other"
+  }
+]

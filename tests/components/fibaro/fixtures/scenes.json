@@ -1,0 +1,60 @@
+[
+  {
+    "id": 2,
+    "name": "Einbruch",
+    "type": "com.fibaro.blockScene",
+    "categories": ["other"],
+    "roomID": 5,
+    "iconID": 5,
+    "runConfig": "TRIGGER_AND_MANUAL",
+    "alexaProhibited": true,
+    "autostart": false,
+    "protectedByPIN": false,
+    "killable": true,
+    "killOtherInstances": false,
+    "maxRunningInstances": 1,
+    "runningInstances": 0,
+    "instances": [],
+    "runningManualInstances": 0,
+    "visible": true,
+    "isLua": false,
+    "properties": "",
+    "triggers": {
+      "properties": [{ "id": 17, "name": "value" }],
+      "globals": ["GlobalMode"],
+      "events": [],
+      "weather": []
+    },
+    "actions": { "devices": [], "scenes": [], "groups": [] },
+    "sortOrder": 15
+  },
+  {
+    "id": 3,
+    "name": "Abwesend",
+    "type": "com.fibaro.blockScene",
+    "categories": ["other"],
+    "roomID": 4,
+    "iconID": 5,
+    "runConfig": "MANUAL_ONLY",
+    "alexaProhibited": false,
+    "autostart": false,
+    "protectedByPIN": false,
+    "killable": true,
+    "killOtherInstances": false,
+    "maxRunningInstances": 1,
+    "runningInstances": 0,
+    "instances": [],
+    "runningManualInstances": 0,
+    "visible": true,
+    "isLua": false,
+    "properties": "",
+    "triggers": {
+      "properties": [],
+      "globals": ["UserTriggered"],
+      "events": [],
+      "weather": []
+    },
+    "actions": { "devices": [], "scenes": [5], "groups": [] },
+    "sortOrder": 43
+  }
+]

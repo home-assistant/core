@@ -1,7 +1,6 @@
 """Support for Fibaro thermostats."""
 from __future__ import annotations
 
-from contextlib import suppress
 import logging
 from typing import Any
 
@@ -195,22 +194,23 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         if self._op_mode_device:
             prop = self._op_mode_device.fibaro_device.properties
             if "supportedThermostatModes" in prop:
-                op_modes = prop.supportedThermostatModes.split(",")
-            elif "supportedOperatingModes" in prop:
-                op_modes = prop.supportedOperatingModes.split(",")
-            elif "supportedModes" in prop:
-                op_modes = prop.supportedModes.split(",")
-            for mode in op_modes:
-                if isinstance(mode, str) and mode.lower() in HVAC_MODES:
-                    self._hvac_support.add(mode.lower())
-                else:
-                    with suppress(ValueError, TypeError):
-                        mode = int(mode)
-                        if mode in OPMODES_HVAC:
-                            mode_ha = OPMODES_HVAC[mode]
-                            self._hvac_support.add(mode_ha)
-                        if mode in OPMODES_PRESET:
-                            self._preset_support.append(OPMODES_PRESET[mode])
+                for mode in prop.supportedThermostatModes:
+                    if mode.lower() in HVAC_MODES:
+                        self._hvac_support.add(mode.lower())
+                    else:
+                        self._preset_support.append(mode)
+            else:
+                if "supportedOperatingModes" in prop:
+                    op_modes = prop.supportedOperatingModes.split(",")
+                elif "supportedModes" in prop:
+                    op_modes = prop.supportedModes.split(",")
+                for mode in op_modes:
+                    mode = int(mode)
+                    if mode in OPMODES_HVAC:
+                        mode_ha = OPMODES_HVAC[mode]
+                        self._hvac_support.add(mode_ha)
+                    if mode in OPMODES_PRESET:
+                        self._preset_support.append(OPMODES_PRESET[mode])
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
@@ -270,8 +270,8 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
 
         if "operatingMode" in prop:
             return int(prop.operatingMode)
-        if "thermostatOperatingState" in prop:
-            return prop.thermostatOperatingState
+        if "thermostatMode" in prop:
+            return prop.thermostatMode
 
         return int(prop.mode)
 
@@ -309,7 +309,7 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         elif "setThermostatMode" in self._op_mode_device.fibaro_device.actions:
             prop = self._op_mode_device.fibaro_device.properties
             if "supportedThermostatModes" in prop:
-                for mode in prop.supportedThermostatModes.split(","):
+                for mode in prop.supportedThermostatModes:
                     if mode.lower() == hvac_mode:
                         self._op_mode_device.action("setThermostatMode", mode)
                         break
@@ -337,6 +337,11 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         if not self._op_mode_device:
             return None
 
+        if "thermostatMode" in self._op_mode_device.fibaro_device.properties:
+            mode = self._op_mode_device.fibaro_device.properties.thermostatMode
+            if self.preset_modes is not None and mode in self.preset_modes:
+                return mode
+            return None
         if "operatingMode" in self._op_mode_device.fibaro_device.properties:
             mode = int(self._op_mode_device.fibaro_device.properties.operatingMode)
         else:
@@ -360,7 +365,9 @@ class FibaroThermostat(FibaroDevice, ClimateEntity):
         """Set new preset mode."""
         if self._op_mode_device is None:
             return
-        if "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
+        if "setThermostatMode" in self._op_mode_device.fibaro_device.actions:
+            self._op_mode_device.action("setThermostatMode", preset_mode)
+        elif "setOperatingMode" in self._op_mode_device.fibaro_device.actions:
             self._op_mode_device.action(
                 "setOperatingMode", HA_OPMODES_PRESET[preset_mode]
             )
