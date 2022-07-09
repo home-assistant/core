@@ -1,5 +1,4 @@
 """The Risco integration."""
-import asyncio
 from datetime import timedelta
 import logging
 
@@ -56,16 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         EVENTS_COORDINATOR: events_coordinator,
     }
 
-    async def start_platforms():
-        await asyncio.gather(
-            *(
-                hass.config_entries.async_forward_entry_setup(entry, platform)
-                for platform in PLATFORMS
-            )
-        )
-        await events_coordinator.async_refresh()
-
-    hass.async_create_task(start_platforms())
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await events_coordinator.async_refresh()
 
     return True
 

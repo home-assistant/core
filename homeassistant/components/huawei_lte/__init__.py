@@ -434,7 +434,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     # Forward config entry setup to platforms
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Notify doesn't support config entry setup yet, load with discovery for now
     await discovery.async_load_platform(
