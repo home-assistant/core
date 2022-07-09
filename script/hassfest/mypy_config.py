@@ -74,7 +74,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.sensor",
     "homeassistant.components.sonos.speaker",
     "homeassistant.components.sonos.statistics",
-    "homeassistant.components.telegram_bot.polling",
     "homeassistant.components.template.number",
     "homeassistant.components.template.sensor",
     "homeassistant.components.toon",
