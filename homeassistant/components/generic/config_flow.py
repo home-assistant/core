@@ -6,7 +6,7 @@ import contextlib
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
-from typing import Any, cast
+from typing import Any
 
 import PIL
 from aiohttp import web
@@ -25,12 +25,7 @@ from homeassistant.components.stream import (
     SOURCE_TIMEOUT,
     create_stream,
 )
-from homeassistant.config_entries import (
-    ConfigEntriesFlowManager,
-    ConfigEntry,
-    ConfigFlow,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import (
     CONF_AUTHENTICATION,
     CONF_NAME,
@@ -71,7 +66,7 @@ DEFAULT_DATA = {
 }
 
 SUPPORTED_IMAGE_TYPES = {"png", "jpeg", "gif", "svg+xml", "webp"}
-PREVIEW = "preview"
+PREVIEWS = "previews"
 
 
 def build_schema(
@@ -270,14 +265,15 @@ async def async_test_stream(
     return {}
 
 
-def register_preview(hass: HomeAssistant):
+def register_preview(hass: HomeAssistant, flow_id: str, preview: GenericCamera):
     """Set up previews for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
-    if not hass.data[DOMAIN].get(PREVIEW):
+    if not hass.data[DOMAIN].get(PREVIEWS):
         _LOGGER.debug("Registering camera image preview handler")
         hass.http.register_view(CameraImagePreview(hass))
-        hass.data[DOMAIN][PREVIEW] = True
+        hass.data[DOMAIN][PREVIEWS] = {}
+    hass.data[DOMAIN][PREVIEWS][flow_id] = preview
 
 
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -312,7 +308,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the start of the config flow."""
         errors = {}
         hass = self.hass
-        register_preview(hass)
         if user_input:
             # Secondary validation because serialised vol can't seem to handle this complexity:
             if not user_input.get(CONF_STILL_IMAGE_URL) and not user_input.get(
@@ -340,7 +335,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # Register a temporary view so that we can show a preview
                     flow_id = self.flow_id
-                    self.preview = GenericCamera(hass, user_input, flow_id, "preview")
+                    preview = GenericCamera(hass, user_input, flow_id, "preview")
+                    register_preview(hass, flow_id, preview)
                     preview_url = f"/api/generic/preview_flow_image/{flow_id}"
                     return self.async_show_form(
                         step_id="user_confirm_still",
@@ -474,12 +470,7 @@ class CameraImagePreview(HomeAssistantView):
     async def get(self, request: web.Request, flow_id) -> web.Response:
         """Start a GET request."""
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
-        manager: ConfigEntriesFlowManager = self.hass.config_entries.flow
-
-        # @todo - Need to find a more legal way of doing this:
-        # pylint: disable=protected-access
-        flow = cast(GenericIPCamConfigFlow, manager._progress[flow_id])
-        camera = flow.preview
+        camera = self.hass.data[DOMAIN][PREVIEWS][flow_id]
 
         if camera is None:
             _LOGGER.warning("Not valid")
