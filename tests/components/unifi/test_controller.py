@@ -281,7 +281,7 @@ async def test_controller_not_accessible(hass):
 async def test_controller_trigger_reauth_flow(hass):
     """Failed authentication trigger a reauthentication flow."""
     with patch(
-        "homeassistant.components.unifi.controller.get_unifi_controller",
+        "homeassistant.components.unifi.get_unifi_controller",
         side_effect=AuthenticationRequired,
     ), patch.object(hass.config_entries.flow, "async_init") as mock_flow_init:
         await setup_unifi_integration(hass)

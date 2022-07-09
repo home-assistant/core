@@ -5,16 +5,13 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_CONTROLLER,
-    DOMAIN as UNIFI_DOMAIN,
-    LOGGER,
-    UNIFI_WIRELESS_CLIENTS,
-)
-from .controller import PLATFORMS, UniFiController
+from .const import CONF_CONTROLLER, DOMAIN as UNIFI_DOMAIN, UNIFI_WIRELESS_CLIENTS
+from .controller import PLATFORMS, UniFiController, get_unifi_controller
+from .errors import AuthenticationRequired, CannotConnect
 from .services import async_setup_services, async_unload_services
 
 SAVE_DELAY = 10
@@ -37,9 +34,16 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Flat configuration was introduced with 2021.3
     await async_flatten_entry_data(hass, config_entry)
 
-    controller = UniFiController(hass, config_entry)
-    if not await controller.async_setup():
-        return False
+    try:
+        api = await get_unifi_controller(hass, config_entry.data)
+        controller = UniFiController(hass, config_entry, api)
+        await controller.initialize()
+
+    except CannotConnect as err:
+        raise ConfigEntryNotReady from err
+
+    except AuthenticationRequired as err:
+        raise ConfigEntryAuthFailed from err
 
     # Unique ID was introduced with 2021.3
     if config_entry.unique_id is None:
@@ -47,21 +51,18 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             config_entry, unique_id=controller.site_id
         )
 
-    if not hass.data[UNIFI_DOMAIN]:
+    hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    await controller.async_update_device_registry()
+
+    if len(hass.data[UNIFI_DOMAIN]) == 1:
         async_setup_services(hass)
 
-    hass.data[UNIFI_DOMAIN][config_entry.entry_id] = controller
-
-    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-    controller.api.start_websocket()
+    api.start_websocket()
 
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, controller.shutdown)
     )
-
-    LOGGER.debug("UniFi Network config options %s", config_entry.options)
-
-    await controller.async_update_device_registry()
 
     return True
 

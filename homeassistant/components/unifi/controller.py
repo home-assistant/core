@@ -4,6 +4,8 @@ from __future__ import annotations
 import asyncio
 from datetime import datetime, timedelta
 import ssl
+from types import MappingProxyType
+from typing import Any
 
 from aiohttp import CookieJar
 import aiounifi
@@ -36,7 +38,6 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     device_registry as dr,
@@ -97,12 +98,15 @@ DEVICE_CONNECTED = (
 class UniFiController:
     """Manages a single UniFi Network instance."""
 
-    def __init__(self, hass, config_entry):
+    def __init__(self, hass, config_entry, api):
         """Initialize the system."""
         self.hass = hass
         self.config_entry = config_entry
+        self.api = api
+
+        api.callback = self.async_unifi_signalling_callback
+
         self.available = True
-        self.api = None
         self.progress = None
         self.wireless_clients = None
 
@@ -301,31 +305,18 @@ class UniFiController:
             unifi_wireless_clients = self.hass.data[UNIFI_WIRELESS_CLIENTS]
             unifi_wireless_clients.update_data(self.wireless_clients, self.config_entry)
 
-    async def async_setup(self):
+    async def initialize(self):
         """Set up a UniFi Network instance."""
-        try:
-            self.api = await get_unifi_controller(
-                self.hass,
-                config=self.config_entry.data,
-                async_callback=self.async_unifi_signalling_callback,
-            )
-            await self.api.initialize()
+        await self.api.initialize()
 
-            sites = await self.api.sites()
-            description = await self.api.site_description()
-
-        except CannotConnect as err:
-            raise ConfigEntryNotReady from err
-
-        except AuthenticationRequired as err:
-            raise ConfigEntryAuthFailed from err
-
+        sites = await self.api.sites()
         for site in sites.values():
             if self.site == site["name"]:
                 self.site_id = site["_id"]
                 self._site_name = site["desc"]
                 break
 
+        description = await self.api.site_description()
         self._site_role = description[0]["site_role"]
 
         # Restore clients that are not a part of active clients list.
@@ -363,8 +354,6 @@ class UniFiController:
         self._cancel_heartbeat_check = async_track_time_interval(
             self.hass, self._async_check_for_stale, CHECK_HEARTBEAT_INTERVAL
         )
-
-        return True
 
     @callback
     def async_heartbeat(
@@ -476,11 +465,14 @@ class UniFiController:
         return True
 
 
-async def get_unifi_controller(hass, config, async_callback=None):
+async def get_unifi_controller(
+    hass: HomeAssistant,
+    config: MappingProxyType[str, Any],
+) -> aiounifi.Controller:
     """Create a controller object and verify authentication."""
     sslcontext = None
 
-    if verify_ssl := config.get(CONF_VERIFY_SSL):
+    if verify_ssl := bool(config.get(CONF_VERIFY_SSL)):
         session = aiohttp_client.async_get_clientsession(hass)
         if isinstance(verify_ssl, str):
             sslcontext = ssl.create_default_context(cafile=verify_ssl)
@@ -497,7 +489,6 @@ async def get_unifi_controller(hass, config, async_callback=None):
         site=config[CONF_SITE_ID],
         websession=session,
         sslcontext=sslcontext,
-        callback=async_callback,
     )
 
     try:
