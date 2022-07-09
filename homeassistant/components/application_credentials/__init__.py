@@ -15,6 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_CLIENT_SECRET,
@@ -127,9 +128,7 @@ class ApplicationCredentialsStorageCollection(collection.StorageCollection):
         for item in self.async_items():
             if item[CONF_DOMAIN] != domain:
                 continue
-            auth_domain = (
-                item[CONF_AUTH_DOMAIN] if CONF_AUTH_DOMAIN in item else item[CONF_ID]
-            )
+            auth_domain = item.get(CONF_AUTH_DOMAIN, item[CONF_ID])
             credentials[auth_domain] = ClientCredential(
                 client_id=item[CONF_CLIENT_ID],
                 client_secret=item[CONF_CLIENT_SECRET],
@@ -232,6 +231,25 @@ async def _async_provide_implementation(
         AuthImplementation(hass, auth_domain, credential, authorization_server)
         for auth_domain, credential in credentials.items()
     ]
+
+
+async def async_get_credential_item_id(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+) -> str | None:
+    """Return the item id of an application credential for an existing ConfigEntry."""
+    if not await _get_platform(hass, config_entry.domain):
+        return None
+
+    storage_collection = hass.data[DOMAIN][DATA_STORAGE]
+    for item in storage_collection.async_items():
+        if item[CONF_DOMAIN] != config_entry.domain:
+            continue
+        item_id = item[CONF_ID]
+        auth_domain = item.get(CONF_AUTH_DOMAIN, item_id)
+        if config_entry.data.get("auth_implementation") == auth_domain:
+            return item_id
+    return None
 
 
 class ApplicationCredentialsProtocol(Protocol):
