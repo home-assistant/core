@@ -995,7 +995,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.8
+pyezviz==0.2.0.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
