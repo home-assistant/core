@@ -7,7 +7,6 @@ MIT License applies.
 """
 from __future__ import annotations
 
-import binascii
 import logging
 import struct
 from typing import Any
@@ -18,11 +17,6 @@ PACKED_hHB = struct.Struct(">hHB")
 PACKED_hh = struct.Struct(">hh")
 PACKED_hhbhh = struct.Struct(">hhbhh")
 PACKED_hhhhh = struct.Struct(">hhhhh")
-
-
-def to_unformatted_mac(addr: bytes) -> str:
-    """Return unformatted MAC address."""
-    return "".join(f"{i:02X}" for i in addr[:])
 
 
 def decode_temps(packet_value: int) -> float:
@@ -44,23 +38,21 @@ NOT_GOVEE_MANUFACTURER = {76}
 
 
 def parse_govee_from_discovery_data(
-    local_name: str, address: str, rssi: int, manufacturer_data: dict[int, bytes]
+    rssi: int, manufacturer_data: dict[int, bytes]
 ) -> dict[str, Any] | None:
     """Parse Govee BLE advertisement data."""
-    source_mac = binascii.unhexlify(address.replace(":", ""))
-
     for device_id, mfr_data in manufacturer_data.items():
         if device_id in NOT_GOVEE_MANUFACTURER:
             continue
-        if result := parse_govee(mfr_data, device_id, source_mac, rssi):
+        if result := parse_govee(mfr_data, device_id, rssi):
             return result
 
     return None
 
 
 def parse_govee(
-    mfr_data: bytes, device_id: int, source_mac: bytes, rssi: int
-) -> dict[str, Any] | None:
+    mfr_data: bytes, device_id: int, rssi: int
+) -> dict[str, str | int | float] | None:
     """Parser for Govee sensors."""
 
     # Original messages had the device id
@@ -71,7 +63,6 @@ def parse_govee(
 
     msg_length = len(data)
     firmware = "Govee"
-    govee_mac = source_mac
     result: dict[str, str | int | float] = {"firmware": firmware}
 
     if msg_length == 10 and device_id == 0xEC88:
@@ -121,8 +112,6 @@ def parse_govee(
             device_type = "H5178"
         elif sensor_id == 1:
             device_type = "H5178-outdoor"
-            govee_mac_outdoor = int.from_bytes(govee_mac, "big") + 1
-            govee_mac = bytearray(govee_mac_outdoor.to_bytes(len(govee_mac), "big"))
         else:
             _LOGGER.debug(
                 "Unknown sensor id for Govee H5178, please report to the developers, data: %s",
@@ -183,7 +172,6 @@ def parse_govee(
     result.update(
         {
             "rssi": rssi,
-            "mac": to_unformatted_mac(govee_mac),
             "type": device_type,
             "packet": "no packet id",
             "firmware": firmware,
