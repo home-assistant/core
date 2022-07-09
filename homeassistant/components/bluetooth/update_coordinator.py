@@ -10,11 +10,8 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .device import (
-    BluetoothDeviceData,
-    BluetoothDeviceEntityDescriptionsType,
-    BluetoothDeviceKey,
-)
+from .device import BluetoothDeviceData
+from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
 
 BluetoothListenerCallbackType = Callable[[BluetoothDeviceEntityDescriptionsType], None]
 

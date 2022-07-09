@@ -2,15 +2,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from collections.abc import Mapping
-from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
-from homeassistant.helpers import entity
 from homeassistant.helpers.typing import StateType
 
 from . import BluetoothChange, BluetoothServiceInfo
@@ -19,29 +16,12 @@ from .binary_sensor import (
     BluetoothBinarySensorEntityDescription,
     BluetoothBinarySensorType,
 )
+from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
 from .sensor import (
     SENSOR_TYPE_TO_DEVICE_CLASS,
     BluetoothSensorEntityDescription,
     BluetoothSensorType,
 )
-
-
-@dataclass
-class BluetoothDeviceKey:
-    """Key for a bluetooth device.
-
-    Example:
-    device_id: outdoor_sensor_1
-    key: temperature
-    """
-
-    device_id: str | None
-    key: str
-
-
-BluetoothDeviceEntityDescriptionsType = Mapping[
-    BluetoothDeviceKey, entity.EntityDescription
-]
 
 
 class BluetoothDeviceData:
