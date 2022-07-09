@@ -438,7 +438,7 @@ async def async_setup_entry(  # noqa: C901
                 blocking=False,
             )
 
-    hass.async_create_task(async_forward_entry_setup_and_setup_discovery(entry))
+    await async_forward_entry_setup_and_setup_discovery(entry)
 
     return True
 
