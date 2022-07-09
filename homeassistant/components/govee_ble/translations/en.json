@@ -1,12 +1,16 @@
 {
     "config": {
         "abort": {
-            "no_devices_found": "No devices found on the network",
-            "single_instance_allowed": "Already configured. Only a single configuration possible."
+            "already_configured": "Device is already configured",
+            "already_in_progress": "Configuration flow is already in progress"
         },
+        "error": {
+            "not_govee": "Not a Govee BLE device"
+        },
+        "flow_title": "{model} ({address})",
         "step": {
-            "confirm": {
-                "description": "Do you want to start set up?"
+            "bluetooth_confirm": {
+                "description": "Do you want to setup {model} ({address})?"
             }
         }
     }
