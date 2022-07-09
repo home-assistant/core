@@ -1,4 +1,4 @@
-"""Config flow for govee_ble integration."""
+"""Config flow for sensorpush integration."""
 from __future__ import annotations
 
 import logging
@@ -9,13 +9,13 @@ from homeassistant.components import bluetooth
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
-from .parser import parse_govee_from_discovery_data
+from .parser import parse_sensorpush_from_discovery_data
 
 _LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for govee_ble."""
+    """Handle a config flow for sensorpush."""
 
     VERSION = 1
 
@@ -28,16 +28,19 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: bluetooth.BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
-        _LOGGER.debug("govee discovery info: %s", discovery_info)
+        _LOGGER.debug("sensorpush discovery info: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         if not (
-            device := parse_govee_from_discovery_data(discovery_info.manufacturer_data)
+            device := parse_sensorpush_from_discovery_data(
+                discovery_info.name, discovery_info.manufacturer_data
+            )
         ):
             _LOGGER.debug(
-                "govee discovery info: %s is not a govee device", discovery_info
+                "sensorpush discovery info: %s is not a sensorpush device",
+                discovery_info,
             )
-            return self.async_abort(reason="not_govee")
+            return self.async_abort(reason="not_sensorpush")
         self._discovery_info = discovery_info
         self._discovered_device = device
         return await self.async_step_bluetooth_confirm()

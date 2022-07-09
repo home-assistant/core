@@ -921,6 +921,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensibo/ @andrey-git @gjohansson-ST
 /homeassistant/components/sensor/ @home-assistant/core
 /tests/components/sensor/ @home-assistant/core
+/homeassistant/components/sensorpush/ @bdraco
+/tests/components/sensorpush/ @bdraco
 /homeassistant/components/sentry/ @dcramer @frenck
 /tests/components/sentry/ @dcramer @frenck
 /homeassistant/components/senz/ @milanmeu
