@@ -195,7 +195,7 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.6.0
+aiopyarr==22.7.0
 
 # homeassistant.components.qnap_qsw
 aioqsw==0.1.0
