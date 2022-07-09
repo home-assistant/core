@@ -170,7 +170,6 @@ DATA_ZHA_CONFIG = "config"
 DATA_ZHA_BRIDGE_ID = "zha_bridge_id"
 DATA_ZHA_CORE_EVENTS = "zha_core_events"
 DATA_ZHA_GATEWAY = "zha_gateway"
-DATA_ZHA_PLATFORM_LOADED = "platform_loaded"
 DATA_ZHA_SHUTDOWN_TASK = "zha_shutdown_task"
 
 DEBUG_COMP_BELLOWS = "bellows"
