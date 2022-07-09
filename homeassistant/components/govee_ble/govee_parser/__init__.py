@@ -50,57 +50,50 @@ def parse_govee_from_discovery_data(
     return None
 
 
-def parse_govee(device_id: int, mfr_data: bytes) -> dict[str, str | int | float] | None:
+def parse_govee(device_id: int, data: bytes) -> dict[str, str | int | float] | None:
     """Parser for Govee sensors."""
     # TODO: Add support for multiple sensors
     # TODO: standardize data types
     # TODO: standardize firmware version
-    _LOGGER.warning("Parsing Govee sensor: %s %s", device_id, mfr_data)
-    # Original messages had the device id
-    # appended to the start of the mfr_data
-    # This is not the case for the new messages
-    # So we need to add padding to the start
-    data = b"\x00" * 4 + mfr_data
-
-    msg_length = len(data)
+    _LOGGER.warning("Parsing Govee sensor: %s %s", device_id, data)
     firmware = "Govee"
     result: dict[str, str | int | float] = {"firmware": firmware}
-
-    if msg_length == 10 and device_id == 0xEC88:
+    msg_length = len(data)
+    if msg_length == 6 and device_id == 0xEC88:
         device_type = "H5072/H5075"
-        packet_5072_5075 = data[5:8].hex()
+        packet_5072_5075 = data[1:4].hex()
         packet = int(packet_5072_5075, 16)
         temp = decode_temps(packet)
         humi = float((packet % 1000) / 10)
-        batt = int(data[8])
+        batt = int(data[4])
         result.update({"temperature": temp, "humidity": humi, "battery": batt})
-    elif msg_length == 10 and device_id == 0x0001:
+    elif msg_length == 6 and device_id == 0x0001:
         device_type = "H5101/H5102/H5177"
-        packet_5101_5102 = data[6:9].hex()
+        packet_5101_5102 = data[2:5].hex()
         packet = int(packet_5101_5102, 16)
         temp = decode_temps(packet)
         humi = float((packet % 1000) / 10)
-        batt = int(data[9])
+        batt = int(data[5])
         result.update({"temperature": temp, "humidity": humi, "battery": batt})
-    elif msg_length == 11 and device_id == 0xEC88:
+    elif msg_length == 7 and device_id == 0xEC88:
         device_type = "H5074"
-        (temp, humi, batt) = PACKED_hHB.unpack(data[5:10])
+        (temp, humi, batt) = PACKED_hHB.unpack(data[1:6])
         result.update(
             {"temperature": temp / 100, "humidity": humi / 100, "battery": batt}
         )
-    elif msg_length == 13 and device_id == 0xEC88:
+    elif msg_length == 9 and device_id == 0xEC88:
         device_type = "H5051/H5071"
-        (temp, humi, batt) = PACKED_hHB.unpack(data[5:10])
+        (temp, humi, batt) = PACKED_hHB.unpack(data[1:6])
         result.update(
             {"temperature": temp / 100, "humidity": humi / 100, "battery": batt}
         )
-    elif msg_length == 13 and device_id == 0x0001:
-        packet_5178 = data[7:10].hex()
+    elif msg_length == 9 and device_id == 0x0001:
+        packet_5178 = data[3:6].hex()
         packet = int(packet_5178, 16)
         temp = decode_temps(packet)
         humi = float((packet % 1000) / 10)
-        batt = int(data[10])
-        sensor_id = data[6]
+        batt = int(data[6])
+        sensor_id = data[2]
         result.update(
             {
                 "temperature": temp,
@@ -118,22 +111,22 @@ def parse_govee(device_id: int, mfr_data: bytes) -> dict[str, str | int | float]
                 "Unknown sensor id for Govee H5178, please report to the developers, data: %s",
                 data.hex(),
             )
-    elif msg_length == 13 and device_id == 0x8801:
+    elif msg_length == 9 and device_id == 0x8801:
         device_type = "H5179"
-        (temp, humi, batt) = PACKED_hHB.unpack(data[8:13])
+        (temp, humi, batt) = PACKED_hHB.unpack(data[4:9])
         result.update(
             {"temperature": temp / 100, "humidity": humi / 100, "battery": batt}
         )
-    elif msg_length == 18:
+    elif msg_length == 14:
         device_type = "H5183"
-        (temp_probe_1, temp_alarm_1) = PACKED_hh.unpack(data[12:16])
+        (temp_probe_1, temp_alarm_1) = PACKED_hh.unpack(data[8:12])
         result.update(
             {
                 "temperature probe 1": decode_temps_probes(temp_probe_1),
                 "temperature alarm probe 1": decode_temps_probes(temp_alarm_1),
             }
         )
-    elif msg_length == 21:
+    elif msg_length == 17:
         device_type = "H5182"
         (
             temp_probe_1,
@@ -141,7 +134,7 @@ def parse_govee(device_id: int, mfr_data: bytes) -> dict[str, str | int | float]
             _,
             temp_probe_2,
             temp_alarm_2,
-        ) = PACKED_hhbhh.unpack(data[12:21])
+        ) = PACKED_hhbhh.unpack(data[8:17])
         result.update(
             {
                 "temperature probe 1": decode_temps_probes(temp_probe_1),
@@ -150,7 +143,7 @@ def parse_govee(device_id: int, mfr_data: bytes) -> dict[str, str | int | float]
                 "temperature alarm probe 2": decode_temps_probes(temp_alarm_2),
             }
         )
-    elif msg_length == 24:
+    elif msg_length == 20:
         device_type = "H5185"
         (
             temp_probe_1,
@@ -158,7 +151,7 @@ def parse_govee(device_id: int, mfr_data: bytes) -> dict[str, str | int | float]
             _,
             temp_probe_2,
             temp_alarm_2,
-        ) = PACKED_hhhhh.unpack(data[12:22])
+        ) = PACKED_hhhhh.unpack(data[8:17])
         result.update(
             {
                 "temperature probe 1": decode_temps_probes(temp_probe_1),
