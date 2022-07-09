@@ -145,6 +145,7 @@ class AnthemAVR(MediaPlayerEntity):
         )
         self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
         self._attr_icon = "mdi:audio-video"
+        self.set_states()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -156,46 +157,20 @@ class AnthemAVR(MediaPlayerEntity):
             )
         )
 
-    @property
-    def state(self) -> str | None:
-        """Return state of power on/off."""
-        pwrstate = self._zone.power
+    def update_states(self) -> None:
+        """Update states for the current zone."""
+        self.set_states()
+        self.async_write_ha_state()
 
-        if pwrstate is True:
-            return STATE_ON
-        if pwrstate is False:
-            return STATE_OFF
-        return None
-
-    @property
-    def is_volume_muted(self) -> bool | None:
-        """Return boolean reflecting mute state on device."""
-        return self._zone.mute
-
-    @property
-    def volume_level(self) -> float | None:
-        """Return volume level from 0 to 1."""
-        return self._zone.volume_as_percentage
-
-    @property
-    def media_title(self) -> str | None:
-        """Return current input name (closest we have to media title)."""
-        return self._zone.input_name
-
-    @property
-    def app_name(self) -> str | None:
-        """Return details about current video and audio stream."""
-        return self._zone.input_format
-
-    @property
-    def source(self) -> str | None:
-        """Return currently selected input."""
-        return self._zone.input_name
-
-    @property
-    def source_list(self) -> list[str] | None:
-        """Return all active, configured inputs."""
-        return self.avr.input_list
+    def set_states(self) -> None:
+        """Set all the states from the device to the entity."""
+        self._attr_state = STATE_ON if self._zone.power is True else STATE_OFF
+        self._attr_is_volume_muted = self._zone.mute
+        self._attr_volume_level = self._zone.volume_as_percentage
+        self._attr_media_title = self._zone.input_name
+        self._attr_app_name = self._zone.input_format
+        self._attr_source = self._zone.input_name
+        self._attr_source_list = self.avr.input_list
 
     async def async_select_source(self, source: str) -> None:
         """Change AVR to the designated source (by name)."""
