@@ -4,7 +4,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 import logging
 
-from elro.command import SILENCE_ALARM, TEST_ALARM, TEST_ALARM_WATER, CommandAttributes
+from elro.command import SILENCE_ALARM, TEST_ALARM, TEST_ALARM_ALT, CommandAttributes
 from elro.device import (
     ALARM_CO,
     ALARM_FIRE,
@@ -45,7 +45,7 @@ SIREN_DEVICE_TYPES = {
         device_class="carbon_monoxide",
         name="CO Alarm",
         icon="mdi:molecule-co",
-        test_alarm=TEST_ALARM,
+        test_alarm=TEST_ALARM_ALT,
         silence_alarm=SILENCE_ALARM,
     ),
     ALARM_FIRE: ElroSirenEntityDescription(
@@ -61,7 +61,7 @@ SIREN_DEVICE_TYPES = {
         device_class="heat",
         name="Heat Alarm",
         icon="mdi:fire-alert",
-        test_alarm=TEST_ALARM,
+        test_alarm=TEST_ALARM_ALT,
         silence_alarm=SILENCE_ALARM,
     ),
     ALARM_SMOKE: ElroSirenEntityDescription(
@@ -77,7 +77,7 @@ SIREN_DEVICE_TYPES = {
         device_class="moisture",
         name="Water Alarm",
         icon="mdi:water-alert",
-        test_alarm=TEST_ALARM_WATER,
+        test_alarm=TEST_ALARM_ALT,
         silence_alarm=SILENCE_ALARM,
     ),
 }
