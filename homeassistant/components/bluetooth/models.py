@@ -56,7 +56,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         self._callbacks: list[
             tuple[AdvertisementDataCallback, dict[str, set[str]]]
         ] = []
-        self._history: LRU = LRU(MAX_HISTORY_SIZE)
+        self.history: LRU = LRU(MAX_HISTORY_SIZE)
         super().__init__(*args, **kwargs)
 
     @hass_callback
@@ -74,7 +74,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         # Replay the history since otherwise we miss devices
         # that were already discovered before the callback was registered
         # or we are in passive mode
-        for device, advertisement_data in self._history.values():
+        for device, advertisement_data in self.history.values():
             _dispatch_callback(callback, filters, device, advertisement_data)
 
         return _remove_callback
@@ -87,7 +87,7 @@ class HaBleakScanner(BleakScanner):  # type: ignore[misc]
         Here we get the actual callback from bleak and dispatch
         it to all the wrapped HaBleakScannerWrapper classes
         """
-        self._history[device.address] = (device, advertisement_data)
+        self.history[device.address] = (device, advertisement_data)
         for callback_filters in self._callbacks:
             _dispatch_callback(*callback_filters, device, advertisement_data)
 
