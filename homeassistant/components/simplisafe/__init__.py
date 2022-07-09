@@ -113,8 +113,7 @@ ATTR_SYSTEM_ID = "system_id"
 ATTR_TIMESTAMP = "timestamp"
 
 DEFAULT_CONFIG_URL = "https://webapp.simplisafe.com/new/#/dashboard"
-DEFAULT_ENTITY_MODEL = "ALARM_CONTROL_PANEL"
-DEFAULT_ENTITY_NAME = "Alarm"
+DEFAULT_ENTITY_MODEL = "Alarm control panel"
 DEFAULT_ERROR_THRESHOLD = 2
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=30)
 DEFAULT_SOCKET_MIN_RETRY = 15
@@ -681,12 +680,11 @@ class SimpliSafeEntity(CoordinatorEntity):
         self._error_count = 0
 
         if device:
-            model = device.type.name
-            device_name = device.name.capitalize()
+            model = device.type.name.capitalize().replace("_", " ")
+            device_name = f"{device.name.capitalize()} {model}"
             serial = device.serial
         else:
-            model = DEFAULT_ENTITY_MODEL
-            device_name = DEFAULT_ENTITY_NAME
+            model = device_name = DEFAULT_ENTITY_MODEL
             serial = system.serial
 
         event = simplisafe.initial_event_to_use[system.system_id]
@@ -716,7 +714,6 @@ class SimpliSafeEntity(CoordinatorEntity):
             via_device=(DOMAIN, system.system_id),
         )
 
-        self._attr_name = model.capitalize().replace("_", " ")
         self._attr_unique_id = serial
         self._device = device
         self._online = True
