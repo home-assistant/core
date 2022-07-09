@@ -50,22 +50,22 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
         _LOGGER.debug("Parsing Govee BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
 
-        for device_id, mfr_data in manufacturer_data.items():
-            if device_id in NOT_GOVEE_MANUFACTURER:
+        for mgr_id, mfr_data in manufacturer_data.items():
+            if mgr_id in NOT_GOVEE_MANUFACTURER:
                 continue
-            self._process_update(device_id, mfr_data)
+            self._process_update(mgr_id, mfr_data)
 
-    def _process_update(self, device_id: int, data: bytes) -> None:
+    def _process_update(self, mgr_id: int, data: bytes) -> None:
         """Parser for Govee sensors."""
-        _LOGGER.debug("Parsing Govee sensor: %s %s", device_id, data)
+        _LOGGER.debug("Parsing Govee sensor: %s %s", mgr_id, data)
         msg_length = len(data)
         if msg_length > 25 and b"INTELLI_ROCKS" in data:
             # INTELLI_ROCKS sometimes ends up glued on to the end of the message
             data = data[:-25]
             msg_length = len(data)
-            _LOGGER.debug("Cleaned up packet: %s %s", device_id, data)
+            _LOGGER.debug("Cleaned up packet: %s %s", mgr_id, data)
 
-        if msg_length == 6 and device_id == 0xEC88:
+        if msg_length == 6 and mgr_id == 0xEC88:
             self.set_device_type("H5072/H5075")
             packet_5072_5075 = data[1:4].hex()
             packet = int(packet_5072_5075, 16)
@@ -81,7 +81,7 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
             self.update_predefined_sensor(BluetoothSensorType.BATTERY, PERCENTAGE, batt)
             return
 
-        if msg_length == 6 and device_id == 0x0001:
+        if msg_length == 6 and mgr_id == 0x0001:
             self.set_device_type("H5101/H5102/H5177")
             packet_5101_5102 = data[2:5].hex()
             packet = int(packet_5101_5102, 16)
@@ -97,7 +97,7 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
             self.update_predefined_sensor(BluetoothSensorType.BATTERY, PERCENTAGE, batt)
             return
 
-        if msg_length == 7 and device_id == 0xEC88:
+        if msg_length == 7 and mgr_id == 0xEC88:
             self.set_device_type("H5074")
             (temp, humi, batt) = PACKED_hHB.unpack(data[1:6])
             self.update_predefined_sensor(
@@ -109,7 +109,7 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
             self.update_predefined_sensor(BluetoothSensorType.BATTERY, PERCENTAGE, batt)
             return
 
-        if msg_length == 9 and device_id == 0xEC88:
+        if msg_length == 9 and mgr_id == 0xEC88:
             self.set_device_type("H5051/H5071")
             (temp, humi, batt) = PACKED_hHB.unpack(data[1:6])
             self.update_predefined_sensor(
@@ -121,34 +121,36 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
             self.update_predefined_sensor(BluetoothSensorType.BATTERY, PERCENTAGE, batt)
             return
 
-        if msg_length == 9 and device_id == 0x0001:
+        if msg_length == 9 and mgr_id == 0x0001:
             packet_5178 = data[3:6].hex()
             packet = int(packet_5178, 16)
             temp = decode_temps(packet)
             humi = float((packet % 1000) / 10)
             batt = int(data[6])
             sensor_id = data[2]
-            device_key = "indoor"
+            device_id = "indoor"
             if sensor_id == 0:
-                self.set_device_type("H5178", device_key)
+                self.set_device_type("H5178", device_id)
             elif sensor_id == 1:
-                device_key = "outdoor"
-                self.set_device_type("H5178-outdoor", device_key)
+                device_id = "outdoor"
+                self.set_device_type("H5178-outdoor", device_id)
             else:
                 _LOGGER.debug(
                     "Unknown sensor id for Govee H5178, please report to the developers, data: %s",
                     data.hex(),
                 )
             self.update_predefined_sensor(
-                BluetoothSensorType.TEMPERATURE, TEMP_CELSIUS, temp
+                BluetoothSensorType.TEMPERATURE, TEMP_CELSIUS, temp, device_id
             )
             self.update_predefined_sensor(
-                BluetoothSensorType.HUMIDITY, PERCENTAGE, humi
+                BluetoothSensorType.HUMIDITY, PERCENTAGE, humi, device_id
             )
-            self.update_predefined_sensor(BluetoothSensorType.BATTERY, PERCENTAGE, batt)
+            self.update_predefined_sensor(
+                BluetoothSensorType.BATTERY, PERCENTAGE, batt, device_id
+            )
             return
 
-        if msg_length == 9 and device_id == 0x8801:
+        if msg_length == 9 and mgr_id == 0x8801:
             self.set_device_type("H5179")
             (temp, humi, batt) = PACKED_hHB.unpack(data[4:9])
             self.update_predefined_sensor(
