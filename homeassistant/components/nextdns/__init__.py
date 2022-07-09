@@ -71,6 +71,14 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
         super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
 
     async def _async_update_data(self) -> TCoordinatorData:
+        """Update data via internal method."""
+        try:
+            async with timeout(10):
+                return await self._async_update_data_internal()
+        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
+            raise UpdateFailed(err) from err
+
+    async def _async_update_data_internal(self) -> TCoordinatorData:
         """Update data via library."""
         raise NotImplementedError("Update method not implemented")
 
@@ -78,73 +86,49 @@ class NextDnsUpdateCoordinator(DataUpdateCoordinator[TCoordinatorData]):
 class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
     """Class to manage fetching NextDNS analytics status data from API."""
 
-    async def _async_update_data(self) -> AnalyticsStatus:
+    async def _async_update_data_internal(self) -> AnalyticsStatus:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_status(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_status(self.profile_id)
 
 
 class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
     """Class to manage fetching NextDNS analytics Dnssec data from API."""
 
-    async def _async_update_data(self) -> AnalyticsDnssec:
+    async def _async_update_data_internal(self) -> AnalyticsDnssec:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_dnssec(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_dnssec(self.profile_id)
 
 
 class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncryption]):
     """Class to manage fetching NextDNS analytics encryption data from API."""
 
-    async def _async_update_data(self) -> AnalyticsEncryption:
+    async def _async_update_data_internal(self) -> AnalyticsEncryption:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_encryption(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_encryption(self.profile_id)
 
 
 class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVersions]):
     """Class to manage fetching NextDNS analytics IP versions data from API."""
 
-    async def _async_update_data(self) -> AnalyticsIpVersions:
+    async def _async_update_data_internal(self) -> AnalyticsIpVersions:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_ip_versions(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_ip_versions(self.profile_id)
 
 
 class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtocols]):
     """Class to manage fetching NextDNS analytics protocols data from API."""
 
-    async def _async_update_data(self) -> AnalyticsProtocols:
+    async def _async_update_data_internal(self) -> AnalyticsProtocols:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_analytics_protocols(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_analytics_protocols(self.profile_id)
 
 
 class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
     """Class to manage fetching NextDNS connection data from API."""
 
-    async def _async_update_data(self) -> Settings:
+    async def _async_update_data_internal(self) -> Settings:
         """Update data via library."""
-        try:
-            async with timeout(10):
-                return await self.nextdns.get_settings(self.profile_id)
-        except (ApiError, ClientConnectorError, InvalidApiKeyError) as err:
-            raise UpdateFailed(err) from err
+        return await self.nextdns.get_settings(self.profile_id)
 
 
 _LOGGER = logging.getLogger(__name__)
