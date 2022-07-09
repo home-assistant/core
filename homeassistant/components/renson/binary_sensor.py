@@ -6,7 +6,6 @@ from renson_endura_delta.field_enum import (
     BREEZE_ENABLE_FIELD,
     BREEZE_MET_FIELD,
     CO2_CONTROL_FIELD,
-    FIRMWARE_VERSION,
     FROST_PROTECTION_FIELD,
     HUMIDITY_CONTROL_FIELD,
     PREHEATER_FIELD,
@@ -112,43 +111,6 @@ class RensonBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self.async_write_ha_state()
 
 
-class FirmwareSensor(CoordinatorEntity, BinarySensorEntity):
-    """Check firmware update and store it in the state of the class."""
-
-    def __init__(
-        self,
-        renson_api: RensonVentilation,
-        hass,
-        coordinator: RensonCoordinator,
-    ):
-        """Initialize class."""
-        super().__init__(coordinator)
-        self._state = None
-        self.renson = renson_api
-        self.hass = hass
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return "Latest firmware"
-
-    @property
-    def is_on(self):
-        """Return true if the binary sensor is on."""
-        return self._state
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        all_data = self.coordinator.data
-
-        value = self.renson.get_field_value(all_data, FIRMWARE_VERSION.name)
-
-        self._state = self.renson.is_firmware_up_to_date(value)
-
-        self.async_write_ha_state()
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -163,6 +125,5 @@ async def async_setup_entry(
     for description in BINARY_SENSORS:
         entities.append(RensonBinarySensor(description, renson_api, coordinator))
 
-    entities.append(FirmwareSensor(renson_api, hass, coordinator))
     async_add_entities(entities)
     await coordinator.async_config_entry_first_refresh()
