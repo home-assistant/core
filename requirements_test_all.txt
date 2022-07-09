@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.18
+aiohomekit==0.7.20
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -162,7 +162,7 @@ aiohttp_cors==0.7.0
 aiohue==4.4.2
 
 # homeassistant.components.apache_kafka
-aiokafka==0.6.0
+aiokafka==0.7.2
 
 # homeassistant.components.lookin
 aiolookin==0.1.1
@@ -216,10 +216,10 @@ aiosenz==1.0.0
 aioshelly==2.0.0
 
 # homeassistant.components.skybell
-aioskybell==22.6.1
+aioskybell==22.7.0
 
 # homeassistant.components.slimproto
-aioslimproto==2.0.1
+aioslimproto==2.1.1
 
 # homeassistant.components.steamist
 aiosteamist==0.3.2
@@ -316,8 +316,11 @@ bellows==0.31.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
 
+# homeassistant.components.bluetooth
+bleak==0.14.3
+
 # homeassistant.components.blebox
-blebox_uniapi==2.0.0
+blebox_uniapi==2.0.1
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -388,7 +391,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.6.0
+debugpy==1.6.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -429,7 +432,7 @@ eagle100==0.1.1
 elgato==3.0.0
 
 # homeassistant.components.elkm1
-elkm1-lib==2.0.0
+elkm1-lib==2.0.2
 
 # homeassistant.components.elmax
 elmax_api==0.0.2
@@ -577,7 +580,7 @@ habitipy==0.2.0
 hangups==0.4.18
 
 # homeassistant.components.cloud
-hass-nabucasa==0.54.0
+hass-nabucasa==0.54.1
 
 # homeassistant.components.tasmota
 hatasmota==0.5.1
@@ -598,13 +601,13 @@ hole==0.7.0
 holidays==0.14.2
 
 # homeassistant.components.frontend
-home-assistant-frontend==20220630.0
+home-assistant-frontend==20220707.0
 
 # homeassistant.components.home_connect
 homeconnect==0.7.1
 
 # homeassistant.components.homematicip_cloud
-homematicip==1.0.2
+homematicip==1.0.3
 
 # homeassistant.components.home_plus_control
 homepluscontrol==0.0.5
@@ -681,14 +684,11 @@ life360==4.1.1
 # homeassistant.components.logi_circle
 logi_circle==0.2.3
 
-# homeassistant.components.recorder
-lru-dict==1.1.7
-
 # homeassistant.components.luftdaten
 luftdaten==0.7.2
 
 # homeassistant.components.scrape
-lxml==4.8.0
+lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
@@ -762,6 +762,9 @@ nexia==2.0.1
 # homeassistant.components.discord
 nextcord==2.0.0a8
 
+# homeassistant.components.nextdns
+nextdns==1.0.1
+
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
 
@@ -797,7 +800,7 @@ omnilogic==0.4.5
 ondilo==0.2.0
 
 # homeassistant.components.onvif
-onvif-zeep-async==1.2.0
+onvif-zeep-async==1.2.1
 
 # homeassistant.components.opengarage
 open-garage==0.2.0
@@ -847,7 +850,7 @@ pilight==0.1.1
 # homeassistant.components.seven_segments
 # homeassistant.components.sighthound
 # homeassistant.components.tensorflow
-pillow==9.1.1
+pillow==9.2.0
 
 # homeassistant.components.plex
 plexapi==4.11.2
@@ -977,7 +980,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==95
+pydeconz==97
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -998,7 +1001,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.8
+pyezviz==0.2.0.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1220,7 +1223,7 @@ pyruckus==0.12
 pysabnzbd==1.1.1
 
 # homeassistant.components.sensibo
-pysensibo==1.0.17
+pysensibo==1.0.18
 
 # homeassistant.components.serial
 # homeassistant.components.zha
@@ -1334,7 +1337,7 @@ pytrafikverket==0.2.0.1
 pyudev==0.22.0
 
 # homeassistant.components.unifiprotect
-pyunifiprotect==4.0.8
+pyunifiprotect==4.0.9
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==22.2.0
@@ -1379,7 +1382,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.06.1
+regenmaschine==2022.07.0
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1388,7 +1391,7 @@ renault-api==0.1.11
 restrictedpython==5.2
 
 # homeassistant.components.rflink
-rflink==0.0.62
+rflink==0.0.63
 
 # homeassistant.components.ring
 ring_doorbell==0.7.2

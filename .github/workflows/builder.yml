@@ -102,6 +102,17 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v3.0.2
 
+      - name: Download nightly wheels of frontend
+        if: needs.init.outputs.channel == 'dev'
+        uses: dawidd6/action-download-artifact@v2
+        with:
+          github_token: ${{secrets.GITHUB_TOKEN}}
+          repo: home-assistant/frontend
+          branch: dev
+          workflow: nightly.yaml
+          workflow_conclusion: success
+          name: wheels
+
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         if: needs.init.outputs.channel == 'dev'
         uses: actions/setup-python@v4.0.0
@@ -112,9 +123,22 @@ jobs:
         if: needs.init.outputs.channel == 'dev'
         shell: bash
         run: |
-          python3 -m pip install packaging
+          python3 -m pip install packaging tomli
           python3 -m pip install --use-deprecated=legacy-resolver .
           version="$(python3 script/version_bump.py nightly)"
+
+          if [[ "$(ls home_assistant_frontend*.whl)" =~ ^home_assistant_frontend-(.*)-py3-none-any.whl$ ]]; then
+            echo "Found frontend wheel, setting version to: ${BASH_REMATCH[1]}"
+            frontend_version="${BASH_REMATCH[1]}" yq \
+              --inplace e -o json \
+              '.requirements = ["home-assistant-frontend=="+env(frontend_version)]' \
+              homeassistant/components/frontend/manifest.json
+
+            sed -i "s|home-assistant-frontend==.*|home-assistant-frontend==${BASH_REMATCH[1]}|" \
+              homeassistant/package_constraints.txt
+
+            python -m script.gen_requirements_all
+          fi
 
       - name: Write meta info file
         shell: bash
@@ -135,7 +159,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.06.2
+        uses: home-assistant/builder@2022.07.0
         with:
           args: |
             $BUILD_ARGS \
@@ -201,7 +225,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build base image
-        uses: home-assistant/builder@2022.06.2
+        uses: home-assistant/builder@2022.07.0
         with:
           args: |
             $BUILD_ARGS \

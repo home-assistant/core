@@ -131,13 +131,15 @@ build.json @home-assistant/supervisor
 /homeassistant/components/binary_sensor/ @home-assistant/core
 /tests/components/binary_sensor/ @home-assistant/core
 /homeassistant/components/bizkaibus/ @UgaitzEtxebarria
-/homeassistant/components/blebox/ @bbx-a @bbx-jp @riokuu
-/tests/components/blebox/ @bbx-a @bbx-jp @riokuu
+/homeassistant/components/blebox/ @bbx-a @riokuu
+/tests/components/blebox/ @bbx-a @riokuu
 /homeassistant/components/blink/ @fronzbot
 /tests/components/blink/ @fronzbot
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluetooth/ @bdraco
+/tests/components/bluetooth/ @bdraco
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
@@ -630,8 +632,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/meteoalarm/ @rolfberkenbosch
 /homeassistant/components/meteoclimatic/ @adrianmo
 /tests/components/meteoclimatic/ @adrianmo
-/homeassistant/components/metoffice/ @MrHarcombe
-/tests/components/metoffice/ @MrHarcombe
+/homeassistant/components/metoffice/ @MrHarcombe @avee87
+/tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/miflora/ @danielhiversen @basnijholt
 /homeassistant/components/mikrotik/ @engrbm87
 /tests/components/mikrotik/ @engrbm87
@@ -698,6 +700,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/nextbus/ @vividboarder
 /tests/components/nextbus/ @vividboarder
 /homeassistant/components/nextcloud/ @meichthys
+/homeassistant/components/nextdns/ @bieniu
+/tests/components/nextdns/ @bieniu
 /homeassistant/components/nfandroidtv/ @tkdrob
 /tests/components/nfandroidtv/ @tkdrob
 /homeassistant/components/nightscout/ @marciogranzotto
@@ -855,6 +859,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/repetier/ @MTrab @ShadowBr0ther
+/homeassistant/components/resolution_center/ @home-assistant/core
+/tests/components/resolution_center/ @home-assistant/core
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
@@ -893,8 +899,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/scene/ @home-assistant/core
 /tests/components/scene/ @home-assistant/core
 /homeassistant/components/schluter/ @prairieapps
-/homeassistant/components/scrape/ @fabaff @gjohansson-ST
-/tests/components/scrape/ @fabaff @gjohansson-ST
+/homeassistant/components/scrape/ @fabaff
+/tests/components/scrape/ @fabaff
 /homeassistant/components/screenlogic/ @dieselrabbit @bdraco
 /tests/components/screenlogic/ @dieselrabbit @bdraco
 /homeassistant/components/script/ @home-assistant/core
