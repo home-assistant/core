@@ -49,6 +49,8 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Start the callback."""
+        if self.update_method is None:
+            raise NotImplementedError("Update method not implemented")
         return bluetooth.async_register_callback(
             self.hass,
             self._async_handle_bluetooth_event,
@@ -82,8 +84,10 @@ class BluetoothDataUpdateCoordinator(Generic[_T]):
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
-        if self.update_method is None:
-            raise NotImplementedError("Update method not implemented")
+        self.logger.warning(
+            "_async_handle_bluetooth_event: %s %s", service_info, change
+        )
+        assert self.update_method is not None
 
         try:
             self.data = self.update_method(service_info, change)
