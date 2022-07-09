@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import dataclasses
-from typing import cast
+from typing import Optional, cast
 
 from homeassistant.const import __version__ as ha_version
 from homeassistant.core import HomeAssistant, callback
@@ -39,7 +39,9 @@ class IssueRegistry:
         """Initialize the issue registry."""
         self.hass = hass
         self.issues: dict[tuple[str, str], IssueEntry] = {}
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True)
+        self._store = Store[dict[str, list[dict[str, Optional[str]]]]](
+            hass, STORAGE_VERSION, STORAGE_KEY, atomic_writes=True
+        )
 
     @callback
     def async_get_issue(self, domain: str, issue_id: str) -> IssueEntry | None:
@@ -119,6 +121,7 @@ class IssueRegistry:
 
         if isinstance(data, dict):
             for issue in data["issues"]:
+                assert issue["domain"] and issue["issue_id"]
                 issues[(issue["domain"], issue["issue_id"])] = IssueEntry(
                     active=False,
                     breaks_in_ha_version=None,

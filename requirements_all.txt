@@ -113,7 +113,7 @@ aio_geojson_usgs_earthquakes==0.1
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.5
+aioairzone==0.4.6
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -168,7 +168,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.20
+aiohomekit==0.7.21
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -1326,7 +1326,7 @@ py-zabbix==1.1.7
 py17track==2021.12.2
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.5.1
+pyCEC==0.5.2
 
 # homeassistant.components.control4
 pyControl4==0.0.6
@@ -1447,7 +1447,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==97
+pydeconz==98
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1898,7 +1898,7 @@ python-family-hub-local==0.0.2
 python-forecastio==1.4.0
 
 # homeassistant.components.sms
-# python-gammu==3.2.3
+# python-gammu==3.2.4
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0
@@ -1907,7 +1907,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.0.3
+python-homewizard-energy==1.1.0
 
 # homeassistant.components.hp_ilo
 python-hpilo==4.3
@@ -2068,7 +2068,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.07.0
+regenmaschine==2022.07.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2271,7 +2271,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.1.5
+systembridgeconnector==3.3.2
 
 # homeassistant.components.tailscale
 tailscale==0.2.0

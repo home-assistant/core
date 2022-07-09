@@ -145,7 +145,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = SonosDiscoveryManager(
         hass, entry, data, hosts
     )
-    hass.async_create_task(manager.setup_platforms_and_discovery())
+    await manager.setup_platforms_and_discovery()
     return True
 
 
@@ -386,12 +386,7 @@ class SonosDiscoveryManager:
 
     async def setup_platforms_and_discovery(self) -> None:
         """Set up platforms and discovery."""
-        await asyncio.gather(
-            *(
-                self.hass.config_entries.async_forward_entry_setup(self.entry, platform)
-                for platform in PLATFORMS
-            )
-        )
+        await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, self._async_stop_event_listener
