@@ -1,10 +1,11 @@
 """Class representing Sonos favorites."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from soco import SoCo
 from soco.data_structures import DidlFavorite
@@ -77,7 +78,8 @@ class SonosFavorites(SonosHouseholdCoordinator):
         container_id = int(match.groups()[0])
         event_id = int(event_id.split(",")[-1])
 
-        async with self.cache_update_lock:
+        lock = cast(asyncio.Lock, self.cache_update_lock)
+        async with lock:  # pylint:disable=not-async-context-manager
             last_poll_id = self.last_polled_ids.get(speaker.uid)
             if (
                 self.last_processed_event_id

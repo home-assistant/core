@@ -1,11 +1,13 @@
 """Class representing Sonos alarms."""
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Iterator
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
-from soco import SoCo, alarms
+from soco import SoCo
+from soco.alarms import Alarm, Alarms
 from soco.events_base import Event as SonosEvent
 
 from homeassistant.helpers.dispatcher import async_dispatcher_send
@@ -26,14 +28,14 @@ class SonosAlarms(SonosHouseholdCoordinator):
     def __init__(self, *args: Any) -> None:
         """Initialize the data."""
         super().__init__(*args)
-        self.alarms: alarms.Alarms = alarms.Alarms()
+        self.alarms: Alarms = Alarms()
         self.created_alarm_ids: set[str] = set()
 
     def __iter__(self) -> Iterator:
         """Return an iterator for the known alarms."""
         return iter(self.alarms)
 
-    def get(self, alarm_id: str) -> alarms.Alarm | None:
+    def get(self, alarm_id: str) -> Alarm | None:
         """Get an Alarm instance."""
         return self.alarms.get(alarm_id)
 
@@ -63,7 +65,8 @@ class SonosAlarms(SonosHouseholdCoordinator):
         """Process the event payload in an async lock and update entities."""
         event_id = event.variables["alarm_list_version"].split(":")[-1]
         event_id = int(event_id)
-        async with self.cache_update_lock:
+        lock = cast(asyncio.Lock, self.cache_update_lock)
+        async with lock:  # pylint:disable=not-async-context-manager
             if event_id <= self.last_processed_event_id:
                 # Skip updates if this event_id has already been seen
                 return

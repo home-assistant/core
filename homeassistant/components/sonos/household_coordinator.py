@@ -25,7 +25,7 @@ class SonosHouseholdCoordinator:
         self.household_id = household_id
         self.async_poll: Callable[[], Coroutine[None, None, None]] | None = None
         self.last_processed_event_id: int | None = None
-        self.cache_update_lock = asyncio.Lock()
+        self.cache_update_lock: asyncio.Lock | None = None
 
     def setup(self, soco: SoCo) -> None:
         """Set up the SonosAlarm instance."""
