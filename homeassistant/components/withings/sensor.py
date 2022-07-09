@@ -4,7 +4,7 @@ from __future__ import annotations
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorEntity,
-    STATE_CLASS_MEASUREMENT,
+    SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -45,4 +45,4 @@ class WithingsHealthSensor(BaseWithingsSensor, SensorEntity):
     @property
     def state_class(self) -> str:
         """Return the state_class of this entity, if any."""
-        return STATE_CLASS_MEASUREMENT
+        return SensorStateClass.MEASUREMENT
