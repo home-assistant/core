@@ -2,13 +2,14 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from anthemav.connection import Connection
+from anthemav.protocol import AVR
 import voluptuous as vol
 
 from homeassistant.components.media_player import (
     PLATFORM_SCHEMA,
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
 )
@@ -88,14 +89,19 @@ async def async_setup_entry(
     mac_address = config_entry.data[CONF_MAC]
     model = config_entry.data[CONF_MODEL]
 
-    avr = hass.data[DOMAIN][config_entry.entry_id]
+    avr: Connection = hass.data[DOMAIN][config_entry.entry_id]
 
-    entity = AnthemAVR(avr, name, mac_address, model, config_entry.entry_id)
+    entities = []
+    for zone in avr.protocol.zones:
+        _LOGGER.debug("Initializing Zone %s", zone)
+        entity = AnthemAVR(
+            avr.protocol, name, mac_address, model, zone, config_entry.entry_id
+        )
+        entities.append(entity)
 
-    _LOGGER.debug("Device data dump: %s", entity.dump_avrdata)
     _LOGGER.debug("Connection data dump: %s", avr.dump_conndata)
 
-    async_add_entities([entity])
+    async_add_entities(entities)
 
 
 class AnthemAVR(MediaPlayerEntity):
@@ -111,23 +117,34 @@ class AnthemAVR(MediaPlayerEntity):
     )
 
     def __init__(
-        self, avr: Connection, name: str, mac_address: str, model: str, entry_id: str
+        self,
+        avr: AVR,
+        name: str,
+        mac_address: str,
+        model: str,
+        zone_number: int,
+        entry_id: str,
     ) -> None:
         """Initialize entity with transport."""
         super().__init__()
         self.avr = avr
         self._entry_id = entry_id
-        self._attr_name = name
-        self._attr_unique_id = mac_address
+        self._zone_number = zone_number
+        self._zone = avr.zones[zone_number]
+        if zone_number > 1:
+            self._attr_name = f"{name} Zone {zone_number}"
+        else:
+            self._attr_name = name
+
+        self._attr_unique_id = f"{mac_address}_{zone_number}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac_address)},
             name=name,
             manufacturer=MANUFACTURER,
             model=model,
         )
-
-    def _lookup(self, propname: str, dval: Any | None = None) -> Any | None:
-        return getattr(self.avr.protocol, propname, dval)
+        self._attr_device_class = MediaPlayerDeviceClass.RECEIVER
+        self._attr_icon = "mdi:audio-video"
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -142,7 +159,7 @@ class AnthemAVR(MediaPlayerEntity):
     @property
     def state(self) -> str | None:
         """Return state of power on/off."""
-        pwrstate = self._lookup("power")
+        pwrstate = self._zone.power
 
         if pwrstate is True:
             return STATE_ON
@@ -153,64 +170,49 @@ class AnthemAVR(MediaPlayerEntity):
     @property
     def is_volume_muted(self) -> bool | None:
         """Return boolean reflecting mute state on device."""
-        return self._lookup("mute", False)
+        return self._zone.mute
 
     @property
     def volume_level(self) -> float | None:
         """Return volume level from 0 to 1."""
-        return self._lookup("volume_as_percentage", 0.0)
+        return self._zone.volume_as_percentage
 
     @property
     def media_title(self) -> str | None:
         """Return current input name (closest we have to media title)."""
-        return self._lookup("input_name", "No Source")
+        return self._zone.input_name
 
     @property
     def app_name(self) -> str | None:
         """Return details about current video and audio stream."""
-        return (
-            f"{self._lookup('video_input_resolution_text', '')} "
-            f"{self._lookup('audio_input_name', '')}"
-        )
+        return self._zone.input_format
 
     @property
     def source(self) -> str | None:
         """Return currently selected input."""
-        return self._lookup("input_name", "Unknown")
+        return self._zone.input_name
 
     @property
     def source_list(self) -> list[str] | None:
         """Return all active, configured inputs."""
-        return self._lookup("input_list", ["Unknown"])
+        return self.avr.input_list
 
     async def async_select_source(self, source: str) -> None:
         """Change AVR to the designated source (by name)."""
-        self._update_avr("input_name", source)
+        self._zone.input_name = source
 
     async def async_turn_off(self) -> None:
         """Turn AVR power off."""
-        self._update_avr("power", False)
+        self._zone.power = False
 
     async def async_turn_on(self) -> None:
         """Turn AVR power on."""
-        self._update_avr("power", True)
+        self._zone.power = True
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set AVR volume (0 to 1)."""
-        self._update_avr("volume_as_percentage", volume)
+        self._zone.volume_as_percentage = volume
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Engage AVR mute."""
-        self._update_avr("mute", mute)
-
-    def _update_avr(self, propname: str, value: Any | None) -> None:
-        """Update a property in the AVR."""
-        _LOGGER.debug("Sending command to AVR: set %s to %s", propname, str(value))
-        setattr(self.avr.protocol, propname, value)
-
-    @property
-    def dump_avrdata(self):
-        """Return state of avr object for debugging forensics."""
-        attrs = vars(self)
-        items_string = ", ".join(f"{item}: {item}" for item in attrs.items())
-        return f"dump_avrdata: {items_string}"
+        self._zone.mute = mute

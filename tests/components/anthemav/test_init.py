@@ -1,6 +1,9 @@
 """Test the Anthem A/V Receivers config flow."""
 from unittest.mock import ANY, AsyncMock, patch
 
+from anthemav.device_error import DeviceError
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -15,6 +18,7 @@ async def test_load_unload_config_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test load and unload AnthemAv component."""
+
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -33,14 +37,15 @@ async def test_load_unload_config_entry(
     mock_anthemav.close.assert_called_once()
 
 
-async def test_config_entry_not_ready(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.parametrize("error", [OSError, DeviceError])
+async def test_config_entry_not_ready_when_oserror(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, error: Exception
 ) -> None:
-    """Test AnthemAV configuration entry not ready."""
+    """Test AnthemAV configuration entry not ready when OsError."""
 
     with patch(
         "anthemav.Connection.create",
-        side_effect=OSError,
+        side_effect=error,
     ):
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

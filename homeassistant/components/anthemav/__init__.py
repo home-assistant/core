@@ -4,6 +4,7 @@ from __future__ import annotations
 import logging
 
 import anthemav
+from anthemav.device_error import DeviceError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -11,7 +12,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
-from .const import ANTHEMAV_UDATE_SIGNAL, DOMAIN
+from .const import ANTHEMAV_UDATE_SIGNAL, DEVICE_TIMEOUT_SECONDS, DOMAIN
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
@@ -34,7 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             update_callback=async_anthemav_update_callback,
         )
 
-    except OSError as err:
+        # Wait for the zones to get initiased based on models
+        await avr.protocol.wait_for_device_initialised(DEVICE_TIMEOUT_SECONDS)
+    except (OSError, DeviceError) as err:
         raise ConfigEntryNotReady from err
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = avr
