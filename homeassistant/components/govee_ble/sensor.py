@@ -69,34 +69,28 @@ async def async_setup_entry(
     created: set[str] = set()
 
     @callback
-    def _async_add_or_update_entities() -> None:
+    def _async_add_or_update_entities(data: dict[str, Any]) -> None:
         """Listen for new entities."""
-        _LOGGER.warning(
-            "_async_add_or_update_entities: %s, %s", created, coordinator.data
-        )
-        if coordinator.data is None:
-            return
-        new = ALL_SENSORS.intersection(coordinator.data).difference(created)
-        async_add_entities(GoveeSensor(coordinator, SENSOR_TYPES[key]) for key in new)
+        _LOGGER.warning("_async_add_or_update_entities: %s, %s", created, data)
+        possible_sensors = ALL_SENSORS.intersection(data)
+        _LOGGER.warning("possible_sensors: %s", possible_sensors)
+        new = possible_sensors.difference(created)
+        _LOGGER.warning("new: %s", new)
+        if new:
+            created.update(new)
+            async_add_entities(
+                GoveeSensor(coordinator, SENSOR_TYPES[key], data) for key in new
+            )
 
     coordinator.async_add_listener(_async_add_or_update_entities)
-    if coordinator.data:
-        _async_add_or_update_entities()
 
 
 class GoveeSensor(BluetoothCoordinatorEntity, SensorEntity):
     """Representation of a govee ble sensor."""
 
-    def __init__(
-        self,
-        coordinator: BluetoothDataUpdateCoordinator[dict[str, Any]],
-        description: SensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
+    entity_description: SensorEntityDescription
 
     @property
     def native_value(self) -> int | None:
         """Return the native value."""
-        return self.coordinator.data.get(self.entity_description.key)
+        return self.data[self.entity_description.key]
