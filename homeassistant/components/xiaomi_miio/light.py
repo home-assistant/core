@@ -1,4 +1,6 @@
 """Support for Xiaomi Philips Lights."""
+from __future__ import annotations
+
 import asyncio
 import datetime
 from datetime import timedelta
@@ -6,7 +8,14 @@ from functools import partial
 import logging
 from math import ceil
 
-from miio import Ceil, DeviceException, PhilipsBulb, PhilipsEyecare, PhilipsMoonlight
+from miio import (
+    Ceil,
+    Device as MiioDevice,
+    DeviceException,
+    PhilipsBulb,
+    PhilipsEyecare,
+    PhilipsMoonlight,
+)
 from miio.gateway.gateway import (
     GATEWAY_MODEL_AC_V1,
     GATEWAY_MODEL_AC_V2,
@@ -115,7 +124,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Xiaomi light from a config entry."""
-    entities = []
+    entities: list[LightEntity] = []
+    entity: LightEntity
+    light: MiioDevice
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = hass.data[DOMAIN][config_entry.entry_id][CONF_GATEWAY]
@@ -195,7 +206,7 @@ async def async_setup_entry(
 
         async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on Xiaomi Philips Lights."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            method = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -372,7 +383,7 @@ class XiaomiPhilipsGenericLight(XiaomiPhilipsAbstractLight):
 
     @staticmethod
     def delayed_turn_off_timestamp(
-        countdown: int, current: datetime, previous: datetime
+        countdown: int, current: datetime.datetime, previous: datetime.datetime
     ):
         """Update the turn off timestamp only if necessary."""
         if countdown is not None and countdown > 0:
@@ -671,7 +682,7 @@ class XiaomiPhilipsEyecareLamp(XiaomiPhilipsGenericLight):
 
     @staticmethod
     def delayed_turn_off_timestamp(
-        countdown: int, current: datetime, previous: datetime
+        countdown: int, current: datetime.datetime, previous: datetime.datetime
     ):
         """Update the turn off timestamp only if necessary."""
         if countdown is not None and countdown > 0:
@@ -783,7 +794,7 @@ class XiaomiPhilipsMoonlightLamp(XiaomiPhilipsBulb):
         return 588
 
     @property
-    def hs_color(self) -> tuple:
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the hs color value."""
         return self._hs_color
 
