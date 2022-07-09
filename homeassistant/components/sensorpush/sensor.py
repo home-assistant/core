@@ -1,4 +1,4 @@
-"""Support for govee ble sensors."""
+"""Support for sensorpush ble sensors."""
 from __future__ import annotations
 
 import logging
@@ -65,7 +65,7 @@ async def async_setup_entry(
     entry: config_entries.ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Govee BLE sensors."""
+    """Set up the SensorPush BLE sensors."""
     coordinator: BluetoothDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     created: set[str] = set()
 
@@ -77,14 +77,14 @@ async def async_setup_entry(
         if new:
             created.update(new)
             async_add_entities(
-                GoveeSensor(coordinator, SENSOR_TYPES[key], data) for key in new
+                SensorPushSensor(coordinator, SENSOR_TYPES[key], data) for key in new
             )
 
     coordinator.async_add_listener(_async_add_or_update_entities)
 
 
-class GoveeSensor(BluetoothCoordinatorEntity, SensorEntity):
-    """Representation of a govee ble sensor."""
+class SensorPushSensor(BluetoothCoordinatorEntity, SensorEntity):
+    """Representation of a sensorpush ble sensor."""
 
     entity_description: SensorEntityDescription
 

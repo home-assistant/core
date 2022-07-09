@@ -13,7 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 
 from .const import DOMAIN
-from .parser import parse_govee_from_discovery_data
+from .parser import parse_sensorpush_from_discovery_data
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
@@ -25,11 +25,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     assert address is not None
 
     @callback
-    def _async_parse_govee_device(
+    def _async_parse_sensorpush_device(
         service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
     ) -> dict[str, Any] | None:
         """Subscribe to bluetooth changes."""
-        if data := parse_govee_from_discovery_data(
+        if data := parse_sensorpush_from_discovery_data(
+            service_info.name,
             service_info.manufacturer_data,
         ):
             data["rssi"] = service_info.rssi
@@ -41,7 +42,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER,
         name=entry.title,
         address=address,
-        parser_method=_async_parse_govee_device,
+        parser_method=_async_parse_sensorpush_device,
     )
     entry.async_on_unload(coordinator.async_setup())
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

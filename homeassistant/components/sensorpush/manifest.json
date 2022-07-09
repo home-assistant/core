@@ -1,0 +1,10 @@
+{
+  "domain": "sensorpush",
+  "name": "SensorPush",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sensorpush",
+  "bluetooth": [{ "local_name": "SensorPush*" }],
+  "dependencies": ["bluetooth"],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_push"
+}
