@@ -55,6 +55,9 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
                 continue
             self._process_update(mgr_id, mfr_data)
 
+        if "GVH" in service_info.name:
+            self.set_device_name(service_info.name)
+
     def _process_update(self, mgr_id: int, data: bytes) -> None:
         """Parser for Govee sensors."""
         _LOGGER.debug("Parsing Govee sensor: %s %s", mgr_id, data)

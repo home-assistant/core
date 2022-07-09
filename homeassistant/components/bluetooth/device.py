@@ -44,7 +44,7 @@ class BluetoothDeviceData:
     def supported(self, service_info: BluetoothServiceInfo) -> bool:
         """Return True if the device is supported."""
         self.generate_update(service_info)
-        return bool(self._device_id_to_name or self._device_id_to_type)
+        return bool(self._device_id_to_type)
 
     @property
     def entity_descriptions(self) -> BluetoothDeviceEntityDescriptionsType:
