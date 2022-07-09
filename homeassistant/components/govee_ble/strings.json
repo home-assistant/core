@@ -1,9 +1,9 @@
 {
   "config": {
-    "flow_title": "{model} ({mac})",
+    "flow_title": "{model} ({address})",
     "step": {
-      "discovery_confirm": {
-        "description": "Do you want to setup {model} ({mac})?"
+      "bluetooth_confirm": {
+        "description": "Do you want to setup {model} ({address})?"
       }
     },
     "error": {
