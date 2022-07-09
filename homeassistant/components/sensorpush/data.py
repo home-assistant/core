@@ -129,7 +129,7 @@ class SensorPushBluetoothDeviceData(BluetoothDeviceData):
                 self.update_predefined_sensor(
                     BluetoothSensorType.HUMIDITY, PERCENTAGE, value
                 )
-            if key == "temperature":
+            if key == "pressure":
                 self.update_predefined_sensor(
                     BluetoothSensorType.PRESSURE, PRESSURE_MBAR, value
                 )
