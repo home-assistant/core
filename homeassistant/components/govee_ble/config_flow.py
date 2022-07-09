@@ -1,6 +1,7 @@
 """Config flow for govee_ble integration."""
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant import config_entries
@@ -9,6 +10,8 @@ from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
 from .govee_parser import parse_govee_from_discovery_data
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -25,11 +28,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, discovery_info: bluetooth.BluetoothServiceInfo
     ) -> FlowResult:
         """Handle the bluetooth discovery step."""
+        _LOGGER.debug("govee discovery info: %s", discovery_info)
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
         if not (
             device := parse_govee_from_discovery_data(discovery_info.manufacturer_data)
         ):
+            _LOGGER.debug(
+                "govee discovery info: %s is not a govee device", discovery_info
+            )
             return self.async_abort(reason="not_govee")
         self._discovery_info = discovery_info
         self._discovered_device = device
