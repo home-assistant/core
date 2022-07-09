@@ -472,18 +472,11 @@ class CameraImagePreview(HomeAssistantView):
         _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
         camera = self.hass.data[DOMAIN][PREVIEWS][flow_id]
 
-        if camera is None:
-            _LOGGER.warning("Not valid")
-            raise web.HTTPNotFound()
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
             raise web.HTTPServiceUnavailable()
-        try:
-            image = await _async_get_image(
-                camera,
-                CAMERA_IMAGE_TIMEOUT,
-            )
-        except (ValueError) as ex:
-            raise web.HTTPInternalServerError() from ex
-        else:
-            return web.Response(body=image.content, content_type=image.content_type)
+        image = await _async_get_image(
+            camera,
+            CAMERA_IMAGE_TIMEOUT,
+        )
+        return web.Response(body=image.content, content_type=image.content_type)
