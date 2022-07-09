@@ -34,13 +34,14 @@ def decode_temps_probes(packet_value: int) -> float:
     return float(packet_value / 100)
 
 
-NOT_GOVEE_MANUFACTURER = {76, 60552}
+NOT_GOVEE_MANUFACTURER = {76}
 
 
 def parse_govee_from_discovery_data(
     manufacturer_data: dict[int, bytes]
 ) -> dict[str, Any] | None:
     """Parse Govee BLE advertisement data."""
+    _LOGGER.debug("Parsing Govee BLE advertisement data: %s", manufacturer_data)
     for device_id, mfr_data in manufacturer_data.items():
         if device_id in NOT_GOVEE_MANUFACTURER:
             continue
@@ -55,10 +56,16 @@ def parse_govee(device_id: int, data: bytes) -> dict[str, str | int | float] | N
     # TODO: Add support for multiple sensors
     # TODO: standardize data types
     # TODO: standardize firmware version
-    _LOGGER.warning("Parsing Govee sensor: %s %s", device_id, data)
+    _LOGGER.debug("Parsing Govee sensor: %s %s", device_id, data)
     firmware = "Govee"
     result: dict[str, str | int | float] = {"firmware": firmware}
     msg_length = len(data)
+    if msg_length > 25 and b"INTELLI_ROCKS" in data:
+        # INTELLI_ROCKS sometimes ends up glued on to the end of the message
+        data = data[:-25]
+        msg_length = len(data)
+        _LOGGER.debug("Cleaned up packet: %s %s", device_id, data)
+
     if msg_length == 6 and device_id == 0xEC88:
         device_type = "H5072/H5075"
         packet_5072_5075 = data[1:4].hex()
