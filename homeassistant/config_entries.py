@@ -28,6 +28,7 @@ from .util import uuid as uuid_util
 from .util.decorator import Registry
 
 if TYPE_CHECKING:
+    from .components.bluetooth import BluetoothServiceInfo
     from .components.dhcp import DhcpServiceInfo
     from .components.hassio import HassioServiceInfo
     from .components.mqtt import MqttServiceInfo
@@ -37,6 +38,7 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+SOURCE_BLUETOOTH = "bluetooth"
 SOURCE_DHCP = "dhcp"
 SOURCE_DISCOVERY = "discovery"
 SOURCE_HASSIO = "hassio"
@@ -116,6 +118,7 @@ class ConfigEntryState(Enum):
 DEFAULT_DISCOVERY_UNIQUE_ID = "default_discovery_unique_id"
 DISCOVERY_NOTIFICATION_ID = "config_entry_discovery"
 DISCOVERY_SOURCES = {
+    SOURCE_BLUETOOTH,
     SOURCE_DHCP,
     SOURCE_DISCOVERY,
     SOURCE_HOMEKIT,
@@ -1155,8 +1158,23 @@ class ConfigEntries:
         self, entry: ConfigEntry, platforms: Iterable[Platform | str]
     ) -> None:
         """Forward the setup of an entry to platforms."""
+        report(
+            "called async_setup_platforms instead of awaiting async_forward_entry_setups; "
+            "this will fail in version 2022.12",
+            # Raise this to warning once all core integrations have been migrated
+            level=logging.DEBUG,
+            error_if_core=False,
+        )
         for platform in platforms:
             self.hass.async_create_task(self.async_forward_entry_setup(entry, platform))
+
+    async def async_forward_entry_setups(
+        self, entry: ConfigEntry, platforms: Iterable[Platform | str]
+    ) -> None:
+        """Forward the setup of an entry to platforms."""
+        await asyncio.gather(
+            *(self.async_forward_entry_setup(entry, platform) for platform in platforms)
+        )
 
     async def async_forward_entry_setup(
         self, entry: ConfigEntry, domain: Platform | str
@@ -1166,9 +1184,6 @@ class ConfigEntries:
         By default an entry is setup with the component it belongs to. If that
         component also has related platforms, the component will have to
         forward the entry to be setup by that component.
-
-        You don't want to await this coroutine if it is called as part of the
-        setup of a component, because it can cause a deadlock.
         """
         # Setup Component if not set up yet
         if domain not in self.hass.config.components:
@@ -1459,6 +1474,12 @@ class ConfigFlow(data_entry_flow.FlowHandler):
         return super().async_abort(
             reason=reason, description_placeholders=description_placeholders
         )
+
+    async def async_step_bluetooth(
+        self, discovery_info: BluetoothServiceInfo
+    ) -> data_entry_flow.FlowResult:
+        """Handle a flow initialized by Bluetooth discovery."""
+        return await self.async_step_discovery(dataclasses.asdict(discovery_info))
 
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo

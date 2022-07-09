@@ -242,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async_track_time_interval(hass, async_update_sabnzbd, UPDATE_INTERVAL)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 

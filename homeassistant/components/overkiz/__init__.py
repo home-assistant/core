@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) or OVERKIZ_DEVICE_TO_PLATFORM.get(device.ui_class):
             platforms[platform].append(device)
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     device_registry = dr.async_get(hass)
 
