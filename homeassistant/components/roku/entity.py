@@ -36,7 +36,6 @@ class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
         else:
             self._attr_name = coordinator.data.info.name
 
-
     @property
     def device_info(self) -> DeviceInfo | None:
         """Return device information about this Roku device."""
