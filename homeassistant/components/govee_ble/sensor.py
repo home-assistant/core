@@ -5,6 +5,10 @@ import logging
 from typing import Any
 
 from homeassistant import config_entries
+from homeassistant.components.bluetooth.update_coordinator import (
+    BluetoothCoordinatorEntity,
+    BluetoothDataUpdateCoordinator,
+)
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -19,10 +23,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .bluetooth_update_coordinator import (
-    BluetoothCoordinatorEntity,
-    BluetoothDataUpdateCoordinator,
-)
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)

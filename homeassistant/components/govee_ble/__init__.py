@@ -5,11 +5,13 @@ import logging
 from typing import Any
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth.update_coordinator import (
+    BluetoothDataUpdateCoordinator,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 
-from .bluetooth_update_coordinator import BluetoothDataUpdateCoordinator
 from .const import DOMAIN
 from .govee_parser import parse_govee_from_discovery_data
 
