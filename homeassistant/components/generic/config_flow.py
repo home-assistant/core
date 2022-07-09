@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import contextlib
+from datetime import datetime
 from errno import EHOSTUNREACH, EIO
 import io
 import logging
@@ -265,7 +266,7 @@ async def async_test_stream(
     return {}
 
 
-def register_preview(hass: HomeAssistant, flow_id: str, preview: GenericCamera):
+def register_preview(hass: HomeAssistant, flow_id: str, user_input: dict[str, Any]):
     """Set up previews for camera feeds during config flow."""
     hass.data.setdefault(DOMAIN, {})
 
@@ -273,7 +274,7 @@ def register_preview(hass: HomeAssistant, flow_id: str, preview: GenericCamera):
         _LOGGER.debug("Registering camera image preview handler")
         hass.http.register_view(CameraImagePreview(hass))
         hass.data[DOMAIN][PREVIEWS] = {}
-    hass.data[DOMAIN][PREVIEWS][flow_id] = preview
+    hass.data[DOMAIN][PREVIEWS][flow_id] = user_input
 
 
 class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -285,8 +286,6 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize Generic ConfigFlow."""
         self.cached_user_input: dict[str, Any] = {}
         self.cached_title = ""
-        self.preview: GenericCamera | None = None
-        self.preview_increment = 0
 
     @staticmethod
     def async_get_options_flow(
@@ -335,11 +334,8 @@ class GenericIPCamConfigFlow(ConfigFlow, domain=DOMAIN):
                     self.cached_title = name
 
                     # Register a temporary view so that we can show a preview
-                    flow_id = self.flow_id
-                    preview = GenericCamera(hass, user_input, flow_id, "preview")
-                    register_preview(hass, flow_id, preview)
-                    self.preview_increment += 1
-                    preview_url = f"/api/generic/preview_flow_image/{flow_id}_{self.preview_increment}"
+                    register_preview(hass, self.flow_id, user_input)
+                    preview_url = f"/api/generic/preview_flow_image/{self.flow_id}?t={datetime.now().isoformat()}"
                     return self.async_show_form(
                         step_id="user_confirm_still",
                         data_schema=vol.Schema(
@@ -461,7 +457,7 @@ class GenericOptionsFlowHandler(OptionsFlow):
 class CameraImagePreview(HomeAssistantView):
     """Camera view to temporarily serve an image."""
 
-    url = "/api/generic/preview_flow_image/{flow_id_inc}"
+    url = "/api/generic/preview_flow_image/{flow_id}"
     name = "api:generic:preview_flow_image"
     requires_auth = False
 
@@ -469,12 +465,11 @@ class CameraImagePreview(HomeAssistantView):
         """Initialise."""
         self.hass = hass
 
-    async def get(self, request: web.Request, flow_id_inc: str) -> web.Response:
+    async def get(self, request: web.Request, flow_id: str) -> web.Response:
         """Start a GET request."""
-        _LOGGER.debug("processing GET request for flow_id=%s", flow_id_inc)
-        # ignore the incrementing suffix which is just to prevent browser caching.
-        flow_id = flow_id_inc.split("_")[0]
-        camera = self.hass.data[DOMAIN][PREVIEWS][flow_id]
+        _LOGGER.debug("processing GET request for flow_id=%s", flow_id)
+        user_input = self.hass.data[DOMAIN][PREVIEWS][flow_id]
+        camera = GenericCamera(self.hass, user_input, flow_id, "preview")
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
