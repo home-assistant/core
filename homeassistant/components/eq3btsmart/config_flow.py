@@ -45,7 +45,7 @@ class EQ3ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             thermostat = eq3.Thermostat(mac)
             # TODO is this the correct way to execute synchronous calls in a config flow?
             await self.hass.async_add_executor_job(thermostat.update)
-        except Exception as ex:
+        except eq3.BackendException as ex:
             _LOGGER.debug("Connection failed: %s", ex)
             return self.async_show_form(
                 step_id="user",

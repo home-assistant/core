@@ -5,7 +5,6 @@ import asyncio
 import logging
 
 import async_timeout
-from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
 
@@ -119,7 +118,7 @@ async def async_setup_entry(
             # and the firmware version prior creating the entity
             await hass.async_add_executor_job(device.query_id)
     except (Exception, asyncio.TimeoutError) as ex:
-        _LOGGER.warning("[%s] Unable to connect", mac)
+        _LOGGER.warning("[%s] Unable to connect: %s", mac, ex)
         raise PlatformNotReady from ex
 
     entity = EQ3BTSmartThermostat(device)
@@ -258,5 +257,5 @@ class EQ3BTSmartThermostat(ClimateEntity):
 
         try:
             self._thermostat.update()
-        except BTLEException as ex:
+        except eq3.BackendException as ex:
             _LOGGER.warning("Updating the state failed: %s", ex)
