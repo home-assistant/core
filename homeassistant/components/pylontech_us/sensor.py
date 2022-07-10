@@ -131,7 +131,9 @@ async def async_setup_entry(
         PylontechStackSensor(hass, coordinator, desc, config_entry.entry_id)
         for desc in PYLONTECH_STACK_SENSORS
     )
-    factory = PylontechPackSensorFactory(hass, coordinator.get_result(), coordinator)
+    factory = PylontechPackSensorFactory(
+        hass, coordinator.get_result(), coordinator, config_entry.entry_id
+    )
     new_entity: SensorEntity | None = None
     while True:
         new_entity = factory.create_next_sensor()
@@ -215,8 +217,10 @@ class PylontechPackSensorFactory:
         hass: HomeAssistant,
         data: PylontechStack,
         coordinator: PylontechCoordinator,
+        entry_id: str,
     ) -> None:
         """Sensor Factory constructor."""
+        self._entry_id = entry_id
         self._sensor_list = self._pylon_to_sensors(
             data=data, hass=hass, coordinator=coordinator
         )
@@ -246,7 +250,7 @@ class PylontechPackSensorFactory:
                 key_sub=None,
                 key_sub_nr=None,
                 key_pack_nr=pack_count,
-                entry_id=sensor_name,
+                entry_id=self._entry_id,
                 initial_result=data,
             )
             pack_count = pack_count + 1
@@ -273,7 +277,7 @@ class PylontechPackSensorFactory:
                     key_sub="CellVoltages",
                     key_sub_nr=element_count,
                     key_pack_nr=pack_count,
-                    entry_id=sensor_name,
+                    entry_id=self._entry_id,
                     initial_result=data,
                 )
                 element_count = element_count + 1
@@ -298,7 +302,7 @@ class PylontechPackSensorFactory:
                     key_sub="Temperatures",
                     key_sub_nr=element_count,
                     key_pack_nr=pack_count,
-                    entry_id=sensor_name,
+                    entry_id=self._entry_id,
                     initial_result=data,
                 )
                 element_count = element_count + 1
@@ -316,7 +320,7 @@ class PylontechPackSensorFactory:
                 key_sub="Current",
                 key_sub_nr=None,
                 key_pack_nr=pack_count,
-                entry_id=sensor_name,
+                entry_id=self._entry_id,
                 initial_result=data,
             )
             return_list.append(sensor)
@@ -333,7 +337,7 @@ class PylontechPackSensorFactory:
                 key_sub="Voltage",
                 key_sub_nr=None,
                 key_pack_nr=pack_count,
-                entry_id=sensor_name,
+                entry_id=self._entry_id,
                 initial_result=data,
             )
             return_list.append(sensor)
@@ -350,7 +354,7 @@ class PylontechPackSensorFactory:
                 key_sub="RemainCapacity",
                 key_sub_nr=None,
                 key_pack_nr=pack_count,
-                entry_id=sensor_name,
+                entry_id=self._entry_id,
                 initial_result=data,
             )
             return_list.append(sensor)
@@ -367,7 +371,7 @@ class PylontechPackSensorFactory:
                 key_sub="ModuleTotalCapacity",
                 key_sub_nr=None,
                 key_pack_nr=pack_count,
-                entry_id=sensor_name,
+                entry_id=self._entry_id,
                 initial_result=data,
             )
             return_list.append(sensor)
@@ -384,7 +388,7 @@ class PylontechPackSensorFactory:
                 key_sub="CycleNumber",
                 key_sub_nr=None,
                 key_pack_nr=pack_count,
-                entry_id=sensor_name,
+                entry_id=self._entry_id,
                 initial_result=data,
             )
             return_list.append(sensor)
@@ -444,16 +448,20 @@ class PylontechPackSensor(CoordinatorEntity, SensorEntity):
         self._attr_available = True
         self._attr_should_poll = True
 
-    def _get_key_result(self):
+    def _get_key_result(self) -> str | None:
         if self._result is None:
             return None
         if self._key_sub is None:
-            return self._result[self._key_main][self._key_pack_nr - 1]
+            return str(self._result[self._key_main][self._key_pack_nr - 1])
         if self._key_sub_nr is None:
-            return self._result[self._key_main][self._key_pack_nr - 1][self._key_sub]
-        return self._result[self._key_main][self._key_pack_nr - 1][self._key_sub][
-            self._key_sub_nr - 1
-        ]
+            return str(
+                self._result[self._key_main][self._key_pack_nr - 1][self._key_sub]
+            )
+        return str(
+            self._result[self._key_main][self._key_pack_nr - 1][self._key_sub][
+                self._key_sub_nr - 1
+            ]
+        )
 
     @property
     def unique_id(self) -> str:
