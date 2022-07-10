@@ -19,7 +19,7 @@ from homeassistant.const import (
 ATTR_NATIVE_UNIT_OF_MEASUREMENT: Final = "native_unit_of_measurement"
 
 
-class SensorMapping(TypedDict, total=False):
+class SensorMapping(TypedDict):
     """Sensor mapping."""
 
     native_unit_of_measurement: str
@@ -34,6 +34,7 @@ MAPPINGS = {
             ATTR_NATIVE_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
             ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            ATTR_NAME: None,
         }
     ),
     "humidity": SensorMapping(
@@ -41,6 +42,7 @@ MAPPINGS = {
             ATTR_NATIVE_UNIT_OF_MEASUREMENT: PERCENTAGE,
             ATTR_DEVICE_CLASS: SensorDeviceClass.HUMIDITY,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            ATTR_NAME: None,
         }
     ),
     "pressure": SensorMapping(
@@ -48,6 +50,7 @@ MAPPINGS = {
             ATTR_NATIVE_UNIT_OF_MEASUREMENT: PRESSURE_MBAR,
             ATTR_DEVICE_CLASS: SensorDeviceClass.PRESSURE,
             ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            ATTR_NAME: None,
         }
     ),
 }
