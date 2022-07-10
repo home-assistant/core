@@ -71,6 +71,7 @@ def format_condition(condition: str) -> str:
 class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
     """Implementation of a Met.no weather condition."""
 
+    _attr_has_entity_name = True
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_precipitation_unit = LENGTH_MILLIMETERS
     _attr_native_pressure_unit = PRESSURE_HPA
@@ -111,7 +112,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         name = self._config.get(CONF_NAME)
         name_appendix = ""
         if self._hourly:
-            name_appendix = " Hourly"
+            name_appendix = " hourly"
 
         if name is not None:
             return f"{name}{name_appendix}"
