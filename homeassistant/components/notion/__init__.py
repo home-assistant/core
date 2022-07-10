@@ -124,7 +124,7 @@ def _async_register_new_bridge(
         identifiers={(DOMAIN, bridge["hardware_id"])},
         manufacturer="Silicon Labs",
         model=bridge["hardware_revision"],
-        name=bridge["name"] or bridge["id"],
+        name=bridge["name"].capitalize() or bridge["id"],
         sw_version=bridge["firmware_version"]["wifi"],
     )
 
@@ -152,7 +152,7 @@ class NotionEntity(CoordinatorEntity):
             identifiers={(DOMAIN, sensor["hardware_id"])},
             manufacturer="Silicon Labs",
             model=sensor["hardware_revision"],
-            name=str(sensor["name"]),
+            name=str(sensor["name"]).capitalize(),
             sw_version=sensor["firmware_version"],
             via_device=(DOMAIN, bridge.get("hardware_id")),
         )
