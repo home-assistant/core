@@ -118,13 +118,18 @@ def _async_register_new_bridge(
     hass: HomeAssistant, bridge: dict, entry: ConfigEntry
 ) -> None:
     """Register a new bridge."""
+    if name := bridge["name"]:
+        bridge_name = name.capitalize()
+    else:
+        bridge_name = bridge["id"]
+
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, bridge["hardware_id"])},
         manufacturer="Silicon Labs",
         model=bridge["hardware_revision"],
-        name=bridge["name"].capitalize() or bridge["id"],
+        name=bridge_name,
         sw_version=bridge["firmware_version"]["wifi"],
     )
 
