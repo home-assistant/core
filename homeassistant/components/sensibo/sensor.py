@@ -17,10 +17,13 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_BILLION,
+    CONCENTRATION_PARTS_PER_MILLION,
     ELECTRIC_POTENTIAL_VOLT,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -106,7 +109,6 @@ MOTION_SENSOR_TYPES: tuple[SensiboMotionSensorEntityDescription, ...] = (
     SensiboMotionSensorEntityDescription(
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=TEMP_CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         name="Temperature",
         icon="mdi:thermometer",
@@ -143,7 +145,37 @@ DEVICE_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
         value_fn=lambda data: data.timer_time,
         extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
     ),
+    SensiboDeviceSensorEntityDescription(
+        key="feels_like",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="Temperature Feels Like",
+        value_fn=lambda data: data.feelslike,
+        extra_fn=None,
+        entity_registry_enabled_default=False,
+    ),
     FILTER_LAST_RESET_DESCRIPTION,
+)
+
+AIRQ_SENSOR_TYPES: tuple[SensiboDeviceSensorEntityDescription, ...] = (
+    SensiboDeviceSensorEntityDescription(
+        key="airq_tvoc",
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        icon="mdi:air-filter",
+        name="AirQ TVOC",
+        value_fn=lambda data: data.tvoc,
+        extra_fn=None,
+    ),
+    SensiboDeviceSensorEntityDescription(
+        key="airq_co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+        name="AirQ CO2",
+        value_fn=lambda data: data.co2,
+        extra_fn=None,
+    ),
 )
 
 
@@ -177,6 +209,12 @@ async def async_setup_entry(
         for description in DEVICE_SENSOR_TYPES
         if device_data.model != "pure"
     )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
+        for device_id, device_data in coordinator.data.parsed.items()
+        for description in AIRQ_SENSOR_TYPES
+        if device_data.model == "airq"
+    )
     async_add_entities(entities)
 
 
@@ -208,6 +246,15 @@ class SensiboMotionSensor(SensiboMotionBaseEntity, SensorEntity):
         )
 
     @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Add native unit of measurement."""
+        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
+            return (
+                TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
+            )
+        return self.entity_description.native_unit_of_measurement
+
+    @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
         if TYPE_CHECKING:
@@ -234,6 +281,15 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, SensorEntity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{device_id}-{entity_description.key}"
         self._attr_name = f"{self.device_data.name} {entity_description.name}"
+
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Add native unit of measurement."""
+        if self.entity_description.device_class == SensorDeviceClass.TEMPERATURE:
+            return (
+                TEMP_CELSIUS if self.device_data.temp_unit == "C" else TEMP_FAHRENHEIT
+            )
+        return self.entity_description.native_unit_of_measurement
 
     @property
     def native_value(self) -> StateType | datetime:
