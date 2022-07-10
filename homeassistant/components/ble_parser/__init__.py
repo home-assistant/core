@@ -2,8 +2,9 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-import binascii
 from collections.abc import Callable
+import logging
+from struct import pack
 from typing import Any
 
 from bleparser import BleParser
@@ -15,6 +16,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .sensor import MAPPINGS as SENSOR_MAPPINGS
 
+_LOGGER = logging.getLogger(__name__)
 PARSER = BleParser(
     discovery=True, filter_duplicates=True, sensor_whitelist=[], tracker_whitelist=[]
 )
@@ -119,16 +121,20 @@ class BLEManufacturerParserWrapper(BLEManufacturerParserWrapperBase):
         self, service_info: BluetoothServiceInfo, manufacturer_id: int
     ) -> None:
         """Load BLE Parser to Bluetooth Device Data for a given id."""
-        self.async_load(
-            self.parser(
+        raw = _manufacturer_data_to_raw(
+            manufacturer_id, service_info.manufacturer_data[manufacturer_id]
+        )
+        try:
+            parsed = self.parser(
                 PARSER,
-                _manufacturer_data_to_raw(
-                    manufacturer_id, service_info.manufacturer_data[manufacturer_id]
-                ),
+                raw,
                 address_to_bytes(service_info.address),
                 service_info.rssi,
             )
-        )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.warning("Error parsing BLE data: %s (%s)", service_info, raw)
+            return
+        self.async_load(parsed)
 
 
 class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase):
@@ -148,22 +154,26 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
         self, service_info: BluetoothServiceInfo, manufacturer_id: int
     ) -> None:
         """Load BLE Parser to Bluetooth Device Data for a given id."""
-        self.async_load(
-            self.parser(
+        raw = _manufacturer_data_to_raw(
+            manufacturer_id, service_info.manufacturer_data[manufacturer_id]
+        )
+        try:
+            parsed = self.parser(
                 PARSER,
-                _manufacturer_data_to_raw(
-                    manufacturer_id, service_info.manufacturer_data[manufacturer_id]
-                ),
+                raw,
                 service_info.name,
                 address_to_bytes(service_info.address),
                 service_info.rssi,
             )
-        )
+        except Exception:  # pylint: disable=broad-except
+            _LOGGER.warning("Error parsing BLE data: %s (%s)", service_info, raw)
+            return
+        self.async_load(parsed)
 
 
 def address_to_bytes(address: str) -> bytes:
     """Return the address as bytes."""
-    return binascii.unhexlify(address.replace(":", "").encode())
+    return pack("L", int(address.replace(":", ""), 16))
 
 
 def newest_manufacturer_data(service_info: BluetoothServiceInfo) -> bytes:
