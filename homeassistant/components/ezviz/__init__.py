@@ -116,7 +116,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 await hass.config_entries.async_reload(item.entry_id)
                 return True
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS_BY_TYPE[sensor_type])
+    await hass.config_entries.async_forward_entry_setups(
+        entry, PLATFORMS_BY_TYPE[sensor_type]
+    )
 
     return True
 
