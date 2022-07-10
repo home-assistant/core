@@ -24,28 +24,13 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockEntity, MockEntityPlatform
 
 
-@pytest.fixture(autouse=True)
-def MockCecAdapter():
-    """Mock CecAdapter.
-
-    Always mocked as it import the `cec` library which is part of `libcec`.
-    """
-    with patch("homeassistant.components.hdmi_cec.CecAdapter") as MockCecAdapter:
-        yield MockCecAdapter
-
-
 @pytest.fixture
 def MockTcpAdapter():
     """Mock TcpAdapter."""
-    with patch("homeassistant.components.hdmi_cec.TcpAdapter") as MockTcpAdapter:
+    with patch(
+        "homeassistant.components.hdmi_cec.TcpAdapter", autospec=True
+    ) as MockTcpAdapter:
         yield MockTcpAdapter
-
-
-@pytest.fixture
-def MockHDMINetwork():
-    """Mock HDMINetwork."""
-    with patch("homeassistant.components.hdmi_cec.HDMINetwork") as MockHDMINetwork:
-        yield MockHDMINetwork
 
 
 @pytest.mark.parametrize(
@@ -117,6 +102,7 @@ async def test_setup_cec_adapter(hass, MockCecAdapter, MockHDMINetwork):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
     mock_hdmi_network.start.assert_called_once_with()
+    mock_hdmi_network.set_new_device_callback.assert_called_once()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_hdmi_network.stop.assert_called_once_with()
@@ -147,6 +133,7 @@ async def test_setup_tcp_adapter(hass, MockTcpAdapter, MockHDMINetwork):
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()
     mock_hdmi_network.start.assert_called_once_with()
+    mock_hdmi_network.set_new_device_callback.assert_called_once()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
     await hass.async_block_till_done()
     mock_hdmi_network.stop.assert_called_once_with()
