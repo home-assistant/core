@@ -61,3 +61,6 @@ class BluetoothConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="bluetooth_confirm", description_placeholders=placeholders
         )
+
+    # TODO: async_step_user to get the list of discovered devices
+    # from bluetooth.async_get_devices()
