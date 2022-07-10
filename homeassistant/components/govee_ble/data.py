@@ -5,7 +5,7 @@ import logging
 
 from bleparser.govee import parse_govee
 
-from homeassistant.components.ble_parser import async_get_parser
+from homeassistant.components.ble_parser import async_get_manufacturer_parser
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
 
@@ -21,7 +21,7 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
     def __init__(self) -> None:
         """Init the GoveeBluetoothDeviceData."""
         super().__init__()
-        self.parser = async_get_parser(self, parse_govee)
+        self.parser = async_get_manufacturer_parser(self, parse_govee)
 
     def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""

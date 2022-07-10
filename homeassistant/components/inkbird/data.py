@@ -5,7 +5,9 @@ import logging
 
 from bleparser.inkbird import parse_inkbird
 
-from homeassistant.components.ble_parser import async_get_parser_with_local_name
+from homeassistant.components.ble_parser import (
+    async_get_manufacturer_parser_with_local_name,
+)
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
 
@@ -20,7 +22,7 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
     def __init__(self) -> None:
         """Init the INKBIRDBluetoothDeviceData."""
         super().__init__()
-        self.parser = async_get_parser_with_local_name(self, parse_inkbird)
+        self.parser = async_get_manufacturer_parser_with_local_name(self, parse_inkbird)
 
     def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
