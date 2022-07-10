@@ -24,7 +24,7 @@ BUTTON_DESCRIPTIONS = (
     ),
     EntityDescription(
         key=BUTTON_TYPE_RESET_VALVE_DIAGNOSTICS,
-        name="Reset Valve Diagnostics",
+        name="Reset valve diagnostics",
     ),
 )
 
