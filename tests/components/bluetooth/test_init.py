@@ -78,6 +78,30 @@ async def test_setup_and_stop_no_bluetooth(hass, caplog):
     assert "Could not create bluetooth scanner" in caplog.text
 
 
+async def test_calling_async_discovered_devices_no_bluetooth(hass, caplog):
+    """Test we fail gracefully when asking for discovered devices and there is no blueooth."""
+    mock_bt = []
+    with patch(
+        "homeassistant.components.bluetooth.HaBleakScanner", side_effect=BleakError
+    ) as mock_ha_bleak_scanner, patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", return_value=mock_bt
+    ), patch.object(
+        hass.config_entries.flow, "async_init"
+    ):
+        assert await async_setup_component(
+            hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
+        )
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+    assert len(mock_ha_bleak_scanner.mock_calls) == 1
+    assert "Could not create bluetooth scanner" in caplog.text
+    assert not bluetooth.async_discovered_service_info(hass)
+    assert not bluetooth.async_address_present(hass, "aa:bb:bb:dd:ee:ff")
+
+
 async def test_discovery_match_by_service_uuid(hass, mock_bleak_scanner_start):
     """Test bluetooth discovery match by service_uuid."""
     mock_bt = [
@@ -216,6 +240,9 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         "bleak.BleakScanner.discovered_devices",  # Must patch before we setup
         [MagicMock(address="44:44:33:11:23:45")],
     ):
+        assert not bluetooth.async_discovered_service_info(hass)
+        assert not bluetooth.async_address_present(hass, "44:44:22:22:11:22")
+
         assert await async_setup_component(
             hass, bluetooth.DOMAIN, {bluetooth.DOMAIN: {}}
         )
@@ -223,6 +250,8 @@ async def test_async_discovered_device_api(hass, mock_bleak_scanner_start):
         await hass.async_block_till_done()
 
         assert len(mock_bleak_scanner_start.mock_calls) == 1
+
+        assert not bluetooth.async_discovered_service_info(hass)
 
         wrong_device = BLEDevice("44:44:33:11:23:42", "wrong_name")
         wrong_adv = AdvertisementData(local_name="wrong_name", service_uuids=[])

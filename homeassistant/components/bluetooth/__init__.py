@@ -125,6 +125,8 @@ def async_discovered_service_info(
     hass: HomeAssistant,
 ) -> list[BluetoothServiceInfo]:
     """Return the discovered devices list."""
+    if DOMAIN not in hass.data:
+        return []
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_discovered_service_info()
 
@@ -135,6 +137,8 @@ def async_address_present(
     address: str,
 ) -> bool:
     """Check if an address is present in the bluetooth device list."""
+    if DOMAIN not in hass.data:
+        return False
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_address_present(address)
 
