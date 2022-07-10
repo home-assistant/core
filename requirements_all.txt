@@ -89,7 +89,7 @@ adguardhome==0.5.1
 advantage_air==0.3.1
 
 # homeassistant.components.frontier_silicon
-afsapi==0.2.4
+afsapi==0.2.5
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
@@ -229,7 +229,7 @@ aiopvpc==3.0.0
 aiopyarr==22.6.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.1.0
+aioqsw==0.1.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -1323,7 +1323,7 @@ py-zabbix==1.1.7
 py17track==2021.12.2
 
 # homeassistant.components.hdmi_cec
-pyCEC==0.5.1
+pyCEC==0.5.2
 
 # homeassistant.components.control4
 pyControl4==0.0.6
@@ -1444,7 +1444,7 @@ pydaikin==2.7.0
 pydanfossair==0.1.0
 
 # homeassistant.components.deconz
-pydeconz==97
+pydeconz==98
 
 # homeassistant.components.delijn
 pydelijn==1.0.0
@@ -1489,7 +1489,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.8
+pyezviz==0.2.0.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1640,7 +1640,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.3
+pymazda==0.3.6
 
 # homeassistant.components.mediaroom
 pymediaroom==0.6.5.4
@@ -1835,7 +1835,7 @@ pysmartthings==0.7.6
 pysmarty==0.8
 
 # homeassistant.components.edl21
-pysml==0.0.7
+pysml==0.0.8
 
 # homeassistant.components.snmp
 pysnmplib==5.0.15
@@ -1895,7 +1895,7 @@ python-family-hub-local==0.0.2
 python-forecastio==1.4.0
 
 # homeassistant.components.sms
-# python-gammu==3.2.3
+# python-gammu==3.2.4
 
 # homeassistant.components.gc100
 python-gc100==1.0.3a0
@@ -2065,7 +2065,7 @@ raincloudy==0.0.7
 raspyrfm-client==1.2.8
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.07.0
+regenmaschine==2022.07.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -2092,7 +2092,7 @@ rjpl==0.3.6
 rocketchat-API==0.6.1
 
 # homeassistant.components.roku
-rokuecp==0.16.0
+rokuecp==0.17.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5
@@ -2268,7 +2268,7 @@ swisshydrodata==0.1.0
 synology-srm==0.2.0
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.1.5
+systembridgeconnector==3.3.2
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
