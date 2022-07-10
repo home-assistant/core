@@ -193,10 +193,7 @@ class DeconzThermostat(DeconzDevice, ClimateEntity):
 
     @property
     def hvac_action(self) -> str | None:
-        """Return current hvac operation ie. heat, cool.
-
-        Need to be one of HVACAction.*.
-        """
+        """Return current hvac operation ie. heat, cool."""
         if self._device.mode == ThermostatMode.OFF:
             return HVACAction.OFF
 
