@@ -25,7 +25,6 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
 
     def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
-        _LOGGER.debug("Parsing Govee BLE advertisement data: %s", service_info)
         if service_info.name.startswith("GV"):
             self.set_device_name(service_info.name[2:])
         for mgr_id in service_info.manufacturer_data:
