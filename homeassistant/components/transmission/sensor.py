@@ -42,13 +42,13 @@ class TransmissionSensorEntityDescription(SensorEntityDescription):
 SPEED_SENSOR_DESCRIPTIONS = [
     TransmissionSensorEntityDescription(
         key="download",
-        name="Down Speed",
+        name="Down speed",
         sub_type="download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="upload",
-        name="Up Speed",
+        name="Up speed",
         sub_type="upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -62,31 +62,31 @@ STATUS_SENSOR_DESCRIPTIONS = [
 TORRENTS_SENSOR_DESCRIPTIONS = [
     TransmissionSensorEntityDescription(
         key="active_torrents",
-        name="Active Torrents",
+        name="Active torrents",
         sub_type="active",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="paused_torrents",
-        name="Paused Torrents",
+        name="Paused torrents",
         sub_type="paused",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="total_torrents",
-        name="Total Torrents",
+        name="Total torrents",
         sub_type="total",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="completed_torrents",
-        name="Completed Torrents",
+        name="Completed torrents",
         sub_type="completed",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="started_torrents",
-        name="Started Torrents",
+        name="Started torrents",
         sub_type="started",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -116,7 +116,12 @@ async def async_setup_entry(
         *STATUS_SENSOR_DESCRIPTIONS,
         *TORRENTS_SENSOR_DESCRIPTIONS,
     ):
-        old_unique_id = f"{tm_client.api.host}-{name} {entity_description.name}"
+        titlecase_name = (
+            entity_description.name.title()
+            if entity_description.name is not None
+            else None
+        )
+        old_unique_id = f"{tm_client.api.host}-{name} {titlecase_name}"
 
         if entity_id := ent_reg.async_get_entity_id(
             Platform.SENSOR, DOMAIN, old_unique_id
