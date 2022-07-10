@@ -68,10 +68,10 @@ class BLEParserWrapperBase:
         if device_name := data.get("name"):
             device_data.set_device_name(device_name)
 
-        for data_type, value in data.items():
-            if sensor_mapping := SENSOR_MAPPINGS.get(data_type):
+        for key, value in data.items():
+            if sensor_mapping := SENSOR_MAPPINGS.get(key):
                 device_data.update_sensor(
-                    key=data_type,
+                    key=key,
                     native_value=value,
                     **sensor_mapping,
                 )
