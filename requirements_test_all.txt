@@ -1334,7 +1334,7 @@ pytradfri[async]==9.0.0
 pytrafikverket==0.2.0.1
 
 # homeassistant.components.usb
-pyudev==0.22.0
+pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
 pyunifiprotect==4.0.9
