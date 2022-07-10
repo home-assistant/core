@@ -1,7 +1,7 @@
 """The Bluetooth integration."""
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
 import time
@@ -9,17 +9,18 @@ from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components import bluetooth
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 
 from .device import BluetoothDeviceData
-from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
+from .entity import BluetoothDeviceKey
 
 UNAVAILABLE_SECONDS = 60 * 5
 NEVER_TIME = -UNAVAILABLE_SECONDS
 
 BluetoothListenerCallbackType = Callable[
-    [Optional[BluetoothDeviceEntityDescriptionsType]], None
+    [Optional[Mapping[BluetoothDeviceKey, EntityDescription]]], None
 ]
 if TYPE_CHECKING:
     from .entity import BluetoothCoordinatorEntity
@@ -105,7 +106,7 @@ class BluetoothDataUpdateCoordinator:
 
         @callback
         def _async_add_or_update_entities(
-            data: BluetoothDeviceEntityDescriptionsType | None,
+            data: Mapping[BluetoothDeviceKey, EntityDescription] | None,
         ) -> None:
             """Listen for new entities."""
             entities: list[BluetoothCoordinatorEntity] = []
@@ -139,7 +140,7 @@ class BluetoothDataUpdateCoordinator:
 
     @callback
     def async_update_listeners(
-        self, data: BluetoothDeviceEntityDescriptionsType
+        self, data: Mapping[BluetoothDeviceKey, EntityDescription]
     ) -> None:
         """Update all registered listeners."""
         # Dispatch to listeners without a filter key

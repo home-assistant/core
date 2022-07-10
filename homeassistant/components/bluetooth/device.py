@@ -16,7 +16,7 @@ from .binary_sensor import (
     BluetoothBinarySensorEntityDescription,
     BluetoothBinarySensorType,
 )
-from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
+from .entity import BluetoothDeviceKey
 from .sensor import (
     SENSOR_TYPE_TO_DEVICE_CLASS,
     BluetoothSensorEntityDescription,
@@ -47,7 +47,12 @@ class BluetoothDeviceData:
         return bool(self._device_id_to_type)
 
     @property
-    def entity_descriptions(self) -> BluetoothDeviceEntityDescriptionsType:
+    def entity_descriptions(
+        self,
+    ) -> dict[
+        BluetoothDeviceKey,
+        BluetoothSensorEntityDescription | BluetoothBinarySensorEntityDescription,
+    ]:
         """Return the data."""
         return self._entity_descriptions
 
