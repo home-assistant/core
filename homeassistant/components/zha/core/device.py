@@ -470,8 +470,6 @@ class ZHADevice(LogMixin):
         self.debug("started configuration")
         await self._channels.async_configure()
         self.debug("completed configuration")
-        entry = self.gateway.zha_storage.async_create_or_update_device(self)
-        self.debug("stored in registry: %s", entry)
 
         if (
             should_identify
@@ -495,12 +493,6 @@ class ZHADevice(LogMixin):
         """Unsubscribe the dispatchers and timers."""
         for unsubscribe in self.unsubs:
             unsubscribe()
-
-    @callback
-    def async_update_last_seen(self, last_seen: float | None) -> None:
-        """Set last seen on the zigpy device."""
-        if self._zigpy_device.last_seen is None and last_seen is not None:
-            self._zigpy_device.last_seen = last_seen
 
     @property
     def zha_device_info(self) -> dict[str, Any]:
