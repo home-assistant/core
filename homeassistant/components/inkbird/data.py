@@ -26,7 +26,6 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
 
     def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
-        _LOGGER.debug("Parsing inkbird BLE advertisement data: %s", service_info)
         if device_type := LOCAL_NAMES_TO_DEVICE_TYPE.get(service_info.name):
             self.set_device_type(device_type)
         self.parser.async_load_manufacturer_data(service_info)
