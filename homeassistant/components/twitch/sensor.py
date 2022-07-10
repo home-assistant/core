@@ -1,8 +1,6 @@
 """Support for the Twitch stream status."""
 from __future__ import annotations
 
-import functools as ft
-
 from twitchAPI.twitch import (
     AuthScope,
     InvalidTokenException,
@@ -60,53 +58,47 @@ async def async_setup_platform(
     client_secret = config[CONF_CLIENT_SECRET]
     oauth_token = config.get(CONF_TOKEN)
 
-    try:
-        client = await hass.async_add_executor_job(
-            ft.partial(
-                Twitch,
+    def initialize(channels):
+        """Initialize client."""
+        try:
+            client = Twitch(
                 app_id=client_id,
                 app_secret=client_secret,
                 target_app_auth_scope=OAUTH_SCOPES,
             )
-        )
-        client.auto_refresh_auth = False
-    except TwitchAuthorizationException:  # pragma: no cover
-        LOGGER.error("Invalid client ID or client secret")  # pragma: no cover
-        return
 
-    if oauth_token:
-        try:
-            await hass.async_add_executor_job(
-                ft.partial(
-                    client.set_user_authentication,
+            client.auto_refresh_auth = False
+        except TwitchAuthorizationException:
+            LOGGER.error("Invalid client ID or client secret")
+            return
+
+        if oauth_token:
+            try:
+
+                client.set_user_authentication(
                     token=oauth_token,
                     scope=OAUTH_SCOPES,
                     validate=True,
                 )
-            )
-        except MissingScopeException:
-            LOGGER.error("OAuth token is missing required scope")
-            return
-        except InvalidTokenException:
-            LOGGER.error("OAuth token is invalid")
-            return
 
-    user = None
-    if config.get(CONF_TOKEN):
-        user = (await hass.async_add_executor_job(client.get_users))["data"][0]["id"]
-    channels = await hass.async_add_executor_job(
-        ft.partial(client.get_users, logins=channels)
-    )
-    coordinator = TwitchDataUpdateCoordinator(hass, client, user, channels["data"])
+            except MissingScopeException:  # pragma: no cover
+                LOGGER.error("OAuth token is missing required scope")
+                return
+            except InvalidTokenException:  # pragma: no cover
+                LOGGER.error("OAuth token is invalid")
+                return
+
+        user = None
+        if config.get(CONF_TOKEN):
+            user = client.get_users()["data"][0]["id"]
+        channels = client.get_users(logins=channels)["data"]
+        return client, user, channels
+
+    res = await hass.async_add_executor_job(initialize, channels)
+    coordinator = TwitchDataUpdateCoordinator(hass, res[0], res[1], res[2])
     await coordinator.async_config_entry_first_refresh()
 
-    async_add_entities(
-        TwitchSensor(
-            coordinator,
-            channel,
-        )
-        for channel in channels["data"]
-    )
+    async_add_entities(TwitchSensor(coordinator, channel) for channel in res[2])
 
 
 class TwitchSensor(CoordinatorEntity, SensorEntity):
