@@ -870,8 +870,10 @@ def test_invalid_device_class(
         """
     class Entity():
         pass
+
     class CoverEntity(Entity):
         pass
+
     class MyCover( #@
         CoverEntity
     ):
