@@ -62,20 +62,20 @@ SENSOR_KIND_VOC = "voc"
 GEOGRAPHY_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_LEVEL,
-        name="Air Pollution Level",
+        name="Air pollution level",
         device_class=DEVICE_CLASS_POLLUTANT_LEVEL,
         icon="mdi:gauge",
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
-        name="Air Quality Index",
+        name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_KIND_POLLUTANT,
-        name="Main Pollutant",
+        name="Main pollutant",
         device_class=DEVICE_CLASS_POLLUTANT_LABEL,
         icon="mdi:chemical-weapon",
     ),
@@ -85,7 +85,7 @@ GEOGRAPHY_SENSOR_LOCALES = {"cn": "Chinese", "us": "U.S."}
 NODE_PRO_SENSOR_DESCRIPTIONS = (
     SensorEntityDescription(
         key=SENSOR_KIND_AQI,
-        name="Air Quality Index",
+        name="Air quality index",
         device_class=SensorDeviceClass.AQI,
         native_unit_of_measurement="AQI",
         state_class=SensorStateClass.MEASUREMENT,
