@@ -131,8 +131,10 @@ class BLEManufacturerParserWrapper(BLEManufacturerParserWrapperBase):
                 address_to_bytes(service_info.address),
                 service_info.rssi,
             )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.warning("Error parsing BLE data: %s (%s)", service_info, raw)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                "Error parsing BLE data: %s (%s): %s", service_info, raw, ex
+            )
             return
         self.async_load(parsed)
 
@@ -165,8 +167,10 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
                 address_to_bytes(service_info.address),
                 service_info.rssi,
             )
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.warning("Error parsing BLE data: %s (%s)", service_info, raw)
+        except Exception as ex:  # pylint: disable=broad-except
+            _LOGGER.warning(
+                "Error parsing BLE data: %s (%s): %s", service_info, raw, ex
+            )
             return
         self.async_load(parsed)
 
