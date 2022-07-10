@@ -5,6 +5,7 @@
   "documentation": "https://www.home-assistant.io/integrations/inkbird",
   "bluetooth": [
     { "local_name": "sps" },
+    { "local_name": "Inkbird*" },
     { "local_name": "iBBQ*" },
     { "local_name": "tps" }
   ],
