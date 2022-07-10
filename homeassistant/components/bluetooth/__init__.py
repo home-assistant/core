@@ -264,14 +264,22 @@ class BluetoothManager:
     ) -> None:
         """Handle a detected device."""
         matched_domains: set[str] | None = None
-        if device.address not in self._matched:
+        match_key = (device.address, bool(advertisement_data.manufacturer_data))
+        match_key_has_mfr_data = (device.address, True)
+
+        # If we matched without manufacturer_data, we need to do it again
+        # since we may think the device is unsupported otherwise
+        if (
+            match_key_has_mfr_data not in self._matched
+            and match_key not in self._matched
+        ):
             matched_domains = {
                 matcher["domain"]
                 for matcher in self._integration_matchers
                 if _ble_device_matches(matcher, device, advertisement_data)
             }
             if matched_domains:
-                self._matched[device.address] = True
+                self._matched[match_key] = True
             _LOGGER.debug(
                 "Device detected: %s with advertisement_data: %s matched domains: %s",
                 device,
