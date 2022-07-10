@@ -321,6 +321,7 @@ class BluetoothManager:
         def _async_remove_callback() -> None:
             self._callbacks.remove(callback_entry)
 
+        _LOGGER.error("Registering callback: %s %s", callback, matcher)
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
         # device.
@@ -330,6 +331,9 @@ class BluetoothManager:
             and models.HA_BLEAK_SCANNER
             and (device_adv_data := models.HA_BLEAK_SCANNER.history.get(address))
         ):
+            _LOGGER.warning(
+                "Calling back from history for %s %s", address, device_adv_data
+            )
             try:
                 callback(
                     BluetoothServiceInfo.from_advertisement(*device_adv_data),

@@ -2164,7 +2164,7 @@ sharkiq==0.0.1
 sharp_aquos_rc==0.3.2
 
 # homeassistant.components.shodan
-shodan==1.27.0
+shodan==1.28.0
 
 # homeassistant.components.sighthound
 simplehound==0.3
