@@ -35,7 +35,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for device_id, state_base in coordinator_update.items():
             state_base[ATTR_DEVICE_STATE] = STATE_OFFLINE
         try:
-            await elro_connects_api.async_update()
+            # Do IO
+            await hass.async_create_task(elro_connects_api.async_update())
             device_update = copy.deepcopy(elro_connects_api.data)
             for device_id, device_data in device_update.items():
                 if ATTR_DEVICE_STATE not in device_data:
