@@ -122,7 +122,8 @@ async def async_setup_entry(
             Platform.SENSOR, DOMAIN, old_unique_id
         ):
             ent_reg.async_update_entity(
-                entity_id, new_unique_id=get_unique_id(config_entry, entity_description)
+                entity_id,
+                new_unique_id=f"{config_entry.entry_id}-{entity_description.key}",
             )
 
     dev = [
@@ -161,7 +162,9 @@ class TransmissionSensor(SensorEntity):
         self.entity_description = entity_description
         self._tm_client = tm_client
         self._state = None
-        self._attr_unique_id = get_unique_id(tm_client.config_entry, entity_description)
+        self._attr_unique_id = (
+            f"{tm_client.config_entry.entry_id}-{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
             manufacturer="Transmission",
