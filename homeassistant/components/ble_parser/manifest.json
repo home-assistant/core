@@ -1,0 +1,9 @@
+{
+  "domain": "ble_parser",
+  "name": "BLE Parser",
+  "documentation": "https://www.home-assistant.io/integrations/ble_parser",
+  "requirements": ["bleparser==3.3.0"],
+  "dependencies": ["bluetooth"],
+  "codeowners": ["@bdraco"],
+  "iot_class": "local_push"
+}
