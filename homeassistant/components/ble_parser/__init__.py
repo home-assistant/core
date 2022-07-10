@@ -25,7 +25,7 @@ def async_get_manufacturer_parser(
     device_data: BluetoothDeviceData,
     parser: Callable[[Any, bytes, bytes, int], dict[str, Any]],
 ) -> BLEManufacturerParserWrapper:
-    """Return the adapter name."""
+    """Return manufacturer parser wrapper."""
     return BLEManufacturerParserWrapper(device_data, parser)
 
 
@@ -34,7 +34,7 @@ def async_get_manufacturer_parser_with_local_name(
     device_data: BluetoothDeviceData,
     parser: Callable[[Any, bytes, str, bytes, int], dict[str, Any]],
 ) -> BLEManufacturerParserWithLocalNameWrapper:
-    """Return the adapter name."""
+    """Return manufacturer parser wrapper that needs a local name."""
     return BLEManufacturerParserWithLocalNameWrapper(device_data, parser)
 
 
