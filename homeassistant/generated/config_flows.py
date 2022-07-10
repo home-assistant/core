@@ -45,6 +45,7 @@ FLOWS = {
         "azure_event_hub",
         "baf",
         "balboa",
+        "ble_parser",
         "blebox",
         "blink",
         "bmw_connected_drive",
