@@ -5,7 +5,7 @@ black==22.6.0
 codespell==2.1.0
 flake8-comprehensions==3.10.0
 flake8-docstrings==1.6.0
-flake8-noqa==1.2.1
+flake8-noqa==1.2.5
 flake8==4.0.1
 isort==5.10.1
 mccabe==0.6.1
