@@ -15,7 +15,7 @@ from .const import DOMAIN
 
 _LOGGING = logging.getLogger(__name__)
 
-ENTITY_DESCTIPTIONS = [
+ENTITY_DESCRIPTIONS = [
     SwitchEntityDescription(
         key="on_off",
         name="Switch",
@@ -38,7 +38,7 @@ async def async_setup_entry(
     name = config_entry.data[CONF_NAME]
 
     ent_reg = entity_registry.async_get(hass)
-    for entity_description in ENTITY_DESCTIPTIONS:
+    for entity_description in ENTITY_DESCRIPTIONS:
         titlecase_name = (
             entity_description.name.title()
             if entity_description.name is not None
@@ -56,7 +56,7 @@ async def async_setup_entry(
 
     dev = [
         TransmissionSwitch(entity_description, tm_client, name)
-        for entity_description in ENTITY_DESCTIPTIONS
+        for entity_description in ENTITY_DESCRIPTIONS
     ]
 
     async_add_entities(dev, True)
