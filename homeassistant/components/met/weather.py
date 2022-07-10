@@ -112,7 +112,7 @@ class MetWeather(CoordinatorEntity[MetDataUpdateCoordinator], WeatherEntity):
         name = self._config.get(CONF_NAME)
         name_appendix = ""
         if self._hourly:
-            name_appendix = " Hourly"
+            name_appendix = " hourly"
 
         if name is not None:
             return f"{name}{name_appendix}"
