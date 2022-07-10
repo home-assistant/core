@@ -33,8 +33,6 @@ class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
         elif device_id is not None:
             self._attr_unique_id = device_id
             self._attr_has_entity_name = True
-        else:
-            self._attr_name = coordinator.data.info.name
 
     @property
     def device_info(self) -> DeviceInfo | None:
