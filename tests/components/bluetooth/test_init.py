@@ -406,12 +406,31 @@ async def test_register_callback_by_address(hass, mock_bleak_scanner_start):
         models.HA_BLEAK_SCANNER._callback(empty_device, empty_adv)
         await hass.async_block_till_done()
 
-    assert len(callbacks) == 1
+        # Now register again with a callback that fails to
+        # make sure we do not perm fail
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {"address": "44:44:33:11:23:45"},
+        )
+        cancel()
 
-    service_info: BluetoothServiceInfo = callbacks[0][0]
-    assert service_info.name == "wohand"
-    assert service_info.manufacturer == "Nordic Semiconductor ASA"
-    assert service_info.manufacturer_id == 89
+        # Now register again, since the 3rd callback
+        # should fail but we should still record it
+        cancel = bluetooth.async_register_callback(
+            hass,
+            _fake_subscriber,
+            {"address": "44:44:33:11:23:45"},
+        )
+        cancel()
+
+    assert len(callbacks) == 3
+
+    for idx in range(3):
+        service_info: BluetoothServiceInfo = callbacks[idx][0]
+        assert service_info.name == "wohand"
+        assert service_info.manufacturer == "Nordic Semiconductor ASA"
+        assert service_info.manufacturer_id == 89
 
 
 async def test_wrapped_instance_with_filter(hass, mock_bleak_scanner_start):
