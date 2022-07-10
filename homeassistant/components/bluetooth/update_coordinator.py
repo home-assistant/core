@@ -4,7 +4,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
+import time
+from typing import TYPE_CHECKING, Optional
 
 from homeassistant.components import bluetooth
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
@@ -14,7 +15,12 @@ from homeassistant.helpers.event import async_track_time_interval
 from .device import BluetoothDeviceData
 from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
 
-BluetoothListenerCallbackType = Callable[[BluetoothDeviceEntityDescriptionsType], None]
+UNAVAILABLE_SECONDS = 60 * 5
+NEVER_TIME = -UNAVAILABLE_SECONDS
+
+BluetoothListenerCallbackType = Callable[
+    [Optional[BluetoothDeviceEntityDescriptionsType]], None
+]
 if TYPE_CHECKING:
     from .entity import BluetoothCoordinatorEntity
 
@@ -45,6 +51,7 @@ class BluetoothDataUpdateCoordinator:
         self.last_update_success = True
         self._present = True
         self.last_exception: Exception | None = None
+        self._last_callback_time: float = NEVER_TIME
 
     @property
     def available(self) -> bool:
@@ -53,13 +60,26 @@ class BluetoothDataUpdateCoordinator:
 
     def _async_check_device_present(self, _: datetime) -> None:
         """Check if the device is present."""
-        self._present = bluetooth.async_address_present(self.hass, self.address)
+        if (
+            not self._present
+            or time.monotonic() - self._last_callback_time < UNAVAILABLE_SECONDS
+        ):
+            return
+        if bluetooth.async_address_present(self.hass, self.address):
+            return
+        self._present = False
+        for key, callbacks in self._listeners.items():
+            if key is not None:
+                for update_callback in callbacks:
+                    update_callback(None)
 
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Start the callback."""
         cancel_track_time = async_track_time_interval(
-            self.hass, self._async_check_device_present, timedelta(minutes=5)
+            self.hass,
+            self._async_check_device_present,
+            timedelta(seconds=UNAVAILABLE_SECONDS),
         )
         cancel_callback = bluetooth.async_register_callback(
             self.hass,
@@ -85,9 +105,10 @@ class BluetoothDataUpdateCoordinator:
 
         @callback
         def _async_add_or_update_entities(
-            data: BluetoothDeviceEntityDescriptionsType,
+            data: BluetoothDeviceEntityDescriptionsType | None,
         ) -> None:
             """Listen for new entities."""
+            assert data is not None
             entities: list[BluetoothCoordinatorEntity] = []
             for key, description in data.items():
                 if key not in created:
@@ -139,6 +160,7 @@ class BluetoothDataUpdateCoordinator:
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Handle a Bluetooth event."""
+        self._last_callback_time = time.monotonic()
         try:
             data_update = self.data.generate_update(service_info)
         except Exception as err:  # pylint: disable=broad-except
