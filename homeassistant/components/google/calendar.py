@@ -341,7 +341,7 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        self.coordinator.async_update_listeners()
+        self._apply_coordinator_update()
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -353,15 +353,19 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
             for event in filter(self._event_filter, result_items)
         ]
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _apply_coordinator_update(self) -> None:
+        """Copy state from the coordinator to this entity."""
         events = self.coordinator.data
         self._event = _get_calendar_event(next(iter(events))) if events else None
         if self._event:
             (self._event.summary, self._offset_value) = extract_offset(
                 self._event.summary, self._offset
             )
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._apply_coordinator_update()
         super()._handle_coordinator_update()
 
     async def async_update(self) -> None:
