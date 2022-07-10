@@ -39,7 +39,7 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
 
     def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""
-        _LOGGER.debug("Parsing Govee BLE advertisement data: %s", service_info)
+        _LOGGER.debug("Parsing inkbird BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
 
         last_id = list(manufacturer_data)[-1]
@@ -51,7 +51,7 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
         _LOGGER.debug("Parsing INKBIRD BLE advertisement data: %s", data)
         msg_length = len(data)
 
-        if msg_length == 7:
+        if msg_length == 9:
             (temp, hum) = unpack("<hH", data[0:4])
             bat = int.from_bytes(data[7:8], "little")
             if complete_local_name == "sps":

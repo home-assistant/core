@@ -21,6 +21,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Govee Bluetooth from a config entry."""
     address = entry.unique_id
     assert address is not None
+
+    # Setup platforms before the coordinator so the
+    # entities can be created as soon as we subscribe
+    # to miss any data
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     coordinator = BluetoothDataUpdateCoordinator(
         hass,
         _LOGGER,
@@ -30,8 +36,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
     entry.async_on_unload(coordinator.async_setup())
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
 
     return True
 
