@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from homeassistant.components import bluetooth
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity
+from homeassistant.helpers.entity import EntityDescription
 
 if TYPE_CHECKING:
     from .update_coordinator import BluetoothDataUpdateCoordinator
@@ -24,11 +25,6 @@ class BluetoothDeviceKey:
 
     device_id: str | None
     key: str
-
-
-BluetoothDeviceEntityDescriptionsType = Mapping[
-    BluetoothDeviceKey, entity.EntityDescription
-]
 
 
 @dataclasses.dataclass
@@ -89,7 +85,7 @@ class BluetoothCoordinatorEntity(entity.Entity):
 
     @callback
     def _handle_coordinator_update(
-        self, data: BluetoothDeviceEntityDescriptionsType | None
+        self, data: Mapping[BluetoothDeviceKey, EntityDescription] | None
     ) -> None:
         """Handle updated data from the coordinator."""
         if data:

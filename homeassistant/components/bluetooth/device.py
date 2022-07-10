@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import SIGNAL_STRENGTH_DECIBELS_MILLIWATT
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.typing import StateType
 
 from . import BluetoothServiceInfo
@@ -16,7 +18,7 @@ from .binary_sensor import (
     BluetoothBinarySensorEntityDescription,
     BluetoothBinarySensorType,
 )
-from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
+from .entity import BluetoothDeviceKey
 from .sensor import (
     SENSOR_TYPE_TO_DEVICE_CLASS,
     BluetoothSensorEntityDescription,
@@ -47,7 +49,7 @@ class BluetoothDeviceData:
         return bool(self._device_id_to_type)
 
     @property
-    def entity_descriptions(self) -> BluetoothDeviceEntityDescriptionsType:
+    def entity_descriptions(self) -> Mapping[BluetoothDeviceKey, EntityDescription]:
         """Return the data."""
         return self._entity_descriptions
 
