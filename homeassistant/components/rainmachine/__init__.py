@@ -417,7 +417,7 @@ class RainMachineEntity(CoordinatorEntity):
             identifiers={(DOMAIN, controller.mac)},
             configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
             connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            name=str(controller.name),
+            name=str(controller.name).capitalize(),
             manufacturer="RainMachine",
             model=(
                 f"Version {controller.hardware_version} "
