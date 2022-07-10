@@ -197,7 +197,7 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.fake_profile_dns_over_https_queries_ratio")
     assert state
-    assert state.state == "22.2"
+    assert state.state == "20.0"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
@@ -217,7 +217,7 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.fake_profile_dns_over_quic_queries_ratio")
     assert state
-    assert state.state == "11.1"
+    assert state.state == "10.0"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
@@ -237,7 +237,7 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.fake_profile_dns_over_tls_queries_ratio")
     assert state
-    assert state.state == "33.3"
+    assert state.state == "30.0"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 
@@ -347,7 +347,7 @@ async def test_sensor(hass):
 
     state = hass.states.get("sensor.fake_profile_udp_queries_ratio")
     assert state
-    assert state.state == "44.4"
+    assert state.state == "40.0"
     assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
 

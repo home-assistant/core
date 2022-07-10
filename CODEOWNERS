@@ -138,6 +138,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/blueprint/ @home-assistant/core
 /tests/components/blueprint/ @home-assistant/core
 /homeassistant/components/bluesound/ @thrawnarn
+/homeassistant/components/bluetooth/ @bdraco
+/tests/components/bluetooth/ @bdraco
 /homeassistant/components/bmw_connected_drive/ @gerard33 @rikroe
 /tests/components/bmw_connected_drive/ @gerard33 @rikroe
 /homeassistant/components/bond/ @bdraco @prystupa @joshs85 @marciogranzotto
@@ -857,6 +859,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/renault/ @epenet
 /tests/components/renault/ @epenet
 /homeassistant/components/repetier/ @MTrab @ShadowBr0ther
+/homeassistant/components/resolution_center/ @home-assistant/core
+/tests/components/resolution_center/ @home-assistant/core
 /homeassistant/components/rflink/ @javicalle
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221

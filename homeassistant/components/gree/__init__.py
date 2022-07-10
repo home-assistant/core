@@ -29,7 +29,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
     hass.data[DOMAIN].setdefault(DISPATCHERS, [])
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     async def _async_scan_update(_=None):
         await gree_discovery.discovery.scan()

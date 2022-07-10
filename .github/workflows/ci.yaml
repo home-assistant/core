@@ -93,8 +93,8 @@ jobs:
           # Defaults
           integrations_glob=""
           test_full_suite="true"
-          test_groups="[1, 2, 3, 4, 5, 6]"
-          test_group_count=6
+          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+          test_group_count=10
           tests="[]"
           tests_glob=""
 
@@ -137,8 +137,8 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
-            test_groups="[1, 2, 3, 4, 5, 6]"
-            test_group_count=6
+            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+            test_group_count=10
             test_full_suite="true"
           fi
 
@@ -677,7 +677,6 @@ jobs:
 
   pip-check:
     runs-on: ubuntu-20.04
-    if: needs.info.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
       - info
       - base

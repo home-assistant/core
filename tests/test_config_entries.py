@@ -17,7 +17,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import CoreState, Event, HomeAssistant, callback
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, BaseServiceInfo, FlowResult
+from homeassistant.data_entry_flow import BaseServiceInfo, FlowResult, FlowResultType
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -1659,7 +1659,7 @@ async def test_unique_id_update_existing_entry_without_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1704,7 +1704,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"
@@ -1721,7 +1721,7 @@ async def test_unique_id_update_existing_entry_with_reload(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "2.2.2.2"
     assert entry.data["additional"] == "data"
@@ -1773,7 +1773,7 @@ async def test_unique_id_from_discovery_in_setup_retry(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert len(async_reload.mock_calls) == 0
 
@@ -1792,7 +1792,7 @@ async def test_unique_id_from_discovery_in_setup_retry(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert discovery_result["type"] == RESULT_TYPE_ABORT
+    assert discovery_result["type"] == FlowResultType.ABORT
     assert discovery_result["reason"] == "already_configured"
     assert len(async_reload.mock_calls) == 1
 
@@ -1833,7 +1833,7 @@ async def test_unique_id_not_update_existing_entry(hass, manager):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "0.0.0.0"
     assert entry.data["additional"] == "data"
@@ -2497,6 +2497,7 @@ async def test_async_setup_update_entry(hass):
 @pytest.mark.parametrize(
     "discovery_source",
     (
+        (config_entries.SOURCE_BLUETOOTH, BaseServiceInfo()),
         (config_entries.SOURCE_DISCOVERY, {}),
         (config_entries.SOURCE_SSDP, BaseServiceInfo()),
         (config_entries.SOURCE_USB, BaseServiceInfo()),
@@ -3100,7 +3101,7 @@ async def test__async_abort_entries_match(hass, manager, matchers, reason):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == reason
 
 
@@ -3250,7 +3251,7 @@ async def test_unique_id_update_while_setup_in_progress(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data["host"] == "1.1.1.1"
     assert entry.data["additional"] == "data"

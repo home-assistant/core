@@ -67,7 +67,7 @@ accuweather==0.3.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.2
+adb-shell[async]==0.4.3
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
@@ -100,7 +100,7 @@ aio_geojson_usgs_earthquakes==0.1
 aio_georss_gdacs==0.7
 
 # homeassistant.components.airzone
-aioairzone==0.4.5
+aioairzone==0.4.6
 
 # homeassistant.components.ambient_station
 aioambient==2021.11.0
@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.20
+aiohomekit==0.7.22
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -195,10 +195,10 @@ aiopvapi==1.6.19
 aiopvpc==3.0.0
 
 # homeassistant.components.sonarr
-aiopyarr==22.6.0
+aiopyarr==22.7.0
 
 # homeassistant.components.qnap_qsw
-aioqsw==0.1.0
+aioqsw==0.1.1
 
 # homeassistant.components.recollect_waste
 aiorecollect==1.0.8
@@ -316,6 +316,9 @@ bellows==0.31.0
 # homeassistant.components.bmw_connected_drive
 bimmer_connected==0.9.6
 
+# homeassistant.components.bluetooth
+bleak==0.14.3
+
 # homeassistant.components.blebox
 blebox_uniapi==2.0.1
 
@@ -388,7 +391,7 @@ datadog==0.15.0
 datapoint==0.9.8
 
 # homeassistant.components.debugpy
-debugpy==1.6.0
+debugpy==1.6.2
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -456,7 +459,7 @@ epson-projector==0.4.2
 faadelays==0.0.7
 
 # homeassistant.components.feedreader
-feedparser==6.0.2
+feedparser==6.0.10
 
 # homeassistant.components.fibaro
 fiblary3==0.1.8
@@ -577,7 +580,7 @@ habitipy==0.2.0
 hangups==0.4.18
 
 # homeassistant.components.cloud
-hass-nabucasa==0.54.0
+hass-nabucasa==0.54.1
 
 # homeassistant.components.tasmota
 hatasmota==0.5.1
@@ -685,7 +688,7 @@ logi_circle==0.2.3
 luftdaten==0.7.2
 
 # homeassistant.components.scrape
-lxml==4.8.0
+lxml==4.9.1
 
 # homeassistant.components.nmap_tracker
 mac-vendor-lookup==0.1.11
@@ -760,7 +763,7 @@ nexia==2.0.1
 nextcord==2.0.0a8
 
 # homeassistant.components.nextdns
-nextdns==1.0.0
+nextdns==1.0.1
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -782,7 +785,7 @@ numato-gpio==0.10.0
 # homeassistant.components.opencv
 # homeassistant.components.tensorflow
 # homeassistant.components.trend
-numpy==1.23.0
+numpy==1.23.1
 
 # homeassistant.components.google
 oauth2client==4.1.3
@@ -977,7 +980,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==96
+pydeconz==98
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3
@@ -998,7 +1001,7 @@ pyeverlights==0.1.0
 pyevilgenius==2.0.0
 
 # homeassistant.components.ezviz
-pyezviz==0.2.0.8
+pyezviz==0.2.0.9
 
 # homeassistant.components.fido
 pyfido==2.1.1
@@ -1116,7 +1119,7 @@ pymailgunner==1.4
 pymata-express==1.19
 
 # homeassistant.components.mazda
-pymazda==0.3.3
+pymazda==0.3.6
 
 # homeassistant.components.melcloud
 pymelcloud==2.5.6
@@ -1278,7 +1281,7 @@ python-ecobee-api==0.2.14
 python-forecastio==1.4.0
 
 # homeassistant.components.homewizard
-python-homewizard-energy==1.0.3
+python-homewizard-energy==1.1.0
 
 # homeassistant.components.izone
 python-izone==1.2.3
@@ -1331,7 +1334,7 @@ pytradfri[async]==9.0.0
 pytrafikverket==0.2.0.1
 
 # homeassistant.components.usb
-pyudev==0.22.0
+pyudev==0.23.2
 
 # homeassistant.components.unifiprotect
 pyunifiprotect==4.0.9
@@ -1379,7 +1382,7 @@ radios==0.1.1
 radiotherm==2.1.0
 
 # homeassistant.components.rainmachine
-regenmaschine==2022.06.1
+regenmaschine==2022.07.1
 
 # homeassistant.components.renault
 renault-api==0.1.11
@@ -1394,7 +1397,7 @@ rflink==0.0.63
 ring_doorbell==0.7.2
 
 # homeassistant.components.roku
-rokuecp==0.16.0
+rokuecp==0.17.0
 
 # homeassistant.components.roomba
 roombapy==1.6.5
@@ -1516,7 +1519,7 @@ sunwatcher==0.2.1
 surepy==0.7.2
 
 # homeassistant.components.system_bridge
-systembridgeconnector==3.1.5
+systembridgeconnector==3.3.2
 
 # homeassistant.components.tailscale
 tailscale==0.2.0
@@ -1578,7 +1581,7 @@ upcloud-api==2.0.0
 # homeassistant.components.huawei_lte
 # homeassistant.components.syncthru
 # homeassistant.components.zwave_me
-url-normalize==1.4.1
+url-normalize==1.4.3
 
 # homeassistant.components.uvc
 uvcclient==0.11.0

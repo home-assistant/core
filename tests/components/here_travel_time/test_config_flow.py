@@ -154,7 +154,7 @@ async def test_step_user(hass: HomeAssistant, menu_options) -> None:
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result2["type"] == data_entry_flow.FlowResultType.MENU
     assert result2["menu_options"] == menu_options
 
 
@@ -178,7 +178,7 @@ async def test_step_origin_coordinates(
             }
         },
     )
-    assert location_selector_result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert location_selector_result["type"] == data_entry_flow.FlowResultType.MENU
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -195,7 +195,7 @@ async def test_step_origin_entity(
         menu_result["flow_id"],
         {"origin_entity_id": "zone.home"},
     )
-    assert entity_selector_result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert entity_selector_result["type"] == data_entry_flow.FlowResultType.MENU
 
 
 @pytest.mark.usefixtures("valid_response")
@@ -341,7 +341,7 @@ async def test_options_flow(hass: HomeAssistant) -> None:
         },
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
 
 
 @pytest.mark.usefixtures("valid_response")

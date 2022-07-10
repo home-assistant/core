@@ -31,8 +31,8 @@ repos:
           - pyflakes==2.4.0
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
-          - flake8-comprehensions==3.8.0
-          - flake8-noqa==1.2.1
+          - flake8-comprehensions==3.10.0
+          - flake8-noqa==1.2.5
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
   - repo: https://github.com/PyCQA/bandit
@@ -61,7 +61,7 @@ repos:
           - --branch=master
           - --branch=rc
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.26.3
+    rev: v1.27.1
     hooks:
       - id: yamllint
   - repo: https://github.com/pre-commit/mirrors-prettier

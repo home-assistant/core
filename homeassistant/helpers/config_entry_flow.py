@@ -6,7 +6,7 @@ import logging
 from typing import TYPE_CHECKING, Any, Generic, TypeVar, Union, cast
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, onboarding, ssdp, zeroconf
+from homeassistant.components import bluetooth, dhcp, onboarding, ssdp, zeroconf
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 
@@ -85,6 +85,17 @@ class DiscoveryFlowHandler(config_entries.ConfigFlow, Generic[_R]):
         self, discovery_info: DiscoveryInfoType
     ) -> FlowResult:
         """Handle a flow initialized by discovery."""
+        if self._async_in_progress() or self._async_current_entries():
+            return self.async_abort(reason="single_instance_allowed")
+
+        await self.async_set_unique_id(self._domain)
+
+        return await self.async_step_confirm()
+
+    async def async_step_bluetooth(
+        self, discovery_info: bluetooth.BluetoothServiceInfo
+    ) -> FlowResult:
+        """Handle a flow initialized by bluetooth discovery."""
         if self._async_in_progress() or self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 

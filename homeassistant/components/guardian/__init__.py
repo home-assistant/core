@@ -161,7 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
     # Set up all of the Guardian entity platforms:
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
     def extract_client(func: Callable) -> Callable:
@@ -373,11 +373,12 @@ class PairedSensorManager:
 class GuardianEntity(CoordinatorEntity):
     """Define a base Guardian entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(  # pylint: disable=super-init-not-called
         self, entry: ConfigEntry, description: EntityDescription
     ) -> None:
         """Initialize."""
-        self._attr_device_info = DeviceInfo(manufacturer="Elexa")
         self._attr_extra_state_attributes = {}
         self._entry = entry
         self.entity_description = description
@@ -406,11 +407,10 @@ class PairedSensorEntity(GuardianEntity):
         paired_sensor_uid = coordinator.data["uid"]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, paired_sensor_uid)},
-            name=f"Guardian Paired Sensor {paired_sensor_uid}",
+            manufacturer="Elexa",
+            model=coordinator.data["codename"],
+            name=f"Guardian paired sensor {paired_sensor_uid}",
             via_device=(DOMAIN, entry.data[CONF_UID]),
-        )
-        self._attr_name = (
-            f"Guardian Paired Sensor {paired_sensor_uid}: {description.name}"
         )
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
         self.coordinator = coordinator
@@ -434,10 +434,10 @@ class ValveControllerEntity(GuardianEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.data[CONF_UID])},
+            manufacturer="Elexa",
             model=coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
+            name=f"Guardian valve controller {entry.data[CONF_UID]}",
         )
-        self._attr_name = f"Guardian {entry.data[CONF_UID]}: {description.name}"
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators
 
