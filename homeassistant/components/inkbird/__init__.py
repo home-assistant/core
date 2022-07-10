@@ -22,22 +22,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up INKBIRD BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-
-    # Setup platforms before the coordinator so the
-    # entities can be created as soon as we subscribe
-    # to miss any data
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
-    coordinator = BluetoothDataUpdateCoordinator(
+    coordinator = hass.data.setdefault(DOMAIN, {})[
+        entry.entry_id
+    ] = BluetoothDataUpdateCoordinator(
         hass,
         _LOGGER,
         data=INKBIRDBluetoothDeviceData(),
         name=entry.title,
         address=address,
     )
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(coordinator.async_setup())
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-
     return True
 
 
