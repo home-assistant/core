@@ -77,7 +77,7 @@ accuweather==0.3.0
 adax==0.2.0
 
 # homeassistant.components.androidtv
-adb-shell[async]==0.4.2
+adb-shell[async]==0.4.3
 
 # homeassistant.components.alarmdecoder
 adext==0.4.2
