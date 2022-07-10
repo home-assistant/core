@@ -12,10 +12,7 @@ from homeassistant.components.bluetooth.device import BluetoothDeviceData
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 
-from .binary_sensor import MAPPINGS as BINARY_SENSOR_MAPPINGS
 from .sensor import MAPPINGS as SENSOR_MAPPINGS
-
-MAPPINGS = {**SENSOR_MAPPINGS, **BINARY_SENSOR_MAPPINGS}
 
 PARSER = BleParser(
     discovery=True, filter_duplicates=True, sensor_whitelist=[], tracker_whitelist=[]
@@ -90,13 +87,12 @@ class BLEParserWrapperBase:
             device_data.set_device_name(device_name)
 
         for data_type, value in data.items():
-            if not (mapping := MAPPINGS.get(data_type)):
-                continue
-            device_data.update_sensor(
-                key=_ble_parser_data_type_to_description_key(data_type),
-                native_value=value,
-                **mapping,  # type: ignore[arg-type]
-            )
+            if sensor_mapping := SENSOR_MAPPINGS.get(data_type):
+                device_data.update_sensor(
+                    key=_ble_parser_data_type_to_description_key(data_type),
+                    native_value=value,
+                    **sensor_mapping,
+                )
 
 
 class BLEParserWrapper(BLEParserWrapperBase):
@@ -176,14 +172,6 @@ def newest_manufacturer_data(service_info: BluetoothServiceInfo) -> bytes:
     return _pad_manufacturer_data(
         _manufacturer_data_to_raw(last_id, manufacturer_data[last_id])
     )
-
-
-# def _manufacturer_data(service_info: BluetoothServiceInfo) -> list[bytes]:
-#    """Return the manufacturer data from a service info."""
-#    return [
-#        _pad_manufacturer_data(_manufacturer_data_to_raw(id_, data))
-#        for id_, data in service_info.manufacturer_data.items()
-#    ]
 
 
 def _manufacturer_data_to_raw(manufacturer_id: int, manufacturer_data: bytes) -> bytes:
