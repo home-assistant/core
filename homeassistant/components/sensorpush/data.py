@@ -77,33 +77,6 @@ class SensorPushBluetoothDeviceData(BluetoothDeviceData):
         elif "HT.xw" in local_name:
             device_type = "HT.xw"
 
-        # SensorPush HTP.xw F4D with advertisement_data: AdvertisementData(
-        # local_name='SensorPush HTP.xw F4D',
-        # manufacturer_data={16899: b'\xae\x00\x81\x00\x00', 25600: b',\xa0~\xa2\xbb'},
-        # service_uuids=['ef090000-11d6-42ba-93b8-9dd7ec090ab0'])
-        # AdvertisementData(local_name='SensorPush HTP.xw F4D',
-        # manufacturer_data={
-        # 16899: b'\xae\x00\x01\x00\x00',
-        # 25600: b',\xa0~\xa2\xbb',
-        # 38656: b' \x8a\x85\xa8\xbb',
-        # 33024: b'\xf0K\xd4\xa3\xbb',
-        # 54528: b'\x8d\x0c+\xa3\xbb',
-        # 34560: b'\xfd\xdd\xda\xa7\xbb',
-        # 12288: b'\xe2&/\xa7\xbb',
-        # 22272: b'](\x83\xa6\xbb',
-        # 60672: b'\x1a\x9c\xd7\xa5\xbb',
-        # 32000: b'\xfb\xc7\xdd\xa9\xbb',
-        # 16128: b'\xcdh/\xa7\xbb',
-        # 7680: b'\x06\x136\xab\xbb',
-        # 45056: b'\rt\x8d\xac\xbb',
-        # 55040: b'\xc7o\x82\xa4\xbb',
-        # 10240: b'v\x81y\x9e\xbb',
-        # 58112: b'0\x91\xd0\x9f\xbb',
-        # 2304: b'\x80:\xc7\x99\xbb',
-        # 37120: b'qX$\x9f\xbb'
-        # },
-        # service_uuids=['ef090000-11d6-42ba-93b8-9dd7ec090ab0']) matched domains: set()
-
         last_id = list(manufacturer_data)[-1]
         data = int(last_id).to_bytes(2, byteorder="little") + manufacturer_data[last_id]
         page_id = data[0] & 0x03
