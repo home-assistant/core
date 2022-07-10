@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import date, datetime, timedelta, timezone
 import logging
+import time
 from typing import Any
 import uuid
 
@@ -34,6 +35,7 @@ from .const import (
     CONF_PROJECT_DUE_DATE,
     CONF_PROJECT_LABEL_WHITELIST,
     CONF_PROJECT_WHITELIST,
+    CONF_UTC_OFFSET_HOURS,
     CONTENT,
     DESCRIPTION,
     DOMAIN,
@@ -79,6 +81,9 @@ NEW_TASK_SERVICE_SCHEMA = vol.Schema(
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_TOKEN): cv.string,
+        vol.Optional(CONF_UTC_OFFSET_HOURS): vol.All(
+            vol.Coerce(int), vol.Range(min=-12, max=14)
+        ),
         vol.Optional(CONF_EXTRA_PROJECTS, default=[]): vol.All(
             cv.ensure_list,
             vol.Schema(
@@ -104,6 +109,26 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 SCAN_INTERVAL = timedelta(minutes=1)
 
 
+def get_system_utc_offset_hours(time_zone: str | None) -> int:
+    """Get the utc offset hours configured for the HA instance.
+
+    This will return 0 if a timezone is not configured.
+    """
+    if time_zone is None:
+        # Default to UTC if no timezone is specified.
+        return 0
+    zone_info = dt.get_time_zone(time_zone)
+    if zone_info is None:
+        # Default to UTC if no timezone specified can not be found.
+        return 0
+
+    utc_offset_delta = zone_info.utcoffset(datetime.utcnow())
+    if utc_offset_delta is None:
+        return 0
+
+    return int(utc_offset_delta.total_seconds() / 60 / 60)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -112,6 +137,9 @@ async def async_setup_platform(
 ) -> None:
     """Set up the Todoist platform."""
     token = config.get(CONF_TOKEN)
+    utc_offset_hours: int = config.get(
+        CONF_UTC_OFFSET_HOURS, get_system_utc_offset_hours(hass.config.time_zone)
+    )
 
     # Look up IDs based on (lowercase) names.
     project_id_lookup = {}
@@ -126,7 +154,6 @@ async def async_setup_platform(
 
     collaborators = []
     for project in projects:
-        # TODO: could be duplicates, need to de-duplicate
         collaborators.extend(await api.get_collaborators(project.id))
 
     # Grab all labels
@@ -138,7 +165,11 @@ async def async_setup_platform(
         # Project is an object, not a dict!
         # Because of that, we convert what we need to a dict.
         project_data: ProjectData = {CONF_NAME: project.name, CONF_ID: project.id}
-        project_devices.append(TodoistProjectEntity(project_data, labels, api))
+        project_devices.append(
+            TodoistProjectEntity(
+                project_data, labels, api, utc_offset_hours=utc_offset_hours
+            )
+        )
         # Cache the names so we can easily look up name->ID.
         project_id_lookup[project.name.lower()] = project.id
 
@@ -172,9 +203,10 @@ async def async_setup_platform(
                 project,
                 labels,
                 api,
-                project_due_date,
-                project_label_filter,
-                project_id_filter,
+                utc_offset_hours=utc_offset_hours,
+                due_date_days=project_due_date,
+                whitelisted_labels=project_label_filter,
+                whitelisted_projects=project_id_filter,
             )
         )
 
@@ -226,8 +258,9 @@ async def async_setup_platform(
 
         api_task = await api.add_task(content, **data)
 
-        # @TODO: rest-api doesn't support reminders, this works manually using
-        # the sync api, but doesn't feel super great.
+        # @NOTE: The rest-api doesn't support reminders, this works manually using
+        # the sync api, in order to keep functional parity with the component.
+        # https://developer.todoist.com/sync/v8/#reminders
         sync_url = get_sync_url("sync")
         _reminder_due: dict = {}
         if REMINDER_DATE_STRING in call.data:
@@ -250,18 +283,18 @@ async def async_setup_platform(
             date_format = "%Y-%m-%dT%H:%M:%S"
             _reminder_due["date"] = datetime.strftime(due_date, date_format)
 
-        def add_reminder(r):
-            d = {
+        def add_reminder(reminder_due: dict):
+            reminder_data = {
                 "commands": [
                     {
                         "type": "reminder_add",
                         "temp_id": str(uuid.uuid1()),
                         "uuid": str(uuid.uuid1()),
-                        "args": {"item_id": api_task.id, "due": r},
+                        "args": {"item_id": api_task.id, "due": reminder_due},
                     }
                 ]
             }
-            return post(requests.Session(), sync_url, token, data=d)
+            return post(requests.Session(), sync_url, token, data=reminder_data)
 
         if _reminder_due:
             hass.async_add_executor_job(add_reminder, _reminder_due)
@@ -293,6 +326,7 @@ class TodoistProjectEntity(CalendarEntity):
         data: ProjectData,
         labels: list[Label],
         api: TodoistAPIAsync,
+        utc_offset_hours: int,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[int] | None = None,
@@ -302,9 +336,10 @@ class TodoistProjectEntity(CalendarEntity):
             data,
             labels,
             api,
-            due_date_days,
-            whitelisted_labels,
-            whitelisted_projects,
+            utc_offset_hours=utc_offset_hours,
+            due_date_days=due_date_days,
+            whitelisted_labels=whitelisted_labels,
+            whitelisted_projects=whitelisted_projects,
         )
         self._cal_data: CalData = {}
         self._name = data[CONF_NAME]
@@ -393,6 +428,7 @@ class TodoistProjectData:
         project_data: ProjectData,
         labels: list[Label],
         api: TodoistAPIAsync,
+        utc_offset_hours: int,
         due_date_days: int | None = None,
         whitelisted_labels: list[str] | None = None,
         whitelisted_projects: list[int] | None = None,
@@ -402,6 +438,7 @@ class TodoistProjectData:
 
         self._api = api
         self._name = project_data[CONF_NAME]
+        self._utc_offset_hours = utc_offset_hours
         # If no ID is defined, fetch all tasks.
         self._id = project_data.get(CONF_ID)
 
@@ -443,6 +480,7 @@ class TodoistProjectData:
             return CalendarEvent(
                 summary=self.event[SUMMARY], start=self.event[START], end=end
             )
+        return None
 
     def create_todoist_task(self, data: Task):
         """
@@ -477,11 +515,8 @@ class TodoistProjectData:
         task[START] = dt.utcnow()
         if data.due is not None:
             task[END] = _parse_due_date(
-                # @TODO: how to get hours offset, allow user to specify or manually
-                # call the sync api?
                 data.due,
-                -7
-                # self._api.state["user"]["tz_info"]["hours"],
+                self._utc_offset_hours,
             )
 
             if self._due_date_days is not None and (
@@ -605,11 +640,11 @@ class TodoistProjectData:
                 continue
             # @NOTE: _parse_due_date always returns the date in UTC time.
             due_date: datetime | None = _parse_due_date(
-                task.due, -7  # @TODO: self._api.state["user"]["tz_info"]["hours"]
+                task.due, self._utc_offset_hours
             )
             if not due_date:
                 continue
-            gmt_string = self._api.state["user"]["tz_info"]["gmt_string"]
+            gmt_string = f"{'-' if self._utc_offset_hours < 0 else '+'}{abs(self._utc_offset_hours):02}:00"
             local_midnight = dt.parse_datetime(
                 due_date.strftime(f"%Y-%m-%dT00:00:00{gmt_string}")
             )

@@ -5,6 +5,7 @@ CONF_EXTRA_PROJECTS: Final = "custom_projects"
 CONF_PROJECT_DUE_DATE: Final = "due_date_days"
 CONF_PROJECT_LABEL_WHITELIST: Final = "labels"
 CONF_PROJECT_WHITELIST: Final = "include_projects"
+CONF_UTC_OFFSET_HOURS: Final = "utc_offset_hours"
 
 # Calendar Platform: Does this calendar event last all day?
 ALL_DAY: Final = "all_day"
