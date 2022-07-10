@@ -227,8 +227,6 @@ async def async_setup_entry(
 class CalendarUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for calendar RPC calls."""
 
-    _attr_has_entity_name = True
-
     def __init__(
         self,
         hass: HomeAssistant,
@@ -279,6 +277,8 @@ class CalendarUpdateCoordinator(DataUpdateCoordinator):
 
 class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     """A calendar event entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
