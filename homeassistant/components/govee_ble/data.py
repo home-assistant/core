@@ -50,13 +50,13 @@ class GoveeBluetoothDeviceData(BluetoothDeviceData):
         _LOGGER.debug("Parsing Govee BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
 
+        if service_info.name.startswith("GV"):
+            self.set_device_name(service_info.name[2:])
+
         for mgr_id, mfr_data in manufacturer_data.items():
             if mgr_id in NOT_GOVEE_MANUFACTURER:
                 continue
             self._process_update(mgr_id, mfr_data)
-
-        if service_info.name.startswith("GV"):
-            self.set_device_name(service_info.name[2:])
 
     def _process_update(self, mgr_id: int, data: bytes) -> None:
         """Parser for Govee sensors."""
