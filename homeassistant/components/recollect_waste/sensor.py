@@ -68,6 +68,7 @@ class ReCollectWasteSensor(CoordinatorEntity, SensorEntity):
     """ReCollect Waste Sensor."""
 
     _attr_device_class = SensorDeviceClass.DATE
+    _attr_has_entity_name = True
 
     def __init__(
         self,
