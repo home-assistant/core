@@ -71,7 +71,7 @@ class BLEParserWrapperBase:
         for data_type, value in data.items():
             if sensor_mapping := SENSOR_MAPPINGS.get(data_type):
                 device_data.update_sensor(
-                    key=_ble_parser_data_type_to_description_key(data_type),
+                    key=data_type,
                     native_value=value,
                     **sensor_mapping,
                 )
@@ -179,8 +179,3 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
             return
         _LOGGER.debug("Loading parsed BLE data: %s from %s", parsed, service_info)
         self.async_load(parsed)
-
-
-def _ble_parser_data_type_to_description_key(key: str) -> str:
-    """Return bluetooth sensor entity description key."""
-    return key.replace(" ", "_").lower()
