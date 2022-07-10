@@ -14,8 +14,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate
+from homeassistant.const import CONF_NAME, STATE_IDLE, UnitOfDataRate, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -35,20 +36,19 @@ from .const import (
 class TransmissionSensorEntityDescription(SensorEntityDescription):
     """Describe Transmission sensor entity."""
 
-    name_suffix: str | None = None
     sub_type: str | None = None
 
 
 SPEED_SENSOR_DESCRIPTIONS = [
     TransmissionSensorEntityDescription(
         key="download",
-        name_suffix="Down Speed",
+        name="Down Speed",
         sub_type="download",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="upload",
-        name_suffix="Up Speed",
+        name="Up Speed",
         sub_type="upload",
         state_class=SensorStateClass.MEASUREMENT,
     ),
@@ -56,41 +56,48 @@ SPEED_SENSOR_DESCRIPTIONS = [
 STATUS_SENSOR_DESCRIPTIONS = [
     TransmissionSensorEntityDescription(
         key="status",
-        name_suffix="Status",
+        name="Status",
     ),
 ]
 TORRENTS_SENSOR_DESCRIPTIONS = [
     TransmissionSensorEntityDescription(
         key="active_torrents",
-        name_suffix="Active Torrents",
+        name="Active Torrents",
         sub_type="active",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="paused_torrents",
-        name_suffix="Paused Torrents",
+        name="Paused Torrents",
         sub_type="paused",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="total_torrents",
-        name_suffix="Total Torrents",
+        name="Total Torrents",
         sub_type="total",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="completed_torrents",
-        name_suffix="Completed Torrents",
+        name="Completed Torrents",
         sub_type="completed",
         state_class=SensorStateClass.MEASUREMENT,
     ),
     TransmissionSensorEntityDescription(
         key="started_torrents",
-        name_suffix="Started Torrents",
+        name="Started Torrents",
         sub_type="started",
         state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
+
+
+def get_unique_id(
+    config_entry: ConfigEntry, entity_description: TransmissionSensorEntityDescription
+) -> str:
+    """Generate a unique id for entity."""
+    return f"{config_entry.entry_id}-{entity_description.key}"
 
 
 async def async_setup_entry(
@@ -102,6 +109,21 @@ async def async_setup_entry(
 
     tm_client = hass.data[DOMAIN][config_entry.entry_id]
     name = config_entry.data[CONF_NAME]
+
+    ent_reg = entity_registry.async_get(hass)
+    for entity_description in (
+        *SPEED_SENSOR_DESCRIPTIONS,
+        *STATUS_SENSOR_DESCRIPTIONS,
+        *TORRENTS_SENSOR_DESCRIPTIONS,
+    ):
+        old_unique_id = f"{tm_client.api.host}-{name} {entity_description.name}"
+
+        if entity_id := ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, old_unique_id
+        ):
+            ent_reg.async_update_entity(
+                entity_id, new_unique_id=get_unique_id(config_entry, entity_description)
+            )
 
     dev = [
         *[
@@ -126,6 +148,9 @@ class TransmissionSensor(SensorEntity):
 
     entity_description: TransmissionSensorEntityDescription
 
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
     def __init__(
         self,
         tm_client: TransmissionClient,
@@ -135,23 +160,13 @@ class TransmissionSensor(SensorEntity):
         """Initialize the sensor."""
         self.entity_description = entity_description
         self._tm_client = tm_client
-        self._client_name = client_name
         self._state = None
+        self._attr_unique_id = get_unique_id(tm_client.config_entry, entity_description)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, tm_client.config_entry.entry_id)},
             manufacturer="Transmission",
             name=client_name,
         )
-
-    @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return f"{self._client_name} {self.entity_description.name_suffix}"
-
-    @property
-    def unique_id(self) -> str:
-        """Return the unique id of the entity."""
-        return f"{self._tm_client.api.host}-{self.name}"
 
     @property
     def native_value(self) -> StateType | None:
