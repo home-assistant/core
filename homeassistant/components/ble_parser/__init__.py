@@ -4,7 +4,6 @@ from __future__ import annotations
 from abc import abstractmethod
 from collections.abc import Callable
 import logging
-from struct import pack
 from typing import Any
 
 from bleparser import BleParser
@@ -15,6 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
 
 from .sensor import MAPPINGS as SENSOR_MAPPINGS
+from .util import address_to_bytes, manufacturer_data_to_raw
 
 _LOGGER = logging.getLogger(__name__)
 PARSER = BleParser(
@@ -97,7 +97,11 @@ class BLEManufacturerParserWrapperBase(BLEParserWrapperBase):
     def async_load_newest_manufacturer_data(
         self, service_info: BluetoothServiceInfo
     ) -> None:
-        """Load BLE Parser to Bluetooth Device Data."""
+        """Load BLE Parser to Bluetooth Device Data.
+
+        This is for devices that put the whole payload in the manufacturer data.
+        We need to extract only the newest data.
+        """
         if service_info.manufacturer_data:
             self.async_load_manufacturer_data_id(
                 service_info, list(service_info.manufacturer_data)[-1]
@@ -121,7 +125,7 @@ class BLEManufacturerParserWrapper(BLEManufacturerParserWrapperBase):
         self, service_info: BluetoothServiceInfo, manufacturer_id: int
     ) -> None:
         """Load BLE Parser to Bluetooth Device Data for a given id."""
-        raw = _manufacturer_data_to_raw(
+        raw = manufacturer_data_to_raw(
             manufacturer_id, service_info.manufacturer_data[manufacturer_id]
         )
         try:
@@ -157,7 +161,7 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
         self, service_info: BluetoothServiceInfo, manufacturer_id: int
     ) -> None:
         """Load BLE Parser to Bluetooth Device Data for a given id."""
-        raw = _manufacturer_data_to_raw(
+        raw = manufacturer_data_to_raw(
             manufacturer_id, service_info.manufacturer_data[manufacturer_id]
         )
         try:
@@ -175,38 +179,6 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
             return
         _LOGGER.debug("Loading parsed BLE data: %s from %s", parsed, service_info)
         self.async_load(parsed)
-
-
-def address_to_bytes(address: str) -> bytes:
-    """Return the address as bytes."""
-    if ":" not in address:
-        address_as_int = 0
-    else:
-        address_as_int = int(address.replace(":", ""), 16)
-    return pack("L", address_as_int)
-
-
-def newest_manufacturer_data(service_info: BluetoothServiceInfo) -> bytes:
-    """Return the newest manufacturer data from a service info.
-
-    This is for devices that put the whole payload in the manufacturer data.
-    We need to extract only the newest data.
-    """
-    manufacturer_data = service_info.manufacturer_data
-    last_id = list(manufacturer_data)[-1]
-    return _manufacturer_data_to_raw(last_id, manufacturer_data[last_id])
-
-
-def _manufacturer_data_to_raw(manufacturer_id: int, manufacturer_data: bytes) -> bytes:
-    """Return the raw data from manufacturer data."""
-    return _pad_manufacturer_data(
-        int(manufacturer_id).to_bytes(2, byteorder="little") + manufacturer_data
-    )
-
-
-def _pad_manufacturer_data(manufacturer_data: bytes) -> bytes:
-    """Pad manufacturer data to the format bleparser needs."""
-    return b"\x00" * 2 + manufacturer_data
 
 
 def _ble_parser_data_type_to_description_key(key: str) -> str:
