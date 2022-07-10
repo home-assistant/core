@@ -85,8 +85,10 @@ async def async_enable_proactive_mode(hass, smart_home_config):
         if not should_report and not should_doorbell:
             return
 
-        if should_doorbell:
-            if new_state.state == STATE_ON:
+        if should_doorbell and new_state:
+            if (
+                old_state is None or old_state.state != STATE_ON
+            ) and new_state.state == STATE_ON:
                 await async_send_doorbell_event_message(
                     hass, smart_home_config, alexa_changed_entity
                 )
