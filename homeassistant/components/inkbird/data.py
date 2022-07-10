@@ -46,7 +46,7 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
             self.set_device_type("IBS-TH")
         elif local_name == "tps":
             self.set_device_type("IBS-TH2/P01B")
-        if manufacturer_data is None:
+        if not manufacturer_data:
             return
         last_id = list(manufacturer_data)[-1]
         data = int(last_id).to_bytes(2, byteorder="little") + manufacturer_data[last_id]
