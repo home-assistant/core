@@ -423,10 +423,7 @@ async def test_http_event_api_failure(
     mock_events_list({}, exc=ClientError())
 
     response = await client.get(upcoming_event_url())
-    assert response.status == HTTPStatus.OK
-    # A failure to talk to the server results in an empty list of events
-    events = await response.json()
-    assert events == []
+    assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
