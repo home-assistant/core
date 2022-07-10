@@ -449,7 +449,10 @@ def time_period_str(value: str) -> timedelta:
     day = 0
     date_parsed = value.partition(" ")
     if date_parsed[1]:
-        day = int(date_parsed[0])
+        try:
+            day = int(date_parsed[0])
+        except ValueError as err:
+            raise vol.Invalid(TIME_PERIOD_ERROR.format(value)) from err
         value = date_parsed[2]
 
     parsed = value.split(":")

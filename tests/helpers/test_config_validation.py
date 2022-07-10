@@ -1334,24 +1334,37 @@ def test_currency():
         assert schema(value)
 
 
-def test_time_period_str():
+@pytest.mark.parametrize(
+    "time_period_str_pass",
+    (
+        ("23:42", timedelta(hours=23, minutes=42)),
+        ("-23:42:25", -timedelta(hours=23, minutes=42, seconds=25)),
+        ("23:42:25.987654", timedelta(hours=23, minutes=42, seconds=25.987654)),
+        ("1 23:42", timedelta(days=1, hours=23, minutes=42)),
+        ("-1 23:42:25", -timedelta(days=1, hours=23, minutes=42, seconds=25)),
+        (
+            "1 23:42:25.987654",
+            timedelta(days=1, hours=23, minutes=42, seconds=25.987654),
+        ),
+    ),
+)
+def test_time_period_str_pass(time_period_str_pass):
     """Test time_period_str validator and transformer."""
-    schema = vol.Schema(cv.time_period_str)
+    assert cv.time_period_str(time_period_str_pass[0]) == time_period_str_pass[1]
 
-    for value in [
+
+@pytest.mark.parametrize(
+    "time_period_str_fail",
+    (
         None,
         datetime.now().time(),
         "2016-11-23",
         "2016-11-23T18:59:08",
         " 1 23:42:25.987654",
         "1 1 23:42:25.987654",
-    ]:
-        with pytest.raises(vol.MultipleInvalid):
-            schema(value)
-
-    schema("23:42")
-    schema("-23:42:25")
-    schema("23:42:25.987654")
-    schema("1 23:42")
-    schema("-1 23:42:25")
-    schema("1 23:42:25.987654")
+    ),
+)
+def test_time_period_str_fail(time_period_str_fail):
+    """Test time_period_str validator and transformer."""
+    with pytest.raises(vol.Invalid):
+        vol.Schema(cv.time_period_str(time_period_str_fail))
