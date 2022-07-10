@@ -47,20 +47,19 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Binary Sensor platform for EnOcean."""
+    """Set up the Cover platform for EnOcean."""
     dev_id = config.get(CONF_ID)
     sender_id = config.get(CONF_SENDER_ID)
     dev_name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
-
     add_entities([EnOceanCover(sender_id, dev_id, dev_name, device_class)])
 
 
 class EnOceanCover(EnOceanEntity, CoverEntity):
-    """Representation of EnOcean Roller Shutter (EEP D2-05-00)."""
+    """Representation of an EnOcean Cover (EEP D2-05-00)."""
 
     def __init__(self, sender_id, dev_id, dev_name, device_class):
-        """Initialize the EnOcean binary sensor."""
+        """Initialize the EnOcean Cover."""
         super().__init__(dev_id, dev_name)
         self._device_class = device_class
         self.position = None
@@ -68,16 +67,14 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self.sender_id = sender_id
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
 
-        _LOGGER.debug("Init EnOcean Roller Shutter: %s", self._attr_unique_id)
-
     @property
     def name(self):
-        """Return the default name for the binary sensor."""
+        """Return the default name for the cover."""
         return self.dev_name
 
     @property
     def device_class(self):
-        """Return the class of this sensor."""
+        """Return the class of this cover."""
         return self._device_class
 
     @property
@@ -111,28 +108,28 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Return if the cover is closed or not."""
         return self.closed
 
-    def open_cover(self, **kwargs):
+    def open_cover(self, **kwargs) -> None:
         """Open the cover."""
         telegram = [0xD2, 0, 0, 0, 1]
         telegram.extend(self.sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
-    def close_cover(self, **kwargs):
+    def close_cover(self, **kwargs) -> None:
         """Close the cover."""
         telegram = [0xD2, 100, 0, 0, 1]
         telegram.extend(self.sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
-    def set_cover_position(self, **kwargs):
+    def set_cover_position(self, **kwargs) -> None:
         """Set the cover position."""
         telegram = [0xD2, 100 - kwargs[ATTR_POSITION], 0, 0, 1]
         telegram.extend(self.sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
-    def stop_cover(self, **kwargs):
+    def stop_cover(self, **kwargs) -> None:
         """Stop any cover movement."""
         telegram = [0xD2, 2]
         telegram.extend(self.sender_id)
