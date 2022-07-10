@@ -266,7 +266,7 @@ async def test_pair_already_paired_1(hass, controller):
 
 
 async def test_unknown_domain_type(hass, controller):
-    """Test that aiohomekit can reject discoveries it doesnt support."""
+    """Test that aiohomekit can reject discoveries it doesn't support."""
     device = setup_mock_accessory(controller)
     # Flag device as already paired
     discovery_info = get_device_discovery_info(device)
