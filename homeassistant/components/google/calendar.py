@@ -282,8 +282,7 @@ class GoogleCalendarEntity(CalendarEntity):
             async for result_page in result:
                 result_items.extend(result_page.items)
         except ApiException as err:
-            _LOGGER.error("Unable to connect to Google: %s", err)
-            return []
+            raise HomeAssistantError(str(err)) from err
         return [
             _get_calendar_event(event)
             for event in filter(self._event_filter, result_items)
