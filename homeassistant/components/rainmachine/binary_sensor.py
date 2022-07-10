@@ -43,14 +43,14 @@ class RainMachineBinarySensorDescription(
 BINARY_SENSOR_DESCRIPTIONS = (
     RainMachineBinarySensorDescription(
         key=TYPE_FLOW_SENSOR,
-        name="Flow Sensor",
+        name="Flow sensor",
         icon="mdi:water-pump",
         api_category=DATA_PROVISION_SETTINGS,
         data_key="useFlowSensor",
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE,
-        name="Freeze Restrictions",
+        name="Freeze restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_CURRENT,
@@ -58,7 +58,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_FREEZE_PROTECTION,
-        name="Freeze Protection",
+        name="Freeze protection",
         icon="mdi:weather-snowy",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
@@ -66,7 +66,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOT_DAYS,
-        name="Extra Water on Hot Days",
+        name="Extra water on hot days",
         icon="mdi:thermometer-lines",
         entity_category=EntityCategory.DIAGNOSTIC,
         api_category=DATA_RESTRICTIONS_UNIVERSAL,
@@ -74,7 +74,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_HOURLY,
-        name="Hourly Restrictions",
+        name="Hourly restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -83,7 +83,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_MONTH,
-        name="Month Restrictions",
+        name="Month restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -92,7 +92,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_RAINDELAY,
-        name="Rain Delay Restrictions",
+        name="Rain delay restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -101,7 +101,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_RAINSENSOR,
-        name="Rain Sensor Restrictions",
+        name="Rain sensor restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -110,7 +110,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
     ),
     RainMachineBinarySensorDescription(
         key=TYPE_WEEKDAY,
-        name="Weekday Restrictions",
+        name="Weekday restrictions",
         icon="mdi:cancel",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
