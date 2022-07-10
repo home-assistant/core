@@ -177,7 +177,11 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
 
 def address_to_bytes(address: str) -> bytes:
     """Return the address as bytes."""
-    return pack("L", int(address.replace(":", ""), 16))
+    if ":" not in address:
+        address_as_int = 0
+    else:
+        address_as_int = int(address.replace(":", ""), 16)
+    return pack("L", address_as_int)
 
 
 def newest_manufacturer_data(service_info: BluetoothServiceInfo) -> bytes:
