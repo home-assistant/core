@@ -31,7 +31,7 @@ async def test_binary_sensors(hass, config_entry, aioclient_mock_fixture):
     assert valve_state.attributes.get("critical") == 0
     assert (
         valve_state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Smart Water Shutoff Pending System Alerts"
+        == "Smart water shutoff Pending system alerts"
     )
 
     detector_state = hass.states.get("binary_sensor.kitchen_sink_water_detected")

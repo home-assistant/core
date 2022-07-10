@@ -39,7 +39,7 @@ class FloEntity(Entity):
             identifiers={(FLO_DOMAIN, self._device.id)},
             manufacturer=self._device.manufacturer,
             model=self._device.model,
-            name=self._device.device_name,
+            name=self._device.device_name.capitalize(),
             sw_version=self._device.firmware_version,
         )
 
