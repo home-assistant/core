@@ -425,6 +425,10 @@ async def test_http_event_api_failure(
     response = await client.get(upcoming_event_url())
     assert response.status == HTTPStatus.INTERNAL_SERVER_ERROR
 
+    state = hass.states.get(TEST_ENTITY)
+    assert state.name == TEST_ENTITY_NAME
+    assert state.state == "unavailable"
+
 
 @pytest.mark.freeze_time("2022-03-27 12:05:00+00:00")
 async def test_http_api_event(

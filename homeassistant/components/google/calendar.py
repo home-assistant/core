@@ -262,6 +262,7 @@ class CalendarUpdateCoordinator(DataUpdateCoordinator):
             async for result_page in result:
                 result_items.extend(result_page.items)
         except ApiException as err:
+            self.async_set_update_error(err)
             raise HomeAssistantError(str(err)) from err
         return result_items
 
