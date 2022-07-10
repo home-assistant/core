@@ -8,7 +8,7 @@ import fnmatch
 from functools import cached_property
 import logging
 import platform
-from typing import Final, TypedDict, cast
+from typing import Final, TypedDict
 
 from bleak import BleakError
 from bleak.backends.device import MANUFACTURERS, BLEDevice
@@ -123,7 +123,7 @@ BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
 @hass_callback
 def async_discovered_devices(
     hass: HomeAssistant,
-) -> list[BLEDevice]:
+) -> list[BluetoothServiceInfo]:
     """Return the discovered devices list."""
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_discovered_devices()
@@ -363,14 +363,25 @@ class BluetoothManager:
     @hass_callback
     def async_address_present(self, address: str) -> bool:
         """Return if the address is present."""
-        devices = self.async_discovered_devices()
-        return any(device.address == address for device in devices)
+        return bool(
+            models.HA_BLEAK_SCANNER
+            and any(
+                device.address == address
+                for device in models.HA_BLEAK_SCANNER.discovered_devices
+            )
+        )
 
     @hass_callback
-    def async_discovered_devices(self) -> list[BLEDevice]:
+    def async_discovered_devices(self) -> list[BluetoothServiceInfo]:
         """Return if the address is present."""
         if models.HA_BLEAK_SCANNER:
-            return cast(list[BLEDevice], models.HA_BLEAK_SCANNER.discovered_devices)
+            discovered = models.HA_BLEAK_SCANNER.discovered_devices
+            history = models.HA_BLEAK_SCANNER.history
+            return [
+                BluetoothServiceInfo.from_advertisement(*history[device.address])
+                for device in discovered
+                if device.address in history
+            ]
         return []
 
     async def async_stop(self, event: Event) -> None:
