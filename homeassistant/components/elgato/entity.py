@@ -12,6 +12,8 @@ from .const import DOMAIN
 class ElgatoEntity(Entity):
     """Defines an Elgato entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, client: Elgato, info: Info, mac: str | None) -> None:
         """Initialize an Elgato entity."""
         self.client = client

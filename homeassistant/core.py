@@ -1942,7 +1942,7 @@ class Config:
         # pylint: disable=import-outside-toplevel
         from .helpers.storage import Store
 
-        store = Store(
+        store = Store[dict[str, Any]](
             self.hass,
             CORE_STORAGE_VERSION,
             CORE_STORAGE_KEY,
@@ -1950,7 +1950,7 @@ class Config:
             atomic_writes=True,
         )
 
-        if not (data := await store.async_load()) or not isinstance(data, dict):
+        if not (data := await store.async_load()):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1998,7 +1998,7 @@ class Config:
             "currency": self.currency,
         }
 
-        store = Store(
+        store: Store[dict[str, Any]] = Store(
             self.hass,
             CORE_STORAGE_VERSION,
             CORE_STORAGE_KEY,
