@@ -1,17 +1,19 @@
-"""Tests for HDMI-CEC component."""
-from unittest.mock import patch
+"""Tests for the HDMI-CEC component."""
+from unittest.mock import ANY, PropertyMock, patch
 
 import pytest
 import voluptuous as vol
 
 from homeassistant.components.hdmi_cec import (
     DOMAIN,
+    EVENT_HDMI_CEC_UNAVAILABLE,
     SERVICE_POWER_ON,
     SERVICE_SELECT_DEVICE,
     SERVICE_SEND_COMMAND,
     SERVICE_STANDBY,
     SERVICE_UPDATE_DEVICES,
     SERVICE_VOLUME,
+    WATCHDOG_INTERVAL,
     CecCommand,
     KeyPressCommand,
     KeyReleaseCommand,
@@ -21,7 +23,7 @@ from homeassistant.components.hdmi_cec import (
 from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntity, MockEntityPlatform
+from tests.common import MockEntity, MockEntityPlatform, async_capture_events
 
 
 @pytest.fixture
@@ -490,3 +492,61 @@ async def test_service_send_command(hass, MockHDMINetwork, data, expected):
     command = mock_hdmi_network.send_command.call_args.args[0]
     assert isinstance(command, CecCommand)
     assert str(command) == expected
+
+
+async def test_watchdog_down(hass, MockHDMINetwork, MockCecAdapter):
+    """Test that the watchdog is initialized and works as expected when adapter is down."""
+    adapter_initialized = PropertyMock(return_value=False)
+    events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
+
+    with patch("homeassistant.components.hdmi_cec.event.async_call_later") as mock_call:
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+        mock_cec_adapter = MockCecAdapter.return_value
+        type(mock_cec_adapter).initialized = adapter_initialized
+
+        mock_hdmi_network = MockHDMINetwork.return_value
+
+        mock_hdmi_network.set_initialized_callback.assert_called_once()
+        callback = mock_hdmi_network.set_initialized_callback.call_args.args[0]
+        callback()
+
+        mock_call.assert_called_once_with(hass, WATCHDOG_INTERVAL, ANY)
+        watchdog = mock_call.call_args.args[2]
+        watchdog()
+        await hass.async_block_till_done()
+
+        assert mock_call.call_count == 2
+        mock_call.assert_called_with(hass, WATCHDOG_INTERVAL, watchdog)
+        adapter_initialized.assert_called_once_with()
+        assert len(events) == 1
+        mock_cec_adapter.init.assert_called_once_with()
+
+
+async def test_watchdog_up(hass, MockHDMINetwork, MockCecAdapter):
+    """Test that the watchdog is initialized and works as expected when adapter is up."""
+    adapter_initialized = PropertyMock(return_value=True)
+    events = async_capture_events(hass, EVENT_HDMI_CEC_UNAVAILABLE)
+
+    with patch("homeassistant.components.hdmi_cec.event.async_call_later") as mock_call:
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+        mock_cec_adapter = MockCecAdapter.return_value
+        type(mock_cec_adapter).initialized = adapter_initialized
+
+        mock_hdmi_network = MockHDMINetwork.return_value
+
+        mock_hdmi_network.set_initialized_callback.assert_called_once()
+        callback = mock_hdmi_network.set_initialized_callback.call_args.args[0]
+        callback()
+
+        mock_call.assert_called_once_with(hass, WATCHDOG_INTERVAL, ANY)
+        watchdog = mock_call.call_args.args[2]
+        watchdog()
+        await hass.async_block_till_done()
+
+        assert mock_call.call_count == 2
+        mock_call.assert_called_with(hass, WATCHDOG_INTERVAL, watchdog)
+        adapter_initialized.assert_called_once_with()
+        assert len(events) == 0
+        mock_cec_adapter.init.assert_not_called()
