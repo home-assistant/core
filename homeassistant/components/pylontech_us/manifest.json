@@ -1,6 +1,6 @@
 {
   "domain": "pylontech_us",
-  "name": "pylontech_rs485",
+  "name": "pylontech_us",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/pylontech_us",
   "requirements": ["pylontech==0.1.1"],
