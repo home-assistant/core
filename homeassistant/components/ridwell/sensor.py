@@ -28,7 +28,7 @@ ATTR_QUANTITY = "quantity"
 
 SENSOR_DESCRIPTION = SensorEntityDescription(
     key=SENSOR_TYPE_NEXT_PICKUP,
-    name="Ridwell Pickup",
+    name="Ridwell pickup",
     device_class=SensorDeviceClass.DATE,
 )
 
