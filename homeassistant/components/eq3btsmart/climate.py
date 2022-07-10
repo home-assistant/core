@@ -137,7 +137,7 @@ class EQ3BTSmartThermostat(ClimateEntity):
         # TODO: should the default name contain some hint what the value is about?
         # For example, eQ-3 Thermostat (serial) ?
         self._name = device.device_serial
-        self._mac = device._conn._mac
+        self._mac = device.mac
         self._thermostat = device
 
     @property
