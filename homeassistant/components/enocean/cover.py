@@ -14,7 +14,6 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.components.enocean.const import SIGNAL_SEND_MESSAGE
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -22,9 +21,11 @@ from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from .const import SIGNAL_SEND_MESSAGE
 from .device import EnOceanEntity
 
 _LOGGER = logging.getLogger(__name__)
+
 
 DEFAULT_NAME = "EnOcean roller shutter"
 DEPENDENCIES = ["enocean"]
@@ -62,15 +63,18 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         """Initialize the EnOcean Cover."""
         super().__init__(dev_id, dev_name)
         self._device_class = device_class
-        self.position = None
-        self.closed = None
-        self.sender_id = sender_id
+        self._position = None
+        self._is_closed = None
+        self._is_opening = False
+        self._is_closing = False
+        self._sender_id = sender_id
+        self._dev_name = dev_name
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
 
     @property
     def name(self):
         """Return the default name for the cover."""
-        return self.dev_name
+        return self._dev_name
 
     @property
     def device_class(self):
@@ -91,48 +95,48 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
     @property
     def current_cover_position(self) -> int | None:
         """Return the current cover position."""
-        return self.position
+        return self._position
 
     @property
     def is_opening(self) -> bool | None:
         """Return if the cover is opening or not."""
-        return False
+        return self._is_opening
 
     @property
     def is_closing(self) -> bool | None:
         """Return if the cover is closing or not."""
-        return False
+        return self._is_closing
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        return self.closed
+        return self._is_closed
 
     def open_cover(self, **kwargs) -> None:
         """Open the cover."""
         telegram = [0xD2, 0, 0, 0, 1]
-        telegram.extend(self.sender_id)
+        telegram.extend(self._sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
     def close_cover(self, **kwargs) -> None:
         """Close the cover."""
         telegram = [0xD2, 100, 0, 0, 1]
-        telegram.extend(self.sender_id)
+        telegram.extend(self._sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
     def set_cover_position(self, **kwargs) -> None:
         """Set the cover position."""
         telegram = [0xD2, 100 - kwargs[ATTR_POSITION], 0, 0, 1]
-        telegram.extend(self.sender_id)
+        telegram.extend(self._sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
     def stop_cover(self, **kwargs) -> None:
         """Stop any cover movement."""
         telegram = [0xD2, 2]
-        telegram.extend(self.sender_id)
+        telegram.extend(self._sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
@@ -142,22 +146,34 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         This method is called when there is an incoming packet associated
         with this platform.
         """
-
         # position is inversed in Home Assistant and in EnOcean:
         # 0 means 'closed' in Home Assistant and 'open' in EnOcean
         # 100 means 'open' in Home Assistant and 'closed' in EnOcean
-        self.position = 100 - packet.data[1]
-        if self.position == 100:
-            self.closed = True
+
+        new_position = 100 - packet.data[1]
+
+        if self._position is not None:
+            if new_position in (0, 100, self._position):
+                self._is_opening = False
+                self._is_closing = False
+            elif new_position > self._position:
+                self._is_opening = True
+                self._is_closing = False
+            elif new_position < self._position:
+                self._is_opening = False
+                self._is_closing = True
+
+        self._position = new_position
+        if self._position == 100:
+            self._is_closed = True
         else:
-            self.closed = False
+            self._is_closed = False
 
         self.schedule_update_ha_state()
 
     def send_telegram(self, data, optional, packet_type):
         """Send a telegram via the EnOcean dongle to only this device."""
-        # optional contains: subtelegram 3, destination id, max dBm for sending and security level 0
-        packet = Packet(
-            packet_type, data=data, optional=[3] + self.dev_id + [0xFF] + [0]
-        )
+        # optional data contains: number of subtelegrams (fixed to 3 for sending),
+        # destination id, max dBm (0xFF) for sending and security level 0
+        packet = Packet(packet_type, data=data, optional=[3] + self.dev_id + [0xFF, 0])
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
