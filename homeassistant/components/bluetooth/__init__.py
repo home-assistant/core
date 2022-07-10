@@ -254,21 +254,14 @@ class BluetoothManager:
     ) -> None:
         """Handle a detected device."""
         matched_domains: set[str] | None = None
-        manufacturer_ids = list(advertisement_data.manufacturer_data).sort()
-        device_matcher = (device.address, manufacturer_ids)
-        #
-        # Only trigger a flow once per address + set of manufacturer ids
-        # This is to avoid multiple flows being started for the same device
-        # unless the manufacturer ids change.
-        #
-        if device_matcher not in self._matched:
+        if device.address not in self._matched:
             matched_domains = {
                 matcher["domain"]
                 for matcher in self._integration_matchers
                 if _ble_device_matches(matcher, device, advertisement_data)
             }
             if matched_domains:
-                self._matched[device_matcher] = True
+                self._matched[device.address] = True
             _LOGGER.debug(
                 "Device detected: %s with advertisement_data: %s matched domains: %s",
                 device,
@@ -321,7 +314,6 @@ class BluetoothManager:
         def _async_remove_callback() -> None:
             self._callbacks.remove(callback_entry)
 
-        _LOGGER.error("Registering callback: %s %s", callback, matcher)
         # If we have history for the subscriber, we can trigger the callback
         # immediately with the last packet so the subscriber can see the
         # device.
@@ -331,9 +323,6 @@ class BluetoothManager:
             and models.HA_BLEAK_SCANNER
             and (device_adv_data := models.HA_BLEAK_SCANNER.history.get(address))
         ):
-            _LOGGER.warning(
-                "Calling back from history for %s %s", address, device_adv_data
-            )
             try:
                 callback(
                     BluetoothServiceInfo.from_advertisement(*device_adv_data),
