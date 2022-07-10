@@ -2,12 +2,14 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from datetime import datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
 from homeassistant.components import bluetooth
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_interval
 
 from .device import BluetoothDeviceData
 from .entity import BluetoothDeviceEntityDescriptionsType, BluetoothDeviceKey
@@ -41,16 +43,36 @@ class BluetoothDataUpdateCoordinator:
         ] = {}
         self._cancel: CALLBACK_TYPE | None = None
         self.last_update_success = True
+        self._present = True
         self.last_exception: Exception | None = None
+
+    @property
+    def available(self) -> bool:
+        """Return if the device is available."""
+        return self._present and self.last_update_success
+
+    def _async_check_device_present(self, _: datetime) -> None:
+        """Check if the device is present."""
+        self._present = bluetooth.async_address_present(self.hass, self.address)
 
     @callback
     def async_setup(self) -> CALLBACK_TYPE:
         """Start the callback."""
-        return bluetooth.async_register_callback(
+        cancel_track_time = async_track_time_interval(
+            self.hass, self._async_check_device_present, timedelta(minutes=5)
+        )
+        cancel_callback = bluetooth.async_register_callback(
             self.hass,
             self._async_handle_bluetooth_event,
             bluetooth.BluetoothCallbackMatcher(address=self.address),
         )
+
+        @callback
+        def _async_cancel_all() -> None:
+            cancel_track_time()
+            cancel_callback()
+
+        return _async_cancel_all
 
     @callback
     def async_add_entities_listener(
@@ -126,6 +148,6 @@ class BluetoothDataUpdateCoordinator:
         else:
             if not self.last_update_success:
                 self.last_update_success = True
-                self.logger.info("Fetching %s data recovered", self.name)
+                self.logger.info("Processing %s data recovered", self.name)
             if data_update:
                 self.async_update_listeners(data_update)

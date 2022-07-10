@@ -41,6 +41,8 @@ class BluetoothDescriptionRequiredKeysMixin:
 class BluetoothCoordinatorEntity(entity.Entity):
     """A class for entities using DataUpdateCoordinator."""
 
+    _attr_should_poll = False
+
     def __init__(
         self,
         coordinator: BluetoothDataUpdateCoordinator,
@@ -72,16 +74,9 @@ class BluetoothCoordinatorEntity(entity.Entity):
         )
 
     @property
-    def should_poll(self) -> bool:
-        """No need to poll. Coordinator notifies entity of updates."""
-        return False
-
-    @property
     def available(self) -> bool:
         """Return if entity is available."""
-        # TODO: be able to set some type of timeout for last update
-        # Check every 5 minutes to see if we are still in devices?
-        return self.coordinator.last_update_success
+        return self.coordinator.available
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -94,8 +89,11 @@ class BluetoothCoordinatorEntity(entity.Entity):
 
     @callback
     def _handle_coordinator_update(
-        self, data: BluetoothDeviceEntityDescriptionsType
+        self, data: BluetoothDeviceEntityDescriptionsType | None
     ) -> None:
         """Handle updated data from the coordinator."""
-        self.entity_description = data[self.device_key]
+        if data:
+            self.entity_description = data[self.device_key]
+        # No data will be dispatched if the device is not available
+        # but we still need to update the state to be unavailable
         self.async_write_ha_state()
