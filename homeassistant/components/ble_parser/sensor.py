@@ -53,6 +53,14 @@ MAPPINGS = {
             ATTR_NAME: None,
         }
     ),
+    "battery": SensorMapping(
+        {
+            ATTR_NATIVE_UNIT_OF_MEASUREMENT: PERCENTAGE,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.BATTERY,
+            ATTR_STATE_CLASS: SensorStateClass.MEASUREMENT,
+            ATTR_NAME: None,
+        }
+    ),
 }
 
 for probe_id in range(1, 6):
