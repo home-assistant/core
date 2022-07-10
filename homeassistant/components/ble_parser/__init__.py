@@ -76,11 +76,13 @@ class BLEParserWrapperBase:
             )
 
     @callback
-    def async_load(self, data: dict[str, Any]) -> None:
+    def async_load(self, data: dict[str, Any] | None) -> None:
         """Load BLE Parser to Bluetooth Device Data."""
-        device_data = self.device_data
-        if not data.get("data"):
+        if not data or not data.get("data"):
             return
+
+        device_data = self.device_data
+
         if device_type := data.get("type"):
             device_data.set_device_type(device_type)
         if device_name := data.get("name"):
@@ -169,14 +171,14 @@ def newest_manufacturer_data(service_info: BluetoothServiceInfo) -> bytes:
     """
     manufacturer_data = service_info.manufacturer_data
     last_id = list(manufacturer_data)[-1]
-    return _pad_manufacturer_data(
-        _manufacturer_data_to_raw(last_id, manufacturer_data[last_id])
-    )
+    return _manufacturer_data_to_raw(last_id, manufacturer_data[last_id])
 
 
 def _manufacturer_data_to_raw(manufacturer_id: int, manufacturer_data: bytes) -> bytes:
     """Return the raw data from manufacturer data."""
-    return int(manufacturer_id).to_bytes(2, byteorder="little") + manufacturer_data
+    return _pad_manufacturer_data(
+        int(manufacturer_id).to_bytes(2, byteorder="little") + manufacturer_data
+    )
 
 
 def _pad_manufacturer_data(manufacturer_data: bytes) -> bytes:
