@@ -70,6 +70,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._sender_id = sender_id
         self._dev_name = dev_name
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
+        self._state_changed_by_command = False
 
     @property
     def name(self):
@@ -114,6 +115,14 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def open_cover(self, **kwargs) -> None:
         """Open the cover."""
+        self._is_opening = True
+        self._is_closing = False
+        self._state_changed_by_command = True
+        _LOGGER.debug(
+            "new state; is_opening: %i, is_closing: %i",
+            self._is_opening,
+            self.is_closing,
+        )
         telegram = [0xD2, 0, 0, 0, 1]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -121,6 +130,14 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def close_cover(self, **kwargs) -> None:
         """Close the cover."""
+        self._is_opening = False
+        self._is_closing = True
+        self._state_changed_by_command = True
+        _LOGGER.debug(
+            "new state; is_opening: %i, is_closing: %i",
+            self._is_opening,
+            self.is_closing,
+        )
         telegram = [0xD2, 100, 0, 0, 1]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -128,13 +145,39 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def set_cover_position(self, **kwargs) -> None:
         """Set the cover position."""
-        telegram = [0xD2, 100 - kwargs[ATTR_POSITION], 0, 0, 1]
+        new_position = kwargs[ATTR_POSITION]
+
+        if new_position == self._position:
+            self._is_opening = False
+            self._is_closing = False
+        elif new_position > self._position:
+            self._is_opening = True
+            self._is_closing = False
+        elif new_position < self._position:
+            self._is_opening = False
+            self._is_closing = True
+
+        self._state_changed_by_command = True
+        _LOGGER.debug(
+            "new state; is_opening: %i, is_closing: %i",
+            self._is_opening,
+            self.is_closing,
+        )
+        telegram = [0xD2, 100 - new_position, 0, 0, 1]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
         self.send_telegram(telegram, [], 0x01)
 
     def stop_cover(self, **kwargs) -> None:
         """Stop any cover movement."""
+        self._is_opening = False
+        self._is_closing = False
+        self._state_changed_by_command = True
+        _LOGGER.debug(
+            "new state; is_opening: %i, is_closing: %i",
+            self._is_opening,
+            self.is_closing,
+        )
         telegram = [0xD2, 2]
         telegram.extend(self._sender_id)
         telegram.extend([0x00])
@@ -153,7 +196,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         new_position = 100 - packet.data[1]
 
         if self._position is not None:
-            if new_position in (0, 100, self._position):
+            if self._state_changed_by_command:
+                self._state_changed_by_command = False
+            elif new_position in (0, 100, self._position):
                 self._is_opening = False
                 self._is_closing = False
             elif new_position > self._position:
@@ -162,6 +207,12 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             elif new_position < self._position:
                 self._is_opening = False
                 self._is_closing = True
+
+            _LOGGER.debug(
+                "new state; is_opening: %i, is_closing: %i",
+                self._is_opening,
+                self.is_closing,
+            )
 
         self._position = new_position
         if self._position == 100:
@@ -177,3 +228,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         # destination id, max dBm (0xFF) for sending and security level 0
         packet = Packet(packet_type, data=data, optional=[3] + self.dev_id + [0xFF, 0])
         dispatcher_send(self.hass, SIGNAL_SEND_MESSAGE, packet)
+
+    # def movement_stop_watchdog(self):
+    #     """Watchdog to check if the movement stopped (assumption if no updates are received within 10s)."""
+    #     asyncio.sleep(10)
+    #     self._is_closing = False
+    #     self._is_opening = False
