@@ -6,7 +6,7 @@ import binascii
 from collections.abc import Callable
 import copy
 import logging
-from typing import NamedTuple, cast
+from typing import Any, NamedTuple, cast
 
 import RFXtrx as rfxtrxmod
 import async_timeout
@@ -288,7 +288,12 @@ async def async_setup_platform_entry(
     async_add_entities: AddEntitiesCallback,
     supported: Callable[[rfxtrxmod.RFXtrxEvent], bool],
     constructor: Callable[
-        [rfxtrxmod.RFXtrxEvent, rfxtrxmod.RFXtrxEvent | None, DeviceTuple, dict],
+        [
+            rfxtrxmod.RFXtrxEvent,
+            rfxtrxmod.RFXtrxEvent | None,
+            DeviceTuple,
+            dict[str, Any],
+        ],
         list[Entity],
     ],
 ):
@@ -373,7 +378,7 @@ def get_pt2262_cmd(device_id: str, data_bits: int) -> str | None:
 
 
 def get_device_data_bits(
-    device: rfxtrxmod.RFXtrxDevice, devices: dict[DeviceTuple, dict]
+    device: rfxtrxmod.RFXtrxDevice, devices: dict[DeviceTuple, dict[str, Any]]
 ) -> int | None:
     """Deduce data bits for device based on a cache of device bits."""
     data_bits = None

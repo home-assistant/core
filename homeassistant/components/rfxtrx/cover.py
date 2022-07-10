@@ -24,7 +24,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-def supported(event: rfxtrxmod.RFXtrxEvent):
+def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
     """Return whether an event supports cover."""
     return event.device.known_to_be_rollershutter
 
@@ -40,7 +40,7 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
+        entity_info: dict[str, Any],
     ):
         return [
             RfxtrxCover(
@@ -154,7 +154,9 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             self._attr_is_closed = True
 
     @callback
-    def _handle_event(self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple):
+    def _handle_event(
+        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Check if event applies to me and update."""
         if device_id != self._device_id:
             return

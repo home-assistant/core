@@ -37,7 +37,7 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
+        entity_info: dict[str, Any],
     ):
         return [
             RfxtrxLight(
@@ -91,7 +91,7 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
         self._attr_brightness = 0
         self.async_write_ha_state()
 
-    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
+    def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
         assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
@@ -105,7 +105,9 @@ class RfxtrxLight(RfxtrxCommandEntity, LightEntity):
             self._attr_is_on = brightness > 0
 
     @callback
-    def _handle_event(self, event, device_id):
+    def _handle_event(
+        self, event: rfxtrxmod.RFXtrxEvent, device_id: DeviceTuple
+    ) -> None:
         """Check if event applies to me and update."""
         if device_id != self._device_id:
             return

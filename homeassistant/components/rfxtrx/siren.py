@@ -58,7 +58,7 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
+        entity_info: dict[str, Any],
     ):
         """Construct a entity from an event."""
         device = event.device

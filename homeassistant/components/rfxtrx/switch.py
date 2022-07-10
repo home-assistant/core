@@ -31,7 +31,7 @@ DATA_SWITCH = f"{DOMAIN}_switch"
 _LOGGER = logging.getLogger(__name__)
 
 
-def supported(event):
+def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
     """Return whether an event supports switch."""
     return (
         isinstance(event.device, rfxtrxmod.LightingDevice)
@@ -52,7 +52,7 @@ async def async_setup_entry(
         event: rfxtrxmod.RFXtrxEvent,
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
-        entity_info: dict,
+        entity_info: dict[str, Any],
     ):
         return [
             RfxtrxSwitch(
@@ -97,7 +97,7 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
             if old_state is not None:
                 self._attr_is_on = old_state.state == STATE_ON
 
-    def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent):
+    def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply event for a lighting 4 device."""
         if self._data_bits is not None:
             cmdstr = get_pt2262_cmd(event.device.id_string, self._data_bits)
