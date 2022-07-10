@@ -41,7 +41,13 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
         """Update from BLE advertisement data."""
         _LOGGER.debug("Parsing inkbird BLE advertisement data: %s", service_info)
         manufacturer_data = service_info.manufacturer_data
-
+        local_name = service_info.name
+        if local_name == "sps":
+            self.set_device_type("IBS-TH")
+        elif local_name == "tps":
+            self.set_device_type("IBS-TH2/P01B")
+        if manufacturer_data is None:
+            return
         last_id = list(manufacturer_data)[-1]
         data = int(last_id).to_bytes(2, byteorder="little") + manufacturer_data[last_id]
         self._process_update(service_info.name, data)
@@ -55,7 +61,6 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
             (temp, hum) = unpack("<hH", data[0:4])
             bat = int.from_bytes(data[7:8], "little")
             if complete_local_name == "sps":
-                self.set_device_type("IBS-TH")
                 self.update_predefined_sensor(
                     BluetoothSensorType.TEMPERATURE, TEMP_CELSIUS, temp / 100
                 )
@@ -66,7 +71,6 @@ class INKBIRDBluetoothDeviceData(BluetoothDeviceData):
                     BluetoothSensorType.BATTERY, PERCENTAGE, bat
                 )
             elif complete_local_name == "tps":
-                self.set_device_type("IBS-TH2/P01B")
                 self.update_predefined_sensor(
                     BluetoothSensorType.TEMPERATURE, TEMP_CELSIUS, temp / 100
                 )
