@@ -216,7 +216,7 @@ class AmbientWeatherEntity(Entity):
             configuration_url=f"https://ambientweather.net/dashboard/{public_device_id}",
             identifiers={(DOMAIN, mac_address)},
             manufacturer="Ambient Weather",
-            name=station_name,
+            name=station_name.capitalize(),
         )
 
         self._attr_unique_id = f"{mac_address}_{description.key}"
