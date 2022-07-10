@@ -53,13 +53,18 @@ class ClassTypeHintMatch:
 _TYPE_HINT_MATCHERS: dict[str, re.Pattern[str]] = {
     # a_or_b matches items such as "DiscoveryInfoType | None"
     "a_or_b": re.compile(r"^(\w+) \| (\w+)$"),
-    # x_of_y matches items such as "Awaitable[None]"
-    "x_of_y": re.compile(r"^(\w+)\[(.*?]*)\]$"),
-    # x_of_y_comma_z matches items such as "Callable[..., Awaitable[None]]"
-    "x_of_y_comma_z": re.compile(r"^(\w+)\[(.*?]*), (.*?]*)\]$"),
-    # x_of_y_of_z_comma_a matches items such as "list[dict[str, Any]]"
-    "x_of_y_of_z_comma_a": re.compile(r"^(\w+)\[(\w+)\[(.*?]*), (.*?]*)\]\]$"),
 }
+_INNER_MATCH = r"((?:\w+)|(?:\.{3})|(?:\w+\[.+\]))"
+_INNER_MATCH_POSSIBILITIES = [i + 1 for i in range(5)]
+_TYPE_HINT_MATCHERS.update(
+    {
+        f"x_of_y_{i}": re.compile(
+            rf"^(\w+)\[{_INNER_MATCH}" + f", {_INNER_MATCH}" * (i - 1) + r"\]$"
+        )
+        for i in _INNER_MATCH_POSSIBILITIES
+    }
+)
+
 
 _MODULE_REGEX: re.Pattern[str] = re.compile(r"^homeassistant\.components\.\w+(\.\w+)?$")
 
@@ -1438,25 +1443,26 @@ def _is_valid_type(
             and _is_valid_type(match.group(2), node.right)
         )
 
-    # Special case for xxx[yyy[zzz, aaa]]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y_of_z_comma_a"].match(expected_type):
-        return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
-            and isinstance(subnode := node.slice, nodes.Subscript)
-            and _is_valid_type(match.group(2), subnode.value)
-            and isinstance(subnode.slice, nodes.Tuple)
-            and _is_valid_type(match.group(3), subnode.slice.elts[0])
-            and _is_valid_type(match.group(4), subnode.slice.elts[1])
+    # Special case for `xxx[aaa, bbb, ccc, ...]
+    if (
+        isinstance(node, nodes.Subscript)
+        and isinstance(node.slice, nodes.Tuple)
+        and (
+            match := _TYPE_HINT_MATCHERS[f"x_of_y_{len(node.slice.elts)}"].match(
+                expected_type
+            )
         )
-
-    # Special case for xxx[yyy, zzz]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y_comma_z"].match(expected_type):
-        # Handle special case of Mapping[xxx, Any]
-        if in_return and match.group(1) == "Mapping" and match.group(3) == "Any":
+    ):
+        # This special case is separate because we want Mapping[str, Any]
+        # to also match dict[str, int] and similar
+        if (
+            len(node.slice.elts) == 2
+            and in_return
+            and match.group(1) == "Mapping"
+            and match.group(3) == "Any"
+        ):
             return (
-                isinstance(node, nodes.Subscript)
-                and isinstance(node.value, nodes.Name)
+                isinstance(node.value, nodes.Name)
                 # We accept dict when Mapping is needed
                 and node.value.name in ("Mapping", "dict")
                 and isinstance(node.slice, nodes.Tuple)
@@ -1464,16 +1470,19 @@ def _is_valid_type(
                 # Ignore second item
                 # and _is_valid_type(match.group(3), node.slice.elts[1])
             )
+
+        # This is the default case
         return (
-            isinstance(node, nodes.Subscript)
-            and _is_valid_type(match.group(1), node.value)
+            _is_valid_type(match.group(1), node.value)
             and isinstance(node.slice, nodes.Tuple)
-            and _is_valid_type(match.group(2), node.slice.elts[0])
-            and _is_valid_type(match.group(3), node.slice.elts[1])
+            and all(
+                _is_valid_type(match.group(n + 2), node.slice.elts[n])
+                for n in range(len(node.slice.elts))
+            )
         )
 
-    # Special case for xxx[yyy]`
-    if match := _TYPE_HINT_MATCHERS["x_of_y"].match(expected_type):
+    # Special case for xxx[yyy]
+    if match := _TYPE_HINT_MATCHERS["x_of_y_1"].match(expected_type):
         return (
             isinstance(node, nodes.Subscript)
             and _is_valid_type(match.group(1), node.value)

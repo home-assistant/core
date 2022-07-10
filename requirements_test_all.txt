@@ -152,7 +152,7 @@ aioguardian==2022.03.2
 aioharmony==0.2.9
 
 # homeassistant.components.homekit_controller
-aiohomekit==0.7.20
+aiohomekit==0.7.21
 
 # homeassistant.components.emulated_hue
 # homeassistant.components.http
@@ -980,7 +980,7 @@ pycoolmasternet-async==0.1.2
 pydaikin==2.7.0
 
 # homeassistant.components.deconz
-pydeconz==97
+pydeconz==98
 
 # homeassistant.components.dexcom
 pydexcom==0.2.3

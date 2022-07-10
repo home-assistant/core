@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from io import BytesIO
-from typing import Any
+from typing import Any, cast
 
 import voluptuous as vol
 
@@ -77,7 +77,7 @@ class TotpAuthModule(MultiFactorAuthModule):
         """Initialize the user data store."""
         super().__init__(hass, config)
         self._users: dict[str, str] | None = None
-        self._user_store = Store(
+        self._user_store = Store[dict[str, dict[str, str]]](
             hass, STORAGE_VERSION, STORAGE_KEY, private=True, atomic_writes=True
         )
         self._init_lock = asyncio.Lock()
@@ -93,16 +93,14 @@ class TotpAuthModule(MultiFactorAuthModule):
             if self._users is not None:
                 return
 
-            if (data := await self._user_store.async_load()) is None or not isinstance(
-                data, dict
-            ):
-                data = {STORAGE_USERS: {}}
+            if (data := await self._user_store.async_load()) is None:
+                data = cast(dict[str, dict[str, str]], {STORAGE_USERS: {}})
 
             self._users = data.get(STORAGE_USERS, {})
 
     async def _async_save(self) -> None:
         """Save data."""
-        await self._user_store.async_save({STORAGE_USERS: self._users})
+        await self._user_store.async_save({STORAGE_USERS: self._users or {}})
 
     def _add_ota_secret(self, user_id: str, secret: str | None = None) -> str:
         """Create a ota_secret for user."""

@@ -54,7 +54,7 @@ def async_update_friends(
     current_ids = set(current)
 
     # Process new favorites, add them to Home Assistant
-    new_entities = []
+    new_entities: list[XboxBinarySensorEntity] = []
     for xuid in new_ids - current_ids:
         current[xuid] = [
             XboxBinarySensorEntity(coordinator, xuid, attribute)
@@ -75,7 +75,7 @@ def async_update_friends(
 async def async_remove_entities(
     xuid: str,
     coordinator: XboxUpdateCoordinator,
-    current: dict[str, XboxBinarySensorEntity],
+    current: dict[str, list[XboxBinarySensorEntity]],
 ) -> None:
     """Remove friend sensors from Home Assistant."""
     registry = er.async_get(coordinator.hass)

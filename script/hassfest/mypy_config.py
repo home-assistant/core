@@ -33,10 +33,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.izone.climate",
     "homeassistant.components.konnected",
     "homeassistant.components.konnected.config_flow",
-    "homeassistant.components.kostal_plenticore.helper",
-    "homeassistant.components.kostal_plenticore.select",
-    "homeassistant.components.kostal_plenticore.sensor",
-    "homeassistant.components.kostal_plenticore.switch",
     "homeassistant.components.lovelace",
     "homeassistant.components.lovelace.dashboard",
     "homeassistant.components.lovelace.resources",
@@ -48,9 +44,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.nzbget.config_flow",
     "homeassistant.components.nzbget.coordinator",
     "homeassistant.components.nzbget.switch",
-    "homeassistant.components.omnilogic.common",
-    "homeassistant.components.omnilogic.sensor",
-    "homeassistant.components.omnilogic.switch",
     "homeassistant.components.onvif.base",
     "homeassistant.components.onvif.binary_sensor",
     "homeassistant.components.onvif.camera",
@@ -82,12 +75,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.withings.binary_sensor",
     "homeassistant.components.withings.common",
     "homeassistant.components.withings.config_flow",
-    "homeassistant.components.xbox",
-    "homeassistant.components.xbox.base_sensor",
-    "homeassistant.components.xbox.binary_sensor",
-    "homeassistant.components.xbox.browse_media",
-    "homeassistant.components.xbox.media_source",
-    "homeassistant.components.xbox.sensor",
 ]
 
 # Component modules which should set no_implicit_reexport = true.
