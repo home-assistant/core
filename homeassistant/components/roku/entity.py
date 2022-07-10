@@ -38,7 +38,7 @@ class RokuEntity(CoordinatorEntity[RokuDataUpdateCoordinator]):
                 self._attr_unique_id = device_id
 
             self._attr_device_info = DeviceInfo(
-                identifiers={(DOMAIN, self._device_id)},
+                identifiers={(DOMAIN, device_id)},
                 connections={
                     (CONNECTION_NETWORK_MAC, mac_address)
                     for mac_address in (
