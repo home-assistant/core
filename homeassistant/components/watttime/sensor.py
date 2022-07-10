@@ -67,6 +67,8 @@ async def async_setup_entry(
 class RealtimeEmissionsSensor(CoordinatorEntity, SensorEntity):
     """Define a realtime emissions sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: DataUpdateCoordinator,
