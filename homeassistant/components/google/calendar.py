@@ -367,12 +367,11 @@ class GoogleCalendarEntity(CoordinatorEntity, CalendarEntity):
     async def async_update(self) -> None:
         """Disable update behavior.
 
-        This relies on the coordinator callback to update to write home assistant
+        This relies on the coordinator callback update to write home assistant
         state with the next calendar event. This update is a no-op as no new data
         fetch is needed to evaluate the state to determine if the next event has
         started, handled by CalendarEntity parent class.
         """
-        return
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
