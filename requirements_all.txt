@@ -638,7 +638,7 @@ faadelays==0.0.7
 fastdotcom==0.0.3
 
 # homeassistant.components.feedreader
-feedparser==6.0.2
+feedparser==6.0.10
 
 # homeassistant.components.fibaro
 fiblary3==0.1.8

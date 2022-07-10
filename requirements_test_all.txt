@@ -459,7 +459,7 @@ epson-projector==0.4.2
 faadelays==0.0.7
 
 # homeassistant.components.feedreader
-feedparser==6.0.2
+feedparser==6.0.10
 
 # homeassistant.components.fibaro
 fiblary3==0.1.8
