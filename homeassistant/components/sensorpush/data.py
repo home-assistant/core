@@ -5,7 +5,7 @@ import logging
 
 from bleparser.sensorpush import parse_sensorpush
 
-from homeassistant.components.ble_parser import async_get_parser
+from homeassistant.components.ble_parser import async_get_manufacturer_parser
 from homeassistant.components.bluetooth import BluetoothServiceInfo
 from homeassistant.components.bluetooth.device import BluetoothDeviceData
 
@@ -18,7 +18,7 @@ class SensorPushBluetoothDeviceData(BluetoothDeviceData):
     def __init__(self) -> None:
         """Init the SensorPushBluetoothDeviceData."""
         super().__init__()
-        self.parser = async_get_parser(self, parse_sensorpush)
+        self.parser = async_get_manufacturer_parser(self, parse_sensorpush)
 
     def update(self, service_info: BluetoothServiceInfo) -> None:
         """Update from BLE advertisement data."""

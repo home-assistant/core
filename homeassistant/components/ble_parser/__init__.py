@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+import binascii
 from collections.abc import Callable
 from typing import Any
 
@@ -20,21 +21,21 @@ PARSER = BleParser(
 
 
 @callback
-def async_get_parser(
+def async_get_manufacturer_parser(
     device_data: BluetoothDeviceData,
     parser: Callable[[Any, bytes, bytes, int], dict[str, Any]],
-) -> BLEParserWrapper:
-    """Return the adapter name."""
-    return BLEParserWrapper(device_data, parser)
+) -> BLEManufacturerParserWrapper:
+    """Return manufacturer parser wrapper."""
+    return BLEManufacturerParserWrapper(device_data, parser)
 
 
 @callback
-def async_get_parser_with_local_name(
+def async_get_manufacturer_parser_with_local_name(
     device_data: BluetoothDeviceData,
     parser: Callable[[Any, bytes, str, bytes, int], dict[str, Any]],
-) -> BLEParserWithLocalNameWrapper:
-    """Return the adapter name."""
-    return BLEParserWithLocalNameWrapper(device_data, parser)
+) -> BLEManufacturerParserWithLocalNameWrapper:
+    """Return manufacturer parser wrapper that needs a local name."""
+    return BLEManufacturerParserWithLocalNameWrapper(device_data, parser)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -51,6 +52,31 @@ class BLEParserWrapperBase:
     ) -> None:
         """Initialize BLE Parser Wrapper."""
         self.device_data = device_data
+
+    @callback
+    def async_load(self, data: dict[str, Any] | None) -> None:
+        """Load BLE Parser to Bluetooth Device Data."""
+        if not data or not data.get("data"):
+            return
+
+        device_data = self.device_data
+
+        if device_type := data.get("type"):
+            device_data.set_device_type(device_type)
+        if device_name := data.get("name"):
+            device_data.set_device_name(device_name)
+
+        for data_type, value in data.items():
+            if sensor_mapping := SENSOR_MAPPINGS.get(data_type):
+                device_data.update_sensor(
+                    key=_ble_parser_data_type_to_description_key(data_type),
+                    native_value=value,
+                    **sensor_mapping,
+                )
+
+
+class BLEManufacturerParserWrapperBase(BLEParserWrapperBase):
+    """BLE Parser Wrapper."""
 
     @callback
     @abstractmethod
@@ -75,29 +101,8 @@ class BLEParserWrapperBase:
                 service_info, list(service_info.manufacturer_data)[-1]
             )
 
-    @callback
-    def async_load(self, data: dict[str, Any] | None) -> None:
-        """Load BLE Parser to Bluetooth Device Data."""
-        if not data or not data.get("data"):
-            return
 
-        device_data = self.device_data
-
-        if device_type := data.get("type"):
-            device_data.set_device_type(device_type)
-        if device_name := data.get("name"):
-            device_data.set_device_name(device_name)
-
-        for data_type, value in data.items():
-            if sensor_mapping := SENSOR_MAPPINGS.get(data_type):
-                device_data.update_sensor(
-                    key=_ble_parser_data_type_to_description_key(data_type),
-                    native_value=value,
-                    **sensor_mapping,
-                )
-
-
-class BLEParserWrapper(BLEParserWrapperBase):
+class BLEManufacturerParserWrapper(BLEManufacturerParserWrapperBase):
     """BLE Parser Wrapper."""
 
     def __init__(
@@ -107,7 +112,6 @@ class BLEParserWrapper(BLEParserWrapperBase):
     ) -> None:
         """Initialize BLE Parser Wrapper."""
         self.parser = parser
-        self.device_data = device_data
         super().__init__(device_data)
 
     @callback
@@ -127,7 +131,7 @@ class BLEParserWrapper(BLEParserWrapperBase):
         )
 
 
-class BLEParserWithLocalNameWrapper(BLEParserWrapperBase):
+class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase):
     """BLE Parser with local name Wrapper."""
 
     def __init__(
@@ -137,7 +141,6 @@ class BLEParserWithLocalNameWrapper(BLEParserWrapperBase):
     ) -> None:
         """Initialize BLE Parser Wrapper."""
         self.parser = parser
-        self.device_data = device_data
         super().__init__(device_data)
 
     @callback
@@ -160,7 +163,7 @@ class BLEParserWithLocalNameWrapper(BLEParserWrapperBase):
 
 def address_to_bytes(address: str) -> bytes:
     """Return the address as bytes."""
-    return bytes(address.replace(":", ""), "utf-8")
+    return binascii.unhexlify(address.replace(":", "").encode())
 
 
 def newest_manufacturer_data(service_info: BluetoothServiceInfo) -> bytes:
