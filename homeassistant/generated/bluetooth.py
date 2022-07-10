@@ -8,6 +8,10 @@ from __future__ import annotations
 
 BLUETOOTH: list[dict[str, str | int]] = [
     {
+        "domain": "eq3btsmart",
+        "local_name": "CC-RT-BLE"
+    },
+    {
         "domain": "switchbot",
         "service_uuid": "cba20d00-224d-11e6-9fb8-0002a5d5c51b"
     }

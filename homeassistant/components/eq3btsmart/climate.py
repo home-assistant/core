@@ -1,8 +1,10 @@
 """Support for eQ-3 Bluetooth Smart thermostats."""
 from __future__ import annotations
 
+import asyncio
 import logging
 
+import async_timeout
 from bluepy.btle import BTLEException  # pylint: disable=import-error
 import eq3bt as eq3  # pylint: disable=import-error
 import voluptuous as vol
@@ -15,6 +17,7 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_DEVICES,
@@ -23,12 +26,19 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import PlatformNotReady
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import PRESET_CLOSED, PRESET_NO_HOLD, PRESET_OPEN, PRESET_PERMANENT_HOLD
+from .const import (
+    DOMAIN,
+    PRESET_CLOSED,
+    PRESET_NO_HOLD,
+    PRESET_OPEN,
+    PRESET_PERMANENT_HOLD,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,14 +97,33 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the eQ-3 BLE thermostats."""
-    devices = []
+    """Set up eQ-3 BLE thermostats (deprecated)."""
+    _LOGGER.error(
+        "Configuring eq3btsmart through climate platform deprecated and your configuration has been "
+        "converted to use config entries. You can now remove the old configuration and use UI configuration "
+        "for new devices."
+    )
 
-    for name, device_cfg in config[CONF_DEVICES].items():
-        mac = device_cfg[CONF_MAC]
-        devices.append(EQ3BTSmartThermostat(mac, name))
 
-    add_entities(devices, True)
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up eQ-3 BLE thermostat."""
+    mac = config_entry.data[CONF_MAC]
+    device = eq3.Thermostat(mac)
+    try:
+        async with async_timeout.timeout(10):
+            # TODO: we request query_id here to obtain the serial number and
+            # and the firmware version prior creating the entity
+            await hass.async_add_executor_job(device.query_id)
+    except (Exception, asyncio.TimeoutError) as ex:
+        _LOGGER.warning("[%s] Unable to connect", mac)
+        raise PlatformNotReady from ex
+
+    entity = EQ3BTSmartThermostat(device)
+    async_add_entities([entity], True)
 
 
 class EQ3BTSmartThermostat(ClimateEntity):
@@ -104,12 +133,13 @@ class EQ3BTSmartThermostat(ClimateEntity):
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
     )
 
-    def __init__(self, _mac, _name):
+    def __init__(self, device):
         """Initialize the thermostat."""
-        # We want to avoid name clash with this module.
-        self._name = _name
-        self._mac = _mac
-        self._thermostat = eq3.Thermostat(_mac)
+        # TODO: should the default name contain some hint what the value is about?
+        # For example, eQ-3 Thermostat (serial) ?
+        self._name = device.device_serial
+        self._mac = device._conn._mac
+        self._thermostat = device
 
     @property
     def available(self) -> bool:
@@ -185,6 +215,16 @@ class EQ3BTSmartThermostat(ClimateEntity):
         }
 
         return dev_specific
+
+    @property
+    def device_info(self):
+        """Return the device info."""
+        return {
+            "identifiers": {(DOMAIN, self.unique_id)},
+            "name": self.name,
+            "manufacturer": "eQ-3",
+            "sw_version": self._thermostat.firmware_version,
+        }
 
     @property
     def preset_mode(self):

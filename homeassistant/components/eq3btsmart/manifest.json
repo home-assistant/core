@@ -5,5 +5,7 @@
   "requirements": ["construct==2.10.56", "python-eq3bt==0.1.11"],
   "codeowners": ["@rytilahti"],
   "iot_class": "local_polling",
-  "loggers": ["bluepy", "eq3bt"]
+  "loggers": ["bluepy", "eq3bt"],
+  "config_flow": true,
+  "bluetooth": [{ "local_name": "CC-RT-BLE" }]
 }
