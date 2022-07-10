@@ -71,8 +71,8 @@ class BluetoothDeviceData:
         BluetoothSensorEntityDescription | BluetoothBinarySensorEntityDescription,
     ]:
         """Update a bluetooth device."""
-        self.update_rssi(service_info.rssi)
         self.update(service_info)
+        self.update_rssi(service_info.rssi)
         self._entity_descriptions.update(self._entity_descriptions_updates)
         return self._entity_descriptions_updates
 

@@ -74,6 +74,7 @@ class BLEParserWrapperBase:
                     key=key,
                     native_value=value,
                     **sensor_mapping,
+                    device_id=data.get("sensor id"),
                 )
 
 
