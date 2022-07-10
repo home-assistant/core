@@ -363,8 +363,13 @@ class BluetoothManager:
     @hass_callback
     def async_address_present(self, address: str) -> bool:
         """Return if the address is present."""
-        devices = self.async_discovered_devices()
-        return any(device.address == address for device in devices)
+        return bool(
+            models.HA_BLEAK_SCANNER
+            and any(
+                device.address == address
+                for device in models.HA_BLEAK_SCANNER.discovered_devices
+            )
+        )
 
     @hass_callback
     def async_discovered_devices(self) -> list[BluetoothServiceInfo]:
