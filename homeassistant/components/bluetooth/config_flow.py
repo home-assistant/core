@@ -1,10 +1,12 @@
 """Base config flow for a bluetooth integration."""
 from __future__ import annotations
 
+from abc import abstractmethod
 from typing import Any
 
 from homeassistant import config_entries
 from homeassistant.components import bluetooth
+from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 
 from .const import DOMAIN
@@ -15,13 +17,18 @@ class BluetoothConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for a bluetooth device."""
 
     VERSION = 1
-    DEVICE_DATA_CLASS = BluetoothDeviceData
-    USE_LOCAL_NAME = False
 
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._discovery_info: bluetooth.BluetoothServiceInfo | None = None
         self._discovered_device: BluetoothDeviceData | None = None
+
+    @abstractmethod
+    @callback
+    def async_device_data_class(
+        self, discovery_info: bluetooth.BluetoothServiceInfo
+    ) -> BluetoothDeviceData:
+        """Return the device data class."""
 
     async def async_step_bluetooth(
         self, discovery_info: bluetooth.BluetoothServiceInfo
@@ -29,7 +36,7 @@ class BluetoothConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the bluetooth discovery step."""
         await self.async_set_unique_id(discovery_info.address)
         self._abort_if_unique_id_configured()
-        device = self.DEVICE_DATA_CLASS()  # type: ignore[abstract]
+        device = self.async_device_data_class(discovery_info)
         if not device.supported(discovery_info):
             return self.async_abort(reason="not_supported")
         self._discovery_info = discovery_info
@@ -44,10 +51,7 @@ class BluetoothConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         device = self._discovered_device
         assert self._discovery_info is not None
         discovery_info = self._discovery_info
-        if self.USE_LOCAL_NAME:
-            device_name = discovery_info.name
-        else:
-            device_name = device.get_device_name() or discovery_info.name
+        device_name = device.get_device_name() or discovery_info.name
         if user_input is not None:
             return self.async_create_entry(title=device_name, data={})
 
