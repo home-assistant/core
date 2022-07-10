@@ -136,6 +136,7 @@ class BLEManufacturerParserWrapper(BLEManufacturerParserWrapperBase):
                 "Error parsing BLE data: %s (%s): %s", service_info, raw, ex
             )
             return
+        _LOGGER.debug("Loading parsed BLE data: %s from %s", parsed, service_info)
         self.async_load(parsed)
 
 
@@ -172,6 +173,7 @@ class BLEManufacturerParserWithLocalNameWrapper(BLEManufacturerParserWrapperBase
                 "Error parsing BLE data: %s (%s): %s", service_info, raw, ex
             )
             return
+        _LOGGER.debug("Loading parsed BLE data: %s from %s", parsed, service_info)
         self.async_load(parsed)
 
 
