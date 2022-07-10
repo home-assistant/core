@@ -108,12 +108,12 @@ class BluetoothDataUpdateCoordinator:
             data: BluetoothDeviceEntityDescriptionsType | None,
         ) -> None:
             """Listen for new entities."""
-            assert data is not None
             entities: list[BluetoothCoordinatorEntity] = []
-            for key, description in data.items():
-                if key not in created:
-                    entities.append(entity_class(self, description, key))
-                    created.add(key)
+            if data:
+                for key, description in data.items():
+                    if key not in created:
+                        entities.append(entity_class(self, description, key))
+                        created.add(key)
             if entities:
                 async_add_entites(entities)
 
