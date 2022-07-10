@@ -1,4 +1,4 @@
-"""Config flow for pylontech_rs485 integration."""
+"""Config flow for pylontech_us integration."""
 from __future__ import annotations
 
 import logging
@@ -61,7 +61,7 @@ class PylontechHub:
 
 
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for pylontech_rs485."""
+    """Handle a config flow for pylontech_us."""
 
     VERSION = 1
 
