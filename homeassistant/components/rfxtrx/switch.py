@@ -10,6 +10,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
@@ -53,7 +54,7 @@ async def async_setup_entry(
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
-    ):
+    ) -> list[Entity]:
         return [
             RfxtrxSwitch(
                 event.device,

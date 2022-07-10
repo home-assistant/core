@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, cast
 
 from RFXtrx import ControlEvent, RFXtrxDevice, RFXtrxEvent, SensorEvent
 
@@ -33,7 +33,7 @@ from homeassistant.const import (
     UV_INDEX,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity import Entity, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
@@ -43,14 +43,14 @@ from .const import ATTR_EVENT
 _LOGGER = logging.getLogger(__name__)
 
 
-def _battery_convert(value):
+def _battery_convert(value: int | None) -> int | None:
     """Battery is given as a value between 0 and 9."""
     if value is None:
         return None
     return (value + 1) * 10
 
 
-def _rssi_convert(value):
+def _rssi_convert(value: int | None) -> str | None:
     """Rssi is given as dBm value."""
     if value is None:
         return None
@@ -61,7 +61,9 @@ def _rssi_convert(value):
 class RfxtrxSensorEntityDescription(SensorEntityDescription):
     """Description of sensor entities."""
 
-    convert: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: x
+    convert: Callable[[Any], StateType | date | datetime | Decimal] = lambda x: cast(
+        StateType, x
+    )
 
 
 SENSOR_TYPES = (
@@ -247,7 +249,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up config entry."""
 
-    def _supported(event):
+    def _supported(event: RFXtrxEvent) -> bool:
         return isinstance(event, (ControlEvent, SensorEvent))
 
     def _constructor(
@@ -255,8 +257,8 @@ async def async_setup_entry(
         auto: RFXtrxEvent | None,
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
-    ):
-        entities: list[RfxtrxSensor] = []
+    ) -> list[Entity]:
+        entities: list[Entity] = []
         for data_type in set(event.values) & set(SENSOR_TYPES_DICT):
             entities.append(
                 RfxtrxSensor(

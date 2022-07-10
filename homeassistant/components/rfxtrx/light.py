@@ -10,6 +10,7 @@ from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEnti
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import DeviceTuple, RfxtrxCommandEntity, async_setup_platform_entry
@@ -18,7 +19,7 @@ from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST
 _LOGGER = logging.getLogger(__name__)
 
 
-def supported(event: rfxtrxmod.RFXtrxEvent):
+def supported(event: rfxtrxmod.RFXtrxEvent) -> bool:
     """Return whether an event supports light."""
     return (
         isinstance(event.device, rfxtrxmod.LightingDevice)
@@ -38,7 +39,7 @@ async def async_setup_entry(
         auto: rfxtrxmod.RFXtrxEvent | None,
         device_id: DeviceTuple,
         entity_info: dict[str, Any],
-    ):
+    ) -> list[Entity]:
         return [
             RfxtrxLight(
                 event.device,
