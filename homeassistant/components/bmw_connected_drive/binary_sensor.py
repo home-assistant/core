@@ -148,7 +148,9 @@ SENSOR_TYPES: tuple[BMWBinarySensorEntityDescription, ...] = (
         # device class power: On means power detected, Off means no power
         value_fn=lambda v: v.fuel_and_battery.charging_status == ChargingState.CHARGING,
         attr_fn=lambda v, u: {
-            "charging_status": str(v.fuel_and_battery.charging_status),
+            "charging_status": v.fuel_and_battery.charging_status.value
+            if v.fuel_and_battery.charging_status
+            else None,
         },
     ),
     BMWBinarySensorEntityDescription(
