@@ -240,7 +240,7 @@ class HomekitControllerFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             # that the device is available and we should not wait
             # to retry connecting any longer. reconnect_soon
             # will do nothing if the device is already connected
-            await conn.pairing.connection.reconnect_soon()
+            await conn.pairing.reconnect_soon()
             if conn.config_num != config_num:
                 _LOGGER.debug(
                     "HomeKit info %s: c# incremented, refreshing entities", hkid

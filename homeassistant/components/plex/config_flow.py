@@ -1,6 +1,10 @@
 """Config flow for Plex."""
+from __future__ import annotations
+
+from collections.abc import Mapping
 import copy
 import logging
+from typing import Any
 
 from aiohttp import web_response
 import plexapi.exceptions
@@ -24,6 +28,7 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -85,7 +90,9 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> PlexOptionsFlowHandler:
         """Get the options flow for this handler."""
         return PlexOptionsFlowHandler(config_entry)
 
@@ -325,16 +332,16 @@ class PlexFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         server_config = {CONF_TOKEN: self.token}
         return await self.async_step_server_validate(server_config)
 
-    async def async_step_reauth(self, data):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
-        self.current_login = dict(data)
+        self.current_login = dict(entry_data)
         return await self.async_step_user()
 
 
 class PlexOptionsFlowHandler(config_entries.OptionsFlow):
     """Handle Plex options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Plex options flow."""
         self.options = copy.deepcopy(dict(config_entry.options))
         self.server_id = config_entry.data[CONF_SERVER_IDENTIFIER]

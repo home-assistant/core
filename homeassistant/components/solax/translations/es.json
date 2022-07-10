@@ -7,6 +7,8 @@
         "step": {
             "user": {
                 "data": {
+                    "ip_address": "Direcci\u00f3n IP",
+                    "password": "Contrase\u00f1a",
                     "port": "Puerto"
                 }
             }

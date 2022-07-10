@@ -5,6 +5,7 @@ from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_registry import (
+    EVENT_ENTITY_REGISTRY_UPDATED,
     RegistryEntry,
     RegistryEntryDisabler,
     RegistryEntryHider,
@@ -81,6 +82,40 @@ async def test_list_entities(hass, client):
         },
     ]
 
+    mock_registry(
+        hass,
+        {
+            "test_domain.name": RegistryEntry(
+                entity_id="test_domain.name",
+                unique_id="1234",
+                platform="test_platform",
+                name="Hello World",
+            ),
+        },
+    )
+
+    hass.bus.async_fire(
+        EVENT_ENTITY_REGISTRY_UPDATED,
+        {"action": "create", "entity_id": "test_domain.no_name"},
+    )
+    await client.send_json({"id": 6, "type": "config/entity_registry/list"})
+    msg = await client.receive_json()
+
+    assert msg["result"] == [
+        {
+            "config_entry_id": None,
+            "device_id": None,
+            "area_id": None,
+            "disabled_by": None,
+            "entity_id": "test_domain.name",
+            "hidden_by": None,
+            "name": "Hello World",
+            "icon": None,
+            "platform": "test_platform",
+            "entity_category": None,
+        },
+    ]
+
 
 async def test_get_entity(hass, client):
     """Test get entry."""
@@ -117,6 +152,7 @@ async def test_get_entity(hass, client):
         "entity_id": "test_domain.name",
         "hidden_by": None,
         "icon": None,
+        "has_entity_name": False,
         "name": "Hello World",
         "options": {},
         "original_device_class": None,
@@ -146,6 +182,7 @@ async def test_get_entity(hass, client):
         "entity_id": "test_domain.no_name",
         "hidden_by": None,
         "icon": None,
+        "has_entity_name": False,
         "name": None,
         "options": {},
         "original_device_class": None,
@@ -208,6 +245,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "has_entity_name": False,
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -279,6 +317,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "has_entity_name": False,
             "name": "after update",
             "options": {},
             "original_device_class": None,
@@ -315,6 +354,7 @@ async def test_update_entity(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": "user",  # We exchange strings over the WS API, not enums
             "icon": "icon:after update",
+            "has_entity_name": False,
             "name": "after update",
             "options": {"sensor": {"unit_of_measurement": "beard_second"}},
             "original_device_class": None,
@@ -373,6 +413,7 @@ async def test_update_entity_require_restart(hass, client):
             "entity_id": "test_domain.world",
             "icon": None,
             "hidden_by": None,
+            "has_entity_name": False,
             "name": None,
             "options": {},
             "original_device_class": None,
@@ -479,6 +520,7 @@ async def test_update_entity_no_changes(hass, client):
             "entity_id": "test_domain.world",
             "hidden_by": None,
             "icon": None,
+            "has_entity_name": False,
             "name": "name of entity",
             "options": {},
             "original_device_class": None,
@@ -564,6 +606,7 @@ async def test_update_entity_id(hass, client):
             "entity_id": "test_domain.planet",
             "hidden_by": None,
             "icon": None,
+            "has_entity_name": False,
             "name": None,
             "options": {},
             "original_device_class": None,

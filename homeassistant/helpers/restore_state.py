@@ -139,7 +139,7 @@ class RestoreStateData:
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the restore state data class."""
         self.hass: HomeAssistant = hass
-        self.store: Store = Store(
+        self.store = Store[list[dict[str, Any]]](
             hass, STORAGE_VERSION, STORAGE_KEY, encoder=JSONEncoder
         )
         self.last_states: dict[str, StoredState] = {}

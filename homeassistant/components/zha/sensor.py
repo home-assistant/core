@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
@@ -27,6 +27,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_HOURS,
+    TIME_MINUTES,
     TIME_SECONDS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
@@ -62,8 +63,11 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 PARALLEL_UPDATES = 5
 
@@ -114,26 +118,26 @@ class Sensor(ZhaEntity, SensorEntity):
     SENSOR_ATTR: int | str | None = None
     _decimals: int = 1
     _divisor: int = 1
-    _multiplier: int = 1
+    _multiplier: int | float = 1
     _unit: str | None = None
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
 
     @classmethod
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -212,8 +216,8 @@ class Battery(Sensor):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -419,7 +423,10 @@ class Illuminance(Sensor):
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
@@ -448,7 +455,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.demand_formatter(value)
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Return Unit of measurement."""
         return self.unit_of_measure_map.get(self._channel.unit_of_measurement)
 
@@ -463,7 +470,10 @@ class SmartEnergyMetering(Sensor):
         return attrs
 
 
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
 class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
     """Smart Energy Metering summation sensor."""
 
@@ -494,6 +504,26 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
 
         cooked = float(self._channel.multiplier * value) / self._channel.divisor
         return round(cooked, 3)
+
+
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergySummation(SmartEnergySummation):
+    """Polled Smart Energy Metering summation sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
 
 
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
@@ -583,6 +613,17 @@ class PPBVOCLevel(Sensor):
     _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
+@MULTI_MATCH(channel_names="pm25")
+class PM25(Sensor):
+    """Particulate Matter 2.5 microns or less sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
 @MULTI_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
@@ -602,8 +643,8 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -722,13 +763,14 @@ class RSSISensor(Sensor, id_suffix="rssi"):
     _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    unique_id_suffix: str
 
     @classmethod
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -754,3 +796,38 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
 class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class TimeLeft(Sensor, id_suffix="time_left"):
+    """Sensor that displays time left value."""
+
+    SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
+    """Sensor that displays device run time (in minutes)."""
+
+    SENSOR_ATTR = "device_run_time"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
+    """Sensor that displays run time of the current filter (in minutes)."""
+
+    SENSOR_ATTR = "filter_run_time"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES

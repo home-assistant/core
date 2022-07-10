@@ -1,7 +1,6 @@
 """Camera that loads a picture from an MQTT topic."""
 from __future__ import annotations
 
-import asyncio
 from base64 import b64decode
 import functools
 
@@ -17,17 +16,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import subscription
-from .. import mqtt
+from .config import MQTT_BASE_SCHEMA
 from .const import CONF_ENCODING, CONF_QOS, CONF_TOPIC
 from .debug_info import log_messages
 from .mixins import (
     MQTT_ENTITY_COMMON_SCHEMA,
     MqttEntity,
-    async_get_platform_config_from_yaml,
+    async_discover_yaml_entities,
     async_setup_entry_helper,
     async_setup_platform_helper,
     warn_for_legacy_schema,
 )
+from .util import valid_subscribe_topic
 
 DEFAULT_NAME = "MQTT Camera"
 
@@ -40,10 +40,10 @@ MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
     }
 )
 
-PLATFORM_SCHEMA_MODERN = mqtt.MQTT_BASE_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_BASE_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_TOPIC): mqtt.valid_subscribe_topic,
+        vol.Required(CONF_TOPIC): valid_subscribe_topic,
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
@@ -65,7 +65,11 @@ async def async_setup_platform(
     """Set up MQTT camera configured under the camera platform key (deprecated)."""
     # Deprecated in HA Core 2022.6
     await async_setup_platform_helper(
-        hass, camera.DOMAIN, config, async_add_entities, _async_setup_entity
+        hass,
+        camera.DOMAIN,
+        discovery_info or config,
+        async_add_entities,
+        _async_setup_entity,
     )
 
 
@@ -76,14 +80,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up MQTT camera through configuration.yaml and dynamically through MQTT discovery."""
     # load and initialize platform config from configuration.yaml
-    await asyncio.gather(
-        *(
-            _async_setup_entity(hass, async_add_entities, config, config_entry)
-            for config in await async_get_platform_config_from_yaml(
-                hass, camera.DOMAIN, PLATFORM_SCHEMA_MODERN
-            )
-        )
-    )
+    await async_discover_yaml_entities(hass, camera.DOMAIN)
     # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry

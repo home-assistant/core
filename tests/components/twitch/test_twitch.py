@@ -29,15 +29,13 @@ CONFIG_WITH_OAUTH = {
 USER_OBJECT = {
     "id": 123,
     "display_name": "channel123",
-    "profile_image_url": "logo1.png",
-    "offline_image_url": "logo.png",
+    "profile_image_url": "logo.png",
     "view_count": 42,
 }
 USER_OBJECT1 = {
     "id": 456,
     "display_name": "channel123",
-    "profile_image_url": "logo1.png",
-    "offline_image_url": "logo.png",
+    "profile_image_url": "logo.png",
     "view_count": 96,
 }
 STREAM_OBJECT_ONLINE = {

@@ -1,4 +1,6 @@
 """WiZ Platform integration."""
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
@@ -80,10 +82,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Found bulb {bulb.mac} at {ip_address}, expected {entry.unique_id}"
         )
 
-    async def _async_update() -> None:
+    async def _async_update() -> float | None:
         """Update the WiZ device."""
         try:
             await bulb.updateState()
+            if bulb.power_monitoring is not False:
+                power: float | None = await bulb.get_power()
+                return power
+            return None
         except WIZ_EXCEPTIONS as ex:
             raise UpdateFailed(f"Failed to update device at {ip_address}: {ex}") from ex
 
@@ -117,7 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     def _async_push_update(state: PilotParser) -> None:
         """Receive a push update."""
         _LOGGER.debug("%s: Got push update: %s", bulb.mac, state.pilotResult)
-        coordinator.async_set_updated_data(None)
+        coordinator.async_set_updated_data(coordinator.data)
         if state.get_source() == PIR_SOURCE:
             async_dispatcher_send(hass, SIGNAL_WIZ_PIR.format(bulb.mac))
 
@@ -127,7 +133,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = WizData(
         coordinator=coordinator, bulb=bulb, scenes=scenes
     )
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     return True

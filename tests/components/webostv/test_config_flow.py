@@ -17,11 +17,7 @@ from homeassistant.const import (
     CONF_SOURCE,
     CONF_UNIQUE_ID,
 )
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import setup_webostv
 from .const import CLIENT_KEY, FAKE_UUID, HOST, MOCK_APPS, MOCK_INPUTS, TV_NAME
@@ -55,7 +51,7 @@ async def test_form(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
@@ -65,7 +61,7 @@ async def test_form(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_init(
@@ -75,7 +71,7 @@ async def test_form(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     with patch("homeassistant.components.webostv.async_setup_entry", return_value=True):
@@ -85,7 +81,7 @@ async def test_form(hass, client):
 
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TV_NAME
 
 
@@ -115,7 +111,7 @@ async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "init"
 
     result2 = await hass.config_entries.options.async_configure(
@@ -124,7 +120,7 @@ async def test_options_flow_live_tv_in_apps(hass, client, apps, inputs):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_SOURCES] == ["Live TV", "Input01", "Input02"]
 
 
@@ -136,7 +132,7 @@ async def test_options_flow_cannot_retrieve(hass, client):
     result = await hass.config_entries.options.async_init(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_retrieve"}
 
 
@@ -154,7 +150,7 @@ async def test_form_cannot_connect(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -172,7 +168,7 @@ async def test_form_pairexception(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "error_pairing"
 
 
@@ -187,7 +183,7 @@ async def test_entry_already_configured(hass, client):
         data=MOCK_YAML_CONFIG,
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -201,7 +197,7 @@ async def test_form_ssdp(hass, client):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
 
@@ -216,7 +212,7 @@ async def test_ssdp_in_progress(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result2 = await hass.config_entries.flow.async_init(
@@ -224,7 +220,7 @@ async def test_ssdp_in_progress(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
 
@@ -239,7 +235,7 @@ async def test_ssdp_update_uuid(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.unique_id == MOCK_DISCOVERY_INFO.upnp[ssdp.ATTR_UPNP_UDN][5:]
 
@@ -258,7 +254,7 @@ async def test_ssdp_not_update_uuid(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] == RESULT_TYPE_FORM
+    assert result2["type"] == FlowResultType.FORM
     assert result2["step_id"] == "pairing"
     assert entry.unique_id is None
 
@@ -276,7 +272,7 @@ async def test_form_abort_uuid_configured(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     user_config = {
@@ -291,7 +287,7 @@ async def test_form_abort_uuid_configured(hass, client):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "pairing"
 
     result = await hass.config_entries.flow.async_configure(
@@ -300,6 +296,6 @@ async def test_form_abort_uuid_configured(hass, client):
 
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == "new_host"

@@ -52,10 +52,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     options = ConnectionOptions(host=host, username=username, password=password)
     try:
         nam = await NettigoAirMonitor.create(websession, options)
-    except AuthFailed as err:
-        raise ConfigEntryAuthFailed from err
     except (ApiError, ClientError, ClientConnectorError, asyncio.TimeoutError) as err:
         raise ConfigEntryNotReady from err
+
+    try:
+        await nam.async_check_credentials()
+    except AuthFailed as err:
+        raise ConfigEntryAuthFailed from err
 
     coordinator = NAMDataUpdateCoordinator(hass, nam, entry.unique_id)
     await coordinator.async_config_entry_first_refresh()
@@ -63,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Remove air_quality entities from registry if they exist
     ent_reg = entity_registry.async_get(hass)

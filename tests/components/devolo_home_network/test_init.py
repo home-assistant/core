@@ -12,7 +12,6 @@ from . import configure_integration
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_setup_entry(hass: HomeAssistant):
     """Test setup entry."""
     entry = configure_integration(hass)
@@ -24,7 +23,6 @@ async def test_setup_entry(hass: HomeAssistant):
         assert entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_setup_device_not_found(hass: HomeAssistant):
     """Test setup entry."""
     entry = configure_integration(hass)
@@ -37,7 +35,6 @@ async def test_setup_device_not_found(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_unload_entry(hass: HomeAssistant):
     """Test unload entry."""
     entry = configure_integration(hass)
@@ -48,7 +45,6 @@ async def test_unload_entry(hass: HomeAssistant):
 
 
 @pytest.mark.usefixtures("mock_device")
-@pytest.mark.usefixtures("mock_zeroconf")
 async def test_hass_stop(hass: HomeAssistant):
     """Test homeassistant stop event."""
     entry = configure_integration(hass)
@@ -58,4 +54,5 @@ async def test_hass_stop(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
-        assert async_disconnect.assert_called_once
+        await hass.async_block_till_done()
+        async_disconnect.assert_called_once()

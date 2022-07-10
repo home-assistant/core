@@ -39,7 +39,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -246,12 +245,12 @@ async def async_setup_entry(
     def async_add_sensor(_: EventType, sensor_id: str) -> None:
         """Add sensor from deCONZ."""
         sensor = gateway.api.sensors[sensor_id]
+        entities: list[DeconzSensor] = []
 
-        if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
-            return
-
-        if sensor.battery is None:
+        if sensor.battery is None and not sensor.type.startswith("CLIP"):
             DeconzBatteryTracker(sensor_id, gateway, async_add_entities)
+
+        known_entities = set(gateway.entities[DOMAIN])
 
         for description in (
             ENTITY_DESCRIPTIONS.get(type(sensor), []) + SENSOR_DESCRIPTIONS
@@ -262,30 +261,15 @@ async def async_setup_entry(
             ):
                 continue
 
-            async_add_entities([DeconzSensor(sensor, gateway, description)])
+            entity = DeconzSensor(sensor, gateway, description)
+            if entity.unique_id not in known_entities:
+                entities.append(entity)
 
-    config_entry.async_on_unload(
-        gateway.api.sensors.subscribe(
-            gateway.evaluate_add_device(async_add_sensor),
-            EventType.ADDED,
-        )
-    )
-    for sensor_id in gateway.api.sensors:
-        async_add_sensor(EventType.ADDED, sensor_id)
+        async_add_entities(entities)
 
-    @callback
-    def async_reload_clip_sensors() -> None:
-        """Load clip sensor sensors from deCONZ."""
-        for sensor_id, sensor in gateway.api.sensors.items():
-            if sensor.type.startswith("CLIP"):
-                async_add_sensor(EventType.ADDED, sensor_id)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_reload_clip_sensors,
-            async_reload_clip_sensors,
-        )
+    gateway.register_platform_add_device_callback(
+        async_add_sensor,
+        gateway.api.sensors,
     )
 
 
@@ -407,6 +391,7 @@ class DeconzBatteryTracker:
         """Update the device's state."""
         if "battery" in self.sensor.changed_keys:
             self.unsub()
-            self.async_add_entities(
-                [DeconzSensor(self.sensor, self.gateway, SENSOR_DESCRIPTIONS[0])]
-            )
+            known_entities = set(self.gateway.entities[DOMAIN])
+            entity = DeconzSensor(self.sensor, self.gateway, SENSOR_DESCRIPTIONS[0])
+            if entity.unique_id not in known_entities:
+                self.async_add_entities([entity])

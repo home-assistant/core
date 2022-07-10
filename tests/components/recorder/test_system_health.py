@@ -53,6 +53,37 @@ async def test_recorder_system_health_alternate_dbms(hass, recorder_mock, dialec
     }
 
 
+@pytest.mark.parametrize(
+    "dialect_name", [SupportedDialect.MYSQL, SupportedDialect.POSTGRESQL]
+)
+async def test_recorder_system_health_db_url_missing_host(
+    hass, recorder_mock, dialect_name
+):
+    """Test recorder system health with a db_url without a hostname."""
+    assert await async_setup_component(hass, "system_health", {})
+    await async_wait_recording_done(hass)
+
+    instance = get_instance(hass)
+    with patch(
+        "homeassistant.components.recorder.core.Recorder.dialect_name", dialect_name
+    ), patch.object(
+        instance,
+        "db_url",
+        "postgresql://homeassistant:blabla@/home_assistant?host=/config/socket",
+    ), patch(
+        "sqlalchemy.orm.session.Session.execute",
+        return_value=Mock(first=Mock(return_value=("1048576",))),
+    ):
+        info = await get_system_health_info(hass, "recorder")
+    assert info == {
+        "current_recorder_run": instance.run_history.current.start,
+        "oldest_recorder_run": instance.run_history.first.start,
+        "estimated_db_size": "1.00 MiB",
+        "database_engine": dialect_name.value,
+        "database_version": ANY,
+    }
+
+
 async def test_recorder_system_health_crashed_recorder_runs_table(
     hass: HomeAssistant, async_setup_recorder_instance: SetupRecorderInstanceT
 ):

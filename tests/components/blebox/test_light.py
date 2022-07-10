@@ -39,6 +39,8 @@ def dimmer_fixture():
         is_on=True,
         supports_color=False,
         supports_white=False,
+        color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
+        effect_list=None,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
@@ -210,6 +212,8 @@ def wlightboxs_fixture():
         is_on=None,
         supports_color=False,
         supports_white=False,
+        color_mode=blebox_uniapi.light.BleboxColorMode.MONO,
+        effect_list=["NONE", "PL", "RELAX"],
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
@@ -310,6 +314,9 @@ def wlightbox_fixture():
         supports_white=True,
         white_value=None,
         rgbw_hex=None,
+        color_mode=blebox_uniapi.light.BleboxColorMode.RGBW,
+        effect="NONE",
+        effect_list=["NONE", "PL", "POLICE"],
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
@@ -379,7 +386,7 @@ async def test_wlightbox_on_rgbw(wlightbox, hass, config):
 
     def turn_on(value):
         feature_mock.is_on = True
-        assert value == "c1d2f3c7"
+        assert value == [193, 210, 243, 199]
         feature_mock.white_value = 0xC7  # on
         feature_mock.rgbw_hex = "c1d2f3c7"
 
@@ -502,17 +509,18 @@ async def test_turn_on_failure(feature, hass, config, caplog):
     caplog.set_level(logging.ERROR)
 
     feature_mock, entity_id = feature
-    feature_mock.async_on = AsyncMock(side_effect=blebox_uniapi.error.BadOnValueError)
+    feature_mock.async_on = AsyncMock(side_effect=ValueError)
     await async_setup_entity(hass, config, entity_id)
 
     feature_mock.sensible_on_value = 123
-    await hass.services.async_call(
-        "light",
-        SERVICE_TURN_ON,
-        {"entity_id": entity_id},
-        blocking=True,
-    )
+    with pytest.raises(ValueError) as info:
+        await hass.services.async_call(
+            "light",
+            SERVICE_TURN_ON,
+            {"entity_id": entity_id},
+            blocking=True,
+        )
 
-    assert (
-        f"Turning on '{feature_mock.full_name}' failed: Bad value 123 ()" in caplog.text
+    assert f"Turning on '{feature_mock.full_name}' failed: Bad value 123" in str(
+        info.value
     )

@@ -134,9 +134,10 @@ class TwitchSensor(CoordinatorEntity, SensorEntity):
     def entity_picture(self) -> str | None:
         """Return the entity picture of the sensor."""
         if self.unique_id in self.coordinator.streams:
-            return self.coordinator.streams[self.unique_id]["thumbnail_url"]
+            image = self.coordinator.streams[self.unique_id]["thumbnail_url"]
+            return image.format(height=24, width=24)
         if self.unique_id in self.coordinator.users:
-            return self.coordinator.users[self.unique_id]["offline_image_url"]
+            return self.coordinator.users[self.unique_id]["profile_image_url"]
         return None  # pragma: no cover
 
     @property

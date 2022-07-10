@@ -1,4 +1,5 @@
-"""Support for tracking MQTT enabled devices identified through discovery."""
+"""Support for tracking MQTT enabled devices."""
+import asyncio
 import functools
 
 import voluptuous as vol
@@ -18,17 +19,23 @@ from homeassistant.const import (
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 
-from .. import MqttValueTemplate, subscription
-from ... import mqtt
+from .. import subscription
+from ..config import MQTT_RO_SCHEMA
 from ..const import CONF_QOS, CONF_STATE_TOPIC
 from ..debug_info import log_messages
-from ..mixins import MQTT_ENTITY_COMMON_SCHEMA, MqttEntity, async_setup_entry_helper
+from ..mixins import (
+    MQTT_ENTITY_COMMON_SCHEMA,
+    MqttEntity,
+    async_get_platform_config_from_yaml,
+    async_setup_entry_helper,
+)
+from ..models import MqttValueTemplate
 
 CONF_PAYLOAD_HOME = "payload_home"
 CONF_PAYLOAD_NOT_HOME = "payload_not_home"
 CONF_SOURCE_TYPE = "source_type"
 
-PLATFORM_SCHEMA_DISCOVERY = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
+PLATFORM_SCHEMA_MODERN = MQTT_RO_SCHEMA.extend(
     {
         vol.Optional(CONF_NAME): cv.string,
         vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
@@ -37,11 +44,21 @@ PLATFORM_SCHEMA_DISCOVERY = mqtt.MQTT_RO_PLATFORM_SCHEMA.extend(
     }
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
 
-DISCOVERY_SCHEMA = PLATFORM_SCHEMA_DISCOVERY.extend({}, extra=vol.REMOVE_EXTRA)
+DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 
 
 async def async_setup_entry_from_discovery(hass, config_entry, async_add_entities):
-    """Set up MQTT device tracker dynamically through MQTT discovery."""
+    """Set up MQTT device tracker configuration.yaml and dynamically through MQTT discovery."""
+    # load and initialize platform config from configuration.yaml
+    await asyncio.gather(
+        *(
+            _async_setup_entity(hass, async_add_entities, config, config_entry)
+            for config in await async_get_platform_config_from_yaml(
+                hass, device_tracker.DOMAIN
+            )
+        )
+    )
+    # setup for discovery
     setup = functools.partial(
         _async_setup_entity, hass, async_add_entities, config_entry=config_entry
     )
