@@ -85,7 +85,7 @@ async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
         {
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            CONF_URL: "customize",
+            CONF_URL: CONF_CUSTOMIZE,
         },
     )
 
@@ -98,14 +98,10 @@ async def test_user_custom_url(hass: HomeAssistant, ezviz_config_flow) -> None:
             result["flow_id"],
             {CONF_URL: "test-user"},
         )
+    await hass.async_block_till_done()
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_PASSWORD: "test-pass",
-        CONF_TYPE: ATTR_TYPE_CLOUD,
-        CONF_URL: "test-user",
-        CONF_USERNAME: "test-user",
-    }
+    assert result["data"] == API_LOGIN_RETURN_VALIDATE
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -116,7 +112,7 @@ async def test_async_step_reauth(hass, ezviz_config_flow):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -127,7 +123,7 @@ async def test_async_step_reauth(hass, ezviz_config_flow):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {**API_LOGIN_RETURN_VALIDATE}
 
@@ -136,7 +132,7 @@ async def test_async_step_reauth(hass, ezviz_config_flow):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -149,7 +145,7 @@ async def test_async_step_reauth(hass, ezviz_config_flow):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
 
@@ -182,7 +178,7 @@ async def test_step_reauth_abort_if_cloud_account_missing(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
     )
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "ezviz_cloud_account_missing"
 
 
@@ -251,7 +247,7 @@ async def test_user_form_exception(hass: HomeAssistant, ezviz_config_flow) -> No
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -369,7 +365,7 @@ async def test_discover_exception_step1(
         },
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "confirm"
     assert result["errors"] == {"base": "mfa_required"}
 
@@ -508,7 +504,7 @@ async def test_user_custom_url_exception(
         {CONF_URL: "test-user"},
     )
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user_custom_url"
     assert result["errors"] == {"base": "mfa_required"}
 
@@ -529,7 +525,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
 
@@ -540,7 +536,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
         )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "test-username"
     assert result["data"] == {**API_LOGIN_RETURN_VALIDATE}
 
@@ -549,7 +545,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_REAUTH}, data=USER_INPUT_VALIDATE
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
 
@@ -563,7 +559,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -577,7 +573,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_host"}
 
@@ -591,7 +587,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "mfa_required"}
 
@@ -605,7 +601,7 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": "invalid_auth"}
 
@@ -619,5 +615,5 @@ async def test_async_step_reauth_exception(hass, ezviz_config_flow):
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "unknown"
