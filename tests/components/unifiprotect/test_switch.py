@@ -19,10 +19,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
     init_entry,
+    remove_entities,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -35,6 +37,34 @@ CAMERA_SWITCHES_BASIC = [
 CAMERA_SWITCHES_NO_EXTRA = [
     d for d in CAMERA_SWITCHES_BASIC if d.name not in ("High FPS", "Privacy Mode")
 ]
+
+
+async def test_switch_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+):
+    """Test removing and re-adding a camera device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SWITCH, 13, 12)
+    await remove_entities(hass, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
+    await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SWITCH, 13, 12)
+
+
+async def test_switch_light_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+):
+    """Test removing and re-adding a light device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.SWITCH, 2, 1)
+    await remove_entities(hass, [light])
+    assert_entity_counts(hass, Platform.SWITCH, 0, 0)
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.SWITCH, 2, 1)
 
 
 async def test_switch_setup_no_perm(

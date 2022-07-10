@@ -5,7 +5,7 @@ repos:
       - id: pyupgrade
         args: [--py39-plus]
   - repo: https://github.com/psf/black
-    rev: 22.3.0
+    rev: 22.6.0
     hooks:
       - id: black
         args:
@@ -31,7 +31,7 @@ repos:
           - pyflakes==2.4.0
           - flake8-docstrings==1.6.0
           - pydocstyle==6.1.1
-          - flake8-comprehensions==3.8.0
+          - flake8-comprehensions==3.10.0
           - flake8-noqa==1.2.1
           - mccabe==0.6.1
         files: ^(homeassistant|script|tests)/.+\.py$
@@ -96,7 +96,7 @@ repos:
         files: ^(homeassistant|pylint)/.+\.py$
       - id: pylint
         name: pylint
-        entry: script/run-in-env.sh pylint -j 0
+        entry: script/run-in-env.sh pylint -j 0 --ignore-missing-annotations=y
         language: script
         types: [python]
         files: ^homeassistant/.+\.py$

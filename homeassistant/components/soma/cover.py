@@ -102,7 +102,7 @@ class SomaTilt(SomaEntity, CoverEntity):
             )
         self.set_position(kwargs[ATTR_TILT_POSITION])
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the entity with the latest data."""
         response = await self.get_shade_state_from_api()
 
@@ -172,7 +172,7 @@ class SomaShade(SomaEntity, CoverEntity):
                 f'Error while setting the cover position ({self.name}): {response["msg"]}'
             )
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Update the cover with the latest data."""
         response = await self.get_shade_state_from_api()
 

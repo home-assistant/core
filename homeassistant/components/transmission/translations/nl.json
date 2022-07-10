@@ -1,7 +1,8 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
+            "already_configured": "Apparaat is al geconfigureerd",
+            "reauth_successful": "Herauthenticatie geslaagd"
         },
         "error": {
             "cannot_connect": "Kan geen verbinding maken",
@@ -9,6 +10,13 @@
             "name_exists": "Naam bestaat al"
         },
         "step": {
+            "reauth_confirm": {
+                "data": {
+                    "password": "Wachtwoord"
+                },
+                "description": "Het wachtwoord voor {username} is onjuist.",
+                "title": "Integratie herauthenticeren"
+            },
             "user": {
                 "data": {
                     "host": "Host",

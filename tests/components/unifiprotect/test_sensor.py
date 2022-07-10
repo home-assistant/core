@@ -41,16 +41,46 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     enable_entity,
     ids_from_device_description,
     init_entry,
+    remove_entities,
     reset_objects,
     time_changed,
 )
 
 CAMERA_SENSORS_WRITE = CAMERA_SENSORS[:5]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:8]
+
+
+async def test_sensor_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+):
+    """Test removing and re-adding a camera device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SENSOR, 25, 13)
+    await remove_entities(hass, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
+    await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SENSOR, 25, 13)
+
+
+async def test_sensor_sensor_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+):
+    """Test removing and re-adding a light device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
+    await remove_entities(hass, [sensor_all])
+    assert_entity_counts(hass, Platform.SENSOR, 12, 9)
+    await adopt_devices(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.SENSOR, 22, 14)
 
 
 async def test_sensor_setup_sensor(

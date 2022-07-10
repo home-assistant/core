@@ -41,10 +41,54 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    remove_entities,
 )
+
+
+async def test_select_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+):
+    """Test removing and re-adding a camera device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+    await remove_entities(hass, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+    await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.SELECT, 4, 4)
+
+
+async def test_select_light_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+):
+    """Test removing and re-adding a light device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+    await remove_entities(hass, [light])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.SELECT, 2, 2)
+
+
+async def test_select_viewer_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, viewer: Viewer
+):
+    """Test removing and re-adding a light device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [viewer])
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
+    await remove_entities(hass, [viewer])
+    assert_entity_counts(hass, Platform.SELECT, 0, 0)
+    await adopt_devices(hass, ufp, [viewer])
+    assert_entity_counts(hass, Platform.SELECT, 1, 1)
 
 
 async def test_select_setup_light(

@@ -21,10 +21,51 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    remove_entities,
 )
+
+
+async def test_number_sensor_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: Camera, unadopted_camera: Camera
+):
+    """Test removing and re-adding a camera device."""
+
+    await init_entry(hass, ufp, [camera, unadopted_camera])
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
+    await remove_entities(hass, [camera, unadopted_camera])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, ufp, [camera, unadopted_camera])
+    assert_entity_counts(hass, Platform.NUMBER, 3, 3)
+
+
+async def test_number_sensor_light_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.NUMBER, 2, 2)
+    await remove_entities(hass, [light])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.NUMBER, 2, 2)
+
+
+async def test_number_lock_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
+    await remove_entities(hass, [doorlock])
+    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
+    await adopt_devices(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
 
 
 async def test_number_setup_light(

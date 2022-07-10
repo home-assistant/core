@@ -296,6 +296,34 @@ def test_int_function(hass):
     assert render(hass, "{{ int('bad', default=1) }}") == 1
 
 
+def test_bool_function(hass):
+    """Test bool function."""
+    assert render(hass, "{{ bool(true) }}") is True
+    assert render(hass, "{{ bool(false) }}") is False
+    assert render(hass, "{{ bool('on') }}") is True
+    assert render(hass, "{{ bool('off') }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool('unknown') }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ bool(none) }}")
+    assert render(hass, "{{ bool('unavailable', none) }}") is None
+    assert render(hass, "{{ bool('unavailable', default=none) }}") is None
+
+
+def test_bool_filter(hass):
+    """Test bool filter."""
+    assert render(hass, "{{ true | bool }}") is True
+    assert render(hass, "{{ false | bool }}") is False
+    assert render(hass, "{{ 'on' | bool }}") is True
+    assert render(hass, "{{ 'off' | bool }}") is False
+    with pytest.raises(TemplateError):
+        render(hass, "{{ 'unknown' | bool }}")
+    with pytest.raises(TemplateError):
+        render(hass, "{{ none | bool }}")
+    assert render(hass, "{{ 'unavailable' | bool(none) }}") is None
+    assert render(hass, "{{ 'unavailable' | bool(default=none) }}") is None
+
+
 @pytest.mark.parametrize(
     "value, expected",
     [

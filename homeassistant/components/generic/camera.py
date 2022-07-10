@@ -7,6 +7,7 @@ from typing import Any
 
 import httpx
 import voluptuous as vol
+import yarl
 
 from homeassistant.components.camera import (
     DEFAULT_CONTENT_TYPE,
@@ -146,6 +147,8 @@ class GenericCamera(Camera):
         self.hass = hass
         self._attr_unique_id = identifier
         self._authentication = device_info.get(CONF_AUTHENTICATION)
+        self._username = device_info.get(CONF_USERNAME)
+        self._password = device_info.get(CONF_PASSWORD)
         self._name = device_info.get(CONF_NAME, title)
         self._still_image_url = device_info.get(CONF_STILL_IMAGE_URL)
         if (
@@ -223,7 +226,17 @@ class GenericCamera(Camera):
             return None
 
         try:
-            return self._stream_source.async_render(parse_result=False)
+            stream_url = self._stream_source.async_render(parse_result=False)
+            url = yarl.URL(stream_url)
+            if (
+                not url.user
+                and not url.password
+                and self._username
+                and self._password
+                and url.is_absolute()
+            ):
+                url = url.with_user(self._username).with_password(self._password)
+            return str(url)
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._stream_source, err)
             return None

@@ -11,7 +11,27 @@ from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockUFPFixture, assert_entity_counts, enable_entity, init_entry
+from .utils import (
+    MockUFPFixture,
+    adopt_devices,
+    assert_entity_counts,
+    enable_entity,
+    init_entry,
+    remove_entities,
+)
+
+
+async def test_button_chime_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, chime: Chime
+):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [chime])
+    assert_entity_counts(hass, Platform.BUTTON, 3, 2)
+    await remove_entities(hass, [chime])
+    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    await adopt_devices(hass, ufp, [chime])
+    assert_entity_counts(hass, Platform.BUTTON, 3, 2)
 
 
 async def test_reboot_button(

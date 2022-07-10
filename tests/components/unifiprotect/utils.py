@@ -5,11 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, Callable, Sequence
+from unittest.mock import Mock
 
 from pyunifiprotect import ProtectApiClient
 from pyunifiprotect.data import (
     Bootstrap,
     Camera,
+    Event,
+    EventType,
+    ModelType,
     ProtectAdoptableDeviceModel,
     WSSubscriptionMessage,
 )
@@ -18,7 +22,7 @@ from pyunifiprotect.test_util.anonymize import random_hex
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 import homeassistant.util.dt as dt_util
 
@@ -165,4 +169,56 @@ async def init_entry(
         add_device(ufp.api.bootstrap, device, regenerate_ids)
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def remove_entities(
+    hass: HomeAssistant,
+    ufp_devices: list[ProtectAdoptableDeviceModel],
+) -> None:
+    """Remove all entities for given Protect devices."""
+
+    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)
+
+    for ufp_device in ufp_devices:
+        if not ufp_device.is_adopted_by_us:
+            continue
+
+        name = ufp_device.display_name.replace(" ", "_").lower()
+        entity = entity_registry.async_get(f"{Platform.SENSOR}.{name}_uptime")
+        assert entity is not None
+
+        device_id = entity.device_id
+        for reg in list(entity_registry.entities.values()):
+            if reg.device_id == device_id:
+                entity_registry.async_remove(reg.entity_id)
+        device_registry.async_remove_device(device_id)
+
+    await hass.async_block_till_done()
+
+
+async def adopt_devices(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    ufp_devices: list[ProtectAdoptableDeviceModel],
+):
+    """Emit WS to re-adopt give Protect devices."""
+
+    for ufp_device in ufp_devices:
+        mock_msg = Mock()
+        mock_msg.changed_data = {}
+        mock_msg.new_obj = Event(
+            api=ufp_device.api,
+            id=random_hex(24),
+            smart_detect_types=[],
+            smart_detect_event_ids=[],
+            type=EventType.DEVICE_ADOPTED,
+            start=dt_util.utcnow(),
+            score=100,
+            metadata={"device_id": ufp_device.id},
+            model=ModelType.EVENT,
+        )
+        ufp.ws_msg(mock_msg)
+
     await hass.async_block_till_done()

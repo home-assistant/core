@@ -15,9 +15,10 @@ from pyunifiprotect.data import (
     ProtectAdoptableDeviceModel,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 
-from .const import ModelType
+from .const import DOMAIN, ModelType
 
 
 def get_nested_attr(obj: Any, attr: str) -> Any:
@@ -98,3 +99,10 @@ def async_get_light_motion_current(obj: Light) -> str:
     ):
         return f"{LightModeType.MOTION.value}Dark"
     return obj.light_mode_settings.mode.value
+
+
+@callback
+def async_dispatch_id(entry: ConfigEntry, dispatch: str) -> str:
+    """Generate entry specific dispatch ID."""
+
+    return f"{DOMAIN}.{entry.entry_id}.{dispatch}"

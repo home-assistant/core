@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from datetime import datetime, timedelta
+from functools import partial
 from ipaddress import IPv4Address
 import json
 from typing import Any
@@ -102,6 +103,11 @@ def mock_ufp_client(bootstrap: Bootstrap):
     """Mock ProtectApiClient for testing."""
     client = Mock()
     client.bootstrap = bootstrap
+    client._bootstrap = bootstrap
+    client.api_path = "/api"
+    # functionality from API client tests actually need
+    client._stream_response = partial(ProtectApiClient._stream_response, client)
+    client.get_camera_video = partial(ProtectApiClient.get_camera_video, client)
 
     nvr = client.bootstrap.nvr
     nvr._api = client

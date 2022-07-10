@@ -231,13 +231,13 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self._async_create_entry()
 
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle flow upon an API authentication error."""
         self._entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        self._host = data[CONF_HOST]
-        self._port = data[CONF_PORT]
-        self._username = data[CONF_USERNAME]
-        self._password = data[CONF_PASSWORD]
+        self._host = entry_data[CONF_HOST]
+        self._port = entry_data[CONF_PORT]
+        self._username = entry_data[CONF_USERNAME]
+        self._password = entry_data[CONF_PASSWORD]
         return await self.async_step_reauth_confirm()
 
     def _show_setup_form_reauth_confirm(

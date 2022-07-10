@@ -5,7 +5,7 @@ from collections import OrderedDict
 from collections.abc import MutableMapping
 import datetime
 import time
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import attr
 
@@ -40,15 +40,16 @@ class ZhaStorage:
         """Initialize the zha device storage."""
         self.hass: HomeAssistant = hass
         self.devices: MutableMapping[str, ZhaDeviceEntry] = {}
-        self._store = Store(hass, STORAGE_VERSION, STORAGE_KEY)
+        self._store = Store[dict[str, Any]](hass, STORAGE_VERSION, STORAGE_KEY)
 
     @callback
     def async_create_device(self, device: ZHADevice) -> ZhaDeviceEntry:
         """Create a new ZhaDeviceEntry."""
+        ieee_str: str = str(device.ieee)
         device_entry: ZhaDeviceEntry = ZhaDeviceEntry(
-            name=device.name, ieee=str(device.ieee), last_seen=device.last_seen
+            name=device.name, ieee=ieee_str, last_seen=device.last_seen
         )
-        self.devices[device_entry.ieee] = device_entry
+        self.devices[ieee_str] = device_entry
         self.async_schedule_save()
         return device_entry
 
@@ -81,8 +82,8 @@ class ZhaStorage:
         ieee_str: str = str(device.ieee)
         old = self.devices[ieee_str]
 
-        if old is not None and device.last_seen is None:
-            return
+        if device.last_seen is None:
+            return old
 
         changes = {}
         changes["last_seen"] = device.last_seen

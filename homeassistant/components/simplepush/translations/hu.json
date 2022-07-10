@@ -13,7 +13,7 @@
                     "event": "Az esem\u00e9ny",
                     "name": "Elnevez\u00e9s",
                     "password": "A k\u00e9sz\u00fcl\u00e9k \u00e1ltal haszn\u00e1lt titkos\u00edt\u00e1s jelszava",
-                    "salt": "A k\u00e9sz\u00fcl\u00e9k \u00e1ltal haszn\u00e1lt salt."
+                    "salt": "A k\u00e9sz\u00fcl\u00e9k \u00e1ltal haszn\u00e1lt 'salt'."
                 }
             }
         }

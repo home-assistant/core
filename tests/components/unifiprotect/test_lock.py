@@ -21,7 +21,26 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockUFPFixture, assert_entity_counts, init_entry
+from .utils import (
+    MockUFPFixture,
+    adopt_devices,
+    assert_entity_counts,
+    init_entry,
+    remove_entities,
+)
+
+
+async def test_lock_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
+):
+    """Test removing and re-adding a lock device."""
+
+    await init_entry(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
+    await remove_entities(hass, [doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 0, 0)
+    await adopt_devices(hass, ufp, [doorlock])
+    assert_entity_counts(hass, Platform.LOCK, 1, 1)
 
 
 async def test_lock_setup(

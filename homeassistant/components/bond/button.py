@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
 
 from bond_async import Action, BPUPSubscriptions
 
@@ -87,6 +86,13 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
         name="Toggle Down Light",
         icon="mdi:lightbulb",
         mutually_exclusive=Action.TURN_DOWN_LIGHT_ON,
+        argument=None,
+    ),
+    BondButtonEntityDescription(
+        key=Action.START_DIMMER,
+        name="Start Dimmer",
+        icon="mdi:brightness-percent",
+        mutually_exclusive=Action.SET_BRIGHTNESS,
         argument=None,
     ),
     BondButtonEntityDescription(
@@ -290,7 +296,7 @@ class BondButtonEntity(BondEntity, ButtonEntity):
             hub, device, bpup_subs, description.name, description.key.lower()
         )
 
-    async def async_press(self, **kwargs: Any) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         if self.entity_description.argument:
             action = Action(

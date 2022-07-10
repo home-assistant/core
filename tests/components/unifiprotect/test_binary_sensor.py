@@ -32,13 +32,57 @@ from homeassistant.helpers import entity_registry as er
 
 from .utils import (
     MockUFPFixture,
+    adopt_devices,
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    remove_entities,
 )
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:4]
+
+
+async def test_binary_sensor_camera_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: Camera, unadopted_camera: Camera
+):
+    """Test removing and re-adding a camera device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
+    await remove_entities(hass, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
+    await adopt_devices(hass, ufp, [doorbell, unadopted_camera])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 3, 3)
+
+
+async def test_binary_sensor_light_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+):
+    """Test removing and re-adding a light device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+    await remove_entities(hass, [light])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 2, 2)
+
+
+async def test_binary_sensor_sensor_remove(
+    hass: HomeAssistant, ufp: MockUFPFixture, sensor_all: Sensor
+):
+    """Test removing and re-adding a light device."""
+
+    ufp.api.bootstrap.nvr.system_info.ustorage = None
+    await init_entry(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
+    await remove_entities(hass, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 0, 0)
+    await adopt_devices(hass, ufp, [sensor_all])
+    assert_entity_counts(hass, Platform.BINARY_SENSOR, 4, 4)
 
 
 async def test_binary_sensor_setup_light(

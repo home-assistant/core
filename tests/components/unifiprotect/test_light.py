@@ -19,7 +19,24 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .utils import MockUFPFixture, assert_entity_counts, init_entry
+from .utils import (
+    MockUFPFixture,
+    adopt_devices,
+    assert_entity_counts,
+    init_entry,
+    remove_entities,
+)
+
+
+async def test_light_remove(hass: HomeAssistant, ufp: MockUFPFixture, light: Light):
+    """Test removing and re-adding a light device."""
+
+    await init_entry(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
+    await remove_entities(hass, [light])
+    assert_entity_counts(hass, Platform.LIGHT, 0, 0)
+    await adopt_devices(hass, ufp, [light])
+    assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
 
 async def test_light_setup(

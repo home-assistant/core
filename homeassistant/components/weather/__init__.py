@@ -22,7 +22,9 @@ from homeassistant.const import (
     PRESSURE_INHG,
     PRESSURE_MBAR,
     PRESSURE_MMHG,
+    SPEED_FEET_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
     SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
@@ -118,8 +120,10 @@ VALID_UNITS_VISIBILITY: tuple[str, ...] = (
     LENGTH_MILES,
 )
 VALID_UNITS_WIND_SPEED: tuple[str, ...] = (
-    SPEED_METERS_PER_SECOND,
+    SPEED_FEET_PER_SECOND,
     SPEED_KILOMETERS_PER_HOUR,
+    SPEED_KNOTS,
+    SPEED_METERS_PER_SECOND,
     SPEED_MILES_PER_HOUR,
 )
 
@@ -304,7 +308,7 @@ class WeatherEntity(Entity):
                 _LOGGER.warning(
                     "%s::%s is overriding deprecated methods on an instance of "
                     "WeatherEntity, this is not valid and will be unsupported "
-                    "from Home Assistant 2022.10. Please %s",
+                    "from Home Assistant 2023.1. Please %s",
                     cls.__module__,
                     cls.__name__,
                     report_issue,

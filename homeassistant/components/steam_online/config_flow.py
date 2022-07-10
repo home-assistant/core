@@ -12,29 +12,16 @@ from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    CONF_ACCOUNT,
-    CONF_ACCOUNTS,
-    DEFAULT_NAME,
-    DOMAIN,
-    LOGGER,
-    PLACEHOLDERS,
-)
+from .const import CONF_ACCOUNT, CONF_ACCOUNTS, DOMAIN, LOGGER, PLACEHOLDERS
 
 
-def validate_input(
-    user_input: dict[str, str | int], multi: bool = False
-) -> list[dict[str, str | int]]:
+def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
     """Handle common flow input validation."""
     steam.api.key.set(user_input[CONF_API_KEY])
     interface = steam.api.interface("ISteamUser")
-    if multi:
-        names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNTS])
-    else:
-        names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
-    return names["response"]["players"]["player"]
+    names = interface.GetPlayerSummaries(steamids=user_input[CONF_ACCOUNT])
+    return names["response"]["players"]["player"][0]
 
 
 class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
@@ -62,8 +49,8 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         elif user_input is not None:
             try:
                 res = await self.hass.async_add_executor_job(validate_input, user_input)
-                if res[0] is not None:
-                    name = str(res[0]["personaname"])
+                if res is not None:
+                    name = str(res["personaname"])
                 else:
                     errors["base"] = "invalid_account"
             except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
@@ -80,22 +67,10 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.hass.config_entries.async_reload(entry.entry_id)
                     return self.async_abort(reason="reauth_successful")
                 self._abort_if_unique_id_configured()
-                if self.source == config_entries.SOURCE_IMPORT:
-                    res = await self.hass.async_add_executor_job(
-                        validate_input, user_input, True
-                    )
-                    accounts_data = {
-                        CONF_ACCOUNTS: {
-                            acc["steamid"]: acc["personaname"] for acc in res
-                        }
-                    }
-                    user_input.pop(CONF_ACCOUNTS)
-                else:
-                    accounts_data = {CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}}
                 return self.async_create_entry(
-                    title=name or DEFAULT_NAME,
+                    title=name,
                     data=user_input,
-                    options=accounts_data,
+                    options={CONF_ACCOUNTS: {user_input[CONF_ACCOUNT]: name}},
                 )
         user_input = user_input or {}
         return self.async_show_form(
@@ -114,19 +89,7 @@ class SteamFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders=PLACEHOLDERS,
         )
 
-    async def async_step_import(self, import_config: ConfigType) -> FlowResult:
-        """Import a config entry from configuration.yaml."""
-        for entry in self._async_current_entries():
-            if entry.data[CONF_API_KEY] == import_config[CONF_API_KEY]:
-                return self.async_abort(reason="already_configured")
-        LOGGER.warning(
-            "Steam yaml config is now deprecated and has been imported. "
-            "Please remove it from your config"
-        )
-        import_config[CONF_ACCOUNT] = import_config[CONF_ACCOUNTS][0]
-        return await self.async_step_user(import_config)
-
-    async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle a reauthorization flow request."""
         self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
 
