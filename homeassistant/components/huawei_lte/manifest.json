@@ -6,7 +6,7 @@
   "requirements": [
     "huawei-lte-api==1.6.0",
     "stringcase==1.2.0",
-    "url-normalize==1.4.1"
+    "url-normalize==1.4.3"
   ],
   "ssdp": [
     {

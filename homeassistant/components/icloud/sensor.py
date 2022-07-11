@@ -21,7 +21,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up device tracker for iCloud component."""
     account = hass.data[DOMAIN][entry.unique_id]
-    tracked = set()
+    tracked = set[str]()
 
     @callback
     def update_account():
@@ -74,7 +74,7 @@ class IcloudDeviceBatterySensor(SensorEntity):
         return f"{self._device.name} battery state"
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Battery state percentage."""
         return self._device.battery_level
 
