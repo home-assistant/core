@@ -2,21 +2,20 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from datetime import datetime, timedelta
 import logging
 from uuid import UUID
 
-import pygatt
+from bleak import BleakClient, BleakError
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.device_tracker import (
     PLATFORM_SCHEMA as PARENT_PLATFORM_SCHEMA,
 )
 from homeassistant.components.device_tracker.const import (
-    CONF_SCAN_INTERVAL,
     CONF_TRACK_NEW,
-    SCAN_INTERVAL,
     SOURCE_TYPE_BLUETOOTH_LE,
 )
 from homeassistant.components.device_tracker.legacy import (
@@ -24,9 +23,8 @@ from homeassistant.components.device_tracker.legacy import (
     async_load_config,
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.event import track_point_in_utc_time
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 import homeassistant.util.dt as dt_util
 
@@ -53,10 +51,10 @@ PLATFORM_SCHEMA = PARENT_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_scanner(  # noqa: C901
+async def async_setup_scanner(
     hass: HomeAssistant,
     config: ConfigType,
-    see: Callable[..., None],
+    async_see: Callable[..., Awaitable[None]],
     discovery_info: DiscoveryInfoType | None = None,
 ) -> bool:
     """Set up the Bluetooth LE Scanner."""
@@ -64,22 +62,12 @@ def setup_scanner(  # noqa: C901
     new_devices: dict[str, dict] = {}
     hass.data.setdefault(DATA_BLE, {DATA_BLE_ADAPTER: None})
 
-    def handle_stop(event):
-        """Try to shut down the bluetooth child process nicely."""
-        # These should never be unset at the point this runs, but just for
-        # safety's sake, use `get`.
-        adapter = hass.data.get(DATA_BLE, {}).get(DATA_BLE_ADAPTER)
-        if adapter is not None:
-            adapter.kill()
-
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
-
     if config[CONF_TRACK_BATTERY]:
         battery_track_interval = config[CONF_TRACK_BATTERY_INTERVAL]
     else:
         battery_track_interval = timedelta(0)
 
-    def see_device(address, name, new_device=False, battery=None):
+    async def async_see_device(address, name, new_device=False, battery=None):
         """Mark a device as seen."""
         if name is not None:
             name = name.strip("\x00")
@@ -105,27 +93,12 @@ def setup_scanner(  # noqa: C901
                 new_devices[address] = {"seen": 1, "name": name}
                 return
 
-        see(
+        await async_see(
             mac=BLE_PREFIX + address,
             host_name=name,
             source_type=SOURCE_TYPE_BLUETOOTH_LE,
             battery=battery,
         )
-
-    def discover_ble_devices():
-        """Discover Bluetooth LE devices."""
-        _LOGGER.debug("Discovering Bluetooth LE devices")
-        try:
-            adapter = pygatt.GATTToolBackend()
-            hass.data[DATA_BLE][DATA_BLE_ADAPTER] = adapter
-            devs = adapter.scan()
-
-            devices = {x["address"]: x["name"] for x in devs}
-            _LOGGER.debug("Bluetooth LE devices discovered = %s", devices)
-        except (RuntimeError, pygatt.exceptions.BLEError) as error:
-            _LOGGER.error("Error during Bluetooth LE scan: %s", error)
-            return {}
-        return devices
 
     yaml_path = hass.config.path(YAML_DEVICES)
     devs_to_track = []
@@ -135,9 +108,7 @@ def setup_scanner(  # noqa: C901
     # Load all known devices.
     # We just need the devices so set consider_home and home range
     # to 0
-    for device in asyncio.run_coroutine_threadsafe(
-        async_load_config(yaml_path, hass, timedelta(0)), hass.loop
-    ).result():
+    for device in await async_load_config(yaml_path, hass, timedelta(0)):
         # check if device is a valid bluetooth device
         if device.mac and device.mac[:4].upper() == BLE_PREFIX:
             address = device.mac[4:]
@@ -160,54 +131,62 @@ def setup_scanner(  # noqa: C901
         _LOGGER.warning("No Bluetooth LE devices to track!")
         return False
 
-    interval = config.get(CONF_SCAN_INTERVAL, SCAN_INTERVAL)
-
-    def update_ble(now):
+    async def _async_see_update_ble_battery(
+        mac: str,
+        now: datetime,
+        service_info: bluetooth.BluetoothServiceInfo,
+    ):
         """Lookup Bluetooth LE devices and update status."""
-        devs = discover_ble_devices()
-        if devs_track_battery:
-            adapter = hass.data[DATA_BLE][DATA_BLE_ADAPTER]
-        for mac in devs_to_track:
-            if mac not in devs:
-                continue
+        battery = None
+        try:
+            async with BleakClient(mac) as client:
+                bat_char = await client.read_gatt_char(BATTERY_CHARACTERISTIC_UUID)
+                battery = ord(bat_char)
+            # Try to get the handle; it will raise a BLEError exception if not available
+        except asyncio.TimeoutError:
+            _LOGGER.warning(
+                "Timeout when trying to get battery status for %s", service_info.name
+            )
+        except BleakError as err:
+            _LOGGER.debug("Could not read battery status: %s", err)
+            # If the device does not offer battery information, there is no point in asking again later on.
+            # Remove the device from the battery-tracked devices, so that their battery is not wasted
+            # trying to get an unavailable information.
+            del devs_track_battery[mac]
+        if battery:
+            await async_see_device(mac, service_info.name, battery=battery)
 
-            if devs[mac] is None:
-                devs[mac] = mac
-
-            battery = None
+    @callback
+    def _async_update_ble(
+        service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
+    ):
+        """Update from a ble callback."""
+        mac = service_info.address
+        if mac in devs_to_track:
+            now = dt_util.utcnow()
+            hass.async_create_task(async_see_device(mac, service_info.name))
             if (
                 mac in devs_track_battery
                 and now > devs_track_battery[mac] + battery_track_interval
             ):
-                handle = None
-                try:
-                    adapter.start(reset_on_start=False)
-                    _LOGGER.debug("Reading battery for Bluetooth LE device %s", mac)
-                    bt_device = adapter.connect(mac)
-                    # Try to get the handle; it will raise a BLEError exception if not available
-                    handle = bt_device.get_handle(BATTERY_CHARACTERISTIC_UUID)
-                    battery = ord(bt_device.char_read(BATTERY_CHARACTERISTIC_UUID))
-                    devs_track_battery[mac] = now
-                except pygatt.exceptions.NotificationTimeout:
-                    _LOGGER.warning("Timeout when trying to get battery status")
-                except pygatt.exceptions.BLEError as err:
-                    _LOGGER.warning("Could not read battery status: %s", err)
-                    if handle is not None:
-                        # If the device does not offer battery information, there is no point in asking again later on.
-                        # Remove the device from the battery-tracked devices, so that their battery is not wasted
-                        # trying to get an unavailable information.
-                        del devs_track_battery[mac]
-                finally:
-                    adapter.stop()
-            see_device(mac, devs[mac], battery=battery)
+                devs_track_battery[mac] = now
+                asyncio.create_task(
+                    _async_see_update_ble_battery(mac, now, service_info)
+                )
 
         if track_new:
-            for address in devs:
-                if address not in devs_to_track and address not in devs_donot_track:
-                    _LOGGER.info("Discovered Bluetooth LE device %s", address)
-                    see_device(address, devs[address], new_device=True)
+            if mac not in devs_to_track and mac not in devs_donot_track:
+                _LOGGER.info("Discovered Bluetooth LE device %s", mac)
+                hass.async_create_task(
+                    async_see_device(mac, service_info.name, new_device=True)
+                )
 
-        track_point_in_utc_time(hass, update_ble, dt_util.utcnow() + interval)
+    cancel = bluetooth.async_register_callback(hass, _async_update_ble, None)
 
-    update_ble(dt_util.utcnow())
+    def handle_stop(event: Event) -> None:
+        """Cancel the callback."""
+        cancel()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, handle_stop)
+
     return True
