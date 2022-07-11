@@ -16,7 +16,6 @@ from .model import Config, Integration
 # remove your component from this list to enable type checks.
 # Do your best to not add anything new here.
 IGNORED_MODULES: Final[list[str]] = [
-    "homeassistant.components.blueprint.importer",
     "homeassistant.components.blueprint.models",
     "homeassistant.components.blueprint.websocket_api",
     "homeassistant.components.cloud.client",
