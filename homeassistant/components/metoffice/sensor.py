@@ -18,8 +18,10 @@ from homeassistant.const import (
     SPEED_MILES_PER_HOUR,
     TEMP_CELSIUS,
     UV_INDEX,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -52,7 +54,7 @@ ATTR_SITE_NAME = "site_name"
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="name",
-        name="Station Name",
+        name="Station name",
         device_class=None,
         native_unit_of_measurement=None,
         icon="mdi:label-outline",
@@ -76,7 +78,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="feels_like_temperature",
-        name="Feels Like Temperature",
+        name="Feels like temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=TEMP_CELSIUS,
         icon=None,
@@ -84,7 +86,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wind_speed",
-        name="Wind Speed",
+        name="Wind speed",
         device_class=None,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         icon="mdi:weather-windy",
@@ -92,7 +94,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wind_direction",
-        name="Wind Direction",
+        name="Wind direction",
         device_class=None,
         native_unit_of_measurement=None,
         icon="mdi:compass-outline",
@@ -100,7 +102,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="wind_gust",
-        name="Wind Gust",
+        name="Wind gust",
         device_class=None,
         native_unit_of_measurement=SPEED_MILES_PER_HOUR,
         icon="mdi:weather-windy",
@@ -116,7 +118,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="visibility_distance",
-        name="Visibility Distance",
+        name="Visibility distance",
         device_class=None,
         native_unit_of_measurement=LENGTH_KILOMETERS,
         icon="mdi:eye",
@@ -124,7 +126,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="uv",
-        name="UV Index",
+        name="UV index",
         device_class=None,
         native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
@@ -132,7 +134,7 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
     SensorEntityDescription(
         key="precipitation",
-        name="Probability of Precipitation",
+        name="Probability of precipitation",
         device_class=None,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
@@ -154,6 +156,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     hass_data = hass.data[DOMAIN][entry.entry_id]
+
+    async_migrate_unique_ids(hass, hass_data)
 
     async_add_entities(
         [
@@ -178,10 +182,51 @@ async def async_setup_entry(
     )
 
 
+def async_migrate_unique_ids(hass: HomeAssistant, hass_data: Any) -> None:
+    """Migrate unique ID for sensors based on name to key."""
+
+    for old_name, key in (
+        ("Station Name", "name"),
+        ("Weather", "weather"),
+        ("Temperature", "temperature"),
+        ("Feels Like Temperature", "feels_like_temperature"),
+        ("Wind Speed", "wind_speed"),
+        ("Wind Direction", "wind_direction"),
+        ("Wind Gust", "wind_gust"),
+        ("Visibility", "visibility"),
+        ("Visibility Distance", "visibility_distance"),
+        ("UV Index", "uv"),
+        ("Probability of Precipitation", "precipitation"),
+        ("Humidity", "humidity"),
+    ):
+        old_unique_id = f"{old_name}_{hass_data[METOFFICE_COORDINATES]}"
+        old_daily_unique_id = f"{old_unique_id}_{MODE_DAILY}"
+
+        ent_reg = entity_registry.async_get(hass)
+
+        if entity_id := ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, old_unique_id
+        ):
+            ent_reg.async_update_entity(
+                entity_id,
+                new_unique_id=f"{key}_{hass_data[METOFFICE_COORDINATES]}",
+            )
+
+        if daily_entity_id := ent_reg.async_get_entity_id(
+            Platform.SENSOR, DOMAIN, old_daily_unique_id
+        ):
+            ent_reg.async_update_entity(
+                daily_entity_id,
+                new_unique_id=f"{key}_{hass_data[METOFFICE_COORDINATES]}_{MODE_DAILY}",
+            )
+
+
 class MetOfficeCurrentSensor(
     CoordinatorEntity[DataUpdateCoordinator[MetOfficeData]], SensorEntity
 ):
     """Implementation of a Met Office current weather condition sensor."""
+
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -199,8 +244,8 @@ class MetOfficeCurrentSensor(
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = f"{hass_data[METOFFICE_NAME]} {description.name} {mode_label}"
-        self._attr_unique_id = f"{description.name}_{hass_data[METOFFICE_COORDINATES]}"
+        self._attr_name = f"{description.name} {mode_label}"
+        self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"
         self._attr_entity_registry_enabled_default = (
