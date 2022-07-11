@@ -2,7 +2,7 @@
 import datetime
 import json
 from pathlib import Path
-from typing import Any, Final, NamedTuple
+from typing import Any, Final
 
 import orjson
 
@@ -41,8 +41,6 @@ def json_encoder_default(obj: Any) -> Any:
         return obj.as_dict()
     if isinstance(obj, Path):
         return obj.as_posix()
-    if isinstance(obj, NamedTuple):
-        return tuple(obj)
     raise TypeError
 
 

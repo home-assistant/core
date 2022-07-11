@@ -14,6 +14,7 @@ from homeassistant.helpers.json import (
     json_dumps_sorted,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.color import RGBColor
 
 
 @pytest.mark.parametrize("encoder", (JSONEncoder, ExtendedJSONEncoder))
@@ -110,3 +111,10 @@ def test_json_dumps_named_tuple_subclass():
     nts = NamedTupleSubclass("a")
 
     assert json_dumps(nts) == '["a"]'
+
+
+def test_json_dumps_rgb_color_subclass():
+    """Test the json dumps of RGBColor."""
+    rgb = RGBColor(4, 2, 1)
+
+    assert json_dumps(rgb) == "[4,2,1]"
