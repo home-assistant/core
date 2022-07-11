@@ -344,10 +344,6 @@ class EntityRegistry:
         entity_id = self.async_get_entity_id(domain, platform, unique_id)
 
         if entity_id:
-            # Don't change has_entity_name if a name has been set already
-            if has_entity_name and self.entities[entity_id].name is not None:
-                has_entity_name = None
-
             return self.async_update_entity(
                 entity_id,
                 area_id=area_id or UNDEFINED,
