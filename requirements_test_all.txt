@@ -1053,7 +1053,7 @@ pyhiveapi==0.5.13
 pyhomematic==0.1.77
 
 # homeassistant.components.ialarm
-pyialarm==1.9.0
+pyialarm==2.2.0
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
