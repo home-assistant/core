@@ -17,6 +17,7 @@ import zigpy_znp.zigbee.application
 from homeassistant.const import Platform
 import homeassistant.helpers.config_validation as cv
 
+ATTR_ACTIVE_COORDINATOR = "active_coordinator"
 ATTR_ARGS = "args"
 ATTR_ATTRIBUTE = "attribute"
 ATTR_ATTRIBUTE_ID = "attribute_id"
