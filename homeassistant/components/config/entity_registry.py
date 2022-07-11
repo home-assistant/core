@@ -1,6 +1,8 @@
 """HTTP views to interact with the entity registry."""
 from __future__ import annotations
 
+from typing import Any
+
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -223,7 +225,7 @@ def websocket_remove_entity(hass, connection, msg):
 
 
 @callback
-def _entry_dict(entry: er.RegistryEntry):
+def _entry_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     return {
         "area_id": entry.area_id,
@@ -242,7 +244,7 @@ def _entry_dict(entry: er.RegistryEntry):
 
 
 @callback
-def _entry_ext_dict(entry: er.RegistryEntry):
+def _entry_ext_dict(entry: er.RegistryEntry) -> dict[str, Any]:
     """Convert entry to API format."""
     data = _entry_dict(entry)
     data["capabilities"] = entry.capabilities
