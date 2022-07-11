@@ -18,7 +18,7 @@ from .device import ElroConnectsK1
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SIREN]
+PLATFORMS: list[Platform] = [Platform.SIREN]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
