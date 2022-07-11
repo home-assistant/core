@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -69,6 +74,10 @@ UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
     NumberDeviceClass.TEMPERATURE: temperature_util.convert,
 }
 
+VALID_UNITS: dict[str, tuple[str, ...]] = {
+    NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
+}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Number entities."""
@@ -120,13 +129,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NumberEntityDescription(EntityDescription):
     """A class that describes number entities."""
 
-    max_value: float | None = None
-    min_value: float | None = None
+    max_value: None = None
+    min_value: None = None
     native_max_value: float | None = None
     native_min_value: float | None = None
     native_unit_of_measurement: str | None = None
     native_step: float | None = None
-    step: float | None = None
+    step: None = None
+    unit_of_measurement: None = None  # Type override, use native_unit_of_measurement
 
     def __post_init__(self) -> None:
         """Post initialisation processing."""
@@ -136,7 +146,7 @@ class NumberEntityDescription(EntityDescription):
             or self.step is not None
             or self.unit_of_measurement is not None
         ):
-            if self.__class__.__name__ == "NumberEntityDescription":
+            if self.__class__.__name__ == "NumberEntityDescription":  # type: ignore[unreachable]
                 caller = inspect.stack()[2]
                 module = inspect.getmodule(caller[0])
             else:
@@ -180,18 +190,20 @@ class NumberEntity(Entity):
     """Representation of a Number entity."""
 
     entity_description: NumberEntityDescription
-    _attr_max_value: float
-    _attr_min_value: float
-    _attr_state: None = None
-    _attr_step: float
+    _attr_max_value: None
+    _attr_min_value: None
     _attr_mode: NumberMode = NumberMode.AUTO
-    _attr_value: float
+    _attr_state: None = None
+    _attr_step: None
+    _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
+    _attr_value: None
     _attr_native_max_value: float
     _attr_native_min_value: float
     _attr_native_step: float
     _attr_native_value: float
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
+    _number_option_unit_of_measurement: str | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -225,6 +237,13 @@ class NumberEntity(Entity):
                 report_issue,
             )
 
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the number entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
+
     @property
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
@@ -248,16 +267,17 @@ class NumberEntity(Entity):
         return DEFAULT_MIN_VALUE
 
     @property
+    @final
     def min_value(self) -> float:
         """Return the minimum value."""
         if hasattr(self, "_attr_min_value"):
             self._report_deprecated_number_entity()
-            return self._attr_min_value
+            return self._attr_min_value  # type: ignore[return-value]
         if (
             hasattr(self, "entity_description")
             and self.entity_description.min_value is not None
         ):
-            self._report_deprecated_number_entity()
+            self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.min_value
         return self._convert_to_state_value(self.native_min_value, floor_decimal)
 
@@ -274,16 +294,17 @@ class NumberEntity(Entity):
         return DEFAULT_MAX_VALUE
 
     @property
+    @final
     def max_value(self) -> float:
         """Return the maximum value."""
         if hasattr(self, "_attr_max_value"):
             self._report_deprecated_number_entity()
-            return self._attr_max_value
+            return self._attr_max_value  # type: ignore[return-value]
         if (
             hasattr(self, "entity_description")
             and self.entity_description.max_value is not None
         ):
-            self._report_deprecated_number_entity()
+            self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.max_value
         return self._convert_to_state_value(self.native_max_value, ceil_decimal)
 
@@ -298,16 +319,17 @@ class NumberEntity(Entity):
         return None
 
     @property
+    @final
     def step(self) -> float:
         """Return the increment/decrement step."""
         if hasattr(self, "_attr_step"):
             self._report_deprecated_number_entity()
-            return self._attr_step
+            return self._attr_step  # type: ignore[return-value]
         if (
             hasattr(self, "entity_description")
             and self.entity_description.step is not None
         ):
-            self._report_deprecated_number_entity()
+            self._report_deprecated_number_entity()  # type: ignore[unreachable]
             return self.entity_description.step
         if hasattr(self, "_attr_native_step"):
             return self._attr_native_step
@@ -341,15 +363,20 @@ class NumberEntity(Entity):
         return None
 
     @property
+    @final
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if self._number_option_unit_of_measurement:
+            return self._number_option_unit_of_measurement
+
         if hasattr(self, "_attr_unit_of_measurement"):
+            self._report_deprecated_number_entity()
             return self._attr_unit_of_measurement
         if (
             hasattr(self, "entity_description")
             and self.entity_description.unit_of_measurement is not None
         ):
-            return self.entity_description.unit_of_measurement
+            return self.entity_description.unit_of_measurement  # type: ignore[unreachable]
 
         native_unit_of_measurement = self.native_unit_of_measurement
 
@@ -367,6 +394,7 @@ class NumberEntity(Entity):
         return self._attr_native_value
 
     @property
+    @final
     def value(self) -> float | None:
         """Return the entity value to represent the entity state."""
         if hasattr(self, "_attr_value"):
@@ -385,10 +413,12 @@ class NumberEntity(Entity):
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_native_value, value)
 
+    @final
     def set_value(self, value: float) -> None:
         """Set new value."""
         raise NotImplementedError()
 
+    @final
     async def async_set_value(self, value: float) -> None:
         """Set new value."""
         await self.hass.async_add_executor_job(self.set_value, value)
@@ -458,6 +488,22 @@ class NumberEntity(Entity):
                 type(self),
                 report_issue,
             )
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if (
+            (number_options := self.registry_entry.options.get(DOMAIN))
+            and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
+            and (device_class := self.device_class) in UNIT_CONVERSIONS
+            and self.native_unit_of_measurement in VALID_UNITS[device_class]
+            and custom_unit in VALID_UNITS[device_class]
+        ):
+            self._number_option_unit_of_measurement = custom_unit
+            return
+
+        self._number_option_unit_of_measurement = None
 
 
 @dataclasses.dataclass

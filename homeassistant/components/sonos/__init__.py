@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass, field
 import datetime
 from functools import partial
 import logging
@@ -74,6 +75,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+@dataclass
+class UnjoinData:
+    """Class to track data necessary for unjoin coalescing."""
+
+    speakers: list[SonosSpeaker]
+    event: asyncio.Event = field(default_factory=asyncio.Event)
+
+
 class SonosData:
     """Storage class for platform global data."""
 
@@ -89,6 +98,7 @@ class SonosData:
         self.boot_counts: dict[str, int] = {}
         self.mdns_names: dict[str, str] = {}
         self.entity_id_mappings: dict[str, SonosSpeaker] = {}
+        self.unjoin_data: dict[str, UnjoinData] = {}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -133,7 +143,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     manager = hass.data[DATA_SONOS_DISCOVERY_MANAGER] = SonosDiscoveryManager(
         hass, entry, data, hosts
     )
-    hass.async_create_task(manager.setup_platforms_and_discovery())
+    await manager.setup_platforms_and_discovery()
     return True
 
 
@@ -190,6 +200,14 @@ class SonosDiscoveryManager:
         for speaker in self.data.discovered.values():
             speaker.activity_stats.log_report()
             speaker.event_stats.log_report()
+        if zgs := next(
+            speaker.soco.zone_group_state for speaker in self.data.discovered.values()
+        ):
+            _LOGGER.debug(
+                "ZoneGroupState stats: (%s/%s) processed",
+                zgs.processed_count,
+                zgs.total_requests,
+            )
         await asyncio.gather(
             *(speaker.async_offline() for speaker in self.data.discovered.values())
         )
@@ -359,12 +377,7 @@ class SonosDiscoveryManager:
 
     async def setup_platforms_and_discovery(self):
         """Set up platforms and discovery."""
-        await asyncio.gather(
-            *(
-                self.hass.config_entries.async_forward_entry_setup(self.entry, platform)
-                for platform in PLATFORMS
-            )
-        )
+        await self.hass.config_entries.async_forward_entry_setups(self.entry, PLATFORMS)
         self.entry.async_on_unload(
             self.hass.bus.async_listen_once(
                 EVENT_HOMEASSISTANT_STOP, self._async_stop_event_listener

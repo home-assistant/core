@@ -1,6 +1,8 @@
 """Support for Acmeda Roller Blinds."""
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     CoverEntity,
@@ -45,7 +47,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
     """Representation of a Acmeda cover device."""
 
     @property
-    def current_cover_position(self):
+    def current_cover_position(self) -> int | None:
         """Return the current position of the roller blind.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -56,7 +58,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
-    def current_cover_tilt_position(self):
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current tilt of the roller blind.
 
         None is unknown, 0 is closed, 100 is fully open.
@@ -67,7 +69,7 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return position
 
     @property
-    def supported_features(self):
+    def supported_features(self) -> int:
         """Flag supported features."""
         supported_features = 0
         if self.current_cover_position is not None:
@@ -88,35 +90,35 @@ class AcmedaCover(AcmedaBase, CoverEntity):
         return supported_features
 
     @property
-    def is_closed(self):
+    def is_closed(self) -> bool:
         """Return if the cover is closed."""
         return self.roller.closed_percent == 100
 
-    async def async_close_cover(self, **kwargs):
+    async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the roller."""
         await self.roller.move_down()
 
-    async def async_open_cover(self, **kwargs):
+    async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the roller."""
         await self.roller.move_up()
 
-    async def async_stop_cover(self, **kwargs):
+    async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the roller."""
         await self.roller.move_stop()
 
-    async def async_set_cover_position(self, **kwargs):
+    async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the roller shutter to a specific position."""
         await self.roller.move_to(100 - kwargs[ATTR_POSITION])
 
-    async def async_close_cover_tilt(self, **kwargs):
+    async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the roller."""
         await self.roller.move_down()
 
-    async def async_open_cover_tilt(self, **kwargs):
+    async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the roller."""
         await self.roller.move_up()
 
-    async def async_stop_cover_tilt(self, **kwargs):
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the roller."""
         await self.roller.move_stop()
 

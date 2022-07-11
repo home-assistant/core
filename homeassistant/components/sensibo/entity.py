@@ -106,6 +106,8 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
                 self._device_id,
                 params,
             )
+        if command == "reset_filter":
+            result = await self._client.async_reset_filter(self._device_id)
         return result
 
 

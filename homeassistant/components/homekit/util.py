@@ -37,7 +37,7 @@ from homeassistant.const import (
     CONF_TYPE,
     TEMP_CELSIUS,
 )
-from homeassistant.core import HomeAssistant, State, callback, split_entity_id
+from homeassistant.core import Event, HomeAssistant, State, callback, split_entity_id
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.storage import STORAGE_DIR
 import homeassistant.util.temperature as temp_util
@@ -572,3 +572,11 @@ def state_needs_accessory_mode(state: State) -> bool:
         and state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
         & RemoteEntityFeature.ACTIVITY
     )
+
+
+def state_changed_event_is_same_state(event: Event) -> bool:
+    """Check if a state changed event is the same state."""
+    event_data = event.data
+    old_state: State | None = event_data.get("old_state")
+    new_state: State | None = event_data.get("new_state")
+    return bool(new_state and old_state and new_state.state == old_state.state)

@@ -1110,6 +1110,13 @@ class State:
         self.domain, self.object_id = split_entity_id(self.entity_id)
         self._as_dict: ReadOnlyDict[str, Collection[Any]] | None = None
 
+    def __hash__(self) -> int:
+        """Make the state hashable.
+
+        State objects are effectively immutable.
+        """
+        return hash((id(self), self.last_updated))
+
     @property
     def name(self) -> str:
         """Name of this state."""
@@ -1935,7 +1942,7 @@ class Config:
         # pylint: disable=import-outside-toplevel
         from .helpers.storage import Store
 
-        store = Store(
+        store = Store[dict[str, Any]](
             self.hass,
             CORE_STORAGE_VERSION,
             CORE_STORAGE_KEY,
@@ -1943,7 +1950,7 @@ class Config:
             atomic_writes=True,
         )
 
-        if not (data := await store.async_load()) or not isinstance(data, dict):
+        if not (data := await store.async_load()):
             return
 
         # In 2021.9 we fixed validation to disallow a path (because that's never correct)
@@ -1991,7 +1998,7 @@ class Config:
             "currency": self.currency,
         }
 
-        store = Store(
+        store: Store[dict[str, Any]] = Store(
             self.hass,
             CORE_STORAGE_VERSION,
             CORE_STORAGE_KEY,

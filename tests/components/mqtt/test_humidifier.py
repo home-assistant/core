@@ -13,6 +13,7 @@ from homeassistant.components.humidifier import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
 )
+from homeassistant.components.mqtt import CONFIG_SCHEMA
 from homeassistant.components.mqtt.humidifier import (
     CONF_MODE_COMMAND_TOPIC,
     CONF_MODE_STATE_TOPIC,
@@ -1283,3 +1284,15 @@ async def test_setup_manual_entity_from_yaml(hass):
     del config["platform"]
     await help_test_setup_manual_entity_from_yaml(hass, platform, config)
     assert hass.states.get(f"{platform}.test") is not None
+
+
+async def test_config_schema_validation(hass):
+    """Test invalid platform options in the config schema do pass the config validation."""
+    platform = humidifier.DOMAIN
+    config = copy.deepcopy(DEFAULT_CONFIG[platform])
+    config["name"] = "test"
+    del config["platform"]
+    CONFIG_SCHEMA({DOMAIN: {platform: config}})
+    CONFIG_SCHEMA({DOMAIN: {platform: [config]}})
+    with pytest.raises(MultipleInvalid):
+        CONFIG_SCHEMA({"mqtt": {"humidifier": [{"bla": "bla"}]}})

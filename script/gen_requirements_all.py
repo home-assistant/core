@@ -30,7 +30,6 @@ COMMENT_REQUIREMENTS = (
     "opencv-python-headless",
     "pybluez",
     "pycups",
-    "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
     "python-gammu",
@@ -105,6 +104,9 @@ httpcore==0.15.0
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
+
+# Ensure we run compatible with musllinux build env
+numpy==1.23.1
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0

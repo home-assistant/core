@@ -57,7 +57,7 @@ from .const import (
     SONOS_VANISHED,
     SUBSCRIPTION_TIMEOUT,
 )
-from .exception import S1BatteryMissing, SonosUpdateError
+from .exception import S1BatteryMissing, SonosSubscriptionsFailed, SonosUpdateError
 from .favorites import SonosFavorites
 from .helpers import soco_error
 from .media import SonosMedia
@@ -146,6 +146,9 @@ class SonosSpeaker:
         self.sub_enabled: bool | None = None
         self.sub_gain: int | None = None
         self.surround_enabled: bool | None = None
+        self.surround_mode: bool | None = None
+        self.surround_level: int | None = None
+        self.music_surround_level: int | None = None
 
         # Misc features
         self.buttons_enabled: bool | None = None
@@ -321,11 +324,28 @@ class SonosSpeaker:
         async with self._subscription_lock:
             if self._subscriptions:
                 return
-            await self._async_subscribe()
+            try:
+                await self._async_subscribe()
+            except SonosSubscriptionsFailed:
+                _LOGGER.warning("Creating subscriptions failed for %s", self.zone_name)
+                await self._async_offline()
 
     async def _async_subscribe(self) -> None:
         """Create event subscriptions."""
         _LOGGER.debug("Creating subscriptions for %s", self.zone_name)
+
+        subscriptions = [
+            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
+            for service in SUBSCRIPTION_SERVICES
+        ]
+        results = await asyncio.gather(*subscriptions, return_exceptions=True)
+        for result in results:
+            self.log_subscription_result(
+                result, "Creating subscription", logging.WARNING
+            )
+
+        if any(isinstance(result, Exception) for result in results):
+            raise SonosSubscriptionsFailed
 
         # Create a polling task in case subscriptions fail or callback events do not arrive
         if not self._poll_timer:
@@ -337,16 +357,6 @@ class SonosSpeaker:
                     f"{SONOS_FALLBACK_POLL}-{self.soco.uid}",
                 ),
                 SCAN_INTERVAL,
-            )
-
-        subscriptions = [
-            self._subscribe(getattr(self.soco, service), self.async_dispatch_event)
-            for service in SUBSCRIPTION_SERVICES
-        ]
-        results = await asyncio.gather(*subscriptions, return_exceptions=True)
-        for result in results:
-            self.log_subscription_result(
-                result, "Creating subscription", logging.WARNING
             )
 
     async def _subscribe(
@@ -515,11 +525,19 @@ class SonosSpeaker:
             "night_mode",
             "sub_enabled",
             "surround_enabled",
+            "surround_mode",
         ):
             if bool_var in variables:
                 setattr(self, bool_var, variables[bool_var] == "1")
 
-        for int_var in ("audio_delay", "bass", "treble", "sub_gain"):
+        for int_var in (
+            "audio_delay",
+            "bass",
+            "treble",
+            "sub_gain",
+            "surround_level",
+            "music_surround_level",
+        ):
             if int_var in variables:
                 setattr(self, int_var, variables[int_var])
 
@@ -575,6 +593,11 @@ class SonosSpeaker:
 
     async def async_offline(self) -> None:
         """Handle removal of speaker when unavailable."""
+        async with self._subscription_lock:
+            await self._async_offline()
+
+    async def _async_offline(self) -> None:
+        """Handle removal of speaker when unavailable."""
         if not self.available:
             return
 
@@ -591,8 +614,7 @@ class SonosSpeaker:
             self._poll_timer()
             self._poll_timer = None
 
-        async with self._subscription_lock:
-            await self.async_unsubscribe()
+        await self.async_unsubscribe()
 
         self.hass.data[DATA_SONOS].discovery_known.discard(self.soco.uid)
 
@@ -861,9 +883,9 @@ class SonosSpeaker:
 
         for speaker in speakers:
             if speaker.soco.uid != self.soco.uid:
-                speaker.soco.join(self.soco)
-                speaker.coordinator = self
                 if speaker not in group:
+                    speaker.soco.join(self.soco)
+                    speaker.coordinator = self
                     group.append(speaker)
 
         return group
@@ -884,6 +906,8 @@ class SonosSpeaker:
     @soco_error()
     def unjoin(self) -> None:
         """Unjoin the player from a group."""
+        if self.sonos_group == [self]:
+            return
         self.soco.unjoin()
         self.coordinator = None
 
@@ -1062,8 +1086,8 @@ class SonosSpeaker:
         except asyncio.TimeoutError:
             _LOGGER.warning("Timeout waiting for target groups %s", groups)
 
-        for speaker in hass.data[DATA_SONOS].discovered.values():
-            speaker.soco._zgs_cache.clear()  # pylint: disable=protected-access
+        any_speaker = next(iter(hass.data[DATA_SONOS].discovered.values()))
+        any_speaker.soco.zone_group_state.clear_cache()
 
     #
     # Media and playback state handlers

@@ -45,7 +45,9 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the cameras."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
+        DATA_DEVICE_MANAGER
+    ]
     entities = []
     for device in device_manager.devices.values():
         if (
@@ -58,6 +60,8 @@ async def async_setup_sdm_entry(
 
 class NestCamera(Camera):
     """Devices that support cameras."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, device: Device) -> None:
         """Initialize the camera."""
@@ -80,11 +84,6 @@ class NestCamera(Camera):
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return f"{self._device.name}-camera"
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the camera."""
-        return self._device_info.device_name
 
     @property
     def device_info(self) -> DeviceInfo:

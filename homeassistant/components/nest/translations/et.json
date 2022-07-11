@@ -4,6 +4,7 @@
     },
     "config": {
         "abort": {
+            "already_configured": "Konto on juba h\u00e4\u00e4lestatud",
             "authorize_url_timeout": "Tuvastamise URL-i loomise ajal\u00f5pp.",
             "invalid_access_token": "Vigane juurdep\u00e4\u00e4sut\u00f5end",
             "missing_configuration": "Osis pole seadistatud. Vaata dokumentatsiooni.",

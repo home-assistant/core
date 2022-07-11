@@ -39,7 +39,6 @@ from homeassistant.const import (
     TEMP_CELSIUS,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -248,9 +247,6 @@ async def async_setup_entry(
         sensor = gateway.api.sensors[sensor_id]
         entities: list[DeconzSensor] = []
 
-        if not gateway.option_allow_clip_sensor and sensor.type.startswith("CLIP"):
-            return
-
         if sensor.battery is None and not sensor.type.startswith("CLIP"):
             DeconzBatteryTracker(sensor_id, gateway, async_add_entities)
 
@@ -274,21 +270,6 @@ async def async_setup_entry(
     gateway.register_platform_add_device_callback(
         async_add_sensor,
         gateway.api.sensors,
-    )
-
-    @callback
-    def async_reload_clip_sensors() -> None:
-        """Load clip sensor sensors from deCONZ."""
-        for sensor_id, sensor in gateway.api.sensors.items():
-            if sensor.type.startswith("CLIP"):
-                async_add_sensor(EventType.ADDED, sensor_id)
-
-    config_entry.async_on_unload(
-        async_dispatcher_connect(
-            hass,
-            gateway.signal_reload_clip_sensors,
-            async_reload_clip_sensors,
-        )
     )
 
 

@@ -24,6 +24,7 @@ from homeassistant.setup import async_setup_component
 
 from .common import (
     DEVICE_ID,
+    PROJECT_ID,
     SUBSCRIBER_ID,
     TEST_CONFIG_APP_CREDS,
     TEST_CONFIG_YAML_ONLY,
@@ -214,10 +215,17 @@ def config(
 
 
 @pytest.fixture
+def config_entry_unique_id() -> str:
+    """Fixture to set ConfigEntry unique id."""
+    return PROJECT_ID
+
+
+@pytest.fixture
 def config_entry(
     subscriber_id: str | None,
     auth_implementation: str | None,
     nest_test_config: NestTestConfig,
+    config_entry_unique_id: str,
 ) -> MockConfigEntry | None:
     """Fixture that sets up the ConfigEntry for the test."""
     if nest_test_config.config_entry_data is None:
@@ -229,7 +237,7 @@ def config_entry(
         else:
             del data[CONF_SUBSCRIBER_ID]
     data["auth_implementation"] = auth_implementation
-    return MockConfigEntry(domain=DOMAIN, data=data)
+    return MockConfigEntry(domain=DOMAIN, data=data, unique_id=config_entry_unique_id)
 
 
 @pytest.fixture(autouse=True)

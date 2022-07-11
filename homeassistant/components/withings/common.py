@@ -32,7 +32,7 @@ from homeassistant.components.application_credentials import AuthImplementation
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
     MASS_KILOGRAMS,
@@ -57,6 +57,7 @@ from . import const
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
+_RETRY_COEFFICIENT = 0.5
 NOT_AUTHENTICATED_ERROR = re.compile(
     f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
@@ -484,7 +485,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
     ) -> None:
         """Initialize object."""
         self._hass = hass
-        self._config_entry = config_entry
+        self.config_entry = config_entry
         self._implementation = implementation
         self.session = OAuth2Session(hass, config_entry, implementation)
 
@@ -496,7 +497,7 @@ class ConfigEntryWithingsApi(AbstractWithingsApi):
             self.session.async_ensure_token_valid(), self._hass.loop
         ).result()
 
-        access_token = self._config_entry.data["token"]["access_token"]
+        access_token = self.config_entry.data["token"]["access_token"]
         response = requests.request(
             method,
             f"{self.URL}/{path}",
@@ -651,7 +652,7 @@ class DataManager:
                     "Failed attempt %s of %s (%s)", attempt, attempts, exception1
                 )
                 # Make each backoff pause a little bit longer
-                await asyncio.sleep(0.5 * attempt)
+                await asyncio.sleep(_RETRY_COEFFICIENT * attempt)
                 exception = exception1
                 continue
 
@@ -738,32 +739,8 @@ class DataManager:
             if isinstance(
                 exception, (UnauthorizedException, AuthFailedException)
             ) or NOT_AUTHENTICATED_ERROR.match(str(exception)):
-                context = {
-                    const.PROFILE: self._profile,
-                    "userid": self._user_id,
-                    "source": SOURCE_REAUTH,
-                }
-
-                # Check if reauth flow already exists.
-                flow = next(
-                    iter(
-                        flow
-                        for flow in self._hass.config_entries.flow.async_progress_by_handler(
-                            const.DOMAIN
-                        )
-                        if flow.context == context
-                    ),
-                    None,
-                )
-                if flow:
-                    return
-
-                # Start a reauth flow.
-                await self._hass.config_entries.flow.async_init(
-                    const.DOMAIN,
-                    context=context,
-                )
-                return
+                self._api.config_entry.async_start_reauth(self._hass)
+                return None
 
             raise exception
 

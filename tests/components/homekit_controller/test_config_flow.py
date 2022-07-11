@@ -15,7 +15,7 @@ from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.components.homekit_controller import config_flow
 from homeassistant.components.homekit_controller.const import KNOWN_DEVICES
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_CREATE_ENTRY
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -141,7 +141,7 @@ def get_device_discovery_info(
     result = zeroconf.ZeroconfServiceInfo(
         host="127.0.0.1",
         hostname=device.description.name,
-        name=device.description.name,
+        name=device.description.name + "._hap._tcp.local.",
         addresses=["127.0.0.1"],
         port=8080,
         properties={
@@ -263,6 +263,23 @@ async def test_pair_already_paired_1(hass, controller):
     )
     assert result["type"] == "abort"
     assert result["reason"] == "already_paired"
+
+
+async def test_unknown_domain_type(hass, controller):
+    """Test that aiohomekit can reject discoveries it doesn't support."""
+    device = setup_mock_accessory(controller)
+    # Flag device as already paired
+    discovery_info = get_device_discovery_info(device)
+    discovery_info.name = "TestDevice._music._tap.local."
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "ignored_model"
 
 
 async def test_id_missing(hass, controller):
@@ -943,10 +960,10 @@ async def test_mdns_update_to_paired_during_pairing(hass, controller):
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info_paired,
     )
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_paired"
     mdns_update_to_paired.set()
     result = await task
-    assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Koogeek-LS1-20833F"
     assert result["data"] == {}

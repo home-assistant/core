@@ -6,6 +6,7 @@ from time import monotonic
 
 from . import (
     application_credentials,
+    bluetooth,
     codeowners,
     config_flow,
     coverage,
@@ -27,6 +28,7 @@ from .model import Config, Integration
 
 INTEGRATION_PLUGINS = [
     application_credentials,
+    bluetooth,
     codeowners,
     config_flow,
     dependencies,

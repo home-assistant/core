@@ -8,7 +8,6 @@ from datetime import timedelta
 from enum import Enum
 import itertools
 import logging
-import os
 import time
 import traceback
 from typing import TYPE_CHECKING, Any, NamedTuple, Union
@@ -28,7 +27,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import DeviceInfo
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from . import discovery
@@ -82,14 +80,12 @@ from .const import (
 from .device import DeviceStatus, ZHADevice
 from .group import GroupMember, ZHAGroup
 from .registries import GROUP_ENTITY_DOMAINS
-from .store import async_get_registry
 
 if TYPE_CHECKING:
     from logging import Filter, LogRecord
 
     from ..entity import ZhaEntity
     from .channels.base import ZigbeeChannel
-    from .store import ZhaStorage
 
     _LogFilterType = Union[Filter, Callable[[LogRecord], int]]
 
@@ -119,7 +115,6 @@ class ZHAGateway:
     """Gateway that handles events that happen on the ZHA Zigbee network."""
 
     # -- Set in async_initialize --
-    zha_storage: ZhaStorage
     ha_device_registry: dr.DeviceRegistry
     ha_entity_registry: er.EntityRegistry
     application_controller: ControllerApplication
@@ -151,7 +146,6 @@ class ZHAGateway:
         discovery.PROBE.initialize(self._hass)
         discovery.GROUP_PROBE.initialize(self._hass)
 
-        self.zha_storage = await async_get_registry(self._hass)
         self.ha_device_registry = dr.async_get(self._hass)
         self.ha_entity_registry = er.async_get(self._hass)
 
@@ -163,7 +157,7 @@ class ZHAGateway:
         app_config = self._config.get(CONF_ZIGPY, {})
         database = self._config.get(
             CONF_DATABASE,
-            os.path.join(self._hass.config.config_dir, DEFAULT_DATABASE_NAME),
+            self._hass.config.path(DEFAULT_DATABASE_NAME),
         )
         app_config[CONF_DATABASE] = database
         app_config[CONF_DEVICE] = self.config_entry.data[CONF_DEVICE]
@@ -197,10 +191,9 @@ class ZHAGateway:
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
             if zha_device.ieee == self.application_controller.ieee:
                 self.coordinator_zha_device = zha_device
-            zha_dev_entry = self.zha_storage.devices.get(str(zigpy_device.ieee))
             delta_msg = "not known"
-            if zha_dev_entry and zha_dev_entry.last_seen is not None:
-                delta = round(time.time() - zha_dev_entry.last_seen)
+            if zha_device.last_seen is not None:
+                delta = round(time.time() - zha_device.last_seen)
                 zha_device.available = delta < zha_device.consider_unavailable_time
                 delta_msg = f"{str(timedelta(seconds=delta))} ago"
             _LOGGER.debug(
@@ -211,13 +204,6 @@ class ZHAGateway:
                 delta_msg,
                 zha_device.consider_unavailable_time,
             )
-        # update the last seen time for devices every 10 minutes to avoid thrashing
-        # writes and shutdown issues where storage isn't updated
-        self._unsubs.append(
-            async_track_time_interval(
-                self._hass, self.async_update_device_storage, timedelta(minutes=10)
-            )
-        )
 
     @callback
     def async_load_groups(self) -> None:
@@ -333,7 +319,7 @@ class ZHAGateway:
     def group_removed(self, zigpy_group: zigpy.group.Group) -> None:
         """Handle zigpy group removed event."""
         self._send_group_gateway_message(zigpy_group, ZHA_GW_MSG_GROUP_REMOVED)
-        zha_group = self._groups.pop(zigpy_group.group_id, None)
+        zha_group = self._groups.pop(zigpy_group.group_id)
         zha_group.info("group_removed")
         self._cleanup_group_entity_registry_entries(zigpy_group)
 
@@ -428,6 +414,7 @@ class ZHAGateway:
         ]
 
         # then we get all group entity entries tied to the coordinator
+        assert self.coordinator_zha_device
         all_group_entity_entries = er.async_entries_for_device(
             self.ha_entity_registry,
             self.coordinator_zha_device.device_id,
@@ -526,8 +513,6 @@ class ZHAGateway:
                 model=zha_device.model,
             )
             zha_device.set_device_id(device_registry_device.id)
-        entry = self.zha_storage.async_get_or_create_device(zha_device)
-        zha_device.async_update_last_seen(entry.last_seen)
         return zha_device
 
     @callback
@@ -550,17 +535,9 @@ class ZHAGateway:
             if device.status is DeviceStatus.INITIALIZED:
                 device.update_available(available)
 
-    async def async_update_device_storage(self, *_: Any) -> None:
-        """Update the devices in the store."""
-        for device in self.devices.values():
-            self.zha_storage.async_update_device(device)
-
     async def async_device_initialized(self, device: zigpy.device.Device) -> None:
         """Handle device joined and basic information discovered (async)."""
         zha_device = self._async_get_or_create_device(device)
-        # This is an active device so set a last seen if it is none
-        if zha_device.last_seen is None:
-            zha_device.async_update_last_seen(time.time())
         _LOGGER.debug(
             "device - %s:%s entering async_device_initialized - is_new_join: %s",
             device.nwk,
@@ -687,7 +664,7 @@ class ZHAGateway:
         _LOGGER.debug("Shutting down ZHA ControllerApplication")
         for unsubscribe in self._unsubs:
             unsubscribe()
-        await self.application_controller.pre_shutdown()
+        await self.application_controller.shutdown()
 
     def handle_message(
         self,

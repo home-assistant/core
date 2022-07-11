@@ -1,6 +1,11 @@
 {
     "config": {
         "step": {
+            "cloud": {
+                "data": {
+                    "username": "Anv\u00e4ndarnamn"
+                }
+            },
             "user": {
                 "data": {
                     "connection_type": "V\u00e4lj anslutningstyp"

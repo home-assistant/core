@@ -1,9 +1,9 @@
 """Binary Sensor platform for Sensibo integration."""
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
@@ -36,7 +36,6 @@ class DeviceBaseEntityDescriptionMixin:
     """Mixin for required Sensibo base description keys."""
 
     value_fn: Callable[[SensiboDevice], bool | None]
-    extra_fn: Callable[[SensiboDevice], dict[str, str | bool | None] | None] | None
 
 
 @dataclass
@@ -52,6 +51,13 @@ class SensiboDeviceBinarySensorEntityDescription(
 ):
     """Describes Sensibo Motion sensor entity."""
 
+
+FILTER_CLEAN_REQUIRED_DESCRIPTION = SensiboDeviceBinarySensorEntityDescription(
+    key="filter_clean",
+    device_class=BinarySensorDeviceClass.PROBLEM,
+    name="Filter Clean Required",
+    value_fn=lambda data: data.filter_clean,
+)
 
 MOTION_SENSOR_TYPES: tuple[SensiboMotionBinarySensorEntityDescription, ...] = (
     SensiboMotionBinarySensorEntityDescription(
@@ -85,30 +91,14 @@ MOTION_DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ..
         name="Room Occupied",
         icon="mdi:motion-sensor",
         value_fn=lambda data: data.room_occupied,
-        extra_fn=None,
     ),
 )
 
 DEVICE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
-    SensiboDeviceBinarySensorEntityDescription(
-        key="timer_on",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        name="Timer Running",
-        icon="mdi:timer",
-        value_fn=lambda data: data.timer_on,
-        extra_fn=lambda data: {"id": data.timer_id, "turn_on": data.timer_state_on},
-    ),
+    FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
-    SensiboDeviceBinarySensorEntityDescription(
-        key="pure_boost_enabled",
-        device_class=BinarySensorDeviceClass.RUNNING,
-        name="Pure Boost Enabled",
-        icon="mdi:wind-power-outline",
-        value_fn=lambda data: data.pure_boost_enabled,
-        extra_fn=None,
-    ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_ac_integration",
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -116,7 +106,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with AC",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_ac_integration,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_geo_integration",
@@ -125,7 +114,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Presence",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_geo_integration,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_measure_integration",
@@ -134,7 +122,6 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Indoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_measure_integration,
-        extra_fn=None,
     ),
     SensiboDeviceBinarySensorEntityDescription(
         key="pure_prime_integration",
@@ -143,8 +130,8 @@ PURE_SENSOR_TYPES: tuple[SensiboDeviceBinarySensorEntityDescription, ...] = (
         name="Pure Boost linked with Outdoor Air Quality",
         icon="mdi:connection",
         value_fn=lambda data: data.pure_prime_integration,
-        extra_fn=None,
     ),
+    FILTER_CLEAN_REQUIRED_DESCRIPTION,
 )
 
 
@@ -170,19 +157,19 @@ async def async_setup_entry(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in MOTION_DEVICE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.motion_sensors is not None
-    )
-    entities.extend(
-        SensiboDeviceSensor(coordinator, device_id, description)
-        for description in DEVICE_SENSOR_TYPES
-        for device_id, device_data in coordinator.data.parsed.items()
-        if device_data.model != "pure"
+        if device_data.motion_sensors
     )
     entities.extend(
         SensiboDeviceSensor(coordinator, device_id, description)
         for description in PURE_SENSOR_TYPES
         for device_id, device_data in coordinator.data.parsed.items()
         if device_data.model == "pure"
+    )
+    entities.extend(
+        SensiboDeviceSensor(coordinator, device_id, description)
+        for description in DEVICE_SENSOR_TYPES
+        for device_id, device_data in coordinator.data.parsed.items()
+        if device_data.model != "pure"
     )
 
     async_add_entities(entities)
@@ -247,10 +234,3 @@ class SensiboDeviceSensor(SensiboDeviceBaseEntity, BinarySensorEntity):
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.device_data)
-
-    @property
-    def extra_state_attributes(self) -> Mapping[str, Any] | None:
-        """Return additional attributes."""
-        if self.entity_description.extra_fn is not None:
-            return self.entity_description.extra_fn(self.device_data)
-        return None

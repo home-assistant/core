@@ -311,7 +311,7 @@ async def test_device_restore_availability(
     zha_device = await zha_device_restored(
         zigpy_device, last_seen=time.time() - last_seen_delta
     )
-    entity_id = "switch.fakemanufacturer_fakemodel_e769900a_on_off"
+    entity_id = "switch.fakemanufacturer_fakemodel_switch"
 
     await hass.async_block_till_done()
     # ensure the switch entity was created

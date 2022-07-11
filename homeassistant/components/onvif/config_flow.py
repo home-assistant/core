@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 from pprint import pformat
+from typing import Any
 from urllib.parse import urlparse
 
 from onvif.exceptions import ONVIFError
@@ -44,7 +45,7 @@ def wsdiscovery() -> list[Service]:
     return services
 
 
-async def async_discovery(hass) -> bool:
+async def async_discovery(hass) -> list[dict[str, Any]]:
     """Return if there are devices that can be discovered."""
     LOGGER.debug("Starting ONVIF discovery")
     services = await hass.async_add_executor_job(wsdiscovery)

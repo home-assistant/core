@@ -51,7 +51,7 @@ async def async_setup_entry(
     create_elk_entities(elk_data, [elk.panel], "panel", ElkPanel, entities)
     create_elk_entities(elk_data, elk.settings, "setting", ElkSetting, entities)
     create_elk_entities(elk_data, elk.zones, "zone", ElkZone, entities)
-    async_add_entities(entities, True)
+    async_add_entities(entities)
 
     platform = entity_platform.async_get_current_platform()
 

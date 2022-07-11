@@ -82,7 +82,9 @@ async def async_setup_sdm_entry(
 ) -> None:
     """Set up the client entities."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][DATA_DEVICE_MANAGER]
+    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
+        DATA_DEVICE_MANAGER
+    ]
     entities = []
     for device in device_manager.devices.values():
         if ThermostatHvacTrait.NAME in device.traits:
@@ -95,6 +97,7 @@ class ThermostatEntity(ClimateEntity):
 
     _attr_min_temp = MIN_TEMP
     _attr_max_temp = MAX_TEMP
+    _attr_has_entity_name = True
 
     def __init__(self, device: Device) -> None:
         """Initialize ThermostatEntity."""
@@ -112,11 +115,6 @@ class ThermostatEntity(ClimateEntity):
         """Return a unique ID."""
         # The API "name" field is a unique device identifier.
         return self._device.name
-
-    @property
-    def name(self) -> str | None:
-        """Return the name of the entity."""
-        return self._device_info.device_name
 
     @property
     def device_info(self) -> DeviceInfo:

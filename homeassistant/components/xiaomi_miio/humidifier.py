@@ -68,7 +68,8 @@ async def async_setup_entry(
     if not config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         return
 
-    entities = []
+    entities: list[HumidifierEntity] = []
+    entity: HumidifierEntity
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     coordinator = hass.data[DOMAIN][config_entry.entry_id][KEY_COORDINATOR]
@@ -112,6 +113,7 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
     _attr_device_class = HumidifierDeviceClass.HUMIDIFIER
     _attr_supported_features = HumidifierEntityFeature.MODES
+    supported_features: int
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the generic Xiaomi device."""
@@ -168,6 +170,8 @@ class XiaomiGenericHumidifier(XiaomiCoordinatedMiioEntity, HumidifierEntity):
 
 class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
     """Representation of a Xiaomi Air Humidifier."""
+
+    available_modes: list[str]
 
     def __init__(self, name, device, entry, unique_id, coordinator):
         """Initialize the plug switch."""
