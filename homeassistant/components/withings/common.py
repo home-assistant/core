@@ -752,19 +752,19 @@ class DataManager:
                         for flow in self._hass.config_entries.flow.async_progress_by_handler(
                             const.DOMAIN
                         )
-                        if flow.context == context
+                        if flow["context"].get(const.PROFILE) == self._profile
                     ),
                     None,
                 )
                 if flow:
-                    return
+                    return None
 
                 # Start a reauth flow.
                 await self._hass.config_entries.flow.async_init(
                     const.DOMAIN,
                     context=context,
                 )
-                return
+                return None
 
             raise exception
 
