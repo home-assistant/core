@@ -43,13 +43,11 @@ class AdvantageAirFilter(AdvantageAirEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
-    _attr_name = "Filter"
 
     def __init__(self, instance, ac_key):
         """Initialize an Advantage Air Filter."""
         super().__init__(instance, ac_key)
-        # self._attr_name = f'{self._ac["name"]} Filter'
+        self._attr_name = f'{self._ac["name"]} filter'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-filter'
         )
@@ -68,7 +66,7 @@ class AdvantageAirZoneMotion(AdvantageAirEntity, BinarySensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone Motion."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} Motion'
+        self._attr_name = f'{self._zone["name"]} motion'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-motion'
         )
@@ -88,7 +86,7 @@ class AdvantageAirZoneMyZone(AdvantageAirEntity, BinarySensorEntity):
     def __init__(self, instance, ac_key, zone_key):
         """Initialize an Advantage Air Zone MyZone."""
         super().__init__(instance, ac_key, zone_key)
-        self._attr_name = f'{self._zone["name"]} MyZone'
+        self._attr_name = f'{self._zone["name"]} myZone'
         self._attr_unique_id = (
             f'{self.coordinator.data["system"]["rid"]}-{ac_key}-{zone_key}-myzone'
         )
