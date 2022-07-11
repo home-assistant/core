@@ -392,10 +392,6 @@ async def test_primo_s0(hass, aioclient_mock):
         hass, config_entry.entry_id, FroniusMeterUpdateCoordinator.default_interval
     )
     assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 40
-    print("############################################################")
-    for ent in hass.states.async_all(domain_filter=SENSOR_DOMAIN):
-        print(f"{ent.entity_id}: {ent.state}")
-    print("############################################################")
     # logger
     assert_state("sensor.solarnet_grid_export_tariff", 1)
     assert_state("sensor.solarnet_co2_factor", 0.53)
