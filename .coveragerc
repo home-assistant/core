@@ -468,7 +468,6 @@ omit =
     homeassistant/components/harmony/remote.py
     homeassistant/components/harmony/util.py
     homeassistant/components/haveibeenpwned/sensor.py
-    homeassistant/components/hdmi_cec/media_player.py
     homeassistant/components/heatmiser/climate.py
     homeassistant/components/hikvision/binary_sensor.py
     homeassistant/components/hikvisioncam/switch.py

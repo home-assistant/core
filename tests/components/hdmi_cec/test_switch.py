@@ -1,10 +1,7 @@
 """Tests for the HDMI-CEC switch platform."""
-from unittest.mock import Mock
-
 import pytest
 
 from homeassistant.components.hdmi_cec import (
-    DOMAIN,
     EVENT_HDMI_CEC_UNAVAILABLE,
     POWER_OFF,
     POWER_ON,
@@ -16,55 +13,60 @@ from homeassistant.components.hdmi_cec import (
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-from homeassistant.setup import async_setup_component
+
+from tests.components.hdmi_cec import MockHDMIDevice
 
 
-class MockHDMIDevice:
-    """Mock of a HDMIDevice."""
-
-    turn_on = Mock()
-    turn_off = Mock()
-
-    def __init__(self, *, logical_address, **values):
-        """Mock of a HDMIDevice."""
-        super().__setattr__(
-            "set_update_callback", Mock(side_effect=self._set_update_callback)
-        )
-        super().__setattr__("logical_address", logical_address)
-        super().__setattr__("name", f"hdmi_{logical_address:x}")
-        if "power_status" not in values:
-            # Default to invalid state.
-            values["power_status"] = -1
-        super().__setattr__("_values", values)
-
-    def __getattr__(self, name):
-        """Get attribute from `_values` if not explicitly set."""
-        return self._values.get(name)
-
-    def __setattr__(self, name, value):
-        """Set attributes in `_values` if not one of the known attributes."""
-        if name in ("logical_address", "name", "_values", "_update"):
-            raise AttributeError("can't set attribute")
-        self._values[name] = value
-        self._update()
-
-    def _set_update_callback(self, update):
-        super().__setattr__("_update", update)
-
-
-async def test_switch_on_off(hass, create_hdmi_network, create_cec_entity):
-    """Test that switch triggers on & off commands."""
-    hdmi_network = await create_hdmi_network()
+@pytest.mark.parametrize("config", [{}, {"platform": "switch"}])
+async def test_load_platform(hass, create_hdmi_network, create_cec_entity, config):
+    """Test that switch entity is loaded."""
+    hdmi_network = await create_hdmi_network(config=config)
     mock_hdmi_device = MockHDMIDevice(logical_address=3)
     await create_cec_entity(hdmi_network, mock_hdmi_device)
     mock_hdmi_device.set_update_callback.assert_called_once()
+    state = hass.states.get("media_player.hdmi_3")
+    assert state is None
+
+    state = hass.states.get("switch.hdmi_3")
+    assert state is not None
+
+
+async def test_load_types(hass, create_hdmi_network, create_cec_entity):
+    """Test that switch entity is loaded when types is set."""
+    config = {"platform": "media_player", "types": {"hdmi_cec.hdmi_3": "switch"}}
+    hdmi_network = await create_hdmi_network(config=config)
+    mock_hdmi_device = MockHDMIDevice(logical_address=3)
+    await create_cec_entity(hdmi_network, mock_hdmi_device)
+    mock_hdmi_device.set_update_callback.assert_called_once()
+    state = hass.states.get("media_player.hdmi_3")
+    assert state is None
+
+    state = hass.states.get("switch.hdmi_3")
+    assert state is not None
+
+    mock_hdmi_device = MockHDMIDevice(logical_address=4)
+    await create_cec_entity(hdmi_network, mock_hdmi_device)
+    mock_hdmi_device.set_update_callback.assert_called_once()
+    state = hass.states.get("media_player.hdmi_4")
+    assert state is not None
+
+    state = hass.states.get("switch.hdmi_4")
+    assert state is None
+
+
+async def test_service_on(hass, create_hdmi_network, create_cec_entity):
+    """Test that switch triggers on `on` service."""
+    hdmi_network = await create_hdmi_network()
+    mock_hdmi_device = MockHDMIDevice(logical_address=3, power_status=3)
+    await create_cec_entity(hdmi_network, mock_hdmi_device)
+    state = hass.states.get("switch.hdmi_3")
+    assert state.state != STATE_ON
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: "switch.hdmi_3"}, blocking=True
@@ -74,6 +76,15 @@ async def test_switch_on_off(hass, create_hdmi_network, create_cec_entity):
 
     state = hass.states.get("switch.hdmi_3")
     assert state.state == STATE_ON
+
+
+async def test_service_off(hass, create_hdmi_network, create_cec_entity):
+    """Test that switch triggers on `off` service."""
+    hdmi_network = await create_hdmi_network()
+    mock_hdmi_device = MockHDMIDevice(logical_address=3, power_status=4)
+    await create_cec_entity(hdmi_network, mock_hdmi_device)
+    state = hass.states.get("switch.hdmi_3")
+    assert state.state != STATE_OFF
 
     await hass.services.async_call(
         SWITCH_DOMAIN,
@@ -261,33 +272,3 @@ async def test_unavailable_status(hass, create_hdmi_network, create_cec_entity):
     print(state)
     print(dir(state))
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.fixture
-def create_hdmi_network(hass, MockHDMINetwork):
-    """Create an initialized mock hdmi_network."""
-
-    async def hdmi_network(config=None):
-        if not config:
-            config = {}
-        await async_setup_component(hass, DOMAIN, {DOMAIN: config})
-
-        mock_hdmi_network = MockHDMINetwork.return_value
-
-        hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
-        await hass.async_block_till_done()
-        return mock_hdmi_network
-
-    return hdmi_network
-
-
-@pytest.fixture
-def create_cec_entity(hass):
-    """Create a CecEntity."""
-
-    async def cec_entity(hdmi_network, device):
-        new_device_callback = hdmi_network.set_new_device_callback.call_args.args[0]
-        new_device_callback(device)
-        await hass.async_block_till_done()
-
-    return cec_entity

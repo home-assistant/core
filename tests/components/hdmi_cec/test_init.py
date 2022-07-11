@@ -24,6 +24,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntity, MockEntityPlatform, async_capture_events
+from tests.components.hdmi_cec import assert_key_press_release
 
 
 @pytest.fixture
@@ -318,15 +319,9 @@ async def test_service_volume_x_times(
         blocking=True,
     )
 
-    assert len(mock_hdmi_network.send_command.call_args_list) == calls * 2
+    assert mock_hdmi_network.send_command.call_count == calls * 2
     for i in range(calls):
-        press_arg = mock_hdmi_network.send_command.call_args_list[i * 2].args[0]
-        release_arg = mock_hdmi_network.send_command.call_args_list[i * 2 + 1].args[0]
-        assert isinstance(press_arg, KeyPressCommand)
-        assert press_arg.key == key
-        assert press_arg.dst == 5
-        assert isinstance(release_arg, KeyReleaseCommand)
-        assert release_arg.dst == 5
+        assert_key_press_release(mock_hdmi_network.send_command, i, dst=5, key=key)
 
 
 @pytest.mark.parametrize("direction,key", [("up", 65), ("down", 66)])
@@ -408,14 +403,8 @@ async def test_service_volume_mute(hass, MockHDMINetwork, attr, key):
         blocking=True,
     )
 
-    assert len(mock_hdmi_network.send_command.call_args_list) == 2
-    press_arg = mock_hdmi_network.send_command.call_args_list[0].args[0]
-    release_arg = mock_hdmi_network.send_command.call_args_list[1].args[0]
-    assert isinstance(press_arg, KeyPressCommand)
-    assert press_arg.key == key
-    assert press_arg.dst == 5
-    assert isinstance(release_arg, KeyReleaseCommand)
-    assert release_arg.dst == 5
+    assert mock_hdmi_network.send_command.call_count == 2
+    assert_key_press_release(mock_hdmi_network.send_command, key=key, dst=5)
 
 
 @pytest.mark.parametrize(
