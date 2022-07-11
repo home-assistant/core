@@ -100,7 +100,7 @@ class AdGuardHomeDNSQueriesSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "DNS Queries",
+            "DNS queries",
             "mdi:magnify",
             "dns_queries",
             "queries",
@@ -119,7 +119,7 @@ class AdGuardHomeBlockedFilteringSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "DNS Queries Blocked",
+            "DNS queries blocked",
             "mdi:magnify-close",
             "blocked_filtering",
             "queries",
@@ -139,7 +139,7 @@ class AdGuardHomePercentageBlockedSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "DNS Queries Blocked Ratio",
+            "DNS queries blocked ratio",
             "mdi:magnify-close",
             "blocked_percentage",
             PERCENTAGE,
@@ -159,7 +159,7 @@ class AdGuardHomeReplacedParentalSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "Parental Control Blocked",
+            "Parental control blocked",
             "mdi:human-male-girl",
             "blocked_parental",
             "requests",
@@ -178,7 +178,7 @@ class AdGuardHomeReplacedSafeBrowsingSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "Safe Browsing Blocked",
+            "Safe browsing blocked",
             "mdi:shield-half-full",
             "blocked_safebrowsing",
             "requests",
@@ -197,7 +197,7 @@ class AdGuardHomeReplacedSafeSearchSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "Safe Searches Enforced",
+            "Safe searches enforced",
             "mdi:shield-search",
             "enforced_safesearch",
             "requests",
@@ -216,7 +216,7 @@ class AdGuardHomeAverageProcessingTimeSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "Average Processing Speed",
+            "Average processing speed",
             "mdi:speedometer",
             "average_speed",
             TIME_MILLISECONDS,
@@ -236,7 +236,7 @@ class AdGuardHomeRulesCountSensor(AdGuardHomeSensor):
         super().__init__(
             adguard,
             entry,
-            "Rules Count",
+            "Rules count",
             "mdi:counter",
             "rules_count",
             "rules",
