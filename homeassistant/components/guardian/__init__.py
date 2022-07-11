@@ -47,6 +47,8 @@ DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 SERVICE_NAME_DISABLE_AP = "disable_ap"
 SERVICE_NAME_ENABLE_AP = "enable_ap"
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
+SERVICE_NAME_REBOOT = "reboot"
+SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
@@ -54,6 +56,8 @@ SERVICES = (
     SERVICE_NAME_DISABLE_AP,
     SERVICE_NAME_ENABLE_AP,
     SERVICE_NAME_PAIR_SENSOR,
+    SERVICE_NAME_REBOOT,
+    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
     SERVICE_NAME_UNPAIR_SENSOR,
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
@@ -297,6 +301,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
+        ),
+        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
+        (
+            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
+            SERVICE_BASE_SCHEMA,
+            async_reset_valve_diagnostics,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
