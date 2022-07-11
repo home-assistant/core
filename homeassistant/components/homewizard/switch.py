@@ -36,6 +36,8 @@ class HWEnergySwitchEntity(
 ):
     """Representation switchable entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: HWEnergyDeviceUpdateCoordinator,
@@ -66,7 +68,7 @@ class HWEnergyMainSwitchEntity(HWEnergySwitchEntity):
         super().__init__(coordinator, entry, "power_on")
 
         # Config attributes
-        self._attr_name = f"{entry.title} Switch"
+        self._attr_name = None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -111,7 +113,7 @@ class HWEnergySwitchLockEntity(HWEnergySwitchEntity):
         super().__init__(coordinator, entry, "switch_lock")
 
         # Config attributes
-        self._attr_name = f"{entry.title} Switch Lock"
+        self._attr_name = "Switch lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch-lock on."""
