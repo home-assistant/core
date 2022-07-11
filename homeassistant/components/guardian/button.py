@@ -15,16 +15,16 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from . import ValveControllerEntity
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN
 
-BUTTON_TYPE_REBOOT = "reboot"
-BUTTON_TYPE_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
+BUTTON_KIND_REBOOT = "reboot"
+BUTTON_KIND_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 
 BUTTON_DESCRIPTIONS = (
     EntityDescription(
-        key=BUTTON_TYPE_REBOOT,
+        key=BUTTON_KIND_REBOOT,
         name="Reboot",
     ),
     EntityDescription(
-        key=BUTTON_TYPE_RESET_VALVE_DIAGNOSTICS,
+        key=BUTTON_KIND_RESET_VALVE_DIAGNOSTICS,
         name="Reset valve diagnostics",
     ),
 )
@@ -67,7 +67,7 @@ class GuardianButton(ValveControllerEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Send out a restart command."""
-        if self.entity_description.key == BUTTON_TYPE_REBOOT:
+        if self.entity_description.key == BUTTON_KIND_REBOOT:
             coro_func = self._client.system.reboot
         else:
             coro_func = self._client.valve.reset
