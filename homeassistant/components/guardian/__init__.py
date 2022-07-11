@@ -182,17 +182,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @callback
-    def extract_client(func: Callable) -> Callable:
-        """Define a decorator to get the correct client for a service call."""
+    def hydrate_with_entry_and_client(func: Callable) -> Callable:
+        """Define a decorator to hydrate a method with args based on service call."""
 
         async def wrapper(call: ServiceCall) -> None:
             """Wrap the service function."""
             entry_id = async_get_entry_id_for_service_call(hass, call)
             client = hass.data[DOMAIN][entry_id][DATA_CLIENT]
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry
 
             try:
                 async with client:
-                    await func(call, client)
+                    await func(call, entry, client)
             except GuardianError as err:
                 raise HomeAssistantError(
                     f"Error while executing {func.__name__}: {err}"
@@ -200,18 +202,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         return wrapper
 
-    @extract_client
-    async def async_disable_ap(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_disable_ap(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Disable the onboard AP."""
         await client.wifi.disable_ap()
 
-    @extract_client
-    async def async_enable_ap(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_enable_ap(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Enable the onboard AP."""
         await client.wifi.enable_ap()
 
-    @extract_client
-    async def async_pair_sensor(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_pair_sensor(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Add a new paired sensor."""
         entry_id = async_get_entry_id_for_service_call(hass, call)
         paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
@@ -220,12 +228,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.sensor.pair_sensor(uid)
         await paired_sensor_manager.async_pair_sensor(uid)
 
-    @extract_client
-    async def async_reboot(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_reboot(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Reboot the valve controller."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
         async_log_deprecated_service_call(
             hass,
             call,
@@ -234,12 +241,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await client.system.reboot()
 
-    @extract_client
-    async def async_reset_valve_diagnostics(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_reset_valve_diagnostics(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Fully reset system motor diagnostics."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry
         async_log_deprecated_service_call(
             hass,
             call,
@@ -248,8 +254,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
         await client.valve.reset()
 
-    @extract_client
-    async def async_unpair_sensor(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_unpair_sensor(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Remove a paired sensor."""
         entry_id = async_get_entry_id_for_service_call(hass, call)
         paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
@@ -258,8 +266,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await client.sensor.unpair_sensor(uid)
         await paired_sensor_manager.async_unpair_sensor(uid)
 
-    @extract_client
-    async def async_upgrade_firmware(call: ServiceCall, client: Client) -> None:
+    @hydrate_with_entry_and_client
+    async def async_upgrade_firmware(
+        call: ServiceCall, entry: ConfigEntry, client: Client
+    ) -> None:
         """Upgrade the device firmware."""
         await client.system.upgrade_firmware(
             url=call.data[CONF_URL],
