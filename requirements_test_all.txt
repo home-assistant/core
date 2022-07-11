@@ -1217,7 +1217,7 @@ pyrisco==0.3.1
 pyrituals==0.0.6
 
 # homeassistant.components.ruckus_unleashed
-pyruckus==0.15
+pyruckus==0.16
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
