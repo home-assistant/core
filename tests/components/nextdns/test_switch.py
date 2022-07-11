@@ -13,6 +13,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.dt import utcnow
 
@@ -21,7 +22,7 @@ from . import SETTINGS, init_integration
 from tests.common import async_fire_time_changed
 
 
-async def test_switch(hass):
+async def test_switch(hass: HomeAssistant) -> None:
     """Test states of the switches."""
     registry = er.async_get(hass)
 
@@ -218,7 +219,7 @@ async def test_switch(hass):
     assert entry.unique_id == "xyz12_web3"
 
 
-async def test_switch_on(hass):
+async def test_switch_on(hass: HomeAssistant) -> None:
     """Test the switch can be turned on."""
     await init_integration(hass)
 
@@ -244,7 +245,7 @@ async def test_switch_on(hass):
         mock_switch_on.assert_called_once()
 
 
-async def test_switch_off(hass):
+async def test_switch_off(hass: HomeAssistant) -> None:
     """Test the switch can be turned on."""
     await init_integration(hass)
 
@@ -270,7 +271,7 @@ async def test_switch_off(hass):
         mock_switch_on.assert_called_once()
 
 
-async def test_availability(hass):
+async def test_availability(hass: HomeAssistant) -> None:
     """Ensure that we mark the entities unavailable correctly when service causes an error."""
     await init_integration(hass)
 
