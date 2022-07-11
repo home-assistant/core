@@ -37,7 +37,7 @@ async def async_setup_entry(
     if router.data.get(KEY_DIALUP_MOBILE_DATASWITCH):
         switches.append(HuaweiLteMobileDataSwitch(router))
 
-    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH).get("WifiEnable"):
+    if router.data.get(KEY_WLAN_WIFI_GUEST_NETWORK_SWITCH, {}).get("WifiEnable"):
         switches.append(HuaweiLteWifiGuestNetworkSwitch(router))
 
     async_add_entities(switches, True)
@@ -153,4 +153,4 @@ class HuaweiLteWifiGuestNetworkSwitch(HuaweiLteBaseSwitch):
     @property
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes."""
-        return {"ssid": self.router.data[self.key].get("WifiSsid")}
+        return {"ssid": self.router.data[self.key].get("WifiSsid", "")}
