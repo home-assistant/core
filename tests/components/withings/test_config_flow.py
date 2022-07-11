@@ -66,7 +66,7 @@ async def test_config_reauth_profile(
     )
     assert result
     assert result["type"] == "form"
-    assert result["step_id"] == "reauth"
+    assert result["step_id"] == "reauth_confirm"
     assert result["description_placeholders"] == {const.PROFILE: "person0"}
 
     result = await hass.config_entries.flow.async_configure(
