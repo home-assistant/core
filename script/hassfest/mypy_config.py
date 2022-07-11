@@ -30,7 +30,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.icloud.account",
     "homeassistant.components.icloud.device_tracker",
     "homeassistant.components.icloud.sensor",
-    "homeassistant.components.izone.climate",
     "homeassistant.components.lovelace",
     "homeassistant.components.lovelace.dashboard",
     "homeassistant.components.lovelace.resources",
