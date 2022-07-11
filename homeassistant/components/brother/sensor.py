@@ -111,6 +111,8 @@ async def async_setup_entry(
 class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
     """Define an Brother Printer sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         coordinator: BrotherDataUpdateCoordinator,
@@ -121,7 +123,6 @@ class BrotherPrinterSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self._attrs: dict[str, Any] = {}
         self._attr_device_info = device_info
-        self._attr_name = f"{coordinator.data.model} {description.name}"
         self._attr_unique_id = f"{coordinator.data.serial.lower()}_{description.key}"
         self.entity_description = description
 
