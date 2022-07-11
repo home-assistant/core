@@ -225,24 +225,19 @@ def websocket_remove_entity(hass, connection, msg):
 @callback
 def _entry_dict(entry: er.RegistryEntry):
     """Convert entry to API format."""
-    # If entity name we always want to have a name.
-    if entry.has_entity_name:
-        name = entry.name or entry.original_name
-    else:
-        name = entry.name
-
     return {
         "area_id": entry.area_id,
         "config_entry_id": entry.config_entry_id,
         "device_id": entry.device_id,
         "disabled_by": entry.disabled_by,
+        "has_entity_name": entry.has_entity_name,
         "entity_category": entry.entity_category,
         "entity_id": entry.entity_id,
         "hidden_by": entry.hidden_by,
         "icon": entry.icon,
-        "name": name,
+        "name": entry.name,
+        "original_name": entry.original_name,
         "platform": entry.platform,
-        "has_entity_name": entry.has_entity_name,
     }
 
 
@@ -252,10 +247,8 @@ def _entry_ext_dict(entry: er.RegistryEntry):
     data = _entry_dict(entry)
     data["capabilities"] = entry.capabilities
     data["device_class"] = entry.device_class
-    data["has_entity_name"] = entry.has_entity_name
     data["options"] = entry.options
     data["original_device_class"] = entry.original_device_class
     data["original_icon"] = entry.original_icon
-    data["original_name"] = entry.original_name
     data["unique_id"] = entry.unique_id
     return data
