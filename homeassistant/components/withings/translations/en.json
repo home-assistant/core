@@ -24,7 +24,7 @@
                 "description": "Provide a unique profile name for this data. Typically this is the name of the profile you selected in the previous step.",
                 "title": "User Profile."
             },
-            "reauth": {
+            "reauth_confirm": {
                 "description": "The \"{profile}\" profile needs to be re-authenticated in order to continue receiving Withings data.",
                 "title": "Reauthenticate Integration"
             }
