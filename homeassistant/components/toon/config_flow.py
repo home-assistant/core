@@ -20,7 +20,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 2
 
-    agreements: list[Agreement] | None = None
+    agreements: list[Agreement]
     data: dict[str, Any]
 
     @property
@@ -67,7 +67,6 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] = None
     ) -> FlowResult:
         """Select Toon agreement to add."""
-        assert self.agreements is not None
         if len(self.agreements) == 1:
             return await self._create_entry(self.agreements[0])
 
