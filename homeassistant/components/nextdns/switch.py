@@ -206,6 +206,7 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
     """Define an NextDNS switch."""
 
     _attr_has_entity_name = True
+    entity_description: NextDnsSwitchEntityDescription
 
     def __init__(
         self,
@@ -217,7 +218,7 @@ class NextDnsSwitch(CoordinatorEntity[NextDnsSettingsUpdateCoordinator], SwitchE
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
         self._attr_is_on = description.state(coordinator.data)
-        self.entity_description: NextDnsSwitchEntityDescription = description
+        self.entity_description = description
 
     @callback
     def _handle_coordinator_update(self) -> None:
