@@ -273,8 +273,10 @@ async def async_setup_entry(
 class RfxtrxSensor(RfxtrxEntity, SensorEntity):
     """Representation of a RFXtrx sensor."""
 
-    entity_description: RfxtrxSensorEntityDescription
     _attr_force_update = True
+    """We should force updates. Repeated states have meaning."""
+
+    entity_description: RfxtrxSensorEntityDescription
 
     def __init__(self, device, device_id, entity_description, event=None):
         """Initialize the sensor."""

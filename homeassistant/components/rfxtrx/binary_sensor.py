@@ -125,6 +125,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
     """A representation of a RFXtrx binary sensor."""
 
     _attr_force_update = True
+    """We should force updates. Repeated states have meaning."""
 
     def __init__(
         self,

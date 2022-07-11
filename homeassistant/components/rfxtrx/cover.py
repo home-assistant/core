@@ -73,7 +73,7 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
         self._venetian_blind_mode = venetian_blind_mode
         self._attr_is_closed: bool | None = True
 
-        supported_features = (
+        self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
 
@@ -81,12 +81,11 @@ class RfxtrxCover(RfxtrxCommandEntity, CoverEntity):
             CONST_VENETIAN_BLIND_MODE_US,
             CONST_VENETIAN_BLIND_MODE_EU,
         ):
-            supported_features |= (
+            self._attr_supported_features |= (
                 CoverEntityFeature.OPEN_TILT
                 | CoverEntityFeature.CLOSE_TILT
                 | CoverEntityFeature.STOP_TILT
             )
-        self._attr_supported_features = supported_features
 
     async def async_added_to_hass(self) -> None:
         """Restore device state."""
