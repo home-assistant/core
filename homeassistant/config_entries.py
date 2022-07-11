@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import asyncio
 from collections import ChainMap
-from collections.abc import Callable, Coroutine, Iterable, Mapping
+from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from enum import Enum
 import functools
@@ -858,6 +858,9 @@ class ConfigEntries:
             hass, STORAGE_VERSION, STORAGE_KEY
         )
         EntityRegistryDisabledHandler(hass).async_setup()
+        self._post_remove_calls: list[
+            Callable[[HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]]
+        ] = []
 
     @callback
     def async_domains(
@@ -951,11 +954,17 @@ class ConfigEntries:
             )
 
         result: dict[str, Any] = {"require_restart": not unload_success}
-        if application_credential_id := await _async_get_application_credential_id(
-            self.hass, entry
-        ):
-            result["application_credential_id"] = application_credential_id
+        for call in self._post_remove_calls:
+            if data := await call(self.hass, entry):
+                result.update(data)
         return result
+
+    def async_add_post_remove_call(
+        self,
+        call: Callable[[HomeAssistant, ConfigEntry], Awaitable[dict[str, Any] | None]],
+    ) -> None:
+        """Register a callback invoked to process the remove and add to the result."""
+        self._post_remove_calls.append(call)
 
     async def _async_shutdown(self, event: Event) -> None:
         """Call when Home Assistant is stopping."""
@@ -1728,22 +1737,3 @@ async def support_remove_from_device(hass: HomeAssistant, domain: str) -> bool:
     integration = await loader.async_get_integration(hass, domain)
     component = integration.get_component()
     return hasattr(component, "async_remove_config_entry_device")
-
-
-async def _async_get_application_credential_id(
-    hass: HomeAssistant, config_entry: ConfigEntry
-) -> str | None:
-    """Return an in-use Application Credential ID if any."""
-    try:
-        integration = await loader.async_get_integration(
-            hass, "application_credentials"
-        )
-    except loader.IntegrationNotFound:
-        # application_credentials is not loaded
-        return None
-    component = integration.get_component()
-    if not hasattr(component, "async_get_credential_item_id"):
-        return None
-    return cast(
-        Optional[str], await component.async_get_credential_item_id(hass, config_entry)
-    )

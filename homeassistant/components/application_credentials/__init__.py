@@ -160,6 +160,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         hass, DOMAIN, _async_provide_implementation
     )
 
+    hass.config_entries.async_add_post_remove_call(async_post_remove_config_entry)
+
     return True
 
 
@@ -233,10 +235,10 @@ async def _async_provide_implementation(
     ]
 
 
-async def async_get_credential_item_id(
+async def async_post_remove_config_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-) -> str | None:
+) -> dict[str, Any] | None:
     """Return the item id of an application credential for an existing ConfigEntry."""
     if not await _get_platform(hass, config_entry.domain):
         return None
@@ -248,7 +250,7 @@ async def async_get_credential_item_id(
         item_id = item[CONF_ID]
         auth_domain = item.get(CONF_AUTH_DOMAIN, item_id)
         if config_entry.data.get("auth_implementation") == auth_domain:
-            return item_id
+            return {"application_credential_id": item_id}
     return None
 
 
