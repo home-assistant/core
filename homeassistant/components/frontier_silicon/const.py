@@ -4,3 +4,5 @@ DOMAIN = "frontier_silicon"
 
 DEFAULT_PIN = "1234"
 DEFAULT_PORT = 80
+
+MEDIA_TYPE_PRESET = "preset"
