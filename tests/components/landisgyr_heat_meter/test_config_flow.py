@@ -169,9 +169,9 @@ async def test_get_serial_by_id_realpath(
     assert result["errors"] == {}
 
     scandir = [MagicMock(), MagicMock()]
-    scandir[0].path.return_value = "dev/ttyUSB1234"
+    scandir[0].path = "/dev/ttyUSB1234"
     scandir[0].is_symlink.return_value = True
-    scandir[1].path.return_value = "dev/ttyUSB5678"
+    scandir[1].path = "/dev/ttyUSB5678"
     scandir[1].is_symlink.return_value = True
 
     with patch("os.path") as path:
@@ -208,7 +208,7 @@ async def test_get_serial_by_id_dev_path(
     assert result["errors"] == {}
 
     scandir = [MagicMock()]
-    scandir[0].path.return_value = "dev/ttyUSB5678"
+    scandir[0].path.return_value = "/dev/serial/by-id/USB5678"
     scandir[0].is_symlink.return_value = True
 
     with patch("os.path") as path:

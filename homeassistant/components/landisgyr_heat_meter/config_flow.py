@@ -37,38 +37,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            user_selection = user_input[CONF_DEVICE]
-            if user_selection == CONF_MANUAL_PATH:
+            if user_input[CONF_DEVICE] == CONF_MANUAL_PATH:
                 return await self.async_step_setup_serial_manual_path()
 
             dev_path = await self.hass.async_add_executor_job(
-                get_serial_by_id, user_selection
+                get_serial_by_id, user_input[CONF_DEVICE]
             )
 
             try:
-                model, device_number = await self.validate_ultraheat(dev_path)
+                return await self.validate_and_create_entry(dev_path)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
 
-            if not errors:
-                await self.async_set_unique_id(device_number)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=model,
-                    data=user_input | {"model": model, "device_number": device_number},
-                )
+        ports = await self.get_ports()
+        ports["test"] = "test"
 
-        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
-        list_of_ports = {}
-        for port in ports:
-            list_of_ports[
-                port.device
-            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
-                f" - {port.manufacturer}" if port.manufacturer else ""
-            )
-        list_of_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
-
-        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(list_of_ports)})
+        schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(ports)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_setup_serial_manual_path(self, user_input=None):
@@ -76,26 +60,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
+            dev_path = user_input[CONF_DEVICE]
             try:
-                model, device_number = await self.validate_ultraheat(
-                    user_input[CONF_DEVICE]
-                )
+                return await self.validate_and_create_entry(dev_path)
             except CannotConnect:
                 errors["base"] = "cannot_connect"
-
-            if not errors:
-                await self.async_set_unique_id(device_number)
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=model,
-                    data=user_input | {"model": model, "device_number": device_number},
-                )
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): str})
         return self.async_show_form(
             step_id="setup_serial_manual_path",
             data_schema=schema,
             errors=errors,
+        )
+
+    async def validate_and_create_entry(self, dev_path):
+        """Try to connect to the device path and return an entry."""
+        model, device_number = await self.validate_ultraheat(dev_path)
+
+        await self.async_set_unique_id(device_number)
+        self._abort_if_unique_id_configured()
+        data = {
+            CONF_DEVICE: dev_path,
+            "model": model,
+            "device_number": device_number,
+        }
+        return self.async_create_entry(
+            title=model,
+            data=data,
         )
 
     async def validate_ultraheat(self, port: str):
@@ -113,8 +104,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.warning("Failed read data from: %s. %s", port, err)
             raise CannotConnect(f"Error communicating with device: {err}") from err
 
-        _LOGGER.info("Successfully connected to %s", port)
+        _LOGGER.debug("Successfully connected to %s", port)
         return data.model, data.device_number
+
+    async def get_ports(self) -> dict:
+        """Get the available ports."""
+        ports = await self.hass.async_add_executor_job(serial.tools.list_ports.comports)
+        formatted_ports = {}
+        for port in ports:
+            formatted_ports[
+                port.device
+            ] = f"{port}, s/n: {port.serial_number or 'n/a'}" + (
+                f" - {port.manufacturer}" if port.manufacturer else ""
+            )
+        formatted_ports[CONF_MANUAL_PATH] = CONF_MANUAL_PATH
+        return formatted_ports
 
 
 def get_serial_by_id(dev_path: str) -> str:
