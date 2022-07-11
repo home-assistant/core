@@ -398,6 +398,7 @@ class Washer(
     PROGRAMS = [
         {"name": "LaundryCare.Washer.Program.Cotton"},
         {"name": "LaundryCare.Washer.Program.Cotton.CottonEco"},
+        {"name": "LaundryCare.Washer.Program.Cotton.Eco4060"},
         {"name": "LaundryCare.Washer.Program.EasyCare"},
         {"name": "LaundryCare.Washer.Program.Mix"},
         {"name": "LaundryCare.Washer.Program.DelicatesSilk"},
