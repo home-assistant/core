@@ -33,14 +33,16 @@ def json_encoder_default(obj: Any) -> Any:
 
     Hand other objects to the original method.
     """
+    if isinstance(obj, (set, tuple)):
+        return list(obj)
     if isinstance(obj, float):
         return float(obj)
-    if isinstance(obj, (set, tuple, NamedTuple)):
-        return list(obj)
     if hasattr(obj, "as_dict"):
         return obj.as_dict()
     if isinstance(obj, Path):
         return obj.as_posix()
+    if isinstance(obj, NamedTuple):
+        return tuple(obj)
     raise TypeError
 
 
