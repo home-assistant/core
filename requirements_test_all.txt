@@ -40,7 +40,7 @@ PyTransportNSW==0.1.1
 
 # homeassistant.components.camera
 # homeassistant.components.stream
-PyTurboJPEG==1.6.6
+PyTurboJPEG==1.6.7
 
 # homeassistant.components.vicare
 PyViCare==2.16.2
@@ -320,7 +320,7 @@ bimmer_connected==0.9.6
 bleak==0.14.3
 
 # homeassistant.components.blebox
-blebox_uniapi==2.0.1
+blebox_uniapi==2.0.2
 
 # homeassistant.components.blink
 blinkpy==0.19.0
@@ -1053,7 +1053,7 @@ pyhiveapi==0.5.13
 pyhomematic==0.1.77
 
 # homeassistant.components.ialarm
-pyialarm==1.9.0
+pyialarm==2.2.0
 
 # homeassistant.components.icloud
 pyicloud==1.0.0
@@ -1434,7 +1434,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.6.0
+sentry-sdk==1.7.0
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1

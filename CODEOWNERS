@@ -865,6 +865,8 @@ build.json @home-assistant/supervisor
 /tests/components/rflink/ @javicalle
 /homeassistant/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
 /tests/components/rfxtrx/ @danielhiversen @elupus @RobBie1221
+/homeassistant/components/rhasspy/ @balloob @synesthesiam
+/tests/components/rhasspy/ @balloob @synesthesiam
 /homeassistant/components/ridwell/ @bachya
 /tests/components/ridwell/ @bachya
 /homeassistant/components/ring/ @balloob

@@ -25,7 +25,6 @@ SUFFIX_LIMIT: Final = "LIMIT"
 
 ATTRIBUTION: Final = "Data provided by Airly"
 CONF_USE_NEAREST: Final = "use_nearest"
-DEFAULT_NAME: Final = "Airly"
 DOMAIN: Final = "airly"
 LABEL_ADVICE: Final = "advice"
 MANUFACTURER: Final = "Airly sp. z o.o."

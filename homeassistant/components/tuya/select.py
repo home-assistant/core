@@ -57,13 +57,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "kg": (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power on Behavior",
+            name="Power on behavior",
             device_class=TuyaDeviceClass.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator Light Mode",
+            name="Indicator light mode",
             device_class=TuyaDeviceClass.LIGHT_MODE,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -73,7 +73,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "qn": (
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Temperature Level",
+            name="Temperature level",
             icon="mdi:thermometer-lines",
         ),
     ),
@@ -96,27 +96,27 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "sp": (
         SelectEntityDescription(
             key=DPCode.IPC_WORK_MODE,
-            name="IPC Mode",
+            name="IPC mode",
             device_class=TuyaDeviceClass.IPC_WORK_MODE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.DECIBEL_SENSITIVITY,
-            name="Sound Detection Sensitivity",
+            name="Sound detection densitivity",
             icon="mdi:volume-vibrate",
             device_class=TuyaDeviceClass.DECIBEL_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.RECORD_MODE,
-            name="Record Mode",
+            name="Record mode",
             icon="mdi:record-rec",
             device_class=TuyaDeviceClass.RECORD_MODE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.BASIC_NIGHTVISION,
-            name="Night Vision",
+            name="Night vision",
             icon="mdi:theme-light-dark",
             device_class=TuyaDeviceClass.BASIC_NIGHTVISION,
             entity_category=EntityCategory.CONFIG,
@@ -130,7 +130,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
         ),
         SelectEntityDescription(
             key=DPCode.MOTION_SENSITIVITY,
-            name="Motion Detection Sensitivity",
+            name="Motion detection sensitivity",
             icon="mdi:motion-sensor",
             device_class=TuyaDeviceClass.MOTION_SENSITIVITY,
             entity_category=EntityCategory.CONFIG,
@@ -141,13 +141,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "tdq": (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power on Behavior",
+            name="Power on behavior",
             device_class=TuyaDeviceClass.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator Light Mode",
+            name="Indicator light mode",
             device_class=TuyaDeviceClass.LIGHT_MODE,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -157,31 +157,31 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "tgkg": (
         SelectEntityDescription(
             key=DPCode.RELAY_STATUS,
-            name="Power on Behavior",
+            name="Power on behavior",
             device_class=TuyaDeviceClass.RELAY_STATUS,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LIGHT_MODE,
-            name="Indicator Light Mode",
+            name="Indicator light mode",
             device_class=TuyaDeviceClass.LIGHT_MODE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
-            name="Light Source Type",
+            name="Light source type",
             device_class=TuyaDeviceClass.LED_TYPE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
-            name="Light 2 Source Type",
+            name="Light 2 source type",
             device_class=TuyaDeviceClass.LED_TYPE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_3,
-            name="Light 3 Source Type",
+            name="Light 3 source type",
             device_class=TuyaDeviceClass.LED_TYPE,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -191,13 +191,13 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "tgq": (
         SelectEntityDescription(
             key=DPCode.LED_TYPE_1,
-            name="Light Source Type",
+            name="Light source type",
             device_class=TuyaDeviceClass.LED_TYPE,
             entity_category=EntityCategory.CONFIG,
         ),
         SelectEntityDescription(
             key=DPCode.LED_TYPE_2,
-            name="Light 2 Source Type",
+            name="Light 2 source type",
             device_class=TuyaDeviceClass.LED_TYPE,
             entity_category=EntityCategory.CONFIG,
         ),
@@ -216,14 +216,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "sd": (
         SelectEntityDescription(
             key=DPCode.CISTERN,
-            name="Water Tank Adjustment",
+            name="Water tank adjustment",
             entity_category=EntityCategory.CONFIG,
             device_class=TuyaDeviceClass.VACUUM_CISTERN,
             icon="mdi:water-opacity",
         ),
         SelectEntityDescription(
             key=DPCode.COLLECTION_MODE,
-            name="Dust Collection Mode",
+            name="Dust collection mode",
             entity_category=EntityCategory.CONFIG,
             device_class=TuyaDeviceClass.VACUUM_COLLECTION,
             icon="mdi:air-filter",
@@ -241,14 +241,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "fs": (
         SelectEntityDescription(
             key=DPCode.FAN_VERTICAL,
-            name="Vertical Swing Flap Angle",
+            name="Vertical swing flap angle",
             device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-vertical-align-center",
         ),
         SelectEntityDescription(
             key=DPCode.FAN_HORIZONTAL,
-            name="Horizontal Swing Flap Angle",
+            name="Horizontal swing flap angle",
             device_class=TuyaDeviceClass.FAN_ANGLE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:format-horizontal-align-center",
@@ -273,7 +273,7 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "cl": (
         SelectEntityDescription(
             key=DPCode.CONTROL_BACK_MODE,
-            name="Motor Mode",
+            name="Motor mode",
             device_class=TuyaDeviceClass.CURTAIN_MOTOR_MODE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:swap-horizontal",
@@ -290,14 +290,14 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
     "jsq": (
         SelectEntityDescription(
             key=DPCode.SPRAY_MODE,
-            name="Spray Mode",
+            name="Spray mode",
             device_class=TuyaDeviceClass.HUMIDIFIER_SPRAY_MODE,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:spray",
         ),
         SelectEntityDescription(
             key=DPCode.LEVEL,
-            name="Spraying Level",
+            name="Spraying level",
             device_class=TuyaDeviceClass.HUMIDIFIER_LEVEL,
             entity_category=EntityCategory.CONFIG,
             icon="mdi:spray",
