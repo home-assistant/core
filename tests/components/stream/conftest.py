@@ -12,10 +12,10 @@ so that it can inspect the output.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Generator
 from http import HTTPStatus
 import logging
 import threading
-from typing import Generator
 from unittest.mock import Mock, patch
 
 from aiohttp import web
