@@ -30,7 +30,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_platform
+from tests.common import MockConfigEntry, mock_platform
 
 CLIENT_ID = "some-client-id"
 CLIENT_SECRET = "some-client-secret"
@@ -761,3 +761,21 @@ async def test_name(
     assert (
         result["data"].get("auth_implementation") == "fake_integration_some_client_id"
     )
+
+
+async def test_remove_config_entry_without_app_credentials(
+    hass: HomeAssistant,
+    ws_client: ClientFixture,
+    authorization_server: AuthorizationServer,
+):
+    """Test config entry removal for non-app credentials integration."""
+    hass.config.components.add("other_domain")
+    config_entry = MockConfigEntry(domain="other_domain")
+    config_entry.add_to_hass(hass)
+    assert await async_setup_component(hass, "other_domain", {})
+
+    entries = hass.config_entries.async_entries("other_domain")
+    assert len(entries) == 1
+
+    result = await hass.config_entries.async_remove(entries[0].entry_id)
+    assert "application_credential_id" not in result

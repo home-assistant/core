@@ -240,16 +240,18 @@ async def async_post_remove_config_entry(
     config_entry: ConfigEntry,
 ) -> dict[str, Any] | None:
     """Return the item id of an application credential for an existing ConfigEntry."""
-    if not await _get_platform(hass, config_entry.domain):
+    if not await _get_platform(hass, config_entry.domain) or not (
+        auth_domain := config_entry.data.get("auth_implementation")
+    ):
         return None
 
     storage_collection = hass.data[DOMAIN][DATA_STORAGE]
     for item in storage_collection.async_items():
-        if item[CONF_DOMAIN] != config_entry.domain:
-            continue
         item_id = item[CONF_ID]
-        auth_domain = item.get(CONF_AUTH_DOMAIN, item_id)
-        if config_entry.data.get("auth_implementation") == auth_domain:
+        if (
+            item[CONF_DOMAIN] == config_entry.domain
+            and item.get(CONF_AUTH_DOMAIN, item_id) == auth_domain
+        ):
             return {"application_credential_id": item_id}
     return None
 
