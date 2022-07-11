@@ -125,10 +125,6 @@ class CanaryCamera(CoordinatorEntity[CanaryDataUpdateCoordinator], Camera):
             name=device.name,
         )
         self._image: bytes | None = None
-        self._expires_at = dt_util.utcnow()
-        _LOGGER.debug(
-            "%s %s has been initialized", self.name, device.device_type["name"]
-        )
         self._last_event: Entry | None = None
         self._last_image_id = None
         self._image_url: str | None = None
