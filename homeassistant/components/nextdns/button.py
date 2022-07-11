@@ -15,7 +15,7 @@ PARALLEL_UPDATES = 1
 
 CLEAR_LOGS_BUTTON = ButtonEntityDescription(
     key="clear_logs",
-    name="Clear Logs",
+    name="Clear logs",
     entity_category=EntityCategory.CONFIG,
 )
 
