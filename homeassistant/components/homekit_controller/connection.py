@@ -185,7 +185,7 @@ class HKDevice:
             self.hass, self.async_update, DEFAULT_SCAN_INTERVAL
         )
 
-        self.hass.async_create_task(self.async_process_entity_map())
+        await self.async_process_entity_map()
 
         return True
 
