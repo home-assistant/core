@@ -1,7 +1,9 @@
 {
   "config": {
     "step": {
-      "user": {}
+      "user": {
+        "description": "Do you want to enable Rhasspy support?"
+      }
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"

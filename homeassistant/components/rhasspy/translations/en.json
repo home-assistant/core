@@ -4,7 +4,9 @@
             "single_instance_allowed": "Already configured. Only a single configuration possible."
         },
         "step": {
-            "user": {}
+            "user": {
+                "description": "Do you want to enable Rhasspy support?"
+            }
         }
     }
 }
