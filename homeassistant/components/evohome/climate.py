@@ -13,7 +13,7 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import PRECISION_TENTHS
+from homeassistant.const import PRECISION_TENTHS, TEMP_CELSIUS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -151,19 +151,19 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         if evo_device.modelType.startswith("VisionProWifi"):
             # this system does not have a distinct ID for the zone
-            self._unique_id = f"{evo_device.zoneId}z"
+            self._attr_unique_id = f"{evo_device.zoneId}z"
         else:
-            self._unique_id = evo_device.zoneId
+            self._attr_unique_id = evo_device.zoneId
 
-        self._name = evo_device.name
-        self._icon = "mdi:radiator"
+        self._attr_name = evo_device.name
 
         if evo_broker.client_v1:
-            self._precision = PRECISION_TENTHS
+            self._attr_precision = PRECISION_TENTHS
         else:
-            self._precision = self._evo_device.setpointCapabilities["valueResolution"]
+            self._attr_precision = self._evo_device.setpointCapabilities[
+                "valueResolution"
+            ]
 
-        self._preset_modes = list(HA_PRESET_TO_EVO)
         self._attr_supported_features = (
             ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
         )
@@ -313,22 +313,23 @@ class EvoController(EvoClimateEntity):
     It is assumed there is only one TCS per location, and they are thus synonymous.
     """
 
+    _attr_icon = "mdi:thermostat"
+    _attr_precision = PRECISION_TENTHS
+    _attr_temperature_unit = TEMP_CELSIUS
+
     def __init__(self, evo_broker, evo_device) -> None:
         """Initialize a Honeywell TCC Controller/Location."""
         super().__init__(evo_broker, evo_device)
 
-        self._unique_id = evo_device.systemId
-        self._name = evo_device.location.name
-        self._icon = "mdi:thermostat"
-
-        self._precision = PRECISION_TENTHS
+        self._attr_unique_id = evo_device.systemId
+        self._attr_name = evo_device.location.name
 
         modes = [m["systemMode"] for m in evo_broker.config["allowedSystemModes"]]
-        self._preset_modes = [
+        self._attr_preset_modes = [
             TCS_PRESET_TO_HA[m] for m in modes if m in list(TCS_PRESET_TO_HA)
         ]
         self._attr_supported_features = (
-            ClimateEntityFeature.PRESET_MODE if self._preset_modes else 0
+            ClimateEntityFeature.PRESET_MODE if self._attr_preset_modes else 0
         )
 
     async def async_tcs_svc_request(self, service: dict, data: dict) -> None:

@@ -121,11 +121,24 @@ BluetoothCallback = Callable[[BluetoothServiceInfo, BluetoothChange], None]
 
 
 @hass_callback
+def async_discovered_service_info(
+    hass: HomeAssistant,
+) -> list[BluetoothServiceInfo]:
+    """Return the discovered devices list."""
+    if DOMAIN not in hass.data:
+        return []
+    manager: BluetoothManager = hass.data[DOMAIN]
+    return manager.async_discovered_service_info()
+
+
+@hass_callback
 def async_address_present(
     hass: HomeAssistant,
     address: str,
 ) -> bool:
     """Check if an address is present in the bluetooth device list."""
+    if DOMAIN not in hass.data:
+        return False
     manager: BluetoothManager = hass.data[DOMAIN]
     return manager.async_address_present(address)
 
@@ -361,6 +374,19 @@ class BluetoothManager:
                 for device in models.HA_BLEAK_SCANNER.discovered_devices
             )
         )
+
+    @hass_callback
+    def async_discovered_service_info(self) -> list[BluetoothServiceInfo]:
+        """Return if the address is present."""
+        if models.HA_BLEAK_SCANNER:
+            discovered = models.HA_BLEAK_SCANNER.discovered_devices
+            history = models.HA_BLEAK_SCANNER.history
+            return [
+                BluetoothServiceInfo.from_advertisement(*history[device.address])
+                for device in discovered
+                if device.address in history
+            ]
+        return []
 
     async def async_stop(self, event: Event) -> None:
         """Stop bluetooth discovery."""

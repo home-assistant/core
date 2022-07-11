@@ -409,7 +409,7 @@ class PairedSensorEntity(GuardianEntity):
             identifiers={(DOMAIN, paired_sensor_uid)},
             manufacturer="Elexa",
             model=coordinator.data["codename"],
-            name=f"Guardian Paired Sensor {paired_sensor_uid}",
+            name=f"Guardian paired sensor {paired_sensor_uid}",
             via_device=(DOMAIN, entry.data[CONF_UID]),
         )
         self._attr_unique_id = f"{paired_sensor_uid}_{description.key}"
@@ -436,7 +436,7 @@ class ValveControllerEntity(GuardianEntity):
             identifiers={(DOMAIN, entry.data[CONF_UID])},
             manufacturer="Elexa",
             model=coordinators[API_SYSTEM_DIAGNOSTICS].data["firmware"],
-            name=f"Guardian Valve Controller {entry.data[CONF_UID]}",
+            name=f"Guardian valve controller {entry.data[CONF_UID]}",
         )
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"
         self.coordinators = coordinators

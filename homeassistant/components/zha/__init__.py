@@ -1,6 +1,7 @@
 """Support for Zigbee Home Automation devices."""
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
@@ -12,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -98,6 +100,14 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     if config.get(CONF_ENABLE_QUIRKS, True):
         setup_quirks(config)
 
+    # temporary code to remove the zha storage file from disk. this will be removed in 2022.10.0
+    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
+    if os.path.isfile(storage_path):
+        _LOGGER.debug("removing ZHA storage file")
+        await hass.async_add_executor_job(os.remove, storage_path)
+    else:
+        _LOGGER.debug("ZHA storage file does not exist or was already removed")
+
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
@@ -124,7 +134,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         """Handle shutdown tasks."""
         zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
         await zha_gateway.shutdown()
-        await zha_gateway.async_update_device_storage()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
         ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
@@ -137,7 +146,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     """Unload ZHA config entry."""
     zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
     await zha_gateway.shutdown()
-    await zha_gateway.async_update_device_storage()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)

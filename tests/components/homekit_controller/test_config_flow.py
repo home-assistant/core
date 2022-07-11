@@ -265,6 +265,23 @@ async def test_pair_already_paired_1(hass, controller):
     assert result["reason"] == "already_paired"
 
 
+async def test_unknown_domain_type(hass, controller):
+    """Test that aiohomekit can reject discoveries it doesn't support."""
+    device = setup_mock_accessory(controller)
+    # Flag device as already paired
+    discovery_info = get_device_discovery_info(device)
+    discovery_info.name = "TestDevice._music._tap.local."
+
+    # Device is discovered
+    result = await hass.config_entries.flow.async_init(
+        "homekit_controller",
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "ignored_model"
+
+
 async def test_id_missing(hass, controller):
     """Test id is missing."""
     device = setup_mock_accessory(controller)

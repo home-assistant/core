@@ -283,6 +283,15 @@ class DataUpdateCoordinator(Generic[_T]):
         self.async_update_listeners()
 
     @callback
+    def async_set_update_error(self, err: Exception) -> None:
+        """Manually set an error, log the message and notify listeners."""
+        self.last_exception = err
+        if self.last_update_success:
+            self.logger.error("Error requesting %s data: %s", self.name, err)
+            self.last_update_success = False
+            self.async_update_listeners()
+
+    @callback
     def async_set_updated_data(self, data: _T) -> None:
         """Manually update data, notify listeners and reset refresh interval."""
         if self._unsub_refresh:
