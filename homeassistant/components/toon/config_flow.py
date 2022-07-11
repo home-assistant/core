@@ -67,6 +67,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] = None
     ) -> FlowResult:
         """Select Toon agreement to add."""
+        assert self.agreements is not None
         if len(self.agreements) == 1:
             return await self._create_entry(self.agreements[0])
 
@@ -93,6 +94,7 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         await self.async_set_unique_id(agreement.agreement_id)
         self._abort_if_unique_id_configured()
 
+        assert self.data is not None
         self.data[CONF_AGREEMENT_ID] = agreement.agreement_id
         return self.async_create_entry(
             title=f"{agreement.street} {agreement.house_number}, {agreement.city}",
