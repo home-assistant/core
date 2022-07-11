@@ -1434,7 +1434,7 @@ securetar==2022.2.0
 sense_energy==0.10.4
 
 # homeassistant.components.sentry
-sentry-sdk==1.6.0
+sentry-sdk==1.7.0
 
 # homeassistant.components.sharkiq
 sharkiq==0.0.1
