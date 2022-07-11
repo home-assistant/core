@@ -32,7 +32,7 @@ CONF_ACCESS_TOKEN_SECRET = "access_token_secret"
 GAS_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="volume",
-        name="Consumption",
+        name="Total consumption",
         native_unit_of_measurement=VOLUME_CUBIC_METERS,
         device_class=SensorDeviceClass.GAS,
         state_class=SensorStateClass.TOTAL_INCREASING,

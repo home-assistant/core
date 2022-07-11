@@ -109,6 +109,8 @@ async def async_setup_entry(
 class DiscovergySensor(CoordinatorEntity, SensorEntity):
     """Represents a discovergy smart meter sensor."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         description: SensorEntityDescription,
