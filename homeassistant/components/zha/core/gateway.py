@@ -178,9 +178,7 @@ class ZHAGateway:
         self.application_controller.add_listener(self)
         self.application_controller.groups.add_listener(self)
         self._hass.data[DATA_ZHA][DATA_ZHA_GATEWAY] = self
-        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(
-            self.application_controller.ieee
-        )
+        self._hass.data[DATA_ZHA][DATA_ZHA_BRIDGE_ID] = str(self.coordinator_ieee)
         self.async_load_devices()
         self.async_load_groups()
 
@@ -189,7 +187,7 @@ class ZHAGateway:
         """Restore ZHA devices from zigpy application state."""
         for zigpy_device in self.application_controller.devices.values():
             zha_device = self._async_get_or_create_device(zigpy_device, restored=True)
-            if zha_device.ieee == self.application_controller.ieee:
+            if zha_device.ieee == self.coordinator_ieee:
                 self.coordinator_zha_device = zha_device
             delta_msg = "not known"
             if zha_device.last_seen is not None:
@@ -434,6 +432,11 @@ class ZHAGateway:
                 "cleaning up entity registry entry for entity: %s", entry.entity_id
             )
             self.ha_entity_registry.async_remove(entry.entity_id)
+
+    @property
+    def coordinator_ieee(self) -> EUI64:
+        """Return the active coordinator's IEEE address."""
+        return self.application_controller.state.node_info.ieee
 
     @property
     def devices(self) -> dict[EUI64, ZHADevice]:
