@@ -91,20 +91,18 @@ class IcloudAccount:
         self._username = username
         self._password = password
         self._with_family = with_family
-        self._fetch_interval = max_interval
+        self._fetch_interval: float = max_interval
         self._max_interval = max_interval
         self._gps_accuracy_threshold = gps_accuracy_threshold
 
         self._icloud_dir = icloud_dir
 
         self.api: PyiCloudService | None = None
-        self._owner_fullname = None
-        self._family_members_fullname = {}
-        self._devices = {}
+        self._owner_fullname: str | None = None
+        self._family_members_fullname: dict[str, str] = {}
+        self._devices: dict[str, IcloudDevice] = {}
         self._retried_fetch = False
         self._config_entry = config_entry
-
-        self.listeners = []
 
     def setup(self) -> None:
         """Set up an iCloud account."""
@@ -271,6 +269,8 @@ class IcloudAccount:
 
             distances = []
             for zone_state in zones:
+                if zone_state is None:
+                    continue
                 zone_state_lat = zone_state.attributes[DEVICE_LOCATION_LATITUDE]
                 zone_state_long = zone_state.attributes[DEVICE_LOCATION_LONGITUDE]
                 zone_distance = distance(
@@ -279,7 +279,8 @@ class IcloudAccount:
                     zone_state_lat,
                     zone_state_long,
                 )
-                distances.append(round(zone_distance / 1000, 1))
+                if zone_distance is not None:
+                    distances.append(round(zone_distance / 1000, 1))
 
             # Max interval if no zone
             if not distances:
@@ -288,7 +289,7 @@ class IcloudAccount:
 
             # Calculate out how long it would take for the device to drive
             # to the nearest zone at 120 km/h:
-            interval = round(mindistance / 2, 0)
+            interval = round(mindistance / 2)
 
             # Never poll more than once per minute
             interval = max(interval, 1)
@@ -324,7 +325,7 @@ class IcloudAccount:
         self.api.authenticate()
         self.update_devices()
 
-    def get_devices_with_name(self, name: str) -> [any]:
+    def get_devices_with_name(self, name: str) -> list[Any]:
         """Get devices by name."""
         result = []
         name_slug = slugify(name.replace(" ", "", 99))
@@ -341,7 +342,7 @@ class IcloudAccount:
         return self._username
 
     @property
-    def owner_fullname(self) -> str:
+    def owner_fullname(self) -> str | None:
         """Return the account owner fullname."""
         return self._owner_fullname
 
@@ -351,7 +352,7 @@ class IcloudAccount:
         return self._family_members_fullname
 
     @property
-    def fetch_interval(self) -> int:
+    def fetch_interval(self) -> float:
         """Return the account fetch interval."""
         return self._fetch_interval
 
@@ -386,14 +387,7 @@ class IcloudDevice:
         self._device_class = self._status[DEVICE_CLASS]
         self._device_model = self._status[DEVICE_DISPLAY_NAME]
 
-        if self._status[DEVICE_PERSON_ID]:
-            owner_fullname = account.family_members_fullname[
-                self._status[DEVICE_PERSON_ID]
-            ]
-        else:
-            owner_fullname = account.owner_fullname
-
-        self._battery_level = None
+        self._battery_level: int | None = None
         self._battery_status = None
         self._location = None
 
@@ -402,8 +396,13 @@ class IcloudDevice:
             ATTR_ACCOUNT_FETCH_INTERVAL: self._account.fetch_interval,
             ATTR_DEVICE_NAME: self._device_model,
             ATTR_DEVICE_STATUS: None,
-            ATTR_OWNER_NAME: owner_fullname,
         }
+        if self._status[DEVICE_PERSON_ID]:
+            self._attrs[ATTR_OWNER_NAME] = account.family_members_fullname[
+                self._status[DEVICE_PERSON_ID]
+            ]
+        elif account.owner_fullname is not None:
+            self._attrs[ATTR_OWNER_NAME] = account.owner_fullname
 
     def update(self, status) -> None:
         """Update the iCloud device."""
@@ -487,17 +486,17 @@ class IcloudDevice:
         return self._device_model
 
     @property
-    def battery_level(self) -> int:
+    def battery_level(self) -> int | None:
         """Return the Apple device battery level."""
         return self._battery_level
 
     @property
-    def battery_status(self) -> str:
+    def battery_status(self) -> str | None:
         """Return the Apple device battery status."""
         return self._battery_status
 
     @property
-    def location(self) -> dict[str, Any]:
+    def location(self) -> dict[str, Any] | None:
         """Return the Apple device location."""
         return self._location
 
