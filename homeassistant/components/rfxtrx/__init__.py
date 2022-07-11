@@ -477,13 +477,11 @@ class RfxtrxEntity(RestoreEntity):
         event: rfxtrxmod.RFXtrxEvent | None = None,
     ) -> None:
         """Initialize the device."""
-        self._attr_assumed_state = True
         self._attr_device_info = DeviceInfo(
             identifiers=get_identifiers_from_device_tuple(device_id),
             model=device.type_string,
             name=f"{device.type_string} {device.id_string}",
         )
-        self._attr_should_poll = False
         self._attr_unique_id = "_".join(x for x in device_id)
         self._device = device
         self._event = event
