@@ -76,7 +76,7 @@
       "known_devices": ["Bitron Video AV2010/10"]
     }
   ],
-  "codeowners": ["@dmulcahey", "@adminiuga"],
+  "codeowners": ["@dmulcahey", "@adminiuga", "@puddly"],
   "zeroconf": [
     {
       "type": "_esphomelib._tcp.local.",
