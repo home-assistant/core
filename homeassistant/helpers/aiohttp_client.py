@@ -14,7 +14,6 @@ from aiohttp import web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 import async_timeout
-import orjson
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_CLOSE, __version__
@@ -23,6 +22,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import ssl as ssl_util
 
 from .frame import warn_use
+from .json import json_dumps
 
 DATA_CONNECTOR = "aiohttp_connector"
 DATA_CONNECTOR_NOTVERIFY = "aiohttp_connector_notverify"
@@ -98,7 +98,7 @@ def _async_create_clientsession(
     """Create a new ClientSession with kwargs, i.e. for cookies."""
     clientsession = aiohttp.ClientSession(
         connector=_async_get_connector(hass, verify_ssl),
-        json_serialize=lambda x: orjson.dumps(x).decode("utf-8"),
+        json_serialize=json_dumps,
         **kwargs,
     )
     # Prevent packages accidentally overriding our default headers
