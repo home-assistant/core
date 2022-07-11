@@ -31,7 +31,6 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_PLATFORM_LOADED,
     DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
@@ -111,11 +110,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
-    zha_data[DATA_ZHA_PLATFORM_LOADED] = []
-    for platform in PLATFORMS:
-        coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -136,7 +130,10 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
         ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
     )
-    asyncio.create_task(async_load_entities(hass))
+
+    await zha_gateway.async_initialize_devices_and_entities()
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
 
 
@@ -159,18 +156,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     hass.data[DATA_ZHA][DATA_ZHA_SHUTDOWN_TASK]()
 
     return True
-
-
-async def async_load_entities(hass: HomeAssistant) -> None:
-    """Load entities after integration was setup."""
-    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
-    await zha_gateway.async_initialize_devices_and_entities()
-    to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
-    results = await asyncio.gather(*to_setup, return_exceptions=True)
-    for res in results:
-        if isinstance(res, Exception):
-            _LOGGER.warning("Couldn't setup zha platform: %s", res)
-    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
 
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
