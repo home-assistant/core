@@ -12,7 +12,7 @@ coverage==6.4.1
 freezegun==1.2.1
 mock-open==1.4.0
 mypy==0.961
-pre-commit==2.19.0
+pre-commit==2.20.0
 pylint==2.14.4
 pipdeptree==2.2.1
 pytest-aiohttp==0.3.0
