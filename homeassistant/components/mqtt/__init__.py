@@ -110,8 +110,6 @@ CONNECTION_SUCCESS = "connection_success"
 CONNECTION_FAILED = "connection_failed"
 CONNECTION_FAILED_RECOVERABLE = "connection_failed_recoverable"
 
-DATA_MQTT_ENTRY_SETUP_TASK = "data_mqtt_entry_setup_task"
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -570,9 +568,6 @@ async def async_remove_config_entry_device(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload MQTT dump and publish service when the config entry is unloaded."""
-    # Make sure platform setup was finished before unloading
-    if DATA_MQTT_ENTRY_SETUP_TASK in hass.data:
-        await hass.data[DATA_MQTT_ENTRY_SETUP_TASK]
     # Unload publish and dump services.
     hass.services.async_remove(
         DOMAIN,
