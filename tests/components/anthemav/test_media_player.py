@@ -18,18 +18,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry
 
-MAIN_ENTITY_ID = "media_player.anthem_av"
-
 
 @pytest.mark.parametrize(
-    "entity_id",
+    "entity_id,entity_name",
     [
-        MAIN_ENTITY_ID,
-        "media_player.anthem_av_zone_2",
+        ("media_player.anthem_av", "Anthem AV"),
+        ("media_player.anthem_av_zone_2", "Anthem AV zone 2"),
     ],
 )
 async def test_zones_loaded(
-    hass: HomeAssistant, init_integration: MockConfigEntry, entity_id: str
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    entity_id: str,
+    entity_name: str,
 ) -> None:
     """Test load and unload AnthemAv component."""
 
@@ -37,6 +38,7 @@ async def test_zones_loaded(
 
     assert states
     assert states.state == STATE_OFF
+    assert states.name == entity_name
 
 
 async def test_update_states_zone1(
@@ -58,7 +60,7 @@ async def test_update_states_zone1(
     )
     await hass.async_block_till_done()
 
-    states = hass.states.get(MAIN_ENTITY_ID)
+    states = hass.states.get("media_player.anthem_av")
     assert states
     assert states.state == STATE_ON
     assert states.attributes[ATTR_VOLUME_LEVEL] == 42
