@@ -12,6 +12,7 @@ from nextdns import (
 
 from homeassistant.components.nextdns.const import CONF_PROFILE_ID, DOMAIN
 from homeassistant.const import CONF_API_KEY
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
@@ -52,7 +53,7 @@ SETTINGS = Settings(
 )
 
 
-async def init_integration(hass, add_to_hass=True) -> MockConfigEntry:
+async def init_integration(hass: HomeAssistant, add_to_hass=True) -> MockConfigEntry:
     """Set up the NextDNS integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
