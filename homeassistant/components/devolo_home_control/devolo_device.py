@@ -19,6 +19,8 @@ _LOGGER = logging.getLogger(__name__)
 class DevoloDeviceEntity(Entity):
     """Abstract representation of a device within devolo Home Control."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self, homecontrol: HomeControl, device_instance: Zwave, element_uid: str
     ) -> None:
@@ -29,9 +31,6 @@ class DevoloDeviceEntity(Entity):
         self._attr_available = (
             device_instance.is_online()
         )  # This is not doing I/O. It fetches an internal state of the API
-        self._attr_name: str = device_instance.settings_property[
-            "general_device_settings"
-        ].name
         self._attr_should_poll = False
         self._attr_unique_id = element_uid
         self._attr_device_info = DeviceInfo(
@@ -39,7 +38,7 @@ class DevoloDeviceEntity(Entity):
             identifiers={(DOMAIN, self._device_instance.uid)},
             manufacturer=device_instance.brand,
             model=device_instance.name,
-            name=self._attr_name,
+            name=device_instance.settings_property["general_device_settings"].name,
             suggested_area=device_instance.settings_property[
                 "general_device_settings"
             ].zone,
@@ -47,6 +46,8 @@ class DevoloDeviceEntity(Entity):
 
         self.subscriber: Subscriber | None = None
         self.sync_callback = self._sync
+
+        self._attr_name: str  # All entities ensure, it is set
         self._value: float
 
     async def async_added_to_hass(self) -> None:

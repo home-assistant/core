@@ -52,6 +52,7 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
             device_instance=device_instance,
             element_uid=element_uid,
         )
+        self._attr_name = "Alarm"
         self._attr_available_tones = [
             *range(
                 int(self._multi_level_switch_property.min),

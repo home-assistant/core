@@ -53,6 +53,7 @@ class DevoloCoverDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, CoverEntity):
             element_uid=element_uid,
         )
 
+        self._attr_name = "Position"
         self._attr_device_class = CoverDeviceClass.BLIND
         self._attr_supported_features = (
             CoverEntityFeature.OPEN

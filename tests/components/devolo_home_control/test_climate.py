@@ -7,7 +7,12 @@ from homeassistant.components.climate.const import (
     SERVICE_SET_TEMPERATURE,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
+    ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from . import configure_integration
@@ -26,15 +31,16 @@ async def test_climate(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test_temperature")
     assert state is not None
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == test_gateway.devices["Test"].value
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Temperature"
 
     # Emulate websocket message: temperature changed
     test_gateway.publisher.dispatch("Test", ("Test", 21.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test_temperature")
     assert state.state == HVACMode.HEAT
     assert state.attributes[ATTR_TEMPERATURE] == 21.0
 
@@ -46,7 +52,7 @@ async def test_climate(hass: HomeAssistant):
             DOMAIN,
             SERVICE_SET_TEMPERATURE,
             {
-                ATTR_ENTITY_ID: f"{DOMAIN}.test",
+                ATTR_ENTITY_ID: f"{DOMAIN}.test_temperature",
                 ATTR_HVAC_MODE: HVACMode.HEAT,
                 ATTR_TEMPERATURE: 20.0,
             },
@@ -58,7 +64,7 @@ async def test_climate(hass: HomeAssistant):
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{DOMAIN}.test_temperature").state == STATE_UNAVAILABLE
 
 
 async def test_remove_from_hass(hass: HomeAssistant):
@@ -72,7 +78,7 @@ async def test_remove_from_hass(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test_temperature")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

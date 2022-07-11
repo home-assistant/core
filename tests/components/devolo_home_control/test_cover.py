@@ -4,6 +4,7 @@ from unittest.mock import patch
 from homeassistant.components.cover import ATTR_CURRENT_POSITION, ATTR_POSITION, DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_FRIENDLY_NAME,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
@@ -29,9 +30,10 @@ async def test_cover(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test_position")
     assert state is not None
     assert state.state == STATE_OPEN
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Position"
     assert (
         state.attributes[ATTR_CURRENT_POSITION]
         == test_gateway.devices["Test"]
@@ -42,7 +44,7 @@ async def test_cover(hass: HomeAssistant):
     # Emulate websocket message: position changed
     test_gateway.publisher.dispatch("Test", ("devolo.Blinds", 0.0))
     await hass.async_block_till_done()
-    state = hass.states.get(f"{DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test_position")
     assert state.state == STATE_CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0.0
 
@@ -53,7 +55,7 @@ async def test_cover(hass: HomeAssistant):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_OPEN_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.test"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.test_position"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(100)
@@ -62,7 +64,7 @@ async def test_cover(hass: HomeAssistant):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.test"},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.test_position"},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(0)
@@ -71,7 +73,7 @@ async def test_cover(hass: HomeAssistant):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: f"{DOMAIN}.test", ATTR_POSITION: 50},
+            {ATTR_ENTITY_ID: f"{DOMAIN}.test_position", ATTR_POSITION: 50},
             blocking=True,
         )  # In reality, this leads to a websocket message like already tested above
         set_value.assert_called_once_with(50)
@@ -80,7 +82,7 @@ async def test_cover(hass: HomeAssistant):
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{DOMAIN}.test_position").state == STATE_UNAVAILABLE
 
 
 async def test_remove_from_hass(hass: HomeAssistant):
@@ -94,7 +96,7 @@ async def test_remove_from_hass(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test")
+    state = hass.states.get(f"{DOMAIN}.test_position")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()

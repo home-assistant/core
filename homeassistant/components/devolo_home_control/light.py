@@ -49,6 +49,7 @@ class DevoloLightDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, LightEntity):
             element_uid=element_uid,
         )
 
+        self._attr_name = "Brightness"
         self._attr_color_mode = ColorMode.BRIGHTNESS
         self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
         self._binary_switch_property = device_instance.binary_switch_property.get(

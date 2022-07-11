@@ -59,6 +59,7 @@ class DevoloClimateDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, ClimateEntit
             element_uid=element_uid,
         )
 
+        self._attr_name = "Temperature"
         self._attr_hvac_mode = HVACMode.HEAT
         self._attr_hvac_modes = [HVACMode.HEAT]
         self._attr_min_temp = self._multi_level_switch_property.min
