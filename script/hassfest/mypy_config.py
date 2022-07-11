@@ -18,8 +18,6 @@ from .model import Config, Integration
 IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.cloud.client",
     "homeassistant.components.cloud.http_api",
-    "homeassistant.components.conversation",
-    "homeassistant.components.conversation.default_agent",
     "homeassistant.components.evohome",
     "homeassistant.components.evohome.climate",
     "homeassistant.components.lovelace",
