@@ -50,7 +50,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
         ports = await self.get_ports()
-        ports["test"] = "test"
 
         schema = vol.Schema({vol.Required(CONF_DEVICE): vol.In(ports)})
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
