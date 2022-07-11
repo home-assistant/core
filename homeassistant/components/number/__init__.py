@@ -183,9 +183,10 @@ class NumberEntity(Entity):
     entity_description: NumberEntityDescription
     _attr_max_value: None
     _attr_min_value: None
+    _attr_mode: NumberMode = NumberMode.AUTO
     _attr_state: None = None
     _attr_step: None
-    _attr_mode: NumberMode = NumberMode.AUTO
+    _attr_unit_of_measurement: None  # Subclasses of NumberEntity should not set this
     _attr_value: None
     _attr_native_max_value: float
     _attr_native_min_value: float
@@ -349,6 +350,7 @@ class NumberEntity(Entity):
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
         if hasattr(self, "_attr_unit_of_measurement"):
+            self._report_deprecated_number_entity()
             return self._attr_unit_of_measurement
         if (
             hasattr(self, "entity_description")
