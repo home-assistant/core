@@ -32,9 +32,7 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY_LABEL,
     MODE_DAILY,
-    MODE_DAILY_LABEL,
 )
 from .data import MetOfficeData
 
@@ -100,7 +98,7 @@ class MetOfficeWeather(
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
         )
-        self._attr_name = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        self._attr_name = "3-hourly" if use_3hourly else "Daily"
         self._attr_unique_id = hass_data[METOFFICE_COORDINATES]
         if not use_3hourly:
             self._attr_unique_id = f"{self._attr_unique_id}_{MODE_DAILY}"

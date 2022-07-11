@@ -37,9 +37,7 @@ from .const import (
     METOFFICE_DAILY_COORDINATOR,
     METOFFICE_HOURLY_COORDINATOR,
     METOFFICE_NAME,
-    MODE_3HOURLY_LABEL,
     MODE_DAILY,
-    MODE_DAILY_LABEL,
     VISIBILITY_CLASSES,
     VISIBILITY_DISTANCE_CLASSES,
 )
@@ -239,7 +237,7 @@ class MetOfficeCurrentSensor(
         super().__init__(coordinator)
 
         self.entity_description = description
-        mode_label = MODE_3HOURLY_LABEL if use_3hourly else MODE_DAILY_LABEL
+        mode_label = "3-hourly" if use_3hourly else "daily"
 
         self._attr_device_info = get_device_info(
             coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
