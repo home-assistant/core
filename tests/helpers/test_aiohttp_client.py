@@ -216,11 +216,13 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
     assert resp.status == 502
 
 
-async def test_sending_named_tuple(aioclient_mock, camera_client):
+async def test_sending_named_tuple(hass, aioclient_mock):
     """Test sending a named tuple in json."""
-    aioclient_mock.post(
-        "http://example.com/mjpeg_stream", json={"rgb": RGBColor(4, 3, 2)}
-    )
+    resp = aioclient_mock.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
+    session = client.async_get_clientsession(hass)
+    resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
+    assert resp.status == 200
+    await resp.json() == {"rgb": RGBColor(4, 3, 2)}
 
 
 async def test_client_session_immutable_headers(hass):
