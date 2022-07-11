@@ -122,6 +122,7 @@ async def test_async_setup_no_config(hass: HomeAssistant) -> None:
         [Exception("401, this is the message")],
     ],
 )
+@patch("homeassistant.components.withings.common._RETRY_COEFFICIENT", 0)
 async def test_auth_failure(
     hass: HomeAssistant,
     component_factory: ComponentFactory,

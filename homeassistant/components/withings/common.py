@@ -57,6 +57,7 @@ from . import const
 from .const import Measurement
 
 _LOGGER = logging.getLogger(const.LOG_NAMESPACE)
+_RETRY_COEFFICIENT = 0.5
 NOT_AUTHENTICATED_ERROR = re.compile(
     f"^{HTTPStatus.UNAUTHORIZED},.*",
     re.IGNORECASE,
@@ -651,7 +652,7 @@ class DataManager:
                     "Failed attempt %s of %s (%s)", attempt, attempts, exception1
                 )
                 # Make each backoff pause a little bit longer
-                await asyncio.sleep(0.5 * attempt)
+                await asyncio.sleep(_RETRY_COEFFICIENT * attempt)
                 exception = exception1
                 continue
 
