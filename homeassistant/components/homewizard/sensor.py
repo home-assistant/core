@@ -43,13 +43,13 @@ SENSORS: Final[tuple[SensorEntityDescription, ...]] = (
     ),
     SensorEntityDescription(
         key="wifi_ssid",
-        name="Wifi SSID",
+        name="Wi-Fi SSID",
         icon="mdi:wifi",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="wifi_strength",
-        name="Wifi strength",
+        name="Wi-Fi strength",
         icon="mdi:wifi",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,

@@ -128,8 +128,8 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
 
     entity_registry = er.async_get(hass)
 
-    state = hass.states.get("sensor.product_name_aabbccddeeff_wifi_ssid")
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_wifi_ssid")
+    state = hass.states.get("sensor.product_name_aabbccddeeff_wi_fi_ssid")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_wi_fi_ssid")
     assert entry
     assert state
     assert entry.unique_id == "aabbccddeeff_wifi_ssid"
@@ -137,7 +137,7 @@ async def test_sensor_entity_wifi_ssid(hass, mock_config_entry_data, mock_config
     assert state.state == "My Wifi"
     assert (
         state.attributes.get(ATTR_FRIENDLY_NAME)
-        == "Product Name (aabbccddeeff) Wifi SSID"
+        == "Product Name (aabbccddeeff) Wi-Fi SSID"
     )
     assert ATTR_STATE_CLASS not in state.attributes
     assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
@@ -166,7 +166,7 @@ async def test_sensor_entity_wifi_strength(
 
     entity_registry = er.async_get(hass)
 
-    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_wifi_strength")
+    entry = entity_registry.async_get("sensor.product_name_aabbccddeeff_wi_fi_strength")
     assert entry
     assert entry.unique_id == "aabbccddeeff_wifi_strength"
     assert entry.disabled
