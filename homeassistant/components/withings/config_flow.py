@@ -82,6 +82,12 @@ class WithingsFlowHandler(
 
     async def async_step_reauth(self, data: Mapping[str, Any]) -> FlowResult:
         """Prompt user to re-authenticate."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, data: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Prompt user to re-authenticate."""
         if data is not None:
             return await self.async_step_user()
 
@@ -90,7 +96,7 @@ class WithingsFlowHandler(
         self.context.update({"title_placeholders": placeholders})
 
         return self.async_show_form(
-            step_id="reauth",
+            step_id="reauth_confirm",
             description_placeholders=placeholders,
         )
 
