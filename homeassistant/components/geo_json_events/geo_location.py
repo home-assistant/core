@@ -94,6 +94,7 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
     coordinator: GeoJsonEventsFeedEntityCoordinator
     _attr_force_update = DEFAULT_FORCE_UPDATE
     _attr_icon = "mdi:pin"
+    _attr_source = SOURCE
 
     def __init__(
         self,
@@ -188,8 +189,3 @@ class GeoJsonLocationEvent(CoordinatorEntity, GeolocationEvent):
         if self.hass.config.units.name == CONF_UNIT_SYSTEM_IMPERIAL:
             return LENGTH_MILES
         return LENGTH_KILOMETERS
-
-    @property
-    def source(self) -> str:
-        """Return source value of this external event."""
-        return SOURCE

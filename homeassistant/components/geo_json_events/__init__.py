@@ -1,9 +1,12 @@
 """The GeoJSON events component."""
+from __future__ import annotations
+
 from collections.abc import Callable
 from datetime import timedelta
 import logging
 
 from aio_geojson_generic_client import GenericFeedManager
+from aio_geojson_generic_client.feed_entry import GenericFeedEntry
 
 from homeassistant.const import (
     CONF_LATITUDE,
@@ -94,10 +97,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
     """Feed Entity Coordinator for GeoJSON events feed."""
 
-    def __init__(self, hass, config_entry, radius_in_km) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, radius_in_km: float
+    ) -> None:
         """Initialize the Feed Entity Coordinator."""
         self.config_entry: ConfigEntry = config_entry
-        coordinates = (
+        coordinates: tuple[float, float] = (
             config_entry.data[CONF_LATITUDE],
             config_entry.data[CONF_LONGITUDE],
         )
@@ -147,11 +152,11 @@ class GeoJsonEventsFeedEntityCoordinator(DataUpdateCoordinator):
         """Return coordinator specific event to signal new entity."""
         return f"{DOMAIN}_new_geolocation_{self._config_entry_id}"
 
-    def get_entry(self, external_id):
+    def get_entry(self, external_id: str) -> GenericFeedEntry | None:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id)
 
-    def entry_available(self, external_id) -> bool:
+    def entry_available(self, external_id: str) -> bool:
         """Get feed entry by external id."""
         return self._feed_manager.feed_entries.get(external_id) is not None
 
