@@ -14,8 +14,13 @@ import voluptuous as vol
 
 from homeassistant.backports.enum import StrEnum
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_MODE, TEMP_CELSIUS, TEMP_FAHRENHEIT
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_UNIT_OF_MEASUREMENT,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers.config_validation import (  # noqa: F401
     PLATFORM_SCHEMA,
     PLATFORM_SCHEMA_BASE,
@@ -67,6 +72,10 @@ class NumberMode(StrEnum):
 
 UNIT_CONVERSIONS: dict[str, Callable[[float, str, str], float]] = {
     NumberDeviceClass.TEMPERATURE: temperature_util.convert,
+}
+
+VALID_UNITS: dict[str, tuple[str, ...]] = {
+    NumberDeviceClass.TEMPERATURE: temperature_util.VALID_UNITS,
 }
 
 
@@ -193,6 +202,7 @@ class NumberEntity(Entity):
     _attr_native_value: float
     _attr_native_unit_of_measurement: str | None
     _deprecated_number_entity_reported = False
+    _number_option_unit_of_measurement: str | None = None
 
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Post initialisation processing."""
@@ -225,6 +235,13 @@ class NumberEntity(Entity):
                 cls.__name__,
                 report_issue,
             )
+
+    async def async_internal_added_to_hass(self) -> None:
+        """Call when the number entity is added to hass."""
+        await super().async_internal_added_to_hass()
+        if not self.registry_entry:
+            return
+        self.async_registry_entry_updated()
 
     @property
     def capability_attributes(self) -> dict[str, Any]:
@@ -348,6 +365,9 @@ class NumberEntity(Entity):
     @final
     def unit_of_measurement(self) -> str | None:
         """Return the unit of measurement of the entity, after unit conversion."""
+        if self._number_option_unit_of_measurement:
+            return self._number_option_unit_of_measurement
+
         if hasattr(self, "_attr_unit_of_measurement"):
             return self._attr_unit_of_measurement
         if (
@@ -466,6 +486,22 @@ class NumberEntity(Entity):
                 type(self),
                 report_issue,
             )
+
+    @callback
+    def async_registry_entry_updated(self) -> None:
+        """Run when the entity registry entry has been updated."""
+        assert self.registry_entry
+        if (
+            (number_options := self.registry_entry.options.get(DOMAIN))
+            and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
+            and (device_class := self.device_class) in UNIT_CONVERSIONS
+            and self.native_unit_of_measurement in VALID_UNITS[device_class]
+            and custom_unit in VALID_UNITS[device_class]
+        ):
+            self._number_option_unit_of_measurement = custom_unit
+            return
+
+        self._number_option_unit_of_measurement = None
 
 
 @dataclasses.dataclass
