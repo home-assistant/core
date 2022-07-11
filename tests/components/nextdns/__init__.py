@@ -53,7 +53,9 @@ SETTINGS = Settings(
 )
 
 
-async def init_integration(hass: HomeAssistant, add_to_hass: bool = True) -> MockConfigEntry:
+async def init_integration(
+    hass: HomeAssistant, add_to_hass: bool = True
+) -> MockConfigEntry:
     """Set up the NextDNS integration in Home Assistant."""
     entry = MockConfigEntry(
         domain=DOMAIN,
