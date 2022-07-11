@@ -49,7 +49,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.onvif.camera",
     "homeassistant.components.onvif.device",
     "homeassistant.components.onvif.sensor",
-    "homeassistant.components.plex.media_player",
     "homeassistant.components.profiler",
     "homeassistant.components.solaredge.config_flow",
     "homeassistant.components.solaredge.coordinator",
