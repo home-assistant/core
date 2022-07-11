@@ -2,6 +2,7 @@
 import datetime
 import json
 import time
+from typing import NamedTuple
 
 import pytest
 
@@ -96,3 +97,16 @@ def test_json_dumps_tuple_subclass():
     tt = time.struct_time((1999, 3, 17, 32, 44, 55, 2, 76, 0))
 
     assert json_dumps(tt) == "[1999,3,17,32,44,55,2,76,0]"
+
+
+def test_json_dumps_named_tuple_subclass():
+    """Test the json dumps a tuple subclass."""
+
+    class NamedTupleSubclass(NamedTuple):
+        """A NamedTuple subclass."""
+
+        name: str
+
+    nts = NamedTupleSubclass("a")
+
+    assert json_dumps(nts) == '["a"]'
