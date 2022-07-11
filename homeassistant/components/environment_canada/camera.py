@@ -40,6 +40,8 @@ async def async_setup_entry(
 class ECCamera(CoordinatorEntity, Camera):
     """Implementation of an Environment Canada radar camera."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, coordinator):
         """Initialize the camera."""
         super().__init__(coordinator)

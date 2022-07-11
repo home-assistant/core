@@ -68,6 +68,7 @@ async def async_setup_entry(
 class ECWeather(CoordinatorEntity, WeatherEntity):
     """Representation of a weather condition."""
 
+    _attr_has_entity_name = True
     _attr_native_pressure_unit = PRESSURE_KPA
     _attr_native_temperature_unit = TEMP_CELSIUS
     _attr_native_visibility_unit = LENGTH_KILOMETERS
