@@ -68,10 +68,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.sonos.statistics",
     "homeassistant.components.template.number",
     "homeassistant.components.template.sensor",
-    "homeassistant.components.withings",
-    "homeassistant.components.withings.binary_sensor",
-    "homeassistant.components.withings.common",
-    "homeassistant.components.withings.config_flow",
 ]
 
 # Component modules which should set no_implicit_reexport = true.

@@ -10,7 +10,7 @@ from enum import Enum, IntEnum
 from http import HTTPStatus
 import logging
 import re
-from typing import Any
+from typing import Any, Union
 
 from aiohttp.web import Response
 import requests
@@ -589,7 +589,7 @@ class DataManager:
             update_method=self.async_subscribe_webhook,
         )
         self.poll_data_update_coordinator = DataUpdateCoordinator[
-            dict[MeasureType, Any]
+            Union[dict[MeasureType, Any], None]
         ](
             hass,
             _LOGGER,
@@ -951,7 +951,7 @@ class BaseWithingsSensor(Entity):
         return self._unique_id
 
     @property
-    def icon(self) -> str:
+    def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._attribute.icon
 
@@ -1005,7 +1005,7 @@ async def async_get_data_manager(
     config_entry_data = hass.data[const.DOMAIN][config_entry.entry_id]
 
     if const.DATA_MANAGER not in config_entry_data:
-        profile = config_entry.data.get(const.PROFILE)
+        profile: str = config_entry.data[const.PROFILE]
 
         _LOGGER.debug("Creating withings data manager for profile: %s", profile)
         config_entry_data[const.DATA_MANAGER] = DataManager(
