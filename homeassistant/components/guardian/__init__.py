@@ -115,8 +115,8 @@ def async_log_deprecated_service_call(
     """Log a warning about a deprecated service call."""
     LOGGER.warning(
         (
-            'The "%s" service is deprecated and will be removed in a future version. '
-            'Use the "%s" service and pass it a target of "%s"'
+            'The "%s" service is deprecated and will be removed in a future version; '
+            'use the "%s" service and pass it a target entity ID of "%s"'
         ),
         f"{call.domain}.{call.service}",
         alternate_service,
