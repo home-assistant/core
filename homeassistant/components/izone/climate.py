@@ -76,7 +76,7 @@ async def async_setup_entry(
     @callback
     def init_controller(ctrl: Controller):
         """Register the controller device and the containing zones."""
-        conf: ConfigType = hass.data.get(DATA_CONFIG)
+        conf: ConfigType | None = hass.data.get(DATA_CONFIG)
 
         # Filter out any entities excluded in the config file
         if conf and ctrl.device_uid in conf[CONF_EXCLUDE]:
@@ -106,8 +106,6 @@ async def async_setup_entry(
         IZONE_SERVICE_AIRFLOW_SCHEMA,
         "async_set_airflow_max",
     )
-
-    return True
 
 
 def _return_on_connection_error(ret=None):
@@ -310,7 +308,7 @@ class ControllerDevice(ClimateEntity):
                 return key
         assert False, "Should be unreachable"
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error([])
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available operation modes."""
@@ -318,13 +316,13 @@ class ControllerDevice(ClimateEntity):
             return [HVACMode.OFF, HVACMode.FAN_ONLY]
         return [HVACMode.OFF, *self._state_to_pizone]
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error(PRESET_NONE)
     def preset_mode(self):
         """Eco mode is external air."""
         return PRESET_ECO if self._controller.free_air else PRESET_NONE
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error([PRESET_NONE])
     def preset_modes(self):
         """Available preset modes, normal or eco."""
@@ -332,7 +330,7 @@ class ControllerDevice(ClimateEntity):
             return [PRESET_NONE, PRESET_ECO]
         return [PRESET_NONE]
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error()
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
@@ -362,7 +360,7 @@ class ControllerDevice(ClimateEntity):
             return None
         return zone.target_temperature
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error()
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach (either from control zone or master unit)."""
@@ -390,13 +388,13 @@ class ControllerDevice(ClimateEntity):
         """Return the list of available fan modes."""
         return list(self._fan_to_pizone)
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error(0.0)
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return self._controller.temp_min
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error(50.0)
     def max_temp(self) -> float:
         """Return the maximum temperature."""
@@ -471,7 +469,9 @@ class ZoneDevice(ClimateEntity):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(IZONE, controller.unique_id, zone.index)},
+            identifiers={
+                (IZONE, controller.unique_id, zone.index)  # type:ignore[arg-type]
+            },
             manufacturer="IZone",
             model=zone.type.name.title(),
             name=self.name,
@@ -533,7 +533,7 @@ class ZoneDevice(ClimateEntity):
         """
         return False
 
-    @property
+    @property  # type: ignore[misc]
     @_return_on_connection_error(0)
     def supported_features(self):
         """Return the list of supported features."""
@@ -552,7 +552,7 @@ class ZoneDevice(ClimateEntity):
         return PRECISION_TENTHS
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         mode = self._zone.mode
         for (key, value) in self._state_to_pizone.items():
