@@ -223,6 +223,7 @@ async def test_sending_named_tuple(hass, aioclient_mock):
     resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
     assert resp.status == 200
     await resp.json() == {"rgb": RGBColor(4, 3, 2)}
+    aioclient_mock.mock_calls[0][2]["rgb"] == RGBColor(4, 3, 2)
 
 
 async def test_client_session_immutable_headers(hass):
