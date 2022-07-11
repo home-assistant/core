@@ -238,11 +238,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     @call_with_data
     async def async_disable_ap(call: ServiceCall, data: GuardianData) -> None:
         """Disable the onboard AP."""
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "switch.turn_off",
+            f"switch.guardian_valve_controller_{entry.data[CONF_UID]}_onboard_ap",
+        )
         await data.client.wifi.disable_ap()
 
     @call_with_data
     async def async_enable_ap(call: ServiceCall, data: GuardianData) -> None:
         """Enable the onboard AP."""
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "switch.turn_on",
+            f"switch.guardian_valve_controller_{entry.data[CONF_UID]}_onboard_ap",
+        )
         await data.client.wifi.enable_ap()
 
     @call_with_data

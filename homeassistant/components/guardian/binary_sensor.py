@@ -1,4 +1,4 @@
-"""Binary sensors for the Elexa Guardian integration."""
+"""Bsensors for the Elexa Guardian integration."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -22,16 +23,13 @@ from . import (
 )
 from .const import (
     API_SYSTEM_ONBOARD_SENSOR_STATUS,
-    API_WIFI_STATUS,
     CONF_UID,
     DOMAIN,
+    LOGGER,
     SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED,
 )
 from .util import GuardianDataUpdateCoordinator
 
-ATTR_CONNECTED_CLIENTS = "connected_clients"
-
-SENSOR_KIND_AP_INFO = "ap_enabled"
 SENSOR_KIND_LEAK_DETECTED = "leak_detected"
 SENSOR_KIND_MOVED = "moved"
 
@@ -64,13 +62,6 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         device_class=BinarySensorDeviceClass.MOISTURE,
         api_category=API_SYSTEM_ONBOARD_SENSOR_STATUS,
     ),
-    ValveControllerBinarySensorDescription(
-        key=SENSOR_KIND_AP_INFO,
-        name="Onboard AP enabled",
-        device_class=BinarySensorDeviceClass.CONNECTIVITY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        api_category=API_WIFI_STATUS,
-    ),
 )
 
 
@@ -79,6 +70,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up Guardian switches based on a config entry."""
     data: GuardianData = hass.data[DOMAIN][entry.entry_id]
+
+    ent_reg = entity_registry.async_get(hass)
+
+    # Older versions of the integration had onboard AP status as a binary sensor
+    # (instead of the config switch that is used now); if that entity exists, clean it
+    # up:
+    for entity_entry in [
+        e
+        for e in ent_reg.entities.values()
+        if e.config_entry_id == entry.entry_id
+        and e.entity_id.endswith("onboard_ap_enabled")
+    ]:
+        LOGGER.debug('Removing deprecated binary sensor: "%s"', entity_entry.entity_id)
+        ent_reg.async_remove(entity_entry.entity_id)
 
     @callback
     def add_new_paired_sensor(uid: str) -> None:
@@ -163,10 +168,5 @@ class ValveControllerBinarySensor(ValveControllerEntity, BinarySensorEntity):
     @callback
     def _async_update_from_latest_data(self) -> None:
         """Update the entity."""
-        if self.entity_description.key == SENSOR_KIND_AP_INFO:
-            self._attr_is_on = self.coordinator.data["station_connected"]
-            self._attr_extra_state_attributes[
-                ATTR_CONNECTED_CLIENTS
-            ] = self.coordinator.data.get("ap_clients")
-        elif self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
+        if self.entity_description.key == SENSOR_KIND_LEAK_DETECTED:
             self._attr_is_on = self.coordinator.data["wet"]
