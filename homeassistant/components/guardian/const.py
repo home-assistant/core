@@ -19,4 +19,3 @@ DATA_COORDINATOR = "coordinator"
 DATA_COORDINATOR_PAIRED_SENSOR = "coordinator_paired_sensor"
 
 SIGNAL_PAIRED_SENSOR_COORDINATOR_ADDED = "guardian_paired_sensor_coordinator_added_{0}"
-SIGNAL_REBOOT = "guardian_reboot"

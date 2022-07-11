@@ -51,6 +51,8 @@ DATA_PAIRED_SENSOR_MANAGER = "paired_sensor_manager"
 SERVICE_NAME_DISABLE_AP = "disable_ap"
 SERVICE_NAME_ENABLE_AP = "enable_ap"
 SERVICE_NAME_PAIR_SENSOR = "pair_sensor"
+SERVICE_NAME_REBOOT = "reboot"
+SERVICE_NAME_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
 SERVICE_NAME_UNPAIR_SENSOR = "unpair_sensor"
 SERVICE_NAME_UPGRADE_FIRMWARE = "upgrade_firmware"
 
@@ -58,6 +60,8 @@ SERVICES = (
     SERVICE_NAME_DISABLE_AP,
     SERVICE_NAME_ENABLE_AP,
     SERVICE_NAME_PAIR_SENSOR,
+    SERVICE_NAME_REBOOT,
+    SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
     SERVICE_NAME_UNPAIR_SENSOR,
     SERVICE_NAME_UPGRADE_FIRMWARE,
 )
@@ -84,8 +88,7 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
     },
 )
 
-
-PLATFORMS = [Platform.BUTTON, Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 
 
 @callback
@@ -100,6 +103,25 @@ def async_get_entry_id_for_service_call(hass: HomeAssistant, call: ServiceCall) 
                 return entry.entry_id
 
     raise ValueError(f"No client for device ID: {device_id}")
+
+
+@callback
+def async_log_deprecated_service_call(
+    hass: HomeAssistant,
+    call: ServiceCall,
+    alternate_service: str,
+    alternate_target: str,
+) -> None:
+    """Log a warning about a deprecated service call."""
+    LOGGER.warning(
+        (
+            'The "%s" service is deprecated and will be removed in a future version. '
+            'Use the "%s" service and pass it a target of "%s"'
+        ),
+        f"{call.domain}.{call.service}",
+        alternate_service,
+        alternate_target,
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -199,6 +221,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await paired_sensor_manager.async_pair_sensor(uid)
 
     @extract_client
+    async def async_reboot(call: ServiceCall, client: Client) -> None:
+        """Reboot the valve controller."""
+        entry_id = async_get_entry_id_for_service_call(hass, call)
+        entry = hass.config_entries.async_get_entry(entry_id)
+        assert entry
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "button.press",
+            f"button.guardian_valve_controller_{entry.data[CONF_UID]}_reboot",
+        )
+        await client.system.reboot()
+
+    @extract_client
+    async def async_reset_valve_diagnostics(call: ServiceCall, client: Client) -> None:
+        """Fully reset system motor diagnostics."""
+        entry_id = async_get_entry_id_for_service_call(hass, call)
+        entry = hass.config_entries.async_get_entry(entry_id)
+        assert entry
+        async_log_deprecated_service_call(
+            hass,
+            call,
+            "button.press",
+            f"button.guardian_valve_controller_{entry.data[CONF_UID]}_reset_valve_diagnostics",
+        )
+        await client.valve.reset()
+
+    @extract_client
     async def async_unpair_sensor(call: ServiceCall, client: Client) -> None:
         """Remove a paired sensor."""
         entry_id = async_get_entry_id_for_service_call(hass, call)
@@ -224,6 +274,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_NAME_PAIR_SENSOR,
             SERVICE_PAIR_UNPAIR_SENSOR_SCHEMA,
             async_pair_sensor,
+        ),
+        (SERVICE_NAME_REBOOT, SERVICE_BASE_SCHEMA, async_reboot),
+        (
+            SERVICE_NAME_RESET_VALVE_DIAGNOSTICS,
+            SERVICE_BASE_SCHEMA,
+            async_reset_valve_diagnostics,
         ),
         (
             SERVICE_NAME_UNPAIR_SENSOR,
