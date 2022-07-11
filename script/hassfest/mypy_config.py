@@ -21,8 +21,6 @@ IGNORED_MODULES: Final[list[str]] = [
     "homeassistant.components.blueprint.websocket_api",
     "homeassistant.components.cloud.client",
     "homeassistant.components.cloud.http_api",
-    "homeassistant.components.conversation",
-    "homeassistant.components.conversation.default_agent",
     "homeassistant.components.evohome",
     "homeassistant.components.evohome.climate",
     "homeassistant.components.evohome.water_heater",
