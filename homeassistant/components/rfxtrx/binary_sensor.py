@@ -142,7 +142,6 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         self.entity_description = entity_description
         self._data_bits = data_bits
         self._off_delay = off_delay
-        self._state: bool | None = None
         self._delay_listener: CALLBACK_TYPE | None = None
         self._cmd_on = cmd_on
         self._cmd_off = cmd_off
@@ -154,15 +153,10 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
         if self._event is None:
             old_state = await self.async_get_last_state()
             if old_state is not None:
-                self._state = old_state.state == STATE_ON
+                self._attr_is_on = old_state.state == STATE_ON
 
-        if self._state and self._off_delay is not None:
-            self._state = False
-
-    @property
-    def is_on(self):
-        """Return true if the sensor state is True."""
-        return self._state
+        if self.is_on and self._off_delay is not None:
+            self._attr_is_on = False
 
     def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply event for a lighting 4 device."""
@@ -171,22 +165,22 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             assert cmdstr
             cmd = int(cmdstr, 16)
             if cmd == self._cmd_on:
-                self._state = True
+                self._attr_is_on = True
             elif cmd == self._cmd_off:
-                self._state = False
+                self._attr_is_on = False
         else:
-            self._state = True
+            self._attr_is_on = True
 
     def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent):
         assert isinstance(event, (rfxtrxmod.SensorEvent, rfxtrxmod.ControlEvent))
         if event.values.get("Command") in COMMAND_ON_LIST:
-            self._state = True
+            self._attr_is_on = True
         elif event.values.get("Command") in COMMAND_OFF_LIST:
-            self._state = False
+            self._attr_is_on = False
         elif event.values.get("Sensor Status") in SENSOR_STATUS_ON:
-            self._state = True
+            self._attr_is_on = True
         elif event.values.get("Sensor Status") in SENSOR_STATUS_OFF:
-            self._state = False
+            self._attr_is_on = False
 
     def _apply_event(self, event: rfxtrxmod.RFXtrxEvent):
         """Apply command from rfxtrx."""
@@ -223,7 +217,7 @@ class RfxtrxBinarySensor(RfxtrxEntity, BinarySensorEntity):
             def off_delay_listener(now):
                 """Switch device off after a delay."""
                 self._delay_listener = None
-                self._state = False
+                self._attr_is_on = False
                 self.async_write_ha_state()
 
             self._delay_listener = evt.async_call_later(

@@ -545,7 +545,6 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     ) -> None:
         """Initialzie a switch or light device."""
         super().__init__(device, device_id, event=event)
-        self._state: bool | None = None
 
     async def _async_send(self, fun, *args):
         rfx_object = self.hass.data[DOMAIN][DATA_RFXOBJECT]
