@@ -46,7 +46,7 @@ PyTurboJPEG==1.6.6
 PyViCare==2.16.2
 
 # homeassistant.components.xiaomi_aqara
-PyXiaomiGateway==0.13.4
+PyXiaomiGateway==0.14.1
 
 # homeassistant.components.remember_the_milk
 RtmAPI==0.7.2
