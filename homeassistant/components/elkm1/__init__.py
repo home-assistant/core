@@ -443,6 +443,8 @@ def create_elk_entities(
 class ElkEntity(Entity):
     """Base class for all Elk entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, element: Element, elk: Elk, elk_data: dict[str, Any]) -> None:
         """Initialize the base of all Elk devices."""
         self._elk = elk
