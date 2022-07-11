@@ -221,8 +221,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         call: ServiceCall, entry: ConfigEntry, client: Client
     ) -> None:
         """Add a new paired sensor."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
+        paired_sensor_manager = hass.data[DOMAIN][entry.entry_id][
+            DATA_PAIRED_SENSOR_MANAGER
+        ]
         uid = call.data[CONF_UID]
 
         await client.sensor.pair_sensor(uid)
@@ -259,8 +260,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         call: ServiceCall, entry: ConfigEntry, client: Client
     ) -> None:
         """Remove a paired sensor."""
-        entry_id = async_get_entry_id_for_service_call(hass, call)
-        paired_sensor_manager = hass.data[DOMAIN][entry_id][DATA_PAIRED_SENSOR_MANAGER]
+        paired_sensor_manager = hass.data[DOMAIN][entry.entry_id][
+            DATA_PAIRED_SENSOR_MANAGER
+        ]
         uid = call.data[CONF_UID]
 
         await client.sensor.unpair_sensor(uid)
