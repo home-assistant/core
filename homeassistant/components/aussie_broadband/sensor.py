@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import re
 from typing import Any, cast
 
 from homeassistant.components.sensor import (
@@ -152,7 +153,7 @@ class AussieBroadandSensorEntity(CoordinatorEntity, SensorEntity):
             identifiers={(DOMAIN, service[SERVICE_ID])},
             manufacturer="Aussie Broadband",
             configuration_url=f"https://my.aussiebroadband.com.au/#/{service['name'].lower()}/{service[SERVICE_ID]}/",
-            name=service["description"],
+            name=re.sub(r" - AVC\d+$", "", service["description"]),
             model=service["name"],
         )
 
