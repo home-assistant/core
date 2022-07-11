@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 
 import voluptuous as vol
-from xiaomi_gateway import XiaomiGateway, AsyncXiaomiGatewayMulticast
+from xiaomi_gateway import AsyncXiaomiGatewayMulticast, XiaomiGateway
 
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -164,7 +164,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     async with setup_lock:
         if LISTENER_KEY not in hass.data[DOMAIN]:
-            multicast = AsyncXiaomiGatewayMulticast(interface = entry.data[CONF_INTERFACE])
+            multicast = AsyncXiaomiGatewayMulticast(
+                interface=entry.data[CONF_INTERFACE]
+            )
             hass.data[DOMAIN][LISTENER_KEY] = multicast
 
             # start listining for local pushes (only once)
@@ -176,9 +178,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 _LOGGER.debug("Shutting down Xiaomi Gateway Listener")
                 multicast.stop_listen()
 
-            unsub = hass.bus.async_listen_once(
-                EVENT_HOMEASSISTANT_STOP, stop_xiaomi
-            )
+            unsub = hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_xiaomi)
             hass.data[DOMAIN][KEY_UNSUB_STOP] = unsub
 
     multicast = hass.data[DOMAIN][LISTENER_KEY]
@@ -215,7 +215,9 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     else:
         platforms = GATEWAY_PLATFORMS_NO_KEY
 
-    unload_ok = await hass.config_entries.async_unload_platforms(config_entry, platforms)
+    unload_ok = await hass.config_entries.async_unload_platforms(
+        config_entry, platforms
+    )
     if unload_ok:
         hass.data[DOMAIN][GATEWAYS_KEY].pop(config_entry.entry_id)
 
