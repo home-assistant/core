@@ -219,7 +219,7 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
 async def test_sending_named_tuple(hass, aioclient_mock):
     """Test sending a named tuple in json."""
     resp = aioclient_mock.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
-    session = client.async_get_clientsession(hass)
+    session = client.async_create_clientsession(hass)
     resp = await session.post("http://127.0.0.1/rgb", json={"rgb": RGBColor(4, 3, 2)})
     assert resp.status == 200
     await resp.json() == {"rgb": RGBColor(4, 3, 2)}
