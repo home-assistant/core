@@ -19,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import EVENT_HOMEASSISTANT_CLOSE
 import homeassistant.helpers.aiohttp_client as client
+from homeassistant.util.color import RGBColor
 
 from tests.common import MockConfigEntry
 
@@ -213,6 +214,13 @@ async def test_async_aiohttp_proxy_stream_client_err(aioclient_mock, camera_clie
 
     resp = await camera_client.get("/api/camera_proxy_stream/camera.mjpeg_camera")
     assert resp.status == 502
+
+
+async def test_sending_named_tuple(aioclient_mock, camera_client):
+    """Test sending a named tuple in json."""
+    aioclient_mock.post(
+        "http://example.com/mjpeg_stream", json={"rgb": RGBColor(4, 3, 2)}
+    )
 
 
 async def test_client_session_immutable_headers(hass):
