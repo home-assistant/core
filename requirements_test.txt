@@ -12,7 +12,7 @@ coverage==6.4.1
 freezegun==1.2.1
 mock-open==1.4.0
 mypy==0.961
-pre-commit==2.19.0
+pre-commit==2.20.0
 pylint==2.14.4
 pipdeptree==2.2.1
 pytest-aiohttp==0.3.0
@@ -20,12 +20,12 @@ pytest-cov==3.0.0
 pytest-freezegun==0.4.2
 pytest-socket==0.5.1
 pytest-test-groups==1.0.3
-pytest-sugar==0.9.4
+pytest-sugar==0.9.5
 pytest-timeout==2.1.0
 pytest-xdist==2.5.0
 pytest==7.1.2
 requests_mock==1.9.2
-respx==0.19.0
+respx==0.19.2
 stdlib-list==0.7.0
 tomli==2.0.1;python_version<"3.11"
 tqdm==4.49.0

@@ -17,12 +17,13 @@ from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
+    Platform.AIR_QUALITY,
+    Platform.BUTTON,
+    Platform.CLIMATE,
     Platform.COVER,
+    Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.AIR_QUALITY,
-    Platform.LIGHT,
-    Platform.CLIMATE,
 ]
 
 PARALLEL_UPDATES = 0
