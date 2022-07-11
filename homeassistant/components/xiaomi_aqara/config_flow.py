@@ -106,7 +106,7 @@ class XiaomiAqaraFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             return await self.async_step_settings()
 
         # Discover Xiaomi Aqara Gateways in the netwerk to get required SIDs.
-        xiaomi = XiaomiGatewayDiscovery(self.hass.add_job, [], self.interface)
+        xiaomi = XiaomiGatewayDiscovery(self.interface)
         try:
             await self.hass.async_add_executor_job(xiaomi.discover_gateways)
         except gaierror:
