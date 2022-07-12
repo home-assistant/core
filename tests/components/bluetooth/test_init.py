@@ -1,10 +1,8 @@
 """Tests for the Bluetooth integration."""
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
-import bleak
 from bleak import BleakError
 from bleak.backends.scanner import AdvertisementData, BLEDevice
-import pytest
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
@@ -14,25 +12,6 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED, EVENT_HOMEASSISTANT_STOP
 from homeassistant.setup import async_setup_component
-
-
-@pytest.fixture()
-def mock_bleak_scanner_start():
-    """Fixture to mock starting the bleak scanner."""
-    scanner = bleak.BleakScanner
-    models.HA_BLEAK_SCANNER = None
-
-    with patch("homeassistant.components.bluetooth.HaBleakScanner.stop"), patch(
-        "homeassistant.components.bluetooth.HaBleakScanner.start",
-    ) as mock_bleak_scanner_start:
-        yield mock_bleak_scanner_start
-
-    # We need to drop the stop method from the object since we patched
-    # out start and this fixture will expire before the stop method is called
-    # when EVENT_HOMEASSISTANT_STOP is fired.
-    if models.HA_BLEAK_SCANNER:
-        models.HA_BLEAK_SCANNER.stop = AsyncMock()
-    bleak.BleakScanner = scanner
 
 
 async def test_setup_and_stop(hass, mock_bleak_scanner_start):
