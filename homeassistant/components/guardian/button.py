@@ -3,7 +3,6 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
 
 from aioguardian import Client
 from aioguardian.errors import GuardianError
@@ -40,6 +39,7 @@ class GuardianButtonDescription(
 
 BUTTON_KIND_REBOOT = "reboot"
 BUTTON_KIND_RESET_VALVE_DIAGNOSTICS = "reset_valve_diagnostics"
+
 
 async def _async_reboot(client: Client) -> None:
     """Reboot the Guardian."""
