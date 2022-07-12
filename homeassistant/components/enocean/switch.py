@@ -12,7 +12,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import DOMAIN
+from .const import DOMAIN, LOGGER
 from .device import EnOceanEntity
 
 CONF_CHANNEL = "channel"
@@ -44,13 +44,22 @@ def _migrate_to_new_unique_id(hass: HomeAssistant, dev_id, channel) -> None:
         try:
             ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
         except ValueError:
-            pass
+            LOGGER.warning(
+                "Skip migration of id [%s] to [%s] because it already exists",
+                old_unique_id,
+                new_unique_id,
+            )
+        LOGGER.debug(
+            "Migrating unique_id from [%s] to [%s]",
+            old_unique_id,
+            new_unique_id,
+        )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the EnOcean switch platform."""
@@ -59,7 +68,7 @@ def setup_platform(
     dev_name = config.get(CONF_NAME)
 
     _migrate_to_new_unique_id(hass, dev_id, channel)
-    add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
+    async_add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
 
 
 class EnOceanSwitch(EnOceanEntity, SwitchEntity):
