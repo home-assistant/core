@@ -158,7 +158,7 @@ async def async_setup_scanner(
     @callback
     def _async_update_ble(
         service_info: bluetooth.BluetoothServiceInfo, change: bluetooth.BluetoothChange
-    ):
+    ) -> None:
         """Update from a ble callback."""
         mac = service_info.address
         if mac in devs_to_track:
