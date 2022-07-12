@@ -47,12 +47,15 @@ class DevoloDeviceEntity(Entity):
         self.subscriber: Subscriber | None = None
         self.sync_callback = self._sync
 
-        self._attr_name: str  # All entities ensure, it is set
         self._value: float
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
-        self.subscriber = Subscriber(self._attr_name, callback=self.sync_callback)
+        assert self.device_info
+        assert self.device_info["name"]  # The name was set on entity creation
+        self.subscriber = Subscriber(
+            self.device_info["name"], callback=self.sync_callback
+        )
         self._homecontrol.publisher.register(
             self._device_instance.uid, self.subscriber, self.sync_callback
         )

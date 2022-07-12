@@ -54,7 +54,6 @@ class DevoloSwitch(DevoloDeviceEntity, SwitchEntity):
             self._attr_unique_id  # type: ignore[index]
         ]
         self._attr_is_on = self._binary_switch_property.state
-        self._attr_name = "Switch"
 
     def turn_on(self, **kwargs: Any) -> None:
         """Switch on the device."""

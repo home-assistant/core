@@ -29,21 +29,21 @@ async def test_siren(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test_alarm")
+    state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
-    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test Alarm"
+    assert state.attributes[ATTR_FRIENDLY_NAME] == "Test"
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("devolo.SirenMultiLevelSwitch:Test", 1))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{DOMAIN}.test_alarm").state == STATE_ON
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_ON
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{DOMAIN}.test_alarm").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{DOMAIN}.test").state == STATE_UNAVAILABLE
 
 
 @pytest.mark.usefixtures("mock_zeroconf")
@@ -59,7 +59,7 @@ async def test_siren_switching(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test_alarm")
+    state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     assert state.state == STATE_OFF
 
@@ -69,7 +69,7 @@ async def test_siren_switching(hass: HomeAssistant):
         await hass.services.async_call(
             "siren",
             "turn_on",
-            {"entity_id": f"{DOMAIN}.test_alarm"},
+            {"entity_id": f"{DOMAIN}.test"},
             blocking=True,
         )
         # The real device state is changed by a websocket message
@@ -85,7 +85,7 @@ async def test_siren_switching(hass: HomeAssistant):
         await hass.services.async_call(
             "siren",
             "turn_off",
-            {"entity_id": f"{DOMAIN}.test_alarm"},
+            {"entity_id": f"{DOMAIN}.test"},
             blocking=True,
         )
         # The real device state is changed by a websocket message
@@ -93,7 +93,7 @@ async def test_siren_switching(hass: HomeAssistant):
             "Test", ("devolo.SirenMultiLevelSwitch:Test", 0)
         )
         await hass.async_block_till_done()
-        assert hass.states.get(f"{DOMAIN}.test_alarm").state == STATE_OFF
+        assert hass.states.get(f"{DOMAIN}.test").state == STATE_OFF
         set.assert_called_once_with(0)
 
 
@@ -110,7 +110,7 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test_alarm")
+    state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
 
     with patch(
@@ -120,7 +120,7 @@ async def test_siren_change_default_tone(hass: HomeAssistant):
         await hass.services.async_call(
             "siren",
             "turn_on",
-            {"entity_id": f"{DOMAIN}.test_alarm"},
+            {"entity_id": f"{DOMAIN}.test"},
             blocking=True,
         )
         set.assert_called_once_with(2)
@@ -138,7 +138,7 @@ async def test_remove_from_hass(hass: HomeAssistant):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{DOMAIN}.test_alarm")
+    state = hass.states.get(f"{DOMAIN}.test")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
