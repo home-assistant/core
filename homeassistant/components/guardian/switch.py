@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any
 
 from aioguardian.errors import GuardianError
 
@@ -43,6 +43,26 @@ class ValveControllerSwitchDescription(
     """Describe a Guardian valve controller switch."""
 
 
+async def _async_disable_ap(client: Client) -> None:
+    """Disable the onboard AP."""
+    await client.wifi.disable_ap()
+
+
+async def _async_enable_ap(client: Client) -> None:
+    """Enable the onboard AP."""
+    await client.wifi.enable_ap()
+
+
+async def _async_close_valve(client: Client) -> None:
+    """Close the valve."""
+    await client.valve.close()
+
+
+async def _async_open_valve(client: Client) -> None:
+    """Open the valve."""
+    await client.valve.open()
+
+
 VALVE_CONTROLLER_DESCRIPTIONS = (
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_ONBOARD_AP,
@@ -50,20 +70,16 @@ VALVE_CONTROLLER_DESCRIPTIONS = (
         icon="mdi:wifi",
         entity_category=EntityCategory.CONFIG,
         api_category=API_WIFI_STATUS,
-        off_action=lambda client: cast(
-            Awaitable[dict[str, Any]], client.wifi.disable_ap()
-        ),
-        on_action=lambda client: cast(
-            Awaitable[dict[str, Any]], client.wifi.enable_ap()
-        ),
+        off_action=_async_disable_ap,
+        on_action=_async_enable_ap,
     ),
     ValveControllerSwitchDescription(
         key=SWITCH_KIND_VALVE,
         name="Valve controller",
         icon="mdi:water",
         api_category=API_VALVE_STATUS,
-        off_action=lambda client: cast(Awaitable[dict[str, Any]], client.valve.close()),
-        on_action=lambda client: cast(Awaitable[dict[str, Any]], client.valve.open()),
+        off_action=_async_close_valve,
+        on_action=_async_open_valve,
     ),
 )
 
