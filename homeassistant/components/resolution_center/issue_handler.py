@@ -34,6 +34,8 @@ class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
         platforms: dict[str, ResolutionCenterProtocol] = self.hass.data[DOMAIN][
             "platforms"
         ]
+        if handler_key not in platforms:
+            raise data_entry_flow.UnknownHandler
         platform = platforms[handler_key]
 
         assert data and "issue_id" in data
@@ -42,7 +44,7 @@ class ResolutionCenterFlowManager(data_entry_flow.FlowManager):
         issue_registry = async_get_issue_registry(self.hass)
         issue = issue_registry.async_get_issue(handler_key, issue_id)
         if issue is None or not issue.is_fixable:
-            raise HomeAssistantError("Issue does not exist or is not fixable")
+            raise data_entry_flow.UnknownStep
 
         return await platform.async_create_fix_flow(self.hass, issue_id)
 

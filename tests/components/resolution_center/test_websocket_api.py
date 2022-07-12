@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import ANY, AsyncMock, Mock
 
 import pytest
 import voluptuous as vol
@@ -200,6 +200,13 @@ async def test_fix_non_existing_issue(
 
     url = "/api/resolution_center/issues/fix"
     resp = await client.post(
+        url, json={"handler": "no_such_integration", "issue_id": "no_such_issue"}
+    )
+
+    assert resp.status != HTTPStatus.OK
+
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
         url, json={"handler": "fake_integration", "issue_id": "no_such_issue"}
     )
 
@@ -278,11 +285,12 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    flow_id = data.pop("flow_id")
+    flow_id = data["flow_id"]
     assert data == {
         "data_schema": [],
         "description_placeholders": None,
         "errors": None,
+        "flow_id": ANY,
         "handler": "fake_integration",
         "last_step": None,
         "step_id": "confirm",
@@ -290,15 +298,24 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
     }
 
     url = f"/api/resolution_center/issues/fix/{flow_id}"
+    # Test we can get the status of the flow
+    resp2 = await client.get(url)
+
+    assert resp2.status == HTTPStatus.OK
+    data2 = await resp2.json()
+
+    assert data == data2
+
     resp = await client.post(url)
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    data.pop("flow_id")
+    flow_id = data["flow_id"]
     assert data == {
         "description": None,
         "description_placeholders": None,
+        "flow_id": flow_id,
         "handler": "fake_integration",
         "title": None,
         "type": "create_entry",
@@ -310,6 +327,125 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
 
     assert msg["success"]
     assert msg["result"] == {"issues": []}
+
+
+async def test_fix_issue_unauth(
+    hass: HomeAssistant, hass_client, hass_admin_user
+) -> None:
+    """Test we can't query the result if not authorized."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    hass_admin_user.groups = []
+
+    client = await hass_client()
+
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "issue_1"}
+    )
+
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_get_progress_unauth(
+    hass: HomeAssistant, hass_client, hass_admin_user
+) -> None:
+    """Test we can't fix an issue if not authorized."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_client()
+
+    issues = [
+        {
+            "breaks_in_ha_version": "2022.9",
+            "domain": "fake_integration",
+            "issue_id": "issue_1",
+            "is_fixable": True,
+            "learn_more_url": "https://theuselessweb.com",
+            "severity": "error",
+            "translation_key": "abc_123",
+            "translation_placeholders": {"abc": "123"},
+        },
+    ]
+
+    for issue in issues:
+        async_create_issue(
+            hass,
+            issue["domain"],
+            issue["issue_id"],
+            breaks_in_ha_version=issue["breaks_in_ha_version"],
+            is_fixable=issue["is_fixable"],
+            learn_more_url=issue["learn_more_url"],
+            severity=issue["severity"],
+            translation_key=issue["translation_key"],
+            translation_placeholders=issue["translation_placeholders"],
+        )
+
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "issue_1"}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    flow_id = data["flow_id"]
+
+    hass_admin_user.groups = []
+
+    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    # Test we can't get the status of the flow
+    resp = await client.get(url)
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_step_unauth(hass: HomeAssistant, hass_client, hass_admin_user) -> None:
+    """Test we can't fix an issue if not authorized."""
+    assert await async_setup_component(hass, "http", {})
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    client = await hass_client()
+
+    issues = [
+        {
+            "breaks_in_ha_version": "2022.9",
+            "domain": "fake_integration",
+            "issue_id": "issue_1",
+            "is_fixable": True,
+            "learn_more_url": "https://theuselessweb.com",
+            "severity": "error",
+            "translation_key": "abc_123",
+            "translation_placeholders": {"abc": "123"},
+        },
+    ]
+
+    for issue in issues:
+        async_create_issue(
+            hass,
+            issue["domain"],
+            issue["issue_id"],
+            breaks_in_ha_version=issue["breaks_in_ha_version"],
+            is_fixable=issue["is_fixable"],
+            learn_more_url=issue["learn_more_url"],
+            severity=issue["severity"],
+            translation_key=issue["translation_key"],
+            translation_placeholders=issue["translation_placeholders"],
+        )
+
+    url = "/api/resolution_center/issues/fix"
+    resp = await client.post(
+        url, json={"handler": "fake_integration", "issue_id": "issue_1"}
+    )
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+    flow_id = data["flow_id"]
+
+    hass_admin_user.groups = []
+
+    url = f"/api/resolution_center/issues/fix/{flow_id}"
+    # Test we can't get the status of the flow
+    resp = await client.post(url)
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_list_issues(hass: HomeAssistant, hass_ws_client) -> None:
