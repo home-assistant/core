@@ -7,6 +7,7 @@ import datetime
 import logging
 from typing import Any
 
+from aiohomekit import Controller
 from aiohomekit.exceptions import (
     AccessoryDisconnectedError,
     AccessoryNotFoundError,
@@ -70,7 +71,9 @@ class HKDevice:
         # don't want to mutate a dict owned by a config entry.
         self.pairing_data = pairing_data.copy()
 
-        self.pairing = hass.data[CONTROLLER].load_pairing(
+        connection: Controller = hass.data[CONTROLLER]
+
+        self.pairing = connection.load_pairing(
             self.pairing_data["AccessoryPairingID"], self.pairing_data
         )
 
@@ -187,7 +190,7 @@ class HKDevice:
 
         await self.async_process_entity_map()
 
-        return True
+        return self.pairing.is_connected
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
@@ -361,7 +364,7 @@ class HKDevice:
         # is especially important for BLE, as the Pairing instance relies on the entity map
         # to map aid/iid to GATT characteristics. So push it to there as well.
 
-        self.pairing.pairing_data["accessories"] = self.accessories
+        self.pairing.pairing_data["accessories"] = self.accessories  # type: ignore[attr-defined]
 
         self.async_detect_workarounds()
 
