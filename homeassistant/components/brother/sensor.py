@@ -169,13 +169,13 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_STATUS,
         icon="mdi:printer",
-        name=ATTR_STATUS.title(),
+        name="Status",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BrotherSensorEntityDescription(
         key=ATTR_PAGE_COUNTER,
         icon="mdi:file-document-outline",
-        name=ATTR_PAGE_COUNTER.replace("_", " ").title(),
+        name="Page counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -183,7 +183,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_BW_COUNTER,
         icon="mdi:file-document-outline",
-        name=ATTR_BW_COUNTER.replace("_", " ").title(),
+        name="B/W counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -191,7 +191,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_COLOR_COUNTER,
         icon="mdi:file-document-outline",
-        name=ATTR_COLOR_COUNTER.replace("_", " ").title(),
+        name="Color counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -199,7 +199,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_DUPLEX_COUNTER,
         icon="mdi:file-document-outline",
-        name=ATTR_DUPLEX_COUNTER.replace("_", " ").title(),
+        name="Duplex unit pages counter",
         native_unit_of_measurement=UNIT_PAGES,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -207,7 +207,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_DRUM_REMAINING_LIFE,
         icon="mdi:chart-donut",
-        name=ATTR_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        name="Drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -215,7 +215,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_BLACK_DRUM_REMAINING_LIFE,
         icon="mdi:chart-donut",
-        name=ATTR_BLACK_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        name="Black drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -223,7 +223,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_CYAN_DRUM_REMAINING_LIFE,
         icon="mdi:chart-donut",
-        name=ATTR_CYAN_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        name="Cyan drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -231,7 +231,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_MAGENTA_DRUM_REMAINING_LIFE,
         icon="mdi:chart-donut",
-        name=ATTR_MAGENTA_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        name="Magenta drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -239,7 +239,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_YELLOW_DRUM_REMAINING_LIFE,
         icon="mdi:chart-donut",
-        name=ATTR_YELLOW_DRUM_REMAINING_LIFE.replace("_", " ").title(),
+        name="Yellow drum remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -247,7 +247,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_BELT_UNIT_REMAINING_LIFE,
         icon="mdi:current-ac",
-        name=ATTR_BELT_UNIT_REMAINING_LIFE.replace("_", " ").title(),
+        name="Belt unit remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -255,7 +255,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_FUSER_REMAINING_LIFE,
         icon="mdi:water-outline",
-        name=ATTR_FUSER_REMAINING_LIFE.replace("_", " ").title(),
+        name="Fuser remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -263,7 +263,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_LASER_REMAINING_LIFE,
         icon="mdi:spotlight-beam",
-        name=ATTR_LASER_REMAINING_LIFE.replace("_", " ").title(),
+        name="Laser remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -271,7 +271,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_PF_KIT_1_REMAINING_LIFE,
         icon="mdi:printer-3d",
-        name=ATTR_PF_KIT_1_REMAINING_LIFE.replace("_", " ").title(),
+        name="PF Kit 1 remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -279,7 +279,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_PF_KIT_MP_REMAINING_LIFE,
         icon="mdi:printer-3d",
-        name=ATTR_PF_KIT_MP_REMAINING_LIFE.replace("_", " ").title(),
+        name="PF Kit MP remaining life",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -287,7 +287,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_BLACK_TONER_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_BLACK_TONER_REMAINING.replace("_", " ").title(),
+        name="Black toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -295,7 +295,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_CYAN_TONER_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_CYAN_TONER_REMAINING.replace("_", " ").title(),
+        name="Cyan toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -303,7 +303,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_MAGENTA_TONER_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_MAGENTA_TONER_REMAINING.replace("_", " ").title(),
+        name="Magenta toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -311,7 +311,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_YELLOW_TONER_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_YELLOW_TONER_REMAINING.replace("_", " ").title(),
+        name="Yellow toner remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -319,7 +319,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_BLACK_INK_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_BLACK_INK_REMAINING.replace("_", " ").title(),
+        name="Black ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -327,7 +327,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_CYAN_INK_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_CYAN_INK_REMAINING.replace("_", " ").title(),
+        name="Cyan ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -335,7 +335,7 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_MAGENTA_INK_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_MAGENTA_INK_REMAINING.replace("_", " ").title(),
+        name="Magenta ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -343,14 +343,14 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     BrotherSensorEntityDescription(
         key=ATTR_YELLOW_INK_REMAINING,
         icon="mdi:printer-3d-nozzle",
-        name=ATTR_YELLOW_INK_REMAINING.replace("_", " ").title(),
+        name="Yellow ink remaining",
         native_unit_of_measurement=PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     BrotherSensorEntityDescription(
         key=ATTR_UPTIME,
-        name=ATTR_UPTIME.title(),
+        name="Uptime",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
