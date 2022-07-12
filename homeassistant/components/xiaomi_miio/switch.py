@@ -201,12 +201,20 @@ MODEL_TO_FEATURES_MAP = {
 
 
 @dataclass
-class XiaomiMiioSwitchDescription(SwitchEntityDescription):
+class XiaomiMiioSwitchRequiredKeyMixin:
     """A class that describes switch entities."""
 
-    feature: int | None = None
-    method_on: str | None = None
-    method_off: str | None = None
+    feature: int
+    method_on: str
+    method_off: str
+
+
+@dataclass
+class XiaomiMiioSwitchDescription(
+    SwitchEntityDescription, XiaomiMiioSwitchRequiredKeyMixin
+):
+    """A class that describes switch entities."""
+
     available_with_device_off: bool = True
 
 
@@ -443,7 +451,7 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
         async def async_service_handler(service: ServiceCall) -> None:
             """Map services to methods on XiaomiPlugGenericSwitch."""
-            method = SERVICE_TO_METHOD.get(service.service)
+            method = SERVICE_TO_METHOD[service.service]
             params = {
                 key: value
                 for key, value in service.data.items()
@@ -479,6 +487,8 @@ async def async_setup_other_entry(hass, config_entry, async_add_entities):
 
 class XiaomiGenericCoordinatedSwitch(XiaomiCoordinatedMiioEntity, SwitchEntity):
     """Representation of a Xiaomi Plug Generic."""
+
+    entity_description: XiaomiMiioSwitchDescription
 
     def __init__(self, name, device, entry, unique_id, coordinator, description):
         """Initialize the plug switch."""

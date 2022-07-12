@@ -517,7 +517,7 @@ async def test_show_menu(hass, manager, menu_options):
             return self.async_show_form(step_id="target2")
 
     result = await manager.async_init("test")
-    assert result["type"] == data_entry_flow.RESULT_TYPE_MENU
+    assert result["type"] == data_entry_flow.FlowResultType.MENU
     assert result["menu_options"] == menu_options
     assert result["description_placeholders"] == {"name": "Paulus"}
     assert len(manager.async_progress()) == 1

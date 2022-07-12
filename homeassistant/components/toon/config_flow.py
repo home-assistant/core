@@ -20,8 +20,8 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     VERSION = 2
 
-    agreements: list[Agreement] | None = None
-    data: dict[str, Any] | None = None
+    agreements: list[Agreement]
+    data: dict[str, Any]
 
     @property
     def logger(self) -> logging.Logger:

@@ -1,0 +1,7 @@
+{
+  "domain": "resolution_center",
+  "name": "Resolution Center",
+  "config_flow": false,
+  "documentation": "https://www.home-assistant.io/integrations/resolution_center",
+  "codeowners": ["@home-assistant/core"]
+}

@@ -544,6 +544,7 @@ class EntityPlatform:
                 entity_category=entity.entity_category,
                 hidden_by=hidden_by,
                 known_object_ids=self.entities.keys(),
+                has_entity_name=entity.has_entity_name,
                 original_device_class=entity.device_class,
                 original_icon=entity.icon,
                 original_name=entity.name,

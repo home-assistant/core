@@ -6,11 +6,7 @@ from aioskybell import exceptions
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import (
-    RESULT_TYPE_ABORT,
-    RESULT_TYPE_CREATE_ENTRY,
-    RESULT_TYPE_FORM,
-)
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import CONF_CONFIG_FLOW, _patch_skybell, _patch_skybell_devices
 
@@ -38,7 +34,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
 
         result = await hass.config_entries.flow.async_configure(
@@ -46,7 +42,7 @@ async def test_flow_user(hass: HomeAssistant) -> None:
             user_input=CONF_CONFIG_FLOW,
         )
 
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == "user"
         assert result["data"] == CONF_CONFIG_FLOW
 
@@ -64,7 +60,7 @@ async def test_flow_user_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
     )
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
@@ -75,7 +71,7 @@ async def test_flow_user_cannot_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "cannot_connect"}
 
@@ -88,7 +84,7 @@ async def test_invalid_credentials(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
 
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "invalid_auth"}
 
@@ -100,7 +96,7 @@ async def test_flow_user_unknown_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_CONFIG_FLOW
         )
-        assert result["type"] == RESULT_TYPE_FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": "unknown"}
 
@@ -115,7 +111,7 @@ async def test_flow_import(hass: HomeAssistant) -> None:
             result["flow_id"],
             user_input=CONF_CONFIG_FLOW,
         )
-        assert result["type"] == RESULT_TYPE_CREATE_ENTRY
+        assert result["type"] == FlowResultType.CREATE_ENTRY
         assert result["title"] == "user"
         assert result["data"] == CONF_CONFIG_FLOW
 
@@ -133,5 +129,5 @@ async def test_flow_import_already_configured(hass: HomeAssistant) -> None:
             DOMAIN,
             context={"source": SOURCE_IMPORT},
         )
-        assert result["type"] == RESULT_TYPE_ABORT
+        assert result["type"] == FlowResultType.ABORT
         assert result["reason"] == "already_configured"

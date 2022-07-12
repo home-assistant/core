@@ -93,8 +93,8 @@ jobs:
           # Defaults
           integrations_glob=""
           test_full_suite="true"
-          test_groups="[1, 2, 3, 4, 5, 6]"
-          test_group_count=6
+          test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+          test_group_count=10
           tests="[]"
           tests_glob=""
 
@@ -137,8 +137,8 @@ jobs:
             || [[ "${{ github.event.inputs.full }}" == "true" ]] \
             || [[ "${{ contains(github.event.pull_request.labels.*.name, 'ci-full-run') }}" == "true" ]];
           then
-            test_groups="[1, 2, 3, 4, 5, 6]"
-            test_group_count=6
+            test_groups="[1, 2, 3, 4, 5, 6, 7, 8, 9, 10]"
+            test_group_count=10
             test_full_suite="true"
           fi
 
@@ -166,7 +166,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           cache: "pip"
@@ -205,7 +205,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -254,7 +254,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -306,7 +306,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -347,7 +347,7 @@ jobs:
       - name: Check out code from GitHub
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         id: python
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
@@ -470,7 +470,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Generate partial pip restore key
@@ -533,7 +533,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
@@ -565,7 +565,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore base Python virtual environment
@@ -598,7 +598,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
@@ -642,7 +642,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
       - name: Restore full Python ${{ env.DEFAULT_PYTHON }} virtual environment
@@ -677,7 +677,6 @@ jobs:
 
   pip-check:
     runs-on: ubuntu-20.04
-    if: needs.info.outputs.requirements == 'true' || github.event.inputs.full == 'true'
     needs:
       - info
       - base
@@ -691,7 +690,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Restore full Python ${{ matrix.python-version }} virtual environment
@@ -745,7 +744,7 @@ jobs:
         uses: actions/checkout@v3.0.2
       - name: Set up Python ${{ matrix.python-version }}
         id: python
-        uses: actions/setup-python@v4.0.0
+        uses: actions/setup-python@v4.1.0
         with:
           python-version: ${{ matrix.python-version }}
       - name: Restore full Python ${{ matrix.python-version }} virtual environment

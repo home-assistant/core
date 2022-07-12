@@ -32,6 +32,12 @@
             }
         }
     },
+    "device_automation": {
+        "trigger_subtype": {
+            "button_1": "Primeiro bot\u00e3o",
+            "button_4": "Quarto bot\u00e3o"
+        }
+    },
     "options": {
         "step": {
             "init": {

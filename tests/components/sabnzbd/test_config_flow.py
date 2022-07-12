@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_SSL,
     CONF_URL,
 )
-from homeassistant.data_entry_flow import RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 VALID_CONFIG = {
     CONF_NAME: "Sabnzbd",
@@ -39,7 +39,7 @@ async def test_create_entry(hass):
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
