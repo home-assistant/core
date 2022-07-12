@@ -31,7 +31,7 @@ async def async_setup_entry(
     """Set up device tracker for Keenetic NDMS2 component."""
     router: KeeneticRouter = hass.data[DOMAIN][config_entry.entry_id][ROUTER]
 
-    tracked = set()
+    tracked: set[str] = set()
 
     @callback
     def update_from_router():
@@ -40,7 +40,7 @@ async def async_setup_entry(
 
     update_from_router()
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     # Restore devices that are not a part of active clients list.
     restored = []
     for entity_entry in registry.entities.values():

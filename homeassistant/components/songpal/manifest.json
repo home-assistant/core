@@ -3,7 +3,7 @@
   "name": "Sony Songpal",
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/songpal",
-  "requirements": ["python-songpal==0.12"],
+  "requirements": ["python-songpal==0.14.1"],
   "codeowners": ["@rytilahti", "@shenxn"],
   "ssdp": [
     {
@@ -12,5 +12,6 @@
     }
   ],
   "quality_scale": "gold",
-  "iot_class": "local_push"
+  "iot_class": "local_push",
+  "loggers": ["songpal"]
 }

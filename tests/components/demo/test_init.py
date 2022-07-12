@@ -1,17 +1,16 @@
 """The tests for the Demo component."""
-from contextlib import suppress
 import json
-import os
+from unittest.mock import patch
 
 import pytest
 
 from homeassistant.components.demo import DOMAIN
-from homeassistant.components.device_tracker.legacy import YAML_DEVICES
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import list_statistic_ids
 from homeassistant.helpers.json import JSONEncoder
-from homeassistant.setup import async_setup_component, setup_component
+from homeassistant.setup import async_setup_component
 
-from tests.components.recorder.common import wait_recording_done
+from tests.components.recorder.common import async_wait_recording_done
 
 
 @pytest.fixture(autouse=True)
@@ -21,11 +20,10 @@ def mock_history(hass):
 
 
 @pytest.fixture(autouse=True)
-def demo_cleanup(hass):
-    """Clean up device tracker demo file."""
-    yield
-    with suppress(FileNotFoundError):
-        os.remove(hass.config.path(YAML_DEVICES))
+def mock_device_tracker_update_config(hass):
+    """Prevent device tracker from creating known devices file."""
+    with patch("homeassistant.components.device_tracker.legacy.update_config"):
+        yield
 
 
 async def test_setting_up_demo(hass):
@@ -45,23 +43,27 @@ async def test_setting_up_demo(hass):
         )
 
 
-def test_demo_statistics(hass_recorder):
+async def test_demo_statistics(hass, recorder_mock):
     """Test that the demo components makes some statistics available."""
-    hass = hass_recorder()
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await async_wait_recording_done(hass)
 
-    assert setup_component(hass, DOMAIN, {DOMAIN: {}})
-    hass.block_till_done()
-    hass.start()
-    wait_recording_done(hass)
-
-    statistic_ids = list_statistic_ids(hass)
+    statistic_ids = await get_instance(hass).async_add_executor_job(
+        list_statistic_ids, hass
+    )
     assert {
+        "has_mean": True,
+        "has_sum": False,
         "name": None,
         "source": "demo",
         "statistic_id": "demo:temperature_outdoor",
         "unit_of_measurement": "°C",
     } in statistic_ids
     assert {
+        "has_mean": False,
+        "has_sum": True,
         "name": None,
         "source": "demo",
         "statistic_id": "demo:energy_consumption",

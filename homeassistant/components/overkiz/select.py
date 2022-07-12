@@ -39,8 +39,7 @@ def _select_option_open_closed_pedestrian(
             OverkizCommandParam.CLOSED: OverkizCommand.CLOSE,
             OverkizCommandParam.OPEN: OverkizCommand.OPEN,
             OverkizCommandParam.PEDESTRIAN: OverkizCommand.SET_PEDESTRIAN_POSITION,
-        }[OverkizCommandParam(option)],
-        None,
+        }[OverkizCommandParam(option)]
     )
 
 
@@ -49,6 +48,17 @@ def _select_option_memorized_simple_volume(
 ) -> Awaitable[None]:
     """Change the selected option for Memorized Simple Volume."""
     return execute_command(OverkizCommand.SET_MEMORIZED_SIMPLE_VOLUME, option)
+
+
+def _select_option_active_zone(
+    option: str, execute_command: Callable[..., Awaitable[None]]
+) -> Awaitable[None]:
+    """Change the selected option for Active Zone(s)."""
+    # Turn alarm off when empty zone is selected
+    if option == "":
+        return execute_command(OverkizCommand.ALARM_OFF)
+
+    return execute_command(OverkizCommand.ALARM_ZONE_ON, option)
 
 
 SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
@@ -73,7 +83,28 @@ SELECT_DESCRIPTIONS: list[OverkizSelectDescription] = [
         entity_category=EntityCategory.CONFIG,
         device_class=OverkizDeviceClass.MEMORIZED_SIMPLE_VOLUME,
     ),
+    # SomfyHeatingTemperatureInterface
+    OverkizSelectDescription(
+        key=OverkizState.OVP_HEATING_TEMPERATURE_INTERFACE_OPERATING_MODE,
+        name="Operating Mode",
+        icon="mdi:sun-snowflake",
+        options=[OverkizCommandParam.HEATING, OverkizCommandParam.COOLING],
+        select_option=lambda option, execute_command: execute_command(
+            OverkizCommand.SET_OPERATING_MODE, option
+        ),
+        entity_category=EntityCategory.CONFIG,
+    ),
+    # StatefulAlarmController
+    OverkizSelectDescription(
+        key=OverkizState.CORE_ACTIVE_ZONES,
+        name="Active Zones",
+        icon="mdi:shield-lock",
+        options=["", "A", "B", "C", "A,B", "B,C", "A,C", "A,B,C"],
+        select_option=_select_option_active_zone,
+    ),
 ]
+
+SUPPORTED_STATES = {description.key: description for description in SELECT_DESCRIPTIONS}
 
 
 async def async_setup_entry(
@@ -85,10 +116,6 @@ async def async_setup_entry(
     data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
     entities: list[OverkizSelect] = []
 
-    key_supported_states = {
-        description.key: description for description in SELECT_DESCRIPTIONS
-    }
-
     for device in data.coordinator.data.values():
         if (
             device.widget in IGNORED_OVERKIZ_DEVICES
@@ -97,7 +124,7 @@ async def async_setup_entry(
             continue
 
         for state in device.definition.states:
-            if description := key_supported_states.get(state.qualified_name):
+            if description := SUPPORTED_STATES.get(state.qualified_name):
                 entities.append(
                     OverkizSelect(
                         device.device_url,

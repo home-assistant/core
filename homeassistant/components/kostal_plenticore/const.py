@@ -1,6 +1,8 @@
 """Constants for the Kostal Plenticore Solar Inverter integration."""
+from dataclasses import dataclass
 from typing import NamedTuple
 
+from homeassistant.components.number import NumberEntityDescription
 from homeassistant.components.sensor import (
     ATTR_STATE_CLASS,
     SensorDeviceClass,
@@ -16,6 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     POWER_WATT,
 )
+from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "kostal_plenticore"
 
@@ -665,33 +668,179 @@ SENSOR_PROCESS_DATA = [
         },
         "format_energy",
     ),
-]
-
-# Defines all entities for settings.
-#
-# Each entry is defined with a tuple of these values:
-#  - module id (str)
-#  - process data id (str)
-#  - entity name suffix (str)
-#  - sensor properties (dict)
-#  - value formatter (str)
-SENSOR_SETTINGS_DATA = [
     (
-        "devices:local",
-        "Battery:MinHomeComsumption",
-        "Battery min Home Consumption",
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Day",
+        "Battery Charge from Grid Day",
         {
-            ATTR_UNIT_OF_MEASUREMENT: POWER_WATT,
-            ATTR_DEVICE_CLASS: SensorDeviceClass.POWER,
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
         },
-        "format_round",
+        "format_energy",
     ),
     (
-        "devices:local",
-        "Battery:MinSoc",
-        "Battery min Soc",
-        {ATTR_UNIT_OF_MEASUREMENT: PERCENTAGE, ATTR_ICON: "mdi:battery-negative"},
-        "format_round",
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Month",
+        "Battery Charge from Grid Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Year",
+        "Battery Charge from Grid Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargeGrid:Total",
+        "Battery Charge from Grid Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Day",
+        "Battery Charge from PV Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Month",
+        "Battery Charge from PV Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Year",
+        "Battery Charge from PV Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyChargePv:Total",
+        "Battery Charge from PV Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Day",
+        "Energy Discharge to Grid Day",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Month",
+        "Energy Discharge to Grid Month",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Year",
+        "Energy Discharge to Grid Year",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+        },
+        "format_energy",
+    ),
+    (
+        "scb:statistic:EnergyFlow",
+        "Statistic:EnergyDischargeGrid:Total",
+        "Energy Discharge to Grid Total",
+        {
+            ATTR_UNIT_OF_MEASUREMENT: ENERGY_KILO_WATT_HOUR,
+            ATTR_DEVICE_CLASS: SensorDeviceClass.ENERGY,
+            ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING,
+        },
+        "format_energy",
+    ),
+]
+
+
+@dataclass
+class PlenticoreNumberEntityDescriptionMixin:
+    """Define an entity description mixin for number entities."""
+
+    module_id: str
+    data_id: str
+    fmt_from: str
+    fmt_to: str
+
+
+@dataclass
+class PlenticoreNumberEntityDescription(
+    NumberEntityDescription, PlenticoreNumberEntityDescriptionMixin
+):
+    """Describes a Plenticore number entity."""
+
+
+NUMBER_SETTINGS_DATA = [
+    PlenticoreNumberEntityDescription(
+        key="battery_min_soc",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        icon="mdi:battery-negative",
+        name="Battery min SoC",
+        native_unit_of_measurement=PERCENTAGE,
+        native_max_value=100,
+        native_min_value=5,
+        native_step=5,
+        module_id="devices:local",
+        data_id="Battery:MinSoc",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
+    ),
+    PlenticoreNumberEntityDescription(
+        key="battery_min_home_consumption",
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        name="Battery min Home Consumption",
+        native_unit_of_measurement=POWER_WATT,
+        native_max_value=38000,
+        native_min_value=50,
+        native_step=1,
+        module_id="devices:local",
+        data_id="Battery:MinHomeComsumption",
+        fmt_from="format_round",
+        fmt_to="format_round_back",
     ),
 ]
 

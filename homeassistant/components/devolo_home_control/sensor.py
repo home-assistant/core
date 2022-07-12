@@ -76,14 +76,14 @@ async def async_setup_entry(
                     )
                 )
 
-    async_add_entities(entities, False)
+    async_add_entities(entities)
 
 
 class DevoloMultiLevelDeviceEntity(DevoloDeviceEntity, SensorEntity):
     """Abstract representation of a multi level sensor within devolo Home Control."""
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> float:
         """Return the state of the sensor."""
         return self._value
 

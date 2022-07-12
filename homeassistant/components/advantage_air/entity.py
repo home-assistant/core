@@ -9,6 +9,8 @@ from .const import DOMAIN
 class AdvantageAirEntity(CoordinatorEntity):
     """Parent class for Advantage Air Entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, instance, ac_key, zone_key=None):
         """Initialize common aspects of an Advantage Air sensor."""
         super().__init__(instance["coordinator"])

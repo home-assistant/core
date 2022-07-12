@@ -7,7 +7,9 @@ from elgato import Elgato, ElgatoError, Info
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -25,15 +27,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Elgato button based on a config entry."""
     data: HomeAssistantElgatoData = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ElgatoIdentifyButton(data.client, data.info)])
+    async_add_entities(
+        [ElgatoIdentifyButton(data.client, data.info, entry.data.get(CONF_MAC))]
+    )
 
 
 class ElgatoIdentifyButton(ElgatoEntity, ButtonEntity):
     """Defines an Elgato identify button."""
 
-    def __init__(self, client: Elgato, info: Info) -> None:
+    def __init__(self, client: Elgato, info: Info, mac: str | None) -> None:
         """Initialize the button entity."""
-        super().__init__(client, info)
+        super().__init__(client, info, mac)
         self.entity_description = ButtonEntityDescription(
             key="identify",
             name="Identify",
@@ -46,5 +50,7 @@ class ElgatoIdentifyButton(ElgatoEntity, ButtonEntity):
         """Identify the light, will make it blink."""
         try:
             await self.client.identify()
-        except ElgatoError:
-            _LOGGER.exception("An error occurred while identifying the Elgato Light")
+        except ElgatoError as error:
+            raise HomeAssistantError(
+                "An error occurred while identifying the Elgato Light"
+            ) from error

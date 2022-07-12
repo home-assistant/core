@@ -12,7 +12,6 @@ from homeassistant.components.flux_led.const import (
     CONF_CUSTOM_EFFECT_SPEED_PCT,
     CONF_CUSTOM_EFFECT_TRANSITION,
     CONF_MINOR_VERSION,
-    CONF_MODEL,
     CONF_MODEL_DESCRIPTION,
     CONF_MODEL_INFO,
     CONF_MODEL_NUM,
@@ -23,9 +22,9 @@ from homeassistant.components.flux_led.const import (
     TRANSITION_JUMP,
     TRANSITION_STROBE,
 )
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MODEL
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import RESULT_TYPE_ABORT, RESULT_TYPE_FORM
+from homeassistant.data_entry_flow import FlowResultType
 
 from . import (
     DEFAULT_ENTRY_TITLE,
@@ -34,6 +33,7 @@ from . import (
     FLUX_DISCOVERY_PARTIAL,
     IP_ADDRESS,
     MAC_ADDRESS,
+    MAC_ADDRESS_ONE_OFF,
     MODEL,
     MODEL_DESCRIPTION,
     MODEL_NUM,
@@ -94,7 +94,6 @@ async def test_discovery(hass: HomeAssistant):
     assert result3["data"] == {
         CONF_MINOR_VERSION: 4,
         CONF_HOST: IP_ADDRESS,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
@@ -170,7 +169,6 @@ async def test_discovery_legacy(hass: HomeAssistant):
     assert result3["data"] == {
         CONF_MINOR_VERSION: 4,
         CONF_HOST: IP_ADDRESS,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
@@ -253,7 +251,6 @@ async def test_discovery_with_existing_device_present(hass: HomeAssistant):
         assert result3["data"] == {
             CONF_MINOR_VERSION: 4,
             CONF_HOST: IP_ADDRESS,
-            CONF_NAME: DEFAULT_ENTRY_TITLE,
             CONF_MODEL: MODEL,
             CONF_MODEL_NUM: MODEL_NUM,
             CONF_MODEL_INFO: MODEL,
@@ -330,7 +327,6 @@ async def test_manual_working_discovery(hass: HomeAssistant):
     assert result4["data"] == {
         CONF_MINOR_VERSION: 4,
         CONF_HOST: IP_ADDRESS,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
@@ -377,7 +373,6 @@ async def test_manual_no_discovery_data(hass: HomeAssistant):
         CONF_HOST: IP_ADDRESS,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
-        CONF_NAME: IP_ADDRESS,
     }
 
 
@@ -387,11 +382,11 @@ async def test_discovered_by_discovery_and_dhcp(hass):
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=FLUX_DISCOVERY,
         )
         await hass.async_block_till_done()
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_wifibulb():
@@ -401,7 +396,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             data=DHCP_DISCOVERY,
         )
         await hass.async_block_till_done()
-    assert result2["type"] == RESULT_TYPE_ABORT
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     with _patch_discovery(), _patch_wifibulb():
@@ -415,7 +410,7 @@ async def test_discovered_by_discovery_and_dhcp(hass):
             ),
         )
         await hass.async_block_till_done()
-    assert result3["type"] == RESULT_TYPE_ABORT
+    assert result3["type"] == FlowResultType.ABORT
     assert result3["reason"] == "already_in_progress"
 
 
@@ -425,12 +420,12 @@ async def test_discovered_by_discovery(hass):
     with _patch_discovery(), _patch_wifibulb():
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_DISCOVERY},
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
             data=FLUX_DISCOVERY,
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_wifibulb(), patch(
@@ -445,7 +440,6 @@ async def test_discovered_by_discovery(hass):
     assert result2["data"] == {
         CONF_MINOR_VERSION: 4,
         CONF_HOST: IP_ADDRESS,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
@@ -468,7 +462,7 @@ async def test_discovered_by_dhcp_udp_responds(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(), _patch_wifibulb(), patch(
@@ -483,7 +477,6 @@ async def test_discovered_by_dhcp_udp_responds(hass):
     assert result2["data"] == {
         CONF_MINOR_VERSION: 4,
         CONF_HOST: IP_ADDRESS,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
         CONF_MODEL: MODEL,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_INFO: MODEL,
@@ -506,7 +499,7 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(no_device=True), _patch_wifibulb(), patch(
@@ -522,7 +515,6 @@ async def test_discovered_by_dhcp_no_udp_response(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
@@ -537,7 +529,7 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] is None
 
     with _patch_discovery(device=FLUX_DISCOVERY_PARTIAL), _patch_wifibulb(), patch(
@@ -553,8 +545,8 @@ async def test_discovered_by_dhcp_partial_udp_response_fallback_tcp(hass):
         CONF_HOST: IP_ADDRESS,
         CONF_MODEL_NUM: MODEL_NUM,
         CONF_MODEL_DESCRIPTION: MODEL_DESCRIPTION,
-        CONF_NAME: DEFAULT_ENTRY_TITLE,
     }
+    assert result2["title"] == "Bulb RGBCW DDEEFF"
     assert mock_async_setup.called
     assert mock_async_setup_entry.called
 
@@ -568,7 +560,7 @@ async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
 
 
@@ -576,7 +568,7 @@ async def test_discovered_by_dhcp_no_udp_response_or_tcp_response(hass):
     "source, data",
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
@@ -592,17 +584,57 @@ async def test_discovered_by_dhcp_or_discovery_adds_missing_unique_id(
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS
+
+
+async def test_mac_address_off_by_one_updated_via_discovery(hass):
+    """Test the mac address is updated when its off by one from integration discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+            data=FLUX_DISCOVERY,
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS
+
+
+async def test_mac_address_off_by_one_not_updated_from_dhcp(hass):
+    """Test the mac address is NOT updated when its off by one from dhcp discovery."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_HOST: IP_ADDRESS}, unique_id=MAC_ADDRESS_ONE_OFF
+    )
+    config_entry.add_to_hass(hass)
+
+    with _patch_discovery(), _patch_wifibulb():
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    assert config_entry.unique_id == MAC_ADDRESS_ONE_OFF
 
 
 @pytest.mark.parametrize(
     "source, data",
     [
         (config_entries.SOURCE_DHCP, DHCP_DISCOVERY),
-        (config_entries.SOURCE_DISCOVERY, FLUX_DISCOVERY),
+        (config_entries.SOURCE_INTEGRATION_DISCOVERY, FLUX_DISCOVERY),
     ],
 )
 async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already_configured(
@@ -620,7 +652,7 @@ async def test_discovered_by_dhcp_or_discovery_mac_address_mismatch_host_already
         )
         await hass.async_block_till_done()
 
-    assert result["type"] == RESULT_TYPE_ABORT
+    assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
     assert config_entry.unique_id == MAC_ADDRESS_DIFFERENT
@@ -630,7 +662,8 @@ async def test_options(hass: HomeAssistant):
     """Test options flow."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: IP_ADDRESS, CONF_NAME: DEFAULT_ENTRY_TITLE},
+        data={CONF_HOST: IP_ADDRESS},
+        title=IP_ADDRESS,
         options={
             CONF_CUSTOM_EFFECT_COLORS: "[255,0,0], [0,0,255]",
             CONF_CUSTOM_EFFECT_SPEED_PCT: 30,

@@ -4,11 +4,8 @@
             "already_configured_device": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
             "cannot_connect": "\u9023\u7dda\u5931\u6557",
             "no_unconfigured_devices": "\u627e\u4e0d\u5230\u4efb\u4f55\u672a\u8a2d\u5b9a\u88dd\u7f6e\u3002",
-            "switchbot_unsupported_type": "\u4e0d\u652f\u6301\u7684 Switchbot \u985e\u578b\u3002",
+            "switchbot_unsupported_type": "\u4e0d\u652f\u6301\u7684 Switchbot \u985e\u5225\u3002",
             "unknown": "\u672a\u9810\u671f\u932f\u8aa4"
-        },
-        "error": {
-            "cannot_connect": "\u9023\u7dda\u5931\u6557"
         },
         "flow_title": "{name}",
         "step": {

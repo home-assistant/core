@@ -115,9 +115,9 @@
       "off": "Not charging",
       "on": "Charging"
     },
-    "co": {
-      "off": "Clear",
-      "on": "Detected"
+    "carbon_monoxide": {
+      "off": "[%key:component::binary_sensor::state::gas::off%]",
+      "on": "[%key:component::binary_sensor::state::gas::on%]"
     },
     "cold": {
       "off": "[%key:component::binary_sensor::state::battery::off%]",

@@ -1,4 +1,6 @@
 """Config flow for Coinbase integration."""
+from __future__ import annotations
+
 import logging
 
 from coinbase.wallet.client import Client
@@ -18,6 +20,8 @@ from .const import (
     API_TYPE_VAULT,
     CONF_CURRENCIES,
     CONF_EXCHANGE_BASE,
+    CONF_EXCHANGE_PRECISION,
+    CONF_EXCHANGE_PRECISION_DEFAULT,
     CONF_EXCHANGE_RATES,
     CONF_OPTIONS,
     CONF_YAML_API_TOKEN,
@@ -85,12 +89,12 @@ async def validate_options(
     if CONF_CURRENCIES in options:
         for currency in options[CONF_CURRENCIES]:
             if currency not in accounts_currencies:
-                raise CurrencyUnavaliable
+                raise CurrencyUnavailable
 
     if CONF_EXCHANGE_RATES in options:
         for rate in options[CONF_EXCHANGE_RATES]:
             if rate not in available_rates[API_RATES]:
-                raise ExchangeRateUnavaliable
+                raise ExchangeRateUnavailable
 
     return True
 
@@ -158,7 +162,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)
 
@@ -177,6 +183,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         default_currencies = self.config_entry.options.get(CONF_CURRENCIES, [])
         default_exchange_rates = self.config_entry.options.get(CONF_EXCHANGE_RATES, [])
         default_exchange_base = self.config_entry.options.get(CONF_EXCHANGE_BASE, "USD")
+        default_exchange_precision = self.config_entry.options.get(
+            CONF_EXCHANGE_PRECISION, CONF_EXCHANGE_PRECISION_DEFAULT
+        )
 
         if user_input is not None:
             # Pass back user selected options, even if bad
@@ -189,12 +198,15 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
             if CONF_EXCHANGE_RATES in user_input:
                 default_exchange_base = user_input[CONF_EXCHANGE_BASE]
 
+            if CONF_EXCHANGE_PRECISION in user_input:
+                default_exchange_precision = user_input[CONF_EXCHANGE_PRECISION]
+
             try:
                 await validate_options(self.hass, self.config_entry, user_input)
-            except CurrencyUnavaliable:
-                errors["base"] = "currency_unavaliable"
-            except ExchangeRateUnavaliable:
-                errors["base"] = "exchange_rate_unavaliable"
+            except CurrencyUnavailable:
+                errors["base"] = "currency_unavailable"
+            except ExchangeRateUnavailable:
+                errors["base"] = "exchange_rate_unavailable"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
@@ -217,6 +229,9 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                         CONF_EXCHANGE_BASE,
                         default=default_exchange_base,
                     ): vol.In(WALLETS),
+                    vol.Optional(
+                        CONF_EXCHANGE_PRECISION, default=default_exchange_precision
+                    ): int,
                 }
             ),
             errors=errors,
@@ -243,9 +258,9 @@ class AlreadyConfigured(exceptions.HomeAssistantError):
     """Error to indicate Coinbase API Key is already configured."""
 
 
-class CurrencyUnavaliable(exceptions.HomeAssistantError):
+class CurrencyUnavailable(exceptions.HomeAssistantError):
     """Error to indicate the requested currency resource is not provided by the API."""
 
 
-class ExchangeRateUnavaliable(exceptions.HomeAssistantError):
+class ExchangeRateUnavailable(exceptions.HomeAssistantError):
     """Error to indicate the requested exchange rate resource is not provided by the API."""

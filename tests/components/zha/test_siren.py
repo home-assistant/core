@@ -13,6 +13,7 @@ from homeassistant.components.siren.const import (
     ATTR_DURATION,
     ATTR_TONE,
     ATTR_VOLUME_LEVEL,
+    DOMAIN as SIREN_DOMAIN,
 )
 from homeassistant.components.zha.core.const import (
     WARNING_DEVICE_MODE_EMERGENCY_PANIC,
@@ -25,6 +26,22 @@ from .common import async_enable_traffic, find_entity_id
 from .conftest import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_TYPE
 
 from tests.common import async_fire_time_changed, mock_coro
+
+
+@pytest.fixture(autouse=True)
+def siren_platform_only():
+    """Only setup the siren and required base platforms to speed up tests."""
+    with patch(
+        "homeassistant.components.zha.PLATFORMS",
+        (
+            Platform.DEVICE_TRACKER,
+            Platform.NUMBER,
+            Platform.SENSOR,
+            Platform.SELECT,
+            Platform.SIREN,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
@@ -72,7 +89,7 @@ async def test_siren(hass, siren):
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SIREN, "turn_on", {"entity_id": entity_id}, blocking=True
+            SIREN_DOMAIN, "turn_on", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args[0][0] is False
@@ -92,7 +109,7 @@ async def test_siren(hass, siren):
     ):
         # turn off via UI
         await hass.services.async_call(
-            Platform.SIREN, "turn_off", {"entity_id": entity_id}, blocking=True
+            SIREN_DOMAIN, "turn_off", {"entity_id": entity_id}, blocking=True
         )
         assert len(cluster.request.mock_calls) == 1
         assert cluster.request.call_args[0][0] is False
@@ -112,7 +129,7 @@ async def test_siren(hass, siren):
     ):
         # turn on via UI
         await hass.services.async_call(
-            Platform.SIREN,
+            SIREN_DOMAIN,
             "turn_on",
             {
                 "entity_id": entity_id,

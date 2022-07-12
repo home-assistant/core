@@ -59,8 +59,6 @@
             "connected": "{entity_name} csatlakozik",
             "gas": "{entity_name} g\u00e1zt \u00e9rz\u00e9kel",
             "hot": "{entity_name} felforr\u00f3sodik",
-            "is_not_tampered": "{entity_name} nem \u00e9szlelt manipul\u00e1l\u00e1st",
-            "is_tampered": "{entity_name} manipul\u00e1l\u00e1st \u00e9szlelt",
             "light": "{entity_name} f\u00e9nyt \u00e9rz\u00e9kel",
             "locked": "{entity_name} be lett z\u00e1rva",
             "moist": "{entity_name} nedves lett",
@@ -134,9 +132,9 @@
             "off": "Nem t\u00f6lt\u0151dik",
             "on": "T\u00f6lt\u0151dik"
         },
-        "co": {
-            "off": "Tiszta",
-            "on": "\u00c9rz\u00e9kelve"
+        "carbon_monoxide": {
+            "off": "Norm\u00e1l",
+            "on": "\u00c9szlelve"
         },
         "cold": {
             "off": "Norm\u00e1l",

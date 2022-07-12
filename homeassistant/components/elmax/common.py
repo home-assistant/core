@@ -65,6 +65,12 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             return self._state_by_endpoint.get(actuator_id)
         raise HomeAssistantError("Unknown actuator")
 
+    def get_zone_state(self, zone_id: str) -> Actuator:
+        """Return state of a specific zone."""
+        if self._state_by_endpoint is not None:
+            return self._state_by_endpoint.get(zone_id)
+        raise HomeAssistantError("Unknown zone")
+
     @property
     def http_client(self):
         """Return the current http client being used by this instance."""
@@ -116,10 +122,8 @@ class ElmaxCoordinator(DataUpdateCoordinator[PanelStatus]):
             ) from err
 
 
-class ElmaxEntity(CoordinatorEntity):
+class ElmaxEntity(CoordinatorEntity[ElmaxCoordinator]):
     """Wrapper for Elmax entities."""
-
-    coordinator: ElmaxCoordinator
 
     def __init__(
         self,

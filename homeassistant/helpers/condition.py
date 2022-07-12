@@ -13,10 +13,7 @@ import sys
 from typing import Any, cast
 
 from homeassistant.components import zone as zone_cmp
-from homeassistant.components.device_automation import (
-    DeviceAutomationType,
-    async_get_device_automation_platform,
-)
+from homeassistant.components.device_automation import condition as device_condition
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -30,13 +27,16 @@ from homeassistant.const import (
     CONF_BELOW,
     CONF_CONDITION,
     CONF_DEVICE_ID,
-    CONF_DOMAIN,
+    CONF_ENABLED,
     CONF_ENTITY_ID,
     CONF_ID,
+    CONF_MATCH,
     CONF_STATE,
     CONF_VALUE_TEMPLATE,
     CONF_WEEKDAY,
     CONF_ZONE,
+    ENTITY_MATCH_ALL,
+    ENTITY_MATCH_ANY,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     SUN_EVENT_SUNRISE,
@@ -166,6 +166,18 @@ async def async_from_config(
 
     if factory is None:
         raise HomeAssistantError(f'Invalid condition "{condition}" specified {config}')
+
+    # Check if condition is not enabled
+    if not config.get(CONF_ENABLED, True):
+
+        @trace_condition_function
+        def disabled_condition(
+            hass: HomeAssistant, variables: TemplateVarsType = None
+        ) -> bool:
+            """Condition not enabled, will always pass."""
+            return True
+
+        return disabled_condition
 
     # Check for partials to properly determine if coroutine function
     check_factory = factory
@@ -528,6 +540,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     req_states: str | list[str] = config.get(CONF_STATE, [])
     for_period = config.get("for")
     attribute = config.get(CONF_ATTRIBUTE)
+    match = config.get(CONF_MATCH, ENTITY_MATCH_ALL)
 
     if not isinstance(req_states, list):
         req_states = [req_states]
@@ -536,10 +549,13 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
     def if_state(hass: HomeAssistant, variables: TemplateVarsType = None) -> bool:
         """Test if condition."""
         errors = []
+        result: bool = match != ENTITY_MATCH_ANY
         for index, entity_id in enumerate(entity_ids):
             try:
                 with trace_path(["entity_id", str(index)]), trace_condition(variables):
-                    if not state(hass, entity_id, req_states, for_period, attribute):
+                    if state(hass, entity_id, req_states, for_period, attribute):
+                        result = True
+                    elif match == ENTITY_MATCH_ALL:
                         return False
             except ConditionError as ex:
                 errors.append(
@@ -552,7 +568,7 @@ def state_from_config(config: ConfigType) -> ConditionCheckerType:
         if errors:
             raise ConditionErrorContainer("state", errors=errors)
 
-        return True
+        return result
 
     return if_state
 
@@ -813,6 +829,12 @@ def zone(
     else:
         entity_id = entity.entity_id
 
+    if entity.state in (
+        STATE_UNAVAILABLE,
+        STATE_UNKNOWN,
+    ):
+        return False
+
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
 
@@ -872,15 +894,8 @@ async def async_device_from_config(
     hass: HomeAssistant, config: ConfigType
 ) -> ConditionCheckerType:
     """Test a device condition."""
-    platform = await async_get_device_automation_platform(
-        hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
-    )
-    return trace_condition_function(
-        cast(
-            ConditionCheckerType,
-            platform.async_condition_from_config(hass, config),
-        )
-    )
+    checker = await device_condition.async_condition_from_config(hass, config)
+    return trace_condition_function(checker)
 
 
 async def async_trigger_from_config(
@@ -908,7 +923,7 @@ def numeric_state_validate_config(
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
@@ -919,7 +934,7 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
     registry = er.async_get(hass)
     config = dict(config)
-    config[CONF_ENTITY_ID] = er.async_resolve_entity_ids(
+    config[CONF_ENTITY_ID] = er.async_validate_entity_ids(
         registry, cv.entity_ids_or_uuids(config[CONF_ENTITY_ID])
     )
     return config
@@ -936,21 +951,17 @@ async def async_validate_condition_config(
             sub_cond = await async_validate_condition_config(hass, sub_cond)
             conditions.append(sub_cond)
         config["conditions"] = conditions
+        return config
 
     if condition == "device":
-        config = cv.DEVICE_CONDITION_SCHEMA(config)
-        platform = await async_get_device_automation_platform(
-            hass, config[CONF_DOMAIN], DeviceAutomationType.CONDITION
-        )
-        if hasattr(platform, "async_validate_condition_config"):
-            return await platform.async_validate_condition_config(hass, config)  # type: ignore
-        return cast(ConfigType, platform.CONDITION_SCHEMA(config))
+        return await device_condition.async_validate_condition_config(hass, config)
 
     if condition in ("numeric_state", "state"):
-        validator = getattr(
-            sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)
+        validator = cast(
+            Callable[[HomeAssistant, ConfigType], ConfigType],
+            getattr(sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition)),
         )
-        return validator(hass, config)  # type: ignore
+        return validator(hass, config)
 
     return config
 

@@ -63,7 +63,7 @@ async def test_setup_config_entry_with_error(hass, entry):
         await hass.async_block_till_done()
 
     assert len(hass.config_entries.async_entries(const.DOMAIN)) == 1
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_with_insecure_config_entry(hass, entry, setup_plex_server):
@@ -184,6 +184,7 @@ async def test_setup_when_certificate_changed(
     plextv_account,
     plextv_resources,
     plextv_shared_users,
+    mock_websocket,
 ):
     """Test setup component when the Plex certificate has changed."""
 
@@ -276,3 +277,20 @@ async def test_bad_token_with_tokenless_server(
     # Ensure updates that rely on account return nothing
     trigger_plex_update(mock_websocket)
     await hass.async_block_till_done()
+
+
+async def test_scan_clients_schedule(hass, setup_plex_server):
+    """Test scan_clients scheduled update."""
+    with patch(
+        "homeassistant.components.plex.server.PlexServer._async_update_platforms"
+    ) as mock_scan_clients:
+        await setup_plex_server()
+        mock_scan_clients.reset_mock()
+
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow() + const.CLIENT_SCAN_INTERVAL,
+        )
+        await hass.async_block_till_done()
+
+    assert mock_scan_clients.called

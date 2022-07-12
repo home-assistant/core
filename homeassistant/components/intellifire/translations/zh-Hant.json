@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "\u88dd\u7f6e\u5df2\u7d93\u8a2d\u5b9a\u5b8c\u6210",
+            "not_intellifire_device": "\u975e IntelliFire \u88dd\u7f6e\u3002",
+            "reauth_successful": "\u91cd\u65b0\u8a8d\u8b49\u6210\u529f"
+        },
+        "error": {
+            "api_error": "\u767b\u5165\u5931\u6557",
+            "cannot_connect": "\u9023\u7dda\u5931\u6557",
+            "iftapi_connect": "\u9023\u7dda\u81f3 iftapi.net \u932f\u8aa4"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "\u5bc6\u78bc",
+                    "username": "\u96fb\u5b50\u90f5\u4ef6"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "\u662f\u5426\u8981\u8a2d\u5b9a {host}\n\u5e8f\u865f\uff1a{serial}\uff1f"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\uff08IP \u4f4d\u5740\uff09"
+                },
+                "description": "\u672c\u5730\u7aef\u8a2d\u5b9a"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "\u4e3b\u6a5f\u7aef"
+                },
+                "description": "\u641c\u5c0b\u5230\u4ee5\u4e0b IntelliFire \u88dd\u7f6e\uff0c\u8acb\u9078\u64c7\u6240\u8981\u8a2d\u5b9a\u7684\u88dd\u7f6e\u3002",
+                "title": "\u88dd\u7f6e\u9078\u64c7"
+            }
+        }
+    }
+}

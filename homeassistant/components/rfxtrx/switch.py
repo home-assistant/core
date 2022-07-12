@@ -7,18 +7,23 @@ import RFXtrx as rfxtrxmod
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_ON
+from homeassistant.const import CONF_COMMAND_OFF, CONF_COMMAND_ON, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import (
-    DEFAULT_SIGNAL_REPETITIONS,
     DOMAIN,
     DeviceTuple,
     RfxtrxCommandEntity,
     async_setup_platform_entry,
+    get_pt2262_cmd,
 )
-from .const import COMMAND_OFF_LIST, COMMAND_ON_LIST, CONF_SIGNAL_REPETITIONS
+from .const import (
+    COMMAND_OFF_LIST,
+    COMMAND_ON_LIST,
+    CONF_DATA_BITS,
+    DEVICE_PACKET_TYPE_LIGHTING4,
+)
 
 DATA_SWITCH = f"{DOMAIN}_switch"
 
@@ -52,7 +57,9 @@ async def async_setup_entry(
             RfxtrxSwitch(
                 event.device,
                 device_id,
-                entity_info.get(CONF_SIGNAL_REPETITIONS, DEFAULT_SIGNAL_REPETITIONS),
+                entity_info.get(CONF_DATA_BITS),
+                entity_info.get(CONF_COMMAND_ON),
+                entity_info.get(CONF_COMMAND_OFF),
                 event=event if auto else None,
             )
         ]
@@ -65,6 +72,21 @@ async def async_setup_entry(
 class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
     """Representation of a RFXtrx switch."""
 
+    def __init__(
+        self,
+        device: rfxtrxmod.RFXtrxDevice,
+        device_id: DeviceTuple,
+        data_bits: int | None = None,
+        cmd_on: int | None = None,
+        cmd_off: int | None = None,
+        event: rfxtrxmod.RFXtrxEvent | None = None,
+    ) -> None:
+        """Initialize the RFXtrx switch."""
+        super().__init__(device, device_id, event=event)
+        self._data_bits = data_bits
+        self._cmd_on = cmd_on
+        self._cmd_off = cmd_off
+
     async def async_added_to_hass(self):
         """Restore device state."""
         await super().async_added_to_hass()
@@ -72,16 +94,35 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
         if self._event is None:
             old_state = await self.async_get_last_state()
             if old_state is not None:
-                self._state = old_state.state == STATE_ON
+                self._attr_is_on = old_state.state == STATE_ON
+
+    def _apply_event_lighting4(self, event: rfxtrxmod.RFXtrxEvent):
+        """Apply event for a lighting 4 device."""
+        if self._data_bits is not None:
+            cmdstr = get_pt2262_cmd(event.device.id_string, self._data_bits)
+            assert cmdstr
+            cmd = int(cmdstr, 16)
+            if cmd == self._cmd_on:
+                self._attr_is_on = True
+            elif cmd == self._cmd_off:
+                self._attr_is_on = False
+        else:
+            self._attr_is_on = True
+
+    def _apply_event_standard(self, event: rfxtrxmod.RFXtrxEvent) -> None:
+        assert isinstance(event, rfxtrxmod.ControlEvent)
+        if event.values["Command"] in COMMAND_ON_LIST:
+            self._attr_is_on = True
+        elif event.values["Command"] in COMMAND_OFF_LIST:
+            self._attr_is_on = False
 
     def _apply_event(self, event: rfxtrxmod.RFXtrxEvent) -> None:
         """Apply command from rfxtrx."""
-        assert isinstance(event, rfxtrxmod.ControlEvent)
         super()._apply_event(event)
-        if event.values["Command"] in COMMAND_ON_LIST:
-            self._state = True
-        elif event.values["Command"] in COMMAND_OFF_LIST:
-            self._state = False
+        if event.device.packettype == DEVICE_PACKET_TYPE_LIGHTING4:
+            self._apply_event_lighting4(event)
+        else:
+            self._apply_event_standard(event)
 
     @callback
     def _handle_event(
@@ -93,19 +134,20 @@ class RfxtrxSwitch(RfxtrxCommandEntity, SwitchEntity):
 
             self.async_write_ha_state()
 
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
     async def async_turn_on(self, **kwargs):
         """Turn the device on."""
-        await self._async_send(self._device.send_on)
-        self._state = True
+        if self._cmd_on is not None:
+            await self._async_send(self._device.send_command, self._cmd_on)
+        else:
+            await self._async_send(self._device.send_on)
+        self._attr_is_on = True
         self.async_write_ha_state()
 
     async def async_turn_off(self, **kwargs):
         """Turn the device off."""
-        await self._async_send(self._device.send_off)
-        self._state = False
+        if self._cmd_off is not None:
+            await self._async_send(self._device.send_command, self._cmd_off)
+        else:
+            await self._async_send(self._device.send_off)
+        self._attr_is_on = False
         self.async_write_ha_state()

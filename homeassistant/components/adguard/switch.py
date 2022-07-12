@@ -3,6 +3,7 @@ from __future__ import annotations
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from adguardhome import AdGuardHome, AdGuardHomeConnectionError, AdGuardHomeError
 
@@ -76,7 +77,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         """Return the state of the switch."""
         return self._state
 
-    async def async_turn_off(self, **kwargs) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
             await self._adguard_turn_off()
@@ -88,7 +89,7 @@ class AdGuardHomeSwitch(AdGuardHomeDeviceEntity, SwitchEntity):
         """Turn off the switch."""
         raise NotImplementedError()
 
-    async def async_turn_on(self, **kwargs) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
             await self._adguard_turn_on()
@@ -106,9 +107,7 @@ class AdGuardHomeProtectionSwitch(AdGuardHomeSwitch):
 
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home switch."""
-        super().__init__(
-            adguard, entry, "AdGuard Protection", "mdi:shield-check", "protection"
-        )
+        super().__init__(adguard, entry, "Protection", "mdi:shield-check", "protection")
 
     async def _adguard_turn_off(self) -> None:
         """Turn off the switch."""
@@ -129,7 +128,7 @@ class AdGuardHomeParentalSwitch(AdGuardHomeSwitch):
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
-            adguard, entry, "AdGuard Parental Control", "mdi:shield-check", "parental"
+            adguard, entry, "Parental control", "mdi:shield-check", "parental"
         )
 
     async def _adguard_turn_off(self) -> None:
@@ -151,7 +150,7 @@ class AdGuardHomeSafeSearchSwitch(AdGuardHomeSwitch):
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
-            adguard, entry, "AdGuard Safe Search", "mdi:shield-check", "safesearch"
+            adguard, entry, "Safe search", "mdi:shield-check", "safesearch"
         )
 
     async def _adguard_turn_off(self) -> None:
@@ -173,7 +172,7 @@ class AdGuardHomeSafeBrowsingSwitch(AdGuardHomeSwitch):
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home switch."""
         super().__init__(
-            adguard, entry, "AdGuard Safe Browsing", "mdi:shield-check", "safebrowsing"
+            adguard, entry, "Safe browsing", "mdi:shield-check", "safebrowsing"
         )
 
     async def _adguard_turn_off(self) -> None:
@@ -194,9 +193,7 @@ class AdGuardHomeFilteringSwitch(AdGuardHomeSwitch):
 
     def __init__(self, adguard: AdGuardHome, entry: ConfigEntry) -> None:
         """Initialize AdGuard Home switch."""
-        super().__init__(
-            adguard, entry, "AdGuard Filtering", "mdi:shield-check", "filtering"
-        )
+        super().__init__(adguard, entry, "Filtering", "mdi:shield-check", "filtering")
 
     async def _adguard_turn_off(self) -> None:
         """Turn off the switch."""
@@ -219,7 +216,7 @@ class AdGuardHomeQueryLogSwitch(AdGuardHomeSwitch):
         super().__init__(
             adguard,
             entry,
-            "AdGuard Query Log",
+            "Query log",
             "mdi:shield-check",
             "querylog",
             enabled_default=False,

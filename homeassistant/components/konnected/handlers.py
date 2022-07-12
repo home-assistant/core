@@ -9,7 +9,7 @@ from homeassistant.util import decorator
 from .const import CONF_INVERSE, SIGNAL_DS18B20_NEW
 
 _LOGGER = logging.getLogger(__name__)
-HANDLERS = decorator.Registry()
+HANDLERS = decorator.Registry()  # type: ignore[var-annotated]
 
 
 @HANDLERS.register("state")

@@ -1,7 +1,6 @@
 """Rest API for Home Assistant."""
 import asyncio
 from http import HTTPStatus
-import json
 import logging
 
 from aiohttp import web
@@ -14,12 +13,10 @@ from homeassistant.bootstrap import DATA_LOGGING
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
-    EVENT_TIME_CHANGED,
     MATCH_ALL,
     URL_API,
     URL_API_COMPONENTS,
     URL_API_CONFIG,
-    URL_API_DISCOVERY_INFO,
     URL_API_ERROR_LOG,
     URL_API_EVENTS,
     URL_API_SERVICES,
@@ -31,7 +28,7 @@ import homeassistant.core as ha
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceNotFound, TemplateError, Unauthorized
 from homeassistant.helpers import template
-from homeassistant.helpers.json import JSONEncoder
+from homeassistant.helpers.json import json_dumps, json_loads
 from homeassistant.helpers.service import async_get_all_descriptions
 from homeassistant.helpers.typing import ConfigType
 
@@ -56,7 +53,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.http.register_view(APIStatusView)
     hass.http.register_view(APIEventStream)
     hass.http.register_view(APIConfigView)
-    hass.http.register_view(APIDiscoveryView)
     hass.http.register_view(APIStatesView)
     hass.http.register_view(APIEntityStateView)
     hass.http.register_view(APIEventListenersView)
@@ -92,7 +88,6 @@ class APIEventStream(HomeAssistantView):
 
     async def get(self, request):
         """Provide a streaming interface for the event bus."""
-        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         hass = request.app["hass"]
@@ -104,9 +99,6 @@ class APIEventStream(HomeAssistantView):
 
         async def forward_events(event):
             """Forward events to the open request."""
-            if event.event_type == EVENT_TIME_CHANGED:
-                return
-
             if restrict and event.event_type not in restrict:
                 return
 
@@ -115,7 +107,7 @@ class APIEventStream(HomeAssistantView):
             if event.event_type == EVENT_HOMEASSISTANT_STOP:
                 data = stop_obj
             else:
-                data = json.dumps(event, cls=JSONEncoder)
+                data = json_dumps(event)
 
             await to_write.put(data)
 
@@ -165,33 +157,6 @@ class APIConfigView(HomeAssistantView):
     def get(self, request):
         """Get current configuration."""
         return self.json(request.app["hass"].config.as_dict())
-
-
-class APIDiscoveryView(HomeAssistantView):
-    """
-    View to provide Discovery information.
-
-    DEPRECATED: To be removed in 2022.1
-    """
-
-    requires_auth = False
-    url = URL_API_DISCOVERY_INFO
-    name = "api:discovery"
-
-    async def get(self, request):
-        """Get discovery information."""
-        return self.json(
-            {
-                ATTR_UUID: "",
-                ATTR_BASE_URL: "",
-                ATTR_EXTERNAL_URL: "",
-                ATTR_INTERNAL_URL: "",
-                ATTR_LOCATION_NAME: "",
-                ATTR_INSTALLATION_TYPE: "",
-                ATTR_REQUIRES_API_PASSWORD: True,
-                ATTR_VERSION: "",
-            }
-        )
 
 
 class APIStatesView(HomeAssistantView):
@@ -295,7 +260,7 @@ class APIEventView(HomeAssistantView):
             raise Unauthorized()
         body = await request.text()
         try:
-            event_data = json.loads(body) if body else None
+            event_data = json_loads(body) if body else None
         except ValueError:
             return self.json_message(
                 "Event data should be valid JSON.", HTTPStatus.BAD_REQUEST
@@ -348,7 +313,7 @@ class APIDomainServicesView(HomeAssistantView):
         hass: ha.HomeAssistant = request.app["hass"]
         body = await request.text()
         try:
-            data = json.loads(body) if body else None
+            data = json_loads(body) if body else None
         except ValueError:
             return self.json_message(
                 "Data should be valid JSON.", HTTPStatus.BAD_REQUEST
@@ -412,7 +377,6 @@ class APIErrorLog(HomeAssistantView):
 
     async def get(self, request):
         """Retrieve API error log."""
-        # pylint: disable=no-self-use
         if not request["hass_user"].is_admin:
             raise Unauthorized()
         return web.FileResponse(request.app["hass"].data[DATA_LOGGING])

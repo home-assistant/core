@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Cihaz zaten yap\u0131land\u0131r\u0131lm\u0131\u015f",
+            "no_valid_uuid_set": "Ge\u00e7erli UUID seti yok"
+        },
+        "error": {
+            "no_valid_uuid_set": "Ge\u00e7erli UUID seti yok"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "token": "API Anahtar\u0131",
+                    "url": "URL"
+                },
+                "description": "Z-Way sunucusunun ba\u011flant\u0131 noktas\u0131 ve eri\u015fim anahtar\u0131 ile IP adresini girin. Simgeyi almak i\u00e7in Z-Way kullan\u0131c\u0131 aray\u00fcz\u00fc Smart Home UI > Men\u00fc > Ayarlar > Kullan\u0131c\u0131lar > Y\u00f6netici > API anahtar\u0131na gidin. \n\n Yerel a\u011fda Z-Way'e ba\u011flanma \u00f6rne\u011fi:\n URL: {local_url}\n Belirte\u00e7: {local_token} \n\n Z-Way'e uzaktan eri\u015fim find.z-wave.me arac\u0131l\u0131\u011f\u0131yla ba\u011flanma \u00f6rne\u011fi:\n URL: {find_url}\n Belirte\u00e7: {find_token} \n\n Statik bir genel IP adresiyle Z-Way'e ba\u011flanma \u00f6rne\u011fi:\n URL: {remote_url}\n Belirte\u00e7: {local_token} \n\n find.z-wave.me arac\u0131l\u0131\u011f\u0131yla ba\u011flan\u0131rken, k\u00fcresel kapsaml\u0131 bir anahtar kullanman\u0131z gerekir (bunun i\u00e7in Z-Way'de find.z-wave.me arac\u0131l\u0131\u011f\u0131yla oturum a\u00e7\u0131n)."
+            }
+        }
+    }
+}

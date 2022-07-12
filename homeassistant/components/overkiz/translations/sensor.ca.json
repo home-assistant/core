@@ -1,0 +1,46 @@
+{
+    "state": {
+        "overkiz__battery": {
+            "full": "Carregada",
+            "low": "Baixa",
+            "normal": "Mitjana",
+            "verylow": "Molt baix"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Bo",
+            "low": "Baix",
+            "normal": "Mitj\u00e0",
+            "verylow": "Molt baix"
+        },
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "Passarel\u00b7la externa",
+            "local_user": "Usuari local",
+            "lsc": "LSC",
+            "myself": "Jo",
+            "rain": "Pluja",
+            "saac": "SAAC",
+            "security": "Seguretat",
+            "sfc": "SFC",
+            "temperature": "Temperatura",
+            "timer": "Temporitzador",
+            "ups": "UPS",
+            "user": "Usuari",
+            "wind": "Vent"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "Mort",
+            "low_battery": "Bateria baixa",
+            "maintenance_required": "Es necessita manteniment",
+            "no_defect": "Cap defecte"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Net",
+            "dirty": "Brut"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Tancada",
+            "open": "Oberta",
+            "tilt": "Inclinada"
+        }
+    }
+}

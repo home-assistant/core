@@ -8,7 +8,7 @@ import transmissionrpc
 from transmissionrpc.error import TransmissionError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -20,11 +20,10 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DELETE_DATA,
@@ -34,9 +33,7 @@ from .const import (
     DATA_UPDATED,
     DEFAULT_DELETE_DATA,
     DEFAULT_LIMIT,
-    DEFAULT_NAME,
     DEFAULT_ORDER,
-    DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENT_DOWNLOADED_TORRENT,
@@ -78,40 +75,9 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.Schema(
     }
 )
 
-TRANS_SCHEMA = vol.All(
-    vol.Schema(
-        {
-            vol.Required(CONF_HOST): cv.string,
-            vol.Optional(CONF_PASSWORD): cv.string,
-            vol.Optional(CONF_USERNAME): cv.string,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-            vol.Optional(
-                CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
-            ): cv.time_period,
-        }
-    )
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    vol.All(cv.deprecated(DOMAIN), {DOMAIN: vol.All(cv.ensure_list, [TRANS_SCHEMA])}),
-    extra=vol.ALLOW_EXTRA,
-)
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Import the Transmission Component from config."""
-    if DOMAIN in config:
-        for entry in config[DOMAIN]:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": SOURCE_IMPORT}, data=entry
-                )
-            )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
@@ -119,8 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     client = TransmissionClient(hass, config_entry)
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = client
 
-    if not await client.async_setup():
-        return False
+    await client.async_setup()
 
     return True
 
@@ -186,15 +151,15 @@ class TransmissionClient:
         """Return the TransmissionData object."""
         return self._tm_data
 
-    async def async_setup(self):
+    async def async_setup(self) -> None:
         """Set up the Transmission client."""
 
         try:
             self.tm_api = await get_api(self.hass, self.config_entry.data)
         except CannotConnect as error:
             raise ConfigEntryNotReady from error
-        except (AuthenticationError, UnknownError):
-            return False
+        except (AuthenticationError, UnknownError) as error:
+            raise ConfigEntryAuthFailed from error
 
         self._tm_data = TransmissionData(self.hass, self.config_entry, self.tm_api)
 
@@ -203,7 +168,9 @@ class TransmissionClient:
         self.add_options()
         self.set_scan_interval(self.config_entry.options[CONF_SCAN_INTERVAL])
 
-        self.hass.config_entries.async_setup_platforms(self.config_entry, PLATFORMS)
+        await self.hass.config_entries.async_forward_entry_setups(
+            self.config_entry, PLATFORMS
+        )
 
         def add_torrent(service: ServiceCall) -> None:
             """Add new torrent to download."""
@@ -296,8 +263,6 @@ class TransmissionClient:
 
         self.config_entry.add_update_listener(self.async_options_updated)
 
-        return True
-
     def add_options(self):
         """Add options for entry."""
         if not self.config_entry.options:
@@ -330,7 +295,7 @@ class TransmissionClient:
         )
 
     @staticmethod
-    async def async_options_updated(hass, entry):
+    async def async_options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Triggered by config entry options updates."""
         tm_client = hass.data[DOMAIN][entry.entry_id]
         tm_client.set_scan_interval(entry.options[CONF_SCAN_INTERVAL])

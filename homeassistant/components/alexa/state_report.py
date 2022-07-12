@@ -12,6 +12,7 @@ import async_timeout
 from homeassistant.const import MATCH_ALL, STATE_ON
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.event import async_track_state_change
 from homeassistant.helpers.significant_change import create_checker
 import homeassistant.util.dt as dt_util
 
@@ -102,9 +103,7 @@ async def async_enable_proactive_mode(hass, smart_home_config):
             hass, smart_home_config, alexa_changed_entity, alexa_properties
         )
 
-    return hass.helpers.event.async_track_state_change(
-        MATCH_ALL, async_entity_state_listener
-    )
+    return async_track_state_change(hass, MATCH_ALL, async_entity_state_listener)
 
 
 async def async_send_changereport_message(
@@ -117,7 +116,11 @@ async def async_send_changereport_message(
     try:
         token = await config.async_get_access_token()
     except (RequireRelink, NoTokenAvailable):
-        config.set_authorized(False)
+        await config.set_authorized(False)
+        _LOGGER.error(
+            "Error when sending ChangeReport to Alexa, could not get access token"
+        )
+        return
 
     headers = {"Authorization": f"Bearer {token}"}
 
@@ -146,7 +149,7 @@ async def async_send_changereport_message(
             )
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa")
+        _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
     response_text = await response.text()
@@ -170,10 +173,11 @@ async def async_send_changereport_message(
                 alexa_properties,
                 invalidate_access_token=False,
             )
-        config.set_authorized(False)
+        await config.set_authorized(False)
 
     _LOGGER.error(
-        "Error when sending ChangeReport to Alexa: %s: %s",
+        "Error when sending ChangeReport for %s to Alexa: %s: %s",
+        alexa_entity.entity_id,
         response_json["payload"]["code"],
         response_json["payload"]["description"],
     )
@@ -282,7 +286,7 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
             )
 
     except (asyncio.TimeoutError, aiohttp.ClientError):
-        _LOGGER.error("Timeout sending report to Alexa")
+        _LOGGER.error("Timeout sending report to Alexa for %s", alexa_entity.entity_id)
         return
 
     response_text = await response.text()
@@ -296,7 +300,8 @@ async def async_send_doorbell_event_message(hass, config, alexa_entity):
     response_json = json.loads(response_text)
 
     _LOGGER.error(
-        "Error when sending DoorbellPress event to Alexa: %s: %s",
+        "Error when sending DoorbellPress event for %s to Alexa: %s: %s",
+        alexa_entity.entity_id,
         response_json["payload"]["code"],
         response_json["payload"]["description"],
     )

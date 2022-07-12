@@ -3,15 +3,9 @@ from __future__ import annotations
 
 import functools
 import numbers
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.components.climate.const import (
-    CURRENT_HVAC_COOL,
-    CURRENT_HVAC_FAN,
-    CURRENT_HVAC_HEAT,
-    CURRENT_HVAC_IDLE,
-    CURRENT_HVAC_OFF,
-)
+from homeassistant.components.climate.const import HVACAction
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -25,7 +19,7 @@ from homeassistant.const import (
     ELECTRIC_CURRENT_AMPERE,
     ELECTRIC_POTENTIAL_VOLT,
     ENERGY_KILO_WATT_HOUR,
-    ENTITY_CATEGORY_DIAGNOSTIC,
+    FREQUENCY_HERTZ,
     LIGHT_LUX,
     PERCENTAGE,
     POWER_VOLT_AMPERE,
@@ -33,6 +27,7 @@ from homeassistant.const import (
     PRESSURE_HPA,
     TEMP_CELSIUS,
     TIME_HOURS,
+    TIME_MINUTES,
     TIME_SECONDS,
     VOLUME_CUBIC_FEET,
     VOLUME_CUBIC_METERS,
@@ -52,6 +47,7 @@ from .core import discovery
 from .core.const import (
     CHANNEL_ANALOG_INPUT,
     CHANNEL_BASIC,
+    CHANNEL_DEVICE_TEMPERATURE,
     CHANNEL_ELECTRICAL_MEASUREMENT,
     CHANNEL_HUMIDITY,
     CHANNEL_ILLUMINANCE,
@@ -67,8 +63,11 @@ from .core.const import (
     SIGNAL_ATTR_UPDATED,
 )
 from .core.registries import SMARTTHINGS_HUMIDITY_CLUSTER, ZHA_ENTITIES
-from .core.typing import ChannelType, ZhaDeviceType
 from .entity import ZhaEntity
+
+if TYPE_CHECKING:
+    from .core.channels.base import ZigbeeChannel
+    from .core.device import ZHADevice
 
 PARALLEL_UPDATES = 5
 
@@ -108,7 +107,6 @@ async def async_setup_entry(
             discovery.async_add_entities,
             async_add_entities,
             entities_to_create,
-            update_before_add=False,
         ),
     )
     config_entry.async_on_unload(unsub)
@@ -120,26 +118,26 @@ class Sensor(ZhaEntity, SensorEntity):
     SENSOR_ATTR: int | str | None = None
     _decimals: int = 1
     _divisor: int = 1
-    _multiplier: int = 1
+    _multiplier: int | float = 1
     _unit: str | None = None
 
     def __init__(
         self,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> None:
         """Init this sensor."""
         super().__init__(unique_id, zha_device, channels, **kwargs)
-        self._channel: ChannelType = channels[0]
+        self._channel: ZigbeeChannel = channels[0]
 
     @classmethod
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -218,8 +216,8 @@ class Battery(Sensor):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -231,7 +229,7 @@ class Battery(Sensor):
         return cls(unique_id, zha_device, channels, **kwargs)
 
     @staticmethod
-    def formatter(value: int) -> int:
+    def formatter(value: int) -> int:  # pylint: disable=arguments-differ
         """Return the state of the entity."""
         # per zcl specs battery percent is reported at 200% ¯\_(ツ)_/¯
         if not isinstance(value, numbers.Number) or value == -1:
@@ -346,6 +344,35 @@ class ElectricalMeasurementRMSVoltage(ElectricalMeasurement, id_suffix="rms_volt
         return False
 
 
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementFrequency(ElectricalMeasurement, id_suffix="ac_frequency"):
+    """Frequency measurement."""
+
+    SENSOR_ATTR = "ac_frequency"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.FREQUENCY
+    _unit = FREQUENCY_HERTZ
+    _div_mul_prefix = "ac_frequency"
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
+@MULTI_MATCH(channel_names=CHANNEL_ELECTRICAL_MEASUREMENT)
+class ElectricalMeasurementPowerFactor(ElectricalMeasurement, id_suffix="power_factor"):
+    """Frequency measurement."""
+
+    SENSOR_ATTR = "power_factor"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.POWER_FACTOR
+    _unit = PERCENTAGE
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll indirectly by ElectricalMeasurementSensor."""
+        return False
+
+
 @MULTI_MATCH(
     generic_ids=CHANNEL_ST_HUMIDITY_CLUSTER, stop_on_match_group=CHANNEL_HUMIDITY
 )
@@ -391,13 +418,15 @@ class Illuminance(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _unit = LIGHT_LUX
 
-    @staticmethod
-    def formatter(value: int) -> float:
+    def formatter(self, value: int) -> float:
         """Convert illumination data."""
         return round(pow(10, ((value - 1) / 10000)), 1)
 
 
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
 class SmartEnergyMetering(Sensor):
     """Metering sensor."""
 
@@ -426,7 +455,7 @@ class SmartEnergyMetering(Sensor):
         return self._channel.demand_formatter(value)
 
     @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Return Unit of measurement."""
         return self.unit_of_measure_map.get(self._channel.unit_of_measurement)
 
@@ -441,7 +470,10 @@ class SmartEnergyMetering(Sensor):
         return attrs
 
 
-@MULTI_MATCH(channel_names=CHANNEL_SMARTENERGY_METERING)
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
 class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered"):
     """Smart Energy Metering summation sensor."""
 
@@ -474,6 +506,26 @@ class SmartEnergySummation(SmartEnergyMetering, id_suffix="summation_delivered")
         return round(cooked, 3)
 
 
+@MULTI_MATCH(
+    channel_names=CHANNEL_SMARTENERGY_METERING,
+    models={"TS011F"},
+    stop_on_match_group=CHANNEL_SMARTENERGY_METERING,
+)
+class PolledSmartEnergySummation(SmartEnergySummation):
+    """Polled Smart Energy Metering summation sensor."""
+
+    @property
+    def should_poll(self) -> bool:
+        """Poll the entity for current state."""
+        return True
+
+    async def async_update(self) -> None:
+        """Retrieve latest state."""
+        if not self.available:
+            return
+        await self._channel.async_force_update()
+
+
 @MULTI_MATCH(channel_names=CHANNEL_PRESSURE)
 class Pressure(Sensor):
     """Pressure sensor."""
@@ -494,6 +546,18 @@ class Temperature(Sensor):
     _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
     _divisor = 100
     _unit = TEMP_CELSIUS
+
+
+@MULTI_MATCH(channel_names=CHANNEL_DEVICE_TEMPERATURE)
+class DeviceTemperature(Sensor):
+    """Device Temperature Sensor."""
+
+    SENSOR_ATTR = "current_temperature"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.TEMPERATURE
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _divisor = 100
+    _unit = TEMP_CELSIUS
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
 
 @MULTI_MATCH(channel_names="carbon_dioxide_concentration")
@@ -549,6 +613,17 @@ class PPBVOCLevel(Sensor):
     _unit = CONCENTRATION_PARTS_PER_BILLION
 
 
+@MULTI_MATCH(channel_names="pm25")
+class PM25(Sensor):
+    """Particulate Matter 2.5 microns or less sensor."""
+
+    SENSOR_ATTR = "measured_value"
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _decimals = 0
+    _multiplier = 1
+    _unit = CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+
+
 @MULTI_MATCH(channel_names="formaldehyde_concentration")
 class FormaldehydeConcentration(Sensor):
     """Formaldehyde Concentration sensor."""
@@ -568,8 +643,8 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -590,7 +665,7 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
         return self._pi_demand_action
 
     @property
-    def _rm_rs_action(self) -> str | None:
+    def _rm_rs_action(self) -> HVACAction | None:
         """Return the current HVAC action based on running mode and running state."""
 
         if (running_state := self._channel.running_state) is None:
@@ -601,14 +676,14 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
             | self._channel.RunningState.Heat_2nd_Stage_On
         )
         if running_state & rs_heat:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
 
         rs_cool = (
             self._channel.RunningState.Cool_State_On
             | self._channel.RunningState.Cool_2nd_Stage_On
         )
         if running_state & rs_cool:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
 
         running_state = self._channel.running_state
         if running_state and running_state & (
@@ -616,30 +691,30 @@ class ThermostatHVACAction(Sensor, id_suffix="hvac_action"):
             | self._channel.RunningState.Fan_2nd_Stage_On
             | self._channel.RunningState.Fan_3rd_Stage_On
         ):
-            return CURRENT_HVAC_FAN
+            return HVACAction.FAN
 
         running_state = self._channel.running_state
         if running_state and running_state & self._channel.RunningState.Idle:
-            return CURRENT_HVAC_IDLE
+            return HVACAction.IDLE
 
         if self._channel.system_mode != self._channel.SystemMode.Off:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @property
-    def _pi_demand_action(self) -> str | None:
+    def _pi_demand_action(self) -> HVACAction:
         """Return the current HVAC action based on pi_demands."""
 
         heating_demand = self._channel.pi_heating_demand
         if heating_demand is not None and heating_demand > 0:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         cooling_demand = self._channel.pi_cooling_demand
         if cooling_demand is not None and cooling_demand > 0:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
 
         if self._channel.system_mode != self._channel.SystemMode.Off:
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
     @callback
     def async_set_state(self, *args, **kwargs) -> None:
@@ -656,14 +731,14 @@ class SinopeHVACAction(ThermostatHVACAction):
     """Sinope Thermostat HVAC action sensor."""
 
     @property
-    def _rm_rs_action(self) -> str | None:
+    def _rm_rs_action(self) -> HVACAction:
         """Return the current HVAC action based on running mode and running state."""
 
         running_mode = self._channel.running_mode
         if running_mode == self._channel.RunningMode.Heat:
-            return CURRENT_HVAC_HEAT
+            return HVACAction.HEATING
         if running_mode == self._channel.RunningMode.Cool:
-            return CURRENT_HVAC_COOL
+            return HVACAction.COOLING
 
         running_state = self._channel.running_state
         if running_state and running_state & (
@@ -671,30 +746,31 @@ class SinopeHVACAction(ThermostatHVACAction):
             | self._channel.RunningState.Fan_2nd_Stage_On
             | self._channel.RunningState.Fan_3rd_Stage_On
         ):
-            return CURRENT_HVAC_FAN
+            return HVACAction.FAN
         if (
             self._channel.system_mode != self._channel.SystemMode.Off
             and running_mode == self._channel.SystemMode.Off
         ):
-            return CURRENT_HVAC_IDLE
-        return CURRENT_HVAC_OFF
+            return HVACAction.IDLE
+        return HVACAction.OFF
 
 
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
 class RSSISensor(Sensor, id_suffix="rssi"):
     """RSSI sensor for a device."""
 
-    _state_class: SensorStateClass = SensorStateClass.MEASUREMENT
-    _device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
-    _attr_entity_category = ENTITY_CATEGORY_DIAGNOSTIC
+    _attr_state_class: SensorStateClass = SensorStateClass.MEASUREMENT
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.SIGNAL_STRENGTH
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_entity_registry_enabled_default = False
+    unique_id_suffix: str
 
     @classmethod
     def create_entity(
         cls,
         unique_id: str,
-        zha_device: ZhaDeviceType,
-        channels: list[ChannelType],
+        zha_device: ZHADevice,
+        channels: list[ZigbeeChannel],
         **kwargs,
     ) -> ZhaEntity | None:
         """Entity Factory.
@@ -720,3 +796,38 @@ class RSSISensor(Sensor, id_suffix="rssi"):
 @MULTI_MATCH(channel_names=CHANNEL_BASIC)
 class LQISensor(RSSISensor, id_suffix="lqi"):
     """LQI sensor for a device."""
+
+
+@MULTI_MATCH(
+    channel_names="tuya_manufacturer",
+    manufacturers={
+        "_TZE200_htnnfasr",
+    },
+)
+class TimeLeft(Sensor, id_suffix="time_left"):
+    """Sensor that displays time left value."""
+
+    SENSOR_ATTR = "timer_time_left"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class IkeaDeviceRunTime(Sensor, id_suffix="device_run_time"):
+    """Sensor that displays device run time (in minutes)."""
+
+    SENSOR_ATTR = "device_run_time"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES
+
+
+@MULTI_MATCH(channel_names="ikea_airpurifier")
+class IkeaFilterRunTime(Sensor, id_suffix="filter_run_time"):
+    """Sensor that displays run time of the current filter (in minutes)."""
+
+    SENSOR_ATTR = "filter_run_time"
+    _attr_device_class: SensorDeviceClass = SensorDeviceClass.DURATION
+    _attr_icon = "mdi:timer"
+    _unit = TIME_MINUTES

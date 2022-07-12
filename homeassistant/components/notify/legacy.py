@@ -29,11 +29,13 @@ from .const import (
 
 CONF_FIELDS = "fields"
 NOTIFY_SERVICES = "notify_services"
+NOTIFY_DISCOVERY_DISPATCHER = "notify_discovery_dispatcher"
 
 
 async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
     """Set up legacy notify services."""
     hass.data.setdefault(NOTIFY_SERVICES, {})
+    hass.data.setdefault(NOTIFY_DISCOVERY_DISPATCHER, None)
 
     async def async_setup_platform(
         integration_name: str,
@@ -114,7 +116,9 @@ async def async_setup_legacy(hass: HomeAssistant, config: ConfigType) -> None:
         """Handle for discovered platform."""
         await async_setup_platform(platform, discovery_info=info)
 
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
+    hass.data[NOTIFY_DISCOVERY_DISPATCHER] = discovery.async_listen_platform(
+        hass, DOMAIN, async_platform_discovered
+    )
 
 
 @callback
@@ -147,6 +151,9 @@ async def async_reload(hass: HomeAssistant, integration_name: str) -> None:
 @bind_hass
 async def async_reset_platform(hass: HomeAssistant, integration_name: str) -> None:
     """Unregister notify services for an integration."""
+    if NOTIFY_DISCOVERY_DISPATCHER in hass.data:
+        hass.data[NOTIFY_DISCOVERY_DISPATCHER]()
+        hass.data[NOTIFY_DISCOVERY_DISPATCHER] = None
     if not _async_integration_has_notify_services(hass, integration_name):
         return
 
@@ -178,7 +185,7 @@ class BaseNotificationService:
 
     # While not purely typed, it makes typehinting more useful for us
     # and removes the need for constant None checks or asserts.
-    hass: HomeAssistant = None  # type: ignore
+    hass: HomeAssistant = None  # type: ignore[assignment]
 
     # Name => target
     registered_targets: dict[str, str]
@@ -246,7 +253,7 @@ class BaseNotificationService:
         if hasattr(self, "targets"):
             stale_targets = set(self.registered_targets)
 
-            for name, target in self.targets.items():  # type: ignore
+            for name, target in self.targets.items():  # type: ignore[attr-defined]
                 target_name = slugify(f"{self._target_service_name_prefix}_{name}")
                 if target_name in stale_targets:
                     stale_targets.remove(target_name)

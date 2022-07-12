@@ -3,9 +3,11 @@ from __future__ import annotations
 
 import asyncio
 from collections import deque
+from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
 from random import randrange
+from typing import Any
 
 from pyatv import exceptions, pair, scan
 from pyatv.const import DeviceModel, PairingRequirement, Protocol
@@ -13,12 +15,14 @@ from pyatv.convert import model_str, protocol_str
 from pyatv.helpers import get_unique_id
 import voluptuous as vol
 
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_PIN
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow, FlowResult
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.util.network import is_ipv6_address
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -33,7 +37,7 @@ DEFAULT_START_OFF = False
 DISCOVERY_AGGREGATION_TIME = 15  # seconds
 
 
-async def device_scan(identifier, loop):
+async def device_scan(hass, identifier, loop):
     """Scan for a specific device using identifier as filter."""
 
     def _filter_device(dev):
@@ -53,7 +57,8 @@ async def device_scan(identifier, loop):
 
     # If we have an address, only probe that address to avoid
     # broadcast traffic on the network
-    scan_result = await scan(loop, timeout=3, hosts=_host_filter())
+    aiozc = await zeroconf.async_get_async_instance(hass)
+    scan_result = await scan(loop, timeout=3, hosts=_host_filter(), aiozc=aiozc)
     matches = [atv for atv in scan_result if _filter_device(atv)]
 
     if matches:
@@ -69,7 +74,9 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> AppleTVOptionsFlow:
         """Get options flow for this handler."""
         return AppleTVOptionsFlow(config_entry)
 
@@ -114,10 +121,10 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return entry.unique_id
         return None
 
-    async def async_step_reauth(self, user_input=None):
+    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
         """Handle initial step when updating invalid credentials."""
         self.context["title_placeholders"] = {
-            "name": user_input[CONF_NAME],
+            "name": entry_data[CONF_NAME],
             "type": "Apple TV",
         }
         self.scan_filter = self.unique_id
@@ -162,9 +169,11 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
-    ) -> data_entry_flow.FlowResult:
+    ) -> FlowResult:
         """Handle device found via zeroconf."""
         host = discovery_info.host
+        if is_ipv6_address(host):
+            return self.async_abort(reason="ipv6_not_supported")
         self._async_abort_entries_match({CONF_ADDRESS: host})
         service_type = discovery_info.type[:-1]  # Remove leading .
         name = discovery_info.name.replace(f".{service_type}.", "")
@@ -180,6 +189,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured(updates={CONF_ADDRESS: host})
 
         self._async_abort_entries_match({CONF_ADDRESS: host})
+
         await self._async_aggregate_discoveries(host, unique_id)
         # Scan for the device in order to extract _all_ unique identifiers assigned to
         # it. Not doing it like this will yield multiple config flows for the same
@@ -243,7 +253,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ):
                 # Add potentially new identifiers from this device to the existing flow
                 context["all_identifiers"].append(unique_id)
-            raise data_entry_flow.AbortFlow("already_in_progress")
+            raise AbortFlow("already_in_progress")
 
     async def async_found_zeroconf_device(self, user_input=None):
         """Handle device found after Zeroconf discovery."""
@@ -279,7 +289,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_find_device(self, allow_exist=False):
         """Scan for the selected device to discover services."""
         self.atv, self.atv_identifiers = await device_scan(
-            self.scan_filter, self.hass.loop
+            self.hass, self.scan_filter, self.hass.loop
         )
         if not self.atv:
             raise DeviceNotFound()
@@ -518,7 +528,7 @@ class AppleTVConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 class AppleTVOptionsFlow(config_entries.OptionsFlow):
     """Handle Apple TV options."""
 
-    def __init__(self, config_entry):
+    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
         """Initialize Apple TV options flow."""
         self.config_entry = config_entry
         self.options = dict(config_entry.options)

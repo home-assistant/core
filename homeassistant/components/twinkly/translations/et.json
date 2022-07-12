@@ -12,10 +12,8 @@
             },
             "user": {
                 "data": {
-                    "host": "Twinkly seadme host (v\u00f5i IP-aadress)"
-                },
-                "description": "Seadista oma Twinkly LED riba",
-                "title": ""
+                    "host": "Host"
+                }
             }
         }
     }

@@ -1,4 +1,6 @@
 """Config flow for ScreenLogic."""
+from __future__ import annotations
+
 import logging
 
 from screenlogicpy import ScreenLogicError, discovery
@@ -35,8 +37,9 @@ async def async_discover_gateways_by_unique_id(hass):
         return discovered_gateways
 
     for host in hosts:
-        mac = _extract_mac_from_name(host[SL_GATEWAY_NAME])
-        discovered_gateways[mac] = host
+        if (name := host[SL_GATEWAY_NAME]).startswith("Pentair:"):
+            mac = _extract_mac_from_name(name)
+            discovered_gateways[mac] = host
 
     _LOGGER.debug("Discovered gateways: %s", discovered_gateways)
     return discovered_gateways
@@ -68,7 +71,9 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> ScreenLogicOptionsFlowHandler:
         """Get the options flow for ScreenLogic."""
         return ScreenLogicOptionsFlowHandler(config_entry)
 
@@ -79,7 +84,7 @@ class ScreenlogicConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_dhcp(self, discovery_info: dhcp.DhcpServiceInfo) -> FlowResult:
         """Handle dhcp discovery."""
-        mac = _extract_mac_from_name(discovery_info.hostname)
+        mac = format_mac(discovery_info.macaddress)
         await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(
             updates={CONF_IP_ADDRESS: discovery_info.ip}

@@ -1,6 +1,7 @@
 """Support for wired switches attached to a Konnected device."""
 import logging
 
+from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_STATE,
@@ -12,7 +13,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, ToggleEntity
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -42,7 +43,7 @@ async def async_setup_entry(
     async_add_entities(switches)
 
 
-class KonnectedSwitch(ToggleEntity):
+class KonnectedSwitch(SwitchEntity):
     """Representation of a Konnected switch."""
 
     def __init__(self, device_id, zone_num, data):

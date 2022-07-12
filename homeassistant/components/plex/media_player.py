@@ -1,31 +1,26 @@
 """Support to interface with the Plex API."""
 from __future__ import annotations
 
+from collections.abc import Callable
 from functools import wraps
-import json
 import logging
+from typing import TypeVar
 
 import plexapi.exceptions
 import requests.exceptions
+from typing_extensions import Concatenate, ParamSpec
 
-from homeassistant.components.media_player import DOMAIN as MP_DOMAIN, MediaPlayerEntity
-from homeassistant.components.media_player.const import (
-    MEDIA_TYPE_MUSIC,
-    SUPPORT_BROWSE_MEDIA,
-    SUPPORT_NEXT_TRACK,
-    SUPPORT_PAUSE,
-    SUPPORT_PLAY,
-    SUPPORT_PLAY_MEDIA,
-    SUPPORT_PREVIOUS_TRACK,
-    SUPPORT_SEEK,
-    SUPPORT_STOP,
-    SUPPORT_VOLUME_MUTE,
-    SUPPORT_VOLUME_SET,
+from homeassistant.components.media_player import (
+    DOMAIN as MP_DOMAIN,
+    MediaPlayerEntity,
+    MediaPlayerEntityFeature,
 )
+from homeassistant.components.media_player.const import MEDIA_TYPE_MUSIC
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, STATE_PAUSED, STATE_PLAYING
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -33,7 +28,6 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.entity_registry import async_get_registry
 from homeassistant.helpers.network import is_internal_request
 
 from .const import (
@@ -50,18 +44,27 @@ from .const import (
     TRANSIENT_DEVICE_MODELS,
 )
 from .media_browser import browse_media
+from .services import process_plex_payload
+
+_PlexMediaPlayerT = TypeVar("_PlexMediaPlayerT", bound="PlexMediaPlayer")
+_R = TypeVar("_R")
+_P = ParamSpec("_P")
 
 _LOGGER = logging.getLogger(__name__)
 
 
-def needs_session(func):
+def needs_session(
+    func: Callable[Concatenate[_PlexMediaPlayerT, _P], _R]
+) -> Callable[Concatenate[_PlexMediaPlayerT, _P], _R | None]:
     """Ensure session is available for certain attributes."""
 
     @wraps(func)
-    def get_session_attribute(self, *args):
+    def get_session_attribute(
+        self: _PlexMediaPlayerT, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R | None:
         if self.session is None:
             return None
-        return func(self, *args)
+        return func(self, *args, **kwargs)
 
     return get_session_attribute
 
@@ -73,7 +76,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up Plex media_player from a config entry."""
     server_id = config_entry.data[CONF_SERVER_IDENTIFIER]
-    registry = await async_get_registry(hass)
+    registry = er.async_get(hass)
 
     @callback
     def async_new_media_players(new_entities):
@@ -245,7 +248,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         else:
             self._attr_state = STATE_IDLE
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def username(self):
         """Return the username of the client owner."""
@@ -276,109 +279,109 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
         return "video"
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def session_key(self):
         """Return current session key."""
         return self.session.sessionKey
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_library_title(self):
         """Return the library name of playing media."""
         return self.session.media_library_title
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_content_id(self):
         """Return the content ID of current playing media."""
         return self.session.media_content_id
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_content_type(self):
         """Return the content type of current playing media."""
         return self.session.media_content_type
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_content_rating(self):
         """Return the content rating of current playing media."""
         return self.session.media_content_rating
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_artist(self):
         """Return the artist of current playing media, music track only."""
         return self.session.media_artist
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_album_name(self):
         """Return the album name of current playing media, music track only."""
         return self.session.media_album_name
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_album_artist(self):
         """Return the album artist of current playing media, music only."""
         return self.session.media_album_artist
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_track(self):
         """Return the track number of current playing media, music only."""
         return self.session.media_track
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_duration
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_position(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_position
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
         return self.session.media_position_updated_at
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self.session.media_image_url
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_summary(self):
         """Return the summary of current playing media."""
         return self.session.media_summary
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_title(self):
         """Return the title of current playing media."""
         return self.session.media_title
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_season(self):
         """Return the season of current playing media (TV Show only)."""
         return self.session.media_season
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_series_title(self):
         """Return the title of the series of current playing media."""
         return self.session.media_series_title
 
-    @property
+    @property  # type: ignore[misc]
     @needs_session
     def media_episode(self):
         """Return the episode of current playing media (TV Show only)."""
@@ -389,19 +392,21 @@ class PlexMediaPlayer(MediaPlayerEntity):
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
             return (
-                SUPPORT_PAUSE
-                | SUPPORT_PREVIOUS_TRACK
-                | SUPPORT_NEXT_TRACK
-                | SUPPORT_STOP
-                | SUPPORT_SEEK
-                | SUPPORT_VOLUME_SET
-                | SUPPORT_PLAY
-                | SUPPORT_PLAY_MEDIA
-                | SUPPORT_VOLUME_MUTE
-                | SUPPORT_BROWSE_MEDIA
+                MediaPlayerEntityFeature.PAUSE
+                | MediaPlayerEntityFeature.PREVIOUS_TRACK
+                | MediaPlayerEntityFeature.NEXT_TRACK
+                | MediaPlayerEntityFeature.STOP
+                | MediaPlayerEntityFeature.SEEK
+                | MediaPlayerEntityFeature.VOLUME_SET
+                | MediaPlayerEntityFeature.PLAY
+                | MediaPlayerEntityFeature.PLAY_MEDIA
+                | MediaPlayerEntityFeature.VOLUME_MUTE
+                | MediaPlayerEntityFeature.BROWSE_MEDIA
             )
 
-        return SUPPORT_BROWSE_MEDIA | SUPPORT_PLAY_MEDIA
+        return (
+            MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
+        )
 
     def set_volume_level(self, volume):
         """Set volume level, range 0..1."""
@@ -481,41 +486,13 @@ class PlexMediaPlayer(MediaPlayerEntity):
                 f"Client is not currently accepting playback controls: {self.name}"
             )
 
-        if not self.plex_server.has_token:
-            _LOGGER.warning(
-                "Plex integration configured without a token, playback may fail"
-            )
-
-        src = json.loads(media_id)
-        if isinstance(src, int):
-            src = {"plex_key": src}
-
-        offset = 0
-
-        if playqueue_id := src.pop("playqueue_id", None):
-            try:
-                playqueue = self.plex_server.get_playqueue(playqueue_id)
-            except plexapi.exceptions.NotFound as err:
-                raise HomeAssistantError(
-                    f"PlayQueue '{playqueue_id}' could not be found"
-                ) from err
-        else:
-            shuffle = src.pop("shuffle", 0)
-            offset = src.pop("offset", 0) * 1000
-            resume = src.pop("resume", False)
-            media = self.plex_server.lookup_media(media_type, **src)
-
-            if media is None:
-                raise HomeAssistantError(f"Media could not be found: {media_id}")
-
-            if resume and not offset:
-                offset = media.viewOffset
-
-            _LOGGER.debug("Attempting to play %s on %s", media, self.name)
-            playqueue = self.plex_server.create_playqueue(media, shuffle=shuffle)
+        result = process_plex_payload(
+            self.hass, media_type, media_id, default_plex_server=self.plex_server
+        )
+        _LOGGER.debug("Attempting to play %s on %s", result.media, self.name)
 
         try:
-            self.device.playMedia(playqueue, offset=offset)
+            self.device.playMedia(result.media, offset=result.offset)
         except requests.exceptions.ConnectTimeout as exc:
             raise HomeAssistantError(
                 f"Request failed when playing on {self.name}"
@@ -538,7 +515,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return attributes
 
     @property
-    def device_info(self) -> DeviceInfo:
+    def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.machine_identifier is None:
             return None
@@ -566,22 +543,8 @@ class PlexMediaPlayer(MediaPlayerEntity):
         is_internal = is_internal_request(self.hass)
         return await self.hass.async_add_executor_job(
             browse_media,
-            self,
+            self.hass,
             is_internal,
             media_content_type,
             media_content_id,
         )
-
-    async def async_get_browse_image(
-        self,
-        media_content_type: str,
-        media_content_id: str,
-        media_image_id: str | None = None,
-    ) -> tuple[bytes | None, str | None]:
-        """Get media image from Plex server."""
-        image_url = self.plex_server.thumbnail_cache.get(media_content_id)
-        if image_url:
-            result = await self._async_fetch_image(image_url)
-            return result
-
-        return (None, None)

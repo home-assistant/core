@@ -176,6 +176,8 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
 
     If selected is missing in items, None is returned
     """
+    if selected is None:
+        return None
     try:
         index = items.index(selected)
     except ValueError:
@@ -188,7 +190,7 @@ def _next_selected(items: list[str], selected: str | None) -> str | None:
 class _Trait:
     """Represents a Trait inside Google Assistant skill."""
 
-    commands = []
+    commands: list[str] = []
 
     @staticmethod
     def might_2fa(domain, features, device_class):
@@ -249,7 +251,7 @@ class BrightnessTrait(_Trait):
         if domain == light.DOMAIN:
             brightness = self.state.attributes.get(light.ATTR_BRIGHTNESS)
             if brightness is not None:
-                response["brightness"] = int(100 * (brightness / 255))
+                response["brightness"] = round(100 * (brightness / 255))
             else:
                 response["brightness"] = 0
 
@@ -304,9 +306,7 @@ class CameraStreamTrait(_Trait):
 
     async def execute(self, command, data, params, challenge):
         """Execute a get camera stream command."""
-        url = await self.hass.components.camera.async_request_stream(
-            self.state.entity_id, "hls"
-        )
+        url = await camera.async_request_stream(self.hass, self.state.entity_id, "hls")
         self.stream_info = {
             "cameraStreamAccessUrl": f"{get_url(self.hass)}{url}",
             "cameraStreamReceiverAppId": CAST_APP_ID_HOMEASSISTANT_MEDIA,
@@ -776,14 +776,10 @@ class StartStopTrait(_Trait):
         """Execute a StartStop command."""
         if command == COMMAND_STARTSTOP:
             if params["start"] is False:
-                if (
-                    self.state.state
-                    in (
-                        cover.STATE_CLOSING,
-                        cover.STATE_OPENING,
-                    )
-                    or self.state.attributes.get(ATTR_ASSUMED_STATE)
-                ):
+                if self.state.state in (
+                    cover.STATE_CLOSING,
+                    cover.STATE_OPENING,
+                ) or self.state.attributes.get(ATTR_ASSUMED_STATE):
                     await self.hass.services.async_call(
                         self.state.domain,
                         cover.SERVICE_STOP_COVER,
@@ -1707,7 +1703,7 @@ class InputSelectorTrait(_Trait):
     name = TRAIT_INPUTSELECTOR
     commands = [COMMAND_INPUT, COMMAND_NEXT_INPUT, COMMAND_PREVIOUS_INPUT]
 
-    SYNONYMS = {}
+    SYNONYMS: dict[str, list[str]] = {}
 
     @staticmethod
     def supported(domain, features, device_class, _):
@@ -1954,7 +1950,7 @@ class VolumeTrait(_Trait):
         level = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_LEVEL)
         if level is not None:
             # Convert 0.0-1.0 to 0-100
-            response["currentVolume"] = int(level * 100)
+            response["currentVolume"] = round(level * 100)
 
         muted = self.state.attributes.get(media_player.ATTR_MEDIA_VOLUME_MUTED)
         if muted is not None:
@@ -2203,7 +2199,7 @@ class MediaStateTrait(_Trait):
     """
 
     name = TRAIT_MEDIA_STATE
-    commands = []
+    commands: list[str] = []
 
     activity_lookup = {
         STATE_OFF: "INACTIVE",
@@ -2320,7 +2316,7 @@ class SensorStateTrait(_Trait):
     }
 
     name = TRAIT_SENSOR_STATE
-    commands = []
+    commands: list[str] = []
 
     @classmethod
     def supported(cls, domain, features, device_class, _):

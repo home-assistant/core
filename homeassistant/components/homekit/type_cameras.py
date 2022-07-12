@@ -11,9 +11,10 @@ from pyhap.camera import (
 )
 from pyhap.const import CATEGORY_CAMERA
 
+from homeassistant.components import camera
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.const import STATE_ON
-from homeassistant.core import callback
+from homeassistant.core import Event, callback
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_interval,
@@ -55,7 +56,7 @@ from .const import (
     SERV_SPEAKER,
     SERV_STATELESS_PROGRAMMABLE_SWITCH,
 )
-from .util import pid_is_alive
+from .util import pid_is_alive, state_changed_event_is_same_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -264,9 +265,10 @@ class Camera(HomeAccessory, PyhapCamera):
         await super().run()
 
     @callback
-    def _async_update_motion_state_event(self, event):
+    def _async_update_motion_state_event(self, event: Event) -> None:
         """Handle state change event listener callback."""
-        self._async_update_motion_state(event.data.get("new_state"))
+        if not state_changed_event_is_same_state(event):
+            self._async_update_motion_state(event.data.get("new_state"))
 
     @callback
     def _async_update_motion_state(self, new_state):
@@ -287,9 +289,10 @@ class Camera(HomeAccessory, PyhapCamera):
         )
 
     @callback
-    def _async_update_doorbell_state_event(self, event):
+    def _async_update_doorbell_state_event(self, event: Event) -> None:
         """Handle state change event listener callback."""
-        self._async_update_doorbell_state(event.data.get("new_state"))
+        if not state_changed_event_is_same_state(event):
+            self._async_update_doorbell_state(event.data.get("new_state"))
 
     @callback
     def _async_update_doorbell_state(self, new_state):
@@ -317,8 +320,8 @@ class Camera(HomeAccessory, PyhapCamera):
         if stream_source := self.config.get(CONF_STREAM_SOURCE):
             return stream_source
         try:
-            stream_source = await self.hass.components.camera.async_get_stream_source(
-                self.entity_id
+            stream_source = await camera.async_get_stream_source(
+                self.hass, self.entity_id
             )
         except Exception:  # pylint: disable=broad-except
             _LOGGER.exception(
@@ -471,7 +474,8 @@ class Camera(HomeAccessory, PyhapCamera):
 
     async def async_get_snapshot(self, image_size):
         """Return a jpeg of a snapshot from the camera."""
-        image = await self.hass.components.camera.async_get_image(
+        image = await camera.async_get_image(
+            self.hass,
             self.entity_id,
             width=image_size["image-width"],
             height=image_size["image-height"],

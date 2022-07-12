@@ -1,13 +1,13 @@
 """Support for EnOcean switches."""
 from __future__ import annotations
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
-from homeassistant.components.switch import PLATFORM_SCHEMA
+from homeassistant.components.switch import PLATFORM_SCHEMA, SwitchEntity
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -39,7 +39,7 @@ def setup_platform(
     add_entities([EnOceanSwitch(dev_id, dev_name, channel)])
 
 
-class EnOceanSwitch(EnOceanEntity, ToggleEntity):
+class EnOceanSwitch(EnOceanEntity, SwitchEntity):
     """Representation of an EnOcean switch device."""
 
     def __init__(self, dev_id, dev_name, channel):
@@ -49,6 +49,7 @@ class EnOceanSwitch(EnOceanEntity, ToggleEntity):
         self._on_state = False
         self._on_state2 = False
         self.channel = channel
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
 
     @property
     def is_on(self):
@@ -92,7 +93,7 @@ class EnOceanSwitch(EnOceanEntity, ToggleEntity):
             if packet.parsed["DT"]["raw_value"] == 1:
                 raw_val = packet.parsed["MR"]["raw_value"]
                 divisor = packet.parsed["DIV"]["raw_value"]
-                watts = raw_val / (10 ** divisor)
+                watts = raw_val / (10**divisor)
                 if watts > 1:
                     self._on_state = True
                     self.schedule_update_ha_state()

@@ -12,7 +12,6 @@
         "step": {
             "locations": {
                 "data": {
-                    "location": "Lokasi",
                     "usercode": "Kode pengguna"
                 },
                 "description": "Masukkan kode pengguna untuk pengguna ini di lokasi {location_id}",
@@ -26,8 +25,18 @@
                 "data": {
                     "password": "Kata Sandi",
                     "username": "Nama Pengguna"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "auto_bypass_low_battery": "Otomatis dilewatkan saat baterai lemah"
                 },
-                "title": "Total Connect"
+                "description": "Otomatis melewatkan zona saat baterai lemah dilaporkan.",
+                "title": "Opsi TotalConnect"
             }
         }
     }

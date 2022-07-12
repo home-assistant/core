@@ -12,6 +12,7 @@ DOMAIN = "intent_script"
 
 CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
+CONF_REPROMPT = "reprompt"
 
 CONF_ACTION = "action"
 CONF_CARD = "card"
@@ -36,6 +37,10 @@ CONFIG_SCHEMA = vol.Schema(
                     vol.Required(CONF_CONTENT): cv.template,
                 },
                 vol.Optional(CONF_SPEECH): {
+                    vol.Optional(CONF_TYPE, default="plain"): cv.string,
+                    vol.Required(CONF_TEXT): cv.template,
+                },
+                vol.Optional(CONF_REPROMPT): {
                     vol.Optional(CONF_TYPE, default="plain"): cv.string,
                     vol.Required(CONF_TEXT): cv.template,
                 },
@@ -72,6 +77,7 @@ class ScriptIntentHandler(intent.IntentHandler):
     async def async_handle(self, intent_obj):
         """Handle the intent."""
         speech = self.config.get(CONF_SPEECH)
+        reprompt = self.config.get(CONF_REPROMPT)
         card = self.config.get(CONF_CARD)
         action = self.config.get(CONF_ACTION)
         is_async_action = self.config.get(CONF_ASYNC_ACTION)
@@ -92,6 +98,14 @@ class ScriptIntentHandler(intent.IntentHandler):
                 speech[CONF_TEXT].async_render(slots, parse_result=False),
                 speech[CONF_TYPE],
             )
+
+        if reprompt is not None:
+            text_reprompt = reprompt[CONF_TEXT].async_render(slots, parse_result=False)
+            if text_reprompt:
+                response.async_set_reprompt(
+                    text_reprompt,
+                    reprompt[CONF_TYPE],
+                )
 
         if card is not None:
             response.async_set_card(

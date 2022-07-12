@@ -1,34 +1,44 @@
 """Provides device automations for ZHA devices that emit events."""
+
 import voluptuous as vol
 
+from homeassistant.components.automation import (
+    AutomationActionType,
+    AutomationTriggerInfo,
+)
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
 )
 from homeassistant.components.homeassistant.triggers import event as event_trigger
 from homeassistant.const import CONF_DEVICE_ID, CONF_DOMAIN, CONF_PLATFORM, CONF_TYPE
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.typing import ConfigType
 
 from . import DOMAIN
+from .core.const import ZHA_EVENT
 from .core.helpers import async_get_zha_device
 
 CONF_SUBTYPE = "subtype"
 DEVICE = "device"
 DEVICE_IEEE = "device_ieee"
-ZHA_EVENT = "zha_event"
 
 TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
     {vol.Required(CONF_TYPE): str, vol.Required(CONF_SUBTYPE): str}
 )
 
 
-async def async_validate_trigger_config(hass, config):
+async def async_validate_trigger_config(
+    hass: HomeAssistant, config: ConfigType
+) -> ConfigType:
     """Validate config."""
     config = TRIGGER_SCHEMA(config)
 
     if "zha" in hass.config.components:
         trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
         try:
-            zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
+            zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
         except (KeyError, AttributeError) as err:
             raise InvalidDeviceAutomationConfig from err
         if (
@@ -40,18 +50,25 @@ async def async_validate_trigger_config(hass, config):
     return config
 
 
-async def async_attach_trigger(hass, config, action, automation_info):
+async def async_attach_trigger(
+    hass: HomeAssistant,
+    config: ConfigType,
+    action: AutomationActionType,
+    automation_info: AutomationTriggerInfo,
+) -> CALLBACK_TYPE:
     """Listen for state changes based on configuration."""
-    trigger = (config[CONF_TYPE], config[CONF_SUBTYPE])
+    trigger_key: tuple[str, str] = (config[CONF_TYPE], config[CONF_SUBTYPE])
     try:
-        zha_device = await async_get_zha_device(hass, config[CONF_DEVICE_ID])
-    except (KeyError, AttributeError):
-        return None
+        zha_device = async_get_zha_device(hass, config[CONF_DEVICE_ID])
+    except (KeyError, AttributeError) as err:
+        raise HomeAssistantError(
+            f"Unable to get zha device {config[CONF_DEVICE_ID]}"
+        ) from err
 
-    if trigger not in zha_device.device_automation_triggers:
-        return None
+    if trigger_key not in zha_device.device_automation_triggers:
+        raise HomeAssistantError(f"Unable to find trigger {trigger_key}")
 
-    trigger = zha_device.device_automation_triggers[trigger]
+    trigger = zha_device.device_automation_triggers[trigger_key]
 
     event_config = {
         event_trigger.CONF_PLATFORM: "event",
@@ -65,16 +82,18 @@ async def async_attach_trigger(hass, config, action, automation_info):
     )
 
 
-async def async_get_triggers(hass, device_id):
+async def async_get_triggers(
+    hass: HomeAssistant, device_id: str
+) -> list[dict[str, str]]:
     """List device triggers.
 
     Make sure the device supports device automations and
     if it does return the trigger list.
     """
-    zha_device = await async_get_zha_device(hass, device_id)
+    zha_device = async_get_zha_device(hass, device_id)
 
     if not zha_device.device_automation_triggers:
-        return
+        return []
 
     triggers = []
     for trigger, subtype in zha_device.device_automation_triggers.keys():

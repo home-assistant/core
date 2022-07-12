@@ -1,0 +1,39 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Seade on juba h\u00e4\u00e4lestatud",
+            "not_intellifire_device": "See pole IntelliFire seade.",
+            "reauth_successful": "Taastuvastamine \u00f5nnestus"
+        },
+        "error": {
+            "api_error": "Sisselogimine nurjus",
+            "cannot_connect": "\u00dchendamine nurjus",
+            "iftapi_connect": "\u00dchendumine iftapi.net'iga nurjus"
+        },
+        "flow_title": "{serial} ({host})",
+        "step": {
+            "api_config": {
+                "data": {
+                    "password": "Salas\u00f5na",
+                    "username": "E-posti aadress"
+                }
+            },
+            "dhcp_confirm": {
+                "description": "Kas h\u00e4\u00e4lestada {host}\nSeerianumber: {serial}?"
+            },
+            "manual_device_entry": {
+                "data": {
+                    "host": "Host (IP aadress)"
+                },
+                "description": "Kohalik konfiguratsioon"
+            },
+            "pick_device": {
+                "data": {
+                    "host": "Host"
+                },
+                "description": "Avastati j\u00e4rgmised IntelliFire seadmed. Palun vali millist soovid seadistada.",
+                "title": "Seadme valik"
+            }
+        }
+    }
+}

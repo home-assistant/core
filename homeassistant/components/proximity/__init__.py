@@ -70,14 +70,14 @@ def setup_proximity_component(
     hass: HomeAssistant, name: str, config: ConfigType
 ) -> bool:
     """Set up the individual proximity component."""
-    ignored_zones = config.get(CONF_IGNORED_ZONES)
-    proximity_devices = config.get(CONF_DEVICES)
-    tolerance = config.get(CONF_TOLERANCE)
+    ignored_zones: list[str] = config[CONF_IGNORED_ZONES]
+    proximity_devices: list[str] = config[CONF_DEVICES]
+    tolerance: int = config[CONF_TOLERANCE]
     proximity_zone = name
-    unit_of_measurement = config.get(
+    unit_of_measurement: str = config.get(
         CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
     )
-    zone_id = f"zone.{config.get(CONF_ZONE)}"
+    zone_id = f"zone.{config[CONF_ZONE]}"
 
     proximity = Proximity(  # type:ignore[no-untyped-call]
         hass,

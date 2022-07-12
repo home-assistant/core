@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from aiooncue import OncueDevice, OncueSensor
 
+from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import DeviceInfo, Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -37,6 +39,13 @@ class OncueEntity(CoordinatorEntity, Entity):
             model=device.sensors["GensetModelNumberSelect"].display_value,
             manufacturer="Kohler",
         )
+        try:
+            mac_address_hex = hex(int(device.sensors["MacAddress"].value))[2:]
+        except ValueError:  # MacAddress may be invalid if the gateway is offline
+            return
+        self._attr_device_info[ATTR_CONNECTIONS] = {
+            (dr.CONNECTION_NETWORK_MAC, mac_address_hex)
+        }
 
     @property
     def _oncue_value(self) -> str:

@@ -6,18 +6,30 @@ from typing import Any, cast
 
 from homeassistant.components.weather import (
     ATTR_FORECAST_CONDITION,
-    ATTR_FORECAST_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_PRECIPITATION,
+    ATTR_FORECAST_NATIVE_TEMP,
+    ATTR_FORECAST_NATIVE_TEMP_LOW,
+    ATTR_FORECAST_NATIVE_WIND_SPEED,
     ATTR_FORECAST_PRECIPITATION_PROBABILITY,
-    ATTR_FORECAST_TEMP,
-    ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
     ATTR_FORECAST_WIND_BEARING,
-    ATTR_FORECAST_WIND_SPEED,
     Forecast,
     WeatherEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS, TEMP_FAHRENHEIT
+from homeassistant.const import (
+    CONF_NAME,
+    LENGTH_INCHES,
+    LENGTH_KILOMETERS,
+    LENGTH_MILES,
+    LENGTH_MILLIMETERS,
+    PRESSURE_HPA,
+    PRESSURE_INHG,
+    SPEED_KILOMETERS_PER_HOUR,
+    SPEED_MILES_PER_HOUR,
+    TEMP_CELSIUS,
+    TEMP_FAHRENHEIT,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.entity import DeviceInfo
@@ -51,22 +63,35 @@ async def async_setup_entry(
     async_add_entities([AccuWeatherEntity(name, coordinator)])
 
 
-class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
+class AccuWeatherEntity(
+    CoordinatorEntity[AccuWeatherDataUpdateCoordinator], WeatherEntity
+):
     """Define an AccuWeather entity."""
-
-    coordinator: AccuWeatherDataUpdateCoordinator
 
     def __init__(
         self, name: str, coordinator: AccuWeatherDataUpdateCoordinator
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
-        self._unit_system = API_METRIC if coordinator.is_metric else API_IMPERIAL
+        # Coordinator data is used also for sensors which don't have units automatically
+        # converted, hence the weather entity's native units follow the configured unit
+        # system
+        if coordinator.is_metric:
+            self._attr_native_precipitation_unit = LENGTH_MILLIMETERS
+            self._attr_native_pressure_unit = PRESSURE_HPA
+            self._attr_native_temperature_unit = TEMP_CELSIUS
+            self._attr_native_visibility_unit = LENGTH_KILOMETERS
+            self._attr_native_wind_speed_unit = SPEED_KILOMETERS_PER_HOUR
+            self._unit_system = API_METRIC
+        else:
+            self._unit_system = API_IMPERIAL
+            self._attr_native_precipitation_unit = LENGTH_INCHES
+            self._attr_native_pressure_unit = PRESSURE_INHG
+            self._attr_native_temperature_unit = TEMP_FAHRENHEIT
+            self._attr_native_visibility_unit = LENGTH_MILES
+            self._attr_native_wind_speed_unit = SPEED_MILES_PER_HOUR
         self._attr_name = name
         self._attr_unique_id = coordinator.location_key
-        self._attr_temperature_unit = (
-            TEMP_CELSIUS if coordinator.is_metric else TEMP_FAHRENHEIT
-        )
         self._attr_attribution = ATTRIBUTION
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
@@ -94,14 +119,14 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
             return None
 
     @property
-    def temperature(self) -> float:
+    def native_temperature(self) -> float:
         """Return the temperature."""
         return cast(
             float, self.coordinator.data["Temperature"][self._unit_system]["Value"]
         )
 
     @property
-    def pressure(self) -> float:
+    def native_pressure(self) -> float:
         """Return the pressure."""
         return cast(
             float, self.coordinator.data["Pressure"][self._unit_system]["Value"]
@@ -113,7 +138,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         return cast(int, self.coordinator.data["RelativeHumidity"])
 
     @property
-    def wind_speed(self) -> float:
+    def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return cast(
             float, self.coordinator.data["Wind"]["Speed"][self._unit_system]["Value"]
@@ -125,7 +150,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         return cast(int, self.coordinator.data["Wind"]["Direction"]["Degrees"])
 
     @property
-    def visibility(self) -> float:
+    def native_visibility(self) -> float:
         """Return the visibility."""
         return cast(
             float, self.coordinator.data["Visibility"][self._unit_system]["Value"]
@@ -150,9 +175,9 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
         return [
             {
                 ATTR_FORECAST_TIME: utc_from_timestamp(item["EpochDate"]).isoformat(),
-                ATTR_FORECAST_TEMP: item["TemperatureMax"]["Value"],
-                ATTR_FORECAST_TEMP_LOW: item["TemperatureMin"]["Value"],
-                ATTR_FORECAST_PRECIPITATION: self._calc_precipitation(item),
+                ATTR_FORECAST_NATIVE_TEMP: item["TemperatureMax"]["Value"],
+                ATTR_FORECAST_NATIVE_TEMP_LOW: item["TemperatureMin"]["Value"],
+                ATTR_FORECAST_NATIVE_PRECIPITATION: self._calc_precipitation(item),
                 ATTR_FORECAST_PRECIPITATION_PROBABILITY: round(
                     mean(
                         [
@@ -161,7 +186,7 @@ class AccuWeatherEntity(CoordinatorEntity, WeatherEntity):
                         ]
                     )
                 ),
-                ATTR_FORECAST_WIND_SPEED: item["WindDay"]["Speed"]["Value"],
+                ATTR_FORECAST_NATIVE_WIND_SPEED: item["WindDay"]["Speed"]["Value"],
                 ATTR_FORECAST_WIND_BEARING: item["WindDay"]["Direction"]["Degrees"],
                 ATTR_FORECAST_CONDITION: [
                     k for k, v in CONDITION_CLASSES.items() if item["IconDay"] in v

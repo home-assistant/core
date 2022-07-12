@@ -1,6 +1,7 @@
 {
     "config": {
         "abort": {
+            "cloud_not_connected": "Non connesso a Home Assistant Cloud.",
             "single_instance_allowed": "Gi\u00e0 configurato. \u00c8 possibile una sola configurazione."
         },
         "create_entry": {

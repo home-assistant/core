@@ -39,7 +39,6 @@ async def async_setup_entry(
 class EzvizSwitch(EzvizEntity, SwitchEntity):
     """Representation of a Ezviz sensor."""
 
-    coordinator: EzvizDataUpdateCoordinator
     _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
@@ -66,7 +65,7 @@ class EzvizSwitch(EzvizEntity, SwitchEntity):
             )
 
         except (HTTPError, PyEzvizError) as err:
-            raise PyEzvizError("Failed to turn on switch {self._name}") from err
+            raise PyEzvizError(f"Failed to turn on switch {self._name}") from err
 
         if update_ok:
             await self.coordinator.async_request_refresh()

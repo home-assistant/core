@@ -23,10 +23,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import (
-    async_get_registry as async_get_dev_reg,
-)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -83,7 +80,7 @@ CONFIG_SCHEMA = vol.Schema(
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SENSOR]
 
 
-async def options_updated(hass, entry):
+async def options_updated(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     gateway = hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][entry.data[CONF_ID]]
     async_dispatcher_send(hass, gateway.options_update_signal, entry)
@@ -113,7 +110,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     # Schedule directly on the loop to avoid blocking HA startup.
     hass.loop.create_task(gateway.connect_and_subscribe())
 
-    hass.config_entries.async_setup_platforms(config_entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     register_services(hass)
     return True
@@ -436,7 +433,7 @@ class OpenThermGatewayDevice:
         _LOGGER.debug(
             "Connected to OpenTherm Gateway %s at %s", self.gw_version, self.device_path
         )
-        dev_reg = await async_get_dev_reg(self.hass)
+        dev_reg = dr.async_get(self.hass)
         gw_dev = dev_reg.async_get_or_create(
             config_entry_id=self.config_entry_id,
             identifiers={(DOMAIN, self.gw_id)},

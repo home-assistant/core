@@ -2,7 +2,7 @@
 import copy
 from datetime import datetime
 import json
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, MagicMock, patch
 
 import yaml
 
@@ -11,6 +11,7 @@ from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import MQTT_DISCONNECTED
 from homeassistant.components.mqtt.mixins import MQTT_ATTRIBUTES_BLOCKED
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_ENTITY_ID,
@@ -21,7 +22,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_fire_mqtt_message, mock_registry
+from tests.common import MockConfigEntry, async_fire_mqtt_message, mock_registry
 
 DEFAULT_CONFIG_DEVICE_INFO_ID = {
     "identifiers": ["helloworld"],
@@ -43,11 +44,16 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+_SENTINEL = object()
 
-async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, config):
+
+async def help_test_availability_when_connection_lost(
+    hass, mqtt_mock_entry_with_yaml_config, domain, config
+):
     """Test availability after MQTT disconnection."""
     assert await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
@@ -60,11 +66,14 @@ async def help_test_availability_when_connection_lost(hass, mqtt_mock, domain, c
     assert state.state == STATE_UNAVAILABLE
 
 
-async def help_test_availability_without_topic(hass, mqtt_mock, domain, config):
+async def help_test_availability_without_topic(
+    hass, mqtt_mock_entry_with_yaml_config, domain, config
+):
     """Test availability without defined availability topic."""
     assert "availability_topic" not in config[domain]
     assert await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state != STATE_UNAVAILABLE
@@ -72,7 +81,7 @@ async def help_test_availability_without_topic(hass, mqtt_mock, domain, config):
 
 async def help_test_default_availability_payload(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
@@ -92,6 +101,7 @@ async def help_test_default_availability_payload(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -122,7 +132,7 @@ async def help_test_default_availability_payload(
 
 async def help_test_default_availability_list_payload(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
@@ -145,6 +155,7 @@ async def help_test_default_availability_list_payload(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -187,7 +198,7 @@ async def help_test_default_availability_list_payload(
 
 async def help_test_default_availability_list_payload_all(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
@@ -211,6 +222,7 @@ async def help_test_default_availability_list_payload_all(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -254,7 +266,7 @@ async def help_test_default_availability_list_payload_all(
 
 async def help_test_default_availability_list_payload_any(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
@@ -278,6 +290,7 @@ async def help_test_default_availability_list_payload_any(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -316,7 +329,7 @@ async def help_test_default_availability_list_payload_any(
 
 async def help_test_default_availability_list_single(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     caplog,
     domain,
     config,
@@ -340,6 +353,7 @@ async def help_test_default_availability_list_single(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state is None
@@ -351,7 +365,7 @@ async def help_test_default_availability_list_single(
 
 async def help_test_custom_availability_payload(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     domain,
     config,
     no_assumed_state=False,
@@ -373,6 +387,7 @@ async def help_test_custom_availability_payload(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state.state == STATE_UNAVAILABLE
@@ -403,7 +418,7 @@ async def help_test_custom_availability_payload(
 
 async def help_test_discovery_update_availability(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_no_yaml_config,
     domain,
     config,
     no_assumed_state=False,
@@ -414,6 +429,7 @@ async def help_test_discovery_update_availability(
 
     This is a test helper for the MQTTAvailability mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add availability settings to config
     config1 = copy.deepcopy(config)
     config1[domain]["availability_topic"] = "availability-topic1"
@@ -482,7 +498,7 @@ async def help_test_discovery_update_availability(
 
 
 async def help_test_setting_attribute_via_mqtt_json_message(
-    hass, mqtt_mock, domain, config
+    hass, mqtt_mock_entry_with_yaml_config, domain, config
 ):
     """Test the setting of attribute via MQTT with JSON payload.
 
@@ -497,6 +513,7 @@ async def help_test_setting_attribute_via_mqtt_json_message(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, "attr-topic", '{ "val": "100" }')
     state = hass.states.get(f"{domain}.test")
@@ -505,12 +522,13 @@ async def help_test_setting_attribute_via_mqtt_json_message(
 
 
 async def help_test_setting_blocked_attribute_via_mqtt_json_message(
-    hass, mqtt_mock, domain, config, extra_blocked_attributes
+    hass, mqtt_mock_entry_no_yaml_config, domain, config, extra_blocked_attributes
 ):
     """Test the setting of blocked attribute via MQTT with JSON payload.
 
     This is a test helper for the MqttAttributes mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     extra_blocked_attributes = extra_blocked_attributes or []
 
     # Add JSON attributes settings to config
@@ -532,7 +550,9 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
         assert state.attributes.get(attr) != val
 
 
-async def help_test_setting_attribute_with_template(hass, mqtt_mock, domain, config):
+async def help_test_setting_attribute_with_template(
+    hass, mqtt_mock_entry_with_yaml_config, domain, config
+):
     """Test the setting of attribute via MQTT with JSON payload.
 
     This is a test helper for the MqttAttributes mixin.
@@ -547,6 +567,7 @@ async def help_test_setting_attribute_with_template(hass, mqtt_mock, domain, con
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(
         hass, "attr-topic", json.dumps({"Timer1": {"Arm": 0, "Time": "22:18"}})
@@ -558,7 +579,7 @@ async def help_test_setting_attribute_with_template(hass, mqtt_mock, domain, con
 
 
 async def help_test_update_with_json_attrs_not_dict(
-    hass, mqtt_mock, caplog, domain, config
+    hass, mqtt_mock_entry_with_yaml_config, caplog, domain, config
 ):
     """Test attributes get extracted from a JSON result.
 
@@ -573,6 +594,7 @@ async def help_test_update_with_json_attrs_not_dict(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, "attr-topic", '[ "list", "of", "things"]')
     state = hass.states.get(f"{domain}.test")
@@ -582,7 +604,7 @@ async def help_test_update_with_json_attrs_not_dict(
 
 
 async def help_test_update_with_json_attrs_bad_JSON(
-    hass, mqtt_mock, caplog, domain, config
+    hass, mqtt_mock_entry_with_yaml_config, caplog, domain, config
 ):
     """Test JSON validation of attributes.
 
@@ -597,6 +619,7 @@ async def help_test_update_with_json_attrs_bad_JSON(
         config,
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     async_fire_mqtt_message(hass, "attr-topic", "This is not JSON")
 
@@ -605,11 +628,14 @@ async def help_test_update_with_json_attrs_bad_JSON(
     assert "Erroneous JSON: This is not JSON" in caplog.text
 
 
-async def help_test_discovery_update_attr(hass, mqtt_mock, caplog, domain, config):
+async def help_test_discovery_update_attr(
+    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, config
+):
     """Test update of discovered MQTTAttributes.
 
     This is a test helper for the MqttAttributes mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add JSON attributes settings to config
     config1 = copy.deepcopy(config)
     config1[domain]["json_attributes_topic"] = "attr-topic1"
@@ -639,18 +665,22 @@ async def help_test_discovery_update_attr(hass, mqtt_mock, caplog, domain, confi
     assert state.attributes.get("val") == "75"
 
 
-async def help_test_unique_id(hass, mqtt_mock, domain, config):
+async def help_test_unique_id(hass, mqtt_mock_entry_with_yaml_config, domain, config):
     """Test unique id option only creates one entity per unique_id."""
     assert await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
     assert len(hass.states.async_entity_ids(domain)) == 1
 
 
-async def help_test_discovery_removal(hass, mqtt_mock, caplog, domain, data):
+async def help_test_discovery_removal(
+    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, data
+):
     """Test removal of discovered component.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
@@ -667,7 +697,7 @@ async def help_test_discovery_removal(hass, mqtt_mock, caplog, domain, data):
 
 async def help_test_discovery_update(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_no_yaml_config,
     caplog,
     domain,
     discovery_config1,
@@ -679,6 +709,7 @@ async def help_test_discovery_update(
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add some future configuration to the configurations
     config1 = copy.deepcopy(discovery_config1)
     config1["some_future_option_1"] = "future_option_1"
@@ -728,12 +759,13 @@ async def help_test_discovery_update(
 
 
 async def help_test_discovery_update_unchanged(
-    hass, mqtt_mock, caplog, domain, data1, discovery_update
+    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, data1, discovery_update
 ):
     """Test update of discovered component without changes.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()
 
@@ -747,8 +779,11 @@ async def help_test_discovery_update_unchanged(
     assert not discovery_update.called
 
 
-async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, data1, data2):
+async def help_test_discovery_broken(
+    hass, mqtt_mock_entry_no_yaml_config, caplog, domain, data1, data2
+):
     """Test handling of bad discovery message."""
+    await mqtt_mock_entry_no_yaml_config()
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()
 
@@ -767,7 +802,7 @@ async def help_test_discovery_broken(hass, mqtt_mock, caplog, domain, data1, dat
 
 async def help_test_encoding_subscribable_topics(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     caplog,
     domain,
     config,
@@ -847,6 +882,7 @@ async def help_test_encoding_subscribable_topics(
         hass, domain, {domain: [config1, config2, config3]}
     )
     await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
 
     expected_result = attribute_value or value
 
@@ -897,11 +933,14 @@ async def help_test_encoding_subscribable_topics(
         pass
 
 
-async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, config):
+async def help_test_entity_device_info_with_identifier(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test device registry integration.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -924,11 +963,14 @@ async def help_test_entity_device_info_with_identifier(hass, mqtt_mock, domain, 
     assert device.configuration_url == "http://example.com"
 
 
-async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, config):
+async def help_test_entity_device_info_with_connection(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test device registry integration.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_MAC)
@@ -953,8 +995,11 @@ async def help_test_entity_device_info_with_connection(hass, mqtt_mock, domain, 
     assert device.configuration_url == "http://example.com"
 
 
-async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
+async def help_test_entity_device_info_remove(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test device registry remove."""
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -979,11 +1024,14 @@ async def help_test_entity_device_info_remove(hass, mqtt_mock, domain, config):
     assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
 
 
-async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
+async def help_test_entity_device_info_update(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test device registry update.
 
     This is a test helper for the MqttDiscoveryUpdate mixin.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -1010,7 +1058,7 @@ async def help_test_entity_device_info_update(hass, mqtt_mock, domain, config):
 
 
 async def help_test_entity_id_update_subscriptions(
-    hass, mqtt_mock, domain, config, topics=None
+    hass, mqtt_mock_entry_with_yaml_config, domain, config, topics=None
 ):
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
@@ -1024,16 +1072,18 @@ async def help_test_entity_id_update_subscriptions(
         topics = ["avty-topic", "test-topic"]
     assert len(topics) > 0
     registry = mock_registry(hass, {})
+
     assert await async_setup_component(
         hass,
         domain,
         config,
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     state = hass.states.get(f"{domain}.test")
     assert state is not None
-    assert mqtt_mock.async_subscribe.call_count == len(topics)
+    assert mqtt_mock.async_subscribe.call_count == len(topics) + 3
     for topic in topics:
         mqtt_mock.async_subscribe.assert_any_call(topic, ANY, ANY, ANY)
     mqtt_mock.async_subscribe.reset_mock()
@@ -1051,10 +1101,11 @@ async def help_test_entity_id_update_subscriptions(
 
 
 async def help_test_entity_id_update_discovery_update(
-    hass, mqtt_mock, domain, config, topic=None
+    hass, mqtt_mock_entry_no_yaml_config, domain, config, topic=None
 ):
     """Test MQTT discovery update after entity_id is updated."""
     # Add unique_id to config
+    await mqtt_mock_entry_no_yaml_config()
     config = copy.deepcopy(config)
     config[domain]["unique_id"] = "TOTALLY_UNIQUE"
 
@@ -1091,11 +1142,14 @@ async def help_test_entity_id_update_discovery_update(
     assert state.state != STATE_UNAVAILABLE
 
 
-async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
+async def help_test_entity_debug_info(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -1110,7 +1164,7 @@ async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1121,14 +1175,18 @@ async def help_test_entity_debug_info(hass, mqtt_mock, domain, config):
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
     ]
+    assert debug_info_data["entities"][0]["transmitted"] == []
     assert len(debug_info_data["triggers"]) == 0
 
 
-async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, config):
+async def help_test_entity_debug_info_max_messages(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test debug_info message overflow.
 
     This is a test helper for MQTT debug_info.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -1143,7 +1201,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1155,7 +1213,7 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
         for i in range(0, debug_info.STORED_MESSAGES + 1):
             async_fire_mqtt_message(hass, "test-topic", f"{i}")
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert (
         len(debug_info_data["entities"][0]["subscriptions"][0]["messages"])
@@ -1177,67 +1235,126 @@ async def help_test_entity_debug_info_max_messages(hass, mqtt_mock, domain, conf
 
 
 async def help_test_entity_debug_info_message(
-    hass, mqtt_mock, domain, config, topic=None, payload=None
+    hass,
+    mqtt_mock_entry_no_yaml_config,
+    domain,
+    config,
+    service,
+    command_topic=_SENTINEL,
+    command_payload=_SENTINEL,
+    state_topic=_SENTINEL,
+    state_payload=_SENTINEL,
+    service_parameters=None,
 ):
-    """Test debug_info message overflow.
-
-    This is a test helper for MQTT debug_info.
-    """
-    # Add device settings to config
-    config = copy.deepcopy(config[domain])
-    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
-    config["unique_id"] = "veryunique"
-
-    if topic is None:
-        # Add default topic to config
-        config["state_topic"] = "state-topic"
-        topic = "state-topic"
-
-    if payload is None:
-        payload = "ON"
-
-    registry = dr.async_get(hass)
-
-    data = json.dumps(config)
-    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
-    await hass.async_block_till_done()
-
-    device = registry.async_get_device({("mqtt", "helloworld")})
-    assert device is not None
-
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
-    assert {"topic": topic, "messages": []} in debug_info_data["entities"][0][
-        "subscriptions"
-    ]
-
-    start_dt = datetime(2019, 1, 1, 0, 0, 0)
-    with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
-        dt_utcnow.return_value = start_dt
-        async_fire_mqtt_message(hass, topic, payload)
-
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
-    assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
-    assert {
-        "topic": topic,
-        "messages": [
-            {
-                "payload": payload,
-                "qos": 0,
-                "retain": False,
-                "time": start_dt,
-                "topic": topic,
-            }
-        ],
-    } in debug_info_data["entities"][0]["subscriptions"]
-
-
-async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
     # Add device settings to config
+    await mqtt_mock_entry_no_yaml_config()
+    config = copy.deepcopy(config[domain])
+    config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
+    config["unique_id"] = "veryunique"
+
+    if command_topic is _SENTINEL:
+        # Add default topic to config
+        config["command_topic"] = "command-topic"
+        command_topic = "command-topic"
+
+    if command_payload is _SENTINEL:
+        command_payload = "ON"
+
+    if state_topic is _SENTINEL:
+        # Add default topic to config
+        config["state_topic"] = "state-topic"
+        state_topic = "state-topic"
+
+    if state_payload is _SENTINEL:
+        state_payload = "ON"
+
+    registry = dr.async_get(hass)
+
+    data = json.dumps(config)
+    async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
+    await hass.async_block_till_done()
+
+    device = registry.async_get_device({("mqtt", "helloworld")})
+    assert device is not None
+
+    debug_info_data = debug_info.info_for_device(hass, device.id)
+
+    start_dt = datetime(2019, 1, 1, 0, 0, 0)
+
+    if state_topic is not None:
+        assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+        assert {"topic": state_topic, "messages": []} in debug_info_data["entities"][0][
+            "subscriptions"
+        ]
+
+        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+            dt_utcnow.return_value = start_dt
+            async_fire_mqtt_message(hass, state_topic, state_payload)
+
+        debug_info_data = debug_info.info_for_device(hass, device.id)
+        assert len(debug_info_data["entities"][0]["subscriptions"]) >= 1
+        assert {
+            "topic": state_topic,
+            "messages": [
+                {
+                    "payload": str(state_payload),
+                    "qos": 0,
+                    "retain": False,
+                    "time": start_dt,
+                    "topic": state_topic,
+                }
+            ],
+        } in debug_info_data["entities"][0]["subscriptions"]
+
+    expected_transmissions = []
+    if service:
+        # Trigger an outgoing MQTT message
+        with patch("homeassistant.util.dt.utcnow") as dt_utcnow:
+            dt_utcnow.return_value = start_dt
+            if service:
+                service_data = {ATTR_ENTITY_ID: f"{domain}.test"}
+                if service_parameters:
+                    service_data.update(service_parameters)
+
+                await hass.services.async_call(
+                    domain,
+                    service,
+                    service_data,
+                    blocking=True,
+                )
+
+        expected_transmissions = [
+            {
+                "topic": command_topic,
+                "messages": [
+                    {
+                        "payload": str(command_payload),
+                        "qos": 0,
+                        "retain": False,
+                        "time": start_dt,
+                        "topic": command_topic,
+                    }
+                ],
+            }
+        ]
+
+    debug_info_data = debug_info.info_for_device(hass, device.id)
+    assert debug_info_data["entities"][0]["transmitted"] == expected_transmissions
+
+
+async def help_test_entity_debug_info_remove(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
+    """Test debug_info.
+
+    This is a test helper for MQTT debug_info.
+    """
+    await mqtt_mock_entry_no_yaml_config()
+    # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
@@ -1251,7 +1368,7 @@ async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1269,17 +1386,20 @@ async def help_test_entity_debug_info_remove(hass, mqtt_mock, domain, config):
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
     await hass.async_block_till_done()
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 0
     assert len(debug_info_data["triggers"]) == 0
     assert entity_id not in hass.data[debug_info.DATA_MQTT_DEBUG_INFO]["entities"]
 
 
-async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, config):
+async def help_test_entity_debug_info_update_entity_id(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test debug_info.
 
     This is a test helper for MQTT debug_info.
     """
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -1295,7 +1415,7 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     device = dev_registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1313,7 +1433,7 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     await hass.async_block_till_done()
     await hass.async_block_till_done()
 
-    debug_info_data = await debug_info.info_for_device(hass, device.id)
+    debug_info_data = debug_info.info_for_device(hass, device.id)
     assert len(debug_info_data["entities"]) == 1
     assert (
         debug_info_data["entities"][0]["discovery_data"]["topic"]
@@ -1331,8 +1451,11 @@ async def help_test_entity_debug_info_update_entity_id(hass, mqtt_mock, domain, 
     )
 
 
-async def help_test_entity_disabled_by_default(hass, mqtt_mock, domain, config):
+async def help_test_entity_disabled_by_default(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test device registry remove."""
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -1367,8 +1490,11 @@ async def help_test_entity_disabled_by_default(hass, mqtt_mock, domain, config):
     assert not dev_registry.async_get_device({("mqtt", "helloworld")})
 
 
-async def help_test_entity_category(hass, mqtt_mock, domain, config):
+async def help_test_entity_category(
+    hass, mqtt_mock_entry_no_yaml_config, domain, config
+):
     """Test device registry remove."""
+    await mqtt_mock_entry_no_yaml_config()
     # Add device settings to config
     config = copy.deepcopy(config[domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
@@ -1410,7 +1536,7 @@ async def help_test_entity_category(hass, mqtt_mock, domain, config):
 
 async def help_test_publishing_with_custom_encoding(
     hass,
-    mqtt_mock,
+    mqtt_mock_entry_with_yaml_config,
     caplog,
     domain,
     config,
@@ -1461,6 +1587,7 @@ async def help_test_publishing_with_custom_encoding(
         {domain: setup_config},
     )
     await hass.async_block_till_done()
+    mqtt_mock = await mqtt_mock_entry_with_yaml_config()
 
     # 1) test with default encoding
     await hass.services.async_call(
@@ -1525,32 +1652,10 @@ async def help_test_publishing_with_custom_encoding(
     mqtt_mock.async_publish.reset_mock()
 
 
-async def help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config):
-    """Test reloading an MQTT platform."""
-    # Create and test an old config of 2 entities based on the config supplied
-    old_config_1 = copy.deepcopy(config)
-    old_config_1["name"] = "test_old_1"
-    old_config_2 = copy.deepcopy(config)
-    old_config_2["name"] = "test_old_2"
-
-    assert await async_setup_component(
-        hass, domain, {domain: [old_config_1, old_config_2]}
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(f"{domain}.test_old_1")
-    assert hass.states.get(f"{domain}.test_old_2")
-    assert len(hass.states.async_all(domain)) == 2
-
-    # Create temporary fixture for configuration.yaml based on the supplied config and test a reload with this new config
-    new_config_1 = copy.deepcopy(config)
-    new_config_1["name"] = "test_new_1"
-    new_config_2 = copy.deepcopy(config)
-    new_config_2["name"] = "test_new_2"
-    new_config_3 = copy.deepcopy(config)
-    new_config_3["name"] = "test_new_3"
+async def help_test_reload_with_config(hass, caplog, tmp_path, config):
+    """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump({domain: [new_config_1, new_config_2, new_config_3]})
+    new_yaml_config = yaml.dump(config)
     new_yaml_config_file.write_text(new_yaml_config)
     assert new_yaml_config_file.read_text() == new_yaml_config
 
@@ -1565,8 +1670,227 @@ async def help_test_reloadable(hass, mqtt_mock, caplog, tmp_path, domain, config
 
     assert "<Event event_mqtt_reloaded[L]>" in caplog.text
 
+
+async def help_test_entry_reload_with_new_config(hass, tmp_path, new_config):
+    """Test reloading with supplied config."""
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump(new_config)
+    new_yaml_config_file.write_text(new_yaml_config)
+    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file), patch(
+        "paho.mqtt.client.Client"
+    ) as mock_client:
+        mock_client().connect = lambda *args: 0
+        # reload the config entry
+        assert await hass.config_entries.async_reload(mqtt_config_entry.entry_id)
+        assert mqtt_config_entry.state is ConfigEntryState.LOADED
+        await hass.async_block_till_done()
+
+
+async def help_test_reloadable(
+    hass, mqtt_mock_entry_with_yaml_config, caplog, tmp_path, domain, config
+):
+    """Test reloading an MQTT platform."""
+    # Create and test an old config of 2 entities based on the config supplied
+    old_config_1 = copy.deepcopy(config)
+    old_config_1["name"] = "test_old_1"
+    old_config_2 = copy.deepcopy(config)
+    old_config_2["name"] = "test_old_2"
+    old_config_3 = copy.deepcopy(config)
+    old_config_3["name"] = "test_old_3"
+    old_config_3.pop("platform")
+    old_config_4 = copy.deepcopy(config)
+    old_config_4["name"] = "test_old_4"
+    old_config_4.pop("platform")
+
+    old_config = {
+        domain: [old_config_1, old_config_2],
+        "mqtt": {domain: [old_config_3, old_config_4]},
+    }
+
+    assert await async_setup_component(hass, domain, old_config)
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    assert hass.states.get(f"{domain}.test_old_1")
+    assert hass.states.get(f"{domain}.test_old_2")
+    assert hass.states.get(f"{domain}.test_old_3")
+    assert hass.states.get(f"{domain}.test_old_4")
+    assert len(hass.states.async_all(domain)) == 4
+
+    # Create temporary fixture for configuration.yaml based on the supplied config and
+    # test a reload with this new config
+    new_config_1 = copy.deepcopy(config)
+    new_config_1["name"] = "test_new_1"
+    new_config_2 = copy.deepcopy(config)
+    new_config_2["name"] = "test_new_2"
+    new_config_3 = copy.deepcopy(config)
+    new_config_3["name"] = "test_new_3"
+    new_config_3.pop("platform")
+    new_config_4 = copy.deepcopy(config)
+    new_config_4["name"] = "test_new_4"
+    new_config_4.pop("platform")
+    new_config_5 = copy.deepcopy(config)
+    new_config_5["name"] = "test_new_5"
+    new_config_6 = copy.deepcopy(config)
+    new_config_6["name"] = "test_new_6"
+    new_config_6.pop("platform")
+
+    new_config = {
+        domain: [new_config_1, new_config_2, new_config_5],
+        "mqtt": {domain: [new_config_3, new_config_4, new_config_6]},
+    }
+
+    await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
+
+    assert len(hass.states.async_all(domain)) == 6
+
+    assert hass.states.get(f"{domain}.test_new_1")
+    assert hass.states.get(f"{domain}.test_new_2")
+    assert hass.states.get(f"{domain}.test_new_3")
+    assert hass.states.get(f"{domain}.test_new_4")
+    assert hass.states.get(f"{domain}.test_new_5")
+    assert hass.states.get(f"{domain}.test_new_6")
+
+
+async def help_test_reloadable_late(hass, caplog, tmp_path, domain, config):
+    """Test reloading an MQTT platform when config entry is setup late."""
+    # Create and test an old config of 2 entities based on the config supplied
+    old_config_1 = copy.deepcopy(config)
+    old_config_1["name"] = "test_old_1"
+    old_config_2 = copy.deepcopy(config)
+    old_config_2["name"] = "test_old_2"
+
+    old_yaml_config_file = tmp_path / "configuration.yaml"
+    old_yaml_config = yaml.dump({domain: [old_config_1, old_config_2]})
+    old_yaml_config_file.write_text(old_yaml_config)
+    assert old_yaml_config_file.read_text() == old_yaml_config
+
+    assert await async_setup_component(
+        hass, domain, {domain: [old_config_1, old_config_2]}
+    )
+    await hass.async_block_till_done()
+
+    # No MQTT config entry, there should be a warning and no entities
+    assert (
+        "MQTT integration is not setup, skipping setup of manually "
+        f"configured MQTT {domain}"
+    ) in caplog.text
+    assert len(hass.states.async_all(domain)) == 0
+
+    # User sets up a config entry, should succeed and entities will setup
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", old_yaml_config_file):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    assert len(hass.states.async_all(domain)) == 2
+
+    # Create temporary fixture for configuration.yaml based on the supplied config and
+    # test a reload with this new config
+    new_config_1 = copy.deepcopy(config)
+    new_config_1["name"] = "test_new_1"
+    new_config_2 = copy.deepcopy(config)
+    new_config_2["name"] = "test_new_2"
+    new_config_3 = copy.deepcopy(config)
+    new_config_3["name"] = "test_new_3"
+
+    new_config = {
+        domain: [new_config_1, new_config_2, new_config_3],
+    }
+    await help_test_reload_with_config(hass, caplog, tmp_path, new_config)
+    await hass.async_block_till_done()
+
     assert len(hass.states.async_all(domain)) == 3
 
     assert hass.states.get(f"{domain}.test_new_1")
     assert hass.states.get(f"{domain}.test_new_2")
     assert hass.states.get(f"{domain}.test_new_3")
+
+
+async def help_test_setup_manual_entity_from_yaml(hass, platform, config):
+    """Help to test setup from yaml through configuration entry."""
+    calls = MagicMock()
+
+    async def mock_reload(hass):
+        """Mock reload."""
+        calls()
+
+    config_structure = {mqtt.DOMAIN: {platform: config}}
+
+    await async_setup_component(hass, mqtt.DOMAIN, config_structure)
+    # Mock config entry
+    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.mqtt.async_reload_manual_mqtt_items",
+        side_effect=mock_reload,
+    ), patch("paho.mqtt.client.Client") as mock_client:
+        mock_client().connect = lambda *args: 0
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+        calls.assert_called_once()
+
+
+async def help_test_unload_config_entry(hass, tmp_path, newconfig):
+    """Test unloading the MQTT config entry."""
+    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    assert mqtt_config_entry.state is ConfigEntryState.LOADED
+
+    new_yaml_config_file = tmp_path / "configuration.yaml"
+    new_yaml_config = yaml.dump(newconfig)
+    new_yaml_config_file.write_text(new_yaml_config)
+    with patch.object(hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
+        assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
+        assert mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
+        await hass.async_block_till_done()
+
+
+async def help_test_unload_config_entry_with_platform(
+    hass,
+    mqtt_mock_entry_with_yaml_config,
+    tmp_path,
+    domain,
+    config,
+):
+    """Test unloading the MQTT config entry with a specific platform domain."""
+    # prepare setup through configuration.yaml
+    config_setup = copy.deepcopy(config)
+    config_setup["name"] = "config_setup"
+    config_name = config_setup
+    assert await async_setup_component(hass, domain, {domain: [config_setup]})
+    await hass.async_block_till_done()
+    await mqtt_mock_entry_with_yaml_config()
+
+    # prepare setup through discovery
+    discovery_setup = copy.deepcopy(config)
+    discovery_setup["name"] = "discovery_setup"
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)
+    )
+    await hass.async_block_till_done()
+
+    # check if both entities were setup correctly
+    config_setup_entity = hass.states.get(f"{domain}.config_setup")
+    assert config_setup_entity
+
+    discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
+    assert discovery_setup_entity
+
+    await help_test_unload_config_entry(hass, tmp_path, config_setup)
+
+    async_fire_mqtt_message(
+        hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)
+    )
+    await hass.async_block_till_done()
+
+    # check if both entities were unloaded correctly
+    config_setup_entity = hass.states.get(f"{domain}.{config_name}")
+    assert config_setup_entity is None
+
+    discovery_setup_entity = hass.states.get(f"{domain}.discovery_setup")
+    assert discovery_setup_entity is None

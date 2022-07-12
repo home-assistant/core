@@ -8,28 +8,35 @@ BASE = """
 # People marked here will be automatically requested for a review
 # when the code that they own is touched.
 # https://github.com/blog/2392-introducing-code-owners
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
 
 # Home Assistant Core
-setup.py @home-assistant/core
-homeassistant/*.py @home-assistant/core
-homeassistant/helpers/* @home-assistant/core
-homeassistant/util/* @home-assistant/core
+setup.cfg @home-assistant/core
+pyproject.toml @home-assistant/core
+/homeassistant/*.py @home-assistant/core
+/homeassistant/helpers/ @home-assistant/core
+/homeassistant/util/ @home-assistant/core
 
 # Home Assistant Supervisor
 build.json @home-assistant/supervisor
-machine/* @home-assistant/supervisor
-rootfs/* @home-assistant/supervisor
-Dockerfile @home-assistant/supervisor
+/machine/ @home-assistant/supervisor
+/rootfs/ @home-assistant/supervisor
+/Dockerfile @home-assistant/supervisor
 
 # Other code
-homeassistant/scripts/check_config.py @kellerza
+/homeassistant/scripts/check_config.py @kellerza
 
 # Integrations
 """.strip()
 
 INDIVIDUAL_FILES = """
 # Individual files
-homeassistant/components/demo/weather @fabaff
+/homeassistant/components/demo/weather.py @fabaff
+"""
+
+REMOVE_CODEOWNERS = """
+# Remove codeowners from files
+/homeassistant/components/*/translations/
 """
 
 
@@ -54,12 +61,13 @@ def generate_and_validate(integrations: dict[str, Integration], config: Config):
                     "codeowners", "Code owners need to be valid GitHub handles."
                 )
 
-        parts.append(f"homeassistant/components/{domain}/* {' '.join(codeowners)}")
+        parts.append(f"/homeassistant/components/{domain}/ {' '.join(codeowners)}")
 
-        if (config.root / "tests/components" / domain).exists():
-            parts.append(f"tests/components/{domain}/* {' '.join(codeowners)}")
+        if (config.root / "tests/components" / domain / "__init__.py").exists():
+            parts.append(f"/tests/components/{domain}/ {' '.join(codeowners)}")
 
     parts.append(f"\n{INDIVIDUAL_FILES.strip()}")
+    parts.append(f"\n{REMOVE_CODEOWNERS.strip()}")
 
     return "\n".join(parts)
 

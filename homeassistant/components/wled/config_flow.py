@@ -6,7 +6,7 @@ from typing import Any
 import voluptuous as vol
 from wled import WLED, Device, WLEDConnectionError
 
-from homeassistant.components import zeroconf
+from homeassistant.components import onboarding, zeroconf
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.core import callback
@@ -41,6 +41,8 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
             except WLEDConnectionError:
                 errors["base"] = "cannot_connect"
             else:
+                if device.info.leds.cct:
+                    return self.async_abort(reason="cct_unsupported")
                 await self.async_set_unique_id(device.info.mac_address)
                 self._abort_if_unique_id_configured(
                     updates={CONF_HOST: user_input[CONF_HOST]}
@@ -77,6 +79,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         except WLEDConnectionError:
             return self.async_abort(reason="cannot_connect")
 
+        if self.discovered_device.info.leds.cct:
+            return self.async_abort(reason="cct_unsupported")
+
         await self.async_set_unique_id(self.discovered_device.info.mac_address)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
@@ -92,7 +97,7 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> FlowResult:
         """Handle a flow initiated by zeroconf."""
-        if user_input is not None:
+        if user_input is not None or not onboarding.async_is_onboarded(self.hass):
             return self.async_create_entry(
                 title=self.discovered_device.info.name,
                 data={

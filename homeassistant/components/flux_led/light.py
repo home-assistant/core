@@ -19,9 +19,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_WHITE,
-    SUPPORT_EFFECT,
-    SUPPORT_TRANSITION,
     LightEntity,
+    LightEntityFeature,
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -44,6 +43,8 @@ from .const import (
     CONF_TRANSITION,
     DEFAULT_EFFECT_SPEED,
     DOMAIN,
+    MIN_CCT_BRIGHTNESS,
+    MIN_RGB_BRIGHTNESS,
     MULTI_BRIGHTNESS_COLOR_MODES,
     TRANSITION_GRADUAL,
     TRANSITION_JUMP,
@@ -55,6 +56,9 @@ from .util import (
     _effect_brightness,
     _flux_color_mode_to_hass,
     _hass_color_modes,
+    _min_rgb_brightness,
+    _min_rgbw_brightness,
+    _min_rgbwc_brightness,
     _str_to_multi_color_effect,
 )
 
@@ -106,7 +110,7 @@ SET_MUSIC_MODE_DICT: Final = {
         vol.Coerce(int), vol.Range(min=0, max=100)
     ),
     vol.Optional(ATTR_EFFECT, default=1): vol.All(
-        vol.Coerce(int), vol.Range(min=1, max=16)
+        vol.Coerce(int), vol.Range(min=0, max=16)
     ),
     vol.Optional(ATTR_LIGHT_SCREEN, default=False): bool,
     vol.Optional(ATTR_FOREGROUND_COLOR): vol.All(
@@ -172,8 +176,8 @@ async def async_setup_entry(
         [
             FluxLight(
                 coordinator,
-                entry.unique_id,
-                entry.data[CONF_NAME],
+                entry.unique_id or entry.entry_id,
+                entry.data.get(CONF_NAME, entry.title),
                 list(custom_effect_colors),
                 options.get(CONF_CUSTOM_EFFECT_SPEED_PCT, DEFAULT_EFFECT_SPEED),
                 options.get(CONF_CUSTOM_EFFECT_TRANSITION, TRANSITION_GRADUAL),
@@ -182,22 +186,24 @@ async def async_setup_entry(
     )
 
 
-class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
+class FluxLight(
+    FluxOnOffEntity, CoordinatorEntity[FluxLedUpdateCoordinator], LightEntity
+):
     """Representation of a Flux light."""
 
-    _attr_supported_features = SUPPORT_TRANSITION | SUPPORT_EFFECT
+    _attr_supported_features = LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
 
     def __init__(
         self,
         coordinator: FluxLedUpdateCoordinator,
-        unique_id: str | None,
+        base_unique_id: str,
         name: str,
         custom_effect_colors: list[tuple[int, int, int]],
         custom_effect_speed_pct: int,
         custom_effect_transition: str,
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator, unique_id, name, None)
+        super().__init__(coordinator, base_unique_id, name, None)
         self._attr_min_mireds = color_temperature_kelvin_to_mired(self._device.max_temp)
         self._attr_max_mireds = color_temperature_kelvin_to_mired(self._device.min_temp)
         self._attr_supported_color_modes = _hass_color_modes(self._device)
@@ -281,13 +287,13 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         """Determine brightness from kwargs or current value."""
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is None:
             brightness = self.brightness
-        if not brightness:
-            # If the brightness was previously 0, the light
-            # will not turn on unless brightness is at least 1
-            # If the device was on and brightness was not
-            # set, it means it was masked by an effect
-            brightness = 255 if self.is_on else 1
-        return brightness
+        # If the brightness was previously 0, the light
+        # will not turn on unless brightness is at least 1
+        #
+        # We previously had a problem with the brightness
+        # sometimes reporting as 0 when an effect was in progress,
+        # however this has since been resolved in the upstream library
+        return max(MIN_RGB_BRIGHTNESS, brightness)
 
     async def _async_set_mode(self, **kwargs: Any) -> None:
         """Set an effect or color mode."""
@@ -305,11 +311,13 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
             ):
                 # When switching to color temp from RGBWW or RGB&W mode,
                 # we do not want the overall brightness of the RGB channels
-                brightness = max(self._device.rgb)
+                brightness = max(MIN_CCT_BRIGHTNESS, *self._device.rgb)
             await self._device.async_set_white_temp(color_temp_kelvin, brightness)
             return
         # Handle switch to RGB Color Mode
         if rgb := kwargs.get(ATTR_RGB_COLOR):
+            if not self._device.requires_turn_on:
+                rgb = _min_rgb_brightness(rgb)
             red, green, blue = rgb
             await self._device.async_set_levels(red, green, blue, brightness=brightness)
             return
@@ -317,13 +325,16 @@ class FluxLight(FluxOnOffEntity, CoordinatorEntity, LightEntity):
         if rgbw := kwargs.get(ATTR_RGBW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbw = rgbw_brightness(rgbw, brightness)
+            rgbw = _min_rgbw_brightness(rgbw, self._device.rgbw)
             await self._device.async_set_levels(*rgbw)
             return
         # Handle switch to RGBWW Color Mode
         if rgbcw := kwargs.get(ATTR_RGBWW_COLOR):
             if ATTR_BRIGHTNESS in kwargs:
                 rgbcw = rgbcw_brightness(kwargs[ATTR_RGBWW_COLOR], brightness)
-            await self._device.async_set_levels(*rgbcw_to_rgbwc(rgbcw))
+            rgbwc = rgbcw_to_rgbwc(rgbcw)
+            rgbwc = _min_rgbwc_brightness(rgbwc, self._device.rgbww)
+            await self._device.async_set_levels(*rgbwc)
             return
         if (white := kwargs.get(ATTR_WHITE)) is not None:
             await self._device.async_set_levels(w=white)

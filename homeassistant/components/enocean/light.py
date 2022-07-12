@@ -3,12 +3,13 @@ from __future__ import annotations
 
 import math
 
+from enocean.utils import combine_hex
 import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     PLATFORM_SCHEMA,
-    SUPPORT_BRIGHTNESS,
+    ColorMode,
     LightEntity,
 )
 from homeassistant.const import CONF_ID, CONF_NAME
@@ -22,7 +23,6 @@ from .device import EnOceanEntity
 CONF_SENDER_ID = "sender_id"
 
 DEFAULT_NAME = "EnOcean Light"
-SUPPORT_ENOCEAN = SUPPORT_BRIGHTNESS
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -50,12 +50,16 @@ def setup_platform(
 class EnOceanLight(EnOceanEntity, LightEntity):
     """Representation of an EnOcean light source."""
 
+    _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
+
     def __init__(self, sender_id, dev_id, dev_name):
         """Initialize the EnOcean light source."""
         super().__init__(dev_id, dev_name)
         self._on_state = False
         self._brightness = 50
         self._sender_id = sender_id
+        self._attr_unique_id = f"{combine_hex(dev_id)}"
 
     @property
     def name(self):
@@ -75,11 +79,6 @@ class EnOceanLight(EnOceanEntity, LightEntity):
     def is_on(self):
         """If light is on."""
         return self._on_state
-
-    @property
-    def supported_features(self):
-        """Flag supported features."""
-        return SUPPORT_ENOCEAN
 
     def turn_on(self, **kwargs):
         """Turn the light source on or sets a specific dimmer value."""

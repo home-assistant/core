@@ -10,7 +10,7 @@
             "is_on": "{entity_name} est\u00e1 activado"
         },
         "trigger_type": {
-            "toggled": "{entity_name} activado o desactivado",
+            "changed_states": "{entity_name} activado o desactivado",
             "turned_off": "{entity_name} desactivado",
             "turned_on": "{entity_name} activado"
         }

@@ -1,0 +1,48 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "already_in_progress": "O fluxo de configura\u00e7\u00e3o j\u00e1 est\u00e1 em andamento",
+            "cannot_connect": "Falha ao conectar, tente novamente, desconectar os cabos de alimenta\u00e7\u00e3o e ethernet e reconect\u00e1-los pode ajudar",
+            "not_denonavr_manufacturer": "N\u00e3o \u00e9 um receptor de rede Denon AVR, o fabricante descoberto n\u00e3o corresponde",
+            "not_denonavr_missing": "N\u00e3o \u00e9 um receptor de rede Denon AVR, as informa\u00e7\u00f5es de descoberta n\u00e3o est\u00e3o completas"
+        },
+        "error": {
+            "discovery_error": "Falha ao descobrir um receptor de rede Denon AVR"
+        },
+        "flow_title": "{name}",
+        "step": {
+            "confirm": {
+                "description": "Confirme a adi\u00e7\u00e3o do receptor"
+            },
+            "select": {
+                "data": {
+                    "select_host": "Endere\u00e7o IP do receptor"
+                },
+                "description": "Execute a configura\u00e7\u00e3o novamente se desejar conectar receptores adicionais",
+                "title": "Selecione o receptor que voc\u00ea deseja conectar"
+            },
+            "user": {
+                "data": {
+                    "host": "Endere\u00e7o IP"
+                },
+                "data_description": {
+                    "host": "Deixe em branco para usar a descoberta autom\u00e1tica"
+                }
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "show_all_sources": "Mostrar todas as fontes",
+                    "update_audyssey": "Atualizar as configura\u00e7\u00f5es do Audyssey",
+                    "zone2": "Configure a Zona 2",
+                    "zone3": "Configurar a Zona 3"
+                },
+                "description": "Especificar configura\u00e7\u00f5es opcionais"
+            }
+        }
+    }
+}

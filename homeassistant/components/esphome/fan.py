@@ -9,10 +9,8 @@ from aioesphomeapi import FanDirection, FanInfo, FanSpeed, FanState
 from homeassistant.components.fan import (
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
-    SUPPORT_DIRECTION,
-    SUPPORT_OSCILLATE,
-    SUPPORT_SET_SPEED,
     FanEntity,
+    FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -69,8 +67,11 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         api_version = self._api_version
         return api_version.major == 1 and api_version.minor > 3
 
-    async def async_set_percentage(self, percentage: int | None) -> None:
+    async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
+        await self._async_set_percentage(percentage)
+
+    async def _async_set_percentage(self, percentage: int | None) -> None:
         if percentage == 0:
             await self.async_turn_off()
             return
@@ -92,13 +93,12 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
 
     async def async_turn_on(
         self,
-        speed: str | None = None,
         percentage: int | None = None,
         preset_mode: str | None = None,
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        await self.async_set_percentage(percentage)
+        await self._async_set_percentage(percentage)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
@@ -117,7 +117,7 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         )
 
     @esphome_state_property
-    def is_on(self) -> bool | None:  # type: ignore[override]
+    def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._state.state
 
@@ -162,9 +162,9 @@ class EsphomeFan(EsphomeEntity[FanInfo, FanState], FanEntity):
         """Flag supported features."""
         flags = 0
         if self._static_info.supports_oscillation:
-            flags |= SUPPORT_OSCILLATE
+            flags |= FanEntityFeature.OSCILLATE
         if self._static_info.supports_speed:
-            flags |= SUPPORT_SET_SPEED
+            flags |= FanEntityFeature.SET_SPEED
         if self._static_info.supports_direction:
-            flags |= SUPPORT_DIRECTION
+            flags |= FanEntityFeature.DIRECTION
         return flags

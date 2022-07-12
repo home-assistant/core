@@ -25,7 +25,7 @@ async def async_setup_entry(
     """Set up device tracker for Ruckus Unleashed component."""
     coordinator = hass.data[DOMAIN][entry.entry_id][COORDINATOR]
 
-    tracked = set()
+    tracked: set[str] = set()
 
     @callback
     def router_update():
@@ -38,7 +38,7 @@ async def async_setup_entry(
         coordinator.async_add_listener(router_update)
     )
 
-    registry = await entity_registry.async_get_registry(hass)
+    registry = entity_registry.async_get(hass)
     restore_entities(registry, coordinator, entry, async_add_entities, tracked)
 
 

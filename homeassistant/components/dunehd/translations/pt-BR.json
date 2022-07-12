@@ -1,0 +1,20 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado"
+        },
+        "error": {
+            "already_configured": "Dispositivo j\u00e1 est\u00e1 configurado",
+            "cannot_connect": "Falha ao conectar",
+            "invalid_host": "Nome de host ou endere\u00e7o IP inv\u00e1lido"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "host": "Nome do host"
+                },
+                "description": "Certifique-se de que seu player est\u00e1 ligado."
+            }
+        }
+    }
+}

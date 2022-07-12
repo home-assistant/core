@@ -8,7 +8,6 @@ from unittest.mock import AsyncMock, Mock, patch
 import aiohue.v1 as aiohue_v1
 import aiohue.v2 as aiohue_v2
 from aiohue.v2.controllers.events import EventType
-from aiohue.v2.models.clip import parse_clip_resource
 import pytest
 
 from homeassistant.components import hue
@@ -61,7 +60,7 @@ def create_mock_bridge(hass, api_version=1):
 
     bridge.async_initialize_bridge = async_initialize_bridge
 
-    async def async_request_call(task, *args, allowed_errors=None, **kwargs):
+    async def async_request_call(task, *args, **kwargs):
         await task(*args, **kwargs)
 
     bridge.async_request_call = async_request_call
@@ -187,7 +186,7 @@ def create_mock_api_v2(hass):
 
     def emit_event(event_type, data):
         """Emit an event from a (hue resource) dict."""
-        api.events.emit(EventType(event_type), parse_clip_resource(data))
+        api.events.emit(EventType(event_type), data)
 
     api.load_test_data = load_test_data
     api.emit_event = emit_event

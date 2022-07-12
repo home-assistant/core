@@ -1,0 +1,46 @@
+{
+    "state": {
+        "overkiz__battery": {
+            "full": "\u03a0\u03bb\u03ae\u03c1\u03b7\u03c2",
+            "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc",
+            "normal": "\u03a6\u03c5\u03c3\u03b9\u03bf\u03bb\u03bf\u03b3\u03b9\u03ba\u03cc",
+            "verylow": "\u03a0\u03bf\u03bb\u03cd \u03c7\u03b1\u03bc\u03b7\u03bb\u03cc"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "\u039a\u03b1\u03bb\u03cc",
+            "low": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03cc",
+            "normal": "\u03a6\u03c5\u03c3\u03b9\u03bf\u03bb\u03bf\u03b3\u03b9\u03ba\u03cc",
+            "verylow": "\u03a0\u03bf\u03bb\u03cd \u03c7\u03b1\u03bc\u03b7\u03bb\u03cc"
+        },
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "\u0395\u03be\u03c9\u03c4\u03b5\u03c1\u03b9\u03ba\u03ae \u03c0\u03cd\u03bb\u03b7",
+            "local_user": "\u03a4\u03bf\u03c0\u03b9\u03ba\u03cc\u03c2 \u03c7\u03c1\u03ae\u03c3\u03c4\u03b7\u03c2",
+            "lsc": "LSC",
+            "myself": "\u0395\u03b3\u03ce \u03bf \u03af\u03b4\u03b9\u03bf\u03c2",
+            "rain": "\u0392\u03c1\u03bf\u03c7\u03ae",
+            "saac": "SAAC",
+            "security": "\u0391\u03c3\u03c6\u03ac\u03bb\u03b5\u03b9\u03b1",
+            "sfc": "SFC",
+            "temperature": "\u0398\u03b5\u03c1\u03bc\u03bf\u03ba\u03c1\u03b1\u03c3\u03af\u03b1",
+            "timer": "\u03a7\u03c1\u03bf\u03bd\u03bf\u03b4\u03b9\u03b1\u03ba\u03cc\u03c0\u03c4\u03b7\u03c2",
+            "ups": "UPS",
+            "user": "\u03a7\u03c1\u03ae\u03c3\u03c4\u03b7\u03c2",
+            "wind": "\u0386\u03bd\u03b5\u03bc\u03bf\u03c2"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "\u039d\u03b5\u03ba\u03c1\u03cc",
+            "low_battery": "\u03a7\u03b1\u03bc\u03b7\u03bb\u03ae \u03bc\u03c0\u03b1\u03c4\u03b1\u03c1\u03af\u03b1",
+            "maintenance_required": "\u0391\u03c0\u03b1\u03b9\u03c4\u03b5\u03af\u03c4\u03b1\u03b9 \u03c3\u03c5\u03bd\u03c4\u03ae\u03c1\u03b7\u03c3\u03b7",
+            "no_defect": "\u03a7\u03c9\u03c1\u03af\u03c2 \u03b5\u03bb\u03ac\u03c4\u03c4\u03c9\u03bc\u03b1"
+        },
+        "overkiz__sensor_room": {
+            "clean": "\u039a\u03b1\u03b8\u03b1\u03c1\u03cc\u03c2",
+            "dirty": "\u0392\u03c1\u03ce\u03bc\u03b9\u03ba\u03bf\u03c2"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "\u039a\u03bb\u03b5\u03b9\u03c3\u03c4\u03cc",
+            "open": "\u0386\u03bd\u03bf\u03b9\u03b3\u03bc\u03b1",
+            "tilt": "\u039a\u03bb\u03af\u03c3\u03b7"
+        }
+    }
+}

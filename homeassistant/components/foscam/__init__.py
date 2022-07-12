@@ -21,7 +21,7 @@ PLATFORMS = [Platform.CAMERA]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up foscam from a config entry."""
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = entry.data
 
@@ -71,7 +71,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         if ret != 0:
             rtsp_port = response.get("rtspPort") or response.get("mediaPort")
 
-        entry.data = {**entry.data, CONF_RTSP_PORT: rtsp_port}
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_RTSP_PORT: rtsp_port}
+        )
 
         # Change entry version
         entry.version = 2

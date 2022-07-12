@@ -1,12 +1,13 @@
 """Motor speed support for Xiaomi Mi Air Humidifier."""
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.components.number.const import DOMAIN as PLATFORM_DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import DEGREE, TIME_MINUTES
+from homeassistant.const import CONF_MODEL, DEGREE, TIME_MINUTES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityCategory
@@ -15,9 +16,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_DEVICE,
     CONF_FLOW_TYPE,
-    CONF_MODEL,
     DOMAIN,
     FEATURE_FLAGS_AIRFRESH,
+    FEATURE_FLAGS_AIRFRESH_A1,
+    FEATURE_FLAGS_AIRFRESH_T2017,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     FEATURE_FLAGS_AIRPURIFIER_2S,
@@ -45,6 +47,8 @@ from .const import (
     FEATURE_SET_VOLUME,
     KEY_COORDINATOR,
     KEY_DEVICE,
+    MODEL_AIRFRESH_A1,
+    MODEL_AIRFRESH_T2017,
     MODEL_AIRFRESH_VA2,
     MODEL_AIRHUMIDIFIER_CA1,
     MODEL_AIRHUMIDIFIER_CA4,
@@ -105,10 +109,10 @@ NUMBER_TYPES = {
         key=ATTR_MOTOR_SPEED,
         name="Motor Speed",
         icon="mdi:fast-forward-outline",
-        unit_of_measurement="rpm",
-        min_value=200,
-        max_value=2000,
-        step=10,
+        native_unit_of_measurement="rpm",
+        native_min_value=200,
+        native_max_value=2000,
+        native_step=10,
         available_with_device_off=False,
         method="async_set_motor_speed",
         entity_category=EntityCategory.CONFIG,
@@ -117,9 +121,9 @@ NUMBER_TYPES = {
         key=ATTR_FAVORITE_LEVEL,
         name="Favorite Level",
         icon="mdi:star-cog",
-        min_value=0,
-        max_value=17,
-        step=1,
+        native_min_value=0,
+        native_max_value=17,
+        native_step=1,
         method="async_set_favorite_level",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -127,9 +131,9 @@ NUMBER_TYPES = {
         key=ATTR_FAN_LEVEL,
         name="Fan Level",
         icon="mdi:fan",
-        min_value=1,
-        max_value=3,
-        step=1,
+        native_min_value=1,
+        native_max_value=3,
+        native_step=1,
         method="async_set_fan_level",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -137,9 +141,9 @@ NUMBER_TYPES = {
         key=ATTR_VOLUME,
         name="Volume",
         icon="mdi:volume-high",
-        min_value=0,
-        max_value=100,
-        step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
         method="async_set_volume",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -147,10 +151,10 @@ NUMBER_TYPES = {
         key=ATTR_OSCILLATION_ANGLE,
         name="Oscillation Angle",
         icon="mdi:angle-acute",
-        unit_of_measurement=DEGREE,
-        min_value=1,
-        max_value=120,
-        step=1,
+        native_unit_of_measurement=DEGREE,
+        native_min_value=1,
+        native_max_value=120,
+        native_step=1,
         method="async_set_oscillation_angle",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -158,10 +162,10 @@ NUMBER_TYPES = {
         key=ATTR_DELAY_OFF_COUNTDOWN,
         name="Delay Off Countdown",
         icon="mdi:fan-off",
-        unit_of_measurement=TIME_MINUTES,
-        min_value=0,
-        max_value=480,
-        step=1,
+        native_unit_of_measurement=TIME_MINUTES,
+        native_min_value=0,
+        native_max_value=480,
+        native_step=1,
         method="async_set_delay_off_countdown",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -169,9 +173,9 @@ NUMBER_TYPES = {
         key=ATTR_LED_BRIGHTNESS,
         name="Led Brightness",
         icon="mdi:brightness-6",
-        min_value=0,
-        max_value=100,
-        step=1,
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
         method="async_set_led_brightness",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -179,9 +183,9 @@ NUMBER_TYPES = {
         key=ATTR_LED_BRIGHTNESS_LEVEL,
         name="Led Brightness",
         icon="mdi:brightness-6",
-        min_value=0,
-        max_value=8,
-        step=1,
+        native_min_value=0,
+        native_max_value=8,
+        native_step=1,
         method="async_set_led_brightness_level",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -189,17 +193,19 @@ NUMBER_TYPES = {
         key=ATTR_FAVORITE_RPM,
         name="Favorite Motor Speed",
         icon="mdi:star-cog",
-        unit_of_measurement="rpm",
-        min_value=300,
-        max_value=2200,
-        step=10,
+        native_unit_of_measurement="rpm",
+        native_min_value=300,
+        native_max_value=2200,
+        native_step=10,
         method="async_set_favorite_rpm",
         entity_category=EntityCategory.CONFIG,
     ),
 }
 
 MODEL_TO_FEATURES_MAP = {
+    MODEL_AIRFRESH_A1: FEATURE_FLAGS_AIRFRESH_A1,
     MODEL_AIRFRESH_VA2: FEATURE_FLAGS_AIRFRESH,
+    MODEL_AIRFRESH_T2017: FEATURE_FLAGS_AIRFRESH_T2017,
     MODEL_AIRHUMIDIFIER_CA1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
     MODEL_AIRHUMIDIFIER_CA4: FEATURE_FLAGS_AIRHUMIDIFIER_CA4,
     MODEL_AIRHUMIDIFIER_CB1: FEATURE_FLAGS_AIRHUMIDIFIER_CA_AND_CB,
@@ -268,9 +274,12 @@ async def async_setup_entry(
                 description.key == ATTR_OSCILLATION_ANGLE
                 and model in OSCILLATION_ANGLE_VALUES
             ):
-                description.max_value = OSCILLATION_ANGLE_VALUES[model].max_value
-                description.min_value = OSCILLATION_ANGLE_VALUES[model].min_value
-                description.step = OSCILLATION_ANGLE_VALUES[model].step
+                description = dataclasses.replace(
+                    description,
+                    native_max_value=OSCILLATION_ANGLE_VALUES[model].max_value,
+                    native_min_value=OSCILLATION_ANGLE_VALUES[model].min_value,
+                    native_step=OSCILLATION_ANGLE_VALUES[model].step,
+                )
 
             entities.append(
                 XiaomiNumberEntity(
@@ -293,7 +302,7 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
         """Initialize the generic Xiaomi attribute selector."""
         super().__init__(name, device, entry, unique_id, coordinator)
 
-        self._attr_value = self._extract_value_from_attribute(
+        self._attr_native_value = self._extract_value_from_attribute(
             coordinator.data, description.key
         )
         self.entity_description = description
@@ -309,18 +318,18 @@ class XiaomiNumberEntity(XiaomiCoordinatedMiioEntity, NumberEntity):
             return False
         return super().available
 
-    async def async_set_value(self, value):
+    async def async_set_native_value(self, value):
         """Set an option of the miio device."""
         method = getattr(self, self.entity_description.method)
         if await method(int(value)):
-            self._attr_value = value
+            self._attr_native_value = value
             self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self):
         """Fetch state from the device."""
         # On state change the device doesn't provide the new state immediately.
-        self._attr_value = self._extract_value_from_attribute(
+        self._attr_native_value = self._extract_value_from_attribute(
             self.coordinator.data, self.entity_description.key
         )
         self.async_write_ha_state()

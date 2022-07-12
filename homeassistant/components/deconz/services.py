@@ -1,7 +1,5 @@
 """deCONZ services."""
 
-from types import MappingProxyType
-
 from pydeconz.utils import normalize_bridge_id
 import voluptuous as vol
 
@@ -16,6 +14,7 @@ from homeassistant.helpers.entity_registry import (
     async_entries_for_config_entry,
     async_entries_for_device,
 )
+from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .config_flow import get_master_gateway
 from .const import CONF_BRIDGE_ID, DOMAIN, LOGGER
@@ -111,9 +110,7 @@ def async_unload_services(hass: HomeAssistant) -> None:
         hass.services.async_remove(DOMAIN, service)
 
 
-async def async_configure_service(
-    gateway: DeconzGateway, data: MappingProxyType
-) -> None:
+async def async_configure_service(gateway: DeconzGateway, data: ReadOnlyDict) -> None:
     """Set attribute of device in deCONZ.
 
     Entity is used to resolve to a device path (e.g. '/lights/1').
@@ -147,10 +144,8 @@ async def async_refresh_devices_service(gateway: DeconzGateway) -> None:
     """Refresh available devices from deCONZ."""
     gateway.ignore_state_updates = True
     await gateway.api.refresh_state()
+    gateway.load_ignored_devices()
     gateway.ignore_state_updates = False
-
-    for resource_type in gateway.deconz_resource_type_to_signal_new_device:
-        gateway.async_add_device_callback(resource_type, force=True)
 
 
 async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
@@ -170,12 +165,13 @@ async def async_remove_orphaned_entries_service(gateway: DeconzGateway) -> None:
     ]
 
     # Don't remove the Gateway host entry
-    gateway_host = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
-        identifiers=set(),
-    )
-    if gateway_host and gateway_host.id in devices_to_be_removed:
-        devices_to_be_removed.remove(gateway_host.id)
+    if gateway.api.config.mac:
+        gateway_host = device_registry.async_get_device(
+            connections={(CONNECTION_NETWORK_MAC, gateway.api.config.mac)},
+            identifiers=set(),
+        )
+        if gateway_host and gateway_host.id in devices_to_be_removed:
+            devices_to_be_removed.remove(gateway_host.id)
 
     # Don't remove the Gateway service entry
     gateway_service = device_registry.async_get_device(

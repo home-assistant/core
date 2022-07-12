@@ -9,6 +9,7 @@
         },
         "step": {
             "discovery_confirm": {
+                "description": "{product_type} ({serial}) \u3092 {ip_address} \u3067\u30bb\u30c3\u30c8\u30a2\u30c3\u30d7\u3057\u307e\u3059\u304b\uff1f",
                 "title": "\u78ba\u8a8d"
             },
             "user": {

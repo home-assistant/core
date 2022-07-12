@@ -25,7 +25,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Verisure hub."""
-        self.imageseries = {}
+        self.imageseries: dict[str, list] = {}
         self.entry = entry
 
         self.verisure = Verisure(
@@ -52,14 +52,12 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
 
         return True
 
-    async def async_logout(self, _event: Event) -> bool:
+    async def async_logout(self, _event: Event) -> None:
         """Logout from Verisure."""
         try:
             await self.hass.async_add_executor_job(self.verisure.logout)
         except VerisureError as ex:
             LOGGER.error("Could not log out from verisure, %s", ex)
-            return False
-        return True
 
     async def _async_update_data(self) -> dict:
         """Fetch data from Verisure."""

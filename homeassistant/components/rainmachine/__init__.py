@@ -50,10 +50,7 @@ from .const import (
     LOGGER,
 )
 
-DEFAULT_ATTRIBUTION = "Data provided by Green Electronics LLC"
-DEFAULT_ICON = "mdi:water"
 DEFAULT_SSL = True
-DEFAULT_UPDATE_INTERVAL = timedelta(seconds=15)
 
 CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
@@ -67,9 +64,9 @@ UPDATE_INTERVALS = {
     DATA_ZONES: timedelta(seconds=15),
 }
 
-# Constants expected by the RainMachine API for Service Data
 CONF_CONDITION = "condition"
 CONF_DEWPOINT = "dewpoint"
+CONF_DURATION = "duration"
 CONF_ET = "et"
 CONF_MAXRH = "maxrh"
 CONF_MAXTEMP = "maxtemp"
@@ -95,8 +92,10 @@ CV_WX_DATA_VALID_SOLARRAD = vol.All(vol.Coerce(float), vol.Range(min=0.0, max=5.
 
 SERVICE_NAME_PAUSE_WATERING = "pause_watering"
 SERVICE_NAME_PUSH_WEATHER_DATA = "push_weather_data"
+SERVICE_NAME_RESTRICT_WATERING = "restrict_watering"
 SERVICE_NAME_STOP_ALL = "stop_all"
 SERVICE_NAME_UNPAUSE_WATERING = "unpause_watering"
+SERVICE_NAME_UNRESTRICT_WATERING = "unrestrict_watering"
 
 SERVICE_SCHEMA = vol.Schema(
     {
@@ -126,6 +125,12 @@ SERVICE_PUSH_WEATHER_DATA_SCHEMA = SERVICE_SCHEMA.extend(
         vol.Optional(CONF_CONDITION): cv.string,
         vol.Optional(CONF_PRESSURE): CV_WX_DATA_VALID_PRESSURE,
         vol.Optional(CONF_DEWPOINT): CV_WX_DATA_VALID_TEMP_RANGE,
+    }
+)
+
+SERVICE_RESTRICT_WATERING_SCHEMA = SERVICE_SCHEMA.extend(
+    {
+        vol.Required(CONF_DURATION): cv.time_period,
     }
 )
 
@@ -178,7 +183,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry.data[CONF_IP_ADDRESS],
             entry.data[CONF_PASSWORD],
             port=entry.data[CONF_PORT],
-            ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
+            use_ssl=entry.data.get(CONF_SSL, DEFAULT_SSL),
         )
     except RainMachineError as err:
         raise ConfigEntryNotReady from err
@@ -250,7 +255,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         DATA_COORDINATOR: coordinators,
     }
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
@@ -275,6 +280,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             }
         )
 
+    async def async_restrict_watering(call: ServiceCall) -> None:
+        """Restrict watering for a time period."""
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.restrictions.restrict(call.data[CONF_DURATION])
+        await async_update_programs_and_zones(hass, entry)
+
     async def async_stop_all(call: ServiceCall) -> None:
         """Stop all watering."""
         controller = async_get_controller_for_service_call(hass, call)
@@ -285,6 +296,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         """Unpause watering."""
         controller = async_get_controller_for_service_call(hass, call)
         await controller.watering.unpause_all()
+        await async_update_programs_and_zones(hass, entry)
+
+    async def async_unrestrict_watering(call: ServiceCall) -> None:
+        """Unrestrict watering."""
+        controller = async_get_controller_for_service_call(hass, call)
+        await controller.restrictions.unrestrict()
         await async_update_programs_and_zones(hass, entry)
 
     for service_name, schema, method in (
@@ -298,8 +315,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             SERVICE_PUSH_WEATHER_DATA_SCHEMA,
             async_push_weather_data,
         ),
+        (
+            SERVICE_NAME_RESTRICT_WATERING,
+            SERVICE_RESTRICT_WATERING_SCHEMA,
+            async_restrict_watering,
+        ),
         (SERVICE_NAME_STOP_ALL, SERVICE_SCHEMA, async_stop_all),
         (SERVICE_NAME_UNPAUSE_WATERING, SERVICE_SCHEMA, async_unpause_watering),
+        (
+            SERVICE_NAME_UNRESTRICT_WATERING,
+            SERVICE_SCHEMA,
+            async_unrestrict_watering,
+        ),
     ):
         if hass.services.has_service(DOMAIN, service_name):
             continue
@@ -325,8 +352,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         for service_name in (
             SERVICE_NAME_PAUSE_WATERING,
             SERVICE_NAME_PUSH_WEATHER_DATA,
+            SERVICE_NAME_RESTRICT_WATERING,
             SERVICE_NAME_STOP_ALL,
             SERVICE_NAME_UNPAUSE_WATERING,
+            SERVICE_NAME_UNRESTRICT_WATERING,
         ):
             hass.services.async_remove(DOMAIN, service_name)
 
@@ -372,6 +401,8 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 class RainMachineEntity(CoordinatorEntity):
     """Define a generic RainMachine entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
         entry: ConfigEntry,
@@ -386,7 +417,7 @@ class RainMachineEntity(CoordinatorEntity):
             identifiers={(DOMAIN, controller.mac)},
             configuration_url=f"https://{entry.data[CONF_IP_ADDRESS]}:{entry.data[CONF_PORT]}",
             connections={(dr.CONNECTION_NETWORK_MAC, controller.mac)},
-            name=str(controller.name),
+            name=str(controller.name).capitalize(),
             manufacturer="RainMachine",
             model=(
                 f"Version {controller.hardware_version} "
@@ -395,7 +426,6 @@ class RainMachineEntity(CoordinatorEntity):
             sw_version=controller.software_version,
         )
         self._attr_extra_state_attributes = {}
-        self._attr_name = f"{controller.name} {description.name}"
         self._attr_unique_id = f"{controller.mac}_{description.key}"
         self._controller = controller
         self.entity_description = description

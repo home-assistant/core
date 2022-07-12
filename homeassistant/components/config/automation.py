@@ -1,5 +1,4 @@
 """Provide configuration end points for Automations."""
-from collections import OrderedDict
 import uuid
 
 from homeassistant.components.automation.config import (
@@ -24,7 +23,7 @@ async def async_setup(hass):
         if action != ACTION_DELETE:
             return
 
-        ent_reg = await entity_registry.async_get_registry(hass)
+        ent_reg = entity_registry.async_get(hass)
 
         entity_id = ent_reg.async_get_entity_id(DOMAIN, DOMAIN, config_key)
 
@@ -52,7 +51,18 @@ class EditAutomationConfigView(EditIdBasedConfigView):
 
     def _write_value(self, hass, data, config_key, new_value):
         """Set value."""
-        index = None
+        updated_value = {CONF_ID: config_key}
+
+        # Iterate through some keys that we want to have ordered in the output
+        for key in ("alias", "description", "trigger", "condition", "action"):
+            if key in new_value:
+                updated_value[key] = new_value[key]
+
+        # We cover all current fields above, but just in case we start
+        # supporting more fields in the future.
+        updated_value.update(new_value)
+
+        updated = False
         for index, cur_value in enumerate(data):
             # When people copy paste their automations to the config file,
             # they sometimes forget to add IDs. Fix it here.
@@ -60,23 +70,8 @@ class EditAutomationConfigView(EditIdBasedConfigView):
                 cur_value[CONF_ID] = uuid.uuid4().hex
 
             elif cur_value[CONF_ID] == config_key:
-                break
-        else:
-            cur_value = OrderedDict()
-            cur_value[CONF_ID] = config_key
-            index = len(data)
-            data.append(cur_value)
+                data[index] = updated_value
+                updated = True
 
-        # Iterate through some keys that we want to have ordered in the output
-        updated_value = OrderedDict()
-        for key in ("id", "alias", "description", "trigger", "condition", "action"):
-            if key in cur_value:
-                updated_value[key] = cur_value[key]
-            if key in new_value:
-                updated_value[key] = new_value[key]
-
-        # We cover all current fields above, but just in case we start
-        # supporting more fields in the future.
-        updated_value.update(cur_value)
-        updated_value.update(new_value)
-        data[index] = updated_value
+        if not updated:
+            data.append(updated_value)

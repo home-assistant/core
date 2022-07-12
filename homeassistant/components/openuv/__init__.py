@@ -70,7 +70,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     try:
         await openuv.async_update()
-    except OpenUvError as err:
+    except HomeAssistantError as err:
         LOGGER.error("Config entry failed: %s", err)
         raise ConfigEntryNotReady from err
 
@@ -80,7 +80,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.setdefault(DOMAIN, {})
     hass.data[DOMAIN][entry.entry_id] = openuv
 
-    hass.config_entries.async_setup_platforms(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     @_verify_domain_control
     async def update_data(_: ServiceCall) -> None:
@@ -161,7 +161,7 @@ class OpenUV:
                 f"Error during protection data update: {err}"
             ) from err
 
-        self.data[DATA_PROTECTION_WINDOW] = data["result"]
+        self.data[DATA_PROTECTION_WINDOW] = data.get("result")
 
     async def async_update_uv_index_data(self) -> None:
         """Update sensor (uv index, etc) data."""
@@ -172,7 +172,7 @@ class OpenUV:
                 f"Error during UV index data update: {err}"
             ) from err
 
-        self.data[DATA_UV] = data
+        self.data[DATA_UV] = data.get("result")
 
     async def async_update(self) -> None:
         """Update sensor/binary sensor data."""
@@ -182,6 +182,8 @@ class OpenUV:
 
 class OpenUvEntity(Entity):
     """Define a generic OpenUV entity."""
+
+    _attr_has_entity_name = True
 
     def __init__(self, openuv: OpenUV, description: EntityDescription) -> None:
         """Initialize."""

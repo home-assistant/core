@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MediaContainer size="1" allowSync="1" identifier="com.plexapp.plugins.library" librarySectionID="3" librarySectionTitle="Music" librarySectionUUID="ba0c2140-c6ef-448a-9d1b-31020741d014">
+<Hub title="Stations" type="station" hubIdentifier="music.stations.5" context="hub.music.stations" size="3" more="0" style="grid">
+<Playlist key="/library/sections/3/stations/1" guid="tv.plex://station/library" type="playlist" title="Library Radio" librarySectionTitle="Music" librarySectionID="3" librarySectionKey="/library/sections/3" summary="" smart="1" playlistType="audio" leafCount="0" icon="playlist://image.radio" radio="1">
+</Playlist>
+<Playlist key="/library/sections/3/stations/2" guid="tv.plex://station/history" type="playlist" title="Time Travel Radio" librarySectionTitle="Music" librarySectionID="3" librarySectionKey="/library/sections/3" summary="" smart="1" playlistType="audio" leafCount="0" icon="playlist://image.radio" radio="1">
+</Playlist>
+<Playlist key="/library/sections/3/stations/3" guid="tv.plex://station/album" type="playlist" title="Random Album Radio" librarySectionTitle="Music" librarySectionID="3" librarySectionKey="/library/sections/3" summary="" smart="1" playlistType="audio" leafCount="0" icon="playlist://image.radio" radio="1">
+</Playlist>
+</Hub>
+</MediaContainer>

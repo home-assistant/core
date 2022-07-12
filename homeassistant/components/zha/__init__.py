@@ -1,17 +1,19 @@
 """Support for Zigbee Home Automation devices."""
-
 import asyncio
 import logging
+import os
 
 import voluptuous as vol
 from zhaquirks import setup as setup_quirks
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 
-from homeassistant import config_entries, const as ha_const
+from homeassistant import const as ha_const
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
@@ -29,7 +31,6 @@ from .core.const import (
     DATA_ZHA,
     DATA_ZHA_CONFIG,
     DATA_ZHA_GATEWAY,
-    DATA_ZHA_PLATFORM_LOADED,
     DATA_ZHA_SHUTDOWN_TASK,
     DOMAIN,
     PLATFORMS,
@@ -83,9 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Set up ZHA.
 
     Will automatically load components to support devices found on the network.
@@ -100,19 +99,22 @@ async def async_setup_entry(
     if config.get(CONF_ENABLE_QUIRKS, True):
         setup_quirks(config)
 
+    # temporary code to remove the zha storage file from disk. this will be removed in 2022.10.0
+    storage_path = hass.config.path(STORAGE_DIR, "zha.storage")
+    if os.path.isfile(storage_path):
+        _LOGGER.debug("removing ZHA storage file")
+        await hass.async_add_executor_job(os.remove, storage_path)
+    else:
+        _LOGGER.debug("ZHA storage file does not exist or was already removed")
+
     zha_gateway = ZHAGateway(hass, config, config_entry)
     await zha_gateway.async_initialize()
 
-    zha_data[DATA_ZHA_PLATFORM_LOADED] = []
-    for platform in PLATFORMS:
-        coro = hass.config_entries.async_forward_entry_setup(config_entry, platform)
-        zha_data[DATA_ZHA_PLATFORM_LOADED].append(hass.async_create_task(coro))
-
-    device_registry = await hass.helpers.device_registry.async_get_registry()
+    device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        connections={(CONNECTION_ZIGBEE, str(zha_gateway.application_controller.ieee))},
-        identifiers={(DOMAIN, str(zha_gateway.application_controller.ieee))},
+        connections={(dr.CONNECTION_ZIGBEE, str(zha_gateway.coordinator_ieee))},
+        identifiers={(DOMAIN, str(zha_gateway.coordinator_ieee))},
         name="Zigbee Coordinator",
         manufacturer="ZHA",
         model=zha_gateway.radio_description,
@@ -122,22 +124,23 @@ async def async_setup_entry(
 
     async def async_zha_shutdown(event):
         """Handle shutdown tasks."""
-        await zha_data[DATA_ZHA_GATEWAY].shutdown()
-        await zha_data[DATA_ZHA_GATEWAY].async_update_device_storage()
+        zha_gateway: ZHAGateway = zha_data[DATA_ZHA_GATEWAY]
+        await zha_gateway.shutdown()
 
     zha_data[DATA_ZHA_SHUTDOWN_TASK] = hass.bus.async_listen_once(
         ha_const.EVENT_HOMEASSISTANT_STOP, async_zha_shutdown
     )
-    asyncio.create_task(async_load_entities(hass))
+
+    await zha_gateway.async_initialize_devices_and_entities()
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
     return True
 
 
-async def async_unload_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Unload ZHA config entry."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].shutdown()
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_update_device_storage()
+    zha_gateway: ZHAGateway = hass.data[DATA_ZHA][DATA_ZHA_GATEWAY]
+    await zha_gateway.shutdown()
 
     GROUP_PROBE.cleanup()
     api.async_unload_api(hass)
@@ -155,20 +158,7 @@ async def async_unload_entry(
     return True
 
 
-async def async_load_entities(hass: HomeAssistant) -> None:
-    """Load entities after integration was setup."""
-    await hass.data[DATA_ZHA][DATA_ZHA_GATEWAY].async_initialize_devices_and_entities()
-    to_setup = hass.data[DATA_ZHA][DATA_ZHA_PLATFORM_LOADED]
-    results = await asyncio.gather(*to_setup, return_exceptions=True)
-    for res in results:
-        if isinstance(res, Exception):
-            _LOGGER.warning("Couldn't setup zha platform: %s", res)
-    async_dispatcher_send(hass, SIGNAL_ADD_ENTITIES)
-
-
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: config_entries.ConfigEntry
-):
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s", config_entry.version)
 

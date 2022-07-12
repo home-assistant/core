@@ -191,6 +191,8 @@ def parse_mapping(mapping, parents=None):
 def setup(hass: HomeAssistant, base_config: ConfigType) -> bool:  # noqa: C901
     """Set up the CEC capability."""
 
+    hass.data[DOMAIN] = {}
+
     # Parse configuration into a dict of device name to physical address
     # represented as a list of four elements.
     device_aliases = {}

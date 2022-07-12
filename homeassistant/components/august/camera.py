@@ -11,7 +11,7 @@ from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AugustData
-from .const import DATA_AUGUST, DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_TIMEOUT, DOMAIN
 from .entity import AugustEntityMixin
 
 
@@ -21,13 +21,11 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up August cameras."""
-    data: AugustData = hass.data[DOMAIN][config_entry.entry_id][DATA_AUGUST]
+    data: AugustData = hass.data[DOMAIN][config_entry.entry_id]
     session = aiohttp_client.async_get_clientsession(hass)
     async_add_entities(
-        [
-            AugustCamera(data, doorbell, session, DEFAULT_TIMEOUT)
-            for doorbell in data.doorbells
-        ]
+        AugustCamera(data, doorbell, session, DEFAULT_TIMEOUT)
+        for doorbell in data.doorbells
     )
 
 
@@ -37,8 +35,6 @@ class AugustCamera(AugustEntityMixin, Camera):
     def __init__(self, data, device, session, timeout):
         """Initialize a August security camera."""
         super().__init__(data, device)
-        self._data = data
-        self._device = device
         self._timeout = timeout
         self._session = session
         self._image_url = None

@@ -3,15 +3,14 @@
 from unittest.mock import patch
 from uuid import uuid4
 
-from homeassistant.components.twinkly import async_setup_entry, async_unload_entry
 from homeassistant.components.twinkly.const import (
-    CONF_ENTRY_HOST,
-    CONF_ENTRY_ID,
-    CONF_ENTRY_MODEL,
-    CONF_ENTRY_NAME,
+    CONF_HOST,
+    CONF_ID,
+    CONF_NAME,
     DOMAIN as TWINKLY_DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -23,7 +22,7 @@ from tests.components.twinkly import (
 )
 
 
-async def test_setup_entry(hass: HomeAssistant):
+async def test_load_unload_entry(hass: HomeAssistant):
     """Validate that setup entry also configure the client."""
     client = ClientMock()
 
@@ -31,47 +30,24 @@ async def test_setup_entry(hass: HomeAssistant):
     config_entry = MockConfigEntry(
         domain=TWINKLY_DOMAIN,
         data={
-            CONF_ENTRY_HOST: TEST_HOST,
-            CONF_ENTRY_ID: id,
-            CONF_ENTRY_NAME: TEST_NAME_ORIGINAL,
-            CONF_ENTRY_MODEL: TEST_MODEL,
+            CONF_HOST: TEST_HOST,
+            CONF_ID: id,
+            CONF_NAME: TEST_NAME_ORIGINAL,
+            CONF_MODEL: TEST_MODEL,
         },
         entry_id=id,
     )
 
-    def setup_mock(_, __):
-        return True
+    config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_setup",
-        side_effect=setup_mock,
-    ), patch("homeassistant.components.twinkly.Twinkly", return_value=client):
-        await async_setup_entry(hass, config_entry)
+    with patch("homeassistant.components.twinkly.Twinkly", return_value=client):
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert hass.data[TWINKLY_DOMAIN][id] is not None
+    assert config_entry.state == ConfigEntryState.LOADED
 
+    await hass.config_entries.async_unload(config_entry.entry_id)
 
-async def test_unload_entry(hass: HomeAssistant):
-    """Validate that unload entry also clear the client."""
-
-    id = str(uuid4())
-    config_entry = MockConfigEntry(
-        domain=TWINKLY_DOMAIN,
-        data={
-            CONF_ENTRY_HOST: TEST_HOST,
-            CONF_ENTRY_ID: id,
-            CONF_ENTRY_NAME: TEST_NAME_ORIGINAL,
-            CONF_ENTRY_MODEL: TEST_MODEL,
-        },
-        entry_id=id,
-    )
-
-    # Put random content at the location where the client should have been placed by setup
-    hass.data.setdefault(TWINKLY_DOMAIN, {})[id] = config_entry
-
-    await async_unload_entry(hass, config_entry)
-
-    assert hass.data[TWINKLY_DOMAIN].get(id) is None
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
 
 
 async def test_config_entry_not_ready(hass: HomeAssistant):
@@ -82,10 +58,10 @@ async def test_config_entry_not_ready(hass: HomeAssistant):
     config_entry = MockConfigEntry(
         domain=TWINKLY_DOMAIN,
         data={
-            CONF_ENTRY_HOST: TEST_HOST,
-            CONF_ENTRY_ID: id,
-            CONF_ENTRY_NAME: TEST_NAME_ORIGINAL,
-            CONF_ENTRY_MODEL: TEST_MODEL,
+            CONF_HOST: TEST_HOST,
+            CONF_ID: id,
+            CONF_NAME: TEST_NAME_ORIGINAL,
+            CONF_MODEL: TEST_MODEL,
         },
     )
 

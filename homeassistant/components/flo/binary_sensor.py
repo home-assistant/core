@@ -23,7 +23,7 @@ async def async_setup_entry(
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
         config_entry.entry_id
     ]["devices"]
-    entities = []
+    entities: list[BinarySensorEntity] = []
     for device in devices:
         if device.device_type == "puck_oem":
             # Flo "pucks" (leak detectors) *do* support pending alerts.
@@ -48,7 +48,7 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__("pending_system_alerts", "Pending System Alerts", device)
+        super().__init__("pending_system_alerts", "Pending system alerts", device)
 
     @property
     def is_on(self):
@@ -74,7 +74,7 @@ class FloWaterDetectedBinarySensor(FloEntity, BinarySensorEntity):
 
     def __init__(self, device):
         """Initialize the pending alerts binary sensor."""
-        super().__init__("water_detected", "Water Detected", device)
+        super().__init__("water_detected", "Water detected", device)
 
     @property
     def is_on(self):

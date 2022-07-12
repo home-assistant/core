@@ -4,7 +4,7 @@
             "already_configured": "Teenus on juba h\u00e4\u00e4lestatud",
             "cannot_connect": "\u00dchenduse loomine faili configuration.yaml mandaadiandmetega eba\u00f5nnestus, eemalda yamlist ja kasuta konfiguratsioonivoogu.",
             "single_instance_allowed": "Lubatud on ainult \u00fcks sidumine",
-            "unknown": "\u00dchenduse loomine faili configuration.yaml mandaadiandmetega nurjus tundmatu vea t\u00f5ttu. Eemalda yamlist ja kasuta konfiguratsioonivoogu."
+            "unknown": "\u00dchenduse loomine faili configuration.yaml mandaadiandmetega nurjus tundmatu vea t\u00f5ttu, eemalda yamlist ja kasuta konfiguratsioonivoogu."
         },
         "error": {
             "cannot_connect": "\u00dchendamine nurjus",

@@ -11,12 +11,11 @@ from collections.abc import Callable
 from contextlib import suppress
 import functools as ft
 import importlib
-import json
 import logging
 import pathlib
 import sys
 from types import ModuleType
-from typing import TYPE_CHECKING, Any, TypedDict, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, TypeVar, cast
 
 from awesomeversion import (
     AwesomeVersion,
@@ -24,20 +23,21 @@ from awesomeversion import (
     AwesomeVersionStrategy,
 )
 
+from .generated.application_credentials import APPLICATION_CREDENTIALS
+from .generated.bluetooth import BLUETOOTH
 from .generated.dhcp import DHCP
 from .generated.mqtt import MQTT
 from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
+from .helpers.json import JSON_DECODE_EXCEPTIONS, json_loads
 from .util.async_ import gather_with_concurrency
 
 # Typing imports that create a circular dependency
 if TYPE_CHECKING:
     from .core import HomeAssistant
 
-CALLABLE_T = TypeVar(  # pylint: disable=invalid-name
-    "CALLABLE_T", bound=Callable[..., Any]
-)
+_CallableT = TypeVar("_CallableT", bound=Callable[..., Any])
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,6 +60,43 @@ MAX_LOAD_CONCURRENTLY = 4
 MOVED_ZEROCONF_PROPS = ("macaddress", "model", "manufacturer")
 
 
+class DHCPMatcherRequired(TypedDict, total=True):
+    """Matcher for the dhcp integration for required fields."""
+
+    domain: str
+
+
+class DHCPMatcherOptional(TypedDict, total=False):
+    """Matcher for the dhcp integration for optional fields."""
+
+    macaddress: str
+    hostname: str
+    registered_devices: bool
+
+
+class DHCPMatcher(DHCPMatcherRequired, DHCPMatcherOptional):
+    """Matcher for the dhcp integration."""
+
+
+class BluetoothMatcherRequired(TypedDict, total=True):
+    """Matcher for the bluetooth integration for required fields."""
+
+    domain: str
+
+
+class BluetoothMatcherOptional(TypedDict, total=False):
+    """Matcher for the bluetooth integration for optional fields."""
+
+    local_name: str
+    service_uuid: str
+    manufacturer_id: int
+    manufacturer_data_first_byte: int
+
+
+class BluetoothMatcher(BluetoothMatcherRequired, BluetoothMatcherOptional):
+    """Matcher for the bluetooth integration."""
+
+
 class Manifest(TypedDict, total=False):
     """
     Integration manifest.
@@ -71,6 +108,7 @@ class Manifest(TypedDict, total=False):
     name: str
     disabled: str
     domain: str
+    integration_type: Literal["integration", "helper"]
     dependencies: list[str]
     after_dependencies: list[str]
     requirements: list[str]
@@ -79,15 +117,17 @@ class Manifest(TypedDict, total=False):
     issue_tracker: str
     quality_scale: str
     iot_class: str
+    bluetooth: list[dict[str, int | str]]
     mqtt: list[str]
     ssdp: list[dict[str, str]]
     zeroconf: list[str | dict[str, str]]
-    dhcp: list[dict[str, str]]
+    dhcp: list[dict[str, bool | str]]
     usb: list[dict[str, str]]
     homekit: dict[str, list[str]]
     is_built_in: bool
     version: str
     codeowners: list[str]
+    loggers: list[str]
 
 
 def manifest_from_legacy_module(domain: str, module: ModuleType) -> Manifest:
@@ -163,24 +203,47 @@ async def async_get_custom_components(
     return cast(dict[str, "Integration"], reg_or_evt)
 
 
-async def async_get_config_flows(hass: HomeAssistant) -> set[str]:
+async def async_get_config_flows(
+    hass: HomeAssistant,
+    type_filter: Literal["helper", "integration"] | None = None,
+) -> set[str]:
     """Return cached list of config flows."""
     # pylint: disable=import-outside-toplevel
     from .generated.config_flows import FLOWS
 
-    flows: set[str] = set()
-    flows.update(FLOWS)
-
     integrations = await async_get_custom_components(hass)
+    flows: set[str] = set()
+
+    if type_filter is not None:
+        flows.update(FLOWS[type_filter])
+    else:
+        for type_flows in FLOWS.values():
+            flows.update(type_flows)
+
     flows.update(
         [
             integration.domain
             for integration in integrations.values()
             if integration.config_flow
+            and (type_filter is None or integration.integration_type == type_filter)
         ]
     )
 
     return flows
+
+
+async def async_get_application_credentials(hass: HomeAssistant) -> list[str]:
+    """Return cached list of application credentials."""
+    integrations = await async_get_custom_components(hass)
+
+    return [
+        *APPLICATION_CREDENTIALS,
+        *[
+            integration.domain
+            for integration in integrations.values()
+            if "application_credentials" in integration.dependencies
+        ],
+    ]
 
 
 def async_process_zeroconf_match_dict(entry: dict[str, Any]) -> dict[str, Any]:
@@ -227,16 +290,32 @@ async def async_get_zeroconf(
     return zeroconf
 
 
-async def async_get_dhcp(hass: HomeAssistant) -> list[dict[str, str]]:
+async def async_get_bluetooth(hass: HomeAssistant) -> list[BluetoothMatcher]:
+    """Return cached list of bluetooth types."""
+    bluetooth = cast(list[BluetoothMatcher], BLUETOOTH.copy())
+
+    integrations = await async_get_custom_components(hass)
+    for integration in integrations.values():
+        if not integration.bluetooth:
+            continue
+        for entry in integration.bluetooth:
+            bluetooth.append(
+                cast(BluetoothMatcher, {"domain": integration.domain, **entry})
+            )
+
+    return bluetooth
+
+
+async def async_get_dhcp(hass: HomeAssistant) -> list[DHCPMatcher]:
     """Return cached list of dhcp types."""
-    dhcp: list[dict[str, str]] = DHCP.copy()
+    dhcp = cast(list[DHCPMatcher], DHCP.copy())
 
     integrations = await async_get_custom_components(hass)
     for integration in integrations.values():
         if not integration.dhcp:
             continue
         for entry in integration.dhcp:
-            dhcp.append({"domain": integration.domain, **entry})
+            dhcp.append(cast(DHCPMatcher, {"domain": integration.domain, **entry}))
 
     return dhcp
 
@@ -324,8 +403,8 @@ class Integration:
                 continue
 
             try:
-                manifest = json.loads(manifest_path.read_text())
-            except ValueError as err:
+                manifest = json_loads(manifest_path.read_text())
+            except JSON_DECODE_EXCEPTIONS as err:
                 _LOGGER.error(
                     "Error parsing manifest.json file at %s: %s", manifest_path, err
                 )
@@ -443,6 +522,11 @@ class Integration:
         return self.manifest.get("issue_tracker")
 
     @property
+    def loggers(self) -> list[str] | None:
+        """Return list of loggers used by the integration."""
+        return self.manifest.get("loggers")
+
+    @property
     def quality_scale(self) -> str | None:
         """Return Integration Quality Scale."""
         return self.manifest.get("quality_scale")
@@ -451,6 +535,11 @@ class Integration:
     def iot_class(self) -> str | None:
         """Return the integration IoT Class."""
         return self.manifest.get("iot_class")
+
+    @property
+    def integration_type(self) -> Literal["integration", "helper"]:
+        """Return the integration type."""
+        return self.manifest.get("integration_type", "integration")
 
     @property
     def mqtt(self) -> list[str] | None:
@@ -468,7 +557,12 @@ class Integration:
         return self.manifest.get("zeroconf")
 
     @property
-    def dhcp(self) -> list[dict[str, str]] | None:
+    def bluetooth(self) -> list[dict[str, str | int]] | None:
+        """Return Integration bluetooth entries."""
+        return self.manifest.get("bluetooth")
+
+    @property
+    def dhcp(self) -> list[dict[str, str | bool]] | None:
         """Return Integration dhcp entries."""
         return self.manifest.get("dhcp")
 
@@ -539,18 +633,44 @@ class Integration:
 
     def get_component(self) -> ModuleType:
         """Return the component."""
-        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
-        if self.domain not in cache:
+        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        if self.domain in cache:
+            return cache[self.domain]
+
+        try:
             cache[self.domain] = importlib.import_module(self.pkg_path)
-        return cache[self.domain]  # type: ignore
+        except ImportError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing component %s", self.pkg_path
+            )
+            raise ImportError(f"Exception importing {self.pkg_path}") from err
+
+        return cache[self.domain]
 
     def get_platform(self, platform_name: str) -> ModuleType:
         """Return a platform for an integration."""
-        cache = self.hass.data.setdefault(DATA_COMPONENTS, {})
+        cache: dict[str, ModuleType] = self.hass.data.setdefault(DATA_COMPONENTS, {})
         full_name = f"{self.domain}.{platform_name}"
-        if full_name not in cache:
+        if full_name in cache:
+            return cache[full_name]
+
+        try:
             cache[full_name] = self._import_platform(platform_name)
-        return cache[full_name]  # type: ignore
+        except ImportError:
+            raise
+        except Exception as err:
+            _LOGGER.exception(
+                "Unexpected exception importing platform %s.%s",
+                self.pkg_path,
+                platform_name,
+            )
+            raise ImportError(
+                f"Exception importing {self.pkg_path}.{platform_name}"
+            ) from err
+
+        return cache[full_name]
 
     def _import_platform(self, platform_name: str) -> ModuleType:
         """Import the platform."""
@@ -649,7 +769,7 @@ def _load_file(
     Async friendly.
     """
     with suppress(KeyError):
-        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore
+        return hass.data[DATA_COMPONENTS][comp_or_platform]  # type: ignore[no-any-return]
 
     if (cache := hass.data.get(DATA_COMPONENTS)) is None:
         if not _async_mount_config_dir(hass):
@@ -755,7 +875,7 @@ class Helpers:
         return wrapped
 
 
-def bind_hass(func: CALLABLE_T) -> CALLABLE_T:
+def bind_hass(func: _CallableT) -> _CallableT:
     """Decorate function to indicate that first argument is hass."""
     setattr(func, "__bind_hass", True)
     return func

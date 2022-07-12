@@ -1,0 +1,9 @@
+{
+  "domain": "peco",
+  "name": "PECO Outage Counter",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/peco",
+  "codeowners": ["@IceBotYT"],
+  "iot_class": "cloud_polling",
+  "requirements": ["peco==0.0.29"]
+}

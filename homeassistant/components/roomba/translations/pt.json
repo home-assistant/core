@@ -11,12 +11,14 @@
             "link": {
                 "title": "Recuperar Palavra-passe"
             },
+            "manual": {
+                "data": {
+                    "host": "Anfitri\u00e3o"
+                }
+            },
             "user": {
                 "data": {
-                    "continuous": "Cont\u00ednuo",
-                    "delay": "Atraso",
-                    "host": "Servidor",
-                    "password": "Palavra-passe"
+                    "host": "Servidor"
                 },
                 "title": "Conectar ao dispositivo"
             }

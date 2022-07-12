@@ -1,0 +1,55 @@
+{
+    "config": {
+        "abort": {
+            "all_student_already_configured": "\u3059\u3079\u3066\u306e\u751f\u5f92\u306f\u3059\u3067\u306b\u8ffd\u52a0\u3055\u308c\u3066\u3044\u307e\u3059\u3002",
+            "already_configured": "\u305d\u306e\u5b66\u751f\u306f\u3059\u3067\u306b\u8ffd\u52a0\u3055\u308c\u3066\u3044\u307e\u3059\u3002",
+            "no_matching_entries": "\u4e00\u81f4\u3059\u308b\u30a8\u30f3\u30c8\u30ea\u304c\u898b\u3064\u304b\u308a\u307e\u305b\u3093\u3002\u5225\u306e\u30a2\u30ab\u30a6\u30f3\u30c8\u3092\u4f7f\u7528\u3059\u308b\u304b\u3001outdated student\u7d71\u5408\u3092\u524a\u9664\u3057\u3066\u304f\u3060\u3055\u3044..",
+            "reauth_successful": "\u518d\u8a8d\u8a3c\u306b\u6210\u529f"
+        },
+        "error": {
+            "cannot_connect": "\u63a5\u7d9a\u30a8\u30e9\u30fc - \u30a4\u30f3\u30bf\u30fc\u30cd\u30c3\u30c8\u63a5\u7d9a\u3092\u78ba\u8a8d\u3057\u3066\u304f\u3060\u3055\u3044",
+            "expired_credentials": "\u6709\u52b9\u671f\u9650\u304c\u5207\u308c\u305f\u8a8d\u8a3c\u60c5\u5831 - Vulcan\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u306e\u767b\u9332\u30da\u30fc\u30b8\u3067\u65b0\u898f\u4f5c\u6210\u3057\u3066\u304f\u3060\u3055\u3044\u3002",
+            "expired_token": "\u6709\u52b9\u671f\u9650\u5207\u308c\u306e\u30c8\u30fc\u30af\u30f3 - \u65b0\u3057\u3044\u30c8\u30fc\u30af\u30f3\u3092\u751f\u6210\u3057\u3066\u304f\u3060\u3055\u3044",
+            "invalid_pin": "\u7121\u52b9\u306a\u30d4\u30f3",
+            "invalid_symbol": "\u7121\u52b9\u306a\u30b7\u30f3\u30dc\u30eb",
+            "invalid_token": "\u7121\u52b9\u306a\u30c8\u30fc\u30af\u30f3",
+            "unknown": "\u4e0d\u660e\u306a\u30a8\u30e9\u30fc\u304c\u767a\u751f\u3057\u307e\u3057\u305f"
+        },
+        "step": {
+            "add_next_config_entry": {
+                "data": {
+                    "use_saved_credentials": "\u4fdd\u5b58\u3055\u308c\u305f\u8cc7\u683c\u60c5\u5831\u3092\u4f7f\u7528\u3059\u308b"
+                },
+                "description": "\u5225\u306e\u751f\u5f92\u3092\u8ffd\u52a0\u3057\u307e\u3059\u3002"
+            },
+            "auth": {
+                "data": {
+                    "pin": "\u30d4\u30f3",
+                    "region": "\u30b7\u30f3\u30dc\u30eb",
+                    "token": "\u30c8\u30fc\u30af\u30f3"
+                },
+                "description": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u767b\u9332\u30da\u30fc\u30b8\u3092\u4f7f\u7528\u3057\u3066\u3001Vulcan\u30a2\u30ab\u30a6\u30f3\u30c8\u306b\u30ed\u30b0\u30a4\u30f3\u3057\u307e\u3059\u3002"
+            },
+            "reauth_confirm": {
+                "data": {
+                    "pin": "\u30d4\u30f3",
+                    "region": "\u30b7\u30f3\u30dc\u30eb",
+                    "token": "\u30c8\u30fc\u30af\u30f3"
+                },
+                "description": "\u30e2\u30d0\u30a4\u30eb\u30a2\u30d7\u30ea\u767b\u9332\u30da\u30fc\u30b8\u3092\u4f7f\u7528\u3057\u3066\u3001Vulcan\u30a2\u30ab\u30a6\u30f3\u30c8\u306b\u30ed\u30b0\u30a4\u30f3\u3057\u307e\u3059\u3002"
+            },
+            "select_saved_credentials": {
+                "data": {
+                    "credentials": "\u30ed\u30b0\u30a4\u30f3"
+                },
+                "description": "\u4fdd\u5b58\u3055\u308c\u305f\u8cc7\u683c\u60c5\u5831\u3092\u9078\u629e\u3057\u307e\u3059\u3002"
+            },
+            "select_student": {
+                "data": {
+                    "student_name": "\u751f\u5f92\u3092\u9078\u629e(Select student)"
+                },
+                "description": "\u751f\u5f92\u3092\u9078\u629e\u3057\u307e\u3059(Select student)\u3002\u7d71\u5408\u3092\u518d\u5ea6\u8ffd\u52a0\u3059\u308b\u3053\u3068\u3067\u3001\u3088\u308a\u591a\u304f\u306e\u751f\u5f92\u3092\u8ffd\u52a0\u3059\u308b\u3053\u3068\u304c\u3067\u304d\u307e\u3059\u3002"
+            }
+        }
+    }
+}

@@ -11,38 +11,32 @@ import sys
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Integration
 
+if sys.version_info >= (3, 11):
+    import tomllib
+else:
+    import tomli as tomllib
+
 COMMENT_REQUIREMENTS = (
     "Adafruit_BBIO",
     "avea",  # depends on bluepy
     "avion",
     "beacontools",
     "beewi_smartclim",  # depends on bluepy
-    "blinkt",
     "bluepy",
-    "bme280spi",
-    "bme680",
     "decora",
     "decora_wifi",
-    "envirophat",
     "evdev",
     "face_recognition",
-    "i2csense",
     "opencv-python-headless",
     "pybluez",
     "pycups",
-    "PySwitchbot",
     "pySwitchmate",
     "python-eq3bt",
     "python-gammu",
     "python-lirc",
     "pyuserinput",
-    "raspihats",
-    "rpi-rf",
-    "RPi.GPIO",
-    "smbus-cffi",
     "tensorflow",
     "tf-models-official",
-    "VL53L1X2",
 )
 
 COMMENT_REQUIREMENTS_NORMALIZED = {
@@ -68,9 +62,6 @@ pycryptodome>=3.6.6
 # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
 urllib3>=1.26.5
 
-# Constrain H11 to ensure we get a new enough version to support non-rfc line endings
-h11>=0.12.0
-
 # Constrain httplib2 to protect against GHSA-93xj-8mrv-444m
 # https://github.com/advisories/GHSA-93xj-8mrv-444m
 httplib2>=0.19.0
@@ -78,7 +69,8 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.43.0
+grpcio==1.46.1
+grpcio-status==1.46.1
 
 # libcst >=0.4.0 requires a newer Rust than we currently have available,
 # thus our wheels builds fail. This pins it to the last working version,
@@ -96,18 +88,25 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# Temporary constraint on pandas, to unblock 2021.7 releases
-# until we have fixed the wheels builds for newer versions.
-pandas==1.3.0
-
 # regex causes segfault with version 2021.8.27
 # https://bitbucket.org/mrabarnett/mrab-regex/issues/421/2021827-results-in-fatal-python-error
 # This is fixed in 2021.8.28
 regex==2021.8.28
 
-# anyio has a bug that was fixed in 3.3.1
-# can remove after httpx/httpcore updates its anyio version pin
-anyio>=3.3.1
+# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
+# these requirements are quite loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# requirements so we can directly link HA versions to these library versions.
+anyio==3.6.1
+h11==0.12.0
+httpcore==0.15.0
+
+# Ensure we have a hyperframe version that works in Python 3.10
+# 5.2.0 fixed a collections abc deprecation
+hyperframe>=5.2.0
+
+# Ensure we run compatible with musllinux build env
+numpy==1.23.1
 
 # pytest_asyncio breaks our test suite. We rely on pytest-aiohttp instead
 pytest_asyncio==1000000000.0.0
@@ -117,6 +116,22 @@ pytest_asyncio==1000000000.0.0
 # https://github.com/jkeljo/sisyphus-control/issues/6
 python-engineio>=3.13.1,<4.0
 python-socketio>=4.6.0,<5.0
+
+# Constrain multidict to avoid typing issues
+# https://github.com/home-assistant/core/pull/67046
+multidict>=6.0.2
+
+# Required for compatibility with point integration - ensure_active_token
+# https://github.com/home-assistant/core/pull/68176
+authlib<1.0
+
+# Pin backoff for compatibility until most libraries have been updated
+# https://github.com/home-assistant/core/pull/70817
+backoff<2.0
+
+# Breaking change in version
+# https://github.com/samuelcolvin/pydantic/issues/4092
+pydantic!=1.9.1
 """
 
 IGNORE_PRE_COMMIT_HOOK_ID = (
@@ -161,11 +176,10 @@ def explore_module(package, explore_children):
 
 
 def core_requirements():
-    """Gather core requirements out of setup.py."""
-    reqs_raw = re.search(
-        r"REQUIRES = \[(.*?)\]", Path("setup.py").read_text(), re.S
-    ).group(1)
-    return [x[1] for x in re.findall(r"(['\"])(.*?)\1", reqs_raw)]
+    """Gather core requirements out of pyproject.toml."""
+    with open("pyproject.toml", "rb") as fp:
+        data = tomllib.load(fp)
+    return data["project"]["dependencies"]
 
 
 def gather_recursive_requirements(domain, seen=None):

@@ -1,0 +1,46 @@
+{
+    "state": {
+        "overkiz__battery": {
+            "full": "Fullt",
+            "low": "Lav",
+            "normal": "Normal",
+            "verylow": "Veldig lav"
+        },
+        "overkiz__discrete_rssi_level": {
+            "good": "Bra",
+            "low": "Lav",
+            "normal": "Normal",
+            "verylow": "Veldig lav"
+        },
+        "overkiz__priority_lock_originator": {
+            "external_gateway": "Ekstern gateway",
+            "local_user": "Lokal bruker",
+            "lsc": "LSC",
+            "myself": "Meg selv",
+            "rain": "Regn",
+            "saac": "SAAC",
+            "security": "Sikkerhet",
+            "sfc": "SFC",
+            "temperature": "Temperatur",
+            "timer": "Tidtaker",
+            "ups": "UPS",
+            "user": "Bruker",
+            "wind": "Vind"
+        },
+        "overkiz__sensor_defect": {
+            "dead": "D\u00f8d",
+            "low_battery": "Lavt batteriniv\u00e5",
+            "maintenance_required": "Vedlikehold kreves",
+            "no_defect": "Ingen defekt"
+        },
+        "overkiz__sensor_room": {
+            "clean": "Ren",
+            "dirty": "Skitten"
+        },
+        "overkiz__three_way_handle_direction": {
+            "closed": "Lukket",
+            "open": "\u00c5pen",
+            "tilt": "Vippe"
+        }
+    }
+}

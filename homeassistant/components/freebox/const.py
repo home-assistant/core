@@ -17,7 +17,7 @@ APP_DESC = {
 }
 API_VERSION = "v6"
 
-PLATFORMS = [Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.BUTTON, Platform.DEVICE_TRACKER, Platform.SENSOR, Platform.SWITCH]
 
 DEFAULT_DEVICE_NAME = "Unknown device"
 
