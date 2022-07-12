@@ -201,7 +201,7 @@ class HKDevice:
 
         await self.async_process_entity_map()
 
-        return True
+        return self.pairing.is_connected
 
     def device_info_for_accessory(self, accessory: Accessory) -> DeviceInfo:
         """Build a DeviceInfo for a given accessory."""
