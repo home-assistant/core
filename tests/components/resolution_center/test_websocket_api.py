@@ -20,6 +20,52 @@ from homeassistant.setup import async_setup_component
 from tests.common import mock_platform
 
 
+async def create_issues(hass, ws_client):
+    """Create issues."""
+    issues = [
+        {
+            "breaks_in_ha_version": "2022.9",
+            "domain": "fake_integration",
+            "issue_id": "issue_1",
+            "is_fixable": True,
+            "learn_more_url": "https://theuselessweb.com",
+            "severity": "error",
+            "translation_key": "abc_123",
+            "translation_placeholders": {"abc": "123"},
+        },
+    ]
+
+    for issue in issues:
+        async_create_issue(
+            hass,
+            issue["domain"],
+            issue["issue_id"],
+            breaks_in_ha_version=issue["breaks_in_ha_version"],
+            is_fixable=issue["is_fixable"],
+            learn_more_url=issue["learn_more_url"],
+            severity=issue["severity"],
+            translation_key=issue["translation_key"],
+            translation_placeholders=issue["translation_placeholders"],
+        )
+
+    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == {
+        "issues": [
+            dict(
+                issue,
+                dismissed=False,
+                dismissed_version=None,
+            )
+            for issue in issues
+        ]
+    }
+
+    return issues
+
+
 class MockFixFlow(ResolutionCenterFlow):
     """Handler for an issue fixing flow."""
 
@@ -67,52 +113,13 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
 
     client = await hass_ws_client(hass)
 
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "test",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
-
-    for issue in issues:
-        async_create_issue(
-            hass,
-            issue["domain"],
-            issue["issue_id"],
-            breaks_in_ha_version=issue["breaks_in_ha_version"],
-            is_fixable=issue["is_fixable"],
-            learn_more_url=issue["learn_more_url"],
-            severity=issue["severity"],
-            translation_key=issue["translation_key"],
-            translation_placeholders=issue["translation_placeholders"],
-        )
-
-    await client.send_json({"id": 1, "type": "resolution_center/list_issues"})
-    msg = await client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            dict(
-                issue,
-                dismissed=False,
-                dismissed_version=None,
-            )
-            for issue in issues
-        ]
-    }
+    issues = await create_issues(hass, client)
 
     await client.send_json(
         {
             "id": 2,
             "type": "resolution_center/dismiss_issue",
-            "domain": "test",
+            "domain": "fake_integration",
             "issue_id": "no_such_issue",
         }
     )
@@ -123,7 +130,7 @@ async def test_dismiss_issue(hass: HomeAssistant, hass_ws_client) -> None:
         {
             "id": 3,
             "type": "resolution_center/dismiss_issue",
-            "domain": "test",
+            "domain": "fake_integration",
             "issue_id": "issue_1",
         }
     )
@@ -157,46 +164,7 @@ async def test_fix_non_existing_issue(
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
-
-    for issue in issues:
-        async_create_issue(
-            hass,
-            issue["domain"],
-            issue["issue_id"],
-            breaks_in_ha_version=issue["breaks_in_ha_version"],
-            is_fixable=issue["is_fixable"],
-            learn_more_url=issue["learn_more_url"],
-            severity=issue["severity"],
-            translation_key=issue["translation_key"],
-            translation_placeholders=issue["translation_placeholders"],
-        )
-
-    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            dict(
-                issue,
-                dismissed=False,
-                dismissed_version=None,
-            )
-            for issue in issues
-        ]
-    }
+    issues = await create_issues(hass, ws_client)
 
     url = "/api/resolution_center/issues/fix"
     resp = await client.post(
@@ -236,46 +204,7 @@ async def test_fix_issue(hass: HomeAssistant, hass_client, hass_ws_client) -> No
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
-
-    for issue in issues:
-        async_create_issue(
-            hass,
-            issue["domain"],
-            issue["issue_id"],
-            breaks_in_ha_version=issue["breaks_in_ha_version"],
-            is_fixable=issue["is_fixable"],
-            learn_more_url=issue["learn_more_url"],
-            severity=issue["severity"],
-            translation_key=issue["translation_key"],
-            translation_placeholders=issue["translation_placeholders"],
-        )
-
-    await ws_client.send_json({"id": 1, "type": "resolution_center/list_issues"})
-    msg = await ws_client.receive_json()
-
-    assert msg["success"]
-    assert msg["result"] == {
-        "issues": [
-            dict(
-                issue,
-                dismissed=False,
-                dismissed_version=None,
-            )
-            for issue in issues
-        ]
-    }
+    await create_issues(hass, ws_client)
 
     url = "/api/resolution_center/issues/fix"
     resp = await client.post(
@@ -349,39 +278,16 @@ async def test_fix_issue_unauth(
 
 
 async def test_get_progress_unauth(
-    hass: HomeAssistant, hass_client, hass_admin_user
+    hass: HomeAssistant, hass_client, hass_ws_client, hass_admin_user
 ) -> None:
     """Test we can't fix an issue if not authorized."""
     assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
+    ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
-
-    for issue in issues:
-        async_create_issue(
-            hass,
-            issue["domain"],
-            issue["issue_id"],
-            breaks_in_ha_version=issue["breaks_in_ha_version"],
-            is_fixable=issue["is_fixable"],
-            learn_more_url=issue["learn_more_url"],
-            severity=issue["severity"],
-            translation_key=issue["translation_key"],
-            translation_placeholders=issue["translation_placeholders"],
-        )
+    await create_issues(hass, ws_client)
 
     url = "/api/resolution_center/issues/fix"
     resp = await client.post(
@@ -399,38 +305,17 @@ async def test_get_progress_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-async def test_step_unauth(hass: HomeAssistant, hass_client, hass_admin_user) -> None:
+async def test_step_unauth(
+    hass: HomeAssistant, hass_client, hass_ws_client, hass_admin_user
+) -> None:
     """Test we can't fix an issue if not authorized."""
     assert await async_setup_component(hass, "http", {})
     assert await async_setup_component(hass, DOMAIN, {})
 
+    ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
-    issues = [
-        {
-            "breaks_in_ha_version": "2022.9",
-            "domain": "fake_integration",
-            "issue_id": "issue_1",
-            "is_fixable": True,
-            "learn_more_url": "https://theuselessweb.com",
-            "severity": "error",
-            "translation_key": "abc_123",
-            "translation_placeholders": {"abc": "123"},
-        },
-    ]
-
-    for issue in issues:
-        async_create_issue(
-            hass,
-            issue["domain"],
-            issue["issue_id"],
-            breaks_in_ha_version=issue["breaks_in_ha_version"],
-            is_fixable=issue["is_fixable"],
-            learn_more_url=issue["learn_more_url"],
-            severity=issue["severity"],
-            translation_key=issue["translation_key"],
-            translation_placeholders=issue["translation_placeholders"],
-        )
+    await create_issues(hass, ws_client)
 
     url = "/api/resolution_center/issues/fix"
     resp = await client.post(
