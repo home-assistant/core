@@ -86,7 +86,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._attr_unique_id = f"{combine_hex(dev_id)}-{device_class}"
         self._state_changed_by_command = False
         self._watchdog_enabled = False
-        self._watchdog_remaining = 0
+        self._watchdog_seconds_remaining = 0
         self._watchdog_timeout = watchdog_timeout
         self._hass = hass
 
@@ -178,10 +178,10 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def stop_cover(self, **kwargs) -> None:
         """Stop any cover movement."""
+        self.stop_watchdog()
         self._state_changed_by_command = True
         self._is_opening = False
         self._is_closing = False
-        self.stop_watchdog()
 
         telegram = [0xD2, 2]
         telegram.extend(self._sender_id)
@@ -201,10 +201,9 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         new_position = 100 - packet.data[1]
 
         if self._position is not None:
-            if (
-                new_position in (0, 100, self._position)
-                and not self._state_changed_by_command
-            ):
+            if self._state_changed_by_command:
+                self._state_changed_by_command = False
+            elif new_position in (0, 100, self._position):
                 self._is_opening = False
                 self._is_closing = False
                 self.stop_watchdog()
@@ -216,8 +215,6 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
                 self._is_opening = False
                 self._is_closing = True
                 self.start_or_feed_watchdog()
-
-            self._state_changed_by_command = False
 
         self._position = new_position
         if self._position == 0:
@@ -236,7 +233,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
 
     def start_or_feed_watchdog(self):
         """Start or feed the 'movement stop' watchdog."""
-        self._watchdog_remaining = self._watchdog_timeout
+        self._watchdog_seconds_remaining = self._watchdog_timeout
 
         if self._watchdog_enabled:
             return
@@ -249,28 +246,22 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         self._watchdog_enabled = False
 
     async def watchdog(self):
-        """Watchdog to check if cover movement stopped. The assumption is that if no updates are received within 10s after this watchdog started, the cover movement likely stopped. To verify this, the watchdog queries the current status."""
-        self._is_closing = False
-        self._is_opening = False
+        """Watchdog to check if the cover movement stopped. After watchdog time expired, the watchdog queries the current status."""
 
         while 1:
+            await asyncio.sleep(1)
+
             if not self._watchdog_enabled:
                 return
 
-            if self._watchdog_remaining == 0:
-                _LOGGER.debug(
-                    "Watchdog timeout; checking status and resetting watchdog"
-                )
+            if self._watchdog_seconds_remaining == 0:
                 telegram = [0xD2, 3]
                 telegram.extend(self._sender_id)
                 telegram.extend([0x00])
                 self.send_telegram(telegram)
                 await asyncio.sleep(2)
 
-                self._watchdog_remaining = self._watchdog_timeout
+                self._watchdog_seconds_remaining = self._watchdog_timeout
                 continue
 
-            self._watchdog_remaining -= 1
-            _LOGGER.debug("Watchdog time remaining: %is", self._watchdog_remaining)
-
-            await asyncio.sleep(1)
+            self._watchdog_seconds_remaining -= 1
