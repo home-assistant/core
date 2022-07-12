@@ -5,7 +5,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, VOLUME_CUBIC_METERS
 from homeassistant.helpers.entity import EntityCategory
 
 DOMAIN = "landisgyr_heat_meter"
@@ -16,14 +16,14 @@ HEAT_METER_SENSOR_TYPES = (
         icon="mdi:fire",
         name="Heat usage GJ",
         native_unit_of_measurement="GJ",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="volume_usage_m3",
         icon="mdi:fire",
         name="Volume usage m3",
-        native_unit_of_measurement="m3",
-        state_class=SensorStateClass.TOTAL_INCREASING,
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
+        state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(
         key="heat_previous_year_gj",
@@ -36,7 +36,7 @@ HEAT_METER_SENSOR_TYPES = (
         key="volume_previous_year_m3",
         icon="mdi:fire",
         name="Volume usage previous year m3",
-        native_unit_of_measurement="m3",
+        native_unit_of_measurement=VOLUME_CUBIC_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(

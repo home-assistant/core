@@ -9,7 +9,12 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.landisgyr_heat_meter.const import DOMAIN
 from homeassistant.components.sensor import SensorStateClass
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_ICON, ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ICON,
+    ATTR_UNIT_OF_MEASUREMENT,
+    VOLUME_CUBIC_METERS,
+)
 from homeassistant.helpers import entity_registry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.setup import async_setup_component
@@ -66,13 +71,13 @@ async def test_create_sensors(mock_heat_meter, hass):
     assert state
     assert state.state == "123"
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "GJ"
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL_INCREASING
+    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_volume_usage_m3")
     assert state
     assert state.state == "456"
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "m3"
-    assert state.attributes.get("state_class") == SensorStateClass.TOTAL_INCREASING
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == VOLUME_CUBIC_METERS
+    assert state.attributes.get("state_class") == SensorStateClass.TOTAL
 
     state = hass.states.get("sensor.heat_meter_device_number")
     assert state
