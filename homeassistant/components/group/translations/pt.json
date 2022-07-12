@@ -9,6 +9,15 @@
             }
         }
     },
+    "options": {
+        "step": {
+            "fan": {
+                "data": {
+                    "hide_members": "Esconder membros"
+                }
+            }
+        }
+    },
     "state": {
         "_": {
             "closed": "Fechada",
