@@ -10,6 +10,7 @@ import voluptuous as vol  # pylint: disable=import-error
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DEVICE_CLASS_BLIND,
     DEVICE_CLASSES_SCHEMA,
     PLATFORM_SCHEMA,
     CoverEntity,
@@ -55,6 +56,8 @@ def setup_platform(
     sender_id = config.get(CONF_SENDER_ID)
     dev_name = config.get(CONF_NAME)
     device_class = config.get(CONF_DEVICE_CLASS)
+    if device_class is None:
+        device_class = DEVICE_CLASS_BLIND
     watchdog_timeout = config.get(WATCHDOG_TIMEOUT)
     add_entities(
         [
@@ -214,11 +217,10 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
         new_position = 100 - packet.data[1]
 
         if self._position is not None:
-            if new_position == self._position and not self._state_changed_by_command:
-                self._is_opening = False
-                self._is_closing = False
-                self.stop_watchdog()
-            elif new_position in (0, 100):
+            if (
+                new_position in (0, 100, self._position)
+                and not self._state_changed_by_command
+            ):
                 self._is_opening = False
                 self._is_closing = False
                 self.stop_watchdog()
@@ -242,7 +244,7 @@ class EnOceanCover(EnOceanEntity, CoverEntity):
             )
 
         self._position = new_position
-        if self._position == 100:
+        if self._position == 0:
             self._is_closed = True
         else:
             self._is_closed = False
