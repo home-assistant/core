@@ -548,11 +548,7 @@ def async_subscribe_connection_status(
 
 def is_connected(hass: HomeAssistant) -> bool:
     """Return if MQTT client is connected and available."""
-    return (
-        DATA_MQTT in hass.data
-        and hass.data[DATA_MQTT].connected
-        and mqtt_config_entry_enabled(hass) is True
-    )
+    return hass.data[DATA_MQTT].connected
 
 
 async def async_remove_config_entry_device(
