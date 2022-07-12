@@ -37,6 +37,7 @@ class ValloxSensor(ValloxEntity, SensorEntity):
 
     entity_description: ValloxSensorEntityDescription
     _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -49,7 +50,6 @@ class ValloxSensor(ValloxEntity, SensorEntity):
 
         self.entity_description = description
 
-        self._attr_name = f"{name} {description.name}"
         self._attr_unique_id = f"{self._device_uuid}-{description.key}"
 
     @property
@@ -129,13 +129,13 @@ class ValloxSensorEntityDescription(SensorEntityDescription):
 SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ValloxSensorEntityDescription(
         key="current_profile",
-        name="Current Profile",
+        name="Current profile",
         icon="mdi:gauge",
         sensor_type=ValloxProfileSensor,
     ),
     ValloxSensorEntityDescription(
         key="fan_speed",
-        name="Fan Speed",
+        name="Fan speed",
         metric_key="A_CYC_FAN_SPEED",
         icon="mdi:fan",
         state_class=SensorStateClass.MEASUREMENT,
@@ -144,20 +144,20 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="remaining_time_for_filter",
-        name="Remaining Time For Filter",
+        name="Remaining time for filter",
         device_class=SensorDeviceClass.TIMESTAMP,
         sensor_type=ValloxFilterRemainingSensor,
     ),
     ValloxSensorEntityDescription(
         key="cell_state",
-        name="Cell State",
+        name="Cell state",
         icon="mdi:swap-horizontal-bold",
         metric_key="A_CYC_CELL_STATE",
         sensor_type=ValloxCellStateSensor,
     ),
     ValloxSensorEntityDescription(
         key="extract_air",
-        name="Extract Air",
+        name="Extract air",
         metric_key="A_CYC_TEMP_EXTRACT_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -165,7 +165,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="exhaust_air",
-        name="Exhaust Air",
+        name="Exhaust air",
         metric_key="A_CYC_TEMP_EXHAUST_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -173,7 +173,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="outdoor_air",
-        name="Outdoor Air",
+        name="Outdoor air",
         metric_key="A_CYC_TEMP_OUTDOOR_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -181,7 +181,7 @@ SENSORS: tuple[ValloxSensorEntityDescription, ...] = (
     ),
     ValloxSensorEntityDescription(
         key="supply_air",
-        name="Supply Air",
+        name="Supply air",
         metric_key="A_CYC_TEMP_SUPPLY_AIR",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
