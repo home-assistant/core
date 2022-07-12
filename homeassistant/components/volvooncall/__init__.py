@@ -37,6 +37,7 @@ DEFAULT_UPDATE_INTERVAL = timedelta(minutes=1)
 
 CONF_SERVICE_URL = "service_url"
 CONF_SCANDINAVIAN_MILES = "scandinavian_miles"
+CONF_USA_UNITS = "usa_units"
 CONF_MUTABLE = "mutable"
 
 SIGNAL_STATE_UPDATED = f"{DOMAIN}.updated"
@@ -109,6 +110,7 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_SERVICE_URL): cv.string,
                 vol.Optional(CONF_MUTABLE, default=True): cv.boolean,
                 vol.Optional(CONF_SCANDINAVIAN_MILES, default=False): cv.boolean,
+                vol.Optional(CONF_USA_UNITS, default=False): cv.boolean,
             }
         )
     },
@@ -143,6 +145,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         dashboard = vehicle.dashboard(
             mutable=config[DOMAIN][CONF_MUTABLE],
             scandinavian_miles=config[DOMAIN][CONF_SCANDINAVIAN_MILES],
+            usa_units=config[DOMAIN][CONF_USA_UNITS],
         )
 
         for instrument in (
