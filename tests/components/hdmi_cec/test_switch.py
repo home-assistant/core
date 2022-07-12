@@ -107,24 +107,9 @@ async def test_service_off(hass, create_hdmi_network, create_cec_entity):
     "status",
     [
         None,
-        pytest.param(
-            STATUS_PLAY,
-            marks=pytest.mark.xfail(
-                reason="`CecSwitchEntity.is_on` returns `False` here instead of the correct state."
-            ),
-        ),
-        pytest.param(
-            STATUS_STOP,
-            marks=pytest.mark.xfail(
-                reason="`CecSwitchEntity.is_on` returns `False` here instead of the correct state."
-            ),
-        ),
-        pytest.param(
-            STATUS_STILL,
-            marks=pytest.mark.xfail(
-                reason="`CecSwitchEntity.is_on` returns `False` here instead of the correct state."
-            ),
-        ),
+        STATUS_PLAY,
+        STATUS_STOP,
+        STATUS_STILL,
     ],
 )
 async def test_device_status_change(
@@ -139,6 +124,10 @@ async def test_device_status_change(
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.hdmi_3")
+    if power_status in (POWER_ON, 4) and status is not None:
+        pytest.xfail(
+            reason="`CecSwitchEntity.is_on` returns `False` here instead of `true` as expected."
+        )
     assert state.state == expected_state
 
 
@@ -256,19 +245,8 @@ async def test_unavailable_status(hass, create_hdmi_network, create_cec_entity):
     mock_hdmi_device = MockHDMIDevice(logical_address=3)
     await create_cec_entity(hdmi_network, mock_hdmi_device)
 
-    state = hass.states.get("switch.hdmi_3")
-    print(state)
-    mock_hdmi_device._update()
-    import asyncio
-
-    await asyncio.sleep(2)
     hass.bus.async_fire(EVENT_HDMI_CEC_UNAVAILABLE)
-    mock_hdmi_device._update()
-    state = hass.states.get("switch.hdmi_3")
-    print(state)
     await hass.async_block_till_done()
 
     state = hass.states.get("switch.hdmi_3")
-    print(state)
-    print(dir(state))
     assert state.state == STATE_UNAVAILABLE
