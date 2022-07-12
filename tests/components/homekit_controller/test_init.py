@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from aiohomekit import exceptions
-from aiohomekit.model import Accessories, Accessory
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 from aiohomekit.testing import FakeController, FakeDiscovery, FakePairing
@@ -18,9 +18,9 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import Helper, remove_device
+from .common import Helper, remove_device, setup_test_accessories_with_controller
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 from tests.components.homekit_controller.common import setup_test_component
 
 ALIVE_DEVICE_NAME = "testdevice"
@@ -153,28 +153,14 @@ async def test_offline_device_raises(hass):
         fake_controller = controller.return_value = OfflineFakeController()
         await async_setup_component(hass, DOMAIN, {})
 
-    pairing_id = "00:00:00:00:00:00"
-
     accessory = Accessory.create_with_info(
         "TestDevice", "example.com", "Test", "0001", "0.1"
     )
     create_alive_service(accessory)
-    accessories_obj = Accessories()
-    accessories_obj.add_accessory(accessory)
 
-    await fake_controller.add_paired_device(accessories_obj, pairing_id)
-
-    config_entry = MockConfigEntry(
-        version=1,
-        domain="homekit_controller",
-        entry_id="TestData",
-        data={"AccessoryPairingID": pairing_id},
-        title="test",
+    config_entry, _ = await setup_test_accessories_with_controller(
+        hass, [accessory], fake_controller
     )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
 
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
