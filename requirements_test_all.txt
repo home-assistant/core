@@ -1323,7 +1323,7 @@ pytile==2022.02.0
 pytomorrowio==0.3.3
 
 # homeassistant.components.traccar
-pytraccar==0.10.0
+pytraccar==0.10.1
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.0

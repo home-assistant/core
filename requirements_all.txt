@@ -1982,7 +1982,7 @@ pytomorrowio==0.3.3
 pytouchline==0.7
 
 # homeassistant.components.traccar
-pytraccar==0.10.0
+pytraccar==0.10.1
 
 # homeassistant.components.tradfri
 pytradfri[async]==9.0.0
