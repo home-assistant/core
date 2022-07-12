@@ -10,6 +10,7 @@ import logging
 from threading import Event
 from typing import Any, cast
 
+import attr
 import av
 
 from homeassistant.core import HomeAssistant
@@ -24,7 +25,14 @@ from .const import (
     SEGMENT_CONTAINER_FORMAT,
     SOURCE_TIMEOUT,
 )
-from .core import KeyFrameConverter, Part, Segment, StreamOutput, StreamSettings
+from .core import (
+    STREAM_SETTINGS_NON_LL_HLS,
+    KeyFrameConverter,
+    Part,
+    Segment,
+    StreamOutput,
+    StreamSettings,
+)
 from .diagnostics import Diagnostics
 from .hls import HlsStreamOutput
 
@@ -305,6 +313,9 @@ class StreamMuxer:
                 self._part_start_dts
                 + 0.85 * self._stream_settings.part_target_duration / packet.time_base,
             )
+        # Undo dts adjustments if we don't have ll_hls
+        if not self._stream_settings.ll_hls:
+            adjusted_dts = packet.dts
         assert self._segment
         self._memory_file.seek(self._memory_file_pos)
         self._hass.loop.call_soon_threadsafe(
@@ -489,7 +500,12 @@ def stream_worker(
         audio_stream = None
     # Disable ll-hls for hls inputs
     if container.format.name == "hls":
-        stream_settings.ll_hls = False
+        for field in attr.fields(StreamSettings):
+            setattr(
+                stream_settings,
+                field.name,
+                getattr(STREAM_SETTINGS_NON_LL_HLS, field.name),
+            )
     stream_state.diagnostics.set_value("container_format", container.format.name)
     stream_state.diagnostics.set_value("video_codec", video_stream.name)
     if audio_stream:
