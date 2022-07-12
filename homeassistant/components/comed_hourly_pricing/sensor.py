@@ -38,12 +38,12 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=CONF_FIVE_MINUTE,
         name="ComEd 5 Minute Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement="c/kWh",
     ),
     SensorEntityDescription(
         key=CONF_CURRENT_HOUR_AVERAGE,
         name="ComEd Current Hour Average Price",
-        native_unit_of_measurement="c",
+        native_unit_of_measurement="c/kWh",
     ),
 )
 
