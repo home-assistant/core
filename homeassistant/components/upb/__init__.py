@@ -68,8 +68,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
 class UpbEntity(Entity):
     """Base class for all UPB entities."""
 
-    _attr_has_entity_name = True
-
     def __init__(self, element, unique_id, upb):
         """Initialize the base of all UPB devices."""
         self._upb = upb

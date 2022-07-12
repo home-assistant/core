@@ -451,7 +451,6 @@ class ElkEntity(Entity):
         self._element = element
         self._mac = elk_data["mac"]
         self._prefix = elk_data["prefix"]
-        self._name_prefix = f"{self._prefix} " if self._prefix else ""
         self._temperature_unit: str = elk_data["config"]["temperature_unit"]
         # unique_id starts with elkm1_ iff there is no prefix
         # it starts with elkm1m_{prefix} iff there is a prefix
@@ -466,11 +465,7 @@ class ElkEntity(Entity):
         else:
             uid_start = "elkm1"
         self._unique_id = f"{uid_start}_{self._element.default_name('_')}".lower()
-
-    @property
-    def name(self) -> str:
-        """Name of the element."""
-        return f"{self._name_prefix}{self._element.name}"
+        self._attr_name = element.name
 
     @property
     def unique_id(self) -> str:
