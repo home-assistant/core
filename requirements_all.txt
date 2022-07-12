@@ -89,7 +89,7 @@ adguardhome==0.5.1
 advantage_air==0.3.1
 
 # homeassistant.components.frontier_silicon
-afsapi==0.2.5
+afsapi==0.2.6
 
 # homeassistant.components.agent_dvr
 agent-py==0.0.23
